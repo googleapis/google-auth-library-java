@@ -11,7 +11,7 @@
 
   <groupId>com.google.auth</groupId>
   <artifactId>google-auth-library</artifactId>
-  <version>0.8.0</version>
+  <version>0.1.0</version>
   <packaging>pom</packaging>
   <name>Google Auth Library for Java</name>
 
