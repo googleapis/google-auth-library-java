@@ -15,6 +15,14 @@
   <packaging>pom</packaging>
   <name>Google Auth Library for Java</name>
 
+  <licenses>
+    <license>
+      <name>BSD New license</name>
+      <url>http://opensource.org/licenses/BSD-3-Clause</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
   <organization>
     <name>Google</name>
     <url>http://www.google.com/</url>
@@ -24,6 +32,10 @@
     <module>credentials</module>
     <module>oauth2_http</module>
   </modules>
+
+  <scm>
+    <url>https://github.com/google/google-auth-library-java</url>
+  </scm>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
