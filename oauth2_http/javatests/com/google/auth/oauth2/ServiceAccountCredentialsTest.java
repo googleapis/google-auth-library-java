@@ -16,6 +16,7 @@ import org.junit.runners.JUnit4;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,6 +52,7 @@ public class ServiceAccountCredentialsTest {
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
   private final static Collection<String> SCOPES = Collections.singletonList("dummy.scope");
   private final static Collection<String> EMPTY_SCOPES = Collections.<String>emptyList();
+  private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
 
   @Test
   public void createdScoped_clones() throws IOException {
@@ -77,14 +79,14 @@ public class ServiceAccountCredentialsTest {
         SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, null, transport);
 
     try {
-      credentials.getRequestMetadata();
+      credentials.getRequestMetadata(CALL_URI);
       fail("Should not be able to get token without scopes");
     } catch (Exception expected) {
     }
 
     GoogleCredentials scopedCredentials = credentials.createScoped(SCOPES);
 
-    Map<String, List<String>> metadata = scopedCredentials.getRequestMetadata();
+    Map<String, List<String>> metadata = scopedCredentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
@@ -114,7 +116,7 @@ public class ServiceAccountCredentialsTest {
     GoogleCredentials credentials = ServiceAccountCredentials.fromJson(json, transport);
 
     credentials = credentials.createScoped(SCOPES);
-    Map<String, List<String>> metadata = credentials.getRequestMetadata();
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
@@ -125,7 +127,7 @@ public class ServiceAccountCredentialsTest {
     OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(
         SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, transport);
 
-    Map<String, List<String>> metadata = credentials.getRequestMetadata();
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }

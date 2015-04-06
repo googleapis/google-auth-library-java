@@ -12,6 +12,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Map;
 import java.util.List;
 
@@ -24,6 +25,7 @@ public class OAuth2CredentialsTest {
   private static final String CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
   private static final String CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
   private static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
+  private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
 
   @Test
   public void getAuthenticationType_returnsOAuth2() {
@@ -56,7 +58,7 @@ public class OAuth2CredentialsTest {
     credentials.clock = clock;
 
     // Verify getting the first token
-    Map<String, List<String>> metadata = credentials.getRequestMetadata();
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, accessToken1);
 
     // Change server to a different token
@@ -64,12 +66,12 @@ public class OAuth2CredentialsTest {
 
     // Advance 5 minutes and verify original token
     clock.addToCurrentTime(5 * 60 * 1000);
-    metadata = credentials.getRequestMetadata();
+    metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, accessToken1);
 
     // Advance 60 minutes and verify revised token
     clock.addToCurrentTime(60 * 60 * 1000);
-    metadata = credentials.getRequestMetadata();
+    metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, accessToken2);
   }
 
@@ -86,7 +88,7 @@ public class OAuth2CredentialsTest {
     userCredentials.clock = new TestClock();
 
     // Get a first token
-    Map<String, List<String>> metadata = userCredentials.getRequestMetadata();
+    Map<String, List<String>> metadata = userCredentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, accessToken1);
 
     // Change server to a different token
@@ -97,7 +99,7 @@ public class OAuth2CredentialsTest {
 
     // Refresh to force getting next token
     userCredentials.refresh();
-    metadata = userCredentials.getRequestMetadata();
+    metadata = userCredentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, accessToken2);
   }
 }

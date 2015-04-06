@@ -12,6 +12,7 @@ import org.junit.runners.JUnit4;
 
 import java.io.InputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -28,6 +29,7 @@ public class UserCredentialsTest {
   private static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
   private final static Collection<String> SCOPES = Collections.singletonList("dummy.scope");
+  private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
 
   @Test
   public void createScoped_same() {
@@ -50,7 +52,7 @@ public class UserCredentialsTest {
 
     GoogleCredentials credentials = UserCredentials.fromJson(json, transport);
 
-    Map<String, List<String>> metadata = credentials.getRequestMetadata();
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
@@ -62,7 +64,7 @@ public class UserCredentialsTest {
     OAuth2Credentials userCredentials = new UserCredentials(
         CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, transport);
 
-    Map<String, List<String>> metadata = userCredentials.getRequestMetadata();
+    Map<String, List<String>> metadata = userCredentials.getRequestMetadata(CALL_URI);
 
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
