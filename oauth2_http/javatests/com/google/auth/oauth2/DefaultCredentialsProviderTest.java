@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -46,6 +47,7 @@ public class DefaultCredentialsProviderTest {
   private final static String SA_PRIVATE_KEY_PKCS8
       = ServiceAccountCredentialsTest.SA_PRIVATE_KEY_PKCS8;
   private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
+  private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
 
   @Test
   public void getDefaultCredentials_noCredentials_throws() throws Exception {
@@ -101,7 +103,7 @@ public class DefaultCredentialsProviderTest {
     GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transport);
 
     assertNotNull(defaultCredentials);
-    Map<String, List<String>> metadata = defaultCredentials.getRequestMetadata();
+    Map<String, List<String>> metadata = defaultCredentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
@@ -139,7 +141,7 @@ public class DefaultCredentialsProviderTest {
 
     assertNotNull(defaultCredentials);
     defaultCredentials = defaultCredentials.createScoped(SCOPES);
-    Map<String, List<String>> metadata = defaultCredentials.getRequestMetadata();
+    Map<String, List<String>> metadata = defaultCredentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
@@ -241,7 +243,7 @@ public class DefaultCredentialsProviderTest {
     GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transport);
 
     assertNotNull(defaultCredentials);
-    Map<String, List<String>> metadata = defaultCredentials.getRequestMetadata();
+    Map<String, List<String>> metadata = defaultCredentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, accessToken);
   }
 

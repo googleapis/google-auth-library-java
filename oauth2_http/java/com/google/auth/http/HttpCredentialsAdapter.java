@@ -7,6 +7,7 @@ import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.util.Preconditions;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +38,8 @@ public class HttpCredentialsAdapter implements HttpRequestInitializer {
       return;
     }
     HttpHeaders requestHeaders = request.getHeaders();
-    Map<String, List<String>> credentialHeaders = credentials.getRequestMetadata();
+    URI uri = request.getUrl().toURI();
+    Map<String, List<String>> credentialHeaders = credentials.getRequestMetadata(uri);
     if (credentialHeaders == null) {
       return;
     }

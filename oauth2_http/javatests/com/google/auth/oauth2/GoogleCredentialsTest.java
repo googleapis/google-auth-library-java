@@ -15,6 +15,7 @@ import org.junit.runners.JUnit4;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -40,6 +41,7 @@ public class GoogleCredentialsTest {
   private static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
   private static final HttpTransport DUMMY_TRANSPORT = new MockTokenServerTransport();
+  private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
 
   private static final Collection<String> SCOPES =
     Collections.unmodifiableCollection(Arrays.asList("scope1", "scope2"));
@@ -85,7 +87,7 @@ public class GoogleCredentialsTest {
 
     assertNotNull(credentials);
     credentials = credentials.createScoped(SCOPES);
-    Map<String, List<String>> metadata = credentials.getRequestMetadata();
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
@@ -136,7 +138,7 @@ public class GoogleCredentialsTest {
     GoogleCredentials credentials = GoogleCredentials.fromStream(userStream, transport);
 
     assertNotNull(credentials);
-    Map<String, List<String>> metadata = credentials.getRequestMetadata();
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 

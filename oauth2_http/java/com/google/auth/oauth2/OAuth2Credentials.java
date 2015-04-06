@@ -4,6 +4,7 @@ import com.google.api.client.util.Clock;
 import com.google.auth.Credentials;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -46,7 +47,7 @@ public abstract class OAuth2Credentials extends Credentials {
    * as an authorization bearer token.
    */
   @Override
-  public Map<String, List<String>> getRequestMetadata() throws IOException {
+  public Map<String, List<String>> getRequestMetadata(URI uri) throws IOException {
     synchronized(lock) {
       Long expiresIn = getExpiresInMilliseconds();
       if (temporaryAccess == null || expiresIn != null && expiresIn <= MINIMUM_TOKEN_MILLISECONDS) {

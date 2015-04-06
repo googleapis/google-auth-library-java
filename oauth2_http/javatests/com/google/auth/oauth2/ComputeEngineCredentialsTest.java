@@ -13,6 +13,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +23,8 @@ import java.util.Map;
 @RunWith(JUnit4.class)
 public class ComputeEngineCredentialsTest {
 
+  private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
+
   @Test
   public void getRequestMetadata_hasAccessToken() throws IOException {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
@@ -29,7 +32,7 @@ public class ComputeEngineCredentialsTest {
     transport.setAccessToken(accessToken);
     ComputeEngineCredentials credentials = new ComputeEngineCredentials(transport);
 
-    Map<String, List<String>> metadata = credentials.getRequestMetadata();
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
     TestUtils.assertContainsBearerToken(metadata, accessToken);
   }
@@ -43,7 +46,7 @@ public class ComputeEngineCredentialsTest {
     ComputeEngineCredentials credentials = new ComputeEngineCredentials(transport);
 
     try {
-      credentials.getRequestMetadata();
+      credentials.getRequestMetadata(CALL_URI);
       fail("Expected error refreshing token.");
     } catch (IOException expected) {
       String message = expected.getMessage();
@@ -61,7 +64,7 @@ public class ComputeEngineCredentialsTest {
     ComputeEngineCredentials credentials = new ComputeEngineCredentials(transport);
 
     try {
-      credentials.getRequestMetadata();
+      credentials.getRequestMetadata(CALL_URI);
       fail("Expected error refreshing token.");
     } catch (IOException expected) {
       String message = expected.getMessage();

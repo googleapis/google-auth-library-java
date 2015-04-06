@@ -1,6 +1,7 @@
 package com.google.auth;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -27,7 +28,21 @@ public abstract class Credentials {
    *
    * @throws IOException if there was an error getting up-to-date access.
    */
-  public abstract Map<String, List<String>> getRequestMetadata() throws IOException;
+  public Map<String, List<String>> getRequestMetadata() throws IOException {
+    return getRequestMetadata(null);
+  }
+
+  /**
+   * Get the current request metadata, refreshing tokens if required.
+   *
+   * <p>This should be called by the transport layer on each request, and the data should be
+   * populated in headers or other context. The operation can block and fail to complete and may do
+   * things such as refreshing access tokens.
+   *
+   * @param uri URI of the entry point for the request.
+   * @throws IOException if there was an error getting up-to-date access.
+   */
+  public abstract Map<String, List<String>> getRequestMetadata(URI uri) throws IOException;
 
   /**
    * Whether the credentials have metadata entries that should be added to each request.
