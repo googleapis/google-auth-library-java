@@ -2,7 +2,6 @@ package com.google.auth.oauth2;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import com.google.auth.TestClock;
 import com.google.auth.TestUtils;
