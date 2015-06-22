@@ -1,5 +1,6 @@
 package com.google.auth.oauth2;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -13,12 +14,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.security.PrivateKey;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -68,7 +67,7 @@ public class ServiceAccountCredentialsTest {
     assertEquals(SA_CLIENT_EMAIL, newCredentials.getClientEmail());
     assertEquals(privateKey, newCredentials.getPrivateKey());
     assertEquals(SA_PRIVATE_KEY_ID, newCredentials.getPrivateKeyId());
-    assertEquals(newScopes.toArray(), newCredentials.getScopes().toArray());
+    assertArrayEquals(newScopes.toArray(), newCredentials.getScopes().toArray());
   }
 
   @Test

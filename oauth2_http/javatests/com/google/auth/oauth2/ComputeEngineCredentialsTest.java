@@ -1,7 +1,5 @@
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -38,7 +36,7 @@ public class ComputeEngineCredentialsTest {
   }
 
   @Test
-  public void getRequestMetadata_missingServiceAccount_throws() throws IOException {
+  public void getRequestMetadata_missingServiceAccount_throws() {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockMetadataServerTransport transport = new MockMetadataServerTransport();
     transport.setAccessToken(accessToken);
@@ -56,7 +54,7 @@ public class ComputeEngineCredentialsTest {
     }
   }
 
-  public void getRequestMetadata_serverError_throws() throws IOException {
+  public void getRequestMetadata_serverError_throws() {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockMetadataServerTransport transport = new MockMetadataServerTransport();
     transport.setAccessToken(accessToken);

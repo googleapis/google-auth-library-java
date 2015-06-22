@@ -32,7 +32,6 @@ public class HttpCredentialsAdapter implements HttpRequestInitializer {
      *
      * @param request HTTP request
      */
-  @Override
   public void initialize(HttpRequest request) throws IOException {
     if (!credentials.hasRequestMetadata()) {
       return;

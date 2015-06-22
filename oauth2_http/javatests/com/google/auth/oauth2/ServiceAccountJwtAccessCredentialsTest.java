@@ -32,18 +32,15 @@
 package com.google.auth.oauth2;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.auth.Credentials;
-import com.google.auth.TestUtils;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -97,22 +94,19 @@ public class ServiceAccountJwtAccessCredentialsTest {
   @Test 
   public void constructor_noClientId_constructs() throws IOException {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
-    Credentials credentials = new ServiceAccountJwtAccessCredentials(
-        null, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID);    
+    new ServiceAccountJwtAccessCredentials(null, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID);    
   }
 
   @Test 
   public void constructor_noPrivateKeyId_constructs() throws IOException {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
-    Credentials credentials = new ServiceAccountJwtAccessCredentials(
-        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, null);    
+    new ServiceAccountJwtAccessCredentials(SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, null);    
   }
 
   @Test 
   public void constructor_noEmail_throws() throws IOException {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     try {
-      ServiceAccountJwtAccessCredentials credential = 
           new ServiceAccountJwtAccessCredentials(SA_CLIENT_ID, null, privateKey, SA_PRIVATE_KEY_ID);
       fail("exception expected");
     } catch (NullPointerException e) {
@@ -122,7 +116,7 @@ public class ServiceAccountJwtAccessCredentialsTest {
   @Test 
   public void constructor_noPrivateKey_throws() {
     try {
-      Credentials credential = new ServiceAccountJwtAccessCredentials(
+      new ServiceAccountJwtAccessCredentials(
           SA_CLIENT_ID, SA_CLIENT_EMAIL, null , SA_PRIVATE_KEY_ID);
       fail("exception expected");
     } catch (NullPointerException e) {
@@ -162,7 +156,6 @@ public class ServiceAccountJwtAccessCredentialsTest {
     assertNotNull(metadata);    
     List<String> authorizations = metadata.get("Authorization");
     assertNotNull("Authorization headers not found", authorizations);
-    boolean found = false;
     String assertion = null;
     for (String authorization : authorizations) {
       if (authorization.startsWith(headerPrefix)) {
@@ -189,7 +182,6 @@ public class ServiceAccountJwtAccessCredentialsTest {
     assertNotNull(metadata);    
     List<String> authorizations = metadata.get("Authorization");
     assertNotNull("Authorization headers not found", authorizations);
-    boolean found = false;
     String assertion = null;
     for (String authorization : authorizations) {
       if (authorization.startsWith(headerPrefix)) {
@@ -206,7 +198,6 @@ public class ServiceAccountJwtAccessCredentialsTest {
 
   @Test
   public void getRequestMetadata_noURI_throws() throws IOException {
-    final String headerPrefix = "Bearer #";
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     Credentials credentials = new ServiceAccountJwtAccessCredentials(
         SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID);

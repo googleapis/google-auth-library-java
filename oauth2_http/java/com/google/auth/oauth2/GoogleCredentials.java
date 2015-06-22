@@ -4,23 +4,11 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
-import com.google.api.client.util.Beta;
-import com.google.api.client.util.PemReader;
 import com.google.api.client.util.Preconditions;
-import com.google.api.client.util.SecurityUtils;
-import com.google.api.client.util.PemReader.Section;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Reader;
-import java.io.StringReader;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Collection;
-import java.util.Collections;
 
 /**
  * Base type for credentials for authorizing calls to Google APIs using OAuth2.
