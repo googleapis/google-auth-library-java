@@ -78,17 +78,16 @@
         <groupId>com.google.appengine</groupId>
         <artifactId>appengine-api-1.0-sdk</artifactId>
         <version>${project.appengine.version}</version>
-      </dependency>      
-      <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
-        <version>${project.junit.version}</version>
-        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava-jdk5</artifactId>
         <version>${project.guava.version}</version>
+      </dependency>            
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>${project.junit.version}</version>
         <scope>test</scope>
       </dependency>
     </dependencies>
