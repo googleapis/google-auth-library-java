@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.AccessControlException;
 import java.util.Locale;
 
 /**
@@ -87,6 +88,8 @@ class DefaultCredentialsProvider {
         throw OAuth2Utils.exceptionWithCause(new IOException(String.format(
             "Error reading credential file from environment variable %s, value '%s': %s",
             CREDENTIAL_ENV_VAR, credentialsPath, e.getMessage())), e);
+      } catch (AccessControlException expected) {
+        // Exception querying file system is expected on App-Engine
       } finally {
         if (credentialsStream != null) {
           credentialsStream.close();
@@ -97,19 +100,21 @@ class DefaultCredentialsProvider {
     // Then try the well-known file
     if (credentials == null) {
       File wellKnownFileLocation = getWellKnownCredentialsFile();
-      if (isFile(wellKnownFileLocation)) {
-        InputStream credentialsStream = null;
-        try {
+      InputStream credentialsStream = null;
+      try {
+        if (isFile(wellKnownFileLocation)) {
           credentialsStream = readStream(wellKnownFileLocation);
           credentials = GoogleCredentials.fromStream(credentialsStream, transport);
-        } catch (IOException e) {
-          throw new IOException(String.format(
-              "Error reading credential file from location %s: %s",
-              wellKnownFileLocation, e.getMessage()));
-        } finally {
-          if (credentialsStream != null) {
-            credentialsStream.close();
-          }
+        }
+      } catch (IOException e) {
+        throw new IOException(String.format(
+            "Error reading credential file from location %s: %s",
+            wellKnownFileLocation, e.getMessage()));
+      } catch (AccessControlException expected) {
+        // Exception querying file system is expected on App-Engine
+      } finally {
+        if (credentialsStream != null) {
+          credentialsStream.close();
         }
       }
     }

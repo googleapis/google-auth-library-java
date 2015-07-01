@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.URI;
+import java.security.AccessControlException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -63,6 +64,41 @@ public class DefaultCredentialsProviderTest {
     }
   }
 
+  @Test
+  public void getDefaultCredentials_noCredentialsSandbox_throwsNonSecurity() throws Exception {
+    HttpTransport transport = new MockHttpTransport();
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setFileSandbox(true);
+
+    try {
+      testProvider.getDefaultCredentials(transport);
+      fail("No credential expected.");
+    } catch (IOException e) {
+      String message = e.getMessage();
+      assertTrue(message.contains(DefaultCredentialsProvider.HELP_PERMALINK));
+    }
+  }
+
+  @Test
+  public void getDefaultCredentials_envValidSandbox_throwsNonSecurity() throws Exception {
+    HttpTransport transport = new MockHttpTransport();
+    InputStream userStream =
+        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setFileSandbox(true);
+    String userPath = "/user.json";
+    testProvider.addFile(userPath, userStream);
+    testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, userPath);
+    
+    try {
+      testProvider.getDefaultCredentials(transport);
+      fail("No credential expected.");
+    } catch (IOException e) {
+      String message = e.getMessage();
+      assertTrue(message.contains(DefaultCredentialsProvider.HELP_PERMALINK));
+    }
+  }
+  
   @Test
   public void getDefaultCredentials_noCredentials_singleGceTestRequest() {
     MockRequestCountingTransport transport = new MockRequestCountingTransport();
@@ -275,6 +311,7 @@ public class DefaultCredentialsProviderTest {
     private final Map<String, String> variables = new HashMap<String, String>();
     private final Map<String, String> properties = new HashMap<String, String>();
     private final Map<String, InputStream> files = new HashMap<String, InputStream>();
+    private boolean fileSandbox = false;
 
     TestDefaultCredentialsProvider () {
     }
@@ -304,16 +341,26 @@ public class DefaultCredentialsProviderTest {
 
     @Override
     boolean isFile(File file) {
+      if (fileSandbox) {
+        throw new AccessControlException("No file permission.");
+      }
       return files.containsKey(file.getAbsolutePath());
     }
 
     @Override
     InputStream readStream(File file) throws FileNotFoundException {
+      if (fileSandbox) {
+        throw new AccessControlException("No file permission.");
+      }
       InputStream stream = files.get(file.getAbsolutePath());
       if (stream == null) {
         throw new FileNotFoundException(file.getAbsolutePath());
       }
       return stream;
+    }
+        
+    void setFileSandbox(boolean fileSandbox) {
+      this.fileSandbox = fileSandbox;
     }
   }
 }
