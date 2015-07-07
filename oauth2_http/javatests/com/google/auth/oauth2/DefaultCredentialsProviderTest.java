@@ -1,6 +1,7 @@
 package com.google.auth.oauth2;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
@@ -128,6 +129,75 @@ public class DefaultCredentialsProviderTest {
 
     assertNotNull(firstCall);
     assertSame(firstCall, secondCall);
+  }
+
+  @Test
+  public void getDefaultCredentials_appEngine_deployed() throws IOException  {
+    HttpTransport transport = new MockHttpTransport();
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.addType(DefaultCredentialsProvider.APP_ENGINE_CREDENTIAL_CLASS,
+        MockAppEngineCredentials.class);
+    testProvider.addType(DefaultCredentialsProvider.APP_ENGINE_SIGNAL_CLASS,
+        MockAppEngineSystemProperty.class);
+
+    GoogleCredentials defaultCredential = testProvider.getDefaultCredentials(transport);
+
+    assertNotNull(defaultCredential);
+    assertTrue(defaultCredential instanceof MockAppEngineCredentials);
+  }
+
+  @Test
+  public void getDefaultCredentials_appEngineClassWithoutRuntime_NotFoundError() {
+    HttpTransport transport = new MockHttpTransport();
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.addType(DefaultCredentialsProvider.APP_ENGINE_CREDENTIAL_CLASS,
+        MockAppEngineCredentials.class);
+    testProvider.addType(DefaultCredentialsProvider.APP_ENGINE_SIGNAL_CLASS,
+        MockOffAppEngineSystemProperty.class);
+
+    try {
+      testProvider.getDefaultCredentials(transport);
+      fail("No credential expected when not on App Engine.");
+    } catch (IOException e) {
+      String message = e.getMessage();
+      assertTrue(message.contains(DefaultCredentialsProvider.HELP_PERMALINK));
+    }
+  }
+
+  @Test
+  public void getDefaultCredentials_appEngineRuntimeWithoutClass_throwsHelpfulLoadError() {
+    HttpTransport transport = new MockHttpTransport();
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.addType(DefaultCredentialsProvider.APP_ENGINE_SIGNAL_CLASS,
+        MockAppEngineSystemProperty.class);
+
+    try {
+      testProvider.getDefaultCredentials(transport);
+      fail("Credential expected to fail to load if credential class not present.");
+    } catch (IOException e) {
+      String message = e.getMessage();
+      assertFalse(message.contains(DefaultCredentialsProvider.HELP_PERMALINK));
+      assertTrue(message.contains(DefaultCredentialsProvider.APP_ENGINE_CREDENTIAL_CLASS));
+    }
+  }
+
+  @Test
+  public void getDefaultCredentials_appEngine_singleClassLoadAttempt() {
+    HttpTransport transport = new MockHttpTransport();
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    try {
+      testProvider.getDefaultCredentials(transport);
+      fail("No credential expected for default test provider.");
+    } catch (IOException expected) {
+    }
+    assertEquals(1, testProvider.getForNameCallCount());
+    // Try a second time.
+    try {
+      testProvider.getDefaultCredentials(transport);
+      fail("No credential expected for default test provider.");
+    } catch (IOException expected) {
+    }
+    assertEquals(1, testProvider.getForNameCallCount());
   }
 
   @Test
@@ -283,6 +353,57 @@ public class DefaultCredentialsProviderTest {
     TestUtils.assertContainsBearerToken(metadata, accessToken);
   }
 
+  public static class MockAppEngineCredentials extends GoogleCredentials {
+    @SuppressWarnings("unused")
+    public MockAppEngineCredentials(Collection<String> scopes) {
+    }
+
+    @Override
+    public AccessToken refreshAccessToken() throws IOException {
+      return null;
+    }
+  }
+
+  /*
+   * App Engine is detected by calling SystemProperty.environment.value() via Reflection.
+   * The following mock types simulate the shape and behavior of that call sequence.
+   */
+
+  private static class MockAppEngineSystemProperty {
+
+    @SuppressWarnings("unused")
+    public static final MockEnvironment environment =
+      new MockEnvironment(MockEnvironmentEnum.Production);
+  }
+
+  private static class MockOffAppEngineSystemProperty {
+
+    @SuppressWarnings("unused")
+    public static final MockEnvironment environment = new MockEnvironment(null);
+  }
+
+  private enum MockEnvironmentEnum {
+    Production,
+    Development;
+  }
+
+  public static class MockEnvironment {
+
+    private MockEnvironmentEnum innerValue;
+
+    MockEnvironment(MockEnvironmentEnum value) {
+      this.innerValue = value;
+    }
+
+    public MockEnvironmentEnum value() {
+      return innerValue;
+    }
+  }
+
+  /*
+   * End of types simulating SystemProperty.environment.value() to detect App Engine.
+   */
+
   private static class MockRequestCountingTransport extends MockHttpTransport {
     int requestCount = 0;
 
@@ -308,16 +429,22 @@ public class DefaultCredentialsProviderTest {
 
   private static class TestDefaultCredentialsProvider extends DefaultCredentialsProvider {
 
+    private final Map<String, Class<?>> types = new HashMap<String, Class<?>>();
     private final Map<String, String> variables = new HashMap<String, String>();
     private final Map<String, String> properties = new HashMap<String, String>();
     private final Map<String, InputStream> files = new HashMap<String, InputStream>();
     private boolean fileSandbox = false;
+    private int forNameCallCount = 0;
 
     TestDefaultCredentialsProvider () {
     }
 
     void addFile(String file, InputStream stream) {
       files.put(file, stream);
+    }
+
+    void addType(String className, Class<?> type) {
+      types.put(className, type);
     }
 
     @Override
@@ -337,6 +464,20 @@ public class DefaultCredentialsProviderTest {
 
     void setProperty(String property, String value) {
       properties.put(property, value);
+    }
+
+    @Override
+    Class<?> forName(String className) throws ClassNotFoundException {
+      forNameCallCount++;
+      Class<?> lookup = types.get(className);
+      if (lookup != null) {
+        return lookup;
+      }
+      throw new ClassNotFoundException("TestDefaultCredentialProvider: Class not found.");
+    }
+
+    int getForNameCallCount() {
+      return forNameCallCount;
     }
 
     @Override

@@ -7,7 +7,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.security.AccessControlException;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Locale;
 
 /**
@@ -27,8 +33,14 @@ class DefaultCredentialsProvider {
   static final String HELP_PERMALINK =
       "https://developers.google.com/accounts/docs/application-default-credentials";
 
+  static final String APP_ENGINE_CREDENTIAL_CLASS =
+      "com.google.auth.appengine.AppEngineCredentials";
+
+  static final String APP_ENGINE_SIGNAL_CLASS = "com.google.appengine.api.utils.SystemProperty";
+
   // These variables should only be accessed inside a synchronized block
   private GoogleCredentials cachedCredentials = null;
+  private boolean checkedAppEngine = false;
   private boolean checkedComputeEngine = false;
 
   DefaultCredentialsProvider() {
@@ -119,6 +131,11 @@ class DefaultCredentialsProvider {
       }
     }
 
+    // Then try App Engine
+    if (credentials == null) {
+      credentials = tryGetAppEngineCredential();
+    }
+
     // Then try Compute Engine
     if (credentials == null) {
       credentials = tryGetComputeCredentials(transport);
@@ -141,6 +158,76 @@ class DefaultCredentialsProvider {
     return credentialFilePath;
   }
 
+  private boolean runningOnAppEngine() {
+    Class<?> systemPropertyClass = null;
+    try {
+      systemPropertyClass = forName(APP_ENGINE_SIGNAL_CLASS);
+    } catch (ClassNotFoundException expected) {
+      // SystemProperty will always be present on App Engine.
+      return false;
+    }
+    Exception cause = null;
+    Field environmentField;
+    try {
+      environmentField = systemPropertyClass.getField("environment");
+      Object environmentValue = environmentField.get(null);
+      Class<?> environmentType = environmentField.getType();
+      Method valueMethod = environmentType.getMethod("value");
+      Object environmentValueValue = valueMethod.invoke(environmentValue);
+      return (environmentValueValue != null);
+    } catch (NoSuchFieldException exception) {
+      cause = exception;
+    } catch (SecurityException exception) {
+      cause = exception;
+    } catch (IllegalArgumentException exception) {
+      cause = exception;
+    } catch (IllegalAccessException exception) {
+      cause = exception;
+    } catch (NoSuchMethodException exception) {
+      cause = exception;
+    } catch (InvocationTargetException exception) {
+      cause = exception;
+    }
+    throw OAuth2Utils.exceptionWithCause(new RuntimeException(String.format(
+        "Unexpcted error trying to determine if runnning on Google App Engine: %s",
+        cause.getMessage())), cause);
+  }
+
+  private GoogleCredentials tryGetAppEngineCredential() throws IOException {
+    // Checking for App Engine requires a class load, so check only once
+    if (checkedAppEngine) {
+      return null;
+    }
+    boolean onAppEngine = runningOnAppEngine();
+    checkedAppEngine = true;
+    if (!onAppEngine) {
+      return null;
+    }
+    Exception innerException = null;
+    try {
+      Class<?> credentialClass = forName(APP_ENGINE_CREDENTIAL_CLASS);
+      Constructor<?> constructor = credentialClass
+          .getConstructor(Collection.class);
+      Collection<String> emptyScopes = Collections.emptyList();
+      return (GoogleCredentials) constructor.newInstance(emptyScopes);
+    } catch (ClassNotFoundException e) {
+      innerException = e;
+    } catch (NoSuchMethodException e) {
+      innerException = e;
+    } catch (InstantiationException e) {
+      innerException = e;
+    } catch (IllegalAccessException e) {
+      innerException = e;
+    } catch (InvocationTargetException e) {
+      innerException = e;
+    }
+    throw OAuth2Utils.exceptionWithCause(new IOException(String.format(
+        "Application Default Credentials failed to create the Google App Engine service account"
+            + " credentials class %s. Check that the component 'google-auth-library-appengine' is"
+            + " deployed.",
+        APP_ENGINE_CREDENTIAL_CLASS)), innerException);
+  }
+
   private final GoogleCredentials tryGetComputeCredentials(HttpTransport transport) {
     // Checking compute engine requires a round-trip, so check only once
     if (checkedComputeEngine) {
@@ -157,6 +244,10 @@ class DefaultCredentialsProvider {
   /*
    * Start of methods to allow overriding in the test code to isolate from the environment.
    */
+
+  Class<?> forName(String className) throws ClassNotFoundException {
+    return Class.forName(className);
+  }
 
   String getEnv(String name) {
     return System.getenv(name);
