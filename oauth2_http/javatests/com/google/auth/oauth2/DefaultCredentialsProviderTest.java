@@ -214,6 +214,31 @@ public class DefaultCredentialsProviderTest {
   }
 
   @Test
+  public void getDefaultCredentials_cloudshell() throws IOException {
+    HttpTransport transport = new MockHttpTransport();
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setEnv(DefaultCredentialsProvider.CLOUD_SHELL_ENV_VAR, "4");
+    
+    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transport);
+
+    assertTrue(defaultCredentials instanceof CloudShellCredentials);
+    assertEquals(((CloudShellCredentials) defaultCredentials).getAuthPort(), 4);
+  }
+
+  @Test
+  public void getDefaultCredentials_cloudshell_withComputCredentialsPresent() throws IOException {
+    MockMetadataServerTransport transport = new MockMetadataServerTransport();
+    transport.setAccessToken(ACCESS_TOKEN);
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setEnv(DefaultCredentialsProvider.CLOUD_SHELL_ENV_VAR, "4");
+
+    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transport);
+
+    assertTrue(defaultCredentials instanceof CloudShellCredentials);
+    assertEquals(((CloudShellCredentials) defaultCredentials).getAuthPort(), 4);
+  }
+
+  @Test
   public void getDefaultCredentials_envMissingFile_throws() {
     final String invalidPath = "/invalid/path";
     HttpTransport transport = new MockHttpTransport();

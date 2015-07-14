@@ -65,6 +65,11 @@
         <version>${project.version}</version>
       </dependency>
       <dependency>
+        <groupId>com.google.auth</groupId>
+        <artifactId>google-auth-library-cloudshell</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
         <groupId>com.google.http-client</groupId>
         <artifactId>google-http-client</artifactId>
         <version>${project.google.http.version}</version>
@@ -89,6 +94,11 @@
         <artifactId>junit</artifactId>
         <version>${project.junit.version}</version>
         <scope>test</scope>
+      </dependency>
+      <dependency>
+	<groupId>org.glassfish</groupId>
+	<artifactId>javax.json</artifactId>
+	<version>1.0.4</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
