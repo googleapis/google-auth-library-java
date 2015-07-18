@@ -2,6 +2,7 @@ package com.google.auth.oauth2;
 
 import com.google.api.client.util.Clock;
 import com.google.auth.Credentials;
+import com.google.auth.http.AuthHttpConstants;
 
 import java.io.IOException;
 import java.net.URI;
@@ -22,7 +23,7 @@ public abstract class OAuth2Credentials extends Credentials {
   private Map<String, List<String>> requestMetadata;
   private AccessToken temporaryAccess;
 
-  // Allow clock to be overriden by test code
+  // Allow clock to be overridden by test code
   Clock clock = Clock.SYSTEM;
 
   @Override
@@ -55,9 +56,9 @@ public abstract class OAuth2Credentials extends Credentials {
       if (requestMetadata == null) {
         Map<String, List<String>> newRequestMetadata = new HashMap<String, List<String>>();
         List<String> newAuthorizationHeaders = new ArrayList<String>();
-        String authorizationHeader = "Bearer " + temporaryAccess.getTokenValue();
+        String authorizationHeader = OAuth2Utils.BEARER_PREFIX + temporaryAccess.getTokenValue();
         newAuthorizationHeaders.add(authorizationHeader);
-        newRequestMetadata.put("Authorization", newAuthorizationHeaders);
+        newRequestMetadata.put(AuthHttpConstants.AUTHORIZATION, newAuthorizationHeaders);
         requestMetadata = newRequestMetadata;
       }
       return requestMetadata;

@@ -37,6 +37,7 @@ import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.client.util.Clock;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.Credentials;
+import com.google.auth.http.AuthHttpConstants;
 
 import java.io.IOException;
 import java.net.URI;
@@ -186,10 +187,10 @@ public class ServiceAccountJwtAccessCredentials extends Credentials {
       }
     }
     String assertion = getJwtAccess(uri);
-    String authorizationHeader = "Bearer #" + assertion;
+    String authorizationHeader = OAuth2Utils.BEARER_PREFIX + "#" + assertion;
     List<String> newAuthorizationHeaders = Collections.singletonList(authorizationHeader);
     Map<String, List<String>> newRequestMetadata =
-        Collections.singletonMap("Authorization", newAuthorizationHeaders);
+        Collections.singletonMap(AuthHttpConstants.AUTHORIZATION, newAuthorizationHeaders);
     return newRequestMetadata;
   }
 

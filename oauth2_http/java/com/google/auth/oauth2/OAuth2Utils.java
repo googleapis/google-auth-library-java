@@ -6,6 +6,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.GenericData;
+import com.google.auth.http.AuthHttpConstants;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -26,6 +27,8 @@ class OAuth2Utils {
 
   private static String VALUE_NOT_FOUND_MESSAGE = "%sExpected value %s not found.";
   private static String VALUE_WRONG_TYPE_MESSAGE = "%sExpected %s value %s of wrong type.";
+
+  static final String BEARER_PREFIX = AuthHttpConstants.BEARER + " ";
 
   /**
    * Returns whether the headers contain the specified value as one of the entries in the
