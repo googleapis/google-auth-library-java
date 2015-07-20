@@ -44,13 +44,19 @@ import javax.json.JsonArray;
 
 /**
  * OAuth2 credentials representing the built-in service account for Google Cloud Shell.
- *
- * <p>Fetches access tokens from the App Identity service.
  */
 public class CloudShellCredentials extends GoogleCredentials {
 
   private final static int ACCESS_TOKEN_INDEX = 2;
-  private final static int READ_TIMEOUT = 5000;
+  private final static int READ_TIMEOUT_MS = 5000;
+
+  /**
+   * The Cloud Shell back authorization channel uses serialized
+   * Javascript Protobufers, preceeded by the message lengeth and a
+   * new line character. However, the request message has no content,
+   * so a token request consists of an empty JsPb, and its 2 character
+   * lenth prefix.
+   */
   protected final static String GET_AUTH_TOKEN_REQUEST = "2\n[]";
 
   private final int authPort;
@@ -66,7 +72,7 @@ public class CloudShellCredentials extends GoogleCredentials {
   @Override
   public AccessToken refreshAccessToken() throws IOException {
     Socket socket = new Socket("localhost", this.getAuthPort());
-    socket.setSoTimeout(READ_TIMEOUT);
+    socket.setSoTimeout(READ_TIMEOUT_MS);
     AccessToken token;
     try {    
       PrintWriter out =
