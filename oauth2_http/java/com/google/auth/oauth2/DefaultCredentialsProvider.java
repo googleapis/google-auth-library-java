@@ -38,6 +38,8 @@ class DefaultCredentialsProvider {
 
   static final String APP_ENGINE_SIGNAL_CLASS = "com.google.appengine.api.utils.SystemProperty";
 
+  static final String CLOUD_SHELL_ENV_VAR = "DEVSHELL_CLIENT_PORT";
+  
   // These variables should only be accessed inside a synchronized block
   private GoogleCredentials cachedCredentials = null;
   private boolean checkedAppEngine = false;
@@ -136,6 +138,12 @@ class DefaultCredentialsProvider {
       credentials = tryGetAppEngineCredential();
     }
 
+    // Then try Cloud Shell.  This must be done BEFORE checking
+    // Compute Engine, as Cloud Shell runs on GCE VMs.
+    if (credentials == null) {
+      credentials = tryGetCloudShellCredentials();
+    }
+    
     // Then try Compute Engine
     if (credentials == null) {
       credentials = tryGetComputeCredentials(transport);
@@ -193,6 +201,15 @@ class DefaultCredentialsProvider {
         cause.getMessage())), cause);
   }
 
+  private GoogleCredentials tryGetCloudShellCredentials() {
+    String port = getEnv(CLOUD_SHELL_ENV_VAR);
+    if (port != null) {
+      return new CloudShellCredentials(Integer.parseInt(port));
+    } else {
+      return null;
+    }
+  }
+  
   private GoogleCredentials tryGetAppEngineCredential() throws IOException {
     // Checking for App Engine requires a class load, so check only once
     if (checkedAppEngine) {
