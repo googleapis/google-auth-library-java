@@ -36,39 +36,44 @@ public class UserCredentials extends GoogleCredentials {
    * @param refreshToken A refresh token resulting from a OAuth2 consent flow.
    */
   public UserCredentials(String clientId, String clientSecret, String refreshToken) {
-    this(clientId, clientSecret, refreshToken, null, null);
+    this(clientId, clientSecret, refreshToken, null, null, null);
   }
 
   /**
-   * Constructor allow override of transport for getting access tokens.
+   * Constructor to allow both refresh token and initial access token for 3LO scenarios.
    *
    * @param clientId Client ID of the credential from the console.
    * @param clientSecret Client ID of the credential from the console.
    * @param refreshToken A refresh token resulting from a OAuth2 consent flow.
-   * @param transport HTTP object used to get acces tokens.
+   * @param accessToken Initial or temporary access token.
    */
   public UserCredentials(
-      String clientId, String clientSecret, String refreshToken, HttpTransport transport) {
-    this(clientId, clientSecret, refreshToken, transport, null);
+      String clientId, String clientSecret, String refreshToken, AccessToken accessToken) {
+    this(clientId, clientSecret, refreshToken, accessToken, null, null);
   }
 
+
   /**
-   * Constructor allowing override of transport and URL for getting access tokens.
+   * Constructor with all parameters allowing custom transport and server URL.
    *
    * @param clientId Client ID of the credential from the console.
    * @param clientSecret Client ID of the credential from the console.
    * @param refreshToken A refresh token resulting from a OAuth2 consent flow.
-   * @param transport HTTP object used to get acces tokens.
-   * @param tokenServerUrl URL of the endpoint that provides tokens.
+   * @param accessToken Initial or temporary access token.
+   * @param transport HTTP object used to get access tokens.
+   * @param tokenServerUrl URL of the end point that provides tokens.
    */
   public UserCredentials(String clientId, String clientSecret, String refreshToken,
-      HttpTransport transport, GenericUrl tokenServerUrl) {
+      AccessToken accessToken, HttpTransport transport, GenericUrl tokenServerUrl) {
+    super(accessToken);
     this.clientId = Preconditions.checkNotNull(clientId);
     this.clientSecret = Preconditions.checkNotNull(clientSecret);
-    this.refreshToken = Preconditions.checkNotNull(refreshToken);
+    this.refreshToken = refreshToken;
     this.transport = (transport == null) ? OAuth2Utils.HTTP_TRANSPORT : transport;
     this.tokenServerUrl = (tokenServerUrl == null)
         ? new GenericUrl(OAuth2Utils.TOKEN_SERVER_URL) : tokenServerUrl;
+    Preconditions.checkState(accessToken != null || refreshToken != null,
+        "Either accessToken or refreshToken must not be null");
   }
 
   /**
@@ -89,7 +94,7 @@ public class UserCredentials extends GoogleCredentials {
           + " expecting 'client_id', 'client_secret' and 'refresh_token'.");
     }
     UserCredentials credentials =
-        new UserCredentials(clientId, clientSecret, refreshToken, transport);
+        new UserCredentials(clientId, clientSecret, refreshToken, null, transport, null);
     return credentials;
   }
 
@@ -98,6 +103,10 @@ public class UserCredentials extends GoogleCredentials {
    */
   @Override
   public AccessToken refreshAccessToken() throws IOException {
+    if (refreshToken ==  null) {
+      throw new IllegalStateException("UserCredentials instance cannot refresh because there is no"
+          + " refresh token.");
+    }
     GenericData tokenRequest = new GenericData();
     tokenRequest.set("client_id", clientId);
     tokenRequest.set("client_secret", clientSecret);

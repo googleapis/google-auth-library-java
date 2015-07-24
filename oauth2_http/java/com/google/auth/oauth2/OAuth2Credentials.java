@@ -26,6 +26,22 @@ public abstract class OAuth2Credentials extends Credentials {
   // Allow clock to be overridden by test code
   Clock clock = Clock.SYSTEM;
 
+  /**
+   * Default constructor.
+   **/
+  public OAuth2Credentials() {
+    this(null);
+  }
+
+  /**
+   * Constructor with explicit access token.
+   *
+   * @param accessToken Initial or temporary access token.
+   **/
+  public OAuth2Credentials(AccessToken accessToken) {
+    this.temporaryAccess = accessToken;
+  }
+
   @Override
   public String getAuthenticationType() {
     return "OAuth2";

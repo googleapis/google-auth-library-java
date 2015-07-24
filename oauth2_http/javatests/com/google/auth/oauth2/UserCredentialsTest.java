@@ -2,6 +2,7 @@ package com.google.auth.oauth2;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
 
 import com.google.api.client.json.GenericJson;
 import com.google.auth.TestUtils;
@@ -31,6 +32,11 @@ public class UserCredentialsTest {
   private final static Collection<String> SCOPES = Collections.singletonList("dummy.scope");
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
 
+  @Test(expected = IllegalStateException.class)
+  public void constructor_accessAndRefreshTokenNull_throws() {
+    new UserCredentials(CLIENT_ID, CLIENT_SECRET, null, null);
+  }
+
   @Test
   public void createScoped_same() {
     UserCredentials userCredentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN);
@@ -57,12 +63,40 @@ public class UserCredentialsTest {
   }
 
   @Test
-  public void getRequestMetadata_hasAccessToken() throws IOException {
+  public void getRequestMetadata_initialToken_hasAccessToken() throws IOException {
+    MockTokenServerTransport transport = new MockTokenServerTransport();
+    transport.addClient(CLIENT_ID, CLIENT_SECRET);
+    AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
+    OAuth2Credentials userCredentials = new UserCredentials(
+        CLIENT_ID, CLIENT_SECRET, null, accessToken, transport, null);
+
+    Map<String, List<String>> metadata = userCredentials.getRequestMetadata(CALL_URI);
+
+    TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+  }
+
+  @Test
+  public void getRequestMetadata_initialTokenRefreshed_throws() throws IOException {
+    MockTokenServerTransport transport = new MockTokenServerTransport();
+    transport.addClient(CLIENT_ID, CLIENT_SECRET);
+    AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
+    OAuth2Credentials userCredentials = new UserCredentials(
+        CLIENT_ID, CLIENT_SECRET, null, accessToken, transport, null);
+
+    try {
+      userCredentials.refresh();
+      fail("Should not be able to refresh without refresh token.");
+    } catch (IllegalStateException expected) {
+    }
+  }
+
+  @Test
+  public void getRequestMetadata_fromRefreshToken_hasAccessToken() throws IOException {
     MockTokenServerTransport transport = new MockTokenServerTransport();
     transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
     OAuth2Credentials userCredentials = new UserCredentials(
-        CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, transport);
+        CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, null, transport, null);
 
     Map<String, List<String>> metadata = userCredentials.getRequestMetadata(CALL_URI);
 

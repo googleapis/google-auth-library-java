@@ -53,7 +53,7 @@ public class OAuth2CredentialsTest {
     transport.addRefreshToken(REFRESH_TOKEN, accessToken1);
     TestClock clock = new TestClock();
     OAuth2Credentials credentials = new UserCredentials(
-        CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, transport);
+        CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, null, transport, null);
     credentials.clock = clock;
 
     // Verify getting the first token
@@ -82,7 +82,7 @@ public class OAuth2CredentialsTest {
     transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transport.addRefreshToken(REFRESH_TOKEN, accessToken1);
     OAuth2Credentials userCredentials = new UserCredentials(
-        CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, transport);
+        CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, null, transport, null);
     // Use a fixed clock so tokens don't exire
     userCredentials.clock = new TestClock();
 
