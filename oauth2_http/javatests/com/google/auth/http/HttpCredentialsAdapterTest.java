@@ -60,7 +60,7 @@ public class HttpCredentialsAdapterTest {
     tokenServerTransport.addRefreshToken(REFRESH_TOKEN, accessToken);
 
     OAuth2Credentials credentials = new UserCredentials(
-        CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, tokenServerTransport);
+        CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, null, tokenServerTransport, null);
     credentials.refresh();
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
 
