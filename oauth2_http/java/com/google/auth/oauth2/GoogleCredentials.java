@@ -106,6 +106,22 @@ public abstract class GoogleCredentials extends OAuth2Credentials {
   }
 
   /**
+   * Default constructor.
+   **/
+  public GoogleCredentials() {
+    this(null);
+  }
+
+  /**
+   * Constructor with explicit access token.
+   *
+   * @param accessToken Initial or temporary access token.
+   **/
+  public GoogleCredentials(AccessToken accessToken) {
+    super(accessToken);
+  }
+
+  /**
    * Indicates whether the credentials require scopes to be specified via a call to
    * {link GoogleCredentials#createScoped} before use.
    */

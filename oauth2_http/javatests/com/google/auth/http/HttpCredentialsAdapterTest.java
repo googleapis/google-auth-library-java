@@ -37,7 +37,7 @@ public class HttpCredentialsAdapterTest {
     transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transport.addRefreshToken(REFRESH_TOKEN, accessToken);
     OAuth2Credentials credentials = new UserCredentials(
-        CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, transport);
+        CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, null, transport, null);
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
     HttpRequestFactory requestFactory = transport.createRequestFactory();
     HttpRequest request = requestFactory.buildGetRequest(new GenericUrl("http://foo"));
