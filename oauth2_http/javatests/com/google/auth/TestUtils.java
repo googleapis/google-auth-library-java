@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.auth.http.AuthHttpConstants;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 
@@ -29,8 +30,8 @@ public class TestUtils {
   public static void assertContainsBearerToken(Map<String, List<String>> metadata, String token) {
     assertNotNull(metadata);
     assertNotNull(token);
-    String expectedValue = "Bearer " + token;
-    List<String> authorizations = metadata.get("Authorization");
+    String expectedValue = AuthHttpConstants.BEARER + " " + token;
+    List<String> authorizations = metadata.get(AuthHttpConstants.AUTHORIZATION);
     assertNotNull("Authorization headers not found", authorizations);
     boolean found = false;
     for (String authorization : authorizations) {

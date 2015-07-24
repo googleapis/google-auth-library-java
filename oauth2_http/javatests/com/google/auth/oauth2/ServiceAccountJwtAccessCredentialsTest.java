@@ -41,6 +41,7 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.auth.Credentials;
+import com.google.auth.http.AuthHttpConstants;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -154,7 +155,7 @@ public class ServiceAccountJwtAccessCredentialsTest {
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
     assertNotNull(metadata);    
-    List<String> authorizations = metadata.get("Authorization");
+    List<String> authorizations = metadata.get(AuthHttpConstants.AUTHORIZATION);
     assertNotNull("Authorization headers not found", authorizations);
     String assertion = null;
     for (String authorization : authorizations) {
@@ -180,7 +181,7 @@ public class ServiceAccountJwtAccessCredentialsTest {
     Map<String, List<String>> metadata = credentials.getRequestMetadata();
 
     assertNotNull(metadata);    
-    List<String> authorizations = metadata.get("Authorization");
+    List<String> authorizations = metadata.get(AuthHttpConstants.AUTHORIZATION);
     assertNotNull("Authorization headers not found", authorizations);
     String assertion = null;
     for (String authorization : authorizations) {

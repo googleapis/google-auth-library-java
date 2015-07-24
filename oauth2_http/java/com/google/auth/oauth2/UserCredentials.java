@@ -94,7 +94,7 @@ public class UserCredentials extends GoogleCredentials {
   }
 
   /**
-   * Refreshes the OAuth2 acces token by getting a new access token from the refresh token
+   * Refreshes the OAuth2 access token by getting a new access token from the refresh token
    */
   @Override
   public AccessToken refreshAccessToken() throws IOException {
