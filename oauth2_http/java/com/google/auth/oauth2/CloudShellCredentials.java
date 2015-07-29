@@ -35,9 +35,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.Integer;
 import java.net.Socket;
-import java.util.Collection;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -81,7 +79,7 @@ public class CloudShellCredentials extends GoogleCredentials {
     
       BufferedReader input =
           new BufferedReader(new InputStreamReader(socket.getInputStream()));
-      String ignoredSizeLine = input.readLine();
+      input.readLine(); // Skip over the first line
       JsonArray messageArray = Json.createReader(input).readArray();    
       token =  new AccessToken(messageArray.getString(ACCESS_TOKEN_INDEX), null);
     } finally {

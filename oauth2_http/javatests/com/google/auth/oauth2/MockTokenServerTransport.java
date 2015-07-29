@@ -1,6 +1,5 @@
 package com.google.auth.oauth2;
 
-import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.LowLevelHttpRequest;
 import com.google.api.client.http.LowLevelHttpResponse;
 import com.google.api.client.json.GenericJson;
@@ -16,8 +15,6 @@ import com.google.auth.TestUtils;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-
-import java.lang.UnsupportedOperationException;
 
 /**
  * Mock transport to simulate providing Google OAuth2 access tokens

@@ -50,6 +50,7 @@ public class HttpCredentialsAdapter
    *
    * @param request HTTP request
    */
+  @Override
   public void initialize(HttpRequest request) throws IOException {
     request.setUnsuccessfulResponseHandler(this);
 
@@ -82,6 +83,7 @@ public class HttpCredentialsAdapter
    * exception and return {@code false}.
    * </p>
    */
+  @Override
   public boolean handleResponse(HttpRequest request, HttpResponse response, boolean supportsRetry) {
     boolean refreshToken = false;
     boolean bearer = false;
@@ -115,11 +117,5 @@ public class HttpCredentialsAdapter
       }
     }
     return false;
-  }
-
-  // Get header value, casting to List<String>.
-  @SuppressWarnings("unchecked")
-  private List<String> getHeadersValue(HttpHeaders headers, String headerName) {
-    return (List<String>) headers.get(headerName);
   }
 }
