@@ -53,7 +53,6 @@ public class HttpCredentialsAdapterTest {
   public void initialize_populatesOAuth2Credentials_handle401() throws IOException {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
-    final String expectedAuthorization = InternalAuthHttpConstants.BEARER_PREFIX + accessToken;
 
     final MockTokenServerTransport tokenServerTransport = new MockTokenServerTransport();
     tokenServerTransport.addClient(CLIENT_ID, CLIENT_SECRET);

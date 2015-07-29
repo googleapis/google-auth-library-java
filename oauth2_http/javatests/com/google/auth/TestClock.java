@@ -9,6 +9,7 @@ public class TestClock implements Clock {
 
   long currentTime;
 
+  @Override
   public long currentTimeMillis() {
     return currentTime;
   }
