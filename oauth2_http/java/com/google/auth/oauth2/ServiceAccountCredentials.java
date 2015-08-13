@@ -20,6 +20,7 @@ import com.google.api.client.util.Preconditions;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.net.URI;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -46,7 +47,7 @@ public class ServiceAccountCredentials extends GoogleCredentials {
   private final PrivateKey privateKey;
   private final String privateKeyId;
   private final HttpTransport transport;
-  private final GenericUrl tokenServerUrl;
+  private final URI tokenServerUri;
   private final Collection<String> scopes;
 
   /**
@@ -62,7 +63,7 @@ public class ServiceAccountCredentials extends GoogleCredentials {
   public ServiceAccountCredentials(
       String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId,
       Collection<String> scopes) {
-    this(clientId, clientEmail, privateKey, privateKeyId, scopes, null);
+    this(clientId, clientEmail, privateKey, privateKeyId, scopes, null, null);
   }
 
   /**
@@ -75,10 +76,11 @@ public class ServiceAccountCredentials extends GoogleCredentials {
    * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
    *        which results in a credential that must have createScoped called before use.
    * @param transport HTTP object used to get access tokens.
+   * @param tokenServerUri URI of the end point that provides tokens.
    */
   public ServiceAccountCredentials(
       String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId,
-      Collection<String> scopes, HttpTransport transport) {
+      Collection<String> scopes, HttpTransport transport, URI tokenServerUri) {
     this.clientId = clientId;
     this.clientEmail = Preconditions.checkNotNull(clientEmail);
     this.privateKey = Preconditions.checkNotNull(privateKey);
@@ -86,7 +88,7 @@ public class ServiceAccountCredentials extends GoogleCredentials {
     this.scopes = (scopes == null) ? Collections.<String>emptyList()
         : Collections.unmodifiableCollection(scopes);
     this.transport = (transport == null) ? OAuth2Utils.HTTP_TRANSPORT : transport;
-    this.tokenServerUrl = new GenericUrl(OAuth2Utils.TOKEN_SERVER_URL);
+    this.tokenServerUri = (tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : tokenServerUri;
   }
 
   /**
@@ -110,7 +112,7 @@ public class ServiceAccountCredentials extends GoogleCredentials {
           + "expecting  'client_id', 'client_email', 'private_key' and 'private_key_id'.");
     }
 
-    return fromPkcs8(clientId, clientEmail, privateKeyPkcs8, privateKeyId, null, transport);
+    return fromPkcs8(clientId, clientEmail, privateKeyPkcs8, privateKeyId, null, transport, null);
   }
 
   /**
@@ -126,7 +128,7 @@ public class ServiceAccountCredentials extends GoogleCredentials {
   public static ServiceAccountCredentials fromPkcs8(
       String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId,
       Collection<String> scopes) throws IOException {
-    return fromPkcs8(clientId, clientEmail, privateKeyPkcs8, privateKeyId, scopes, null);
+    return fromPkcs8(clientId, clientEmail, privateKeyPkcs8, privateKeyId, scopes, null, null);
   }
 
   /**
@@ -140,13 +142,14 @@ public class ServiceAccountCredentials extends GoogleCredentials {
    * @param scopes Scope strings for the APIs to be called. May be null or an emptt collection,
    *        which results in a credential that must have createScoped called before use.
    * @param transport HTTP object used to get access tokens.
+   * @param tokenServerUri URI of the end point that provides tokens.
    */
   public static ServiceAccountCredentials fromPkcs8(
       String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId,
-      Collection<String> scopes, HttpTransport transport) throws IOException {
+      Collection<String> scopes, HttpTransport transport, URI tokenServerUri) throws IOException {
     PrivateKey privateKey = privateKeyFromPkcs8(privateKeyPkcs8);
     return new ServiceAccountCredentials(
-        clientId, clientEmail, privateKey, privateKeyId, scopes, transport);
+        clientId, clientEmail, privateKey, privateKeyId, scopes, transport, tokenServerUri);
   }
 
   /**
@@ -192,7 +195,7 @@ public class ServiceAccountCredentials extends GoogleCredentials {
     JsonWebToken.Payload payload = new JsonWebToken.Payload();
     long currentTime = clock.currentTimeMillis();
     payload.setIssuer(clientEmail);
-    payload.setAudience(OAuth2Utils.TOKEN_SERVER_URL);
+    payload.setAudience(OAuth2Utils.TOKEN_SERVER_URI.toString());
     payload.setIssuedAtTimeSeconds(currentTime / 1000);
     payload.setExpirationTimeSeconds(currentTime / 1000 + 3600);
     payload.setSubject(null);
@@ -214,7 +217,7 @@ public class ServiceAccountCredentials extends GoogleCredentials {
     UrlEncodedContent content = new UrlEncodedContent(tokenRequest);
 
     HttpRequestFactory requestFactory = transport.createRequestFactory();
-    HttpRequest request = requestFactory.buildPostRequest(tokenServerUrl, content);
+    HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
     request.setParser(new JsonObjectParser(jsonFactory));
 
     HttpResponse response;
@@ -251,7 +254,7 @@ public class ServiceAccountCredentials extends GoogleCredentials {
   @Override
   public GoogleCredentials createScoped(Collection<String> newScopes) {
     return new ServiceAccountCredentials(
-        clientId, clientEmail, privateKey, privateKeyId, newScopes, transport);
+        clientId, clientEmail, privateKey, privateKeyId, newScopes, transport, tokenServerUri);
   }
 
   public final String getClientId() {

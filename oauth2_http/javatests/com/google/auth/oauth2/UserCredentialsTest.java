@@ -103,6 +103,21 @@ public class UserCredentialsTest {
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
+  @Test
+  public void getRequestMetadata_customTokenServer_hasAccessToken() throws IOException {
+    final URI TOKEN_SERVER = URI.create("https://foo.com/bar");
+    MockTokenServerTransport transport = new MockTokenServerTransport();
+    transport.addClient(CLIENT_ID, CLIENT_SECRET);
+    transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
+    transport.setTokenServerUri(TOKEN_SERVER);
+    OAuth2Credentials userCredentials = new UserCredentials(
+        CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, null, transport, TOKEN_SERVER);
+
+    Map<String, List<String>> metadata = userCredentials.getRequestMetadata(CALL_URI);
+
+    TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+  }
+
   static GenericJson writeUserJson(String clientId, String clientSecret, String refreshToken) {
     GenericJson json = new GenericJson();
     if (clientId != null) {
