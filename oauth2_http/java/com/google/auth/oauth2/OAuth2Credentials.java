@@ -22,6 +22,7 @@ public class OAuth2Credentials extends Credentials {
   private final Object lock = new Object();
   private Map<String, List<String>> requestMetadata;
   private AccessToken temporaryAccess;
+  private List<CredentialsChangedListener> changeListeners;
 
   // Allow clock to be overridden by test code
   Clock clock = Clock.SYSTEM;
@@ -94,6 +95,11 @@ public class OAuth2Credentials extends Credentials {
       requestMetadata = null;
       temporaryAccess = null;
       temporaryAccess = refreshAccessToken();
+      if (changeListeners != null) {
+        for (CredentialsChangedListener listener : changeListeners) {
+          listener.onChanged(this);
+        }
+      }
     }
   }
 
@@ -112,6 +118,23 @@ public class OAuth2Credentials extends Credentials {
   }
 
   /**
+   * Adds a listener that is notified when the Credentials data changes.
+   *
+   * <p>This is called when token content changes, such as when the access token is refreshed. This
+   * is typically used by code caching the access token.
+   *
+   * @param listener The listener to be added.
+   */
+  public final void addChangeListener(CredentialsChangedListener listener) {
+    synchronized(lock) {
+      if (changeListeners == null) {
+        changeListeners = new ArrayList<CredentialsChangedListener>();
+      }
+      changeListeners.add(listener);
+    }
+  }
+
+  /**
    * Return the remaining time the current access token will be valid, or null if there is no
    * token or expiry information.
    */
@@ -126,5 +149,25 @@ public class OAuth2Credentials extends Credentials {
       }
       return (expirationTime.getTime() - clock.currentTimeMillis());
     }
+  }
+
+  /**
+   * Listener for changes to credentials.
+   *
+   * <p>This is called when token content changes, such as when the access token is refreshed. This
+   * is typically used by code caching the access token.
+   */
+  public interface CredentialsChangedListener {
+
+    /**
+     * Notifies that the credentials have changed.
+     *
+     * <p>This is called when token content changes, such as when the access token is refreshed.
+     * This is typically used by code caching the access token.
+     *
+     * @param credentials The updated credentials instance
+     * @throws IOException My be thrown by listeners if saving credentials fails.
+     */
+    void onChanged(OAuth2Credentials credentials) throws IOException;
   }
 }

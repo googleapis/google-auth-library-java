@@ -53,6 +53,39 @@ public class OAuth2CredentialsTest {
   }
 
   @Test
+  public void addaddChangeListener_notifiesOnRefresh() throws IOException {
+    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransport transport = new MockTokenServerTransport();
+    transport.addClient(CLIENT_ID, CLIENT_SECRET);
+    transport.addRefreshToken(REFRESH_TOKEN, accessToken1);
+    OAuth2Credentials userCredentials = new UserCredentials(
+        CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, null, transport, null);
+    // Use a fixed clock so tokens don't expire
+    userCredentials.clock = new TestClock();
+    TestChangeListener listener = new TestChangeListener();
+    userCredentials.addChangeListener(listener);
+    Map<String, List<String>> metadata;
+    assertEquals(0, listener.callCount);
+
+    // Get a first token
+    metadata = userCredentials.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, accessToken1);
+    assertEquals(accessToken1, listener.accessToken.getTokenValue());
+    assertEquals(1, listener.callCount);
+
+    // Change server to a different token and refresh
+    transport.addRefreshToken(REFRESH_TOKEN, accessToken2);
+    // Refresh to force getting next token
+    userCredentials.refresh();
+
+    metadata = userCredentials.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, accessToken2);
+    assertEquals(accessToken2, listener.accessToken.getTokenValue());
+    assertEquals(2, listener.callCount);
+  }
+
+  @Test
   public void getRequestMetadata_cachesExpiringToken() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
@@ -123,5 +156,16 @@ public class OAuth2CredentialsTest {
   public void refresh_temporaryToken_throws() throws IOException {
     OAuth2Credentials credentials = new OAuth2Credentials(new AccessToken(ACCESS_TOKEN, null));
     credentials.refresh();
+  }
+
+  private static class TestChangeListener implements OAuth2Credentials.CredentialsChangedListener {
+
+    public AccessToken accessToken = null;
+    public int callCount = 0;
+    @Override
+    public void onChanged(OAuth2Credentials credentials) throws IOException {
+      accessToken = credentials.getAccessToken();
+      callCount++;
+    }
   }
 }
