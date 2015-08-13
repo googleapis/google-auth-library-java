@@ -128,4 +128,8 @@ public class UserCredentials extends GoogleCredentials {
     AccessToken access = new AccessToken(accessToken, new Date(expiresAtMilliseconds));
     return access;
   }
+
+  public final String getRefreshToken() {
+    return refreshToken;
+  }
 }

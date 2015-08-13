@@ -1,5 +1,6 @@
 package com.google.auth.oauth2;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
@@ -35,6 +36,13 @@ public class UserCredentialsTest {
   @Test(expected = IllegalStateException.class)
   public void constructor_accessAndRefreshTokenNull_throws() {
     new UserCredentials(CLIENT_ID, CLIENT_SECRET, null, null);
+  }
+
+  @Test
+  public void constructor_storesRefreshToken() {
+    UserCredentials credentials =
+        new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, null);
+    assertEquals(REFRESH_TOKEN, credentials.getRefreshToken());
   }
 
   @Test
