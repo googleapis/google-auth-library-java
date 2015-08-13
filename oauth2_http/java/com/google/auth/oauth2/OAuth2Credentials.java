@@ -15,7 +15,7 @@ import java.util.Map;
 /**
  * Base type for Credentials using OAuth2.
  */
-public abstract class OAuth2Credentials extends Credentials {
+public class OAuth2Credentials extends Credentials {
 
   private static final int MINIMUM_TOKEN_MILLISECONDS = 60000;
 
@@ -29,7 +29,7 @@ public abstract class OAuth2Credentials extends Credentials {
   /**
    * Default constructor.
    **/
-  public OAuth2Credentials() {
+  protected OAuth2Credentials() {
     this(null);
   }
 
@@ -55,6 +55,10 @@ public abstract class OAuth2Credentials extends Credentials {
   @Override
   public boolean hasRequestMetadataOnly() {
     return true;
+  }
+
+  public final AccessToken getAccessToken() {
+    return temporaryAccess;
   }
 
   /**
@@ -94,9 +98,18 @@ public abstract class OAuth2Credentials extends Credentials {
   }
 
   /**
-   * Abstract method to refresh the access token according to the specific type of credentials.
+   * Method to refresh the access token according to the specific type of credentials.
+   *
+   * Throws IllegalStateException if not overridden since direct use of OAuth2Credentials is only
+   * for temporary or non-refreshing access tokens.
+   *
+   * @throws IOException from derived implementations
    */
-  public abstract AccessToken refreshAccessToken() throws IOException;
+  public AccessToken refreshAccessToken() throws IOException {
+    throw new IllegalStateException("OAuth2Credentials instance does not support refreshing the"
+        + " access token. An instance with a new access token should be used, or a derived type"
+        + " that supports refreshing should be used.");
+  }
 
   /**
    * Return the remaining time the current access token will be valid, or null if there is no

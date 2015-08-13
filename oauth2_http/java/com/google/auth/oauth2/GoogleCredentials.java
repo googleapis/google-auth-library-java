@@ -13,7 +13,7 @@ import java.util.Collection;
 /**
  * Base type for credentials for authorizing calls to Google APIs using OAuth2.
  */
-public abstract class GoogleCredentials extends OAuth2Credentials {
+public class GoogleCredentials extends OAuth2Credentials {
 
   static final String USER_FILE_TYPE = "authorized_user";
   static final String SERVICE_ACCOUNT_FILE_TYPE = "service_account";
@@ -108,7 +108,7 @@ public abstract class GoogleCredentials extends OAuth2Credentials {
   /**
    * Default constructor.
    **/
-  public GoogleCredentials() {
+  protected GoogleCredentials() {
     this(null);
   }
 

@@ -24,7 +24,15 @@ public class OAuth2CredentialsTest {
   private static final String CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
   private static final String CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
   private static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
+  private static final String ACCESS_TOKEN = "aashpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
+
+  @Test
+  public void constructor_storesAccessToken() {
+    OAuth2Credentials credentials = new OAuth2Credentials(new AccessToken(ACCESS_TOKEN, null));
+
+    assertEquals(credentials.getAccessToken().getTokenValue(), ACCESS_TOKEN);
+  }
 
   @Test
   public void getAuthenticationType_returnsOAuth2() {
@@ -75,6 +83,15 @@ public class OAuth2CredentialsTest {
   }
 
   @Test
+  public void getRequestMetadata_temporaryToken_hasToken() throws IOException {
+    OAuth2Credentials credentials = new OAuth2Credentials(new AccessToken(ACCESS_TOKEN, null));
+
+    // Verify getting the first token
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+  }
+
+  @Test
   public void refresh_refreshesToken() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
@@ -100,5 +117,11 @@ public class OAuth2CredentialsTest {
     userCredentials.refresh();
     metadata = userCredentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, accessToken2);
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void refresh_temporaryToken_throws() throws IOException {
+    OAuth2Credentials credentials = new OAuth2Credentials(new AccessToken(ACCESS_TOKEN, null));
+    credentials.refresh();
   }
 }
