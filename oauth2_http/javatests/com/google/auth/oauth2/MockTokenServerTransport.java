@@ -13,6 +13,7 @@ import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.auth.TestUtils;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,8 +27,17 @@ public class MockTokenServerTransport extends MockHttpTransport {
   Map<String, String> clients = new HashMap<String, String>();
   Map<String, String> refreshTokens = new HashMap<String, String>();
   Map<String, String> serviceAccounts = new HashMap<String, String>();
+  URI tokenServerUri = OAuth2Utils.TOKEN_SERVER_URI;
 
   public MockTokenServerTransport()  {
+  }
+
+  public URI getTokenServerUri() {
+    return tokenServerUri;
+  }
+
+  public void setTokenServerUri(URI tokenServerUri) {
+    this.tokenServerUri = tokenServerUri;
   }
 
   public void addClient(String clientId, String clientSecret) {
@@ -48,7 +58,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
 
   @Override
   public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
-    if (url.equals(OAuth2Utils.TOKEN_SERVER_URL)) {
+    if (url.equals(tokenServerUri.toString())) {
       MockLowLevelHttpRequest request = new MockLowLevelHttpRequest(url) {
         @Override
         public LowLevelHttpResponse execute() throws IOException {

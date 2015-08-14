@@ -74,8 +74,8 @@ public class ServiceAccountCredentialsTest {
   public void createdScoped_enablesAccessTokens() throws IOException {
     MockTokenServerTransport transport = new MockTokenServerTransport();
     transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
-    GoogleCredentials credentials = ServiceAccountCredentials.fromPkcs8(
-        SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, null, transport);
+    GoogleCredentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, null, transport, null);
 
     try {
       credentials.getRequestMetadata(CALL_URI);
@@ -123,8 +123,22 @@ public class ServiceAccountCredentialsTest {
   public void getRequestMetadata_hasAccessToken() throws IOException {
     MockTokenServerTransport transport = new MockTokenServerTransport();
     transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
-    OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(
-        SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, transport);
+    OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, transport, null);
+
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+
+    TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+  }
+
+  @Test
+  public void getRequestMetadata_customTokenServer_hasAccessToken() throws IOException {
+    final URI TOKEN_SERVER = URI.create("https://foo.com/bar");
+    MockTokenServerTransport transport = new MockTokenServerTransport();
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    transport.setTokenServerUri(TOKEN_SERVER);
+    OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, transport, TOKEN_SERVER);
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 

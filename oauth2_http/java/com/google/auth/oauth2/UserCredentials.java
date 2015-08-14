@@ -11,6 +11,7 @@ import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Preconditions;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Date;
 import java.util.Map;
 
@@ -26,7 +27,7 @@ public class UserCredentials extends GoogleCredentials {
   private final String clientSecret;
   private final String refreshToken;
   private final HttpTransport transport;
-  private final GenericUrl tokenServerUrl;
+  private final URI tokenServerUri;
 
   /**
    * Constructor with minimum information and default behavior.
@@ -61,17 +62,16 @@ public class UserCredentials extends GoogleCredentials {
    * @param refreshToken A refresh token resulting from a OAuth2 consent flow.
    * @param accessToken Initial or temporary access token.
    * @param transport HTTP object used to get access tokens.
-   * @param tokenServerUrl URL of the end point that provides tokens.
+   * @param tokenServerUri URI of the end point that provides tokens.
    */
   public UserCredentials(String clientId, String clientSecret, String refreshToken,
-      AccessToken accessToken, HttpTransport transport, GenericUrl tokenServerUrl) {
+      AccessToken accessToken, HttpTransport transport, URI tokenServerUri) {
     super(accessToken);
     this.clientId = Preconditions.checkNotNull(clientId);
     this.clientSecret = Preconditions.checkNotNull(clientSecret);
     this.refreshToken = refreshToken;
     this.transport = (transport == null) ? OAuth2Utils.HTTP_TRANSPORT : transport;
-    this.tokenServerUrl = (tokenServerUrl == null)
-        ? new GenericUrl(OAuth2Utils.TOKEN_SERVER_URL) : tokenServerUrl;
+    this.tokenServerUri = (tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : tokenServerUri;
     Preconditions.checkState(accessToken != null || refreshToken != null,
         "Either accessToken or refreshToken must not be null");
   }
@@ -116,7 +116,7 @@ public class UserCredentials extends GoogleCredentials {
 
     HttpRequestFactory requestFactory = transport.createRequestFactory();
     HttpRequest request =
-        requestFactory.buildPostRequest(tokenServerUrl, content);
+        requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
     request.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
     HttpResponse response = request.execute();
     GenericData responseData = response.parseAs(GenericData.class);

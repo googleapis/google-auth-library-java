@@ -10,6 +10,8 @@ import com.google.auth.http.AuthHttpConstants;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.Collection;
 
@@ -17,7 +19,7 @@ import java.util.Collection;
  * Internal utilities for the com.google.auth.oauth2 namespace.
  */
 class OAuth2Utils {
-  static final String TOKEN_SERVER_URL = "https://accounts.google.com/o/oauth2/token";
+  static final URI TOKEN_SERVER_URI = URI.create("https://accounts.google.com/o/oauth2/token");
 
   static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 
