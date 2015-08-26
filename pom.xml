@@ -33,6 +33,7 @@
   <modules>
     <module>credentials</module>
     <module>oauth2_http</module>
+    <module>servlet</module>
     <module>appengine</module>
   </modules>
 
@@ -49,6 +50,7 @@
     <project.junit.version>4.8.2</project.junit.version>
     <project.guava.version>13.0</project.guava.version>
     <project.appengine.version>1.9.21</project.appengine.version>
+    <project.servlet.version>2.5</project.servlet.version>
   </properties>
 
   <dependencyManagement>
@@ -65,6 +67,11 @@
       </dependency>
       <dependency>
         <groupId>com.google.auth</groupId>
+        <artifactId>google-auth-library-servlet</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.auth</groupId>
         <artifactId>google-auth-library-cloudshell</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -77,6 +84,11 @@
         <groupId>com.google.http-client</groupId>
         <artifactId>google-http-client-jackson2</artifactId>
         <version>${project.google.http.version}</version>
+      </dependency>
+      <dependency>
+          <groupId>javax.servlet</groupId>
+          <artifactId>servlet-api</artifactId>
+          <version>${project.servlet.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.appengine</groupId>
