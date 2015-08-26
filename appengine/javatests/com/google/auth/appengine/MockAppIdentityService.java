@@ -60,14 +60,17 @@ public class MockAppIdentityService implements AppIdentityService {
     accessTokenText = text;
   }
 
+  @Override
   public SigningResult signForApp(byte[] signBlob) {
     return null;
   }
 
+  @Override
   public Collection<PublicCertificate> getPublicCertificatesForApp() {
     return null;
   }
 
+  @Override
   public GetAccessTokenResult getAccessToken(Iterable<String> scopes) {
     getAccessTokenCallCount++;
     int scopeCount = 0;
@@ -82,18 +85,22 @@ public class MockAppIdentityService implements AppIdentityService {
     return new GetAccessTokenResult(accessTokenText, null);
   }
 
+  @Override
   public GetAccessTokenResult getAccessTokenUncached(Iterable<String> scopes) {
     return null;
   }
 
+  @Override
   public String getServiceAccountName() {
     return null;
   }
 
+  @Override
   public ParsedAppId parseFullAppId(String fullAppId) {
     return null;
   }
 
+  @Override
   public String getDefaultGcsBucketName() {
     return null;
   }
