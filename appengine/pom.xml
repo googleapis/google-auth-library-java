@@ -48,6 +48,10 @@
       <artifactId>google-auth-library-oauth2-http</artifactId>
     </dependency>
     <dependency>
+      <groupId>com.google.auth</groupId>
+      <artifactId>google-auth-library-servlet</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.google.http-client</groupId>
       <artifactId>google-http-client</artifactId>
     </dependency>
