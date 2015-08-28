@@ -11,7 +11,6 @@ import com.google.auth.http.AuthHttpConstants;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.Collection;
 
