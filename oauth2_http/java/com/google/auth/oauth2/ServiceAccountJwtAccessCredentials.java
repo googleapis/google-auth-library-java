@@ -54,6 +54,8 @@ import java.util.Map;
  */
 public class ServiceAccountJwtAccessCredentials extends Credentials {
 
+  static final String JWT_ACCESS_PREFIX = OAuth2Utils.BEARER_PREFIX;
+
   private final String clientId;
   private final String clientEmail;
   private final PrivateKey privateKey;
@@ -187,7 +189,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials {
       }
     }
     String assertion = getJwtAccess(uri);
-    String authorizationHeader = OAuth2Utils.BEARER_PREFIX + "#" + assertion;
+    String authorizationHeader = JWT_ACCESS_PREFIX + assertion;
     List<String> newAuthorizationHeaders = Collections.singletonList(authorizationHeader);
     Map<String, List<String>> newRequestMetadata =
         Collections.singletonMap(AuthHttpConstants.AUTHORIZATION, newAuthorizationHeaders);
@@ -210,11 +212,12 @@ public class ServiceAccountJwtAccessCredentials extends Credentials {
 
     JsonWebToken.Payload payload = new JsonWebToken.Payload();
     long currentTime = clock.currentTimeMillis();
+    // Both copies of the email are required
     payload.setIssuer(clientEmail);
+    payload.setSubject(clientEmail);
     payload.setAudience(uri.toString());
     payload.setIssuedAtTimeSeconds(currentTime / 1000);
     payload.setExpirationTimeSeconds(currentTime / 1000 + 3600);
-    payload.setSubject(null);
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
 
