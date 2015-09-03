@@ -12,6 +12,7 @@ import com.google.common.collect.Lists;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.util.HashMap;
@@ -23,7 +24,7 @@ import java.util.Map;
  */
 public class TestUtils {
 
-  private static final String UTF_8 = "UTF-8";
+  public static final String UTF_8 = "UTF-8";
 
   private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
 
@@ -48,6 +49,14 @@ public class TestUtils {
     String text = json.toPrettyString();
     InputStream stream = new ByteArrayInputStream(text.getBytes(UTF_8));
     return stream;
+  }
+
+  public static InputStream stringToInputStream(String text) {
+    try {
+      return new ByteArrayInputStream(text.getBytes(TestUtils.UTF_8));
+    } catch (UnsupportedEncodingException e) {
+      throw new RuntimeException("Unexpected encoding exception", e);
+    }
   }
 
   public static Map<String, String> parseQuery(String query) throws IOException {

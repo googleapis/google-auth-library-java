@@ -22,6 +22,11 @@
   <build>
     <sourceDirectory>java</sourceDirectory>
     <testSourceDirectory>javatests</testSourceDirectory>
+    <testResources>
+      <testResource>
+        <directory>testresources</directory>
+      </testResource>
+    </testResources>
     <plugins>
       <plugin>
         <groupId>org.sonatype.plugins</groupId>
@@ -52,13 +57,12 @@
       <artifactId>google-http-client-jackson2</artifactId>
     </dependency>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava-jdk5</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
