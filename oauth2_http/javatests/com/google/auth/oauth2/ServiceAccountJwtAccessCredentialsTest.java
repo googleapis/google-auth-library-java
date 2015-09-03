@@ -77,6 +77,8 @@ public class ServiceAccountJwtAccessCredentialsTest {
       + "gidhycxS86dxpEljnOMCw8CKoUBd5I880IUahEiUltk7OLJYS/Ts1wbn3kPOVX3wyJs8WBDtBkFrDHW2ezth2QJ"
       + "ADj3e1YhMVdjJW5jqwlD/VNddGjgzyunmiZg0uOXsHXbytYmsA545S8KRQFaJKFXYYFo2kOjqOiC1T2cAzMDjCQ"
       + "==\n-----END PRIVATE KEY-----\n";
+  private static final String JWT_ACCESS_PREFIX =
+      ServiceAccountJwtAccessCredentials.JWT_ACCESS_PREFIX;
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
   private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
   
@@ -147,54 +149,24 @@ public class ServiceAccountJwtAccessCredentialsTest {
 
   @Test
   public void getRequestMetadata_hasJwtAccess() throws IOException {
-    final String headerPrefix = "Bearer #";
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     Credentials credentials = new ServiceAccountJwtAccessCredentials(
         SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID);
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
-    assertNotNull(metadata);    
-    List<String> authorizations = metadata.get(AuthHttpConstants.AUTHORIZATION);
-    assertNotNull("Authorization headers not found", authorizations);
-    String assertion = null;
-    for (String authorization : authorizations) {
-      if (authorization.startsWith(headerPrefix)) {
-        assertNull("Multiple bearer assertions found", assertion);
-        assertion = authorization.substring(headerPrefix.length());
-      }
-    }
-    assertNotNull("Bearer assertion not found", assertion);    
-    JsonWebSignature signature = JsonWebSignature.parse(JSON_FACTORY, assertion);
-    assertEquals(SA_CLIENT_EMAIL, signature.getPayload().getIssuer());
-    assertEquals(CALL_URI.toString(), signature.getPayload().getAudience());
-    assertEquals(SA_PRIVATE_KEY_ID, signature.getHeader().getKeyId());
+    verifyJwtAccess(metadata, SA_CLIENT_EMAIL, CALL_URI, SA_PRIVATE_KEY_ID);
   }
 
   @Test
   public void getRequestMetadata_defaultURI_hasJwtAccess() throws IOException {
-    final String headerPrefix = "Bearer #";
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     Credentials credentials = new ServiceAccountJwtAccessCredentials(
         SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, CALL_URI);
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata();
 
-    assertNotNull(metadata);    
-    List<String> authorizations = metadata.get(AuthHttpConstants.AUTHORIZATION);
-    assertNotNull("Authorization headers not found", authorizations);
-    String assertion = null;
-    for (String authorization : authorizations) {
-      if (authorization.startsWith(headerPrefix)) {
-        assertNull("Multiple bearer assertions found", assertion);
-        assertion = authorization.substring(headerPrefix.length());
-      }
-    }
-    assertNotNull("Bearer assertion not found", assertion);    
-    JsonWebSignature signature = JsonWebSignature.parse(JSON_FACTORY, assertion);
-    assertEquals(SA_CLIENT_EMAIL, signature.getPayload().getIssuer());
-    assertEquals(CALL_URI.toString(), signature.getPayload().getAudience());
-    assertEquals(SA_PRIVATE_KEY_ID, signature.getHeader().getKeyId());
+    verifyJwtAccess(metadata, SA_CLIENT_EMAIL, CALL_URI, SA_PRIVATE_KEY_ID);
   }
 
   @Test
@@ -208,5 +180,25 @@ public class ServiceAccountJwtAccessCredentialsTest {
       fail("exception expected");
     } catch (IOException e) {
     }
+  }
+
+  private void verifyJwtAccess(Map<String, List<String>> metadata, String expectedEmail,
+      URI expectedAudience, String expectedKeyId) throws IOException {
+    assertNotNull(metadata);
+    List<String> authorizations = metadata.get(AuthHttpConstants.AUTHORIZATION);
+    assertNotNull("Authorization headers not found", authorizations);
+    String assertion = null;
+    for (String authorization : authorizations) {
+      if (authorization.startsWith(JWT_ACCESS_PREFIX)) {
+        assertNull("Multiple bearer assertions found", assertion);
+        assertion = authorization.substring(JWT_ACCESS_PREFIX.length());
+      }
+    }
+    assertNotNull("Bearer assertion not found", assertion);
+    JsonWebSignature signature = JsonWebSignature.parse(JSON_FACTORY, assertion);
+    assertEquals(expectedEmail, signature.getPayload().getIssuer());
+    assertEquals(expectedEmail, signature.getPayload().getSubject());
+    assertEquals(expectedAudience.toString(), signature.getPayload().getAudience());
+    assertEquals(expectedKeyId, signature.getHeader().getKeyId());
   }
 }
