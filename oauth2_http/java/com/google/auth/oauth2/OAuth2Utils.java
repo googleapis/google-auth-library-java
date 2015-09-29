@@ -3,22 +3,29 @@ package com.google.auth.oauth2;
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.client.util.GenericData;
 import com.google.auth.http.AuthHttpConstants;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * Internal utilities for the com.google.auth.oauth2 namespace.
  */
 class OAuth2Utils {
   static final URI TOKEN_SERVER_URI = URI.create("https://accounts.google.com/o/oauth2/token");
+  static final URI TOKEN_REVOKE_URI = URI.create("https://accounts.google.com/o/oauth2/revoke");
+  static final URI USER_AUTH_URI = URI.create("https://accounts.google.com/o/oauth2/auth");
 
   static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 
@@ -57,9 +64,20 @@ class OAuth2Utils {
   }
 
   /**
+   * Parses the specified JSON text.
+   */
+  static GenericJson parseJson(String json) throws IOException {
+    JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
+    InputStream stateStream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
+    GenericJson stateJson = parser.parseAndClose(
+        stateStream, StandardCharsets.UTF_8, GenericJson.class);
+    return stateJson;
+  }
+
+  /**
    * Return the specified string from JSON or throw a helpful error message.
    */
-  static String validateString(GenericData map, String key, String errorPrefix)
+  static String validateString(Map<String, Object> map, String key, String errorPrefix)
       throws IOException {
     Object value = map.get(key);
     if (value == null) {
@@ -73,9 +91,26 @@ class OAuth2Utils {
   }
 
   /**
+   * Return the specified optional string from JSON or throw a helpful error message.
+   */
+  static String validateOptionalString(Map<String, Object> map, String key, String errorPrefix)
+      throws IOException {
+    Object value = map.get(key);
+    if (value == null) {
+      return null;
+    }
+    if (!(value instanceof String)) {
+      throw new IOException(
+          String.format(VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "string", key));
+    }
+    return (String) value;
+  }
+
+  /**
    * Return the specified integer from JSON or throw a helpful error message.
    */
-  static int validateInt32(GenericData map, String key, String errorPrefix) throws IOException {
+  static int validateInt32(Map<String, Object> map, String key, String errorPrefix)
+      throws IOException {
     Object value = map.get(key);
     if (value == null) {
       throw new IOException(String.format(VALUE_NOT_FOUND_MESSAGE, errorPrefix, key));
@@ -89,6 +124,26 @@ class OAuth2Utils {
           String.format(VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "integer", key));
     }
     return (Integer) value;
+  }
+
+  /**
+   * Return the specified long from JSON or throw a helpful error message.
+   */
+  static long validateLong(Map<String, Object> map, String key, String errorPrefix)
+      throws IOException {
+    Object value = map.get(key);
+    if (value == null) {
+      throw new IOException(String.format(VALUE_NOT_FOUND_MESSAGE, errorPrefix, key));
+    }
+    if (value instanceof BigDecimal) {
+      BigDecimal bigDecimalValue = (BigDecimal) value;
+      return bigDecimalValue.longValueExact();
+    }
+    if (!(value instanceof Long)) {
+      throw new IOException(
+          String.format(VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "long", key));
+    }
+    return (Long) value;
   }
 
   private OAuth2Utils() {

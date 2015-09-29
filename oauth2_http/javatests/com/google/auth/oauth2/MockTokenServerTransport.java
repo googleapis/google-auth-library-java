@@ -14,6 +14,7 @@ import com.google.auth.TestUtils;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,6 +28,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
   Map<String, String> clients = new HashMap<String, String>();
   Map<String, String> refreshTokens = new HashMap<String, String>();
   Map<String, String> serviceAccounts = new HashMap<String, String>();
+  Map<String, String> codes = new HashMap<String, String>();
   URI tokenServerUri = OAuth2Utils.TOKEN_SERVER_URI;
 
   public MockTokenServerTransport()  {
@@ -38,6 +40,11 @@ public class MockTokenServerTransport extends MockHttpTransport {
 
   public void setTokenServerUri(URI tokenServerUri) {
     this.tokenServerUri = tokenServerUri;
+  }
+
+  public void addAuthorizationCode(String code, String refreshToken, String accessToken) {
+    codes.put(code, refreshToken);
+    refreshTokens.put(refreshToken, accessToken);
   }
 
   public void addClient(String clientId, String clientSecret) {
@@ -58,13 +65,17 @@ public class MockTokenServerTransport extends MockHttpTransport {
 
   @Override
   public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
-    if (url.equals(tokenServerUri.toString())) {
+    int questionMarkPos = url.indexOf('?');
+    final String urlWithoutQUery = (questionMarkPos > 0) ? url.substring(0, questionMarkPos) : url;
+    final String query = (questionMarkPos > 0) ? url.substring(questionMarkPos + 1) : "";
+    if (urlWithoutQUery.equals(tokenServerUri.toString())) {
       MockLowLevelHttpRequest request = new MockLowLevelHttpRequest(url) {
         @Override
         public LowLevelHttpResponse execute() throws IOException {
           String content = this.getContentAsString();
           Map<String, String> query = TestUtils.parseQuery(content);
           String accessToken = null;
+          String refreshToken = null;
 
           String foundId = query.get("client_id");
           if (foundId != null) {
@@ -76,11 +87,20 @@ public class MockTokenServerTransport extends MockHttpTransport {
             if (foundSecret == null || !foundSecret.equals(expectedSecret)) {
               throw new IOException("Client secret not found.");
             }
-            String foundRefresh = query.get("refresh_token");
-            if (!refreshTokens.containsKey(foundRefresh)) {
+            String grantType = query.get("grant_type");
+            if (grantType != null && grantType.equals("authorization_code")) {
+              String foundCode = query.get("code");
+              if (!codes.containsKey(foundCode)) {
+                throw new IOException("Authorization code not found");
+              }
+              refreshToken = codes.get(foundCode);
+            } else {
+              refreshToken = query.get("refresh_token");
+            }
+            if (!refreshTokens.containsKey(refreshToken)) {
               throw new IOException("Refresh Token not found.");
             }
-            accessToken = refreshTokens.get(foundRefresh);
+            accessToken = refreshTokens.get(refreshToken);
           } else if (query.containsKey("grant_type")) {
             String grantType = query.get("grant_type");
             if (!EXPECTED_GRANT_TYPE.equals(grantType)) {
@@ -107,12 +127,33 @@ public class MockTokenServerTransport extends MockHttpTransport {
           refreshContents.put("access_token", accessToken);
           refreshContents.put("expires_in", 3600);
           refreshContents.put("token_type", "Bearer");
+          if (refreshToken != null) {
+            refreshContents.put("refresh_token", refreshToken);
+          }
           String refreshText  = refreshContents.toPrettyString();
 
           MockLowLevelHttpResponse response = new MockLowLevelHttpResponse()
             .setContentType(Json.MEDIA_TYPE)
             .setContent(refreshText);
           return response;
+        }
+      };
+      return request;
+    } else if (urlWithoutQUery.equals(OAuth2Utils.TOKEN_REVOKE_URI.toString())) {
+      MockLowLevelHttpRequest request = new MockLowLevelHttpRequest(url) {
+        @Override
+        public LowLevelHttpResponse execute() throws IOException {
+          Map<String, String> parameters = TestUtils.parseQuery(query);
+          String token = parameters.get("token");
+          if (token == null) {
+            throw new IOException("Token to revoke not found.");
+          }
+          // Token could be access token or refresh token so remove keys and values
+          refreshTokens.values().removeAll(Collections.singleton(token));
+          refreshTokens.remove(token);
+          MockLowLevelHttpResponse response = new MockLowLevelHttpResponse()
+          .setContentType(Json.MEDIA_TYPE);
+        return response;
         }
       };
       return request;
