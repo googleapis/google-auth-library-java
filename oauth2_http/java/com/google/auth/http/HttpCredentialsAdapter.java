@@ -58,7 +58,10 @@ public class HttpCredentialsAdapter
       return;
     }
     HttpHeaders requestHeaders = request.getHeaders();
-    URI uri = request.getUrl().toURI();
+    URI uri = null;
+    if (request.getUrl() != null) {
+      uri = request.getUrl().toURI();
+    }
     Map<String, List<String>> credentialHeaders = credentials.getRequestMetadata(uri);
     if (credentialHeaders == null) {
       return;

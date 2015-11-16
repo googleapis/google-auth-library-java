@@ -79,4 +79,24 @@ public class HttpCredentialsAdapterTest {
     assertEquals(200, response.getStatusCode());
     assertEquals(MockTokenCheckingTransport.SUCCESS_CONTENT, response.parseAsString());
   }
+
+  @Test
+  public void initialize_noURI() throws IOException {
+    final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    final String expectedAuthorization = InternalAuthHttpConstants.BEARER_PREFIX + accessToken;
+    MockTokenServerTransport transport = new MockTokenServerTransport();
+    transport.addClient(CLIENT_ID, CLIENT_SECRET);
+    transport.addRefreshToken(REFRESH_TOKEN, accessToken);
+    OAuth2Credentials credentials = new UserCredentials(
+        CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, null, transport, null);
+    HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
+    HttpRequestFactory requestFactory = transport.createRequestFactory();
+    HttpRequest request = requestFactory.buildGetRequest(null);
+
+    adapter.initialize(request);
+
+    HttpHeaders requestHeaders = request.getHeaders();
+    String authorizationHeader = requestHeaders.getAuthorization();
+    assertEquals(authorizationHeader, expectedAuthorization);
+  }
 }
