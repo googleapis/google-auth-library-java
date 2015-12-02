@@ -129,6 +129,29 @@ public class UserCredentials extends GoogleCredentials {
     return access;
   }
 
+  /**
+   * Returns client ID of the credential from the console.
+   *
+   * @return client ID
+   */
+  public final String getClientId() {
+    return clientId;
+  }
+
+  /**
+   * Returns client secret of the credential from the console.
+   *
+   * @return client secret
+   */
+  public final String getClientSecret() {
+    return clientSecret;
+  }
+
+  /**
+   * Returns the refresh token resulting from a OAuth2 consent flow.
+   *
+   * @return refresh token
+   */
   public final String getRefreshToken() {
     return refreshToken;
   }
