@@ -32,13 +32,14 @@
 package com.google.auth.oauth2;
 
 import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.JsonParser;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.Collection;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -83,9 +84,9 @@ public class CloudShellCredentials extends GoogleCredentials {
       BufferedReader input =
           new BufferedReader(new InputStreamReader(socket.getInputStream()));
       input.readLine(); // Skip over the first line
-      Collection<String> messageArray = jsonFactory.createJsonParser(input)
-        .parseArray(LinkedList.class, String.class);
-      String accessToken = ((List<String>) messageArray).get(ACCESS_TOKEN_INDEX);
+      JsonParser parser = jsonFactory.createJsonParser(input);
+      List<Object> messageArray = (List<Object>) parser.parseArray(ArrayList.class, Object.class);
+      String accessToken = messageArray.get(ACCESS_TOKEN_INDEX).toString();
       token =  new AccessToken(accessToken, null);
     } finally {
       socket.close();
