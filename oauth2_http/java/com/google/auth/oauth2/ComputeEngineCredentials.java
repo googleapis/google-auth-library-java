@@ -54,7 +54,7 @@ public class ComputeEngineCredentials extends GoogleCredentials {
     HttpRequest request = transport.createRequestFactory().buildGetRequest(tokenUrl);
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     request.setParser(parser);
-    request.getHeaders().set("X-Google-Metadata-Request", true);
+    request.getHeaders().set("Metadata-Flavor", "Google");
     request.setThrowExceptionOnExecuteError(false);
     HttpResponse response = null;
     try {
