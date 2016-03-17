@@ -26,6 +26,9 @@ public abstract class Credentials {
    * populated in headers or other context. The operation can block and fail to complete and may do
    * things such as refreshing access tokens.
    *
+   * <p>The convention for handling binary data is for the key in the returned map to end with
+   * {@code "-bin"} and for the corresponding values to be base64 encoded.
+   *
    * @throws IOException if there was an error getting up-to-date access.
    */
   public Map<String, List<String>> getRequestMetadata() throws IOException {
@@ -38,6 +41,9 @@ public abstract class Credentials {
    * <p>This should be called by the transport layer on each request, and the data should be
    * populated in headers or other context. The operation can block and fail to complete and may do
    * things such as refreshing access tokens.
+   *
+   * <p>The convention for handling binary data is for the key in the returned map to end with
+   * {@code "-bin"} and for the corresponding values to be base64 encoded.
    *
    * @param uri URI of the entry point for the request.
    * @throws IOException if there was an error getting up-to-date access.
