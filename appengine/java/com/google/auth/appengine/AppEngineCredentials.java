@@ -35,10 +35,12 @@ import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.collect.ImmutableList;
 import com.google.appengine.api.appidentity.AppIdentityService;
+import com.google.appengine.api.appidentity.AppIdentityService.GetAccessTokenResult;
 import com.google.appengine.api.appidentity.AppIdentityServiceFactory;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Date;
 
 /**
  * OAuth2 credentials representing the built-in service account for Google App ENgine.
@@ -72,8 +74,10 @@ public class AppEngineCredentials extends GoogleCredentials {
     if (createScopedRequired()) {
       throw new IOException("AppEngineCredentials requires createScoped call before use.");
     }
-    String accessToken = appIdentityService.getAccessToken(scopes).getAccessToken();
-    return new AccessToken(accessToken, null);    
+    GetAccessTokenResult accessTokenResponse = appIdentityService.getAccessToken(scopes);
+    String accessToken = accessTokenResponse.getAccessToken();
+    Date expirationTime = accessTokenResponse.getExpirationTime();
+    return new AccessToken(accessToken, expirationTime);
   }
   
   @Override
