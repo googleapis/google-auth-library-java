@@ -36,6 +36,7 @@ import com.google.appengine.api.appidentity.AppIdentityServiceFailureException;
 import com.google.appengine.api.appidentity.PublicCertificate;
 
 import java.util.Collection;
+import java.util.Date;
 
 /**
  * Mock implementation of AppIdentityService interface for testing.
@@ -44,6 +45,7 @@ public class MockAppIdentityService implements AppIdentityService {
 
   private int getAccessTokenCallCount = 0;
   private String accessTokenText = null;
+  private Date expiration = null;
 
   public MockAppIdentityService() {
   }
@@ -58,6 +60,14 @@ public class MockAppIdentityService implements AppIdentityService {
 
   public void setAccessTokenText(String text) {
     accessTokenText = text;
+  }
+
+  public Date getExpiration() {
+    return expiration;
+  }
+
+  public void setExpiration(Date expiration) {
+    this.expiration = expiration;
   }
 
   @Override
@@ -82,7 +92,7 @@ public class MockAppIdentityService implements AppIdentityService {
     if (scopeCount == 0) {
       throw new AppIdentityServiceFailureException("No scopes specified.");
     }
-    return new GetAccessTokenResult(accessTokenText, null);
+    return new GetAccessTokenResult(accessTokenText, expiration);
   }
 
   @Override

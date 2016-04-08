@@ -38,6 +38,7 @@ import static org.junit.Assert.fail;
 import static org.junit.Assert.assertNotSame;
 
 import com.google.auth.Credentials;
+import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 
 import org.junit.Test;
@@ -49,6 +50,7 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -74,6 +76,19 @@ public class AppEngineCredentialsTest {
 
     assertEquals(1, appIdentity.getGetAccessTokenCallCount());
     assertContainsBearerToken(metadata, expectedAccessToken);
+  }
+
+  @Test
+  public void refreshAccessToken_sameAs() throws IOException {
+    final String expectedAccessToken = "ExpectedAccessToken";
+
+    MockAppIdentityService appIdentity = new MockAppIdentityService();
+    appIdentity.setAccessTokenText(expectedAccessToken);
+    appIdentity.setExpiration(new Date(System.currentTimeMillis() + 60L * 60L * 100L));
+    AppEngineCredentials credentials = new AppEngineCredentials(SCOPES, appIdentity);
+    AccessToken accessToken = credentials.refreshAccessToken();
+    assertEquals(appIdentity.getAccessTokenText(), accessToken.getTokenValue());
+    assertEquals(appIdentity.getExpiration(), accessToken.getExpirationTime());
   }
 
   @Test  
