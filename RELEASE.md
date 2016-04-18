@@ -65,7 +65,8 @@ Deploy to Sonatype
 * Verify the publishment [here](https://oss.sonatype.org/#nexus-search;quick~com.google.auth)
   * If there is a problem, undo by ```mvn nexus-staging:drop```
 * ```mvn nexus-staging:release -DperformRelease=true```
-* Update all ```pom.xml``` files to the new snapshot version
+* Update all ```pom.xml``` files to the new snapshot version (unless it's a bugfix release, we
+update from 0.4.0 to 0.5.0-SNAPSHOT)
 
 Publish the release
 -------------------
