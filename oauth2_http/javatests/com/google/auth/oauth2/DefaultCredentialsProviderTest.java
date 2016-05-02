@@ -290,6 +290,21 @@ public class DefaultCredentialsProviderTest {
   }
 
   @Test
+  public void getDefaultCredentials_wellKnownFileEnv_providesToken() throws IOException {
+    File cloudConfigDir = getTempDirectory();
+    InputStream userStream =
+        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+    File wellKnownFile =
+        new File(cloudConfigDir, DefaultCredentialsProvider.WELL_KNOWN_CREDENTIALS_FILE);
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setEnv("CLOUDSDK_CONFIG", cloudConfigDir.getAbsolutePath());
+    testProvider.addFile(wellKnownFile.getAbsolutePath(), userStream);
+
+    testUserProvidesToken(
+        testProvider, USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+  }
+
+  @Test
   public void getDefaultCredentials_wellKnownFileNonWindows_providesToken() throws IOException {
     File homeDir = getTempDirectory();
     File configDir = new File(homeDir, ".config");
