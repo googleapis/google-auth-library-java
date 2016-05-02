@@ -155,10 +155,7 @@ class DefaultCredentialsProvider {
   private final File getWellKnownCredentialsFile() {
     File cloudConfigPath = null;
     String os = getProperty("os.name", "").toLowerCase(Locale.US);
-    String envPath = getEnv("CLOUDSDK_CONFIG");
-    if (envPath != null) {
-      cloudConfigPath = new File(envPath);
-    } else if (os.indexOf("windows") >= 0) {
+    if (os.indexOf("windows") >= 0) {
       File appDataPath = new File(getEnv("APPDATA"));
       cloudConfigPath = new File(appDataPath, CLOUDSDK_CONFIG_DIRECTORY);
     } else {
