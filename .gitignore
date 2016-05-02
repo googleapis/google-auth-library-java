@@ -1,8 +1,12 @@
 # Maven
-target
+target/
 
 # Eclipse
 .classpath
 .project
 .settings
 .gitignore
+
+# Intellij
+*.iml
+.idea/
