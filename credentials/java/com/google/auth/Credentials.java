@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
 
 /**
  * Represents an abstract authorized identity instance.
@@ -33,6 +34,34 @@ public abstract class Credentials {
    */
   public Map<String, List<String>> getRequestMetadata() throws IOException {
     return getRequestMetadata(null);
+  }
+
+  /**
+   * Get the current request metadata without blocking.
+   *
+   * <p>This should be called by the transport layer on each request, and the data should be
+   * populated in headers or other context. The implementation can either call the callback inline,
+   * or from the given executor asynchronously. Either way it should <strong>never block</strong> in
+   * this method.
+   *
+   * <p>The default implementation will just call {@link #getRequestMetadata(URI)} then the callback
+   * from the given executor.
+   *
+   * <p>The convention for handling binary data is for the key in the returned map to end with
+   * {@code "-bin"} and for the corresponding values to be base64 encoded.
+   */
+  public void getRequestMetadata(final URI uri, Executor executor, final Callback callback) {
+    executor.execute(new Runnable() {
+        @Override
+        public void run() {
+          try {
+            Map<String, List<String>> result = getRequestMetadata(uri);
+            callback.onSuccess(result);
+          } catch (IOException e) {
+            callback.onFailure(e);
+          }
+        }
+      });
   }
 
   /**
@@ -77,4 +106,20 @@ public abstract class Credentials {
    * @throws IOException if there was an error getting up-to-date access.
    */
   public abstract void refresh() throws IOException;
+
+  /**
+   * The callback that receives the result of the asynchronous {@link #getRequestMetadata(URI,
+   * Executor, Callback)}. Exactly one method should be called.
+   */
+  public interface Callback {
+    /**
+     * Called when metadata is successfully produced.
+     */
+    void onSuccess(Map<String, List<String>> metadata);
+
+    /**
+     * Called when metadata generation failed.
+     */
+    void onFailure(IOException exception);
+  }
 }
