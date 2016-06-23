@@ -50,16 +50,19 @@ public abstract class Credentials {
    * <p>The convention for handling binary data is for the key in the returned map to end with
    * {@code "-bin"} and for the corresponding values to be base64 encoded.
    */
-  public void getRequestMetadata(final URI uri, Executor executor, final Callback callback) {
+  public void getRequestMetadata(final URI uri, Executor executor,
+      final RequestMetadataCallback callback) {
     executor.execute(new Runnable() {
         @Override
         public void run() {
+          Map<String, List<String>> result;
           try {
-            Map<String, List<String>> result = getRequestMetadata(uri);
-            callback.onSuccess(result);
+            result = getRequestMetadata(uri);
           } catch (IOException e) {
             callback.onFailure(e);
+            return;
           }
+          callback.onSuccess(result);
         }
       });
   }
@@ -106,20 +109,4 @@ public abstract class Credentials {
    * @throws IOException if there was an error getting up-to-date access.
    */
   public abstract void refresh() throws IOException;
-
-  /**
-   * The callback that receives the result of the asynchronous {@link #getRequestMetadata(URI,
-   * Executor, Callback)}. Exactly one method should be called.
-   */
-  public interface Callback {
-    /**
-     * Called when metadata is successfully produced.
-     */
-    void onSuccess(Map<String, List<String>> metadata);
-
-    /**
-     * Called when metadata generation failed.
-     */
-    void onFailure(IOException exception);
-  }
 }
