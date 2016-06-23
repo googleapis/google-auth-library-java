@@ -58,7 +58,7 @@ public abstract class Credentials {
           Map<String, List<String>> result;
           try {
             result = getRequestMetadata(uri);
-          } catch (IOException e) {
+          } catch (Throwable e) {
             callback.onFailure(e);
             return;
           }

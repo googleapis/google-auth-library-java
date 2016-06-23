@@ -18,5 +18,5 @@ public interface RequestMetadataCallback {
   /**
    * Called when metadata generation failed.
    */
-  void onFailure(IOException exception);
+  void onFailure(Throwable exception);
 }
