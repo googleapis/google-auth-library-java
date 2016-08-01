@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
 
 /**
  * Represents an abstract authorized identity instance.
@@ -33,6 +34,37 @@ public abstract class Credentials {
    */
   public Map<String, List<String>> getRequestMetadata() throws IOException {
     return getRequestMetadata(null);
+  }
+
+  /**
+   * Get the current request metadata without blocking.
+   *
+   * <p>This should be called by the transport layer on each request, and the data should be
+   * populated in headers or other context. The implementation can either call the callback inline
+   * or asynchronously. Either way it should <strong>never block</strong> in this method. The
+   * executor is provided for tasks that may block.
+   *
+   * <p>The default implementation will just call {@link #getRequestMetadata(URI)} then the callback
+   * from the given executor.
+   *
+   * <p>The convention for handling binary data is for the key in the returned map to end with
+   * {@code "-bin"} and for the corresponding values to be base64 encoded.
+   */
+  public void getRequestMetadata(final URI uri, Executor executor,
+      final RequestMetadataCallback callback) {
+    executor.execute(new Runnable() {
+        @Override
+        public void run() {
+          Map<String, List<String>> result;
+          try {
+            result = getRequestMetadata(uri);
+          } catch (Throwable e) {
+            callback.onFailure(e);
+            return;
+          }
+          callback.onSuccess(result);
+        }
+      });
   }
 
   /**
