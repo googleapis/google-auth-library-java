@@ -37,6 +37,7 @@ import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.client.util.Clock;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.Credentials;
+import com.google.auth.RequestMetadataCallback;
 import com.google.auth.http.AuthHttpConstants;
 
 import java.io.IOException;
@@ -46,6 +47,7 @@ import java.security.PrivateKey;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
 
 /**
  * Service Account credentials for calling Google APIs using a JWT directly for access.
@@ -173,6 +175,21 @@ public class ServiceAccountJwtAccessCredentials extends Credentials {
   @Override
   public boolean hasRequestMetadataOnly() {
     return true;
+  }
+
+  @Override
+  public void getRequestMetadata(final URI uri, Executor executor,
+      final RequestMetadataCallback callback) {
+    Map<String, List<String>> metadata;
+    try {
+      // It doesn't use network. Only some CPU work on par with TLS handshake. So it's preferrable
+      // to do it in the current thread, which is likely to be the network thread.
+      metadata = getRequestMetadata(uri);
+    } catch (Throwable e) {
+      callback.onFailure(e);
+      return;
+    }
+    callback.onSuccess(metadata);
   }
 
   /**
