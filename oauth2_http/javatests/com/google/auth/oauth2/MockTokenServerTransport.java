@@ -25,11 +25,13 @@ public class MockTokenServerTransport extends MockHttpTransport {
 
   static final String EXPECTED_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
   static final JsonFactory JSON_FACTORY = new JacksonFactory();
-  Map<String, String> clients = new HashMap<String, String>();
-  Map<String, String> refreshTokens = new HashMap<String, String>();
-  Map<String, String> serviceAccounts = new HashMap<String, String>();
-  Map<String, String> codes = new HashMap<String, String>();
+  int buildRequestCount;
+  final Map<String, String> clients = new HashMap<String, String>();
+  final Map<String, String> refreshTokens = new HashMap<String, String>();
+  final Map<String, String> serviceAccounts = new HashMap<String, String>();
+  final Map<String, String> codes = new HashMap<String, String>();
   URI tokenServerUri = OAuth2Utils.TOKEN_SERVER_URI;
+  private IOException error;
 
   public MockTokenServerTransport()  {
   }
@@ -63,8 +65,16 @@ public class MockTokenServerTransport extends MockHttpTransport {
     return refreshTokens.get(refreshToken);
   }
 
+  public void setError(IOException error) {
+    this.error = error;
+  }
+
   @Override
   public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+    buildRequestCount++;
+    if (error != null) {
+      throw error;
+    }
     int questionMarkPos = url.indexOf('?');
     final String urlWithoutQUery = (questionMarkPos > 0) ? url.substring(0, questionMarkPos) : url;
     final String query = (questionMarkPos > 0) ? url.substring(questionMarkPos + 1) : "";

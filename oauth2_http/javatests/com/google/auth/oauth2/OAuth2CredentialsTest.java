@@ -1,7 +1,11 @@
 package com.google.auth.oauth2;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import com.google.auth.TestClock;
 import com.google.auth.TestUtils;
@@ -86,7 +90,7 @@ public class OAuth2CredentialsTest {
   }
 
   @Test
-  public void getRequestMetadata_cachesExpiringToken() throws IOException {
+  public void getRequestMetadata_blocking_cachesExpiringToken() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransport transport = new MockTokenServerTransport();
@@ -98,11 +102,17 @@ public class OAuth2CredentialsTest {
     credentials.clock = clock;
 
     // Verify getting the first token
+    assertEquals(0, transport.buildRequestCount);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, accessToken1);
+    assertEquals(1, transport.buildRequestCount--);
 
     // Change server to a different token
     transport.addRefreshToken(REFRESH_TOKEN, accessToken2);
+
+    // Make transport fail when used next time.
+    IOException error = new IOException("error");
+    transport.setError(error);
 
     // Advance 5 minutes and verify original token
     clock.addToCurrentTime(5 * 60 * 1000);
@@ -111,8 +121,116 @@ public class OAuth2CredentialsTest {
 
     // Advance 60 minutes and verify revised token
     clock.addToCurrentTime(60 * 60 * 1000);
+    assertEquals(0, transport.buildRequestCount);
+
+    try {
+      credentials.getRequestMetadata(CALL_URI);
+      fail("Should throw");
+    } catch (IOException e) {
+      assertSame(error, e);
+      assertEquals(1, transport.buildRequestCount--);
+    }
+
+    // Reset the error and try again
+    transport.setError(null);
     metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, accessToken2);
+    assertEquals(1, transport.buildRequestCount--);
+  }
+
+  @Test
+  public void getRequestMetadata_async() throws IOException {
+    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransport transport = new MockTokenServerTransport();
+    transport.addClient(CLIENT_ID, CLIENT_SECRET);
+    transport.addRefreshToken(REFRESH_TOKEN, accessToken1);
+    TestClock clock = new TestClock();
+    OAuth2Credentials credentials = new UserCredentials(
+        CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, null, transport, null);
+    credentials.clock = clock;
+
+    MockExecutor executor = new MockExecutor();
+    MockRequestMetadataCallback callback = new MockRequestMetadataCallback();
+    // Verify getting the first token, which uses the transport and calls the callback in the
+    // executor.
+    credentials.getRequestMetadata(CALL_URI, executor, callback);
+    assertEquals(0, transport.buildRequestCount);
+    assertNull(callback.metadata);
+
+    assertEquals(1, executor.runTasksExhaustively());
+    assertNotNull(callback.metadata);
+    TestUtils.assertContainsBearerToken(callback.metadata, accessToken1);
+    assertEquals(1, transport.buildRequestCount--);
+
+    // Change server to a different token
+    transport.addRefreshToken(REFRESH_TOKEN, accessToken2);
+
+    // Make transport fail when used next time.
+    IOException error = new IOException("error");
+    transport.setError(error);
+
+    // Advance 5 minutes and verify original token. Callback is called inline.
+    callback.reset();
+    clock.addToCurrentTime(5 * 60 * 1000);
+    assertNull(callback.metadata);
+    credentials.getRequestMetadata(CALL_URI, executor, callback);
+    assertNotNull(callback.metadata);
+    assertEquals(0, executor.numTasks());
+    TestUtils.assertContainsBearerToken(callback.metadata, accessToken1);
+
+    // Advance 60 minutes and verify revised token, which uses the executor.
+    callback.reset();
+    clock.addToCurrentTime(60 * 60 * 1000);
+    credentials.getRequestMetadata(CALL_URI, executor, callback);
+    assertEquals(0, transport.buildRequestCount);
+    assertNull(callback.exception);
+
+    assertEquals(1, executor.runTasksExhaustively());
+    assertSame(error, callback.exception);
+    assertEquals(1, transport.buildRequestCount--);
+
+    // Reset the error and try again
+    transport.setError(null);
+    callback.reset();
+    credentials.getRequestMetadata(CALL_URI, executor, callback);
+    assertEquals(0, transport.buildRequestCount);
+    assertNull(callback.metadata);
+
+    assertEquals(1, executor.runTasksExhaustively());
+    assertNotNull(callback.metadata);
+    TestUtils.assertContainsBearerToken(callback.metadata, accessToken2);
+    assertEquals(1, transport.buildRequestCount--);
+  }
+
+  @Test
+  public void getRequestMetadata_async_refreshRace() throws IOException {
+    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransport transport = new MockTokenServerTransport();
+    transport.addClient(CLIENT_ID, CLIENT_SECRET);
+    transport.addRefreshToken(REFRESH_TOKEN, accessToken1);
+    TestClock clock = new TestClock();
+    OAuth2Credentials credentials = new UserCredentials(
+        CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, null, transport, null);
+    credentials.clock = clock;
+
+    MockExecutor executor = new MockExecutor();
+    MockRequestMetadataCallback callback = new MockRequestMetadataCallback();
+    // Getting the first token, which uses the transport and calls the callback in the executor.
+    credentials.getRequestMetadata(CALL_URI, executor, callback);
+    assertEquals(0, transport.buildRequestCount);
+    assertNull(callback.metadata);
+
+    // Asynchronous task is scheduled, but beaten by another blocking get call.
+    assertEquals(1, executor.numTasks());
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+    assertEquals(1, transport.buildRequestCount--);
+    TestUtils.assertContainsBearerToken(metadata, accessToken1);
+
+    // When the task is run, the cached data is used.
+    assertEquals(1, executor.runTasksExhaustively());
+    assertEquals(0, transport.buildRequestCount);
+    assertSame(metadata, callback.metadata);
   }
 
   @Test
@@ -139,17 +257,20 @@ public class OAuth2CredentialsTest {
     // Get a first token
     Map<String, List<String>> metadata = userCredentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, accessToken1);
+    assertEquals(1, transport.buildRequestCount--);
 
     // Change server to a different token
     transport.addRefreshToken(REFRESH_TOKEN, accessToken2);
 
     // Confirm token being cached
     TestUtils.assertContainsBearerToken(metadata, accessToken1);
+    assertEquals(0, transport.buildRequestCount);
 
     // Refresh to force getting next token
     userCredentials.refresh();
     metadata = userCredentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, accessToken2);
+    assertEquals(1, transport.buildRequestCount--);
   }
 
   @Test(expected = IllegalStateException.class)
