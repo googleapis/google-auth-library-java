@@ -180,16 +180,9 @@ public class ServiceAccountJwtAccessCredentials extends Credentials {
   @Override
   public void getRequestMetadata(final URI uri, Executor executor,
       final RequestMetadataCallback callback) {
-    Map<String, List<String>> metadata;
-    try {
-      // It doesn't use network. Only some CPU work on par with TLS handshake. So it's preferrable
-      // to do it in the current thread, which is likely to be the network thread.
-      metadata = getRequestMetadata(uri);
-    } catch (Throwable e) {
-      callback.onFailure(e);
-      return;
-    }
-    callback.onSuccess(metadata);
+    // It doesn't use network. Only some CPU work on par with TLS handshake. So it's preferrable
+    // to do it in the current thread, which is likely to be the network thread.
+    blockingGetToCallback(uri, callback);
   }
 
   /**
