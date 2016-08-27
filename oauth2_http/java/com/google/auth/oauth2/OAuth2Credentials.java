@@ -2,15 +2,18 @@ package com.google.auth.oauth2;
 
 import com.google.api.client.util.Clock;
 import com.google.auth.Credentials;
+import com.google.auth.RequestMetadataCallback;
 import com.google.auth.http.AuthHttpConstants;
+import com.google.common.base.Preconditions;
 
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
 
 /**
  * Base type for Credentials using OAuth2.
@@ -40,7 +43,9 @@ public class OAuth2Credentials extends Credentials {
    * @param accessToken Initial or temporary access token.
    **/
   public OAuth2Credentials(AccessToken accessToken) {
-    this.temporaryAccess = accessToken;
+    if (accessToken != null) {
+      useAccessToken(accessToken);
+    }
   }
 
   @Override
@@ -62,6 +67,21 @@ public class OAuth2Credentials extends Credentials {
     return temporaryAccess;
   }
 
+  @Override
+  public void getRequestMetadata(final URI uri, Executor executor,
+      final RequestMetadataCallback callback) {
+    Map<String, List<String>> metadata;
+    synchronized(lock) {
+      if (shouldRefresh()) {
+        // The base class implementation will do a blocking get in the executor.
+        super.getRequestMetadata(uri, executor, callback);
+        return;
+      }
+      metadata = Preconditions.checkNotNull(requestMetadata, "cached requestMetadata");
+    }
+    callback.onSuccess(metadata);
+  }
+
   /**
    * Provide the request metadata by ensuring there is a current access token and providing it
    * as an authorization bearer token.
@@ -69,38 +89,43 @@ public class OAuth2Credentials extends Credentials {
   @Override
   public Map<String, List<String>> getRequestMetadata(URI uri) throws IOException {
     synchronized(lock) {
-      Long expiresIn = getExpiresInMilliseconds();
-      if (temporaryAccess == null || expiresIn != null && expiresIn <= MINIMUM_TOKEN_MILLISECONDS) {
+      if (shouldRefresh()) {
         refresh();
       }
-      assert(temporaryAccess != null);
-      if (requestMetadata == null) {
-        Map<String, List<String>> newRequestMetadata = new HashMap<String, List<String>>();
-        List<String> newAuthorizationHeaders = new ArrayList<String>();
-        String authorizationHeader = OAuth2Utils.BEARER_PREFIX + temporaryAccess.getTokenValue();
-        newAuthorizationHeaders.add(authorizationHeader);
-        newRequestMetadata.put(AuthHttpConstants.AUTHORIZATION, newAuthorizationHeaders);
-        requestMetadata = newRequestMetadata;
-      }
-      return requestMetadata;
+      return Preconditions.checkNotNull(requestMetadata, "requestMetadata");
     }
   }
 
   /**
-   * Refresh the token by discarding the cached token and metadata.
+   * Refresh the token by discarding the cached token and metadata and requesting the new ones.
    */
   @Override
   public void refresh() throws IOException {
     synchronized(lock) {
       requestMetadata = null;
       temporaryAccess = null;
-      temporaryAccess = refreshAccessToken();
+      useAccessToken(Preconditions.checkNotNull(refreshAccessToken(), "new access token"));
       if (changeListeners != null) {
         for (CredentialsChangedListener listener : changeListeners) {
           listener.onChanged(this);
         }
       }
     }
+  }
+
+  // Must be called under lock
+  private void useAccessToken(AccessToken token) {
+    this.temporaryAccess = token;
+    this.requestMetadata = Collections.singletonMap(
+        AuthHttpConstants.AUTHORIZATION,
+        Collections.singletonList(OAuth2Utils.BEARER_PREFIX + token.getTokenValue()));
+  }
+
+  // Must be called under lock
+  // requestMetadata will never be null if false is returned.
+  private boolean shouldRefresh() {
+    Long expiresIn = getExpiresInMilliseconds();
+    return requestMetadata == null || expiresIn != null && expiresIn <= MINIMUM_TOKEN_MILLISECONDS;
   }
 
   /**
@@ -136,19 +161,17 @@ public class OAuth2Credentials extends Credentials {
 
   /**
    * Return the remaining time the current access token will be valid, or null if there is no
-   * token or expiry information.
+   * token or expiry information. Must be called under lock.
    */
-  private final Long getExpiresInMilliseconds() {
-    synchronized(lock) {
-      if (temporaryAccess == null) {
-        return null;
-      }
-      Date expirationTime = temporaryAccess.getExpirationTime();
-      if (expirationTime == null) {
-        return null;
-      }
-      return (expirationTime.getTime() - clock.currentTimeMillis());
+  private Long getExpiresInMilliseconds() {
+    if (temporaryAccess == null) {
+      return null;
     }
+    Date expirationTime = temporaryAccess.getExpirationTime();
+    if (expirationTime == null) {
+      return null;
+    }
+    return (expirationTime.getTime() - clock.currentTimeMillis());
   }
 
   /**

@@ -148,7 +148,7 @@ public class ServiceAccountJwtAccessCredentialsTest {
   }
 
   @Test
-  public void getRequestMetadata_hasJwtAccess() throws IOException {
+  public void getRequestMetadata_blocking_hasJwtAccess() throws IOException {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     Credentials credentials = new ServiceAccountJwtAccessCredentials(
         SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID);
@@ -159,7 +159,7 @@ public class ServiceAccountJwtAccessCredentialsTest {
   }
 
   @Test
-  public void getRequestMetadata_defaultURI_hasJwtAccess() throws IOException {
+  public void getRequestMetadata_blocking_defaultURI_hasJwtAccess() throws IOException {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     Credentials credentials = new ServiceAccountJwtAccessCredentials(
         SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, CALL_URI);
@@ -170,7 +170,7 @@ public class ServiceAccountJwtAccessCredentialsTest {
   }
 
   @Test
-  public void getRequestMetadata_noURI_throws() throws IOException {
+  public void getRequestMetadata_blocking_noURI_throws() throws IOException {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     Credentials credentials = new ServiceAccountJwtAccessCredentials(
         SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID);
@@ -180,6 +180,47 @@ public class ServiceAccountJwtAccessCredentialsTest {
       fail("exception expected");
     } catch (IOException e) {
     }
+  }
+
+  @Test
+  public void getRequestMetadata_async_hasJwtAccess() throws IOException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    Credentials credentials = new ServiceAccountJwtAccessCredentials(
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID);
+    MockExecutor executor = new MockExecutor();
+    MockRequestMetadataCallback callback = new MockRequestMetadataCallback();
+
+    credentials.getRequestMetadata(CALL_URI, executor, callback);
+    assertEquals(0, executor.numTasks());
+    assertNotNull(callback.metadata);
+    verifyJwtAccess(callback.metadata, SA_CLIENT_EMAIL, CALL_URI, SA_PRIVATE_KEY_ID);
+  }
+
+  @Test
+  public void getRequestMetadata_async_defaultURI_hasJwtAccess() throws IOException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    Credentials credentials = new ServiceAccountJwtAccessCredentials(
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, CALL_URI);
+    MockExecutor executor = new MockExecutor();
+    MockRequestMetadataCallback callback = new MockRequestMetadataCallback();
+
+    credentials.getRequestMetadata(null, executor, callback);
+    assertEquals(0, executor.numTasks());
+    assertNotNull(callback.metadata);
+    verifyJwtAccess(callback.metadata, SA_CLIENT_EMAIL, CALL_URI, SA_PRIVATE_KEY_ID);
+  }
+
+  @Test
+  public void getRequestMetadata_async_noURI_exception() throws IOException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    Credentials credentials = new ServiceAccountJwtAccessCredentials(
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID);
+    MockExecutor executor = new MockExecutor();
+    MockRequestMetadataCallback callback = new MockRequestMetadataCallback();
+
+    credentials.getRequestMetadata(null, executor, callback);
+    assertEquals(0, executor.numTasks());
+    assertNotNull(callback.exception);
   }
 
   private void verifyJwtAccess(Map<String, List<String>> metadata, String expectedEmail,

@@ -55,20 +55,27 @@ public abstract class Credentials {
     executor.execute(new Runnable() {
         @Override
         public void run() {
-          Map<String, List<String>> result;
-          try {
-            result = getRequestMetadata(uri);
-          } catch (Throwable e) {
-            callback.onFailure(e);
-            return;
-          }
-          callback.onSuccess(result);
+          blockingGetToCallback(uri, callback);
         }
       });
   }
 
   /**
-   * Get the current request metadata, refreshing tokens if required.
+   * Call {@link #getRequestMetadata(URI)} and pass the result or error to the callback.
+   */
+  protected final void blockingGetToCallback(URI uri, RequestMetadataCallback callback) {
+    Map<String, List<String>> result;
+    try {
+      result = getRequestMetadata(uri);
+    } catch (Throwable e) {
+      callback.onFailure(e);
+      return;
+    }
+    callback.onSuccess(result);
+  }
+
+  /**
+   * Get the current request metadata in a blocking manner, refreshing tokens if required.
    *
    * <p>This should be called by the transport layer on each request, and the data should be
    * populated in headers or other context. The operation can block and fail to complete and may do
