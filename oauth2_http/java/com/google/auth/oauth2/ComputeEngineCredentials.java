@@ -1,18 +1,23 @@
 package com.google.auth.oauth2;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
+
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpStatusCodes;
-import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
+import com.google.auth.http.HttpTransportFactory;
+import com.google.common.base.MoreObjects;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.net.UnknownHostException;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * OAuth2 credentials representing the built-in service account for a Google Compute Engine VM.
@@ -26,8 +31,11 @@ public class ComputeEngineCredentials extends GoogleCredentials {
   static final String METADATA_SERVER_URL = "http://metadata.google.internal";
 
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
+  private static final long serialVersionUID = -4113476462526554235L;
 
-  private final HttpTransport transport;
+  private final String transportFactoryClassName;
+
+  private transient HttpTransportFactory transportFactory;
 
   /**
    * Constructor with minimum information and default behavior.
@@ -39,10 +47,13 @@ public class ComputeEngineCredentials extends GoogleCredentials {
   /**
    * Constructor with overridden transport.
    *
-   * @param transport HTTP object used to get access tokens.
+   * @param transportFactory HTTP transport factory, creates the transport used to get access
+   *        tokens.
    */
-  public ComputeEngineCredentials(HttpTransport transport) {
-    this.transport = (transport == null) ? OAuth2Utils.HTTP_TRANSPORT : transport;
+  public ComputeEngineCredentials(HttpTransportFactory transportFactory) {
+    this.transportFactory = firstNonNull(transportFactory,
+        getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
+    this.transportFactoryClassName = this.transportFactory.getClass().getName();
   }
 
   /**
@@ -51,7 +62,8 @@ public class ComputeEngineCredentials extends GoogleCredentials {
   @Override
   public AccessToken refreshAccessToken() throws IOException {
     GenericUrl tokenUrl = new GenericUrl(TOKEN_SERVER_ENCODED_URL);
-    HttpRequest request = transport.createRequestFactory().buildGetRequest(tokenUrl);
+    HttpRequest request =
+        transportFactory.create().createRequestFactory().buildGetRequest(tokenUrl);
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     request.setParser(parser);
     request.getHeaders().set("Metadata-Flavor", "Google");
@@ -95,10 +107,11 @@ public class ComputeEngineCredentials extends GoogleCredentials {
   /**
    * Return whether code is running on Google Compute Engine.
    */
-  static boolean runningOnComputeEngine(HttpTransport transport) {
+  static boolean runningOnComputeEngine(HttpTransportFactory transportFactory) {
     try {
       GenericUrl tokenUrl = new GenericUrl(METADATA_SERVER_URL);
-      HttpRequest request = transport.createRequestFactory().buildGetRequest(tokenUrl);
+      HttpRequest request =
+          transportFactory.create().createRequestFactory().buildGetRequest(tokenUrl);
       HttpResponse response = request.execute();
       // Internet providers can return a generic response to all requests, so it is necessary
       // to check that metadata header is present also.
@@ -107,7 +120,34 @@ public class ComputeEngineCredentials extends GoogleCredentials {
         return true;
       }
     } catch (IOException expected) {
+      // ignore
     }
     return false;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(transportFactoryClassName);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("transportFactoryClassName", transportFactoryClassName)
+        .toString();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof ComputeEngineCredentials)) {
+      return false;
+    }
+    ComputeEngineCredentials other = (ComputeEngineCredentials) obj;
+    return Objects.equals(this.transportFactoryClassName, other.transportFactoryClassName);
+  }
+
+  private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
+    input.defaultReadObject();
+    transportFactory = newInstance(transportFactoryClassName);
   }
 }

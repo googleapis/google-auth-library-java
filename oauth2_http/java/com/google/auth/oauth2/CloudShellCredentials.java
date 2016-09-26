@@ -31,28 +31,30 @@
 
 package com.google.auth.oauth2;
 
-import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonParser;
+import com.google.common.base.MoreObjects;
 
 import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * OAuth2 credentials representing the built-in service account for Google Cloud Shell.
  */
 public class CloudShellCredentials extends GoogleCredentials {
 
+  private static final long serialVersionUID = -2133257318957488451L;
   private final static int ACCESS_TOKEN_INDEX = 2;
   private final static int READ_TIMEOUT_MS = 5000;
 
   /**
    * The Cloud Shell back authorization channel uses serialized
-   * Javascript Protobufers, preceeded by the message lengeth and a
+   * Javascript Protobufers, preceeded by the message length and a
    * new line character. However, the request message has no content,
    * so a token request consists of an empty JsPb, and its 2 character
    * lenth prefix.
@@ -60,11 +62,9 @@ public class CloudShellCredentials extends GoogleCredentials {
   protected final static String GET_AUTH_TOKEN_REQUEST = "2\n[]";
 
   private final int authPort;
-  private final JsonFactory jsonFactory;
-  
+
   public CloudShellCredentials(int authPort) {
     this.authPort = authPort;
-    this.jsonFactory = OAuth2Utils.JSON_FACTORY;
   }
 
   protected int getAuthPort() {
@@ -84,7 +84,7 @@ public class CloudShellCredentials extends GoogleCredentials {
       BufferedReader input =
           new BufferedReader(new InputStreamReader(socket.getInputStream()));
       input.readLine(); // Skip over the first line
-      JsonParser parser = jsonFactory.createJsonParser(input);
+      JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser(input);
       List<Object> messageArray = (List<Object>) parser.parseArray(ArrayList.class, Object.class);
       String accessToken = messageArray.get(ACCESS_TOKEN_INDEX).toString();
       token =  new AccessToken(accessToken, null);
@@ -92,5 +92,24 @@ public class CloudShellCredentials extends GoogleCredentials {
       socket.close();
     }
     return token;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(authPort);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).add("authPort", authPort).toString();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof CloudShellCredentials)) {
+      return false;
+    }
+    CloudShellCredentials other = (CloudShellCredentials) obj;
+    return this.authPort == other.authPort;
   }
 }

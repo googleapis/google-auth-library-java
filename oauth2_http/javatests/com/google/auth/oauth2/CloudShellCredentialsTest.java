@@ -32,17 +32,20 @@
 package com.google.auth.oauth2;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
+import com.google.api.client.util.Clock;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.lang.Runnable;
-import java.lang.Thread;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -50,7 +53,7 @@ import java.net.Socket;
  * Unit tests for CloudShellCredentials
  */
 @RunWith(JUnit4.class)
-public class CloudShellCredentialsTest {
+public class CloudShellCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void refreshAccessToken() throws IOException{
@@ -83,5 +86,52 @@ public class CloudShellCredentialsTest {
     } finally {
       authSocket.close();
     }
+  }
+
+  @Test
+  public void equals_true() throws IOException {
+    GoogleCredentials credentials = new CloudShellCredentials(42);
+    GoogleCredentials otherCredentials = new CloudShellCredentials(42);
+    assertTrue(credentials.equals(otherCredentials));
+    assertTrue(otherCredentials.equals(credentials));
+  }
+
+  @Test
+  public void equals_false() throws IOException {
+    GoogleCredentials credentials = new CloudShellCredentials(42);
+    GoogleCredentials otherCredentials = new CloudShellCredentials(43);
+    assertFalse(credentials.equals(otherCredentials));
+    assertFalse(otherCredentials.equals(credentials));
+  }
+
+  @Test
+  public void toString_containsFields() throws IOException {
+    String expectedToString = String.format("CloudShellCredentials{authPort=%d}", 42);
+    GoogleCredentials credentials = new CloudShellCredentials(42);
+    assertEquals(expectedToString, credentials.toString());
+  }
+
+  @Test
+  public void hashCode_equals() throws IOException {
+    GoogleCredentials credentials = new CloudShellCredentials(42);
+    GoogleCredentials otherCredentials = new CloudShellCredentials(42);
+    assertEquals(credentials.hashCode(), otherCredentials.hashCode());
+  }
+
+  @Test
+  public void hashCode_notEquals() throws IOException {
+    GoogleCredentials credentials = new CloudShellCredentials(42);
+    GoogleCredentials otherCredentials = new CloudShellCredentials(43);
+    assertFalse(credentials.hashCode() == otherCredentials.hashCode());
+  }
+
+  @Test
+  public void serialize() throws IOException, ClassNotFoundException {
+    GoogleCredentials credentials = new CloudShellCredentials(42);
+    GoogleCredentials deserializedCredentials = serializeAndDeserialize(credentials);
+    assertEquals(credentials, deserializedCredentials);
+    assertEquals(credentials.hashCode(), deserializedCredentials.hashCode());
+    assertEquals(credentials.toString(), deserializedCredentials.toString());
+    assertSame(deserializedCredentials.clock, Clock.SYSTEM);
   }
 }

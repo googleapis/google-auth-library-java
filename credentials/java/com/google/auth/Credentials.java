@@ -1,6 +1,7 @@
 package com.google.auth;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +10,9 @@ import java.util.concurrent.Executor;
 /**
  * Represents an abstract authorized identity instance.
  */
-public abstract class Credentials {
+public abstract class Credentials implements Serializable {
+
+  private static final long serialVersionUID = 808575179767517313L;
 
   /**
    * A constant string name describing the authentication technology.

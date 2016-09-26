@@ -32,14 +32,17 @@
 package com.google.auth.oauth2;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
+import com.google.api.client.util.Clock;
 import com.google.auth.Credentials;
 import com.google.auth.http.AuthHttpConstants;
 
@@ -57,7 +60,7 @@ import java.util.Map;
  * Test case for {@link ServiceAccountCredentials}.
  */
 @RunWith(JUnit4.class)
-public class ServiceAccountJwtAccessCredentialsTest {
+public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
 
   private final static String SA_CLIENT_EMAIL =
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr@developer.gserviceaccount.com";
@@ -221,6 +224,99 @@ public class ServiceAccountJwtAccessCredentialsTest {
     credentials.getRequestMetadata(null, executor, callback);
     assertEquals(0, executor.numTasks());
     assertNotNull(callback.exception);
+  }
+
+  @Test
+  public void equals_true() throws IOException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    ServiceAccountJwtAccessCredentials credentials = new ServiceAccountJwtAccessCredentials(
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, CALL_URI);
+    ServiceAccountJwtAccessCredentials otherCredentials = new ServiceAccountJwtAccessCredentials(
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, CALL_URI);
+    assertTrue(credentials.equals(otherCredentials));
+    assertTrue(otherCredentials.equals(credentials));
+  }
+
+  @Test
+  public void equals_false() throws IOException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    final URI otherCallUri = URI.create("https://foo.com/bar");
+    ServiceAccountJwtAccessCredentials credentials = new ServiceAccountJwtAccessCredentials(
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, CALL_URI);
+    ServiceAccountJwtAccessCredentials otherCredentials = new ServiceAccountJwtAccessCredentials(
+        "otherClientId", SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, CALL_URI);
+    assertFalse(credentials.equals(otherCredentials));
+    assertFalse(otherCredentials.equals(credentials));
+    otherCredentials = new ServiceAccountJwtAccessCredentials(SA_CLIENT_ID, "otherClientEmail",
+        privateKey, SA_PRIVATE_KEY_ID, CALL_URI);
+    assertFalse(credentials.equals(otherCredentials));
+    assertFalse(otherCredentials.equals(credentials));
+    otherCredentials = new ServiceAccountJwtAccessCredentials(SA_CLIENT_ID, SA_CLIENT_EMAIL,
+        privateKey, "otherKeyId", CALL_URI);
+    assertFalse(credentials.equals(otherCredentials));
+    assertFalse(otherCredentials.equals(credentials));
+    otherCredentials = new ServiceAccountJwtAccessCredentials(SA_CLIENT_ID, SA_CLIENT_EMAIL,
+        privateKey, SA_PRIVATE_KEY_ID, otherCallUri);
+    assertFalse(credentials.equals(otherCredentials));
+    assertFalse(otherCredentials.equals(credentials));
+  }
+
+  @Test
+  public void toString_containsFields() throws IOException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    ServiceAccountJwtAccessCredentials credentials = new ServiceAccountJwtAccessCredentials(
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, CALL_URI);
+    String expectedToString = String.format(
+        "ServiceAccountJwtAccessCredentials{clientId=%s, clientEmail=%s, privateKeyId=%s, "
+            + "defaultAudience=%s}",
+        SA_CLIENT_ID,
+        SA_CLIENT_EMAIL,
+        SA_PRIVATE_KEY_ID,
+        CALL_URI);
+    assertEquals(expectedToString, credentials.toString());
+  }
+
+  @Test
+  public void hashCode_equals() throws IOException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    ServiceAccountJwtAccessCredentials credentials = new ServiceAccountJwtAccessCredentials(
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, CALL_URI);
+    ServiceAccountJwtAccessCredentials otherCredentials = new ServiceAccountJwtAccessCredentials(
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, CALL_URI);
+    assertEquals(credentials.hashCode(), otherCredentials.hashCode());
+  }
+
+  @Test
+  public void hashCode_notEquals() throws IOException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    final URI otherCallUri = URI.create("https://foo.com/bar");
+    ServiceAccountJwtAccessCredentials credentials = new ServiceAccountJwtAccessCredentials(
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, CALL_URI);
+    ServiceAccountJwtAccessCredentials otherCredentials = new ServiceAccountJwtAccessCredentials(
+        "otherClientId", SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, CALL_URI);
+    assertFalse(credentials.hashCode() == otherCredentials.hashCode());
+    otherCredentials = new ServiceAccountJwtAccessCredentials(SA_CLIENT_ID, "otherClientEmail",
+        privateKey, SA_PRIVATE_KEY_ID, CALL_URI);
+    assertFalse(credentials.hashCode() == otherCredentials.hashCode());
+    otherCredentials = new ServiceAccountJwtAccessCredentials(SA_CLIENT_ID, SA_CLIENT_EMAIL,
+        privateKey, "otherKeyId", CALL_URI);
+    assertFalse(credentials.hashCode() == otherCredentials.hashCode());
+    otherCredentials = new ServiceAccountJwtAccessCredentials(SA_CLIENT_ID, SA_CLIENT_EMAIL,
+        privateKey, SA_PRIVATE_KEY_ID, otherCallUri);
+    assertFalse(credentials.hashCode() == otherCredentials.hashCode());
+  }
+
+  @Test
+  public void serialize() throws IOException, ClassNotFoundException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    ServiceAccountJwtAccessCredentials credentials = new ServiceAccountJwtAccessCredentials(
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, CALL_URI);
+    ServiceAccountJwtAccessCredentials deserializedCredentials =
+        serializeAndDeserialize(credentials);
+    assertEquals(credentials, deserializedCredentials);
+    assertEquals(credentials.hashCode(), deserializedCredentials.hashCode());
+    assertEquals(credentials.toString(), deserializedCredentials.toString());
+    assertSame(deserializedCredentials.clock, Clock.SYSTEM);
   }
 
   private void verifyJwtAccess(Map<String, List<String>> metadata, String expectedEmail,

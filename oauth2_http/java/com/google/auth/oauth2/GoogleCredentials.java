@@ -1,10 +1,10 @@
 package com.google.auth.oauth2;
 
-import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.Preconditions;
+import com.google.auth.http.HttpTransportFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,6 +15,7 @@ import java.util.Collection;
  */
 public class GoogleCredentials extends OAuth2Credentials {
 
+  private static final long serialVersionUID = -1522852442442473691L;
   static final String USER_FILE_TYPE = "authorized_user";
   static final String SERVICE_ACCOUNT_FILE_TYPE = "service_account";
 
@@ -33,7 +34,7 @@ public class GoogleCredentials extends OAuth2Credentials {
    * @throws IOException if the credentials cannot be created in the current environment.
    */
   public static GoogleCredentials getApplicationDefault() throws IOException {
-    return getApplicationDefault(OAuth2Utils.HTTP_TRANSPORT);
+    return getApplicationDefault(OAuth2Utils.HTTP_TRANSPORT_FACTORY);
   }
 
   /**
@@ -44,14 +45,15 @@ public class GoogleCredentials extends OAuth2Credentials {
    * Compute Engine or the credentials file from the path in the environment variable
    * GOOGLE_APPLICATION_CREDENTIALS.</p>
    *
-   * @param transport the transport for Http calls.
+   * @param transportFactory HTTP transport factory, creates the transport used to get access
+   *        tokens.
    * @return the credentials instance.
    * @throws IOException if the credentials cannot be created in the current environment.
    **/
-  public static GoogleCredentials getApplicationDefault(
-      HttpTransport transport) throws IOException {
-    Preconditions.checkNotNull(transport);
-    return defaultCredentialsProvider.getDefaultCredentials(transport);
+  public static GoogleCredentials getApplicationDefault(HttpTransportFactory transportFactory)
+      throws IOException {
+    Preconditions.checkNotNull(transportFactory);
+    return defaultCredentialsProvider.getDefaultCredentials(transportFactory);
   }
 
   /**
@@ -65,7 +67,7 @@ public class GoogleCredentials extends OAuth2Credentials {
    * @throws IOException if the credential cannot be created from the stream.
    **/
   public static GoogleCredentials fromStream(InputStream credentialsStream) throws IOException {
-    return fromStream(credentialsStream, OAuth2Utils.HTTP_TRANSPORT);
+    return fromStream(credentialsStream, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
   }
 
   /**
@@ -75,14 +77,15 @@ public class GoogleCredentials extends OAuth2Credentials {
    * Console or a stored user credential using the format supported by the Cloud SDK.</p>
    *
    * @param credentialsStream the stream with the credential definition.
-   * @param transport the transport for Http calls.
+   * @param transportFactory HTTP transport factory, creates the transport used to get access
+   *        tokens.
    * @return the credential defined by the credentialsStream.
    * @throws IOException if the credential cannot be created from the stream.
    **/
-  public static GoogleCredentials fromStream(InputStream credentialsStream, HttpTransport transport)
-      throws IOException {
+  public static GoogleCredentials fromStream(InputStream credentialsStream,
+      HttpTransportFactory transportFactory) throws IOException {
     Preconditions.checkNotNull(credentialsStream);
-    Preconditions.checkNotNull(transport);
+    Preconditions.checkNotNull(transportFactory);
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     JsonObjectParser parser = new JsonObjectParser(jsonFactory);
@@ -94,10 +97,10 @@ public class GoogleCredentials extends OAuth2Credentials {
       throw new IOException("Error reading credentials from stream, 'type' field not specified.");
     }
     if (USER_FILE_TYPE.equals(fileType)) {
-      return UserCredentials.fromJson(fileContents, transport);
+      return UserCredentials.fromJson(fileContents, transportFactory);
     }
     if (SERVICE_ACCOUNT_FILE_TYPE.equals(fileType)) {
-      return ServiceAccountCredentials.fromJson(fileContents, transport);
+      return ServiceAccountCredentials.fromJson(fileContents, transportFactory);
     }
     throw new IOException(String.format(
         "Error reading credentials from stream, 'type' value '%s' not recognized."

@@ -32,10 +32,11 @@
 package com.google.auth.appengine;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.junit.Assert.assertNotSame;
 
 import com.google.auth.Credentials;
 import com.google.auth.oauth2.AccessToken;
@@ -45,7 +46,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
@@ -117,7 +122,72 @@ public class AppEngineCredentialsTest {
     assertEquals(1, appIdentity.getGetAccessTokenCallCount());
     assertContainsBearerToken(metadata, expectedAccessToken);
   }
-  
+
+  @Test
+  public void equals_true() throws IOException {
+    final Collection<String> emptyScopes = Collections.emptyList();
+    MockAppIdentityService appIdentity = new MockAppIdentityService();
+    GoogleCredentials credentials = new AppEngineCredentials(emptyScopes, appIdentity);
+    GoogleCredentials otherCredentials = new AppEngineCredentials(emptyScopes, appIdentity);
+    assertTrue(credentials.equals(credentials));
+    assertTrue(credentials.equals(otherCredentials));
+    assertTrue(otherCredentials.equals(credentials));
+  }
+
+  @Test
+  public void equals_false() throws IOException {
+    final Collection<String> emptyScopes = Collections.emptyList();
+    final Collection<String> scopes = Collections.singleton("SomeScope");
+    MockAppIdentityService appIdentity = new MockAppIdentityService();
+    GoogleCredentials credentials = new AppEngineCredentials(emptyScopes, appIdentity);
+    GoogleCredentials otherCredentials = new AppEngineCredentials(scopes, appIdentity);
+    assertFalse(credentials.equals(otherCredentials));
+    assertFalse(otherCredentials.equals(credentials));
+  }
+
+  @Test
+  public void toString_containsFields() throws IOException {
+    String expectedToString = String.format(
+        "AppEngineCredentials{scopes=[%s], scopesRequired=%b, appIdentityServiceClassName=%s}",
+        "SomeScope",
+        false,
+        MockAppIdentityService.class.getName());
+    final Collection<String> scopes = Collections.singleton("SomeScope");
+    MockAppIdentityService appIdentity = new MockAppIdentityService();
+    GoogleCredentials credentials = new AppEngineCredentials(scopes, appIdentity);
+    assertEquals(expectedToString, credentials.toString());
+  }
+
+  @Test
+  public void hashCode_equals() throws IOException {
+    final Collection<String> emptyScopes = Collections.emptyList();
+    MockAppIdentityService appIdentity = new MockAppIdentityService();
+    GoogleCredentials credentials = new AppEngineCredentials(emptyScopes, appIdentity);
+    GoogleCredentials otherCredentials = new AppEngineCredentials(emptyScopes, appIdentity);
+    assertEquals(credentials.hashCode(), otherCredentials.hashCode());
+  }
+
+  @Test
+  public void hashCode_notEquals() throws IOException {
+    final Collection<String> emptyScopes = Collections.emptyList();
+    final Collection<String> scopes = Collections.singleton("SomeScope");
+    MockAppIdentityService appIdentity = new MockAppIdentityService();
+    GoogleCredentials credentials = new AppEngineCredentials(emptyScopes, appIdentity);
+    GoogleCredentials otherCredentials = new AppEngineCredentials(scopes, appIdentity);
+    assertFalse(credentials.hashCode() == otherCredentials.hashCode());
+  }
+
+  @Test
+  public void serialize() throws IOException, ClassNotFoundException {
+    final Collection<String> scopes = Collections.singleton("SomeScope");
+    MockAppIdentityService appIdentity = new MockAppIdentityService();
+    GoogleCredentials credentials = new AppEngineCredentials(scopes, appIdentity);
+    GoogleCredentials deserializedCredentials = serializeAndDeserialize(credentials);
+    assertEquals(credentials, deserializedCredentials);
+    assertEquals(credentials.hashCode(), deserializedCredentials.hashCode());
+    assertEquals(credentials.toString(), deserializedCredentials.toString());
+  }
+
   private static void assertContainsBearerToken(Map<String, List<String>> metadata, String token) {
     assertNotNull(metadata);
     assertNotNull(token);
@@ -132,5 +202,25 @@ public class AppEngineCredentialsTest {
       }
     }
     assertTrue("Bearer token not found", found);
+  }
+
+  @SuppressWarnings("unchecked")
+  public <T> T serializeAndDeserialize(T obj) throws IOException, ClassNotFoundException {
+    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    ObjectOutputStream output = null;
+    ObjectInputStream input = null;
+    try {
+      output = new ObjectOutputStream(bytes);
+      output.writeObject(obj);
+      input = new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()));
+      return (T) input.readObject();
+    } finally {
+      if (output != null) {
+        output.close();
+      }
+      if (input != null) {
+        input.close();
+      }
+    }
   }
 }

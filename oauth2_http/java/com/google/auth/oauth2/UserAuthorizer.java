@@ -35,16 +35,13 @@ import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
-import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.UrlEncodedContent;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Joiner;
 import com.google.api.client.util.Preconditions;
-import com.google.auth.oauth2.AccessToken;
-import com.google.auth.oauth2.OAuth2Credentials;
-import com.google.auth.oauth2.UserCredentials;
+import com.google.auth.http.HttpTransportFactory;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
@@ -68,7 +65,7 @@ public class UserAuthorizer {
   private final TokenStore tokenStore;
   private final URI callbackUri;
 
-  private final HttpTransport transport;
+  private final HttpTransportFactory transportFactory;
   private final URI tokenServerUri;
   private final URI userAuthUri;
 
@@ -103,16 +100,18 @@ public class UserAuthorizer {
    * @param scopes OAUth2 scopes defining the user consent.
    * @param tokenStore Implementation of a component for long term storage of tokens.
    * @param callbackUri URI for implementation of the OAuth2 web callback.
-   * @param transport HTTP transport implementation for OAuth2 API calls.
+   * @param transportFactory HTTP transport factory, creates the transport used to get access
+   *        tokens.
    * @param tokenServerUri URI of the end point that provides tokens.
    * @param userAuthUri URI of the Web UI for user consent.
    */
   public UserAuthorizer(ClientId clientId, Collection<String> scopes, TokenStore tokenStore,
-      URI callbackUri, HttpTransport transport, URI tokenServerUri, URI userAuthUri) {
+      URI callbackUri, HttpTransportFactory transportFactory, URI tokenServerUri, URI userAuthUri) {
     this.clientId = Preconditions.checkNotNull(clientId);
     this.scopes = ImmutableList.copyOf(Preconditions.checkNotNull(scopes));
     this.callbackUri = (callbackUri == null) ? DEFAULT_CALLBACK_URI : callbackUri;
-    this.transport = (transport == null) ? OAuth2Utils.HTTP_TRANSPORT : transport;
+    this.transportFactory =
+        (transportFactory == null) ? OAuth2Utils.HTTP_TRANSPORT_FACTORY : transportFactory;
     this.tokenServerUri = (tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : tokenServerUri;
     this.userAuthUri = (userAuthUri == null) ? OAuth2Utils.USER_AUTH_URI : userAuthUri;
     this.tokenStore = tokenStore;
@@ -222,7 +221,7 @@ public class UserAuthorizer {
     String refreshToken = OAuth2Utils.validateOptionalString(
         tokenJson, "refresh_token", TOKEN_STORE_ERROR);
     UserCredentials credentials = new UserCredentials(clientId.getClientId(),
-        clientId.getClientSecret(), refreshToken, accessToken, transport, tokenServerUri);
+        clientId.getClientSecret(), refreshToken, accessToken, transportFactory, tokenServerUri);
     monitorCredentials(userId, credentials);
     return credentials;
   }
@@ -246,7 +245,7 @@ public class UserAuthorizer {
     tokenData.put("redirect_uri", resolvedCallbackUri);
     tokenData.put("grant_type", "authorization_code");
     UrlEncodedContent tokenContent = new UrlEncodedContent(tokenData);
-    HttpRequestFactory requestFactory = transport.createRequestFactory();
+    HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest tokenRequest = requestFactory.buildPostRequest(
         new GenericUrl(tokenServerUri), tokenContent);
     tokenRequest.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
@@ -263,7 +262,7 @@ public class UserAuthorizer {
         parsedTokens, "refresh_token", FETCH_TOKEN_ERROR);
 
     UserCredentials credentials = new UserCredentials(clientId.getClientId(),
-        clientId.getClientSecret(), refreshToken, accessToken, transport, tokenServerUri);
+        clientId.getClientSecret(), refreshToken, accessToken, transportFactory, tokenServerUri);
     return credentials;
   }
 
@@ -318,7 +317,7 @@ public class UserAuthorizer {
     String revokeToken = (refreshToken != null) ? refreshToken : accessTokenValue;
     GenericUrl revokeUrl = new GenericUrl(OAuth2Utils.TOKEN_REVOKE_URI);
     revokeUrl.put("token", revokeToken);
-    HttpRequestFactory requestFactory = transport.createRequestFactory();
+    HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest tokenRequest = requestFactory.buildGetRequest(revokeUrl);
     tokenRequest.execute();
 

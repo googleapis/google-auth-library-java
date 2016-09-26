@@ -1,19 +1,23 @@
 package com.google.auth.oauth2;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
+
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
-import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.UrlEncodedContent;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Preconditions;
+import com.google.auth.http.HttpTransportFactory;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.net.URI;
 import java.util.Date;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * OAuth2 Credentials representing a user's identity and consent.
@@ -22,12 +26,15 @@ public class UserCredentials extends GoogleCredentials {
 
   private static final String GRANT_TYPE = "refresh_token";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
+  private static final long serialVersionUID = -4800758775038679176L;
 
   private final String clientId;
   private final String clientSecret;
   private final String refreshToken;
-  private final HttpTransport transport;
   private final URI tokenServerUri;
+  private final String transportFactoryClassName;
+
+  private transient HttpTransportFactory transportFactory;
 
   /**
    * Constructor with minimum information and default behavior.
@@ -61,17 +68,20 @@ public class UserCredentials extends GoogleCredentials {
    * @param clientSecret Client ID of the credential from the console.
    * @param refreshToken A refresh token resulting from a OAuth2 consent flow.
    * @param accessToken Initial or temporary access token.
-   * @param transport HTTP object used to get access tokens.
+   * @param transportFactory HTTP transport factory, creates the transport used to get access
+   *        tokens.
    * @param tokenServerUri URI of the end point that provides tokens.
    */
   public UserCredentials(String clientId, String clientSecret, String refreshToken,
-      AccessToken accessToken, HttpTransport transport, URI tokenServerUri) {
+      AccessToken accessToken, HttpTransportFactory transportFactory, URI tokenServerUri) {
     super(accessToken);
     this.clientId = Preconditions.checkNotNull(clientId);
     this.clientSecret = Preconditions.checkNotNull(clientSecret);
     this.refreshToken = refreshToken;
-    this.transport = (transport == null) ? OAuth2Utils.HTTP_TRANSPORT : transport;
+    this.transportFactory = firstNonNull(transportFactory,
+        getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     this.tokenServerUri = (tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : tokenServerUri;
+    this.transportFactoryClassName = this.transportFactory.getClass().getName();
     Preconditions.checkState(accessToken != null || refreshToken != null,
         "Either accessToken or refreshToken must not be null");
   }
@@ -80,11 +90,12 @@ public class UserCredentials extends GoogleCredentials {
    * Returns user crentials defined by JSON contents using the format supported by the Cloud SDK.
    *
    * @param json a map from the JSON representing the credentials.
-   * @param transport the transport for Http calls.
+   * @param transportFactory HTTP transport factory, creates the transport used to get access
+   *        tokens.
    * @return the credentials defined by the JSON.
    * @throws IOException if the credential cannot be created from the JSON.
    **/
-  static UserCredentials fromJson(Map<String, Object> json, HttpTransport transport)
+  static UserCredentials fromJson(Map<String, Object> json, HttpTransportFactory transportFactory)
       throws IOException {
     String clientId = (String) json.get("client_id");
     String clientSecret = (String) json.get("client_secret");
@@ -94,7 +105,7 @@ public class UserCredentials extends GoogleCredentials {
           + " expecting 'client_id', 'client_secret' and 'refresh_token'.");
     }
     UserCredentials credentials =
-        new UserCredentials(clientId, clientSecret, refreshToken, null, transport, null);
+        new UserCredentials(clientId, clientSecret, refreshToken, null, transportFactory, null);
     return credentials;
   }
 
@@ -114,7 +125,7 @@ public class UserCredentials extends GoogleCredentials {
     tokenRequest.set("grant_type", GRANT_TYPE);
     UrlEncodedContent content = new UrlEncodedContent(tokenRequest);
 
-    HttpRequestFactory requestFactory = transport.createRequestFactory();
+    HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request =
         requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
     request.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
@@ -154,5 +165,41 @@ public class UserCredentials extends GoogleCredentials {
    */
   public final String getRefreshToken() {
     return refreshToken;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), clientId, clientSecret, refreshToken, tokenServerUri,
+        transportFactoryClassName);
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper()
+        .add("clientId", clientId)
+        .add("clientSecret", clientSecret)
+        .add("refreshToken", refreshToken)
+        .add("tokenServerUri", tokenServerUri)
+        .add("transportFactoryClassName", transportFactoryClassName)
+        .toString();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof UserCredentials)) {
+      return false;
+    }
+    UserCredentials other = (UserCredentials) obj;
+    return super.equals(other)
+        && Objects.equals(this.clientId, other.clientId)
+        && Objects.equals(this.clientSecret, other.clientSecret)
+        && Objects.equals(this.refreshToken, other.refreshToken)
+        && Objects.equals(this.tokenServerUri, other.tokenServerUri)
+        && Objects.equals(this.transportFactoryClassName, other.transportFactoryClassName);
+  }
+
+  private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
+    input.defaultReadObject();
+    transportFactory = newInstance(transportFactoryClassName);
   }
 }

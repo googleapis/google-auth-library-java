@@ -1,10 +1,11 @@
 package com.google.auth.oauth2;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
+
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
-import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.UrlEncodedContent;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
@@ -13,11 +14,15 @@ import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Joiner;
 import com.google.api.client.util.PemReader;
-import com.google.api.client.util.SecurityUtils;
 import com.google.api.client.util.PemReader.Section;
 import com.google.api.client.util.Preconditions;
+import com.google.api.client.util.SecurityUtils;
+import com.google.auth.http.HttpTransportFactory;
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.URI;
@@ -29,8 +34,8 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.sql.Date;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * OAuth2 credentials representing a Service Account for calling Google APIs.
@@ -39,6 +44,7 @@ import java.util.Map;
  */
 public class ServiceAccountCredentials extends GoogleCredentials {
 
+  private static final long serialVersionUID = 7807543542681217978L;
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
 
@@ -46,9 +52,11 @@ public class ServiceAccountCredentials extends GoogleCredentials {
   private final String clientEmail;
   private final PrivateKey privateKey;
   private final String privateKeyId;
-  private final HttpTransport transport;
+  private final String transportFactoryClassName;
   private final URI tokenServerUri;
   private final Collection<String> scopes;
+
+  private transient HttpTransportFactory transportFactory;
 
   /**
    * Constructor with minimum identifying information.
@@ -75,19 +83,21 @@ public class ServiceAccountCredentials extends GoogleCredentials {
    * @param privateKeyId Private key identifier for the service account. May be null.
    * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
    *        which results in a credential that must have createScoped called before use.
-   * @param transport HTTP object used to get access tokens.
+   * @param transportFactory HTTP transport factory, creates the transport used to get access
+   *        tokens.
    * @param tokenServerUri URI of the end point that provides tokens.
    */
   public ServiceAccountCredentials(
       String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId,
-      Collection<String> scopes, HttpTransport transport, URI tokenServerUri) {
+      Collection<String> scopes, HttpTransportFactory transportFactory, URI tokenServerUri) {
     this.clientId = clientId;
     this.clientEmail = Preconditions.checkNotNull(clientEmail);
     this.privateKey = Preconditions.checkNotNull(privateKey);
     this.privateKeyId = privateKeyId;
-    this.scopes = (scopes == null) ? Collections.<String>emptyList()
-        : Collections.unmodifiableCollection(scopes);
-    this.transport = (transport == null) ? OAuth2Utils.HTTP_TRANSPORT : transport;
+    this.scopes = (scopes == null) ? ImmutableSet.<String>of() : ImmutableSet.copyOf(scopes);
+    this.transportFactory = firstNonNull(transportFactory,
+        getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
+    this.transportFactoryClassName = this.transportFactory.getClass().getName();
     this.tokenServerUri = (tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : tokenServerUri;
   }
 
@@ -96,12 +106,13 @@ public class ServiceAccountCredentials extends GoogleCredentials {
    * Developers Console.
    *
    * @param json a map from the JSON representing the credentials.
-   * @param transport the transport for Http calls.
+   * @param transportFactory HTTP transport factory, creates the transport used to get access
+   *        tokens.
    * @return the credentials defined by the JSON.
    * @throws IOException if the credential cannot be created from the JSON.
    **/
   static ServiceAccountCredentials fromJson(
-      Map<String, Object> json, HttpTransport transport) throws IOException {
+      Map<String, Object> json, HttpTransportFactory transportFactory) throws IOException {
     String clientId = (String) json.get("client_id");
     String clientEmail = (String) json.get("client_email");
     String privateKeyPkcs8 = (String) json.get("private_key");
@@ -112,7 +123,8 @@ public class ServiceAccountCredentials extends GoogleCredentials {
           + "expecting  'client_id', 'client_email', 'private_key' and 'private_key_id'.");
     }
 
-    return fromPkcs8(clientId, clientEmail, privateKeyPkcs8, privateKeyId, null, transport, null);
+    return fromPkcs8(clientId, clientEmail, privateKeyPkcs8, privateKeyId, null, transportFactory,
+        null);
   }
 
   /**
@@ -141,15 +153,17 @@ public class ServiceAccountCredentials extends GoogleCredentials {
    * @param privateKeyId Private key identifier for the service account. May be null.
    * @param scopes Scope strings for the APIs to be called. May be null or an emptt collection,
    *        which results in a credential that must have createScoped called before use.
-   * @param transport HTTP object used to get access tokens.
+   * @param transportFactory HTTP transport factory, creates the transport used to get access
+   *        tokens.
    * @param tokenServerUri URI of the end point that provides tokens.
    */
   public static ServiceAccountCredentials fromPkcs8(
       String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId,
-      Collection<String> scopes, HttpTransport transport, URI tokenServerUri) throws IOException {
+      Collection<String> scopes, HttpTransportFactory transportFactory, URI tokenServerUri)
+      throws IOException {
     PrivateKey privateKey = privateKeyFromPkcs8(privateKeyPkcs8);
     return new ServiceAccountCredentials(
-        clientId, clientEmail, privateKey, privateKeyId, scopes, transport, tokenServerUri);
+        clientId, clientEmail, privateKey, privateKeyId, scopes, transportFactory, tokenServerUri);
   }
 
   /**
@@ -166,8 +180,7 @@ public class ServiceAccountCredentials extends GoogleCredentials {
     Exception unexpectedException = null;
     try {
       KeyFactory keyFactory = SecurityUtils.getRsaKeyFactory();
-      PrivateKey privateKey = keyFactory.generatePrivate(keySpec);
-      return privateKey;
+      return keyFactory.generatePrivate(keySpec);
     } catch (NoSuchAlgorithmException exception) {
       unexpectedException = exception;
     } catch (InvalidKeySpecException exception) {
@@ -216,7 +229,7 @@ public class ServiceAccountCredentials extends GoogleCredentials {
     tokenRequest.set("assertion", assertion);
     UrlEncodedContent content = new UrlEncodedContent(tokenRequest);
 
-    HttpRequestFactory requestFactory = transport.createRequestFactory();
+    HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
     request.setParser(new JsonObjectParser(jsonFactory));
 
@@ -239,7 +252,7 @@ public class ServiceAccountCredentials extends GoogleCredentials {
   }
 
   /**
-   * Returns whther the scopes are empty, meaning createScoped must be called before use.
+   * Returns whether the scopes are empty, meaning createScoped must be called before use.
    */
   @Override
   public boolean createScopedRequired() {
@@ -253,8 +266,8 @@ public class ServiceAccountCredentials extends GoogleCredentials {
    */
   @Override
   public GoogleCredentials createScoped(Collection<String> newScopes) {
-    return new ServiceAccountCredentials(
-        clientId, clientEmail, privateKey, privateKeyId, newScopes, transport, tokenServerUri);
+    return new ServiceAccountCredentials(clientId, clientEmail, privateKey, privateKeyId, newScopes,
+        transportFactory, tokenServerUri);
   }
 
   public final String getClientId() {
@@ -275,5 +288,43 @@ public class ServiceAccountCredentials extends GoogleCredentials {
 
   public final Collection<String> getScopes() {
     return scopes;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(clientId, clientEmail, privateKey, privateKeyId, transportFactoryClassName,
+        tokenServerUri, scopes);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("clientId", clientId)
+        .add("clientEmail", clientEmail)
+        .add("privateKeyId", privateKeyId)
+        .add("transportFactoryClassName", transportFactoryClassName)
+        .add("tokenServerUri", tokenServerUri)
+        .add("scopes", scopes)
+        .toString();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof ServiceAccountCredentials)) {
+      return false;
+    }
+    ServiceAccountCredentials other = (ServiceAccountCredentials) obj;
+    return Objects.equals(this.clientId, other.clientId)
+        && Objects.equals(this.clientEmail, other.clientEmail)
+        && Objects.equals(this.privateKey, other.privateKey)
+        && Objects.equals(this.privateKeyId, other.privateKeyId)
+        && Objects.equals(this.transportFactoryClassName, other.transportFactoryClassName)
+        && Objects.equals(this.tokenServerUri, other.tokenServerUri)
+        && Objects.equals(this.scopes, other.scopes);
+  }
+
+  private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
+    input.defaultReadObject();
+    transportFactory = newInstance(transportFactoryClassName);
   }
 }

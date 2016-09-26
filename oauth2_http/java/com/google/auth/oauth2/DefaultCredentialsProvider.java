@@ -1,6 +1,6 @@
 package com.google.auth.oauth2;
 
-import com.google.api.client.http.HttpTransport;
+import com.google.auth.http.HttpTransportFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -56,15 +56,16 @@ class DefaultCredentialsProvider {
    * Compute Engine or credentials specified by an environment variable or a file in a well-known
    * location.</p>
    *
-   * @param transport the transport for Http calls.
+   * @param transportFactory HTTP transport factory, creates the transport used to get access
+   *        tokens.
    * @return the credentials instance.
    * @throws IOException if the credentials cannot be created in the current environment.
    **/
-  final GoogleCredentials getDefaultCredentials(HttpTransport transport)
+  final GoogleCredentials getDefaultCredentials(HttpTransportFactory transportFactory)
       throws IOException {
     synchronized (this) {
       if (cachedCredentials == null) {
-        cachedCredentials = getDefaultCredentialsUnsynchronized(transport);
+        cachedCredentials = getDefaultCredentialsUnsynchronized(transportFactory);
       }
       if (cachedCredentials != null) {
         return cachedCredentials;
@@ -79,8 +80,8 @@ class DefaultCredentialsProvider {
         HELP_PERMALINK));
   }
 
-  private final GoogleCredentials getDefaultCredentialsUnsynchronized(HttpTransport transport)
-      throws IOException {
+  private final GoogleCredentials getDefaultCredentialsUnsynchronized(
+      HttpTransportFactory transportFactory) throws IOException {
 
     // First try the environment variable
     GoogleCredentials credentials = null;
@@ -94,7 +95,7 @@ class DefaultCredentialsProvider {
           throw new IOException("File does not exist.");
         }
         credentialsStream = readStream(credentialsFile);
-        credentials = GoogleCredentials.fromStream(credentialsStream, transport);
+        credentials = GoogleCredentials.fromStream(credentialsStream, transportFactory);
       } catch (IOException e) {
         // Although it is also the cause, the message of the caught exception can have very
         // important information for diagnosing errors, so include its message in the
@@ -118,7 +119,7 @@ class DefaultCredentialsProvider {
       try {
         if (isFile(wellKnownFileLocation)) {
           credentialsStream = readStream(wellKnownFileLocation);
-          credentials = GoogleCredentials.fromStream(credentialsStream, transport);
+          credentials = GoogleCredentials.fromStream(credentialsStream, transportFactory);
         }
       } catch (IOException e) {
         throw new IOException(String.format(
@@ -146,7 +147,7 @@ class DefaultCredentialsProvider {
     
     // Then try Compute Engine
     if (credentials == null) {
-      credentials = tryGetComputeCredentials(transport);
+      credentials = tryGetComputeCredentials(transportFactory);
     }
 
     return credentials;
@@ -248,15 +249,16 @@ class DefaultCredentialsProvider {
         APP_ENGINE_CREDENTIAL_CLASS)), innerException);
   }
 
-  private final GoogleCredentials tryGetComputeCredentials(HttpTransport transport) {
+  private final GoogleCredentials tryGetComputeCredentials(HttpTransportFactory transportFactory) {
     // Checking compute engine requires a round-trip, so check only once
     if (checkedComputeEngine) {
       return null;
     }
-    boolean runningOnComputeEngine = ComputeEngineCredentials.runningOnComputeEngine(transport);
+    boolean runningOnComputeEngine =
+        ComputeEngineCredentials.runningOnComputeEngine(transportFactory);
     checkedComputeEngine = true;
     if (runningOnComputeEngine) {
-      return new ComputeEngineCredentials(transport);
+      return new ComputeEngineCredentials(transportFactory);
     }
     return null;
   }
