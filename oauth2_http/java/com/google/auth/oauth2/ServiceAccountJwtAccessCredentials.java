@@ -39,6 +39,7 @@ import com.google.api.client.util.Preconditions;
 import com.google.auth.Credentials;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.http.AuthHttpConstants;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 
 import java.io.IOException;
@@ -69,6 +70,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials {
   private final URI defaultAudience;
 
   // Until we expose this to the users it can remain transient and non-serializable
+  @VisibleForTesting
   transient Clock clock = Clock.SYSTEM;
 
   /**
