@@ -191,13 +191,12 @@ public class UserCredentialsTest extends BaseSerializationTest {
     OAuth2Credentials credentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN,
         accessToken, transportFactory, tokenServer);
     String expectedToString = String.format(
-        "UserCredentials{requestMetadata=%s, temporaryAccess=%s, clientId=%s, clientSecret=%s, "
-            + "refreshToken=%s, tokenServerUri=%s, transportFactoryClassName=%s}",
+        "UserCredentials{requestMetadata=%s, temporaryAccess=%s, clientId=%s, refreshToken=%s, "
+            + "tokenServerUri=%s, transportFactoryClassName=%s}",
         ImmutableMap.of(AuthHttpConstants.AUTHORIZATION,
             ImmutableList.of(OAuth2Utils.BEARER_PREFIX + accessToken.getTokenValue())),
         accessToken.toString(),
         CLIENT_ID,
-        CLIENT_SECRET,
         REFRESH_TOKEN,
         tokenServer,
         MockTokenServerTransportFactory.class.getName());

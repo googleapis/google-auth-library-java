@@ -177,7 +177,6 @@ public class UserCredentials extends GoogleCredentials {
   public String toString() {
     return toStringHelper()
         .add("clientId", clientId)
-        .add("clientSecret", clientSecret)
         .add("refreshToken", refreshToken)
         .add("tokenServerUri", tokenServerUri)
         .add("transportFactoryClassName", transportFactoryClassName)
