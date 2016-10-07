@@ -68,12 +68,17 @@ public class AccessTokenTest extends BaseSerializationTest {
   }
 
   @Test
-  public void equals_false() throws IOException {
+  public void equals_false_token() throws IOException {
     AccessToken accessToken = new AccessToken(TOKEN, EXPIRATION_DATE);
     AccessToken otherAccessToken = new AccessToken("otherToken", EXPIRATION_DATE);
     assertFalse(accessToken.equals(otherAccessToken));
     assertFalse(otherAccessToken.equals(accessToken));
-    otherAccessToken = new AccessToken(TOKEN, new Date(EXPIRATION_DATE.getTime() + 42));
+  }
+
+  @Test
+  public void equals_false_expirationDate() throws IOException {
+    AccessToken accessToken = new AccessToken(TOKEN, EXPIRATION_DATE);
+    AccessToken otherAccessToken = new AccessToken(TOKEN, new Date(EXPIRATION_DATE.getTime() + 42));
     assertFalse(accessToken.equals(otherAccessToken));
     assertFalse(otherAccessToken.equals(accessToken));
   }
@@ -91,15 +96,6 @@ public class AccessTokenTest extends BaseSerializationTest {
     AccessToken accessToken = new AccessToken(TOKEN, EXPIRATION_DATE);
     AccessToken otherAccessToken = new AccessToken(TOKEN, EXPIRATION_DATE);
     assertEquals(accessToken.hashCode(), otherAccessToken.hashCode());
-  }
-
-  @Test
-  public void hashCode_notEquals() throws IOException {
-    AccessToken accessToken = new AccessToken(TOKEN, EXPIRATION_DATE);
-    AccessToken otherAccessToken = new AccessToken("otherToken", EXPIRATION_DATE);
-    assertFalse(accessToken.hashCode() == otherAccessToken.hashCode());
-    otherAccessToken = new AccessToken(TOKEN, new Date(EXPIRATION_DATE.getTime() + 42));
-    assertFalse(accessToken.hashCode() == otherAccessToken.hashCode());
   }
 
   @Test

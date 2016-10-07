@@ -132,7 +132,7 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void equals_false() throws IOException {
+  public void equals_false_scopes() throws IOException {
     final Collection<String> emptyScopes = Collections.emptyList();
     final Collection<String> scopes = Collections.singleton("SomeScope");
     MockAppIdentityService appIdentity = new MockAppIdentityService();
@@ -162,16 +162,6 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
     GoogleCredentials credentials = new AppEngineCredentials(emptyScopes, appIdentity);
     GoogleCredentials otherCredentials = new AppEngineCredentials(emptyScopes, appIdentity);
     assertEquals(credentials.hashCode(), otherCredentials.hashCode());
-  }
-
-  @Test
-  public void hashCode_notEquals() throws IOException {
-    final Collection<String> emptyScopes = Collections.emptyList();
-    final Collection<String> scopes = Collections.singleton("SomeScope");
-    MockAppIdentityService appIdentity = new MockAppIdentityService();
-    GoogleCredentials credentials = new AppEngineCredentials(emptyScopes, appIdentity);
-    GoogleCredentials otherCredentials = new AppEngineCredentials(scopes, appIdentity);
-    assertFalse(credentials.hashCode() == otherCredentials.hashCode());
   }
 
   @Test

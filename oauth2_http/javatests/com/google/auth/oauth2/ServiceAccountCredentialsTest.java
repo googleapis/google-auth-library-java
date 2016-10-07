@@ -178,10 +178,8 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void equals_false() throws IOException {
+  public void equals_false_clientId() throws IOException {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
-    final URI tokenServer2 = URI.create("https://foo2.com/bar");
-    MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
     MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
     OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
         SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, serverTransportFactory,
@@ -191,25 +189,76 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
         tokenServer1);
     assertFalse(credentials.equals(otherCredentials));
     assertFalse(otherCredentials.equals(credentials));
-    otherCredentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID, "otherEmail",
-        SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, serverTransportFactory, tokenServer1);
-    assertFalse(credentials.equals(otherCredentials));
-    assertFalse(otherCredentials.equals(credentials));
-    otherCredentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID, SA_CLIENT_EMAIL,
-        SA_PRIVATE_KEY_PKCS8, "otherId", SCOPES, serverTransportFactory, tokenServer1);
-    assertFalse(credentials.equals(otherCredentials));
-    assertFalse(otherCredentials.equals(credentials));
-    otherCredentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID, SA_CLIENT_EMAIL,
-        SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, ImmutableSet.<String>of(), serverTransportFactory,
+  }
+
+  @Test
+  public void equals_false_email() throws IOException {
+    final URI tokenServer1 = URI.create("https://foo1.com/bar");
+    MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
+    OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, serverTransportFactory,
+        tokenServer1);
+    OAuth2Credentials otherCredentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        "otherEmail", SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, serverTransportFactory,
         tokenServer1);
     assertFalse(credentials.equals(otherCredentials));
     assertFalse(otherCredentials.equals(credentials));
-    otherCredentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID, SA_CLIENT_EMAIL,
-        SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, httpTransportFactory, tokenServer1);
+  }
+
+  @Test
+  public void equals_false_keyId() throws IOException {
+    final URI tokenServer1 = URI.create("https://foo1.com/bar");
+    MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
+    OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, serverTransportFactory,
+        tokenServer1);
+    OAuth2Credentials otherCredentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, "otherId", SCOPES, serverTransportFactory,
+        tokenServer1);
     assertFalse(credentials.equals(otherCredentials));
     assertFalse(otherCredentials.equals(credentials));
-    otherCredentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID, SA_CLIENT_EMAIL,
-        SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, serverTransportFactory, tokenServer2);
+  }
+
+  @Test
+  public void equals_false_scopes() throws IOException {
+    final URI tokenServer1 = URI.create("https://foo1.com/bar");
+    MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
+    OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, serverTransportFactory,
+        tokenServer1);
+    OAuth2Credentials otherCredentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, ImmutableSet.<String>of(),
+        serverTransportFactory, tokenServer1);
+    assertFalse(credentials.equals(otherCredentials));
+    assertFalse(otherCredentials.equals(credentials));
+  }
+
+  @Test
+  public void equals_false_transportFactory() throws IOException {
+    final URI tokenServer1 = URI.create("https://foo1.com/bar");
+    MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
+    MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
+    OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, serverTransportFactory,
+        tokenServer1);
+    OAuth2Credentials otherCredentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, httpTransportFactory,
+        tokenServer1);
+    assertFalse(credentials.equals(otherCredentials));
+    assertFalse(otherCredentials.equals(credentials));
+  }
+
+  @Test
+  public void equals_false_tokenServer() throws IOException {
+    final URI tokenServer1 = URI.create("https://foo1.com/bar");
+    final URI tokenServer2 = URI.create("https://foo2.com/bar");
+    MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
+    OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, serverTransportFactory,
+        tokenServer1);
+    OAuth2Credentials otherCredentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, serverTransportFactory,
+        tokenServer2);
     assertFalse(credentials.equals(otherCredentials));
     assertFalse(otherCredentials.equals(credentials));
   }
@@ -244,37 +293,6 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
         SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, transportFactory,
         tokenServer);
     assertEquals(credentials.hashCode(), otherCredentials.hashCode());
-  }
-
-  @Test
-  public void hashCode_notEquals() throws IOException {
-    final URI tokenServer1 = URI.create("https://foo1.com/bar");
-    final URI tokenServer2 = URI.create("https://foo2.com/bar");
-    MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
-    MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
-    OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
-        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, serverTransportFactory,
-        tokenServer1);
-    OAuth2Credentials otherCredentials = ServiceAccountCredentials.fromPkcs8("otherClientId",
-        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, serverTransportFactory,
-        tokenServer1);
-    assertFalse(credentials.hashCode() == otherCredentials.hashCode());
-    otherCredentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID, "otherEmail",
-        SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, serverTransportFactory, tokenServer1);
-    assertFalse(credentials.hashCode() == otherCredentials.hashCode());
-    otherCredentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID, "otherEmail",
-        SA_PRIVATE_KEY_PKCS8, "otherId", SCOPES, serverTransportFactory, tokenServer1);
-    assertFalse(credentials.hashCode() == otherCredentials.hashCode());
-    otherCredentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID, SA_CLIENT_EMAIL,
-        SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, EMPTY_SCOPES, serverTransportFactory,
-        tokenServer1);
-    assertFalse(credentials.hashCode() == otherCredentials.hashCode());
-    otherCredentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID, SA_CLIENT_EMAIL,
-        SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, httpTransportFactory, tokenServer1);
-    assertFalse(credentials.hashCode() == otherCredentials.hashCode());
-    otherCredentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID, SA_CLIENT_EMAIL,
-        SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, serverTransportFactory, tokenServer2);
-    assertFalse(credentials.hashCode() == otherCredentials.hashCode());
   }
 
   @Test

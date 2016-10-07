@@ -148,37 +148,82 @@ public class UserCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void equals_false() throws IOException {
+  public void equals_false_clientId() throws IOException {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
-    final URI tokenServer2 = URI.create("https://foo2.com/bar");
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
-    AccessToken otherAccessToken = new AccessToken("otherAccessToken", null);
     MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
-    MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
     OAuth2Credentials credentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN,
         accessToken, httpTransportFactory, tokenServer1);
     OAuth2Credentials otherCredentials = new UserCredentials("otherClientId", CLIENT_SECRET,
         REFRESH_TOKEN, accessToken, httpTransportFactory, tokenServer1);
     assertFalse(credentials.equals(otherCredentials));
     assertFalse(otherCredentials.equals(credentials));
-    otherCredentials = new UserCredentials(CLIENT_ID, "otherClientSecret", REFRESH_TOKEN,
+  }
+
+  @Test
+  public void equals_false_clientSecret() throws IOException {
+    final URI tokenServer1 = URI.create("https://foo1.com/bar");
+    AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
+    MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
+    OAuth2Credentials credentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN,
         accessToken, httpTransportFactory, tokenServer1);
+    OAuth2Credentials otherCredentials = new UserCredentials(CLIENT_ID, "otherClientSecret",
+        REFRESH_TOKEN, accessToken, httpTransportFactory, tokenServer1);
     assertFalse(credentials.equals(otherCredentials));
     assertFalse(otherCredentials.equals(credentials));
-    otherCredentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, "otherRefreshToken",
+  }
+
+  @Test
+  public void equals_false_refreshToken() throws IOException {
+    final URI tokenServer1 = URI.create("https://foo1.com/bar");
+    AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
+    MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
+    OAuth2Credentials credentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN,
         accessToken, httpTransportFactory, tokenServer1);
+    OAuth2Credentials otherCredentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET,
+        "otherRefreshToken", accessToken, httpTransportFactory, tokenServer1);
     assertFalse(credentials.equals(otherCredentials));
     assertFalse(otherCredentials.equals(credentials));
-    otherCredentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN,
-        otherAccessToken, httpTransportFactory, tokenServer1);
+  }
+
+  @Test
+  public void equals_false_accessToken() throws IOException {
+    final URI tokenServer1 = URI.create("https://foo1.com/bar");
+    AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
+    AccessToken otherAccessToken = new AccessToken("otherAccessToken", null);
+    MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
+    OAuth2Credentials credentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN,
+        accessToken, httpTransportFactory, tokenServer1);
+    OAuth2Credentials otherCredentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET,
+        REFRESH_TOKEN, otherAccessToken, httpTransportFactory, tokenServer1);
     assertFalse(credentials.equals(otherCredentials));
     assertFalse(otherCredentials.equals(credentials));
-    otherCredentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN,
-        accessToken, serverTransportFactory, tokenServer1);
+  }
+
+  @Test
+  public void equals_false_transportFactory() throws IOException {
+    final URI tokenServer1 = URI.create("https://foo1.com/bar");
+    AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
+    MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
+    MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
+    OAuth2Credentials credentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN,
+        accessToken, httpTransportFactory, tokenServer1);
+    OAuth2Credentials otherCredentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET,
+        REFRESH_TOKEN, accessToken, serverTransportFactory, tokenServer1);
     assertFalse(credentials.equals(otherCredentials));
     assertFalse(otherCredentials.equals(credentials));
-    otherCredentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN,
-        accessToken, httpTransportFactory, tokenServer2);
+  }
+
+  @Test
+  public void equals_false_tokenServer() throws IOException {
+    final URI tokenServer1 = URI.create("https://foo1.com/bar");
+    final URI tokenServer2 = URI.create("https://foo2.com/bar");
+    AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
+    MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
+    OAuth2Credentials credentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN,
+        accessToken, httpTransportFactory, tokenServer1);
+    OAuth2Credentials otherCredentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET,
+        REFRESH_TOKEN, accessToken, httpTransportFactory, tokenServer2);
     assertFalse(credentials.equals(otherCredentials));
     assertFalse(otherCredentials.equals(credentials));
   }
@@ -213,36 +258,6 @@ public class UserCredentialsTest extends BaseSerializationTest {
     OAuth2Credentials otherCredentials = new UserCredentials(
         CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, accessToken, transportFactory, tokenServer);
     assertEquals(credentials.hashCode(), otherCredentials.hashCode());
-  }
-
-  @Test
-  public void hashCode_notEquals() throws IOException {
-    final URI tokenServer1 = URI.create("https://foo1.com/bar");
-    final URI tokenServer2 = URI.create("https://foo2.com/bar");
-    AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
-    AccessToken otherAccessToken = new AccessToken("otherAccessToken", null);
-    MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
-    MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
-    OAuth2Credentials credentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN,
-        accessToken, httpTransportFactory, tokenServer1);
-    OAuth2Credentials otherCredentials = new UserCredentials("otherClientId", CLIENT_SECRET,
-        REFRESH_TOKEN, accessToken, httpTransportFactory, tokenServer1);
-    assertFalse(credentials.hashCode() == otherCredentials.hashCode());
-    otherCredentials = new UserCredentials(CLIENT_ID, "otherClientSecret", REFRESH_TOKEN,
-        accessToken, httpTransportFactory, tokenServer1);
-    assertFalse(credentials.hashCode() == otherCredentials.hashCode());
-    otherCredentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, "otherRefreshToken",
-        accessToken, httpTransportFactory, tokenServer1);
-    assertFalse(credentials.hashCode() == otherCredentials.hashCode());
-    otherCredentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN,
-        otherAccessToken, httpTransportFactory, tokenServer1);
-    assertFalse(credentials.hashCode() == otherCredentials.hashCode());
-    otherCredentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN,
-        accessToken, serverTransportFactory, tokenServer1);
-    assertFalse(credentials.hashCode() == otherCredentials.hashCode());
-    otherCredentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN,
-        accessToken, httpTransportFactory, tokenServer2);
-    assertFalse(credentials.hashCode() == otherCredentials.hashCode());
   }
 
   @Test

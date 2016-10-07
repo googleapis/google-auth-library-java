@@ -295,7 +295,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void equals_false() throws IOException {
+  public void equals_false_accessToken() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     OAuth2Credentials credentials = new OAuth2Credentials(new AccessToken(accessToken1, null));
@@ -322,15 +322,6 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     OAuth2Credentials credentials = new OAuth2Credentials(new AccessToken(accessToken, null));
     OAuth2Credentials otherCredentials = new OAuth2Credentials(new AccessToken(accessToken, null));
     assertEquals(credentials.hashCode(), otherCredentials.hashCode());
-  }
-
-  @Test
-  public void hashCode_notEquals() throws IOException {
-    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
-    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
-    OAuth2Credentials credentials = new OAuth2Credentials(new AccessToken(accessToken1, null));
-    OAuth2Credentials otherCredentials = new OAuth2Credentials(new AccessToken(accessToken2, null));
-    assertFalse(credentials.hashCode() == otherCredentials.hashCode());
   }
 
   @Test

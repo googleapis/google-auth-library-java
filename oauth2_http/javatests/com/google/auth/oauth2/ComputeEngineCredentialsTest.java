@@ -98,7 +98,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void equals_false() throws IOException {
+  public void equals_false_transportFactory() throws IOException {
     MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
     MockMetadataServerTransportFactory serverTransportFactory =
         new MockMetadataServerTransportFactory();
@@ -127,16 +127,6 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     ComputeEngineCredentials otherCredentials =
         new ComputeEngineCredentials(serverTransportFactory);
     assertEquals(credentials.hashCode(), otherCredentials.hashCode());
-  }
-
-  @Test
-  public void hashCode_notEquals() throws IOException {
-    MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
-    MockMetadataServerTransportFactory serverTransportFactory =
-        new MockMetadataServerTransportFactory();
-    ComputeEngineCredentials credentials = new ComputeEngineCredentials(serverTransportFactory);
-    ComputeEngineCredentials otherCredentials = new ComputeEngineCredentials(httpTransportFactory);
-    assertFalse(credentials.hashCode() == otherCredentials.hashCode());
   }
 
   @Test

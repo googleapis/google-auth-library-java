@@ -97,7 +97,7 @@ public class CloudShellCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void equals_false() throws IOException {
+  public void equals_false_authPort() throws IOException {
     GoogleCredentials credentials = new CloudShellCredentials(42);
     GoogleCredentials otherCredentials = new CloudShellCredentials(43);
     assertFalse(credentials.equals(otherCredentials));
@@ -116,13 +116,6 @@ public class CloudShellCredentialsTest extends BaseSerializationTest {
     GoogleCredentials credentials = new CloudShellCredentials(42);
     GoogleCredentials otherCredentials = new CloudShellCredentials(42);
     assertEquals(credentials.hashCode(), otherCredentials.hashCode());
-  }
-
-  @Test
-  public void hashCode_notEquals() throws IOException {
-    GoogleCredentials credentials = new CloudShellCredentials(42);
-    GoogleCredentials otherCredentials = new CloudShellCredentials(43);
-    assertFalse(credentials.hashCode() == otherCredentials.hashCode());
   }
 
   @Test
