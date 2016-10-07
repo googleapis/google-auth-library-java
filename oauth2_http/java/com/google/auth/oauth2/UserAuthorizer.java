@@ -216,7 +216,7 @@ public class UserAuthorizer {
         tokenJson, "access_token", TOKEN_STORE_ERROR);
     Long expirationMillis = OAuth2Utils.validateLong(
         tokenJson, "expiration_time_millis", TOKEN_STORE_ERROR);
-    Date expirationTime = new Date(Long.valueOf(expirationMillis));
+    Date expirationTime = new Date(expirationMillis);
     AccessToken accessToken = new AccessToken(accessTokenValue, expirationTime);
     String refreshToken = OAuth2Utils.validateOptionalString(
         tokenJson, "refresh_token", TOKEN_STORE_ERROR);
@@ -261,9 +261,8 @@ public class UserAuthorizer {
     String refreshToken = OAuth2Utils.validateOptionalString(
         parsedTokens, "refresh_token", FETCH_TOKEN_ERROR);
 
-    UserCredentials credentials = new UserCredentials(clientId.getClientId(),
-        clientId.getClientSecret(), refreshToken, accessToken, transportFactory, tokenServerUri);
-    return credentials;
+    return new UserCredentials(clientId.getClientId(), clientId.getClientSecret(), refreshToken,
+        accessToken, transportFactory, tokenServerUri);
   }
 
   /**

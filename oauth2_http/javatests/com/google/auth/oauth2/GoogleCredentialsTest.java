@@ -74,6 +74,7 @@ public class GoogleCredentialsTest {
       GoogleCredentials.getApplicationDefault(null);
       fail();
     } catch (NullPointerException expected) {
+      // Expected
     }
   }
 
@@ -84,6 +85,7 @@ public class GoogleCredentialsTest {
       GoogleCredentials.fromStream(stream, null);
       fail();
     } catch (NullPointerException expected) {
+      // Expected
     }
   }
 
@@ -94,6 +96,7 @@ public class GoogleCredentialsTest {
       GoogleCredentials.fromStream(null, transportFactory);
       fail();
     } catch (NullPointerException expected) {
+      // Expected
     }
   }
 

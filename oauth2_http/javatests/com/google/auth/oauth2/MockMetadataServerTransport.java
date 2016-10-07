@@ -34,15 +34,14 @@ public class MockMetadataServerTransport extends MockHttpTransport {
   public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
     if (url.equals(ComputeEngineCredentials.TOKEN_SERVER_ENCODED_URL)) {
 
-      MockLowLevelHttpRequest request = new MockLowLevelHttpRequest(url) {
+      return new MockLowLevelHttpRequest(url) {
         @Override
         public LowLevelHttpResponse execute() throws IOException {
 
           if (tokenRequestStatusCode != null) {
-            MockLowLevelHttpResponse response = new MockLowLevelHttpResponse()
+            return new MockLowLevelHttpResponse()
               .setStatusCode(tokenRequestStatusCode)
               .setContent("Token Fetch Error");
-            return response;
           }
 
           String metadataRequestHeader = getFirstHeaderValue("Metadata-Flavor");
@@ -58,16 +57,13 @@ public class MockMetadataServerTransport extends MockHttpTransport {
           refreshContents.put("token_type", "Bearer");
           String refreshText = refreshContents.toPrettyString();
 
-          MockLowLevelHttpResponse response = new MockLowLevelHttpResponse()
+          return new MockLowLevelHttpResponse()
             .setContentType(Json.MEDIA_TYPE)
             .setContent(refreshText);
-          return response;
-
         }
       };
-      return request;
     } else if (url.equals(ComputeEngineCredentials.METADATA_SERVER_URL)) {
-      MockLowLevelHttpRequest request = new MockLowLevelHttpRequest(url) {
+      return new MockLowLevelHttpRequest(url) {
         @Override
         public LowLevelHttpResponse execute() {
           MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
@@ -75,7 +71,6 @@ public class MockMetadataServerTransport extends MockHttpTransport {
           return response;
         }
       };
-      return request;
     }
     return super.buildRequest(method, url);
   }

@@ -167,6 +167,7 @@ public class ClientIdTest {
       ClientId.fromStream(stream);
       fail();
     } catch (IOException expected) {
+      // Expected
     }
   }
 

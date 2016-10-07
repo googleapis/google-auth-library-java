@@ -207,9 +207,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials {
     String assertion = getJwtAccess(uri);
     String authorizationHeader = JWT_ACCESS_PREFIX + assertion;
     List<String> newAuthorizationHeaders = Collections.singletonList(authorizationHeader);
-    Map<String, List<String>> newRequestMetadata =
-        Collections.singletonMap(AuthHttpConstants.AUTHORIZATION, newAuthorizationHeaders);
-    return newRequestMetadata;
+    return Collections.singletonMap(AuthHttpConstants.AUTHORIZATION, newAuthorizationHeaders);
   }
 
   /**
@@ -237,7 +235,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials {
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
 
-    String assertion = null;
+    String assertion;
     try {
       assertion = JsonWebSignature.signUsingRsaSha256(
           privateKey, jsonFactory, header, payload);

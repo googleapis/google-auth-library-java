@@ -55,7 +55,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
       + "==\n-----END PRIVATE KEY-----\n";
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
   private final static Collection<String> SCOPES = Collections.singletonList("dummy.scope");
-  private final static Collection<String> EMPTY_SCOPES = Collections.<String>emptyList();
+  private final static Collection<String> EMPTY_SCOPES = Collections.emptyList();
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
 
   @Test
@@ -86,6 +86,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
       credentials.getRequestMetadata(CALL_URI);
       fail("Should not be able to get token without scopes");
     } catch (Exception expected) {
+      // Expected
     }
 
     GoogleCredentials scopedCredentials = credentials.createScoped(SCOPES);
@@ -313,7 +314,6 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
       String privateKeyPkcs8, String privateKeyId) throws IOException {
     GenericJson json =
         writeServiceAccountJson(clientId, clientEmail, privateKeyPkcs8, privateKeyId);
-    InputStream stream = TestUtils.jsonToInputStream(json);
-    return stream;
+    return TestUtils.jsonToInputStream(json);
   }
 }

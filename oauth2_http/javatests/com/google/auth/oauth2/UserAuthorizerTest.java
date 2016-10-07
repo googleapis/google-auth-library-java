@@ -312,7 +312,7 @@ public class UserAuthorizerTest {
       credentials1.refresh();
       fail("Credentials should not refresh after revoke.");
     } catch (IOException expected) {
-      // expected
+      // Expected
     }
     UserCredentials credentials2 = authorizer.getCredentials(USER_ID);
     assertNull(credentials2);
@@ -320,7 +320,7 @@ public class UserAuthorizerTest {
 
   private static class TestTokenStore implements TokenStore {
 
-    private final Map<String, String> map = new HashMap<String, String>();
+    private final Map<String, String> map = new HashMap<>();
 
     @Override
     public String load(String id) throws IOException {

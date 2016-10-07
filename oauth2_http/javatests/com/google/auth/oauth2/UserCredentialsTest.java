@@ -102,7 +102,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
       userCredentials.refresh();
       fail("Should not be able to refresh without refresh token.");
     } catch (IllegalStateException expected) {
-      // expected
+      // Expected
     }
   }
 
@@ -277,7 +277,6 @@ public class UserCredentialsTest extends BaseSerializationTest {
   static InputStream writeUserStream(String clientId, String clientSecret, String refreshToken)
       throws IOException {
     GenericJson json = writeUserJson(clientId, clientSecret, refreshToken);
-    InputStream stream = TestUtils.jsonToInputStream(json);
-    return stream;
+    return TestUtils.jsonToInputStream(json);
   }
 }

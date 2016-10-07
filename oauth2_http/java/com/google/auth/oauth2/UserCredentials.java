@@ -104,9 +104,7 @@ public class UserCredentials extends GoogleCredentials {
       throw new IOException("Error reading user credential from JSON, "
           + " expecting 'client_id', 'client_secret' and 'refresh_token'.");
     }
-    UserCredentials credentials =
-        new UserCredentials(clientId, clientSecret, refreshToken, null, transportFactory, null);
-    return credentials;
+    return new UserCredentials(clientId, clientSecret, refreshToken, null, transportFactory, null);
   }
 
   /**
@@ -136,8 +134,7 @@ public class UserCredentials extends GoogleCredentials {
     int expiresInSeconds =
         OAuth2Utils.validateInt32(responseData, "expires_in", PARSE_ERROR_PREFIX);
     long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000;
-    AccessToken access = new AccessToken(accessToken, new Date(expiresAtMilliseconds));
-    return access;
+    return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
   }
 
   /**

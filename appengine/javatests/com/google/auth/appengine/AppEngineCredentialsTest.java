@@ -207,20 +207,12 @@ public class AppEngineCredentialsTest {
   @SuppressWarnings("unchecked")
   public <T> T serializeAndDeserialize(T obj) throws IOException, ClassNotFoundException {
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-    ObjectOutputStream output = null;
-    ObjectInputStream input = null;
-    try {
-      output = new ObjectOutputStream(bytes);
+    try (ObjectOutputStream output = new ObjectOutputStream(bytes)) {
       output.writeObject(obj);
-      input = new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()));
+    }
+    try (ObjectInputStream input =
+        new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()))) {
       return (T) input.readObject();
-    } finally {
-      if (output != null) {
-        output.close();
-      }
-      if (input != null) {
-        input.close();
-      }
     }
   }
 }

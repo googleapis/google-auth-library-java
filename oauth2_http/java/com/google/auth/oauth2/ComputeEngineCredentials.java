@@ -68,7 +68,7 @@ public class ComputeEngineCredentials extends GoogleCredentials {
     request.setParser(parser);
     request.getHeaders().set("Metadata-Flavor", "Google");
     request.setThrowExceptionOnExecuteError(false);
-    HttpResponse response = null;
+    HttpResponse response;
     try {
       response = request.execute();
     } catch (UnknownHostException exception) {
@@ -100,8 +100,7 @@ public class ComputeEngineCredentials extends GoogleCredentials {
     int expiresInSeconds = OAuth2Utils.validateInt32(
         responseData, "expires_in", PARSE_ERROR_PREFIX);
     long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000;
-    AccessToken access = new AccessToken(accessToken, new Date(expiresAtMilliseconds));
-    return access;
+    return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
   }
 
   /**

@@ -116,6 +116,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
           new ServiceAccountJwtAccessCredentials(SA_CLIENT_ID, null, privateKey, SA_PRIVATE_KEY_ID);
       fail("exception expected");
     } catch (NullPointerException e) {
+      // Expected
     }
   }
 
@@ -126,6 +127,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
           SA_CLIENT_ID, SA_CLIENT_EMAIL, null , SA_PRIVATE_KEY_ID);
       fail("exception expected");
     } catch (NullPointerException e) {
+      // Expected
     }
   }
   
@@ -182,6 +184,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
       credentials.getRequestMetadata();
       fail("exception expected");
     } catch (IOException e) {
+      // Expected
     }
   }
 

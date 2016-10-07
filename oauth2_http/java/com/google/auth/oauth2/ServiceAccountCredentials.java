@@ -177,13 +177,11 @@ public class ServiceAccountCredentials extends GoogleCredentials {
     }
     byte[] bytes = section.getBase64DecodedBytes();
     PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(bytes);
-    Exception unexpectedException = null;
+    Exception unexpectedException;
     try {
       KeyFactory keyFactory = SecurityUtils.getRsaKeyFactory();
       return keyFactory.generatePrivate(keySpec);
-    } catch (NoSuchAlgorithmException exception) {
-      unexpectedException = exception;
-    } catch (InvalidKeySpecException exception) {
+    } catch (NoSuchAlgorithmException | InvalidKeySpecException exception) {
       unexpectedException = exception;
     }
     throw OAuth2Utils.exceptionWithCause(
@@ -216,7 +214,7 @@ public class ServiceAccountCredentials extends GoogleCredentials {
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
 
-    String assertion = null;
+    String assertion;
     try {
       assertion = JsonWebSignature.signUsingRsaSha256(
           privateKey, jsonFactory, header, payload);
@@ -247,8 +245,7 @@ public class ServiceAccountCredentials extends GoogleCredentials {
     int expiresInSeconds = OAuth2Utils.validateInt32(
         responseData, "expires_in", PARSE_ERROR_PREFIX);
     long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000;
-    AccessToken access = new AccessToken(accessToken, new Date(expiresAtMilliseconds));
-    return access;
+    return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
   }
 
   /**

@@ -164,7 +164,7 @@ public class OAuth2Credentials extends Credentials {
   public final void addChangeListener(CredentialsChangedListener listener) {
     synchronized(lock) {
       if (changeListeners == null) {
-        changeListeners = new ArrayList<CredentialsChangedListener>();
+        changeListeners = new ArrayList<>();
       }
       changeListeners.add(listener);
     }
@@ -240,9 +240,7 @@ public class OAuth2Credentials extends Credentials {
   protected static <T> T newInstance(String className) throws IOException, ClassNotFoundException {
     try {
       return (T) Class.forName(className).newInstance();
-    } catch (InstantiationException e) {
-      throw new IOException(e);
-    } catch (IllegalAccessException e) {
+    } catch (InstantiationException | IllegalAccessException e) {
       throw new IOException(e);
     }
   }

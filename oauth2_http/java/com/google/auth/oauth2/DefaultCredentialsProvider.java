@@ -154,7 +154,7 @@ class DefaultCredentialsProvider {
   }
 
   private final File getWellKnownCredentialsFile() {
-    File cloudConfigPath = null;
+    File cloudConfigPath;
     String os = getProperty("os.name", "").toLowerCase(Locale.US);
     String envPath = getEnv("CLOUDSDK_CONFIG");
     if (envPath != null) {
@@ -166,8 +166,7 @@ class DefaultCredentialsProvider {
       File configPath = new File(getProperty("user.home", ""), ".config");
       cloudConfigPath = new File(configPath, CLOUDSDK_CONFIG_DIRECTORY);
     }
-    File credentialFilePath = new File(cloudConfigPath, WELL_KNOWN_CREDENTIALS_FILE);
-    return credentialFilePath;
+    return new File(cloudConfigPath, WELL_KNOWN_CREDENTIALS_FILE);
   }
 
   private boolean runningOnAppEngine() {
@@ -178,7 +177,7 @@ class DefaultCredentialsProvider {
       // SystemProperty will always be present on App Engine.
       return false;
     }
-    Exception cause = null;
+    Exception cause;
     Field environmentField;
     try {
       environmentField = systemPropertyClass.getField("environment");
@@ -187,17 +186,8 @@ class DefaultCredentialsProvider {
       Method valueMethod = environmentType.getMethod("value");
       Object environmentValueValue = valueMethod.invoke(environmentValue);
       return (environmentValueValue != null);
-    } catch (NoSuchFieldException exception) {
-      cause = exception;
-    } catch (SecurityException exception) {
-      cause = exception;
-    } catch (IllegalArgumentException exception) {
-      cause = exception;
-    } catch (IllegalAccessException exception) {
-      cause = exception;
-    } catch (NoSuchMethodException exception) {
-      cause = exception;
-    } catch (InvocationTargetException exception) {
+    } catch (NoSuchFieldException | SecurityException | IllegalArgumentException
+        | IllegalAccessException | NoSuchMethodException | InvocationTargetException exception) {
       cause = exception;
     }
     throw OAuth2Utils.exceptionWithCause(new RuntimeException(String.format(
@@ -224,22 +214,15 @@ class DefaultCredentialsProvider {
     if (!onAppEngine) {
       return null;
     }
-    Exception innerException = null;
+    Exception innerException;
     try {
       Class<?> credentialClass = forName(APP_ENGINE_CREDENTIAL_CLASS);
       Constructor<?> constructor = credentialClass
           .getConstructor(Collection.class);
       Collection<String> emptyScopes = Collections.emptyList();
       return (GoogleCredentials) constructor.newInstance(emptyScopes);
-    } catch (ClassNotFoundException e) {
-      innerException = e;
-    } catch (NoSuchMethodException e) {
-      innerException = e;
-    } catch (InstantiationException e) {
-      innerException = e;
-    } catch (IllegalAccessException e) {
-      innerException = e;
-    } catch (InvocationTargetException e) {
+    } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException
+        | IllegalAccessException | InvocationTargetException e) {
       innerException = e;
     }
     throw OAuth2Utils.exceptionWithCause(new IOException(String.format(

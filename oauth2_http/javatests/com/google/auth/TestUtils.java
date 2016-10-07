@@ -47,8 +47,7 @@ public class TestUtils {
   public static InputStream jsonToInputStream(GenericJson json) throws IOException {
     json.setFactory(JSON_FACTORY);
     String text = json.toPrettyString();
-    InputStream stream = new ByteArrayInputStream(text.getBytes(UTF_8));
-    return stream;
+    return new ByteArrayInputStream(text.getBytes(UTF_8));
   }
 
   public static InputStream stringToInputStream(String text) {
@@ -60,7 +59,7 @@ public class TestUtils {
   }
 
   public static Map<String, String> parseQuery(String query) throws IOException {
-    Map<String, String> map = new HashMap<String, String>();
+    Map<String, String> map = new HashMap<>();
     Iterable<String> entries = Splitter.on('&').split(query);
     for (String entry : entries) {
       List<String> sides = Lists.newArrayList(Splitter.on('=').split(entry));

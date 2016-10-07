@@ -124,12 +124,14 @@ public class DefaultCredentialsProviderTest {
       testProvider.getDefaultCredentials(transportFactory);
       fail("No credential expected.");
     } catch (IOException expected) {
+      // Expected
     }
     assertEquals(1, transportFactory.transport.getRequestCount());
     try {
       testProvider.getDefaultCredentials(transportFactory);
       fail("No credential expected.");
     } catch (IOException expected) {
+      // Expected
     }
     assertEquals(1, transportFactory.transport.getRequestCount());
   }
@@ -204,6 +206,7 @@ public class DefaultCredentialsProviderTest {
       testProvider.getDefaultCredentials(transportFactory);
       fail("No credential expected for default test provider.");
     } catch (IOException expected) {
+      // Expected
     }
     assertEquals(1, testProvider.getForNameCallCount());
     // Try a second time.
@@ -211,6 +214,7 @@ public class DefaultCredentialsProviderTest {
       testProvider.getDefaultCredentials(transportFactory);
       fail("No credential expected for default test provider.");
     } catch (IOException expected) {
+      // Expected
     }
     assertEquals(1, testProvider.getForNameCallCount());
   }
@@ -409,6 +413,8 @@ public class DefaultCredentialsProviderTest {
   }
 
   public static class MockAppEngineCredentials extends GoogleCredentials {
+    private static final long serialVersionUID = 2695173591854484322L;
+
     @SuppressWarnings("unused")
     public MockAppEngineCredentials(Collection<String> scopes) {
     }
@@ -471,23 +477,22 @@ public class DefaultCredentialsProviderTest {
 
     @Override
     public LowLevelHttpRequest buildRequest(String method, String url) {
-      MockLowLevelHttpRequest request = new MockLowLevelHttpRequest(url) {
+      return new MockLowLevelHttpRequest(url) {
         @Override
         public LowLevelHttpResponse execute() throws IOException {
           requestCount++;
           throw new IOException("MockRequestCountingTransport request failed.");
         }
       };
-      return request;
     }
   }
 
   private static class TestDefaultCredentialsProvider extends DefaultCredentialsProvider {
 
-    private final Map<String, Class<?>> types = new HashMap<String, Class<?>>();
-    private final Map<String, String> variables = new HashMap<String, String>();
-    private final Map<String, String> properties = new HashMap<String, String>();
-    private final Map<String, InputStream> files = new HashMap<String, InputStream>();
+    private final Map<String, Class<?>> types = new HashMap<>();
+    private final Map<String, String> variables = new HashMap<>();
+    private final Map<String, String> properties = new HashMap<>();
+    private final Map<String, InputStream> files = new HashMap<>();
     private boolean fileSandbox = false;
     private int forNameCallCount = 0;
 
