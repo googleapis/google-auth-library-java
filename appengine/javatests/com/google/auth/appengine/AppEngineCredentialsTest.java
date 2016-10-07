@@ -40,17 +40,14 @@ import static org.junit.Assert.fail;
 
 import com.google.auth.Credentials;
 import com.google.auth.oauth2.AccessToken;
+import com.google.auth.oauth2.BaseSerializationTest;
 import com.google.auth.oauth2.GoogleCredentials;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
@@ -63,7 +60,7 @@ import java.util.Map;
  * Unit tests for AppEngineCredentials
  */
 @RunWith(JUnit4.class)
-public class AppEngineCredentialsTest {
+public class AppEngineCredentialsTest extends BaseSerializationTest {
   
   private static final Collection<String> SCOPES =
       Collections.unmodifiableCollection(Arrays.asList("scope1", "scope2"));
@@ -202,17 +199,5 @@ public class AppEngineCredentialsTest {
       }
     }
     assertTrue("Bearer token not found", found);
-  }
-
-  @SuppressWarnings("unchecked")
-  public <T> T serializeAndDeserialize(T obj) throws IOException, ClassNotFoundException {
-    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-    try (ObjectOutputStream output = new ObjectOutputStream(bytes)) {
-      output.writeObject(obj);
-    }
-    try (ObjectInputStream input =
-        new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()))) {
-      return (T) input.readObject();
-    }
   }
 }
