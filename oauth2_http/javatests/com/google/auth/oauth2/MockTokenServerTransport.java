@@ -110,12 +110,12 @@ public class MockTokenServerTransport extends MockHttpTransport {
     final String urlWithoutQUery = (questionMarkPos > 0) ? url.substring(0, questionMarkPos) : url;
     final String query = (questionMarkPos > 0) ? url.substring(questionMarkPos + 1) : "";
     if (urlWithoutQUery.equals(tokenServerUri.toString())) {
-      MockLowLevelHttpRequest request = new MockLowLevelHttpRequest(url) {
+      return new MockLowLevelHttpRequest(url) {
         @Override
         public LowLevelHttpResponse execute() throws IOException {
           String content = this.getContentAsString();
           Map<String, String> query = TestUtils.parseQuery(content);
-          String accessToken = null;
+          String accessToken;
           String refreshToken = null;
 
           String foundId = query.get("client_id");
@@ -173,15 +173,13 @@ public class MockTokenServerTransport extends MockHttpTransport {
           }
           String refreshText  = refreshContents.toPrettyString();
 
-          MockLowLevelHttpResponse response = new MockLowLevelHttpResponse()
+          return new MockLowLevelHttpResponse()
             .setContentType(Json.MEDIA_TYPE)
             .setContent(refreshText);
-          return response;
         }
       };
-      return request;
     } else if (urlWithoutQUery.equals(OAuth2Utils.TOKEN_REVOKE_URI.toString())) {
-      MockLowLevelHttpRequest request = new MockLowLevelHttpRequest(url) {
+      return new MockLowLevelHttpRequest(url) {
         @Override
         public LowLevelHttpResponse execute() throws IOException {
           Map<String, String> parameters = TestUtils.parseQuery(query);
@@ -192,12 +190,9 @@ public class MockTokenServerTransport extends MockHttpTransport {
           // Token could be access token or refresh token so remove keys and values
           refreshTokens.values().removeAll(Collections.singleton(token));
           refreshTokens.remove(token);
-          MockLowLevelHttpResponse response = new MockLowLevelHttpResponse()
-          .setContentType(Json.MEDIA_TYPE);
-        return response;
+          return new MockLowLevelHttpResponse().setContentType(Json.MEDIA_TYPE);
         }
       };
-      return request;
     }
     return super.buildRequest(method, url);
   }

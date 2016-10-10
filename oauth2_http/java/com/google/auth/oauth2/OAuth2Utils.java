@@ -39,6 +39,7 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.auth.http.AuthHttpConstants;
+import com.google.auth.http.HttpTransportFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -60,6 +61,8 @@ class OAuth2Utils {
 
   static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 
+  static final HttpTransportFactory HTTP_TRANSPORT_FACTORY = new DefaultHttpTransportFactory();
+
   static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
 
   static final Charset UTF_8 = Charset.forName("UTF-8");
@@ -68,6 +71,13 @@ class OAuth2Utils {
   private static String VALUE_WRONG_TYPE_MESSAGE = "%sExpected %s value %s of wrong type.";
 
   static final String BEARER_PREFIX = AuthHttpConstants.BEARER + " ";
+
+  static class DefaultHttpTransportFactory implements HttpTransportFactory {
+
+    public HttpTransport create() {
+      return HTTP_TRANSPORT;
+    }
+  }
 
   /**
    * Returns whether the headers contain the specified value as one of the entries in the

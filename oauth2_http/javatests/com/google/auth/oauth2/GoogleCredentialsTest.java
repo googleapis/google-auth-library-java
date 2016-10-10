@@ -38,14 +38,15 @@ import static org.junit.Assert.fail;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.auth.TestUtils;
+import com.google.auth.http.HttpTransportFactory;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
@@ -71,11 +72,32 @@ public class GoogleCredentialsTest {
   private static final String USER_CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
   private static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
-  private static final HttpTransport DUMMY_TRANSPORT = new MockTokenServerTransport();
+  private static final HttpTransportFactory DUMMY_TRANSPORT_FACTORY =
+      new MockTokenServerTransportFactory();
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
 
   private static final Collection<String> SCOPES =
     Collections.unmodifiableCollection(Arrays.asList("scope1", "scope2"));
+
+  static class MockHttpTransportFactory implements HttpTransportFactory {
+
+    MockHttpTransport transport = new MockHttpTransport();
+
+    @Override
+    public HttpTransport create() {
+      return transport;
+    }
+  }
+
+  public static class MockTokenServerTransportFactory implements HttpTransportFactory {
+
+    public MockTokenServerTransport transport = new MockTokenServerTransport();
+
+    @Override
+    public HttpTransport create() {
+      return transport;
+    }
+  }
 
   @Test
   public void getApplicationDefault_nullTransport_throws() throws IOException {
@@ -83,6 +105,7 @@ public class GoogleCredentialsTest {
       GoogleCredentials.getApplicationDefault(null);
       fail();
     } catch (NullPointerException expected) {
+      // Expected
     }
   }
 
@@ -93,28 +116,31 @@ public class GoogleCredentialsTest {
       GoogleCredentials.fromStream(stream, null);
       fail();
     } catch (NullPointerException expected) {
+      // Expected
     }
   }
 
   @Test
   public void fromStream_nullStreamThrows() throws IOException {
-    HttpTransport transport = new MockHttpTransport();
+    MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     try {
-      GoogleCredentials.fromStream(null, transport);
+      GoogleCredentials.fromStream(null, transportFactory);
       fail();
     } catch (NullPointerException expected) {
+      // Expected
     }
   }
 
   @Test
   public void fromStream_serviceAccount_providesToken() throws IOException {
-    MockTokenServerTransport transport = new MockTokenServerTransport();
-    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     InputStream serviceAccountStream = ServiceAccountCredentialsTest
         .writeServiceAccountAccountStream(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
 
-    GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccountStream, transport);
+    GoogleCredentials credentials =
+        GoogleCredentials.fromStream(serviceAccountStream, transportFactory);
 
     assertNotNull(credentials);
     credentials = credentials.createScoped(SCOPES);
@@ -160,13 +186,13 @@ public class GoogleCredentialsTest {
 
   @Test
   public void fromStream_user_providesToken() throws IOException {
-    MockTokenServerTransport transport = new MockTokenServerTransport();
-    transport.addClient(USER_CLIENT_ID, USER_CLIENT_SECRET);
-    transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(USER_CLIENT_ID, USER_CLIENT_SECRET);
+    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
     InputStream userStream =
         UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
 
-    GoogleCredentials credentials = GoogleCredentials.fromStream(userStream, transport);
+    GoogleCredentials credentials = GoogleCredentials.fromStream(userStream, transportFactory);
 
     assertNotNull(credentials);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
@@ -199,7 +225,7 @@ public class GoogleCredentialsTest {
 
   private void testFromStreamException(InputStream stream, String expectedMessageContent) {
     try {
-      GoogleCredentials.fromStream(stream, DUMMY_TRANSPORT);
+      GoogleCredentials.fromStream(stream, DUMMY_TRANSPORT_FACTORY);
       fail();
     } catch (IOException expected) {
       assertTrue(expected.getMessage().contains(expectedMessageContent));

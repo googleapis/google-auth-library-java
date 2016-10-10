@@ -31,7 +31,7 @@
 
 package com.google.auth.oauth2;
 
-import com.google.api.client.http.HttpTransport;
+import com.google.auth.http.HttpTransportFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -87,15 +87,16 @@ class DefaultCredentialsProvider {
    * Compute Engine or credentials specified by an environment variable or a file in a well-known
    * location.</p>
    *
-   * @param transport the transport for Http calls.
+   * @param transportFactory HTTP transport factory, creates the transport used to get access
+   *        tokens.
    * @return the credentials instance.
    * @throws IOException if the credentials cannot be created in the current environment.
    **/
-  final GoogleCredentials getDefaultCredentials(HttpTransport transport)
+  final GoogleCredentials getDefaultCredentials(HttpTransportFactory transportFactory)
       throws IOException {
     synchronized (this) {
       if (cachedCredentials == null) {
-        cachedCredentials = getDefaultCredentialsUnsynchronized(transport);
+        cachedCredentials = getDefaultCredentialsUnsynchronized(transportFactory);
       }
       if (cachedCredentials != null) {
         return cachedCredentials;
@@ -110,8 +111,8 @@ class DefaultCredentialsProvider {
         HELP_PERMALINK));
   }
 
-  private final GoogleCredentials getDefaultCredentialsUnsynchronized(HttpTransport transport)
-      throws IOException {
+  private final GoogleCredentials getDefaultCredentialsUnsynchronized(
+      HttpTransportFactory transportFactory) throws IOException {
 
     // First try the environment variable
     GoogleCredentials credentials = null;
@@ -125,7 +126,7 @@ class DefaultCredentialsProvider {
           throw new IOException("File does not exist.");
         }
         credentialsStream = readStream(credentialsFile);
-        credentials = GoogleCredentials.fromStream(credentialsStream, transport);
+        credentials = GoogleCredentials.fromStream(credentialsStream, transportFactory);
       } catch (IOException e) {
         // Although it is also the cause, the message of the caught exception can have very
         // important information for diagnosing errors, so include its message in the
@@ -149,7 +150,7 @@ class DefaultCredentialsProvider {
       try {
         if (isFile(wellKnownFileLocation)) {
           credentialsStream = readStream(wellKnownFileLocation);
-          credentials = GoogleCredentials.fromStream(credentialsStream, transport);
+          credentials = GoogleCredentials.fromStream(credentialsStream, transportFactory);
         }
       } catch (IOException e) {
         throw new IOException(String.format(
@@ -177,14 +178,14 @@ class DefaultCredentialsProvider {
     
     // Then try Compute Engine
     if (credentials == null) {
-      credentials = tryGetComputeCredentials(transport);
+      credentials = tryGetComputeCredentials(transportFactory);
     }
 
     return credentials;
   }
 
   private final File getWellKnownCredentialsFile() {
-    File cloudConfigPath = null;
+    File cloudConfigPath;
     String os = getProperty("os.name", "").toLowerCase(Locale.US);
     String envPath = getEnv("CLOUDSDK_CONFIG");
     if (envPath != null) {
@@ -196,8 +197,7 @@ class DefaultCredentialsProvider {
       File configPath = new File(getProperty("user.home", ""), ".config");
       cloudConfigPath = new File(configPath, CLOUDSDK_CONFIG_DIRECTORY);
     }
-    File credentialFilePath = new File(cloudConfigPath, WELL_KNOWN_CREDENTIALS_FILE);
-    return credentialFilePath;
+    return new File(cloudConfigPath, WELL_KNOWN_CREDENTIALS_FILE);
   }
 
   private boolean runningOnAppEngine() {
@@ -208,7 +208,7 @@ class DefaultCredentialsProvider {
       // SystemProperty will always be present on App Engine.
       return false;
     }
-    Exception cause = null;
+    Exception cause;
     Field environmentField;
     try {
       environmentField = systemPropertyClass.getField("environment");
@@ -217,17 +217,8 @@ class DefaultCredentialsProvider {
       Method valueMethod = environmentType.getMethod("value");
       Object environmentValueValue = valueMethod.invoke(environmentValue);
       return (environmentValueValue != null);
-    } catch (NoSuchFieldException exception) {
-      cause = exception;
-    } catch (SecurityException exception) {
-      cause = exception;
-    } catch (IllegalArgumentException exception) {
-      cause = exception;
-    } catch (IllegalAccessException exception) {
-      cause = exception;
-    } catch (NoSuchMethodException exception) {
-      cause = exception;
-    } catch (InvocationTargetException exception) {
+    } catch (NoSuchFieldException | SecurityException | IllegalArgumentException
+        | IllegalAccessException | NoSuchMethodException | InvocationTargetException exception) {
       cause = exception;
     }
     throw OAuth2Utils.exceptionWithCause(new RuntimeException(String.format(
@@ -254,22 +245,15 @@ class DefaultCredentialsProvider {
     if (!onAppEngine) {
       return null;
     }
-    Exception innerException = null;
+    Exception innerException;
     try {
       Class<?> credentialClass = forName(APP_ENGINE_CREDENTIAL_CLASS);
       Constructor<?> constructor = credentialClass
           .getConstructor(Collection.class);
       Collection<String> emptyScopes = Collections.emptyList();
       return (GoogleCredentials) constructor.newInstance(emptyScopes);
-    } catch (ClassNotFoundException e) {
-      innerException = e;
-    } catch (NoSuchMethodException e) {
-      innerException = e;
-    } catch (InstantiationException e) {
-      innerException = e;
-    } catch (IllegalAccessException e) {
-      innerException = e;
-    } catch (InvocationTargetException e) {
+    } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException
+        | IllegalAccessException | InvocationTargetException e) {
       innerException = e;
     }
     throw OAuth2Utils.exceptionWithCause(new IOException(String.format(
@@ -279,15 +263,16 @@ class DefaultCredentialsProvider {
         APP_ENGINE_CREDENTIAL_CLASS)), innerException);
   }
 
-  private final GoogleCredentials tryGetComputeCredentials(HttpTransport transport) {
+  private final GoogleCredentials tryGetComputeCredentials(HttpTransportFactory transportFactory) {
     // Checking compute engine requires a round-trip, so check only once
     if (checkedComputeEngine) {
       return null;
     }
-    boolean runningOnComputeEngine = ComputeEngineCredentials.runningOnComputeEngine(transport);
+    boolean runningOnComputeEngine =
+        ComputeEngineCredentials.runningOnComputeEngine(transportFactory);
     checkedComputeEngine = true;
     if (runningOnComputeEngine) {
-      return new ComputeEngineCredentials(transport);
+      return new ComputeEngineCredentials(transportFactory);
     }
     return null;
   }

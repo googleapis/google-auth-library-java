@@ -33,33 +33,37 @@ package com.google.auth.oauth2;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.LowLevelHttpRequest;
 import com.google.api.client.http.LowLevelHttpResponse;
-import com.google.api.client.http.HttpTransport;
 import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.auth.TestUtils;
+import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.oauth2.ComputeEngineCredentialsTest.MockMetadataServerTransportFactory;
+import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
+import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.io.InputStream;
-import java.io.IOException;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.security.AccessControlException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Test case for {@link DefaultCredentialsProvider}.
@@ -82,13 +86,23 @@ public class DefaultCredentialsProviderTest {
   private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
 
+  static class MockRequestCountingTransportFactory implements HttpTransportFactory {
+
+    MockRequestCountingTransport transport = new MockRequestCountingTransport();
+
+    @Override
+    public HttpTransport create() {
+      return transport;
+    }
+  }
+
   @Test
   public void getDefaultCredentials_noCredentials_throws() throws Exception {
-    HttpTransport transport = new MockHttpTransport();
+    MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
 
     try {
-      testProvider.getDefaultCredentials(transport);
+      testProvider.getDefaultCredentials(transportFactory);
       fail("No credential expected.");
     } catch (IOException e) {
       String message = e.getMessage();
@@ -98,12 +112,12 @@ public class DefaultCredentialsProviderTest {
 
   @Test
   public void getDefaultCredentials_noCredentialsSandbox_throwsNonSecurity() throws Exception {
-    HttpTransport transport = new MockHttpTransport();
+    MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setFileSandbox(true);
 
     try {
-      testProvider.getDefaultCredentials(transport);
+      testProvider.getDefaultCredentials(transportFactory);
       fail("No credential expected.");
     } catch (IOException e) {
       String message = e.getMessage();
@@ -113,7 +127,7 @@ public class DefaultCredentialsProviderTest {
 
   @Test
   public void getDefaultCredentials_envValidSandbox_throwsNonSecurity() throws Exception {
-    HttpTransport transport = new MockHttpTransport();
+    MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     InputStream userStream =
         UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
@@ -123,7 +137,7 @@ public class DefaultCredentialsProviderTest {
     testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, userPath);
     
     try {
-      testProvider.getDefaultCredentials(transport);
+      testProvider.getDefaultCredentials(transportFactory);
       fail("No credential expected.");
     } catch (IOException e) {
       String message = e.getMessage();
@@ -133,30 +147,33 @@ public class DefaultCredentialsProviderTest {
   
   @Test
   public void getDefaultCredentials_noCredentials_singleGceTestRequest() {
-    MockRequestCountingTransport transport = new MockRequestCountingTransport();
+    MockRequestCountingTransportFactory transportFactory =
+        new MockRequestCountingTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
 
     try {
-      testProvider.getDefaultCredentials(transport);
+      testProvider.getDefaultCredentials(transportFactory);
       fail("No credential expected.");
     } catch (IOException expected) {
+      // Expected
     }
-    assertEquals(1, transport.getRequestCount());
+    assertEquals(1, transportFactory.transport.getRequestCount());
     try {
-      testProvider.getDefaultCredentials(transport);
+      testProvider.getDefaultCredentials(transportFactory);
       fail("No credential expected.");
     } catch (IOException expected) {
+      // Expected
     }
-    assertEquals(1, transport.getRequestCount());
+    assertEquals(1, transportFactory.transport.getRequestCount());
   }
 
   @Test
   public void getDefaultCredentials_caches() throws IOException {
-    HttpTransport transport = new MockMetadataServerTransport();
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
 
-    GoogleCredentials firstCall = testProvider.getDefaultCredentials(transport);
-    GoogleCredentials secondCall = testProvider.getDefaultCredentials(transport);
+    GoogleCredentials firstCall = testProvider.getDefaultCredentials(transportFactory);
+    GoogleCredentials secondCall = testProvider.getDefaultCredentials(transportFactory);
 
     assertNotNull(firstCall);
     assertSame(firstCall, secondCall);
@@ -164,14 +181,14 @@ public class DefaultCredentialsProviderTest {
 
   @Test
   public void getDefaultCredentials_appEngine_deployed() throws IOException  {
-    HttpTransport transport = new MockHttpTransport();
+    MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.addType(DefaultCredentialsProvider.APP_ENGINE_CREDENTIAL_CLASS,
         MockAppEngineCredentials.class);
     testProvider.addType(DefaultCredentialsProvider.APP_ENGINE_SIGNAL_CLASS,
         MockAppEngineSystemProperty.class);
 
-    GoogleCredentials defaultCredential = testProvider.getDefaultCredentials(transport);
+    GoogleCredentials defaultCredential = testProvider.getDefaultCredentials(transportFactory);
 
     assertNotNull(defaultCredential);
     assertTrue(defaultCredential instanceof MockAppEngineCredentials);
@@ -179,7 +196,7 @@ public class DefaultCredentialsProviderTest {
 
   @Test
   public void getDefaultCredentials_appEngineClassWithoutRuntime_NotFoundError() {
-    HttpTransport transport = new MockHttpTransport();
+    MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.addType(DefaultCredentialsProvider.APP_ENGINE_CREDENTIAL_CLASS,
         MockAppEngineCredentials.class);
@@ -187,7 +204,7 @@ public class DefaultCredentialsProviderTest {
         MockOffAppEngineSystemProperty.class);
 
     try {
-      testProvider.getDefaultCredentials(transport);
+      testProvider.getDefaultCredentials(transportFactory);
       fail("No credential expected when not on App Engine.");
     } catch (IOException e) {
       String message = e.getMessage();
@@ -197,13 +214,13 @@ public class DefaultCredentialsProviderTest {
 
   @Test
   public void getDefaultCredentials_appEngineRuntimeWithoutClass_throwsHelpfulLoadError() {
-    HttpTransport transport = new MockHttpTransport();
+    MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.addType(DefaultCredentialsProvider.APP_ENGINE_SIGNAL_CLASS,
         MockAppEngineSystemProperty.class);
 
     try {
-      testProvider.getDefaultCredentials(transport);
+      testProvider.getDefaultCredentials(transportFactory);
       fail("Credential expected to fail to load if credential class not present.");
     } catch (IOException e) {
       String message = e.getMessage();
@@ -214,30 +231,32 @@ public class DefaultCredentialsProviderTest {
 
   @Test
   public void getDefaultCredentials_appEngine_singleClassLoadAttempt() {
-    HttpTransport transport = new MockHttpTransport();
+    MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     try {
-      testProvider.getDefaultCredentials(transport);
+      testProvider.getDefaultCredentials(transportFactory);
       fail("No credential expected for default test provider.");
     } catch (IOException expected) {
+      // Expected
     }
     assertEquals(1, testProvider.getForNameCallCount());
     // Try a second time.
     try {
-      testProvider.getDefaultCredentials(transport);
+      testProvider.getDefaultCredentials(transportFactory);
       fail("No credential expected for default test provider.");
     } catch (IOException expected) {
+      // Expected
     }
     assertEquals(1, testProvider.getForNameCallCount());
   }
 
   @Test
   public void getDefaultCredentials_compute_providesToken() throws IOException {
-    MockMetadataServerTransport transport = new MockMetadataServerTransport();
-    transport.setAccessToken(ACCESS_TOKEN);
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    transportFactory.transport.setAccessToken(ACCESS_TOKEN);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
 
-    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transport);
+    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory);
 
     assertNotNull(defaultCredentials);
     Map<String, List<String>> metadata = defaultCredentials.getRequestMetadata(CALL_URI);
@@ -246,11 +265,11 @@ public class DefaultCredentialsProviderTest {
 
   @Test
   public void getDefaultCredentials_cloudshell() throws IOException {
-    HttpTransport transport = new MockHttpTransport();
+    MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setEnv(DefaultCredentialsProvider.CLOUD_SHELL_ENV_VAR, "4");
     
-    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transport);
+    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory);
 
     assertTrue(defaultCredentials instanceof CloudShellCredentials);
     assertEquals(((CloudShellCredentials) defaultCredentials).getAuthPort(), 4);
@@ -258,12 +277,12 @@ public class DefaultCredentialsProviderTest {
 
   @Test
   public void getDefaultCredentials_cloudshell_withComputCredentialsPresent() throws IOException {
-    MockMetadataServerTransport transport = new MockMetadataServerTransport();
-    transport.setAccessToken(ACCESS_TOKEN);
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    transportFactory.transport.setAccessToken(ACCESS_TOKEN);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setEnv(DefaultCredentialsProvider.CLOUD_SHELL_ENV_VAR, "4");
 
-    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transport);
+    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory);
 
     assertTrue(defaultCredentials instanceof CloudShellCredentials);
     assertEquals(((CloudShellCredentials) defaultCredentials).getAuthPort(), 4);
@@ -272,12 +291,12 @@ public class DefaultCredentialsProviderTest {
   @Test
   public void getDefaultCredentials_envMissingFile_throws() {
     final String invalidPath = "/invalid/path";
-    HttpTransport transport = new MockHttpTransport();
+    MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, invalidPath);
 
     try {
-      testProvider.getDefaultCredentials(transport);
+      testProvider.getDefaultCredentials(transportFactory);
       fail("Non existent credential should throw exception");
     } catch (IOException e) {
       String message = e.getMessage();
@@ -288,8 +307,8 @@ public class DefaultCredentialsProviderTest {
 
   @Test
   public void getDefaultCredentials_envServiceAccount_providesToken() throws IOException {
-    MockTokenServerTransport transport = new MockTokenServerTransport();
-    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     InputStream serviceAccountStream = ServiceAccountCredentialsTest
         .writeServiceAccountAccountStream(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
@@ -299,7 +318,7 @@ public class DefaultCredentialsProviderTest {
     testProvider.setEnv(
         DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, serviceAccountPath);
 
-    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transport);
+    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory);
 
     assertNotNull(defaultCredentials);
     defaultCredentials = defaultCredentials.createScoped(SCOPES);
@@ -395,12 +414,12 @@ public class DefaultCredentialsProviderTest {
     testProvider.setProperty("user.home", homeDir.getAbsolutePath());
     testProvider.addFile(wellKnownFile.getAbsolutePath(), wkfStream);
 
-    MockTokenServerTransport transport = new MockTokenServerTransport();
-    transport.addClient(USER_CLIENT_ID, USER_CLIENT_SECRET);
-    transport.addRefreshToken(refreshTokenWkf, accessTokenWkf);
-    transport.addRefreshToken(refreshTokenEnv, accessTokenEnv);
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(USER_CLIENT_ID, USER_CLIENT_SECRET);
+    transportFactory.transport.addRefreshToken(refreshTokenWkf, accessTokenWkf);
+    transportFactory.transport.addRefreshToken(refreshTokenEnv, accessTokenEnv);
 
-    testUserProvidesToken(testProvider, transport, accessTokenEnv);
+    testUserProvidesToken(testProvider, transportFactory, accessTokenEnv);
   }
 
   private static File getTempDirectory() {
@@ -409,15 +428,15 @@ public class DefaultCredentialsProviderTest {
 
   private void testUserProvidesToken(TestDefaultCredentialsProvider testProvider, String clientId,
       String clientSecret, String refreshToken) throws IOException {
-    MockTokenServerTransport transport = new MockTokenServerTransport();
-    transport.addClient(clientId, clientSecret);
-    transport.addRefreshToken(refreshToken, ACCESS_TOKEN);
-    testUserProvidesToken(testProvider, transport, ACCESS_TOKEN);
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(clientId, clientSecret);
+    transportFactory.transport.addRefreshToken(refreshToken, ACCESS_TOKEN);
+    testUserProvidesToken(testProvider, transportFactory, ACCESS_TOKEN);
   }
 
   private void testUserProvidesToken(TestDefaultCredentialsProvider testProvider,
-      HttpTransport transport, String accessToken) throws IOException {
-    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transport);
+      HttpTransportFactory transportFactory, String accessToken) throws IOException {
+    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory);
 
     assertNotNull(defaultCredentials);
     Map<String, List<String>> metadata = defaultCredentials.getRequestMetadata(CALL_URI);
@@ -425,6 +444,8 @@ public class DefaultCredentialsProviderTest {
   }
 
   public static class MockAppEngineCredentials extends GoogleCredentials {
+    private static final long serialVersionUID = 2695173591854484322L;
+
     @SuppressWarnings("unused")
     public MockAppEngineCredentials(Collection<String> scopes) {
     }
@@ -487,23 +508,22 @@ public class DefaultCredentialsProviderTest {
 
     @Override
     public LowLevelHttpRequest buildRequest(String method, String url) {
-      MockLowLevelHttpRequest request = new MockLowLevelHttpRequest(url) {
+      return new MockLowLevelHttpRequest(url) {
         @Override
         public LowLevelHttpResponse execute() throws IOException {
           requestCount++;
           throw new IOException("MockRequestCountingTransport request failed.");
         }
       };
-      return request;
     }
   }
 
   private static class TestDefaultCredentialsProvider extends DefaultCredentialsProvider {
 
-    private final Map<String, Class<?>> types = new HashMap<String, Class<?>>();
-    private final Map<String, String> variables = new HashMap<String, String>();
-    private final Map<String, String> properties = new HashMap<String, String>();
-    private final Map<String, InputStream> files = new HashMap<String, InputStream>();
+    private final Map<String, Class<?>> types = new HashMap<>();
+    private final Map<String, String> variables = new HashMap<>();
+    private final Map<String, String> properties = new HashMap<>();
+    private final Map<String, InputStream> files = new HashMap<>();
     private boolean fileSandbox = false;
     private int forNameCallCount = 0;
 

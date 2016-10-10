@@ -32,13 +32,15 @@
 package com.google.auth.appengine;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.junit.Assert.assertNotSame;
 
 import com.google.auth.Credentials;
 import com.google.auth.oauth2.AccessToken;
+import com.google.auth.oauth2.BaseSerializationTest;
 import com.google.auth.oauth2.GoogleCredentials;
 
 import org.junit.Test;
@@ -58,7 +60,7 @@ import java.util.Map;
  * Unit tests for AppEngineCredentials
  */
 @RunWith(JUnit4.class)
-public class AppEngineCredentialsTest {
+public class AppEngineCredentialsTest extends BaseSerializationTest {
   
   private static final Collection<String> SCOPES =
       Collections.unmodifiableCollection(Arrays.asList("scope1", "scope2"));
@@ -117,7 +119,62 @@ public class AppEngineCredentialsTest {
     assertEquals(1, appIdentity.getGetAccessTokenCallCount());
     assertContainsBearerToken(metadata, expectedAccessToken);
   }
-  
+
+  @Test
+  public void equals_true() throws IOException {
+    final Collection<String> emptyScopes = Collections.emptyList();
+    MockAppIdentityService appIdentity = new MockAppIdentityService();
+    GoogleCredentials credentials = new AppEngineCredentials(emptyScopes, appIdentity);
+    GoogleCredentials otherCredentials = new AppEngineCredentials(emptyScopes, appIdentity);
+    assertTrue(credentials.equals(credentials));
+    assertTrue(credentials.equals(otherCredentials));
+    assertTrue(otherCredentials.equals(credentials));
+  }
+
+  @Test
+  public void equals_false_scopes() throws IOException {
+    final Collection<String> emptyScopes = Collections.emptyList();
+    final Collection<String> scopes = Collections.singleton("SomeScope");
+    MockAppIdentityService appIdentity = new MockAppIdentityService();
+    GoogleCredentials credentials = new AppEngineCredentials(emptyScopes, appIdentity);
+    GoogleCredentials otherCredentials = new AppEngineCredentials(scopes, appIdentity);
+    assertFalse(credentials.equals(otherCredentials));
+    assertFalse(otherCredentials.equals(credentials));
+  }
+
+  @Test
+  public void toString_containsFields() throws IOException {
+    String expectedToString = String.format(
+        "AppEngineCredentials{scopes=[%s], scopesRequired=%b, appIdentityServiceClassName=%s}",
+        "SomeScope",
+        false,
+        MockAppIdentityService.class.getName());
+    final Collection<String> scopes = Collections.singleton("SomeScope");
+    MockAppIdentityService appIdentity = new MockAppIdentityService();
+    GoogleCredentials credentials = new AppEngineCredentials(scopes, appIdentity);
+    assertEquals(expectedToString, credentials.toString());
+  }
+
+  @Test
+  public void hashCode_equals() throws IOException {
+    final Collection<String> emptyScopes = Collections.emptyList();
+    MockAppIdentityService appIdentity = new MockAppIdentityService();
+    GoogleCredentials credentials = new AppEngineCredentials(emptyScopes, appIdentity);
+    GoogleCredentials otherCredentials = new AppEngineCredentials(emptyScopes, appIdentity);
+    assertEquals(credentials.hashCode(), otherCredentials.hashCode());
+  }
+
+  @Test
+  public void serialize() throws IOException, ClassNotFoundException {
+    final Collection<String> scopes = Collections.singleton("SomeScope");
+    MockAppIdentityService appIdentity = new MockAppIdentityService();
+    GoogleCredentials credentials = new AppEngineCredentials(scopes, appIdentity);
+    GoogleCredentials deserializedCredentials = serializeAndDeserialize(credentials);
+    assertEquals(credentials, deserializedCredentials);
+    assertEquals(credentials.hashCode(), deserializedCredentials.hashCode());
+    assertEquals(credentials.toString(), deserializedCredentials.toString());
+  }
+
   private static void assertContainsBearerToken(Map<String, List<String>> metadata, String token) {
     assertNotNull(metadata);
     assertNotNull(token);

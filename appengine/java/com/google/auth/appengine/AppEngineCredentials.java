@@ -31,16 +31,20 @@
 
 package com.google.auth.appengine;
 
-import com.google.auth.oauth2.AccessToken;
-import com.google.auth.oauth2.GoogleCredentials;
-import com.google.common.collect.ImmutableList;
 import com.google.appengine.api.appidentity.AppIdentityService;
 import com.google.appengine.api.appidentity.AppIdentityService.GetAccessTokenResult;
 import com.google.appengine.api.appidentity.AppIdentityServiceFactory;
+import com.google.auth.oauth2.AccessToken;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * OAuth2 credentials representing the built-in service account for Google App ENgine.
@@ -48,24 +52,27 @@ import java.util.Date;
  * <p>Fetches access tokens from the App Identity service.
  */
 public class AppEngineCredentials extends GoogleCredentials {
-  
-  private final AppIdentityService appIdentityService;
-  
+
+  private static final long serialVersionUID = -2627708355455064660L;
+
+  private final String appIdentityServiceClassName;
   private final Collection<String> scopes;
-  
-  private final boolean scopesRequired;  
-  
+  private final boolean scopesRequired;
+
+  private transient AppIdentityService appIdentityService;
+
   public AppEngineCredentials(Collection<String> scopes) {
     this(scopes, null);
   }
 
   public AppEngineCredentials(Collection<String> scopes, AppIdentityService appIdentityService) {
-    this.scopes = ImmutableList.copyOf(scopes);
+    this.scopes = scopes == null ? ImmutableSet.<String>of() : ImmutableList.copyOf(scopes);
     this.appIdentityService = appIdentityService != null ? appIdentityService 
         : AppIdentityServiceFactory.getAppIdentityService();
-    scopesRequired = (scopes == null || scopes.isEmpty());
+    this.appIdentityServiceClassName = this.appIdentityService.getClass().getName();
+    scopesRequired = this.scopes.isEmpty();
   }
-  
+
   /**
    * Refresh the access token by getting it from the App Identity service
    */
@@ -88,5 +95,35 @@ public class AppEngineCredentials extends GoogleCredentials {
   @Override
   public GoogleCredentials createScoped(Collection<String> scopes) {
     return new AppEngineCredentials(scopes, appIdentityService);
-  }    
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(scopes, scopesRequired, appIdentityServiceClassName);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("scopes", scopes)
+        .add("scopesRequired", scopesRequired)
+        .add("appIdentityServiceClassName", appIdentityServiceClassName)
+        .toString();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof AppEngineCredentials)) {
+      return false;
+    }
+    AppEngineCredentials other = (AppEngineCredentials) obj;
+    return this.scopesRequired == other.scopesRequired
+        && Objects.equals(this.scopes, other.scopes)
+        && Objects.equals(this.appIdentityServiceClassName, other.appIdentityServiceClassName);
+  }
+
+  private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
+    input.defaultReadObject();
+    appIdentityService = newInstance(appIdentityServiceClassName);
+  }
 }

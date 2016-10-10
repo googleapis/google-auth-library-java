@@ -39,14 +39,18 @@ import com.google.api.client.util.Preconditions;
 import com.google.auth.Credentials;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.http.AuthHttpConstants;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.net.URI;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /**
@@ -56,6 +60,7 @@ import java.util.concurrent.Executor;
  */
 public class ServiceAccountJwtAccessCredentials extends Credentials {
 
+  private static final long serialVersionUID = -7274955171379494197L;
   static final String JWT_ACCESS_PREFIX = OAuth2Utils.BEARER_PREFIX;
 
   private final String clientId;
@@ -64,8 +69,9 @@ public class ServiceAccountJwtAccessCredentials extends Credentials {
   private final String privateKeyId;
   private final URI defaultAudience;
 
-  // Allow clock to be overriden by test code
-  Clock clock = Clock.SYSTEM;
+  // Until we expose this to the users it can remain transient and non-serializable
+  @VisibleForTesting
+  transient Clock clock = Clock.SYSTEM;
 
   /**
    * Constructor with minimum identifying information.
@@ -201,9 +207,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials {
     String assertion = getJwtAccess(uri);
     String authorizationHeader = JWT_ACCESS_PREFIX + assertion;
     List<String> newAuthorizationHeaders = Collections.singletonList(authorizationHeader);
-    Map<String, List<String>> newRequestMetadata =
-        Collections.singletonMap(AuthHttpConstants.AUTHORIZATION, newAuthorizationHeaders);
-    return newRequestMetadata;
+    return Collections.singletonMap(AuthHttpConstants.AUTHORIZATION, newAuthorizationHeaders);
   }
 
   /**
@@ -231,7 +235,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials {
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
 
-    String assertion = null;
+    String assertion;
     try {
       assertion = JsonWebSignature.signUsingRsaSha256(
           privateKey, jsonFactory, header, payload);
@@ -256,5 +260,38 @@ public class ServiceAccountJwtAccessCredentials extends Credentials {
 
   public final String getPrivateKeyId() {
     return privateKeyId;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(clientId, clientEmail, privateKey, privateKeyId, defaultAudience);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("clientId", clientId)
+        .add("clientEmail", clientEmail)
+        .add("privateKeyId", privateKeyId)
+        .add("defaultAudience", defaultAudience)
+        .toString();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof ServiceAccountJwtAccessCredentials)) {
+      return false;
+    }
+    ServiceAccountJwtAccessCredentials other = (ServiceAccountJwtAccessCredentials) obj;
+    return Objects.equals(this.clientId, other.clientId)
+        && Objects.equals(this.clientEmail, other.clientEmail)
+        && Objects.equals(this.privateKey, other.privateKey)
+        && Objects.equals(this.privateKeyId, other.privateKeyId)
+        && Objects.equals(this.defaultAudience, other.defaultAudience);
+  }
+
+  private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
+    input.defaultReadObject();
+    clock = Clock.SYSTEM;
   }
 }

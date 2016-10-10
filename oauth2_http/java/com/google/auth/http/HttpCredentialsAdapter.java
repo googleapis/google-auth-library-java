@@ -99,7 +99,7 @@ public class HttpCredentialsAdapter
     }
     for (Map.Entry<String, List<String>> entry : credentialHeaders.entrySet()) {
       String headerName = entry.getKey();
-      List<String> requestValues = new ArrayList<String>();
+      List<String> requestValues = new ArrayList<>();
       requestValues.addAll(entry.getValue());
       requestHeaders.put(headerName, requestValues);
     }

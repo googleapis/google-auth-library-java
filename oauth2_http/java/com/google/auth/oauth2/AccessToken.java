@@ -31,12 +31,18 @@
 
 package com.google.auth.oauth2;
 
+import com.google.common.base.MoreObjects;
+
+import java.io.Serializable;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * Represents a temporary OAuth2 access token and its expiration information.
  */
-public class AccessToken {
+public class AccessToken implements Serializable {
+
+  private static final long serialVersionUID = -8514239465808977353L;
 
   private final String tokenValue;
   private final Long expirationTimeMillis;
@@ -69,5 +75,28 @@ public class AccessToken {
 
   Long getExpirationTimeMillis() {
     return expirationTimeMillis;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(tokenValue, expirationTimeMillis);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("tokenValue", tokenValue)
+        .add("expirationTimeMillis", expirationTimeMillis)
+        .toString();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof AccessToken)) {
+      return false;
+    }
+    AccessToken other = (AccessToken) obj;
+    return Objects.equals(this.tokenValue, other.tokenValue)
+        && Objects.equals(this.expirationTimeMillis, other.expirationTimeMillis);
   }
 }

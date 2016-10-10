@@ -38,6 +38,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
 import com.google.auth.TestUtils;
+import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -61,7 +62,7 @@ public class UserAuthorizerTest {
   private static final String CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
   private static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
   private static final String ACCESS_TOKEN_VALUE = "1/MkSJoj1xsli0AccessToken_NKPY2";
-  private static final Long EXPIRATION_TIME = Long.valueOf(504000300);
+  private static final Long EXPIRATION_TIME = 504000300L;
   private static final AccessToken ACCESS_TOKEN =
       new AccessToken(ACCESS_TOKEN_VALUE, new Date(EXPIRATION_TIME));
   private static final ClientId CLIENT_ID = new ClientId(CLIENT_ID_VALUE, CLIENT_SECRET);
@@ -189,14 +190,14 @@ public class UserAuthorizerTest {
     final String accessTokenValue2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     AccessToken acessToken1 =
         new AccessToken(accessTokenValue1, new Date(EXPIRATION_TIME));
-    MockTokenServerTransport transport = new MockTokenServerTransport();
-    transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
-    transport.addRefreshToken(REFRESH_TOKEN, accessTokenValue2);
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
+    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessTokenValue2);
     TestTokenStore tokenStore = new TestTokenStore();
     UserAuthorizer authorizer =
-        new UserAuthorizer(CLIENT_ID, SCOPES, tokenStore, null, transport, null, null);
+        new UserAuthorizer(CLIENT_ID, SCOPES, tokenStore, null, transportFactory, null, null);
     UserCredentials originalCredentials = new UserCredentials(
-        CLIENT_ID_VALUE, CLIENT_SECRET, REFRESH_TOKEN, acessToken1, transport, null);
+        CLIENT_ID_VALUE, CLIENT_SECRET, REFRESH_TOKEN, acessToken1, transportFactory, null);
     authorizer.storeCredentials(USER_ID, originalCredentials);
 
     UserCredentials credentials1 = authorizer.getCredentials(USER_ID);
@@ -219,12 +220,12 @@ public class UserAuthorizerTest {
 
   @Test
   public void getCredentialsFromCode_conevertsCodeToTokens() throws IOException {
-    MockTokenServerTransport transport = new MockTokenServerTransport();
-    transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
-    transport.addAuthorizationCode(CODE, REFRESH_TOKEN, ACCESS_TOKEN_VALUE);
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
+    transportFactory.transport.addAuthorizationCode(CODE, REFRESH_TOKEN, ACCESS_TOKEN_VALUE);
     TestTokenStore tokenStore = new TestTokenStore();
     UserAuthorizer authorizer =
-        new UserAuthorizer(CLIENT_ID, SCOPES, tokenStore, null, transport, null, null);
+        new UserAuthorizer(CLIENT_ID, SCOPES, tokenStore, null, transportFactory, null, null);
 
     UserCredentials credentials = authorizer.getCredentialsFromCode(CODE, BASE_URI);
 
@@ -244,12 +245,12 @@ public class UserAuthorizerTest {
   public void getAndStoreCredentialsFromCode_getAndStoresCredentials() throws IOException {
     final String accessTokenValue1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessTokenValue2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
-    MockTokenServerTransport transport = new MockTokenServerTransport();
-    transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
-    transport.addAuthorizationCode(CODE, REFRESH_TOKEN, accessTokenValue1);
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
+    transportFactory.transport.addAuthorizationCode(CODE, REFRESH_TOKEN, accessTokenValue1);
     TestTokenStore tokenStore = new TestTokenStore();
     UserAuthorizer authorizer =
-        new UserAuthorizer(CLIENT_ID, SCOPES, tokenStore, null, transport, null, null);
+        new UserAuthorizer(CLIENT_ID, SCOPES, tokenStore, null, transportFactory, null, null);
 
     UserCredentials credentials1 =
         authorizer.getAndStoreCredentialsFromCode(USER_ID, CODE, BASE_URI);
@@ -258,7 +259,7 @@ public class UserAuthorizerTest {
     assertEquals(accessTokenValue1, credentials1.getAccessToken().getTokenValue());
 
     // Refresh the token to get update from token server
-    transport.addRefreshToken(REFRESH_TOKEN, accessTokenValue2);
+    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessTokenValue2);
     credentials1.refresh();
     assertEquals(REFRESH_TOKEN, credentials1.getRefreshToken());
     assertEquals(accessTokenValue2, credentials1.getAccessToken().getTokenValue());
@@ -290,13 +291,13 @@ public class UserAuthorizerTest {
   @Test
   public void revokeAuthorization_revokesAndClears() throws IOException {
     TestTokenStore tokenStore = new TestTokenStore();
-    MockTokenServerTransport transport = new MockTokenServerTransport();
-    transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
-    transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN_VALUE);
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
+    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN_VALUE);
     UserCredentials initialCredentials =
         new UserCredentials(CLIENT_ID_VALUE, CLIENT_SECRET, REFRESH_TOKEN, ACCESS_TOKEN);
     UserAuthorizer authorizer =
-        new UserAuthorizer(CLIENT_ID, SCOPES, tokenStore, null, transport, null, null);
+        new UserAuthorizer(CLIENT_ID, SCOPES, tokenStore, null, transportFactory, null, null);
     authorizer.storeCredentials(USER_ID, initialCredentials);
 
     UserCredentials credentials1 = authorizer.getCredentials(USER_ID);
@@ -311,6 +312,7 @@ public class UserAuthorizerTest {
       credentials1.refresh();
       fail("Credentials should not refresh after revoke.");
     } catch (IOException expected) {
+      // Expected
     }
     UserCredentials credentials2 = authorizer.getCredentials(USER_ID);
     assertNull(credentials2);
@@ -318,7 +320,7 @@ public class UserAuthorizerTest {
 
   private static class TestTokenStore implements TokenStore {
 
-    private final Map<String, String> map = new HashMap<String, String>();
+    private final Map<String, String> map = new HashMap<>();
 
     @Override
     public String load(String id) throws IOException {

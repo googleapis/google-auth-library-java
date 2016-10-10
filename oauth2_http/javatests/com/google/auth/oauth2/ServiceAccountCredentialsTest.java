@@ -35,18 +35,23 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.api.client.json.GenericJson;
+import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
+import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
+import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.security.PrivateKey;
 import java.util.Arrays;
@@ -59,7 +64,7 @@ import java.util.Map;
  * Test case for {@link ServiceAccountCredentials}.
  */
 @RunWith(JUnit4.class)
-public class ServiceAccountCredentialsTest {
+public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   private final static String SA_CLIENT_EMAIL =
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr@developer.gserviceaccount.com";
@@ -81,7 +86,7 @@ public class ServiceAccountCredentialsTest {
       + "==\n-----END PRIVATE KEY-----\n";
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
   private final static Collection<String> SCOPES = Collections.singletonList("dummy.scope");
-  private final static Collection<String> EMPTY_SCOPES = Collections.<String>emptyList();
+  private final static Collection<String> EMPTY_SCOPES = Collections.emptyList();
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
 
   @Test
@@ -103,15 +108,16 @@ public class ServiceAccountCredentialsTest {
 
   @Test
   public void createdScoped_enablesAccessTokens() throws IOException {
-    MockTokenServerTransport transport = new MockTokenServerTransport();
-    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     GoogleCredentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
-        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, null, transport, null);
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, null, transportFactory, null);
 
     try {
       credentials.getRequestMetadata(CALL_URI);
       fail("Should not be able to get token without scopes");
     } catch (Exception expected) {
+      // Expected
     }
 
     GoogleCredentials scopedCredentials = credentials.createScoped(SCOPES);
@@ -138,12 +144,12 @@ public class ServiceAccountCredentialsTest {
 
   @Test
   public void fromJSON_hasAccessToken() throws IOException {
-    MockTokenServerTransport transport = new MockTokenServerTransport();
-    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     GenericJson json = writeServiceAccountJson(
         SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
 
-    GoogleCredentials credentials = ServiceAccountCredentials.fromJson(json, transport);
+    GoogleCredentials credentials = ServiceAccountCredentials.fromJson(json, transportFactory);
 
     credentials = credentials.createScoped(SCOPES);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
@@ -152,10 +158,10 @@ public class ServiceAccountCredentialsTest {
 
   @Test
   public void getRequestMetadata_hasAccessToken() throws IOException {
-    MockTokenServerTransport transport = new MockTokenServerTransport();
-    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
-        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, transport, null);
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, transportFactory, null);
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
@@ -165,11 +171,12 @@ public class ServiceAccountCredentialsTest {
   @Test
   public void getRequestMetadata_customTokenServer_hasAccessToken() throws IOException {
     final URI TOKEN_SERVER = URI.create("https://foo.com/bar");
-    MockTokenServerTransport transport = new MockTokenServerTransport();
-    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
-    transport.setTokenServerUri(TOKEN_SERVER);
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    transportFactory.transport.setTokenServerUri(TOKEN_SERVER);
     OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
-        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, transport, TOKEN_SERVER);
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, transportFactory,
+        TOKEN_SERVER);
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
@@ -185,6 +192,152 @@ public class ServiceAccountCredentialsTest {
 
     assertNotNull(scopes);
     assertTrue(scopes.isEmpty());
+  }
+
+  @Test
+  public void equals_true() throws IOException {
+    final URI tokenServer = URI.create("https://foo.com/bar");
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, transportFactory,
+        tokenServer);
+    OAuth2Credentials otherCredentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, transportFactory,
+        tokenServer);
+    assertTrue(credentials.equals(otherCredentials));
+    assertTrue(otherCredentials.equals(credentials));
+  }
+
+  @Test
+  public void equals_false_clientId() throws IOException {
+    final URI tokenServer1 = URI.create("https://foo1.com/bar");
+    MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
+    OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, serverTransportFactory,
+        tokenServer1);
+    OAuth2Credentials otherCredentials = ServiceAccountCredentials.fromPkcs8("otherClientId",
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, serverTransportFactory,
+        tokenServer1);
+    assertFalse(credentials.equals(otherCredentials));
+    assertFalse(otherCredentials.equals(credentials));
+  }
+
+  @Test
+  public void equals_false_email() throws IOException {
+    final URI tokenServer1 = URI.create("https://foo1.com/bar");
+    MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
+    OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, serverTransportFactory,
+        tokenServer1);
+    OAuth2Credentials otherCredentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        "otherEmail", SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, serverTransportFactory,
+        tokenServer1);
+    assertFalse(credentials.equals(otherCredentials));
+    assertFalse(otherCredentials.equals(credentials));
+  }
+
+  @Test
+  public void equals_false_keyId() throws IOException {
+    final URI tokenServer1 = URI.create("https://foo1.com/bar");
+    MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
+    OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, serverTransportFactory,
+        tokenServer1);
+    OAuth2Credentials otherCredentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, "otherId", SCOPES, serverTransportFactory,
+        tokenServer1);
+    assertFalse(credentials.equals(otherCredentials));
+    assertFalse(otherCredentials.equals(credentials));
+  }
+
+  @Test
+  public void equals_false_scopes() throws IOException {
+    final URI tokenServer1 = URI.create("https://foo1.com/bar");
+    MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
+    OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, serverTransportFactory,
+        tokenServer1);
+    OAuth2Credentials otherCredentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, ImmutableSet.<String>of(),
+        serverTransportFactory, tokenServer1);
+    assertFalse(credentials.equals(otherCredentials));
+    assertFalse(otherCredentials.equals(credentials));
+  }
+
+  @Test
+  public void equals_false_transportFactory() throws IOException {
+    final URI tokenServer1 = URI.create("https://foo1.com/bar");
+    MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
+    MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
+    OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, serverTransportFactory,
+        tokenServer1);
+    OAuth2Credentials otherCredentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, httpTransportFactory,
+        tokenServer1);
+    assertFalse(credentials.equals(otherCredentials));
+    assertFalse(otherCredentials.equals(credentials));
+  }
+
+  @Test
+  public void equals_false_tokenServer() throws IOException {
+    final URI tokenServer1 = URI.create("https://foo1.com/bar");
+    final URI tokenServer2 = URI.create("https://foo2.com/bar");
+    MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
+    OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, serverTransportFactory,
+        tokenServer1);
+    OAuth2Credentials otherCredentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, serverTransportFactory,
+        tokenServer2);
+    assertFalse(credentials.equals(otherCredentials));
+    assertFalse(otherCredentials.equals(credentials));
+  }
+
+  @Test
+  public void toString_containsFields() throws IOException {
+    final URI tokenServer = URI.create("https://foo.com/bar");
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, transportFactory,
+        tokenServer);
+    String expectedToString = String.format(
+        "ServiceAccountCredentials{clientId=%s, clientEmail=%s, privateKeyId=%s, "
+            + "transportFactoryClassName=%s, tokenServerUri=%s, scopes=%s}",
+        SA_CLIENT_ID,
+        SA_CLIENT_EMAIL,
+        SA_PRIVATE_KEY_ID,
+        MockTokenServerTransportFactory.class.getName(),
+        tokenServer,
+        SCOPES);
+    assertEquals(expectedToString, credentials.toString());
+  }
+
+  @Test
+  public void hashCode_equals() throws IOException {
+    final URI tokenServer = URI.create("https://foo.com/bar");
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, transportFactory,
+        tokenServer);
+    OAuth2Credentials otherCredentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, transportFactory,
+        tokenServer);
+    assertEquals(credentials.hashCode(), otherCredentials.hashCode());
+  }
+
+  @Test
+  public void serialize() throws IOException, ClassNotFoundException {
+    final URI tokenServer = URI.create("https://foo.com/bar");
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    ServiceAccountCredentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
+        SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, transportFactory,
+        tokenServer);
+    ServiceAccountCredentials deserializedCredentials = serializeAndDeserialize(credentials);
+    assertEquals(credentials, deserializedCredentials);
+    assertEquals(credentials.hashCode(), deserializedCredentials.hashCode());
+    assertEquals(credentials.toString(), deserializedCredentials.toString());
+    assertSame(deserializedCredentials.clock, Clock.SYSTEM);
   }
 
   static GenericJson writeServiceAccountJson(
@@ -210,7 +363,6 @@ public class ServiceAccountCredentialsTest {
       String privateKeyPkcs8, String privateKeyId) throws IOException {
     GenericJson json =
         writeServiceAccountJson(clientId, clientEmail, privateKeyPkcs8, privateKeyId);
-    InputStream stream = TestUtils.jsonToInputStream(json);
-    return stream;
+    return TestUtils.jsonToInputStream(json);
   }
 }
