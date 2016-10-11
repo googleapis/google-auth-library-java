@@ -135,7 +135,7 @@ public class DefaultCredentialsProviderTest {
     String userPath = "/user.json";
     testProvider.addFile(userPath, userStream);
     testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, userPath);
-    
+
     try {
       testProvider.getDefaultCredentials(transportFactory);
       fail("No credential expected.");
@@ -144,7 +144,7 @@ public class DefaultCredentialsProviderTest {
       assertTrue(message.contains(DefaultCredentialsProvider.HELP_PERMALINK));
     }
   }
-  
+
   @Test
   public void getDefaultCredentials_noCredentials_singleGceTestRequest() {
     MockRequestCountingTransportFactory transportFactory =
@@ -180,26 +180,9 @@ public class DefaultCredentialsProviderTest {
   }
 
   @Test
-  public void getDefaultCredentials_appEngine_deployed() throws IOException  {
-    MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
-    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
-    testProvider.addType(DefaultCredentialsProvider.APP_ENGINE_CREDENTIAL_CLASS,
-        MockAppEngineCredentials.class);
-    testProvider.addType(DefaultCredentialsProvider.APP_ENGINE_SIGNAL_CLASS,
-        MockAppEngineSystemProperty.class);
-
-    GoogleCredentials defaultCredential = testProvider.getDefaultCredentials(transportFactory);
-
-    assertNotNull(defaultCredential);
-    assertTrue(defaultCredential instanceof MockAppEngineCredentials);
-  }
-
-  @Test
   public void getDefaultCredentials_appEngineClassWithoutRuntime_NotFoundError() {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
-    testProvider.addType(DefaultCredentialsProvider.APP_ENGINE_CREDENTIAL_CLASS,
-        MockAppEngineCredentials.class);
     testProvider.addType(DefaultCredentialsProvider.APP_ENGINE_SIGNAL_CLASS,
         MockOffAppEngineSystemProperty.class);
 
@@ -225,29 +208,8 @@ public class DefaultCredentialsProviderTest {
     } catch (IOException e) {
       String message = e.getMessage();
       assertFalse(message.contains(DefaultCredentialsProvider.HELP_PERMALINK));
-      assertTrue(message.contains(DefaultCredentialsProvider.APP_ENGINE_CREDENTIAL_CLASS));
+      assertTrue(message.contains("Check that the App Engine SDK is deployed."));
     }
-  }
-
-  @Test
-  public void getDefaultCredentials_appEngine_singleClassLoadAttempt() {
-    MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
-    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
-    try {
-      testProvider.getDefaultCredentials(transportFactory);
-      fail("No credential expected for default test provider.");
-    } catch (IOException expected) {
-      // Expected
-    }
-    assertEquals(1, testProvider.getForNameCallCount());
-    // Try a second time.
-    try {
-      testProvider.getDefaultCredentials(transportFactory);
-      fail("No credential expected for default test provider.");
-    } catch (IOException expected) {
-      // Expected
-    }
-    assertEquals(1, testProvider.getForNameCallCount());
   }
 
   @Test
@@ -268,7 +230,7 @@ public class DefaultCredentialsProviderTest {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setEnv(DefaultCredentialsProvider.CLOUD_SHELL_ENV_VAR, "4");
-    
+
     GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory);
 
     assertTrue(defaultCredentials instanceof CloudShellCredentials);
@@ -590,7 +552,7 @@ public class DefaultCredentialsProviderTest {
       }
       return stream;
     }
-        
+
     void setFileSandbox(boolean fileSandbox) {
       this.fileSandbox = fileSandbox;
     }
