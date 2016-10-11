@@ -94,17 +94,6 @@ class OAuth2Utils {
   }
 
   /**
-   * Throw the exception with the specified cause.
-   *
-   * <p>Needed instead of constructor version to be compatible with JDK 1.5 which is required
-   * until Andriod libraries can update to JDK 1.6
-   */
-  static <T extends Throwable> T exceptionWithCause(T exception, Throwable cause) {
-    exception.initCause(cause);
-    return exception;
-  }
-
-  /**
    * Parses the specified JSON text.
    */
   static GenericJson parseJson(String json) throws IOException {

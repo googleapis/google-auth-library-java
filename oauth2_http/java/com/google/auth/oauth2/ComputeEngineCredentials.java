@@ -103,9 +103,8 @@ public class ComputeEngineCredentials extends GoogleCredentials {
     try {
       response = request.execute();
     } catch (UnknownHostException exception) {
-      throw OAuth2Utils.exceptionWithCause(new IOException("ComputeEngineCredentials cannot find"
-          + " the metadata server. This is likely because code is not running on Google Compute"
-          + " Engine."), exception);
+      throw new IOException("ComputeEngineCredentials cannot find the metadata server. This is"
+          + " likely because code is not running on Google Compute Engine.", exception);
     }
     int statusCode = response.getStatusCode();
     if (statusCode == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {

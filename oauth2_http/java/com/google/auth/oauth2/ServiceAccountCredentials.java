@@ -215,8 +215,7 @@ public class ServiceAccountCredentials extends GoogleCredentials {
     } catch (NoSuchAlgorithmException | InvalidKeySpecException exception) {
       unexpectedException = exception;
     }
-    throw OAuth2Utils.exceptionWithCause(
-        new IOException("Unexpected exception reading PKCS#8 data"), unexpectedException);
+    throw new IOException("Unexpected exception reading PKCS#8 data", unexpectedException);
   }
 
   /**
@@ -250,8 +249,8 @@ public class ServiceAccountCredentials extends GoogleCredentials {
       assertion = JsonWebSignature.signUsingRsaSha256(
           privateKey, jsonFactory, header, payload);
     } catch (GeneralSecurityException e) {
-      throw OAuth2Utils.exceptionWithCause(new IOException(
-          "Error signing service account access token request with private key."), e);
+      throw new IOException(
+          "Error signing service account access token request with private key.", e);
     }
     GenericData tokenRequest = new GenericData();
     tokenRequest.set("grant_type", GRANT_TYPE);
@@ -266,8 +265,7 @@ public class ServiceAccountCredentials extends GoogleCredentials {
     try {
       response = request.execute();
     } catch (IOException e) {
-      throw OAuth2Utils.exceptionWithCause(
-          new IOException("Error getting access token for service account: "), e);
+      throw new IOException("Error getting access token for service account: ", e);
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
