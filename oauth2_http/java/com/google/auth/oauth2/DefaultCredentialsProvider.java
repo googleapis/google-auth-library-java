@@ -70,7 +70,7 @@ class DefaultCredentialsProvider {
   static final String APP_ENGINE_SIGNAL_CLASS = "com.google.appengine.api.utils.SystemProperty";
 
   static final String CLOUD_SHELL_ENV_VAR = "DEVSHELL_CLIENT_PORT";
-  
+
   // These variables should only be accessed inside a synchronized block
   private GoogleCredentials cachedCredentials = null;
   private boolean checkedAppEngine = false;
@@ -131,9 +131,9 @@ class DefaultCredentialsProvider {
         // Although it is also the cause, the message of the caught exception can have very
         // important information for diagnosing errors, so include its message in the
         // outer exception message also.
-        throw OAuth2Utils.exceptionWithCause(new IOException(String.format(
+        throw new IOException(String.format(
             "Error reading credential file from environment variable %s, value '%s': %s",
-            CREDENTIAL_ENV_VAR, credentialsPath, e.getMessage())), e);
+            CREDENTIAL_ENV_VAR, credentialsPath, e.getMessage()), e);
       } catch (AccessControlException expected) {
         // Exception querying file system is expected on App-Engine
       } finally {
@@ -175,7 +175,7 @@ class DefaultCredentialsProvider {
     if (credentials == null) {
       credentials = tryGetCloudShellCredentials();
     }
-    
+
     // Then try Compute Engine
     if (credentials == null) {
       credentials = tryGetComputeCredentials(transportFactory);
@@ -221,9 +221,9 @@ class DefaultCredentialsProvider {
         | IllegalAccessException | NoSuchMethodException | InvocationTargetException exception) {
       cause = exception;
     }
-    throw OAuth2Utils.exceptionWithCause(new RuntimeException(String.format(
-        "Unexpcted error trying to determine if runnning on Google App Engine: %s",
-        cause.getMessage())), cause);
+    throw new RuntimeException(String.format(
+        "Unexpected error trying to determine if runnning on Google App Engine: %s",
+        cause.getMessage()), cause);
   }
 
   private GoogleCredentials tryGetCloudShellCredentials() {
@@ -234,7 +234,7 @@ class DefaultCredentialsProvider {
       return null;
     }
   }
-  
+
   private GoogleCredentials tryGetAppEngineCredential() throws IOException {
     // Checking for App Engine requires a class load, so check only once
     if (checkedAppEngine) {
@@ -256,11 +256,11 @@ class DefaultCredentialsProvider {
         | IllegalAccessException | InvocationTargetException e) {
       innerException = e;
     }
-    throw OAuth2Utils.exceptionWithCause(new IOException(String.format(
+    throw new IOException(String.format(
         "Application Default Credentials failed to create the Google App Engine service account"
             + " credentials class %s. Check that the component 'google-auth-library-appengine' is"
             + " deployed.",
-        APP_ENGINE_CREDENTIAL_CLASS)), innerException);
+        APP_ENGINE_CREDENTIAL_CLASS), innerException);
   }
 
   private final GoogleCredentials tryGetComputeCredentials(HttpTransportFactory transportFactory) {

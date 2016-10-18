@@ -240,8 +240,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials {
       assertion = JsonWebSignature.signUsingRsaSha256(
           privateKey, jsonFactory, header, payload);
     } catch (GeneralSecurityException e) {
-      throw OAuth2Utils.exceptionWithCause(new IOException(
-          "Error signing service account JWT access header with private key."), e);
+      throw new IOException("Error signing service account JWT access header with private key.", e);
     }
     return assertion;
   }
