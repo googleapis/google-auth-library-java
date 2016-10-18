@@ -64,9 +64,6 @@ class DefaultCredentialsProvider {
   static final String HELP_PERMALINK =
       "https://developers.google.com/accounts/docs/application-default-credentials";
 
-  static final String APP_ENGINE_CREDENTIAL_CLASS =
-      "com.google.auth.appengine.AppEngineCredentials";
-
   static final String APP_ENGINE_SIGNAL_CLASS = "com.google.appengine.api.utils.SystemProperty";
 
   static final String CLOUD_SHELL_ENV_VAR = "DEVSHELL_CLIENT_PORT";
@@ -245,22 +242,7 @@ class DefaultCredentialsProvider {
     if (!onAppEngine) {
       return null;
     }
-    Exception innerException;
-    try {
-      Class<?> credentialClass = forName(APP_ENGINE_CREDENTIAL_CLASS);
-      Constructor<?> constructor = credentialClass
-          .getConstructor(Collection.class);
-      Collection<String> emptyScopes = Collections.emptyList();
-      return (GoogleCredentials) constructor.newInstance(emptyScopes);
-    } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException
-        | IllegalAccessException | InvocationTargetException e) {
-      innerException = e;
-    }
-    throw new IOException(String.format(
-        "Application Default Credentials failed to create the Google App Engine service account"
-            + " credentials class %s. Check that the component 'google-auth-library-appengine' is"
-            + " deployed.",
-        APP_ENGINE_CREDENTIAL_CLASS), innerException);
+    return new AppEngineCredentials(Collections.<String>emptyList());
   }
 
   private final GoogleCredentials tryGetComputeCredentials(HttpTransportFactory transportFactory) {
