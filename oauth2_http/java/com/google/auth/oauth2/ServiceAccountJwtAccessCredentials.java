@@ -38,6 +38,7 @@ import com.google.api.client.util.Clock;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.Credentials;
 import com.google.auth.RequestMetadataCallback;
+import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
@@ -46,7 +47,11 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.URI;
 import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -58,7 +63,8 @@ import java.util.concurrent.Executor;
  *
  * <p>Uses a JSON Web Token (JWT) directly in the request metadata to provide authorization.
  */
-public class ServiceAccountJwtAccessCredentials extends Credentials {
+public class ServiceAccountJwtAccessCredentials extends Credentials
+    implements ServiceAccountSigner {
 
   private static final long serialVersionUID = -7274955171379494197L;
   static final String JWT_ACCESS_PREFIX = OAuth2Utils.BEARER_PREFIX;
@@ -259,6 +265,23 @@ public class ServiceAccountJwtAccessCredentials extends Credentials {
 
   public final String getPrivateKeyId() {
     return privateKeyId;
+  }
+
+  @Override
+  public String getAccount() {
+    return getClientEmail();
+  }
+
+  @Override
+  public byte[] sign(byte[] toSign) {
+    try {
+      Signature signer = Signature.getInstance(OAuth2Utils.SIGNATURE_ALGORITHM);
+      signer.initSign(getPrivateKey());
+      signer.update(toSign);
+      return signer.sign();
+    } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException ex) {
+      throw new ServiceAccountSigner.SigningException("Failed to sign the provided bytes", ex);
+    }
   }
 
   @Override

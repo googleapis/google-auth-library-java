@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
@@ -55,6 +56,8 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
   private static final String EXPECTED_ACCESS_TOKEN = "ExpectedAccessToken";
   private static final Date EXPECTED_EXPIRATION_DATE =
       new Date(System.currentTimeMillis() + 60L * 60L * 100L);
+  private static final byte[] EXPECTED_SIGNATURE = {0xD, 0xE, 0xA, 0xD};
+  private static final String EXPECTED_ACCOUNT = "serviceAccount";
 
   private static final Collection<String> SCOPES =
       Collections.unmodifiableCollection(Arrays.asList("scope1", "scope2"));
@@ -64,10 +67,11 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
     Collection<String> scopes = Collections.singleton("SomeScope");
     TestAppEngineCredentials credentials = new TestAppEngineCredentials(scopes);
     List<String> forNameArgs = credentials.getForNameArgs();
-    assertEquals(3, forNameArgs.size());
+    assertEquals(4, forNameArgs.size());
     assertEquals(AppEngineCredentials.APP_IDENTITY_SERVICE_FACTORY_CLASS, forNameArgs.get(0));
     assertEquals(AppEngineCredentials.APP_IDENTITY_SERVICE_CLASS, forNameArgs.get(1));
     assertEquals(AppEngineCredentials.GET_ACCESS_TOKEN_RESULT_CLASS, forNameArgs.get(2));
+    assertEquals(AppEngineCredentials.SIGNING_RESULT_CLASS, forNameArgs.get(3));
   }
 
   @Test
@@ -90,6 +94,18 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
     AccessToken accessToken = credentials.refreshAccessToken();
     assertEquals(EXPECTED_ACCESS_TOKEN, accessToken.getTokenValue());
     assertEquals(EXPECTED_EXPIRATION_DATE, accessToken.getExpirationTime());
+  }
+
+  @Test
+  public void getAccount_sameAs() throws IOException {
+    TestAppEngineCredentials credentials = new TestAppEngineCredentials(SCOPES);
+    assertEquals(EXPECTED_ACCOUNT, credentials.getAccount());
+  }
+
+  @Test
+  public void sign_sameAs() throws IOException {
+    TestAppEngineCredentials credentials = new TestAppEngineCredentials(SCOPES);
+    assertArrayEquals(EXPECTED_SIGNATURE, credentials.sign("Bytes to sign".getBytes()));
   }
 
   @Test
@@ -155,6 +171,19 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
     assertEquals(credentials.toString(), deserializedCredentials.toString());
   }
 
+  private static class TestSigningResult {
+
+    private final byte[] signature;
+
+    TestSigningResult(byte[] signature) {
+      this.signature = signature;
+    }
+
+    public byte[] getSignature() {
+      return this.signature;
+    }
+  }
+
   private static class TestAppIdentityServiceFactory {
 
     public static TestAppIdentityService getAppIdentityService() {
@@ -166,6 +195,14 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
 
     public TestGetAccessTokenResult getAccessToken(Iterable<String> scopes) {
       return new TestGetAccessTokenResult(EXPECTED_ACCESS_TOKEN, EXPECTED_EXPIRATION_DATE);
+    }
+
+    public String getServiceAccountName() {
+      return EXPECTED_ACCOUNT;
+    }
+
+    public TestSigningResult signForApp(byte[] toSign) {
+      return new TestSigningResult(EXPECTED_SIGNATURE);
     }
   }
 
@@ -198,7 +235,9 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
         AppEngineCredentials.APP_IDENTITY_SERVICE_CLASS,
         TestAppIdentityService.class,
         AppEngineCredentials.GET_ACCESS_TOKEN_RESULT_CLASS,
-        TestGetAccessTokenResult.class);
+        TestGetAccessTokenResult.class,
+        AppEngineCredentials.SIGNING_RESULT_CLASS,
+        TestSigningResult.class);
     private List<String> forNameArgs;
 
     TestAppEngineCredentials(Collection<String> scopes) throws IOException {

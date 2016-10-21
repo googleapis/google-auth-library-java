@@ -53,7 +53,11 @@ import org.junit.runners.JUnit4;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -192,6 +196,26 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
     assertNotNull(scopes);
     assertTrue(scopes.isEmpty());
+  }
+
+  @Test
+  public void getAccount_sameAs() throws IOException {
+    ServiceAccountCredentials credentials = ServiceAccountCredentials.fromPkcs8(
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, null);
+    assertEquals(SA_CLIENT_EMAIL, credentials.getAccount());
+  }
+
+  @Test
+  public void sign_sameAs()
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+    byte[] toSign = {0xD, 0xE, 0xA, 0xD};
+    ServiceAccountCredentials credentials = ServiceAccountCredentials.fromPkcs8(
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, null);
+    byte[] signedBytes = credentials.sign(toSign);
+    Signature signature = Signature.getInstance(OAuth2Utils.SIGNATURE_ALGORITHM);
+    signature.initSign(credentials.getPrivateKey());
+    signature.update(toSign);
+    assertArrayEquals(signature.sign(), signedBytes);
   }
 
   @Test

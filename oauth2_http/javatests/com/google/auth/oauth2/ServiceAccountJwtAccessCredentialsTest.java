@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -52,7 +53,11 @@ import org.junit.runners.JUnit4;
 
 import java.io.IOException;
 import java.net.URI;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.util.List;
 import java.util.Map;
 
@@ -68,7 +73,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr.apps.googleusercontent.com";
   private final static String SA_PRIVATE_KEY_ID =
       "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
-  static final String SA_PRIVATE_KEY_PKCS8 = "-----BEGIN PRIVATE KEY-----\n"
+  private static final String SA_PRIVATE_KEY_PKCS8 = "-----BEGIN PRIVATE KEY-----\n"
       + "MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBALX0PQoe1igW12i"
       + "kv1bN/r9lN749y2ijmbc/mFHPyS3hNTyOCjDvBbXYbDhQJzWVUikh4mvGBA07qTj79Xc3yBDfKP2IeyYQIFe0t0"
       + "zkd7R9Zdn98Y2rIQC47aAbDfubtkU1U72t4zL11kHvoa0/RuFZjncvlr42X7be7lYh4p3NAgMBAAECgYASk5wDw"
@@ -227,6 +232,28 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
     credentials.getRequestMetadata(null, executor, callback);
     assertEquals(0, executor.numTasks());
     assertNotNull(callback.exception);
+  }
+
+  @Test
+  public void getAccount_sameAs() throws IOException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    ServiceAccountJwtAccessCredentials credentials = new ServiceAccountJwtAccessCredentials(
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID);
+    assertEquals(SA_CLIENT_EMAIL, credentials.getAccount());
+  }
+
+  @Test
+  public void sign_sameAs()
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    byte[] toSign = {0xD, 0xE, 0xA, 0xD};
+    ServiceAccountJwtAccessCredentials credentials = new ServiceAccountJwtAccessCredentials(
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID);
+    byte[] signedBytes = credentials.sign(toSign);
+    Signature signature = Signature.getInstance(OAuth2Utils.SIGNATURE_ALGORITHM);
+    signature.initSign(credentials.getPrivateKey());
+    signature.update(toSign);
+    assertArrayEquals(signature.sign(), signedBytes);
   }
 
   @Test

@@ -55,6 +55,8 @@ import java.util.Map;
  * Internal utilities for the com.google.auth.oauth2 namespace.
  */
 class OAuth2Utils {
+  static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
+
   static final URI TOKEN_SERVER_URI = URI.create("https://accounts.google.com/o/oauth2/token");
   static final URI TOKEN_REVOKE_URI = URI.create("https://accounts.google.com/o/oauth2/revoke");
   static final URI USER_AUTH_URI = URI.create("https://accounts.google.com/o/oauth2/auth");
