@@ -34,6 +34,7 @@ package com.google.auth.appengine;
 import com.google.appengine.api.appidentity.AppIdentityService;
 import com.google.appengine.api.appidentity.AppIdentityService.GetAccessTokenResult;
 import com.google.appengine.api.appidentity.AppIdentityServiceFactory;
+import com.google.auth.ServiceAccountSigner;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.MoreObjects;
@@ -51,7 +52,7 @@ import java.util.Objects;
  *
  * <p>Fetches access tokens from the App Identity service.
  */
-public class AppEngineCredentials extends GoogleCredentials {
+public class AppEngineCredentials extends GoogleCredentials implements ServiceAccountSigner {
 
   private static final long serialVersionUID = -2627708355455064660L;
 
@@ -95,6 +96,16 @@ public class AppEngineCredentials extends GoogleCredentials {
   @Override
   public GoogleCredentials createScoped(Collection<String> scopes) {
     return new AppEngineCredentials(scopes, appIdentityService);
+  }
+
+  @Override
+  public String getAccount() {
+    return appIdentityService.getServiceAccountName();
+  }
+
+  @Override
+  public byte[] sign(byte[] toSign) {
+    return appIdentityService.signForApp(toSign).getSignature();
   }
 
   @Override

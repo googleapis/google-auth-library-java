@@ -31,6 +31,7 @@
 
 package com.google.auth.appengine;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -65,6 +66,7 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
   private static final Collection<String> SCOPES =
       Collections.unmodifiableCollection(Arrays.asList("scope1", "scope2"));
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
+  private static final String EXPECTED_ACCOUNT = "serviceAccount";
   
   @Test  
   public void constructor_usesAppIdentityService() throws IOException {
@@ -93,7 +95,24 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
     assertEquals(appIdentity.getExpiration(), accessToken.getExpirationTime());
   }
 
-  @Test  
+  @Test
+  public void getAccount_sameAs() throws IOException {
+    MockAppIdentityService appIdentity = new MockAppIdentityService();
+    appIdentity.setServiceAccountName(EXPECTED_ACCOUNT);
+    AppEngineCredentials credentials = new AppEngineCredentials(SCOPES, appIdentity);
+    assertEquals(EXPECTED_ACCOUNT, credentials.getAccount());
+  }
+
+  @Test
+  public void sign_sameAs() throws IOException {
+    byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
+    MockAppIdentityService appIdentity = new MockAppIdentityService();
+    appIdentity.setSignature(expectedSignature);
+    AppEngineCredentials credentials = new AppEngineCredentials(SCOPES, appIdentity);
+    assertArrayEquals(expectedSignature, credentials.sign(expectedSignature));
+  }
+
+  @Test
   public void createScoped_clonesWithScopes() throws IOException {
     final String expectedAccessToken = "ExpectedAccessToken";
     final Collection<String> emptyScopes = Collections.emptyList();
