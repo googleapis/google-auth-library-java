@@ -56,9 +56,9 @@ public class GoogleCredentials extends OAuth2Credentials {
   /**
    * Returns the Application Default Credentials.
    *
-   * <p>Returns the Application Default Credentials which are credentials that identify and
-   * authorize the whole application. Application Default Credentials are looked for in the
-   * following order:
+   * <p>Returns the Application Default Credentials which are used to identify and authorize the
+   * whole application. The following are searched (in order) to find the Application Default
+   * Credentials:
    * <ol>
    *   <li>Credentials file pointed to by the {@code GOOGLE_APPLICATION_CREDENTIALS} environment
    *   variable</li>
@@ -78,9 +78,9 @@ public class GoogleCredentials extends OAuth2Credentials {
   /**
    * Returns the Application Default Credentials.
    *
-   * <p>Returns the Application Default Credentials which are credentials that identify and
-   * authorize the whole application. Application Default Credentials are looked for in the
-   * following order:
+   * <p>Returns the Application Default Credentials which are used to identify and authorize the
+   * whole application. The following are searched (in order) to find the Application Default
+   * Credentials:
    * <ol>
    *   <li>Credentials file pointed to by the {@code GOOGLE_APPLICATION_CREDENTIALS} environment
    *   variable</li>
