@@ -85,7 +85,8 @@ class DefaultCredentialsProvider {
    * <ol>
    *   <li>Credentials file pointed to by the {@code GOOGLE_APPLICATION_CREDENTIALS} environment
    *   variable</li>
-   *   <li>Google Cloud SDK ({@code gcloud}) credentials</li>
+   *   <li>Credentials provided by Cloud SDK {@code gcloud auth application-default login} command
+   *   </li>
    *   <li>Google App Engine built-in credentials</li>
    *   <li>Google Cloud Shell built-in credentials</li>
    *   <li>Google Compute Engine built-in credentials</li>
