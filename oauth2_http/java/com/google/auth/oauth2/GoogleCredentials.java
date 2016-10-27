@@ -56,10 +56,18 @@ public class GoogleCredentials extends OAuth2Credentials {
   /**
    * Returns the Application Default Credentials.
    *
-   * <p>Returns the Application Default Credentials which are credentials that identify and
-   * authorize the whole application. This is the built-in service account if running on Google
-   * Compute Engine or the credentials file from the path in the environment variable
-   * GOOGLE_APPLICATION_CREDENTIALS.</p>
+   * <p>Returns the Application Default Credentials which are used to identify and authorize the
+   * whole application. The following are searched (in order) to find the Application Default
+   * Credentials:
+   * <ol>
+   *   <li>Credentials file pointed to by the {@code GOOGLE_APPLICATION_CREDENTIALS} environment
+   *   variable</li>
+   *   <li>Credentials provided by the Google Cloud SDK
+   *   {@code gcloud auth application-default login} command</li>
+   *   <li>Google App Engine built-in credentials</li>
+   *   <li>Google Cloud Shell built-in credentials</li>
+   *   <li>Google Compute Engine built-in credentials</li>
+   * </ol>
    *
    * @return the credentials instance.
    * @throws IOException if the credentials cannot be created in the current environment.
@@ -71,10 +79,18 @@ public class GoogleCredentials extends OAuth2Credentials {
   /**
    * Returns the Application Default Credentials.
    *
-   * <p>Returns the Application Default Credentials which are credentials that identify and
-   * authorize the whole application. This is the built-in service account if running on Google
-   * Compute Engine or the credentials file from the path in the environment variable
-   * GOOGLE_APPLICATION_CREDENTIALS.</p>
+   * <p>Returns the Application Default Credentials which are used to identify and authorize the
+   * whole application. The following are searched (in order) to find the Application Default
+   * Credentials:
+   * <ol>
+   *   <li>Credentials file pointed to by the {@code GOOGLE_APPLICATION_CREDENTIALS} environment
+   *   variable</li>
+   *   <li>Credentials provided by the Google Cloud SDK
+   *   {@code gcloud auth application-default login} command</li>
+   *   <li>Google App Engine built-in credentials</li>
+   *   <li>Google Cloud Shell built-in credentials</li>
+   *   <li>Google Compute Engine built-in credentials</li>
+   * </ol>
    *
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *        tokens.
