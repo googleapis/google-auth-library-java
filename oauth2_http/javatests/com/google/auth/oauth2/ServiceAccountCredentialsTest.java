@@ -70,11 +70,11 @@ import java.util.Map;
 @RunWith(JUnit4.class)
 public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
-  private final static String SA_CLIENT_EMAIL =
+  private static final String SA_CLIENT_EMAIL =
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr@developer.gserviceaccount.com";
-  private final static String SA_CLIENT_ID =
+  private static final String SA_CLIENT_ID =
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr.apps.googleusercontent.com";
-  private final static String SA_PRIVATE_KEY_ID =
+  private static final String SA_PRIVATE_KEY_ID =
       "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
   static final String SA_PRIVATE_KEY_PKCS8 = "-----BEGIN PRIVATE KEY-----\n"
       + "MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBALX0PQoe1igW12i"
@@ -89,8 +89,8 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
       + "ADj3e1YhMVdjJW5jqwlD/VNddGjgzyunmiZg0uOXsHXbytYmsA545S8KRQFaJKFXYYFo2kOjqOiC1T2cAzMDjCQ"
       + "==\n-----END PRIVATE KEY-----\n";
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
-  private final static Collection<String> SCOPES = Collections.singletonList("dummy.scope");
-  private final static Collection<String> EMPTY_SCOPES = Collections.emptyList();
+  private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
+  private static final Collection<String> EMPTY_SCOPES = Collections.emptyList();
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
 
   @Test

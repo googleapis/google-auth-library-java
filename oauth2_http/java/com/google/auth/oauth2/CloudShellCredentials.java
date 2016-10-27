@@ -49,8 +49,8 @@ import java.util.Objects;
 public class CloudShellCredentials extends GoogleCredentials {
 
   private static final long serialVersionUID = -2133257318957488451L;
-  private final static int ACCESS_TOKEN_INDEX = 2;
-  private final static int READ_TIMEOUT_MS = 5000;
+  private static final int ACCESS_TOKEN_INDEX = 2;
+  private static final int READ_TIMEOUT_MS = 5000;
 
   /**
    * The Cloud Shell back authorization channel uses serialized

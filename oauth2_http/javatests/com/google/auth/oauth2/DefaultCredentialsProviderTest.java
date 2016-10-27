@@ -75,13 +75,13 @@ public class DefaultCredentialsProviderTest {
   private static final String USER_CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
   private static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
-  private final static String SA_CLIENT_EMAIL =
+  private static final String SA_CLIENT_EMAIL =
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr@developer.gserviceaccount.com";
-  private final static String SA_CLIENT_ID =
+  private static final String SA_CLIENT_ID =
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr.apps.googleusercontent.com";
-  private final static String SA_PRIVATE_KEY_ID =
+  private static final String SA_PRIVATE_KEY_ID =
       "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
-  private final static String SA_PRIVATE_KEY_PKCS8
+  private static final String SA_PRIVATE_KEY_PKCS8
       = ServiceAccountCredentialsTest.SA_PRIVATE_KEY_PKCS8;
   private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");

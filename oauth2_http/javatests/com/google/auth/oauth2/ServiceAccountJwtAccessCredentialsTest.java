@@ -67,11 +67,11 @@ import java.util.Map;
 @RunWith(JUnit4.class)
 public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
 
-  private final static String SA_CLIENT_EMAIL =
+  private static final String SA_CLIENT_EMAIL =
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr@developer.gserviceaccount.com";
-  private final static String SA_CLIENT_ID =
+  private static final String SA_CLIENT_ID =
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr.apps.googleusercontent.com";
-  private final static String SA_PRIVATE_KEY_ID =
+  private static final String SA_PRIVATE_KEY_ID =
       "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
   private static final String SA_PRIVATE_KEY_PKCS8 = "-----BEGIN PRIVATE KEY-----\n"
       + "MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBALX0PQoe1igW12i"
