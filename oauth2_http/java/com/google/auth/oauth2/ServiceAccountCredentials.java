@@ -48,6 +48,7 @@ import com.google.api.client.util.PemReader;
 import com.google.api.client.util.PemReader.Section;
 import com.google.api.client.util.Preconditions;
 import com.google.api.client.util.SecurityUtils;
+import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
@@ -58,9 +59,12 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.net.URI;
 import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.sql.Date;
@@ -73,7 +77,7 @@ import java.util.Objects;
  *
  * <p>By default uses a JSON Web Token (JWT) to fetch access tokens.
  */
-public class ServiceAccountCredentials extends GoogleCredentials {
+public class ServiceAccountCredentials extends GoogleCredentials implements ServiceAccountSigner {
 
   private static final long serialVersionUID = 7807543542681217978L;
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
@@ -314,6 +318,23 @@ public class ServiceAccountCredentials extends GoogleCredentials {
 
   public final Collection<String> getScopes() {
     return scopes;
+  }
+
+  @Override
+  public String getAccount() {
+    return getClientEmail();
+  }
+
+  @Override
+  public byte[] sign(byte[] toSign) {
+    try {
+      Signature signer = Signature.getInstance(OAuth2Utils.SIGNATURE_ALGORITHM);
+      signer.initSign(getPrivateKey());
+      signer.update(toSign);
+      return signer.sign();
+    } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException ex) {
+      throw new SigningException("Failed to sign the provided bytes", ex);
+    }
   }
 
   @Override

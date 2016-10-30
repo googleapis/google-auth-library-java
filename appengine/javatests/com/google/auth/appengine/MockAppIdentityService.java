@@ -46,6 +46,8 @@ public class MockAppIdentityService implements AppIdentityService {
   private int getAccessTokenCallCount = 0;
   private String accessTokenText = null;
   private Date expiration = null;
+  private String serviceAccountName = null;
+  private SigningResult signingResult = null;
 
   public MockAppIdentityService() {
   }
@@ -72,7 +74,11 @@ public class MockAppIdentityService implements AppIdentityService {
 
   @Override
   public SigningResult signForApp(byte[] signBlob) {
-    return null;
+    return signingResult;
+  }
+
+  public void setSignature(byte[] signature) {
+    this.signingResult = new SigningResult("keyName", signature);
   }
 
   @Override
@@ -102,7 +108,11 @@ public class MockAppIdentityService implements AppIdentityService {
 
   @Override
   public String getServiceAccountName() {
-    return null;
+    return serviceAccountName;
+  }
+
+  public void setServiceAccountName(String serviceAccountName) {
+    this.serviceAccountName = serviceAccountName;
   }
 
   @Override

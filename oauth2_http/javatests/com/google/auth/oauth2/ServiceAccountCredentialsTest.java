@@ -53,7 +53,11 @@ import org.junit.runners.JUnit4;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -66,11 +70,11 @@ import java.util.Map;
 @RunWith(JUnit4.class)
 public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
-  private final static String SA_CLIENT_EMAIL =
+  private static final String SA_CLIENT_EMAIL =
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr@developer.gserviceaccount.com";
-  private final static String SA_CLIENT_ID =
+  private static final String SA_CLIENT_ID =
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr.apps.googleusercontent.com";
-  private final static String SA_PRIVATE_KEY_ID =
+  private static final String SA_PRIVATE_KEY_ID =
       "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
   static final String SA_PRIVATE_KEY_PKCS8 = "-----BEGIN PRIVATE KEY-----\n"
       + "MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBALX0PQoe1igW12i"
@@ -85,8 +89,8 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
       + "ADj3e1YhMVdjJW5jqwlD/VNddGjgzyunmiZg0uOXsHXbytYmsA545S8KRQFaJKFXYYFo2kOjqOiC1T2cAzMDjCQ"
       + "==\n-----END PRIVATE KEY-----\n";
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
-  private final static Collection<String> SCOPES = Collections.singletonList("dummy.scope");
-  private final static Collection<String> EMPTY_SCOPES = Collections.emptyList();
+  private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
+  private static final Collection<String> EMPTY_SCOPES = Collections.emptyList();
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
 
   @Test
@@ -192,6 +196,26 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
     assertNotNull(scopes);
     assertTrue(scopes.isEmpty());
+  }
+
+  @Test
+  public void getAccount_sameAs() throws IOException {
+    ServiceAccountCredentials credentials = ServiceAccountCredentials.fromPkcs8(
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, null);
+    assertEquals(SA_CLIENT_EMAIL, credentials.getAccount());
+  }
+
+  @Test
+  public void sign_sameAs()
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+    byte[] toSign = {0xD, 0xE, 0xA, 0xD};
+    ServiceAccountCredentials credentials = ServiceAccountCredentials.fromPkcs8(
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, null);
+    byte[] signedBytes = credentials.sign(toSign);
+    Signature signature = Signature.getInstance(OAuth2Utils.SIGNATURE_ALGORITHM);
+    signature.initSign(credentials.getPrivateKey());
+    signature.update(toSign);
+    assertArrayEquals(signature.sign(), signedBytes);
   }
 
   @Test

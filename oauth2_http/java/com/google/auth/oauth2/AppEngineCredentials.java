@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import com.google.auth.ServiceAccountSigner;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -48,7 +49,7 @@ import java.util.Objects;
  *
  * <p>Instances of this class use reflection to access AppIdentityService in AppEngine SDK.
  */
-class AppEngineCredentials extends GoogleCredentials {
+class AppEngineCredentials extends GoogleCredentials implements ServiceAccountSigner {
 
   private static final long serialVersionUID = -493219027336622194L;
 
@@ -58,10 +59,15 @@ class AppEngineCredentials extends GoogleCredentials {
       "com.google.appengine.api.appidentity.AppIdentityService";
   static final String GET_ACCESS_TOKEN_RESULT_CLASS =
       "com.google.appengine.api.appidentity.AppIdentityService$GetAccessTokenResult";
+  static final String SIGNING_RESULT_CLASS =
+      "com.google.appengine.api.appidentity.AppIdentityService$SigningResult";
   private static final String GET_APP_IDENTITY_SERVICE_METHOD = "getAppIdentityService";
   private static final String GET_ACCESS_TOKEN_RESULT_METHOD = "getAccessToken";
   private static final String GET_ACCESS_TOKEN_METHOD = "getAccessToken";
   private static final String GET_EXPIRATION_TIME_METHOD = "getExpirationTime";
+  private static final String GET_SERVICE_ACCOUNT_NAME_METHOD = "getServiceAccountName";
+  private static final String SIGN_FOR_APP_METHOD = "signForApp";
+  private static final String GET_SIGNATURE_METHOD = "getSignature";
 
   private final Collection<String> scopes;
   private final boolean scopesRequired;
@@ -70,6 +76,9 @@ class AppEngineCredentials extends GoogleCredentials {
   private transient Method getAccessToken;
   private transient Method getAccessTokenResult;
   private transient Method getExpirationTime;
+  private transient Method signForApp;
+  private transient Method getSignature;
+  private transient String account;
 
   AppEngineCredentials(Collection<String> scopes) throws IOException {
     this.scopes = scopes == null ? ImmutableSet.<String>of() : ImmutableList.copyOf(scopes);
@@ -97,6 +106,11 @@ class AppEngineCredentials extends GoogleCredentials {
           serviceClass.getMethod(GET_ACCESS_TOKEN_RESULT_METHOD, Iterable.class);
       this.getAccessToken = tokenResultClass.getMethod(GET_ACCESS_TOKEN_METHOD);
       this.getExpirationTime = tokenResultClass.getMethod(GET_EXPIRATION_TIME_METHOD);
+      this.account = (String) serviceClass.getMethod(GET_SERVICE_ACCOUNT_NAME_METHOD)
+          .invoke(appIdentityService);
+      this.signForApp = serviceClass.getMethod(SIGN_FOR_APP_METHOD, byte[].class);
+      Class<?> signingResultClass = forName(SIGNING_RESULT_CLASS);
+      this.getSignature = signingResultClass.getMethod(GET_SIGNATURE_METHOD);
     } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException
         | InvocationTargetException ex) {
       throw new IOException(
@@ -131,6 +145,21 @@ class AppEngineCredentials extends GoogleCredentials {
   @Override
   public GoogleCredentials createScoped(Collection<String> scopes) {
     return new AppEngineCredentials(scopes, this);
+  }
+
+  @Override
+  public String getAccount() {
+    return account;
+  }
+
+  @Override
+  public byte[] sign(byte[] toSign) {
+    try {
+      Object signingResult = signForApp.invoke(appIdentityService, toSign);
+      return (byte[]) getSignature.invoke(signingResult);
+    } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+      throw new SigningException("Failed to sign the provided bytes", ex);
+    }
   }
 
   @Override
