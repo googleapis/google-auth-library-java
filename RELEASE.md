@@ -60,9 +60,9 @@ Create a Maven settings file
 
 Deploy to Sonatype
 ------------------
-* Update all ```pom.xml``` files in the package to the release version you want. Sumit a pull request, get it reviewed, and submit
+* Update all ```pom.xml``` files in the package to the release version you want. Submit a pull request, get it reviewed, and submit
 * ```mvn clean install deploy -DperformRelease=true```
-* Verify the publishment [here](https://oss.sonatype.org/#nexus-search;quick~com.google.auth)
+* Verify the result [here](https://oss.sonatype.org/#nexus-search;quick~com.google.auth)
   * If there is a problem, undo by ```mvn nexus-staging:drop```
 * ```mvn nexus-staging:release -DperformRelease=true```
 * Update all ```pom.xml``` files to the new snapshot version (unless it's a bugfix release, we
