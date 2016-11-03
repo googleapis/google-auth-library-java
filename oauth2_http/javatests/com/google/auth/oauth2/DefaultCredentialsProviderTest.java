@@ -272,7 +272,7 @@ public class DefaultCredentialsProviderTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     InputStream serviceAccountStream = ServiceAccountCredentialsTest
-        .writeServiceAccountAccountStream(
+        .writeServiceAccountStream(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     String serviceAccountPath = "/service_account.json";

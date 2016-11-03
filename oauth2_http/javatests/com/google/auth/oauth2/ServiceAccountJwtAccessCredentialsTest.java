@@ -354,11 +354,11 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
   }
 
   @Test
-  public void fromStream_nullStreamThrows() throws IOException {
+  public void fromStream_nullStream_Throws() throws IOException {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     try {
       ServiceAccountCredentials.fromStream(null, transportFactory);
-      fail();
+      fail("Should throw if InputStream is null");
     } catch (NullPointerException expected) {
       // Expected
     }
@@ -367,7 +367,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
   @Test
   public void fromStream_hasJwtAccess() throws IOException {
     InputStream serviceAccountStream = ServiceAccountCredentialsTest
-        .writeServiceAccountAccountStream(
+        .writeServiceAccountStream(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
 
     Credentials credentials =
@@ -381,7 +381,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
   @Test
   public void fromStream_defaultURI_hasJwtAccess() throws IOException {
     InputStream serviceAccountStream = ServiceAccountCredentialsTest
-        .writeServiceAccountAccountStream(
+        .writeServiceAccountStream(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
 
     Credentials credentials =
@@ -395,8 +395,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
   @Test
   public void fromStream_noClientId_throws() throws IOException {
     InputStream serviceAccountStream = ServiceAccountCredentialsTest
-        .writeServiceAccountAccountStream(
-            null, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
+        .writeServiceAccountStream(null, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
 
     testFromStreamException(serviceAccountStream, "client_id");
   }
@@ -404,8 +403,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
   @Test
   public void fromStream_noClientEmail_throws() throws IOException {
     InputStream serviceAccountStream = ServiceAccountCredentialsTest
-        .writeServiceAccountAccountStream(
-            SA_CLIENT_ID, null, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
+        .writeServiceAccountStream(SA_CLIENT_ID, null, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
 
     testFromStreamException(serviceAccountStream, "client_email");
   }
@@ -413,8 +411,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
   @Test
   public void fromStream_noPrivateKey_throws() throws IOException {
     InputStream serviceAccountStream = ServiceAccountCredentialsTest
-        .writeServiceAccountAccountStream(
-            SA_CLIENT_ID, SA_CLIENT_EMAIL, null, SA_PRIVATE_KEY_ID);
+        .writeServiceAccountStream(SA_CLIENT_ID, SA_CLIENT_EMAIL, null, SA_PRIVATE_KEY_ID);
 
     testFromStreamException(serviceAccountStream, "private_key");
   }
@@ -422,8 +419,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
   @Test
   public void fromStream_noPrivateKeyId_throws() throws IOException {
     InputStream serviceAccountStream = ServiceAccountCredentialsTest
-        .writeServiceAccountAccountStream(
-            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, null);
+        .writeServiceAccountStream(SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, null);
 
     testFromStreamException(serviceAccountStream, "private_key_id");
   }

@@ -114,18 +114,18 @@ public class GoogleCredentialsTest {
     InputStream stream = new ByteArrayInputStream("foo".getBytes());
     try {
       GoogleCredentials.fromStream(stream, null);
-      fail();
+      fail("Should throw if HttpTransportFactory is null");
     } catch (NullPointerException expected) {
       // Expected
     }
   }
 
   @Test
-  public void fromStream_nullStreamThrows() throws IOException {
+  public void fromStream_nullStream_Throws() throws IOException {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     try {
       GoogleCredentials.fromStream(null, transportFactory);
-      fail();
+      fail("Should throw if InputStream is null");
     } catch (NullPointerException expected) {
       // Expected
     }
@@ -136,7 +136,7 @@ public class GoogleCredentialsTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     InputStream serviceAccountStream = ServiceAccountCredentialsTest
-        .writeServiceAccountAccountStream(
+        .writeServiceAccountStream(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
 
     GoogleCredentials credentials =
@@ -151,8 +151,7 @@ public class GoogleCredentialsTest {
   @Test
   public void fromStream_serviceAccountNoClientId_throws() throws IOException {
     InputStream serviceAccountStream = ServiceAccountCredentialsTest
-        .writeServiceAccountAccountStream(
-            null, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
+        .writeServiceAccountStream(null, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
 
     testFromStreamException(serviceAccountStream, "client_id");
   }
@@ -160,8 +159,7 @@ public class GoogleCredentialsTest {
   @Test
   public void fromStream_serviceAccountNoClientEmail_throws() throws IOException {
     InputStream serviceAccountStream = ServiceAccountCredentialsTest
-        .writeServiceAccountAccountStream(
-            SA_CLIENT_ID, null, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
+        .writeServiceAccountStream(SA_CLIENT_ID, null, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
 
     testFromStreamException(serviceAccountStream, "client_email");
   }
@@ -169,8 +167,7 @@ public class GoogleCredentialsTest {
   @Test
   public void fromStream_serviceAccountNoPrivateKey_throws() throws IOException {
     InputStream serviceAccountStream = ServiceAccountCredentialsTest
-        .writeServiceAccountAccountStream(
-            SA_CLIENT_ID, SA_CLIENT_EMAIL, null, SA_PRIVATE_KEY_ID);
+        .writeServiceAccountStream(SA_CLIENT_ID, SA_CLIENT_EMAIL, null, SA_PRIVATE_KEY_ID);
 
     testFromStreamException(serviceAccountStream, "private_key");
   }
@@ -178,8 +175,7 @@ public class GoogleCredentialsTest {
   @Test
   public void fromStream_serviceAccountNoPrivateKeyId_throws() throws IOException {
     InputStream serviceAccountStream = ServiceAccountCredentialsTest
-        .writeServiceAccountAccountStream(
-            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, null);
+        .writeServiceAccountStream(SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, null);
 
     testFromStreamException(serviceAccountStream, "private_key_id");
   }

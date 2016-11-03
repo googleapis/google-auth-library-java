@@ -374,18 +374,18 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     InputStream stream = new ByteArrayInputStream("foo".getBytes());
     try {
       ServiceAccountCredentials.fromStream(stream, null);
-      fail();
+      fail("Should throw if HttpTransportFactory is null");
     } catch (NullPointerException expected) {
       // Expected
     }
   }
 
   @Test
-  public void fromStream_nullStreamThrows() throws IOException {
+  public void fromStream_nullStream_Throws() throws IOException {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     try {
       ServiceAccountCredentials.fromStream(null, transportFactory);
-      fail();
+      fail("Should throw if InputStream is null");
     } catch (NullPointerException expected) {
       // Expected
     }
@@ -395,9 +395,8 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   public void fromStream_providesToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
-    InputStream serviceAccountStream = ServiceAccountCredentialsTest
-        .writeServiceAccountAccountStream(
-            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
+    InputStream serviceAccountStream = writeServiceAccountStream(
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
 
     GoogleCredentials credentials =
         ServiceAccountCredentials.fromStream(serviceAccountStream, transportFactory);
@@ -410,36 +409,32 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void fromStream_noClientId_throws() throws IOException {
-    InputStream serviceAccountStream = ServiceAccountCredentialsTest
-        .writeServiceAccountAccountStream(
-            null, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
+    InputStream serviceAccountStream =
+        writeServiceAccountStream(null, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
 
     testFromStreamException(serviceAccountStream, "client_id");
   }
 
   @Test
   public void fromStream_noClientEmail_throws() throws IOException {
-    InputStream serviceAccountStream = ServiceAccountCredentialsTest
-        .writeServiceAccountAccountStream(
-            SA_CLIENT_ID, null, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
+    InputStream serviceAccountStream =
+        writeServiceAccountStream(SA_CLIENT_ID, null, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
 
     testFromStreamException(serviceAccountStream, "client_email");
   }
 
   @Test
   public void fromStream_noPrivateKey_throws() throws IOException {
-    InputStream serviceAccountStream = ServiceAccountCredentialsTest
-        .writeServiceAccountAccountStream(
-            SA_CLIENT_ID, SA_CLIENT_EMAIL, null, SA_PRIVATE_KEY_ID);
+    InputStream serviceAccountStream =
+        writeServiceAccountStream(SA_CLIENT_ID, SA_CLIENT_EMAIL, null, SA_PRIVATE_KEY_ID);
 
     testFromStreamException(serviceAccountStream, "private_key");
   }
 
   @Test
   public void fromStream_noPrivateKeyId_throws() throws IOException {
-    InputStream serviceAccountStream = ServiceAccountCredentialsTest
-        .writeServiceAccountAccountStream(
-            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, null);
+    InputStream serviceAccountStream =
+        writeServiceAccountStream(SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, null);
 
     testFromStreamException(serviceAccountStream, "private_key_id");
   }
@@ -463,7 +458,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     return json;
   }
 
-  static InputStream writeServiceAccountAccountStream(String clientId, String clientEmail,
+  static InputStream writeServiceAccountStream(String clientId, String clientEmail,
       String privateKeyPkcs8, String privateKeyId) throws IOException {
     GenericJson json =
         writeServiceAccountJson(clientId, clientEmail, privateKeyPkcs8, privateKeyId);
