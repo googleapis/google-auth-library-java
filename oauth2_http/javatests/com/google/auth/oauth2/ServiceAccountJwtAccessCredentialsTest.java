@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.oauth2.GoogleCredentialsTest.testFromStreamException;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -46,12 +47,14 @@ import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.util.Clock;
 import com.google.auth.Credentials;
 import com.google.auth.http.AuthHttpConstants;
+import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -348,6 +351,81 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
     assertEquals(credentials.hashCode(), deserializedCredentials.hashCode());
     assertEquals(credentials.toString(), deserializedCredentials.toString());
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
+  }
+
+  @Test
+  public void fromStream_nullStreamThrows() throws IOException {
+    MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
+    try {
+      ServiceAccountCredentials.fromStream(null, transportFactory);
+      fail();
+    } catch (NullPointerException expected) {
+      // Expected
+    }
+  }
+
+  @Test
+  public void fromStream_hasJwtAccess() throws IOException {
+    InputStream serviceAccountStream = ServiceAccountCredentialsTest
+        .writeServiceAccountAccountStream(
+            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
+
+    Credentials credentials =
+        ServiceAccountJwtAccessCredentials.fromStream(serviceAccountStream);
+
+    assertNotNull(credentials);
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+    verifyJwtAccess(metadata, SA_CLIENT_EMAIL, CALL_URI, SA_PRIVATE_KEY_ID);
+  }
+
+  @Test
+  public void fromStream_defaultURI_hasJwtAccess() throws IOException {
+    InputStream serviceAccountStream = ServiceAccountCredentialsTest
+        .writeServiceAccountAccountStream(
+            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
+
+    Credentials credentials =
+        ServiceAccountJwtAccessCredentials.fromStream(serviceAccountStream, CALL_URI);
+
+    assertNotNull(credentials);
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(null);
+    verifyJwtAccess(metadata, SA_CLIENT_EMAIL, CALL_URI, SA_PRIVATE_KEY_ID);
+  }
+
+  @Test
+  public void fromStream_noClientId_throws() throws IOException {
+    InputStream serviceAccountStream = ServiceAccountCredentialsTest
+        .writeServiceAccountAccountStream(
+            null, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
+
+    testFromStreamException(serviceAccountStream, "client_id");
+  }
+
+  @Test
+  public void fromStream_noClientEmail_throws() throws IOException {
+    InputStream serviceAccountStream = ServiceAccountCredentialsTest
+        .writeServiceAccountAccountStream(
+            SA_CLIENT_ID, null, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
+
+    testFromStreamException(serviceAccountStream, "client_email");
+  }
+
+  @Test
+  public void fromStream_noPrivateKey_throws() throws IOException {
+    InputStream serviceAccountStream = ServiceAccountCredentialsTest
+        .writeServiceAccountAccountStream(
+            SA_CLIENT_ID, SA_CLIENT_EMAIL, null, SA_PRIVATE_KEY_ID);
+
+    testFromStreamException(serviceAccountStream, "private_key");
+  }
+
+  @Test
+  public void fromStream_noPrivateKeyId_throws() throws IOException {
+    InputStream serviceAccountStream = ServiceAccountCredentialsTest
+        .writeServiceAccountAccountStream(
+            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, null);
+
+    testFromStreamException(serviceAccountStream, "private_key_id");
   }
 
   private void verifyJwtAccess(Map<String, List<String>> metadata, String expectedEmail,

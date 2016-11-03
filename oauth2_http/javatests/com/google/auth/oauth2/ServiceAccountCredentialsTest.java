@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.oauth2.GoogleCredentialsTest.testFromStreamException;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -42,6 +43,7 @@ import static org.junit.Assert.fail;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
+import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
 import com.google.common.collect.ImmutableSet;
@@ -50,6 +52,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -92,6 +95,8 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
   private static final Collection<String> EMPTY_SCOPES = Collections.emptyList();
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
+  private static final HttpTransportFactory DUMMY_TRANSPORT_FACTORY =
+      new MockTokenServerTransportFactory();
 
   @Test
   public void createdScoped_clones() throws IOException {
@@ -362,6 +367,81 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(credentials.hashCode(), deserializedCredentials.hashCode());
     assertEquals(credentials.toString(), deserializedCredentials.toString());
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
+  }
+
+  @Test
+  public void fromStream_nullTransport_throws() throws IOException {
+    InputStream stream = new ByteArrayInputStream("foo".getBytes());
+    try {
+      ServiceAccountCredentials.fromStream(stream, null);
+      fail();
+    } catch (NullPointerException expected) {
+      // Expected
+    }
+  }
+
+  @Test
+  public void fromStream_nullStreamThrows() throws IOException {
+    MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
+    try {
+      ServiceAccountCredentials.fromStream(null, transportFactory);
+      fail();
+    } catch (NullPointerException expected) {
+      // Expected
+    }
+  }
+
+  @Test
+  public void fromStream_providesToken() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    InputStream serviceAccountStream = ServiceAccountCredentialsTest
+        .writeServiceAccountAccountStream(
+            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
+
+    GoogleCredentials credentials =
+        ServiceAccountCredentials.fromStream(serviceAccountStream, transportFactory);
+
+    assertNotNull(credentials);
+    credentials = credentials.createScoped(SCOPES);
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+  }
+
+  @Test
+  public void fromStream_noClientId_throws() throws IOException {
+    InputStream serviceAccountStream = ServiceAccountCredentialsTest
+        .writeServiceAccountAccountStream(
+            null, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
+
+    testFromStreamException(serviceAccountStream, "client_id");
+  }
+
+  @Test
+  public void fromStream_noClientEmail_throws() throws IOException {
+    InputStream serviceAccountStream = ServiceAccountCredentialsTest
+        .writeServiceAccountAccountStream(
+            SA_CLIENT_ID, null, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
+
+    testFromStreamException(serviceAccountStream, "client_email");
+  }
+
+  @Test
+  public void fromStream_noPrivateKey_throws() throws IOException {
+    InputStream serviceAccountStream = ServiceAccountCredentialsTest
+        .writeServiceAccountAccountStream(
+            SA_CLIENT_ID, SA_CLIENT_EMAIL, null, SA_PRIVATE_KEY_ID);
+
+    testFromStreamException(serviceAccountStream, "private_key");
+  }
+
+  @Test
+  public void fromStream_noPrivateKeyId_throws() throws IOException {
+    InputStream serviceAccountStream = ServiceAccountCredentialsTest
+        .writeServiceAccountAccountStream(
+            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, null);
+
+    testFromStreamException(serviceAccountStream, "private_key_id");
   }
 
   static GenericJson writeServiceAccountJson(

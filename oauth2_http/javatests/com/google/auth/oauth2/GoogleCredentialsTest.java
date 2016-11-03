@@ -223,7 +223,7 @@ public class GoogleCredentialsTest {
     testFromStreamException(userStream, "refresh_token");
   }
 
-  private void testFromStreamException(InputStream stream, String expectedMessageContent) {
+  static void testFromStreamException(InputStream stream, String expectedMessageContent) {
     try {
       GoogleCredentials.fromStream(stream, DUMMY_TRANSPORT_FACTORY);
       fail();
