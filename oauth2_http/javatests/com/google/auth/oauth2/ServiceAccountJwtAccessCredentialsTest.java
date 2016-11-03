@@ -31,7 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.auth.oauth2.GoogleCredentialsTest.testFromStreamException;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -442,5 +441,14 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
     assertEquals(expectedEmail, signature.getPayload().getSubject());
     assertEquals(expectedAudience.toString(), signature.getPayload().getAudience());
     assertEquals(expectedKeyId, signature.getHeader().getKeyId());
+  }
+
+  private static void testFromStreamException(InputStream stream, String expectedMessageContent) {
+    try {
+      ServiceAccountJwtAccessCredentials.fromStream(stream, CALL_URI);
+      fail();
+    } catch (IOException expected) {
+      assertTrue(expected.getMessage().contains(expectedMessageContent));
+    }
   }
 }

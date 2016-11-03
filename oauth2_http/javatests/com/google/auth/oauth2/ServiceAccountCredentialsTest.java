@@ -31,7 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.auth.oauth2.GoogleCredentialsTest.testFromStreamException;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -463,5 +462,14 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     GenericJson json =
         writeServiceAccountJson(clientId, clientEmail, privateKeyPkcs8, privateKeyId);
     return TestUtils.jsonToInputStream(json);
+  }
+
+  private static void testFromStreamException(InputStream stream, String expectedMessageContent) {
+    try {
+      ServiceAccountCredentials.fromStream(stream, DUMMY_TRANSPORT_FACTORY);
+      fail();
+    } catch (IOException expected) {
+      assertTrue(expected.getMessage().contains(expectedMessageContent));
+    }
   }
 }
