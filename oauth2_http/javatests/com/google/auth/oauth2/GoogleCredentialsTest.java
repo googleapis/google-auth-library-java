@@ -121,7 +121,7 @@ public class GoogleCredentialsTest {
   }
 
   @Test
-  public void fromStream_nullStream_Throws() throws IOException {
+  public void fromStream_nullStream_throws() throws IOException {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     try {
       GoogleCredentials.fromStream(null, transportFactory);
