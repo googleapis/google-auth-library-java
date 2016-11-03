@@ -467,7 +467,8 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   private static void testFromStreamException(InputStream stream, String expectedMessageContent) {
     try {
       ServiceAccountCredentials.fromStream(stream, DUMMY_TRANSPORT_FACTORY);
-      fail();
+      fail(String.format("Should throw exception with message containing '%s'",
+          expectedMessageContent));
     } catch (IOException expected) {
       assertTrue(expected.getMessage().contains(expectedMessageContent));
     }

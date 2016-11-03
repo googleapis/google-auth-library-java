@@ -334,8 +334,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
-    InputStream userStream =
-        UserCredentialsTest.writeUserStream(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN);
+    InputStream userStream = writeUserStream(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN);
 
     UserCredentials credentials = UserCredentials.fromStream(userStream, transportFactory);
 
@@ -346,24 +345,21 @@ public class UserCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void fromStream_userNoClientId_throws() throws IOException {
-    InputStream userStream =
-        UserCredentialsTest.writeUserStream(null, CLIENT_SECRET, REFRESH_TOKEN);
+    InputStream userStream = writeUserStream(null, CLIENT_SECRET, REFRESH_TOKEN);
 
     testFromStreamException(userStream, "client_id");
   }
 
   @Test
   public void fromStream_userNoClientSecret_throws() throws IOException {
-    InputStream userStream =
-        UserCredentialsTest.writeUserStream(CLIENT_ID, null, REFRESH_TOKEN);
+    InputStream userStream = writeUserStream(CLIENT_ID, null, REFRESH_TOKEN);
 
     testFromStreamException(userStream, "client_secret");
   }
 
   @Test
   public void fromStream_userNoRefreshToken_throws() throws IOException {
-    InputStream userStream =
-        UserCredentialsTest.writeUserStream(CLIENT_ID, CLIENT_SECRET, null);
+    InputStream userStream = writeUserStream(CLIENT_ID, CLIENT_SECRET, null);
 
     testFromStreamException(userStream, "refresh_token");
   }
@@ -392,7 +388,8 @@ public class UserCredentialsTest extends BaseSerializationTest {
   private static void testFromStreamException(InputStream stream, String expectedMessageContent) {
     try {
       UserCredentials.fromStream(stream);
-      fail();
+      fail(String.format("Should throw exception with message containing '%s'",
+          expectedMessageContent));
     } catch (IOException expected) {
       assertTrue(expected.getMessage().contains(expectedMessageContent));
     }

@@ -446,7 +446,8 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
   private static void testFromStreamException(InputStream stream, String expectedMessageContent) {
     try {
       ServiceAccountJwtAccessCredentials.fromStream(stream, CALL_URI);
-      fail();
+      fail(String.format("Should throw exception with message containing '%s'",
+          expectedMessageContent));
     } catch (IOException expected) {
       assertTrue(expected.getMessage().contains(expectedMessageContent));
     }
