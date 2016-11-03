@@ -215,7 +215,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
       throw new IOException("Error reading credentials from stream, 'type' field not specified.");
     }
     if (SERVICE_ACCOUNT_FILE_TYPE.equals(fileType)) {
-      return ServiceAccountJwtAccessCredentials.fromJson(fileContents, defaultAudience);
+      return fromJson(fileContents, defaultAudience);
     }
     throw new IOException(String.format(
         "Error reading credentials from stream, 'type' value '%s' not recognized."

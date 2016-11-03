@@ -262,7 +262,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
       throw new IOException("Error reading credentials from stream, 'type' field not specified.");
     }
     if (SERVICE_ACCOUNT_FILE_TYPE.equals(fileType)) {
-      return ServiceAccountCredentials.fromJson(fileContents, transportFactory);
+      return fromJson(fileContents, transportFactory);
     }
     throw new IOException(String.format(
         "Error reading credentials from stream, 'type' value '%s' not recognized."
