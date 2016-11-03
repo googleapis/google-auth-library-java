@@ -33,6 +33,7 @@ package com.google.auth.oauth2;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -50,6 +51,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -305,6 +307,67 @@ public class UserCredentialsTest extends BaseSerializationTest {
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
   }
 
+  @Test
+  public void fromStream_nullTransport_throws() throws IOException {
+    InputStream stream = new ByteArrayInputStream("foo".getBytes());
+    try {
+      UserCredentials.fromStream(stream, null);
+      fail("Should throw if HttpTransportFactory is null");
+    } catch (NullPointerException expected) {
+      // Expected
+    }
+  }
+
+  @Test
+  public void fromStream_nullStream_throws() throws IOException {
+    MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
+    try {
+      UserCredentials.fromStream(null, transportFactory);
+      fail("Should throw if InputStream is null");
+    } catch (NullPointerException expected) {
+      // Expected
+    }
+  }
+
+  @Test
+  public void fromStream_user_providesToken() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
+    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
+    InputStream userStream =
+        UserCredentialsTest.writeUserStream(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN);
+
+    UserCredentials credentials = UserCredentials.fromStream(userStream, transportFactory);
+
+    assertNotNull(credentials);
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+  }
+
+  @Test
+  public void fromStream_userNoClientId_throws() throws IOException {
+    InputStream userStream =
+        UserCredentialsTest.writeUserStream(null, CLIENT_SECRET, REFRESH_TOKEN);
+
+    testFromStreamException(userStream, "client_id");
+  }
+
+  @Test
+  public void fromStream_userNoClientSecret_throws() throws IOException {
+    InputStream userStream =
+        UserCredentialsTest.writeUserStream(CLIENT_ID, null, REFRESH_TOKEN);
+
+    testFromStreamException(userStream, "client_secret");
+  }
+
+  @Test
+  public void fromStream_userNoRefreshToken_throws() throws IOException {
+    InputStream userStream =
+        UserCredentialsTest.writeUserStream(CLIENT_ID, CLIENT_SECRET, null);
+
+    testFromStreamException(userStream, "refresh_token");
+  }
+
   static GenericJson writeUserJson(String clientId, String clientSecret, String refreshToken) {
     GenericJson json = new GenericJson();
     if (clientId != null) {
@@ -324,5 +387,14 @@ public class UserCredentialsTest extends BaseSerializationTest {
       throws IOException {
     GenericJson json = writeUserJson(clientId, clientSecret, refreshToken);
     return TestUtils.jsonToInputStream(json);
+  }
+
+  private static void testFromStreamException(InputStream stream, String expectedMessageContent) {
+    try {
+      UserCredentials.fromStream(stream);
+      fail();
+    } catch (IOException expected) {
+      assertTrue(expected.getMessage().contains(expectedMessageContent));
+    }
   }
 }
