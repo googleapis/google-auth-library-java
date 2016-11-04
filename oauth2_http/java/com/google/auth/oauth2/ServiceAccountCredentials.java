@@ -38,6 +38,7 @@ import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.UrlEncodedContent;
+import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.webtoken.JsonWebSignature;
@@ -54,6 +55,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.Reader;
 import java.io.StringReader;
@@ -220,6 +222,51 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
       unexpectedException = exception;
     }
     throw new IOException("Unexpected exception reading PKCS#8 data", unexpectedException);
+  }
+
+  /**
+   * Returns credentials defined by a Service Account key file in JSON format from the Google
+   * Developers Console.
+   *
+   * @param credentialsStream the stream with the credential definition.
+   * @return the credential defined by the credentialsStream.
+   * @throws IOException if the credential cannot be created from the stream.
+   **/
+  public static ServiceAccountCredentials fromStream(InputStream credentialsStream)
+      throws IOException {
+    return fromStream(credentialsStream, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+  }
+
+  /**
+   * Returns credentials defined by a Service Account key file in JSON format from the Google
+   * Developers Console.
+   *
+   * @param credentialsStream the stream with the credential definition.
+   * @param transportFactory HTTP transport factory, creates the transport used to get access
+   *        tokens.
+   * @return the credential defined by the credentialsStream.
+   * @throws IOException if the credential cannot be created from the stream.
+   **/
+  public static ServiceAccountCredentials fromStream(InputStream credentialsStream,
+      HttpTransportFactory transportFactory) throws IOException {
+    Preconditions.checkNotNull(credentialsStream);
+    Preconditions.checkNotNull(transportFactory);
+
+    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
+    JsonObjectParser parser = new JsonObjectParser(jsonFactory);
+    GenericJson fileContents = parser.parseAndClose(
+        credentialsStream, OAuth2Utils.UTF_8, GenericJson.class);
+
+    String fileType = (String) fileContents.get("type");
+    if (fileType == null) {
+      throw new IOException("Error reading credentials from stream, 'type' field not specified.");
+    }
+    if (SERVICE_ACCOUNT_FILE_TYPE.equals(fileType)) {
+      return fromJson(fileContents, transportFactory);
+    }
+    throw new IOException(String.format(
+        "Error reading credentials from stream, 'type' value '%s' not recognized."
+            + " Expecting '%s'.", fileType, SERVICE_ACCOUNT_FILE_TYPE));
   }
 
   /**

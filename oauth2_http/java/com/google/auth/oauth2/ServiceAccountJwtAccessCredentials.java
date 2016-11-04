@@ -31,7 +31,11 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.oauth2.GoogleCredentials.SERVICE_ACCOUNT_FILE_TYPE;
+
+import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.client.util.Clock;
@@ -44,6 +48,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.URI;
 import java.security.GeneralSecurityException;
@@ -123,7 +128,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   }
 
   /**
-   * Returns service account crentials defined by JSON using the format supported by the Google
+   * Returns service account credentials defined by JSON using the format supported by the Google
    * Developers Console.
    *
    * @param json a map from the JSON representing the credentials.
@@ -172,6 +177,49 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(privateKeyPkcs8);
     return new ServiceAccountJwtAccessCredentials(
         clientId, clientEmail, privateKey, privateKeyId, defaultAudience);
+  }
+
+  /**
+   * Returns credentials defined by a Service Account key file in JSON format from the Google
+   * Developers Console.
+   *
+   * @param credentialsStream the stream with the credential definition.
+   * @return the credential defined by the credentialsStream.
+   * @throws IOException if the credential cannot be created from the stream.
+   **/
+  public static ServiceAccountJwtAccessCredentials fromStream(InputStream credentialsStream)
+      throws IOException {
+    return fromStream(credentialsStream, null);
+  }
+
+  /**
+   * Returns credentials defined by a Service Account key file in JSON format from the Google
+   * Developers Console.
+   *
+   * @param credentialsStream the stream with the credential definition.
+   * @param defaultAudience Audience to use if not provided by transport. May be null.
+   * @return the credential defined by the credentialsStream.
+   * @throws IOException if the credential cannot be created from the stream.
+   **/
+  public static ServiceAccountJwtAccessCredentials fromStream(InputStream credentialsStream,
+      URI defaultAudience) throws IOException {
+    Preconditions.checkNotNull(credentialsStream);
+
+    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
+    JsonObjectParser parser = new JsonObjectParser(jsonFactory);
+    GenericJson fileContents = parser.parseAndClose(
+        credentialsStream, OAuth2Utils.UTF_8, GenericJson.class);
+
+    String fileType = (String) fileContents.get("type");
+    if (fileType == null) {
+      throw new IOException("Error reading credentials from stream, 'type' field not specified.");
+    }
+    if (SERVICE_ACCOUNT_FILE_TYPE.equals(fileType)) {
+      return fromJson(fileContents, defaultAudience);
+    }
+    throw new IOException(String.format(
+        "Error reading credentials from stream, 'type' value '%s' not recognized."
+            + " Expecting '%s'.", fileType, SERVICE_ACCOUNT_FILE_TYPE));
   }
 
   @Override

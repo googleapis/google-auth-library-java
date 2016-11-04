@@ -38,12 +38,15 @@ import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.UrlEncodedContent;
+import com.google.api.client.json.GenericJson;
+import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.http.HttpTransportFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.URI;
 import java.util.Date;
@@ -118,7 +121,7 @@ public class UserCredentials extends GoogleCredentials {
   }
 
   /**
-   * Returns user crentials defined by JSON contents using the format supported by the Cloud SDK.
+   * Returns user credentials defined by JSON contents using the format supported by the Cloud SDK.
    *
    * @param json a map from the JSON representing the credentials.
    * @param transportFactory HTTP transport factory, creates the transport used to get access
@@ -136,6 +139,49 @@ public class UserCredentials extends GoogleCredentials {
           + " expecting 'client_id', 'client_secret' and 'refresh_token'.");
     }
     return new UserCredentials(clientId, clientSecret, refreshToken, null, transportFactory, null);
+  }
+
+  /**
+   * Returns credentials defined by a JSON file stream using the format supported by the Cloud SDK.
+   *
+   * @param credentialsStream the stream with the credential definition.
+   * @return the credential defined by the credentialsStream.
+   * @throws IOException if the credential cannot be created from the stream.
+   **/
+  public static UserCredentials fromStream(InputStream credentialsStream)
+      throws IOException {
+    return fromStream(credentialsStream, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+  }
+
+  /**
+   * Returns credentials defined by a JSON file stream using the format supported by the Cloud SDK.
+   *
+   * @param credentialsStream the stream with the credential definition.
+   * @param transportFactory HTTP transport factory, creates the transport used to get access
+   *        tokens.
+   * @return the credential defined by the credentialsStream.
+   * @throws IOException if the credential cannot be created from the stream.
+   **/
+  public static UserCredentials fromStream(InputStream credentialsStream,
+      HttpTransportFactory transportFactory) throws IOException {
+    Preconditions.checkNotNull(credentialsStream);
+    Preconditions.checkNotNull(transportFactory);
+
+    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
+    JsonObjectParser parser = new JsonObjectParser(jsonFactory);
+    GenericJson fileContents = parser.parseAndClose(
+        credentialsStream, OAuth2Utils.UTF_8, GenericJson.class);
+
+    String fileType = (String) fileContents.get("type");
+    if (fileType == null) {
+      throw new IOException("Error reading credentials from stream, 'type' field not specified.");
+    }
+    if (USER_FILE_TYPE.equals(fileType)) {
+      return fromJson(fileContents, transportFactory);
+    }
+    throw new IOException(String.format(
+        "Error reading credentials from stream, 'type' value '%s' not recognized."
+            + " Expecting '%s'.", fileType, USER_FILE_TYPE));
   }
 
   /**
