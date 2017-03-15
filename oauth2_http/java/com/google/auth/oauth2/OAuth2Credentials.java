@@ -181,7 +181,7 @@ public class OAuth2Credentials extends Credentials {
   public AccessToken refreshAccessToken() throws IOException {
     throw new IllegalStateException("OAuth2Credentials instance does not support refreshing the"
         + " access token. An instance with a new access token should be used, or a derived type"
-        + " that supports refreshing should be used.");
+        + " that supports refreshing.");
   }
 
   /**
