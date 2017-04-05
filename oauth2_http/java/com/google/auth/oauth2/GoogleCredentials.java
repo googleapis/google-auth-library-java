@@ -183,7 +183,6 @@ public class GoogleCredentials extends OAuth2Credentials {
    * If the credentials support scopes, create a copy of the the idenitity with the specified
    * scopes, otherwise returns the same instance.
    */
-  @SuppressWarnings("unused")
   public GoogleCredentials createScoped(Collection<String> scopes) {
     return this;
   }

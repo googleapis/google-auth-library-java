@@ -408,7 +408,6 @@ public class DefaultCredentialsProviderTest {
   public static class MockAppEngineCredentials extends GoogleCredentials {
     private static final long serialVersionUID = 2695173591854484322L;
 
-    @SuppressWarnings("unused")
     public MockAppEngineCredentials(Collection<String> scopes) {
     }
 
