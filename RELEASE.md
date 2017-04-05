@@ -47,7 +47,7 @@ Create a Maven settings file
         <gpg.passphrase>[the password for your gpg key]</gpg.passphrase>
       </properties>
     </profile>
-  </profiles>  
+  </profiles>
   <servers>
     <server>
       <id>ossrh</id>
@@ -57,6 +57,12 @@ Create a Maven settings file
   </servers>
 </settings>
 ```
+
+Versioning
+----------
+Minor changes should be a point increase (0.6.0 -> 0.6.1).  Additions to API or breaking changes should be
+a major release. (0.6.0 -> 0.7.0)
+
 
 Deploy to Sonatype
 ------------------
