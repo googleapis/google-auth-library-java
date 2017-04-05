@@ -59,7 +59,7 @@ import java.util.concurrent.Executor;
 public class OAuth2Credentials extends Credentials {
 
   private static final long serialVersionUID = 4556936364828217687L;
-  private static final int MINIMUM_TOKEN_MILLISECONDS = 60000;
+  private static final long MINIMUM_TOKEN_MILLISECONDS = 60000L * 5L;
 
   // byte[] is serializable, so the lock variable can be final
   private final Object lock = new byte[0];
@@ -181,7 +181,7 @@ public class OAuth2Credentials extends Credentials {
   public AccessToken refreshAccessToken() throws IOException {
     throw new IllegalStateException("OAuth2Credentials instance does not support refreshing the"
         + " access token. An instance with a new access token should be used, or a derived type"
-        + " that supports refreshing should be used.");
+        + " that supports refreshing.");
   }
 
   /**

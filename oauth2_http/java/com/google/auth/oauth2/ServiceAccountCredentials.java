@@ -275,7 +275,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
   @Override
   public AccessToken refreshAccessToken() throws IOException {
     if (createScopedRequired()) {
-      throw new IOException("Scopes not configured for service account. Scoped should be specifed"
+      throw new IOException("Scopes not configured for service account. Scoped should be specified"
           + " by calling createScoped or passing scopes to constructor.");
     }
 
