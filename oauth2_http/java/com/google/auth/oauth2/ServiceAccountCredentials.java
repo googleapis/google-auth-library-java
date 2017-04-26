@@ -37,6 +37,7 @@ import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.UrlEncodedContent;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
@@ -53,12 +54,13 @@ import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.Reader;
 import java.io.StringReader;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
@@ -73,6 +75,7 @@ import java.sql.Date;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
+import org.joda.time.Duration;
 
 /**
  * OAuth2 credentials representing a Service Account for calling Google APIs.
@@ -84,6 +87,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
   private static final long serialVersionUID = 7807543542681217978L;
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
+  public static final int UNKNOWN_CODE = 0;
 
   private final String clientId;
   private final String clientEmail;
@@ -312,11 +316,39 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
     HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
     request.setParser(new JsonObjectParser(jsonFactory));
 
-    HttpResponse response;
-    try {
-      response = request.execute();
-    } catch (IOException e) {
-      throw new IOException("Error getting access token for service account: ", e);
+    ExponentialRetryAlgorithm retry =
+        new ExponentialRetryAlgorithm(
+            RetrySettings.newBuilder()
+                .setInitialRetryDelay(Duration.millis(100L))
+                .setRetryDelayMultiplier(1.3)
+                .setMaxRetryDelay(Duration.millis(60000L))
+                .setInitialRpcTimeout(Duration.millis(20000L))
+                .setRpcTimeoutMultiplier(1.0)
+                .setMaxRpcTimeout(Duration.millis(20000L))
+                .setTotalTimeout(Duration.millis(600000L))
+                .build());
+    TimedAttemptSettings attempt = retry.createFirstAttempt();
+
+    HttpResponse response = null;
+    int code = UNKNOWN_CODE;
+    while (retry.accept(attempt)) {
+      try {
+        try {
+          response = request.execute();
+          break;
+        } catch (SocketException | SocketTimeoutException exception) {
+        } catch (HttpResponseException exception) {
+          code = exception.getStatusCode();
+          // Token endpoint does not return 429; timeouts return 500 instead of 408.
+          if (!(500 <= code && code < 600
+              || code == 403 && exception.getStatusMessage().equals("rate_limit_exceeded"))) {
+            throw exception;
+          }
+        }
+      } catch (IOException exception) {
+        throw new IOException("Error getting access token for service account: ", exception);
+      }
+      attempt = retry.createNextAttempt(attempt);
     }
 
     GenericData responseData = response.parseAs(GenericData.class);

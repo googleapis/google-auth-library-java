@@ -9,3 +9,6 @@ target/
 # Intellij
 *.iml
 .idea/
+
+# emacs/gEdit autosave files
+*~
