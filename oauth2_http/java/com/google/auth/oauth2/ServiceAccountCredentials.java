@@ -327,30 +327,10 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
           + " by calling createScoped or passing scopes to constructor.");
     }
 
-    JsonWebSignature.Header header = new JsonWebSignature.Header();
-    header.setAlgorithm("RS256");
-    header.setType("JWT");
-    header.setKeyId(privateKeyId);
-
-    JsonWebToken.Payload payload = new JsonWebToken.Payload();
-    long currentTime = clock.currentTimeMillis();
-    payload.setIssuer(clientEmail);
-    payload.setAudience(OAuth2Utils.TOKEN_SERVER_URI.toString());
-    payload.setIssuedAtTimeSeconds(currentTime / 1000);
-    payload.setExpirationTimeSeconds(currentTime / 1000 + 3600);
-    payload.setSubject(serviceAccountUser);
-    payload.put("scope", Joiner.on(' ').join(scopes));
-
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
+    long currentTime = clock.currentTimeMillis();
+    String assertion = createAssertion(jsonFactory, currentTime);
 
-    String assertion;
-    try {
-      assertion = JsonWebSignature.signUsingRsaSha256(
-          privateKey, jsonFactory, header, payload);
-    } catch (GeneralSecurityException e) {
-      throw new IOException(
-          "Error signing service account access token request with private key.", e);
-    }
     GenericData tokenRequest = new GenericData();
     tokenRequest.set("grant_type", GRANT_TYPE);
     tokenRequest.set("assertion", assertion);
@@ -476,8 +456,28 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
         && Objects.equals(this.scopes, other.scopes);
   }
 
-  private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
-    input.defaultReadObject();
-    transportFactory = newInstance(transportFactoryClassName);
+  protected String createAssertion(JsonFactory jsonFactory, long currentTime) throws IOException {
+    JsonWebSignature.Header header = new JsonWebSignature.Header();
+    header.setAlgorithm("RS256");
+    header.setType("JWT");
+    header.setKeyId(privateKeyId);
+
+    JsonWebToken.Payload payload = new JsonWebToken.Payload();
+    payload.setIssuer(clientEmail);
+    payload.setAudience(OAuth2Utils.TOKEN_SERVER_URI.toString());
+    payload.setIssuedAtTimeSeconds(currentTime / 1000);
+    payload.setExpirationTimeSeconds(currentTime / 1000 + 3600);
+    payload.setSubject(serviceAccountUser);
+    payload.put("scope", Joiner.on(' ').join(scopes));
+
+    String assertion;
+    try {
+      assertion = JsonWebSignature.signUsingRsaSha256(
+          privateKey, jsonFactory, header, payload);
+    } catch (GeneralSecurityException e) {
+      throw new IOException(
+          "Error signing service account access token request with private key.", e);
+    }
+    return assertion;
   }
 }

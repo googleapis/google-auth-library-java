@@ -40,7 +40,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.api.client.json.GenericJson;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.webtoken.JsonWebSignature;
+import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.client.util.Clock;
+import com.google.api.client.util.Joiner;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
@@ -137,6 +141,27 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
     assertEquals(SERVICE_ACCOUNT_USER, ((ServiceAccountCredentials)credentials).getServiceAccountUser());
 }
+
+  @Test
+  public void createAssertion_correct() throws IOException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    List<String> scopes = Arrays.asList("scope1", "scope2");
+    ServiceAccountCredentials credentials = new ServiceAccountCredentials(
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, scopes, null, null, SERVICE_ACCOUNT_USER);
+
+    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
+    long currentTime = Clock.SYSTEM.currentTimeMillis();
+    String assertion = credentials.createAssertion(jsonFactory, currentTime);
+
+    JsonWebSignature signature = JsonWebSignature.parse(jsonFactory, assertion);
+    JsonWebToken.Payload payload = signature.getPayload();
+    assertEquals(SA_CLIENT_EMAIL, payload.getIssuer());
+    assertEquals(OAuth2Utils.TOKEN_SERVER_URI.toString(), payload.getAudience());
+    assertEquals(currentTime / 1000, (long) payload.getIssuedAtTimeSeconds());
+    assertEquals(currentTime / 1000 + 3600, (long) payload.getExpirationTimeSeconds());
+    assertEquals(SERVICE_ACCOUNT_USER, payload.getSubject());
+    assertEquals(Joiner.on(' ').join(scopes), payload.get("scope"));
+   }
 
   @Test
   public void createdScoped_enablesAccessTokens() throws IOException {
