@@ -66,6 +66,8 @@ class DefaultCredentialsProvider {
 
   static final String CLOUD_SHELL_ENV_VAR = "DEVSHELL_CLIENT_PORT";
 
+  static final String SKIP_APP_ENGINE_ENV_VAR = "GOOGLE_APPLICATION_CREDENTIALS_SKIP_APP_ENGINE";
+
   // These variables should only be accessed inside a synchronized block
   private GoogleCredentials cachedCredentials = null;
   private boolean checkedAppEngine = false;
@@ -169,7 +171,7 @@ class DefaultCredentialsProvider {
     }
 
     // Then try App Engine
-    if (credentials == null) {
+    if (credentials == null && !skipAppEngineCredentialsCheck()) {
       credentials = tryGetAppEngineCredential();
     }
 
@@ -263,6 +265,17 @@ class DefaultCredentialsProvider {
       return new ComputeEngineCredentials(transportFactory);
     }
     return null;
+  }
+
+  // Skip app engine check if environment variable
+  // GOOGLE_APPLICATION_CREDENTIALS_SKIP_APP_ENGINE = 1 or true
+  private boolean skipAppEngineCredentialsCheck() {
+    boolean skip = false; // do not skip by default
+    String value = getEnv(SKIP_APP_ENGINE_ENV_VAR);
+    if (value != null) {
+      skip = value.equalsIgnoreCase("true") || value.equals("1");
+    }
+    return skip;
   }
 
   /*
