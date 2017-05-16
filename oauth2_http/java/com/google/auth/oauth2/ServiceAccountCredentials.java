@@ -146,7 +146,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
    * @param serviceAccountUser Email of the user account to impersonate, if delegating domain-wide
    *        authority to the service account.
    */
-  public ServiceAccountCredentials(
+  ServiceAccountCredentials(
       String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId,
       Collection<String> scopes, HttpTransportFactory transportFactory, URI tokenServerUri,
       String serviceAccountUser) {
