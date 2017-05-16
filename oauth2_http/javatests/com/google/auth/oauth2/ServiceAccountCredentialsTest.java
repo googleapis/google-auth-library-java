@@ -150,15 +150,15 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
         SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, scopes, null, null, SERVICE_ACCOUNT_USER);
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
-    long currentTime = Clock.SYSTEM.currentTimeMillis();
-    String assertion = credentials.createAssertion(jsonFactory, currentTime);
+    long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
+    String assertion = credentials.createAssertion(jsonFactory, currentTimeMillis);
 
     JsonWebSignature signature = JsonWebSignature.parse(jsonFactory, assertion);
     JsonWebToken.Payload payload = signature.getPayload();
     assertEquals(SA_CLIENT_EMAIL, payload.getIssuer());
     assertEquals(OAuth2Utils.TOKEN_SERVER_URI.toString(), payload.getAudience());
-    assertEquals(currentTime / 1000, (long) payload.getIssuedAtTimeSeconds());
-    assertEquals(currentTime / 1000 + 3600, (long) payload.getExpirationTimeSeconds());
+    assertEquals(currentTimeMillis / 1000, (long) payload.getIssuedAtTimeSeconds());
+    assertEquals(currentTimeMillis / 1000 + 3600, (long) payload.getExpirationTimeSeconds());
     assertEquals(SERVICE_ACCOUNT_USER, payload.getSubject());
     assertEquals(Joiner.on(' ').join(scopes), payload.get("scope"));
    }

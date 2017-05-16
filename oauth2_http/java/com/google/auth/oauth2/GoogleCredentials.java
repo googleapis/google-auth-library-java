@@ -181,14 +181,14 @@ public class GoogleCredentials extends OAuth2Credentials {
 
   /**
    * If the credentials support scopes, creates a copy of the the identity with the specified
-   * scopes; otherwise returns the same instance.
+   * scopes; otherwise, returns the same instance.
    */
   public GoogleCredentials createScoped(Collection<String> scopes) {
     return this;
   }
 
   /**
-   * If the credentials support domain-wide delgation, creates a copy
+   * If the credentials support domain-wide delegation, creates a copy
    * of the identity so that it impersonates the specified user;
    * otherwise, returns the same instance.
    */

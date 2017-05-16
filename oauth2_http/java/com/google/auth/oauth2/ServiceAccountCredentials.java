@@ -225,7 +225,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
     return fromPkcs8(clientId, clientEmail, privateKeyPkcs8, privateKeyId, scopes, transportFactory, tokenServerUri, null);
   }
 
-    /**
+  /**
    * Factory with miniumum identifying information and custom transport using PKCS#8 for the
    * private key.
    *
@@ -456,7 +456,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
         && Objects.equals(this.scopes, other.scopes);
   }
 
-  protected String createAssertion(JsonFactory jsonFactory, long currentTime) throws IOException {
+  String createAssertion(JsonFactory jsonFactory, long currentTime) throws IOException {
     JsonWebSignature.Header header = new JsonWebSignature.Header();
     header.setAlgorithm("RS256");
     header.setType("JWT");
