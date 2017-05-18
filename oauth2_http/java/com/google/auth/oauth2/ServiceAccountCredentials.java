@@ -89,6 +89,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
   private final String clientEmail;
   private final PrivateKey privateKey;
   private final String privateKeyId;
+  private final String serviceAccountUser;
   private final String transportFactoryClassName;
   private final URI tokenServerUri;
   private final Collection<String> scopes;
@@ -108,7 +109,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
   public ServiceAccountCredentials(
       String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId,
       Collection<String> scopes) {
-    this(clientId, clientEmail, privateKey, privateKeyId, scopes, null, null);
+    this(clientId, clientEmail, privateKey, privateKeyId, scopes, null, null, null);
   }
 
   /**
@@ -127,6 +128,28 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
   public ServiceAccountCredentials(
       String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId,
       Collection<String> scopes, HttpTransportFactory transportFactory, URI tokenServerUri) {
+    this(clientId, clientEmail, privateKey, privateKeyId, scopes, transportFactory, tokenServerUri, null);
+  }
+
+  /**
+   * Constructor with minimum identifying information and custom HTTP transport.
+   *
+   * @param clientId Client ID of the service account from the console. May be null.
+   * @param clientEmail Client email address of the service account from the console.
+   * @param privateKey RSA private key object for the service account.
+   * @param privateKeyId Private key identifier for the service account. May be null.
+   * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
+   *        which results in a credential that must have createScoped called before use.
+   * @param transportFactory HTTP transport factory, creates the transport used to get access
+   *        tokens.
+   * @param tokenServerUri URI of the end point that provides tokens.
+   * @param serviceAccountUser Email of the user account to impersonate, if delegating domain-wide
+   *        authority to the service account.
+   */
+  ServiceAccountCredentials(
+      String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId,
+      Collection<String> scopes, HttpTransportFactory transportFactory, URI tokenServerUri,
+      String serviceAccountUser) {
     this.clientId = clientId;
     this.clientEmail = Preconditions.checkNotNull(clientEmail);
     this.privateKey = Preconditions.checkNotNull(privateKey);
@@ -136,6 +159,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
         getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
     this.tokenServerUri = (tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : tokenServerUri;
+    this.serviceAccountUser = serviceAccountUser;
   }
 
   /**
@@ -177,7 +201,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
   public static ServiceAccountCredentials fromPkcs8(
       String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId,
       Collection<String> scopes) throws IOException {
-    return fromPkcs8(clientId, clientEmail, privateKeyPkcs8, privateKeyId, scopes, null, null);
+    return fromPkcs8(clientId, clientEmail, privateKeyPkcs8, privateKeyId, scopes, null, null, null);
   }
 
   /**
@@ -198,9 +222,33 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
       String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId,
       Collection<String> scopes, HttpTransportFactory transportFactory, URI tokenServerUri)
       throws IOException {
+    return fromPkcs8(clientId, clientEmail, privateKeyPkcs8, privateKeyId, scopes, transportFactory, tokenServerUri, null);
+  }
+
+  /**
+   * Factory with miniumum identifying information and custom transport using PKCS#8 for the
+   * private key.
+   *
+   * @param clientId Client ID of the service account from the console. May be null.
+   * @param clientEmail Client email address of the service account from the console.
+   * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
+   * @param privateKeyId Private key identifier for the service account. May be null.
+   * @param scopes Scope strings for the APIs to be called. May be null or an emptt collection,
+   *        which results in a credential that must have createScoped called before use.
+   * @param transportFactory HTTP transport factory, creates the transport used to get access
+   *        tokens.
+   * @param tokenServerUri URI of the end point that provides tokens.
+   * @param serviceAccountUser The email of the user account to impersonate, if delegating
+   *        domain-wide authority to the service account.
+   */
+  public static ServiceAccountCredentials fromPkcs8(
+      String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId,
+      Collection<String> scopes, HttpTransportFactory transportFactory, URI tokenServerUri,
+      String serviceAccountUser)
+      throws IOException {
     PrivateKey privateKey = privateKeyFromPkcs8(privateKeyPkcs8);
     return new ServiceAccountCredentials(
-        clientId, clientEmail, privateKey, privateKeyId, scopes, transportFactory, tokenServerUri);
+        clientId, clientEmail, privateKey, privateKeyId, scopes, transportFactory, tokenServerUri, serviceAccountUser);
   }
 
   /**
@@ -279,30 +327,10 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
           + " by calling createScoped or passing scopes to constructor.");
     }
 
-    JsonWebSignature.Header header = new JsonWebSignature.Header();
-    header.setAlgorithm("RS256");
-    header.setType("JWT");
-    header.setKeyId(privateKeyId);
-
-    JsonWebToken.Payload payload = new JsonWebToken.Payload();
-    long currentTime = clock.currentTimeMillis();
-    payload.setIssuer(clientEmail);
-    payload.setAudience(OAuth2Utils.TOKEN_SERVER_URI.toString());
-    payload.setIssuedAtTimeSeconds(currentTime / 1000);
-    payload.setExpirationTimeSeconds(currentTime / 1000 + 3600);
-    payload.setSubject(null);
-    payload.put("scope", Joiner.on(' ').join(scopes));
-
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
+    long currentTime = clock.currentTimeMillis();
+    String assertion = createAssertion(jsonFactory, currentTime);
 
-    String assertion;
-    try {
-      assertion = JsonWebSignature.signUsingRsaSha256(
-          privateKey, jsonFactory, header, payload);
-    } catch (GeneralSecurityException e) {
-      throw new IOException(
-          "Error signing service account access token request with private key.", e);
-    }
     GenericData tokenRequest = new GenericData();
     tokenRequest.set("grant_type", GRANT_TYPE);
     tokenRequest.set("assertion", assertion);
@@ -344,7 +372,13 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
   @Override
   public GoogleCredentials createScoped(Collection<String> newScopes) {
     return new ServiceAccountCredentials(clientId, clientEmail, privateKey, privateKeyId, newScopes,
-        transportFactory, tokenServerUri);
+        transportFactory, tokenServerUri, serviceAccountUser);
+  }
+
+  @Override
+  public GoogleCredentials createDelegated(String user) {
+    return new ServiceAccountCredentials(clientId, clientEmail, privateKey, privateKeyId, scopes,
+        transportFactory, tokenServerUri, user);
   }
 
   public final String getClientId() {
@@ -365,6 +399,10 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
 
   public final Collection<String> getScopes() {
     return scopes;
+  }
+
+  public final String getServiceAccountUser() {
+    return serviceAccountUser;
   }
 
   @Override
@@ -399,6 +437,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
         .add("transportFactoryClassName", transportFactoryClassName)
         .add("tokenServerUri", tokenServerUri)
         .add("scopes", scopes)
+        .add("serviceAccountUser", serviceAccountUser)
         .toString();
   }
 
@@ -417,8 +456,28 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
         && Objects.equals(this.scopes, other.scopes);
   }
 
-  private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
-    input.defaultReadObject();
-    transportFactory = newInstance(transportFactoryClassName);
+  String createAssertion(JsonFactory jsonFactory, long currentTime) throws IOException {
+    JsonWebSignature.Header header = new JsonWebSignature.Header();
+    header.setAlgorithm("RS256");
+    header.setType("JWT");
+    header.setKeyId(privateKeyId);
+
+    JsonWebToken.Payload payload = new JsonWebToken.Payload();
+    payload.setIssuer(clientEmail);
+    payload.setAudience(OAuth2Utils.TOKEN_SERVER_URI.toString());
+    payload.setIssuedAtTimeSeconds(currentTime / 1000);
+    payload.setExpirationTimeSeconds(currentTime / 1000 + 3600);
+    payload.setSubject(serviceAccountUser);
+    payload.put("scope", Joiner.on(' ').join(scopes));
+
+    String assertion;
+    try {
+      assertion = JsonWebSignature.signUsingRsaSha256(
+          privateKey, jsonFactory, header, payload);
+    } catch (GeneralSecurityException e) {
+      throw new IOException(
+          "Error signing service account access token request with private key.", e);
+    }
+    return assertion;
   }
 }

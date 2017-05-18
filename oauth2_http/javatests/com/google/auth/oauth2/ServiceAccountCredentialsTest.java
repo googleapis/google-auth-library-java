@@ -40,7 +40,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.api.client.json.GenericJson;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.webtoken.JsonWebSignature;
+import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.client.util.Clock;
+import com.google.api.client.util.Joiner;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
@@ -92,6 +96,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
       + "==\n-----END PRIVATE KEY-----\n";
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
   private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
+  private static final String SERVICE_ACCOUNT_USER = "user@example.com";
   private static final Collection<String> EMPTY_SCOPES = Collections.emptyList();
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
   private static final HttpTransportFactory DUMMY_TRANSPORT_FACTORY =
@@ -101,7 +106,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   public void createdScoped_clones() throws IOException {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials = new ServiceAccountCredentials(
-        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, null);
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, SCOPES, null, null, SERVICE_ACCOUNT_USER);
     List<String> newScopes = Arrays.asList("scope1", "scope2");
 
     ServiceAccountCredentials newCredentials =
@@ -112,7 +117,51 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(privateKey, newCredentials.getPrivateKey());
     assertEquals(SA_PRIVATE_KEY_ID, newCredentials.getPrivateKeyId());
     assertArrayEquals(newScopes.toArray(), newCredentials.getScopes().toArray());
+    assertEquals(SERVICE_ACCOUNT_USER, newCredentials.getServiceAccountUser());
+
+    assertArrayEquals(SCOPES.toArray(), ((ServiceAccountCredentials)credentials).getScopes().toArray());
   }
+
+    @Test
+  public void createdDelegated_clones() throws IOException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    GoogleCredentials credentials = new ServiceAccountCredentials(
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, SCOPES, null, null, SERVICE_ACCOUNT_USER);
+    String newServiceAccountUser = "stranger@other.org";
+
+    ServiceAccountCredentials newCredentials =
+        (ServiceAccountCredentials) credentials.createDelegated(newServiceAccountUser);
+
+    assertEquals(SA_CLIENT_ID, newCredentials.getClientId());
+    assertEquals(SA_CLIENT_EMAIL, newCredentials.getClientEmail());
+    assertEquals(privateKey, newCredentials.getPrivateKey());
+    assertEquals(SA_PRIVATE_KEY_ID, newCredentials.getPrivateKeyId());
+    assertArrayEquals(SCOPES.toArray(), newCredentials.getScopes().toArray());
+    assertEquals(newServiceAccountUser, newCredentials.getServiceAccountUser());
+
+    assertEquals(SERVICE_ACCOUNT_USER, ((ServiceAccountCredentials)credentials).getServiceAccountUser());
+}
+
+  @Test
+  public void createAssertion_correct() throws IOException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    List<String> scopes = Arrays.asList("scope1", "scope2");
+    ServiceAccountCredentials credentials = new ServiceAccountCredentials(
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, scopes, null, null, SERVICE_ACCOUNT_USER);
+
+    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
+    long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
+    String assertion = credentials.createAssertion(jsonFactory, currentTimeMillis);
+
+    JsonWebSignature signature = JsonWebSignature.parse(jsonFactory, assertion);
+    JsonWebToken.Payload payload = signature.getPayload();
+    assertEquals(SA_CLIENT_EMAIL, payload.getIssuer());
+    assertEquals(OAuth2Utils.TOKEN_SERVER_URI.toString(), payload.getAudience());
+    assertEquals(currentTimeMillis / 1000, (long) payload.getIssuedAtTimeSeconds());
+    assertEquals(currentTimeMillis / 1000 + 3600, (long) payload.getExpirationTimeSeconds());
+    assertEquals(SERVICE_ACCOUNT_USER, payload.getSubject());
+    assertEquals(Joiner.on(' ').join(scopes), payload.get("scope"));
+   }
 
   @Test
   public void createdScoped_enablesAccessTokens() throws IOException {
@@ -328,16 +377,17 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
         SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, transportFactory,
-        tokenServer);
+        tokenServer, SERVICE_ACCOUNT_USER);
     String expectedToString = String.format(
         "ServiceAccountCredentials{clientId=%s, clientEmail=%s, privateKeyId=%s, "
-            + "transportFactoryClassName=%s, tokenServerUri=%s, scopes=%s}",
+            + "transportFactoryClassName=%s, tokenServerUri=%s, scopes=%s, serviceAccountUser=%s}",
         SA_CLIENT_ID,
         SA_CLIENT_EMAIL,
         SA_PRIVATE_KEY_ID,
         MockTokenServerTransportFactory.class.getName(),
         tokenServer,
-        SCOPES);
+        SCOPES,
+        SERVICE_ACCOUNT_USER);
     assertEquals(expectedToString, credentials.toString());
   }
 
