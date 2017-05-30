@@ -34,6 +34,9 @@ package com.google.auth.oauth2;
 import static com.google.common.base.MoreObjects.firstNonNull;
 
 import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpBackOffIOExceptionHandler;
+import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler;
+import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler.BackOffRequired;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
@@ -43,6 +46,7 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
+import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Joiner;
 import com.google.api.client.util.PemReader;
@@ -56,7 +60,6 @@ import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.URI;
@@ -339,6 +342,23 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
     request.setParser(new JsonObjectParser(jsonFactory));
+
+    request.setIOExceptionHandler(new HttpBackOffIOExceptionHandler(new ExponentialBackOff()));
+    request.setUnsuccessfulResponseHandler(
+        new HttpBackOffUnsuccessfulResponseHandler(new ExponentialBackOff()).setBackOffRequired(
+            new BackOffRequired() {
+              public boolean isRequired(HttpResponse response) {
+                int code = response.getStatusCode();
+                return (
+                    // Server error --- includes timeout errors, which use 500 instead of 408
+                    code / 100 == 5
+                    // Forbidden error --- for historical reasons, used for rate_limit_exceeded
+                    // errors instead of 429, but there currently seems no robust automatic way to
+                    // distinguish these cases: see
+                    // https://github.com/google/google-api-java-client/issues/662
+                    || code == 403);
+              }
+            }));
 
     HttpResponse response;
     try {

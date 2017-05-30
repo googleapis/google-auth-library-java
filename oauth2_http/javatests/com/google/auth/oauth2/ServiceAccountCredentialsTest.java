@@ -43,6 +43,7 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
+import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.api.client.util.Joiner;
 import com.google.auth.TestUtils;
@@ -50,10 +51,6 @@ import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -69,6 +66,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Test case for {@link ServiceAccountCredentials}.
@@ -238,6 +239,134 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+  }
+
+  @Test
+  public void refreshAccessToken_refreshesToken() throws IOException {
+    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    MockTokenServerTransport transport = transportFactory.transport;
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.fromPkcs8(
+            SA_CLIENT_ID,
+            SA_CLIENT_EMAIL,
+            SA_PRIVATE_KEY_PKCS8,
+            SA_PRIVATE_KEY_ID,
+            SCOPES,
+            transportFactory,
+            null);
+
+    transport.addServiceAccount(SA_CLIENT_EMAIL, accessToken1);
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
+
+    transport.addServiceAccount(SA_CLIENT_EMAIL, accessToken2);
+    credentials.refresh();
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken2);
+  }
+
+  @Test
+  public void refreshAccessToken_retriesIOException() throws IOException {
+    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    MockTokenServerTransport transport = transportFactory.transport;
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.fromPkcs8(
+            SA_CLIENT_ID,
+            SA_CLIENT_EMAIL,
+            SA_PRIVATE_KEY_PKCS8,
+            SA_PRIVATE_KEY_ID,
+            SCOPES,
+            transportFactory,
+            null);
+
+    transport.addServiceAccount(SA_CLIENT_EMAIL, accessToken1);
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
+
+    transport.addResponseErrorSequence(new IOException());
+    transport.addServiceAccount(SA_CLIENT_EMAIL, accessToken2);
+    credentials.refresh();
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken2);
+  }
+
+  @Test
+  public void refreshAccessToken_retriesForbiddenError() throws IOException {
+    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    MockTokenServerTransport transport = transportFactory.transport;
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.fromPkcs8(
+            SA_CLIENT_ID,
+            SA_CLIENT_EMAIL,
+            SA_PRIVATE_KEY_PKCS8,
+            SA_PRIVATE_KEY_ID,
+            SCOPES,
+            transportFactory,
+            null);
+
+    transport.addServiceAccount(SA_CLIENT_EMAIL, accessToken1);
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
+
+    transport.addResponseSequence(new MockLowLevelHttpResponse().setStatusCode(403));
+    transport.addServiceAccount(SA_CLIENT_EMAIL, accessToken2);
+    credentials.refresh();
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken2);
+  }
+
+  @Test
+  public void refreshAccessToken_retriesServerError() throws IOException {
+    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    MockTokenServerTransport transport = transportFactory.transport;
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.fromPkcs8(
+            SA_CLIENT_ID,
+            SA_CLIENT_EMAIL,
+            SA_PRIVATE_KEY_PKCS8,
+            SA_PRIVATE_KEY_ID,
+            SCOPES,
+            transportFactory,
+            null);
+
+    transport.addServiceAccount(SA_CLIENT_EMAIL, accessToken1);
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
+
+    transport.addResponseSequence(new MockLowLevelHttpResponse().setStatusCode(500));
+    transport.addServiceAccount(SA_CLIENT_EMAIL, accessToken2);
+    credentials.refresh();
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken2);
+  }
+
+  @Test
+  public void refreshAccessToken_failsNotFoundError() throws IOException {
+    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    MockTokenServerTransport transport = transportFactory.transport;
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.fromPkcs8(
+            SA_CLIENT_ID,
+            SA_CLIENT_EMAIL,
+            SA_PRIVATE_KEY_PKCS8,
+            SA_PRIVATE_KEY_ID,
+            SCOPES,
+            transportFactory,
+            null);
+
+    transport.addServiceAccount(SA_CLIENT_EMAIL, accessToken1);
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
+
+    try {
+      transport.addResponseSequence(new MockLowLevelHttpResponse().setStatusCode(404));
+      transport.addServiceAccount(SA_CLIENT_EMAIL, accessToken2);
+      credentials.refresh();
+      fail("Should not retry on Not Found");
+    } catch (IOException expected) {
+      // Expected
+    }
   }
 
   @Test
