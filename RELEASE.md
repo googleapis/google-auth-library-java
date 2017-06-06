@@ -1,5 +1,5 @@
-Release Instructions
-====================
+One-time setup
+==============
 
 Set up Sonatype Account
 -----------------------
@@ -58,11 +58,13 @@ Create a Maven settings file
 </settings>
 ```
 
+To prepare a release
+====================
+
 Versioning
 ----------
 Minor changes should be a point increase (0.6.0 -> 0.6.1).  Additions to API or breaking changes should be
 a major release. (0.6.0 -> 0.7.0)
-
 
 Deploy to Sonatype
 ------------------
@@ -71,7 +73,7 @@ Deploy to Sonatype
 * Verify the result [here](https://oss.sonatype.org/#nexus-search;quick~com.google.auth)
   * If there is a problem, undo by ```mvn nexus-staging:drop```
 * ```mvn nexus-staging:release -DperformRelease=true```
-* Create and push a corresponding Git tag (e.g., "v0.7.0") on the release commit
+* On the [releases](https://github.com/google/google-auth-library-java/releases) page, create a corresponding Git tag (e.g., "v0.7.0") on the release commit, and summarize the commits since the last release. Follow the style of previous release notes.
 * Update all ```pom.xml``` files to the new snapshot version (unless it's a bugfix release, we
 update from 0.4.0 to 0.5.0-SNAPSHOT)
 
