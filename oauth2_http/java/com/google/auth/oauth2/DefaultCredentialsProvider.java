@@ -259,7 +259,7 @@ class DefaultCredentialsProvider {
       return null;
     }
     boolean runningOnComputeEngine =
-        ComputeEngineCredentials.runningOnComputeEngine(transportFactory);
+        ComputeEngineCredentials.runningOnComputeEngine(transportFactory, this);
     checkedComputeEngine = true;
     if (runningOnComputeEngine) {
       return new ComputeEngineCredentials(transportFactory);

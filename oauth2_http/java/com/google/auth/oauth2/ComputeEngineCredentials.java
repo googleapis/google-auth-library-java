@@ -42,13 +42,15 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * OAuth2 credentials representing the built-in service account for a Google Compute Engine VM.
@@ -60,6 +62,22 @@ public class ComputeEngineCredentials extends GoogleCredentials {
   static final String TOKEN_SERVER_ENCODED_URL =
       "http://metadata/computeMetadata/v1/instance/service-accounts/default/token";
   static final String METADATA_SERVER_URL = "http://metadata.google.internal";
+
+  private static final Logger LOGGER = Logger.getLogger(ComputeEngineCredentials.class.getName());
+
+  // Note: the explicit IP address is used to avoid name server resolution issues.
+  private static final String DEFAULT_METADATA_SERVER_URL = "http://169.254.169.254";
+
+  // Note: the explicit `timeout` and `tries` below is a workaround. The underlying
+  // issue is that resolving an unknown host on some networks will take
+  // 20-30 seconds; making this timeout short fixes the issue, but
+  // could lead to false negatives in the event that we are on GCE, but
+  // the metadata resolution was particularly slow. The latter case is
+  // "unlikely" since the expected 4-nines time is about 0.5 seconds.
+  // This allows us to limit the total ping maximum timeout to 1.5 seconds
+  // for developer desktop scenarios.
+  private static final int MAX_COMPUTE_PING_TRIES = 3;
+  private static final int COMPUTE_PING_CONNECTION_TIMEOUT_MS = 500;
 
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final long serialVersionUID = -4113476462526554235L;
@@ -133,25 +151,45 @@ public class ComputeEngineCredentials extends GoogleCredentials {
     return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
   }
 
-  /**
-   * Return whether code is running on Google Compute Engine.
-   */
-  static boolean runningOnComputeEngine(HttpTransportFactory transportFactory) {
-    try {
-      GenericUrl tokenUrl = new GenericUrl(METADATA_SERVER_URL);
-      HttpRequest request =
-          transportFactory.create().createRequestFactory().buildGetRequest(tokenUrl);
-      HttpResponse response = request.execute();
-      // Internet providers can return a generic response to all requests, so it is necessary
-      // to check that metadata header is present also.
-      HttpHeaders headers = response.getHeaders();
-      if (OAuth2Utils.headersContainValue(headers, "Metadata-Flavor", "Google")) {
-        return true;
+  /** Return whether code is running on Google Compute Engine. */
+  static boolean runningOnComputeEngine(
+      HttpTransportFactory transportFactory, DefaultCredentialsProvider provider) {
+    // If the environment has requested that we do no GCE checks, return immediately.
+    if (Boolean.parseBoolean(provider.getEnv("NO_GCE_CHECK"))) {
+      return false;
+    }
+
+    GenericUrl tokenUrl = new GenericUrl(getMetadataServerUrl(provider));
+    for (int i = 1; i <= MAX_COMPUTE_PING_TRIES; ++i) {
+      try {
+        HttpRequest request =
+            transportFactory.create().createRequestFactory().buildGetRequest(tokenUrl);
+        request.setConnectTimeout(COMPUTE_PING_CONNECTION_TIMEOUT_MS);
+        HttpResponse response = request.execute();
+        try {
+          // Internet providers can return a generic response to all requests, so it is necessary
+          // to check that metadata header is present also.
+          HttpHeaders headers = response.getHeaders();
+          return OAuth2Utils.headersContainValue(headers, "Metadata-Flavor", "Google");
+        } finally {
+          response.disconnect();
+        }
+      } catch (SocketTimeoutException expected) {
+        // Ignore logging timeouts which is the expected failure mode in non GCE environments.
+      } catch (IOException e) {
+        LOGGER.log(
+            Level.WARNING, "Failed to detect whether we are running on Google Compute Engine.", e);
       }
-    } catch (IOException expected) {
-      // ignore
     }
     return false;
+  }
+
+  public static String getMetadataServerUrl(DefaultCredentialsProvider provider) {
+    String metadataServerAddress = provider.getEnv("GCE_METADATA_HOST");
+    if (metadataServerAddress != null) {
+      return "http://" + metadataServerAddress;
+    }
+    return DEFAULT_METADATA_SERVER_URL;
   }
 
   @Override
