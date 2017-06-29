@@ -68,6 +68,9 @@ class DefaultCredentialsProvider {
 
   static final String SKIP_APP_ENGINE_ENV_VAR = "GOOGLE_APPLICATION_CREDENTIALS_SKIP_APP_ENGINE";
 
+  static final String NO_GCE_CHECK_ENV_VAR = "NO_GCE_CHECK";
+  static final String GCE_METADATA_HOST_ENV_VAR = "GCE_METADATA_HOST";
+
   // These variables should only be accessed inside a synchronized block
   private GoogleCredentials cachedCredentials = null;
   private boolean checkedAppEngine = false;

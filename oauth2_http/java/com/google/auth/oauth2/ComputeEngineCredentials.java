@@ -59,14 +59,10 @@ import java.util.logging.Logger;
  */
 public class ComputeEngineCredentials extends GoogleCredentials {
 
-  static final String TOKEN_SERVER_ENCODED_URL =
-      "http://metadata/computeMetadata/v1/instance/service-accounts/default/token";
-  static final String METADATA_SERVER_URL = "http://metadata.google.internal";
-
-  private static final Logger LOGGER = Logger.getLogger(ComputeEngineCredentials.class.getName());
-
   // Note: the explicit IP address is used to avoid name server resolution issues.
   private static final String DEFAULT_METADATA_SERVER_URL = "http://169.254.169.254";
+
+  private static final Logger LOGGER = Logger.getLogger(ComputeEngineCredentials.class.getName());
 
   // Note: the explicit `timeout` and `tries` below is a workaround. The underlying
   // issue is that resolving an unknown host on some networks will take
@@ -76,8 +72,8 @@ public class ComputeEngineCredentials extends GoogleCredentials {
   // "unlikely" since the expected 4-nines time is about 0.5 seconds.
   // This allows us to limit the total ping maximum timeout to 1.5 seconds
   // for developer desktop scenarios.
-  private static final int MAX_COMPUTE_PING_TRIES = 3;
-  private static final int COMPUTE_PING_CONNECTION_TIMEOUT_MS = 500;
+  static final int MAX_COMPUTE_PING_TRIES = 3;
+  static final int COMPUTE_PING_CONNECTION_TIMEOUT_MS = 500;
 
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final long serialVersionUID = -4113476462526554235L;
@@ -110,7 +106,7 @@ public class ComputeEngineCredentials extends GoogleCredentials {
    */
   @Override
   public AccessToken refreshAccessToken() throws IOException {
-    GenericUrl tokenUrl = new GenericUrl(TOKEN_SERVER_ENCODED_URL);
+    GenericUrl tokenUrl = new GenericUrl(getTokenServerEncodedUrl());
     HttpRequest request =
         transportFactory.create().createRequestFactory().buildGetRequest(tokenUrl);
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
@@ -155,7 +151,7 @@ public class ComputeEngineCredentials extends GoogleCredentials {
   static boolean runningOnComputeEngine(
       HttpTransportFactory transportFactory, DefaultCredentialsProvider provider) {
     // If the environment has requested that we do no GCE checks, return immediately.
-    if (Boolean.parseBoolean(provider.getEnv("NO_GCE_CHECK"))) {
+    if (Boolean.parseBoolean(provider.getEnv(DefaultCredentialsProvider.NO_GCE_CHECK_ENV_VAR))) {
       return false;
     }
 
@@ -185,11 +181,19 @@ public class ComputeEngineCredentials extends GoogleCredentials {
   }
 
   public static String getMetadataServerUrl(DefaultCredentialsProvider provider) {
-    String metadataServerAddress = provider.getEnv("GCE_METADATA_HOST");
+    String metadataServerAddress = provider.getEnv(DefaultCredentialsProvider.GCE_METADATA_HOST_ENV_VAR);
     if (metadataServerAddress != null) {
       return "http://" + metadataServerAddress;
     }
+    return getMetadataServerUrl();
+  }
+
+  public static String getMetadataServerUrl() {
     return DEFAULT_METADATA_SERVER_URL;
+  }
+
+  public static String getTokenServerEncodedUrl() {
+    return getMetadataServerUrl() + "/computeMetadata/v1/instance/service-accounts/default/token";
   }
 
   @Override
