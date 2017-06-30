@@ -53,6 +53,8 @@ import java.util.Locale;
  **/
 class DefaultCredentialsProvider {
 
+  static final DefaultCredentialsProvider DEFAULT = new DefaultCredentialsProvider();
+
   static final String CREDENTIAL_ENV_VAR = "GOOGLE_APPLICATION_CREDENTIALS";
 
   static final String WELL_KNOWN_CREDENTIALS_FILE = "application_default_credentials.json";
@@ -67,6 +69,9 @@ class DefaultCredentialsProvider {
   static final String CLOUD_SHELL_ENV_VAR = "DEVSHELL_CLIENT_PORT";
 
   static final String SKIP_APP_ENGINE_ENV_VAR = "GOOGLE_APPLICATION_CREDENTIALS_SKIP_APP_ENGINE";
+
+  static final String NO_GCE_CHECK_ENV_VAR = "NO_GCE_CHECK";
+  static final String GCE_METADATA_HOST_ENV_VAR = "GCE_METADATA_HOST";
 
   // These variables should only be accessed inside a synchronized block
   private GoogleCredentials cachedCredentials = null;
@@ -259,7 +264,7 @@ class DefaultCredentialsProvider {
       return null;
     }
     boolean runningOnComputeEngine =
-        ComputeEngineCredentials.runningOnComputeEngine(transportFactory);
+        ComputeEngineCredentials.runningOnComputeEngine(transportFactory, this);
     checkedComputeEngine = true;
     if (runningOnComputeEngine) {
       return new ComputeEngineCredentials(transportFactory);

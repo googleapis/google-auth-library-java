@@ -48,11 +48,6 @@ import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.ComputeEngineCredentialsTest.MockMetadataServerTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -64,6 +59,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Test case for {@link DefaultCredentialsProvider}.
@@ -157,14 +155,18 @@ public class DefaultCredentialsProviderTest {
     } catch (IOException expected) {
       // Expected
     }
-    assertEquals(1, transportFactory.transport.getRequestCount());
+    assertEquals(
+        transportFactory.transport.getRequestCount(),
+        ComputeEngineCredentials.MAX_COMPUTE_PING_TRIES);
     try {
       testProvider.getDefaultCredentials(transportFactory);
       fail("No credential expected.");
     } catch (IOException expected) {
       // Expected
     }
-    assertEquals(1, transportFactory.transport.getRequestCount());
+    assertEquals(
+        transportFactory.transport.getRequestCount(),
+        ComputeEngineCredentials.MAX_COMPUTE_PING_TRIES);
   }
 
   @Test
@@ -313,6 +315,40 @@ public class DefaultCredentialsProviderTest {
 
     testUserProvidesToken(
         testProvider, USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+  }
+
+  @Test
+  public void getDefaultCredentials_envNoGceCheck_noGceRequest() throws IOException {
+    MockRequestCountingTransportFactory transportFactory =
+        new MockRequestCountingTransportFactory();
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setEnv(DefaultCredentialsProvider.NO_GCE_CHECK_ENV_VAR, "true");
+
+    try {
+      testProvider.getDefaultCredentials(transportFactory);
+      fail("No credential expected.");
+    } catch (IOException expected) {
+      // Expected
+    }
+    assertEquals(transportFactory.transport.getRequestCount(), 0);
+  }
+
+  @Test
+  public void getDefaultCredentials_envGceMetadataHost_setsMetadataServerUrl() {
+    String testUrl = "192.0.2.0";
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setEnv(DefaultCredentialsProvider.GCE_METADATA_HOST_ENV_VAR, testUrl);
+    assertEquals(ComputeEngineCredentials.getMetadataServerUrl(testProvider), "http://" + testUrl);
+  }
+
+  @Test
+  public void getDefaultCredentials_envGceMetadataHost_setsTokenServerUrl() {
+    String testUrl = "192.0.2.0";
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setEnv(DefaultCredentialsProvider.GCE_METADATA_HOST_ENV_VAR, testUrl);
+    assertEquals(
+        ComputeEngineCredentials.getTokenServerEncodedUrl(testProvider),
+        "http://" + testUrl + "/computeMetadata/v1/instance/service-accounts/default/token");
   }
 
   @Test
