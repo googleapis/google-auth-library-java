@@ -59,10 +59,10 @@ import java.util.logging.Logger;
  */
 public class ComputeEngineCredentials extends GoogleCredentials {
 
-  // Note: the explicit IP address is used to avoid name server resolution issues.
-  private static final String DEFAULT_METADATA_SERVER_URL = "http://169.254.169.254";
-
   private static final Logger LOGGER = Logger.getLogger(ComputeEngineCredentials.class.getName());
+
+  // Note: the explicit IP address is used to avoid name server resolution issues.
+  static final String DEFAULT_METADATA_SERVER_URL = "http://169.254.169.254";
 
   // Note: the explicit `timeout` and `tries` below is a workaround. The underlying
   // issue is that resolving an unknown host on some networks will take
@@ -185,15 +185,19 @@ public class ComputeEngineCredentials extends GoogleCredentials {
     if (metadataServerAddress != null) {
       return "http://" + metadataServerAddress;
     }
-    return getMetadataServerUrl();
-  }
-
-  public static String getMetadataServerUrl() {
     return DEFAULT_METADATA_SERVER_URL;
   }
 
+  public static String getMetadataServerUrl() {
+    return getMetadataServerUrl(DefaultCredentialsProvider.DEFAULT);
+  }
+
+  public static String getTokenServerEncodedUrl(DefaultCredentialsProvider provider) {
+    return getMetadataServerUrl(provider) + "/computeMetadata/v1/instance/service-accounts/default/token";
+  }
+
   public static String getTokenServerEncodedUrl() {
-    return getMetadataServerUrl() + "/computeMetadata/v1/instance/service-accounts/default/token";
+    return getTokenServerEncodedUrl(DefaultCredentialsProvider.DEFAULT);
   }
 
   @Override

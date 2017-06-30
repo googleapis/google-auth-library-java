@@ -34,7 +34,6 @@ package com.google.auth.oauth2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -335,11 +334,21 @@ public class DefaultCredentialsProviderTest {
   }
 
   @Test
-  public void getDefaultCredentials_envGceMetadataHost_setsUrl() {
+  public void getDefaultCredentials_envGceMetadataHost_setsMetadataServerUrl() {
     String testUrl = "192.0.2.0";
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setEnv(DefaultCredentialsProvider.GCE_METADATA_HOST_ENV_VAR, testUrl);
     assertEquals(ComputeEngineCredentials.getMetadataServerUrl(testProvider), "http://" + testUrl);
+  }
+
+  @Test
+  public void getDefaultCredentials_envGceMetadataHost_setsTokenServerUrl() {
+    String testUrl = "192.0.2.0";
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setEnv(DefaultCredentialsProvider.GCE_METADATA_HOST_ENV_VAR, testUrl);
+    assertEquals(
+        ComputeEngineCredentials.getTokenServerEncodedUrl(testProvider),
+        "http://" + testUrl + "/computeMetadata/v1/instance/service-accounts/default/token");
   }
 
   @Test
