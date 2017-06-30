@@ -84,6 +84,8 @@ following are searched (in order) to find the Application Default Credentials:
 3. Google App Engine built-in credentials
 4. Google Cloud Shell built-in credentials
 5. Google Compute Engine built-in credentials
+   - Skip this check by setting the environment variable `NO_GCE_CHECK=true`
+   - Customize the GCE metadata server address by setting the environment variable `GCE_METADATA_HOST=<hostname>`
 
 To get Credentials from a Service Account JSON key use `GoogleCredentials.fromStream(InputStream)`
 or `GoogleCredentials.fromStream(InputStream, HttpTransportFactory)`.
