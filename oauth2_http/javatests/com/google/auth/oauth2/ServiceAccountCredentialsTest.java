@@ -35,6 +35,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -212,6 +213,17 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
     ServiceAccountCredentials credentials = ServiceAccountCredentials.fromJson(json, transportFactory);
     assertEquals(PROJECT_ID, credentials.getProjectId());
+  }
+
+  @Test
+  public void fromJSON_getProjectIdNull() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    GenericJson json = writeServiceAccountJson(
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, null);
+
+    ServiceAccountCredentials credentials = ServiceAccountCredentials.fromJson(json, transportFactory);
+    assertNull(credentials.getProjectId());
   }
 
   @Test
