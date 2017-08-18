@@ -35,6 +35,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -98,6 +99,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
   private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
   private static final String SERVICE_ACCOUNT_USER = "user@example.com";
+  private static final String PROJECT_ID = "project-id";
   private static final Collection<String> EMPTY_SCOPES = Collections.emptyList();
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
   private static final HttpTransportFactory DUMMY_TRANSPORT_FACTORY =
@@ -107,7 +109,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   public void createdScoped_clones() throws IOException {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials = new ServiceAccountCredentials(
-        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, SCOPES, null, null, SERVICE_ACCOUNT_USER);
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, SCOPES, null, null, SERVICE_ACCOUNT_USER, PROJECT_ID);
     List<String> newScopes = Arrays.asList("scope1", "scope2");
 
     ServiceAccountCredentials newCredentials =
@@ -119,6 +121,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(SA_PRIVATE_KEY_ID, newCredentials.getPrivateKeyId());
     assertArrayEquals(newScopes.toArray(), newCredentials.getScopes().toArray());
     assertEquals(SERVICE_ACCOUNT_USER, newCredentials.getServiceAccountUser());
+    assertEquals(PROJECT_ID, newCredentials.getProjectId());
 
     assertArrayEquals(SCOPES.toArray(), ((ServiceAccountCredentials)credentials).getScopes().toArray());
   }
@@ -127,7 +130,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   public void createdDelegated_clones() throws IOException {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials = new ServiceAccountCredentials(
-        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, SCOPES, null, null, SERVICE_ACCOUNT_USER);
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, SCOPES, null, null, SERVICE_ACCOUNT_USER, PROJECT_ID);
     String newServiceAccountUser = "stranger@other.org";
 
     ServiceAccountCredentials newCredentials =
@@ -139,6 +142,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(SA_PRIVATE_KEY_ID, newCredentials.getPrivateKeyId());
     assertArrayEquals(SCOPES.toArray(), newCredentials.getScopes().toArray());
     assertEquals(newServiceAccountUser, newCredentials.getServiceAccountUser());
+    assertEquals(PROJECT_ID, newCredentials.getProjectId());
 
     assertEquals(SERVICE_ACCOUNT_USER, ((ServiceAccountCredentials)credentials).getServiceAccountUser());
 }
@@ -148,7 +152,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     List<String> scopes = Arrays.asList("scope1", "scope2");
     ServiceAccountCredentials credentials = new ServiceAccountCredentials(
-        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, scopes, null, null, SERVICE_ACCOUNT_USER);
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, scopes, null, null, SERVICE_ACCOUNT_USER, PROJECT_ID);
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
@@ -201,11 +205,33 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void fromJSON_getProjectId() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    GenericJson json = writeServiceAccountJson(
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, PROJECT_ID);
+
+    ServiceAccountCredentials credentials = ServiceAccountCredentials.fromJson(json, transportFactory);
+    assertEquals(PROJECT_ID, credentials.getProjectId());
+  }
+
+  @Test
+  public void fromJSON_getProjectIdNull() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    GenericJson json = writeServiceAccountJson(
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, null);
+
+    ServiceAccountCredentials credentials = ServiceAccountCredentials.fromJson(json, transportFactory);
+    assertNull(credentials.getProjectId());
+  }
+
+  @Test
   public void fromJSON_hasAccessToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     GenericJson json = writeServiceAccountJson(
-        SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
+        SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, PROJECT_ID);
 
     GoogleCredentials credentials = ServiceAccountCredentials.fromJson(json, transportFactory);
 
@@ -618,7 +644,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   static GenericJson writeServiceAccountJson(
-      String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId) {
+      String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId, String projectId) {
     GenericJson json = new GenericJson();
     if (clientId != null) {
       json.put("client_id", clientId);
@@ -632,6 +658,9 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     if (privateKeyId != null) {
       json.put("private_key_id", privateKeyId);
     }
+    if (projectId != null) {
+      json.put("project_id", projectId);
+    }
     json.put("type", GoogleCredentials.SERVICE_ACCOUNT_FILE_TYPE);
     return json;
   }
@@ -639,7 +668,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   static InputStream writeServiceAccountStream(String clientId, String clientEmail,
       String privateKeyPkcs8, String privateKeyId) throws IOException {
     GenericJson json =
-        writeServiceAccountJson(clientId, clientEmail, privateKeyPkcs8, privateKeyId);
+        writeServiceAccountJson(clientId, clientEmail, privateKeyPkcs8, privateKeyId, null);
     return TestUtils.jsonToInputStream(json);
   }
 

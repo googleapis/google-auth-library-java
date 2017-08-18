@@ -93,6 +93,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
   private final PrivateKey privateKey;
   private final String privateKeyId;
   private final String serviceAccountUser;
+  private final String projectId;
   private final String transportFactoryClassName;
   private final URI tokenServerUri;
   private final Collection<String> scopes;
@@ -112,7 +113,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
   public ServiceAccountCredentials(
       String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId,
       Collection<String> scopes) {
-    this(clientId, clientEmail, privateKey, privateKeyId, scopes, null, null, null);
+    this(clientId, clientEmail, privateKey, privateKeyId, scopes, null, null, null, null);
   }
 
   /**
@@ -131,7 +132,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
   public ServiceAccountCredentials(
       String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId,
       Collection<String> scopes, HttpTransportFactory transportFactory, URI tokenServerUri) {
-    this(clientId, clientEmail, privateKey, privateKeyId, scopes, transportFactory, tokenServerUri, null);
+    this(clientId, clientEmail, privateKey, privateKeyId, scopes, transportFactory, tokenServerUri, null, null);
   }
 
   /**
@@ -152,7 +153,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
   ServiceAccountCredentials(
       String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId,
       Collection<String> scopes, HttpTransportFactory transportFactory, URI tokenServerUri,
-      String serviceAccountUser) {
+      String serviceAccountUser, String projectId) {
     this.clientId = clientId;
     this.clientEmail = Preconditions.checkNotNull(clientEmail);
     this.privateKey = Preconditions.checkNotNull(privateKey);
@@ -163,10 +164,11 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
     this.tokenServerUri = (tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : tokenServerUri;
     this.serviceAccountUser = serviceAccountUser;
+    this.projectId = projectId;
   }
 
   /**
-   * Returns service account crentials defined by JSON using the format supported by the Google
+   * Returns service account credentials defined by JSON using the format supported by the Google
    * Developers Console.
    *
    * @param json a map from the JSON representing the credentials.
@@ -181,6 +183,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
     String clientEmail = (String) json.get("client_email");
     String privateKeyPkcs8 = (String) json.get("private_key");
     String privateKeyId = (String) json.get("private_key_id");
+    String projectId = (String) json.get("project_id");
     if (clientId == null || clientEmail == null
         || privateKeyPkcs8 == null || privateKeyId == null) {
       throw new IOException("Error reading service account credential from JSON, "
@@ -188,11 +191,11 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
     }
 
     return fromPkcs8(clientId, clientEmail, privateKeyPkcs8, privateKeyId, null, transportFactory,
-        null);
+        null, null, projectId);
   }
 
   /**
-   * Factory with miniumum identifying information using PKCS#8 for the private key.
+   * Factory with minimum identifying information using PKCS#8 for the private key.
    *
    * @param clientId Client ID of the service account from the console. May be null.
    * @param clientEmail Client email address of the service account from the console.
@@ -208,7 +211,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
   }
 
   /**
-   * Factory with miniumum identifying information and custom transport using PKCS#8 for the
+   * Factory with minimum identifying information and custom transport using PKCS#8 for the
    * private key.
    *
    * @param clientId Client ID of the service account from the console. May be null.
@@ -229,7 +232,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
   }
 
   /**
-   * Factory with miniumum identifying information and custom transport using PKCS#8 for the
+   * Factory with minimum identifying information and custom transport using PKCS#8 for the
    * private key.
    *
    * @param clientId Client ID of the service account from the console. May be null.
@@ -249,9 +252,17 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
       Collection<String> scopes, HttpTransportFactory transportFactory, URI tokenServerUri,
       String serviceAccountUser)
       throws IOException {
+    return fromPkcs8(clientId, clientEmail, privateKeyPkcs8, privateKeyId, scopes, transportFactory, tokenServerUri, serviceAccountUser, null);
+  }
+
+  static ServiceAccountCredentials fromPkcs8(
+      String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId,
+      Collection<String> scopes, HttpTransportFactory transportFactory, URI tokenServerUri,
+      String serviceAccountUser, String projectId)
+      throws IOException {
     PrivateKey privateKey = privateKeyFromPkcs8(privateKeyPkcs8);
     return new ServiceAccountCredentials(
-        clientId, clientEmail, privateKey, privateKeyId, scopes, transportFactory, tokenServerUri, serviceAccountUser);
+        clientId, clientEmail, privateKey, privateKeyId, scopes, transportFactory, tokenServerUri, serviceAccountUser, projectId);
   }
 
   /**
@@ -392,13 +403,13 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
   @Override
   public GoogleCredentials createScoped(Collection<String> newScopes) {
     return new ServiceAccountCredentials(clientId, clientEmail, privateKey, privateKeyId, newScopes,
-        transportFactory, tokenServerUri, serviceAccountUser);
+        transportFactory, tokenServerUri, serviceAccountUser, projectId);
   }
 
   @Override
   public GoogleCredentials createDelegated(String user) {
     return new ServiceAccountCredentials(clientId, clientEmail, privateKey, privateKeyId, scopes,
-        transportFactory, tokenServerUri, user);
+        transportFactory, tokenServerUri, user, projectId);
   }
 
   public final String getClientId() {
@@ -423,6 +434,10 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
 
   public final String getServiceAccountUser() {
     return serviceAccountUser;
+  }
+
+  public final String getProjectId() {
+    return projectId;
   }
 
   @Override
