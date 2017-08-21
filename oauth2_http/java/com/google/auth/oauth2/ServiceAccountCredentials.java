@@ -383,7 +383,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
         responseData, "access_token", PARSE_ERROR_PREFIX);
     int expiresInSeconds = OAuth2Utils.validateInt32(
         responseData, "expires_in", PARSE_ERROR_PREFIX);
-    long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000;
+    long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000L;
     return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
   }
 
