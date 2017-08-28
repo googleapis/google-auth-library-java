@@ -65,6 +65,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
   private IOException error;
   private Queue<IOException> responseErrorSequence = new ArrayDeque<IOException>();
   private Queue<LowLevelHttpResponse> responseSequence = new ArrayDeque<LowLevelHttpResponse>();
+  private int expiresInSeconds = 3600;
 
   public MockTokenServerTransport() {}
 
@@ -111,6 +112,10 @@ public class MockTokenServerTransport extends MockHttpTransport {
     for (LowLevelHttpResponse response : responses) {
       responseSequence.add(response);
     }
+  }
+
+  public void setExpiresInSeconds(int expiresInSeconds) {
+    this.expiresInSeconds = expiresInSeconds;
   }
 
   @Override
@@ -187,7 +192,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
           GenericJson refreshContents = new GenericJson();
           refreshContents.setFactory(JSON_FACTORY);
           refreshContents.put("access_token", accessToken);
-          refreshContents.put("expires_in", 3600);
+          refreshContents.put("expires_in", expiresInSeconds);
           refreshContents.put("token_type", "Bearer");
           if (refreshToken != null) {
             refreshContents.put("refresh_token", refreshToken);

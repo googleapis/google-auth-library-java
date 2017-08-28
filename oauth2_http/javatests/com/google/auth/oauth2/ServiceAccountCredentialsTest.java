@@ -44,6 +44,7 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
+import com.google.api.client.testing.http.FixedClock;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.api.client.util.Joiner;
@@ -289,6 +290,34 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     transport.addServiceAccount(SA_CLIENT_EMAIL, accessToken2);
     credentials.refresh();
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken2);
+  }
+
+  @Test
+  public void refreshAccessToken_tokenExpiry() throws IOException {
+    final String tokenString = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    MockTokenServerTransport transport = transportFactory.transport;
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.fromPkcs8(
+            SA_CLIENT_ID,
+            SA_CLIENT_EMAIL,
+            SA_PRIVATE_KEY_PKCS8,
+            SA_PRIVATE_KEY_ID,
+            SCOPES,
+            transportFactory,
+            null);
+    credentials.clock = new FixedClock(0L);
+
+    transport.addServiceAccount(SA_CLIENT_EMAIL, tokenString);
+    AccessToken accessToken = credentials.refreshAccessToken();
+    assertEquals(tokenString, accessToken.getTokenValue());
+    assertEquals(3600 * 1000L, accessToken.getExpirationTimeMillis().longValue());
+
+    // Test for large expires_in values (should not overflow).
+    transport.setExpiresInSeconds(3600 * 1000);
+    accessToken = credentials.refreshAccessToken();
+    assertEquals(tokenString, accessToken.getTokenValue());
+    assertEquals(3600 * 1000 * 1000L, accessToken.getExpirationTimeMillis().longValue());
   }
 
   @Test
