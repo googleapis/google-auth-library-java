@@ -175,20 +175,20 @@ class DefaultCredentialsProvider {
       }
     }
 
-    // Then try App Engine
-    if (credentials == null && !skipAppEngineCredentialsCheck()) {
-      credentials = tryGetAppEngineCredential();
-    }
-
     // Then try Cloud Shell.  This must be done BEFORE checking
     // Compute Engine, as Cloud Shell runs on GCE VMs.
     if (credentials == null) {
       credentials = tryGetCloudShellCredentials();
     }
 
-    // Then try Compute Engine
+    // Then try Compute Engine and GAE 8 standard environment
     if (credentials == null) {
       credentials = tryGetComputeCredentials(transportFactory);
+    }
+
+    // Then try GAE 7 standard environment
+    if (credentials == null && !skipAppEngineCredentialsCheck()) {
+      credentials = tryGetAppEngineCredential();
     }
 
     return credentials;
