@@ -75,7 +75,7 @@ public class OAuth2Credentials extends Credentials {
   /**
    * Default constructor.
    **/
-  protected OAuth2Credentials() {
+  private OAuth2Credentials() {
     this(null);
   }
 
@@ -84,7 +84,7 @@ public class OAuth2Credentials extends Credentials {
    *
    * @param accessToken Initial or temporary access token.
    **/
-  public OAuth2Credentials(AccessToken accessToken) {
+  protected OAuth2Credentials(AccessToken accessToken) {
     if (accessToken != null) {
       useAccessToken(accessToken);
     }
@@ -153,6 +153,14 @@ public class OAuth2Credentials extends Credentials {
         }
       }
     }
+  }
+
+  public static Builder newBuilder() {
+    return new Builder();
+  }
+
+  public Builder toBuilder() {
+    return new Builder(this);
   }
 
   // Must be called under lock
@@ -278,5 +286,29 @@ public class OAuth2Credentials extends Credentials {
 
   protected static <T> T getFromServiceLoader(Class<? extends T> clazz, T defaultInstance) {
     return Iterables.getFirst(ServiceLoader.load(clazz), defaultInstance);
+  }
+
+  public static class Builder {
+
+    private AccessToken accessToken;
+
+    public Builder setAccessToken(AccessToken token) {
+      this.accessToken = token;
+      return this;
+    }
+
+    public AccessToken getAccessToken() {
+      return accessToken;
+    }
+
+    public OAuth2Credentials build() {
+      return new OAuth2Credentials(accessToken);
+    }
+
+    protected Builder() {}
+
+    protected Builder(OAuth2Credentials credentials) {
+      this.accessToken = credentials.getAccessToken();
+    }
   }
 }

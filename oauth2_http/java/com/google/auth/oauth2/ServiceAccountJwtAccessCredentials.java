@@ -85,19 +85,6 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   transient Clock clock = Clock.SYSTEM;
 
   /**
-   * Constructor with minimum identifying information.
-   *
-   * @param clientId Client ID of the service account from the console. May be null.
-   * @param clientEmail Client email address of the service account from the console.
-   * @param privateKey RSA private key object for the service account.
-   * @param privateKeyId Private key identifier for the service account. May be null.
-   */
-  public ServiceAccountJwtAccessCredentials(
-      String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId) {
-    this(clientId, clientEmail, privateKey, privateKeyId, null);
-  }
-
-  /**
    * Constructor with full information.
    *
    * @param clientId Client ID of the service account from the console. May be null.
@@ -106,7 +93,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    * @param privateKeyId Private key identifier for the service account. May be null.
    * @param defaultAudience Audience to use if not provided by transport. May be null.
    */
-  public ServiceAccountJwtAccessCredentials(String clientId, String clientEmail,
+  protected ServiceAccountJwtAccessCredentials(String clientId, String clientEmail,
       PrivateKey privateKey, String privateKeyId, URI defaultAudience) {
     this.clientId = clientId;
     this.clientEmail = Preconditions.checkNotNull(clientEmail);
@@ -363,5 +350,77 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
     input.defaultReadObject();
     clock = Clock.SYSTEM;
+  }
+
+  public static Builder newBuilder() {
+    return new Builder();
+  }
+
+  public Builder toBuilder() {
+    return new Builder(this);
+  }
+
+  public static class Builder {
+
+    private String clientId;
+    private String clientEmail;
+    private PrivateKey privateKey;
+    private String privateKeyId;
+    private URI defaultAudience;
+
+    public ServiceAccountJwtAccessCredentials build() {
+      return new ServiceAccountJwtAccessCredentials(
+          clientId, clientEmail, privateKey, privateKeyId, defaultAudience);
+    }
+
+    public Builder setClientId(String clientId) {
+      this.clientId = clientId;
+      return this;
+    }
+
+    public Builder setClientEmail(String clientEmail) {
+      this.clientEmail = clientEmail;
+      return this;
+    }
+
+    public Builder setPrivateKey(PrivateKey privateKey) {
+      this.privateKey = privateKey;
+      return this;
+    }
+
+    public Builder setPrivateKeyId(String privateKeyId) {
+      this.privateKeyId = privateKeyId;
+      return this;
+    }
+
+    public String getClientId() {
+      return clientId;
+    }
+
+    public String getClientEmail() {
+      return clientEmail;
+    }
+
+    public PrivateKey getPrivateKey() {
+      return privateKey;
+    }
+
+    public String getPrivateKeyId() {
+      return privateKeyId;
+    }
+
+    public URI getDefaultAudience() {
+      return defaultAudience;
+    }
+
+    protected Builder() {}
+
+    protected Builder(ServiceAccountJwtAccessCredentials credentials) {
+      this.clientId = credentials.clientId;
+      this.clientEmail = credentials.clientEmail;
+      this.privateKey = credentials.privateKey;
+      this.privateKeyId = credentials.privateKeyId;
+      this.defaultAudience = credentials.defaultAudience;
+    }
   }
 }

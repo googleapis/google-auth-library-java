@@ -67,8 +67,14 @@ public class HttpCredentialsAdapterTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessToken);
-    OAuth2Credentials credentials = new UserCredentials(
-        CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, null, transportFactory, null);
+
+    OAuth2Credentials credentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setHttpTransportFactory(transportFactory)
+        .build();
+
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
     HttpRequestFactory requestFactory = transportFactory.transport.createRequestFactory();
     HttpRequest request = requestFactory.buildGetRequest(new GenericUrl("http://foo"));
@@ -90,8 +96,13 @@ public class HttpCredentialsAdapterTest {
     tokenServerTransportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     tokenServerTransportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessToken);
 
-    OAuth2Credentials credentials = new UserCredentials(
-        CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, null, tokenServerTransportFactory, null);
+    OAuth2Credentials credentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setHttpTransportFactory(tokenServerTransportFactory)
+        .build();
+
     credentials.refresh();
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
 
@@ -120,8 +131,14 @@ public class HttpCredentialsAdapterTest {
         new MockTokenServerTransportFactory();
     tokenServerTransportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     tokenServerTransportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessToken);
-    OAuth2Credentials credentials = new UserCredentials(
-        CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, null, tokenServerTransportFactory, null);
+
+    OAuth2Credentials credentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setHttpTransportFactory(tokenServerTransportFactory)
+        .build();
+
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
     HttpRequestFactory requestFactory =
         tokenServerTransportFactory.transport.createRequestFactory();

@@ -71,56 +71,6 @@ public class UserCredentials extends GoogleCredentials {
   private transient HttpTransportFactory transportFactory;
 
   /**
-   * Constructor with minimum information and default behavior.
-   *
-   * @param clientId Client ID of the credential from the console.
-   * @param clientSecret Client ID of the credential from the console.
-   * @param refreshToken A refresh token resulting from a OAuth2 consent flow.
-   */
-  public UserCredentials(String clientId, String clientSecret, String refreshToken) {
-    this(clientId, clientSecret, refreshToken, null, null, null);
-  }
-
-  /**
-   * Constructor to allow both refresh token and initial access token for 3LO scenarios.
-   *
-   * @param clientId Client ID of the credential from the console.
-   * @param clientSecret Client ID of the credential from the console.
-   * @param refreshToken A refresh token resulting from a OAuth2 consent flow.
-   * @param accessToken Initial or temporary access token.
-   */
-  public UserCredentials(
-      String clientId, String clientSecret, String refreshToken, AccessToken accessToken) {
-    this(clientId, clientSecret, refreshToken, accessToken, null, null);
-  }
-
-
-  /**
-   * Constructor with all parameters allowing custom transport and server URL.
-   *
-   * @param clientId Client ID of the credential from the console.
-   * @param clientSecret Client ID of the credential from the console.
-   * @param refreshToken A refresh token resulting from a OAuth2 consent flow.
-   * @param accessToken Initial or temporary access token.
-   * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *        tokens.
-   * @param tokenServerUri URI of the end point that provides tokens.
-   */
-  public UserCredentials(String clientId, String clientSecret, String refreshToken,
-      AccessToken accessToken, HttpTransportFactory transportFactory, URI tokenServerUri) {
-    super(accessToken);
-    this.clientId = Preconditions.checkNotNull(clientId);
-    this.clientSecret = Preconditions.checkNotNull(clientSecret);
-    this.refreshToken = refreshToken;
-    this.transportFactory = firstNonNull(transportFactory,
-        getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
-    this.tokenServerUri = (tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : tokenServerUri;
-    this.transportFactoryClassName = this.transportFactory.getClass().getName();
-    Preconditions.checkState(accessToken != null || refreshToken != null,
-        "Either accessToken or refreshToken must not be null");
-  }
-
-  /**
    * Returns user credentials defined by JSON contents using the format supported by the Cloud SDK.
    *
    * @param json a map from the JSON representing the credentials.
@@ -182,6 +132,31 @@ public class UserCredentials extends GoogleCredentials {
     throw new IOException(String.format(
         "Error reading credentials from stream, 'type' value '%s' not recognized."
             + " Expecting '%s'.", fileType, USER_FILE_TYPE));
+  }
+
+  /**
+   * Constructor with all parameters allowing custom transport and server URL.
+   *
+   * @param clientId Client ID of the credential from the console.
+   * @param clientSecret Client ID of the credential from the console.
+   * @param refreshToken A refresh token resulting from a OAuth2 consent flow.
+   * @param accessToken Initial or temporary access token.
+   * @param transportFactory HTTP transport factory, creates the transport used to get access
+   *        tokens.
+   * @param tokenServerUri URI of the end point that provides tokens.
+   */
+  protected UserCredentials(String clientId, String clientSecret, String refreshToken,
+                            AccessToken accessToken, HttpTransportFactory transportFactory, URI tokenServerUri) {
+    super(accessToken);
+    this.clientId = Preconditions.checkNotNull(clientId);
+    this.clientSecret = Preconditions.checkNotNull(clientSecret);
+    this.refreshToken = refreshToken;
+    this.transportFactory = firstNonNull(transportFactory,
+        getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
+    this.tokenServerUri = (tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : tokenServerUri;
+    this.transportFactoryClassName = this.transportFactory.getClass().getName();
+    Preconditions.checkState(accessToken != null || refreshToken != null,
+        "Either accessToken or refreshToken must not be null");
   }
 
   /**
@@ -274,5 +249,87 @@ public class UserCredentials extends GoogleCredentials {
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
     input.defaultReadObject();
     transportFactory = newInstance(transportFactoryClassName);
+  }
+
+  public static Builder newBuilder() {
+    return new Builder();
+  }
+
+  public Builder toBuilder() {
+    return new Builder(this);
+  }
+
+  public static class Builder extends GoogleCredentials.Builder {
+
+    private String clientId;
+    private String clientSecret;
+    private String refreshToken;
+    private URI tokenServerUri;
+    private HttpTransportFactory transportFactory;
+
+    public UserCredentials build() {
+      return new UserCredentials(
+          clientId, clientSecret, refreshToken, getAccessToken(), transportFactory,tokenServerUri);
+    }
+
+    public Builder setClientId(String clientId) {
+      this.clientId = clientId;
+      return this;
+    }
+
+    public Builder setClientSecret(String clientSecret) {
+      this.clientSecret = clientSecret;
+      return this;
+    }
+
+    public Builder setRefreshToken(String refreshToken) {
+      this.refreshToken = refreshToken;
+      return this;
+    }
+
+    public Builder setTokenServerUri(URI tokenServerUri) {
+      this.tokenServerUri = tokenServerUri;
+      return this;
+    }
+
+    public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
+      this.transportFactory = transportFactory;
+      return this;
+    }
+
+    public Builder setAccessToken(AccessToken token) {
+      super.setAccessToken(token);
+      return this;
+    }
+
+    public String getClientId() {
+      return clientId;
+    }
+
+    public String getClientSecret() {
+      return clientSecret;
+    }
+
+    public String getRefreshToken() {
+      return refreshToken;
+    }
+
+    public URI getTokenServerUri() {
+      return tokenServerUri;
+    }
+
+    public HttpTransportFactory getHttpTransportFactory() {
+      return transportFactory;
+    }
+
+    protected Builder() {}
+
+    protected Builder(UserCredentials credentials) {
+      this.clientId = credentials.clientId;
+      this.clientSecret = credentials.clientSecret;
+      this.refreshToken = credentials.refreshToken;
+      this.transportFactory = credentials.transportFactory;
+      this.tokenServerUri = credentials.tokenServerUri;
+    }
   }
 }

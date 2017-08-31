@@ -167,8 +167,16 @@ public class GoogleCredentials extends OAuth2Credentials {
    *
    * @param accessToken Initial or temporary access token.
    **/
-  public GoogleCredentials(AccessToken accessToken) {
+  protected GoogleCredentials(AccessToken accessToken) {
     super(accessToken);
+  }
+
+  public static Builder newBuilder() {
+    return new Builder();
+  }
+
+  public Builder toBuilder() {
+    return new Builder(this);
   }
 
   /**
@@ -194,5 +202,22 @@ public class GoogleCredentials extends OAuth2Credentials {
    */
   public GoogleCredentials createDelegated(String user) {
     return this;
+  }
+
+  public static class Builder extends OAuth2Credentials.Builder {
+    public GoogleCredentials build() {
+      return new GoogleCredentials(getAccessToken());
+    }
+
+    public Builder setAccessToken(AccessToken token) {
+      super.setAccessToken(token);
+      return this;
+    }
+
+    protected Builder() {}
+
+    protected Builder(GoogleCredentials credentials) {
+      setAccessToken(credentials.getAccessToken());
+    }
   }
 }

@@ -114,6 +114,14 @@ public class ClientId {
     return fromJson(parsedJson);
   }
 
+  public static Builder newBuilder() {
+    return new Builder();
+  }
+
+  public Builder toBuilder() {
+    return new Builder(this);
+  }
+
   /**
    * Constructs a client ID using an explicit ID and secret
    *
@@ -123,7 +131,7 @@ public class ClientId {
    * @param clientId Text identifier of the Client ID.
    * @param clientSecret Secret to associated with the Client ID.
    */
-  public ClientId(String clientId, String clientSecret) {
+  protected ClientId(String clientId, String clientSecret) {
     this.clientId = Preconditions.checkNotNull(clientId);
     this.clientSecret = clientSecret;
   }
@@ -140,5 +148,37 @@ public class ClientId {
    */
   public final String getClientSecret() {
     return clientSecret;
+  }
+
+  public static class Builder {
+
+    private String clientId;
+
+    private String clientSecret;
+
+    protected Builder() {}
+
+    protected Builder(ClientId clientId) {
+      this.clientId = clientId.getClientId();
+      this.clientSecret = clientId.getClientSecret();
+    }
+
+    public Builder setClientId(String clientId) {
+      this.clientId = clientId;
+      return this;
+    }
+
+    public Builder setClientSecret(String clientSecret) {
+      this.clientSecret = clientSecret;
+      return this;
+    }
+
+    public String getClientSecret() {
+      return clientSecret;
+    }
+
+    public ClientId build() {
+      return new ClientId(clientId, clientSecret);
+    }
   }
 }
