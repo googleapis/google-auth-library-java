@@ -69,6 +69,9 @@ class DefaultCredentialsProvider {
   static final String CLOUD_SHELL_ENV_VAR = "DEVSHELL_CLIENT_PORT";
 
   static final String SKIP_APP_ENGINE_ENV_VAR = "GOOGLE_APPLICATION_CREDENTIALS_SKIP_APP_ENGINE";
+  static final String SPECIFICATION_VERSION = System.getProperty("java.specification.version");
+  static final String GAE_RUNTIME_VERSION = System.getProperty("com.google.appengine.runtime.version");
+  static final String RUNTIME_JETTY_LOGGER = System.getProperty("org.eclipse.jetty.util.log.class");
 
   static final String NO_GCE_CHECK_ENV_VAR = "NO_GCE_CHECK";
   static final String GCE_METADATA_HOST_ENV_VAR = "GCE_METADATA_HOST";
@@ -175,6 +178,11 @@ class DefaultCredentialsProvider {
       }
     }
 
+    // Then try GAE 7 standard environment
+    if (credentials == null && isOnGAEStandard7() && !skipAppEngineCredentialsCheck()) {
+      credentials = tryGetAppEngineCredential();
+    }
+
     // Then try Cloud Shell.  This must be done BEFORE checking
     // Compute Engine, as Cloud Shell runs on GCE VMs.
     if (credentials == null) {
@@ -184,11 +192,6 @@ class DefaultCredentialsProvider {
     // Then try Compute Engine and GAE 8 standard environment
     if (credentials == null) {
       credentials = tryGetComputeCredentials(transportFactory);
-    }
-
-    // Then try GAE 7 standard environment
-    if (credentials == null && !skipAppEngineCredentialsCheck()) {
-      credentials = tryGetAppEngineCredential();
     }
 
     return credentials;
@@ -281,6 +284,11 @@ class DefaultCredentialsProvider {
       skip = value.equalsIgnoreCase("true") || value.equals("1");
     }
     return skip;
+  }
+
+  protected boolean isOnGAEStandard7() {
+    return GAE_RUNTIME_VERSION != null
+        && (SPECIFICATION_VERSION.equals("1.7") || RUNTIME_JETTY_LOGGER == null);
   }
 
   /*
