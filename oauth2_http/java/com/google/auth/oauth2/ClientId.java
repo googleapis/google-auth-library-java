@@ -131,7 +131,8 @@ public class ClientId {
    * @param clientId Text identifier of the Client ID.
    * @param clientSecret Secret to associated with the Client ID.
    */
-  protected ClientId(String clientId, String clientSecret) {
+  @Deprecated
+  public ClientId(String clientId, String clientSecret) {
     this.clientId = Preconditions.checkNotNull(clientId);
     this.clientSecret = clientSecret;
   }

@@ -101,6 +101,43 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
   private transient HttpTransportFactory transportFactory;
 
   /**
+   * Constructor with minimum identifying information.
+   *
+   * @param clientId Client ID of the service account from the console. May be null.
+   * @param clientEmail Client email address of the service account from the console.
+   * @param privateKey RSA private key object for the service account.
+   * @param privateKeyId Private key identifier for the service account. May be null.
+   * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
+   *        which results in a credential that must have createScoped called before use.
+   */
+  @Deprecated
+  public ServiceAccountCredentials(
+      String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId,
+      Collection<String> scopes) {
+    this(clientId, clientEmail, privateKey, privateKeyId, scopes, null, null, null, null);
+  }
+
+  /**
+   * Constructor with minimum identifying information and custom HTTP transport.
+   *
+   * @param clientId Client ID of the service account from the console. May be null.
+   * @param clientEmail Client email address of the service account from the console.
+   * @param privateKey RSA private key object for the service account.
+   * @param privateKeyId Private key identifier for the service account. May be null.
+   * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
+   *        which results in a credential that must have createScoped called before use.
+   * @param transportFactory HTTP transport factory, creates the transport used to get access
+   *        tokens.
+   * @param tokenServerUri URI of the end point that provides tokens.
+   */
+  @Deprecated
+  public ServiceAccountCredentials(
+      String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId,
+      Collection<String> scopes, HttpTransportFactory transportFactory, URI tokenServerUri) {
+    this(clientId, clientEmail, privateKey, privateKeyId, scopes, transportFactory, tokenServerUri, null, null);
+  }
+
+  /**
    * Constructor with minimum identifying information and custom HTTP transport.
    *
    * @param clientId Client ID of the service account from the console. May be null.
@@ -501,10 +538,18 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
     private Collection<String> scopes;
     private HttpTransportFactory transportFactory;
 
-    public ServiceAccountCredentials build() {
-      return new ServiceAccountCredentials(
-          clientId, clientEmail, privateKey, privateKeyId, scopes,
-          transportFactory, tokenServerUri, serviceAccountUser, projectId);
+    protected Builder() {}
+
+    protected Builder(ServiceAccountCredentials credentials) {
+      this.clientId = credentials.clientId;
+      this.clientEmail = credentials.clientEmail;
+      this.privateKey = credentials.privateKey;
+      this.privateKeyId = credentials.privateKeyId;
+      this.scopes = credentials.scopes;
+      this.transportFactory = credentials.transportFactory;
+      this.tokenServerUri = credentials.tokenServerUri;
+      this.serviceAccountUser = credentials.serviceAccountUser;
+      this.projectId = credentials.projectId;
     }
 
     public Builder setClientId(String clientId) {
@@ -547,7 +592,6 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
       return this;
     }
 
-
     public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
       this.transportFactory = transportFactory;
       return this;
@@ -589,18 +633,10 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
       return transportFactory;
     }
 
-    protected Builder() {}
-
-    protected Builder(ServiceAccountCredentials credentials) {
-      this.clientId = credentials.clientId;
-      this.clientEmail = credentials.clientEmail;
-      this.privateKey = credentials.privateKey;
-      this.privateKeyId = credentials.privateKeyId;
-      this.scopes = credentials.scopes;
-      this.transportFactory = credentials.transportFactory;
-      this.tokenServerUri = credentials.tokenServerUri;
-      this.serviceAccountUser = credentials.serviceAccountUser;
-      this.projectId = credentials.projectId;
+    public ServiceAccountCredentials build() {
+      return new ServiceAccountCredentials(
+          clientId, clientEmail, privateKey, privateKeyId, scopes,
+          transportFactory, tokenServerUri, serviceAccountUser, projectId);
     }
   }
 }

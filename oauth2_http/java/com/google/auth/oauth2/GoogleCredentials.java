@@ -54,6 +54,16 @@ public class GoogleCredentials extends OAuth2Credentials {
       new DefaultCredentialsProvider();
 
   /**
+   * Returns the credentials instance from the given access token.
+   *
+   * @param accessToken the access token
+   * @return the credentials instance
+   */
+  public static GoogleCredentials of(AccessToken accessToken) {
+    return GoogleCredentials.newBuilder().setAccessToken(accessToken).build();
+  }
+
+  /**
    * Returns the Application Default Credentials.
    *
    * <p>Returns the Application Default Credentials which are used to identify and authorize the
@@ -158,7 +168,8 @@ public class GoogleCredentials extends OAuth2Credentials {
   /**
    * Default constructor.
    **/
-  protected GoogleCredentials() {
+  @Deprecated
+  public GoogleCredentials() {
     this(null);
   }
 
@@ -205,19 +216,20 @@ public class GoogleCredentials extends OAuth2Credentials {
   }
 
   public static class Builder extends OAuth2Credentials.Builder {
-    public GoogleCredentials build() {
-      return new GoogleCredentials(getAccessToken());
-    }
-
-    public Builder setAccessToken(AccessToken token) {
-      super.setAccessToken(token);
-      return this;
-    }
-
     protected Builder() {}
 
     protected Builder(GoogleCredentials credentials) {
       setAccessToken(credentials.getAccessToken());
+    }
+
+    public GoogleCredentials build() {
+      return new GoogleCredentials(getAccessToken());
+    }
+
+    @Override
+    public Builder setAccessToken(AccessToken token) {
+      super.setAccessToken(token);
+      return this;
     }
   }
 }

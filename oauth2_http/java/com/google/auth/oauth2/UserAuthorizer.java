@@ -70,7 +70,33 @@ public class UserAuthorizer {
   private final URI userAuthUri;
 
   /**
-   * Constructor
+   * Constructor with minimal parameters.
+   *
+   * @param clientId Client ID to identify the OAuth2 consent prompt.
+   * @param scopes OAUth2 scopes defining the user consent.
+   * @param tokenStore Implementation of component for long term storage of tokens.
+   */
+  @Deprecated
+  public UserAuthorizer(ClientId clientId, Collection<String> scopes, TokenStore tokenStore) {
+    this(clientId, scopes, tokenStore, null, null, null, null);
+  }
+
+  /**
+   * Constructor with common parameters.
+   *
+   * @param clientId Client ID to identify the OAuth2 consent prompt.
+   * @param scopes OAUth2 scopes defining the user consent.
+   * @param tokenStore Implementation of component for long term storage of tokens.
+   * @param callbackUri URI for implementation of the OAuth2 web callback.
+   */
+  @Deprecated
+  public UserAuthorizer(ClientId clientId, Collection<String> scopes, TokenStore tokenStore,
+                        URI callbackUri) {
+    this(clientId, scopes, tokenStore, callbackUri, null, null, null);
+  }
+
+  /**
+   * Constructor with all parameters.
    *
    * @param clientId Client ID to identify the OAuth2 consent prompt.
    * @param scopes OAUth2 scopes defining the user consent.
@@ -81,8 +107,9 @@ public class UserAuthorizer {
    * @param tokenServerUri URI of the end point that provides tokens.
    * @param userAuthUri URI of the Web UI for user consent.
    */
-  protected UserAuthorizer(ClientId clientId, Collection<String> scopes, TokenStore tokenStore,
-      URI callbackUri, HttpTransportFactory transportFactory, URI tokenServerUri, URI userAuthUri) {
+  @Deprecated
+  public UserAuthorizer(ClientId clientId, Collection<String> scopes, TokenStore tokenStore,
+                        URI callbackUri, HttpTransportFactory transportFactory, URI tokenServerUri, URI userAuthUri) {
     this.clientId = Preconditions.checkNotNull(clientId);
     this.scopes = ImmutableList.copyOf(Preconditions.checkNotNull(scopes));
     this.callbackUri = (callbackUri == null) ? DEFAULT_CALLBACK_URI : callbackUri;
@@ -92,6 +119,7 @@ public class UserAuthorizer {
     this.userAuthUri = (userAuthUri == null) ? OAuth2Utils.USER_AUTH_URI : userAuthUri;
     this.tokenStore = tokenStore;
   }
+
 
   /**
    * Returns the Client ID user to identify the OAuth2 consent prompt.
@@ -384,9 +412,16 @@ public class UserAuthorizer {
     private Collection<String> scopes;
     private HttpTransportFactory transportFactory;
 
-    public UserAuthorizer build() {
-      return new UserAuthorizer(clientId, scopes, tokenStore,
-          callbackUri, transportFactory, tokenServerUri, userAuthUri);
+    protected Builder() {}
+
+    protected Builder(UserAuthorizer authorizer) {
+      this.clientId = authorizer.clientId;
+      this.scopes = authorizer.scopes;
+      this.transportFactory = authorizer.transportFactory;
+      this.tokenServerUri = authorizer.tokenServerUri;
+      this.tokenStore = authorizer.tokenStore;
+      this.callbackUri = authorizer.callbackUri;
+      this.userAuthUri = authorizer.userAuthUri;
     }
 
     public Builder setClientId(ClientId clientId) {
@@ -452,17 +487,9 @@ public class UserAuthorizer {
       return transportFactory;
     }
 
-    protected Builder() {
-    }
-
-    protected Builder(UserAuthorizer authorizer) {
-      this.clientId = authorizer.clientId;
-      this.scopes = authorizer.scopes;
-      this.transportFactory = authorizer.transportFactory;
-      this.tokenServerUri = authorizer.tokenServerUri;
-      this.tokenStore = authorizer.tokenStore;
-      this.callbackUri = authorizer.callbackUri;
-      this.userAuthUri = authorizer.userAuthUri;
+    public UserAuthorizer build() {
+      return new UserAuthorizer(clientId, scopes, tokenStore,
+          callbackUri, transportFactory, tokenServerUri, userAuthUri);
     }
   }
 }

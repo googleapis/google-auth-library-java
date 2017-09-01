@@ -82,13 +82,23 @@ public class ComputeEngineCredentials extends GoogleCredentials {
 
   private transient HttpTransportFactory transportFactory;
 
+   /**
+    * Constructor with minimum information and default behavior.
+    */
+   @Deprecated
+   public ComputeEngineCredentials() {
+     this(null);
+   }
+
+
   /**
    * Constructor with overridden transport.
    *
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *        tokens.
    */
-  protected ComputeEngineCredentials(HttpTransportFactory transportFactory) {
+  @Deprecated
+  public ComputeEngineCredentials(HttpTransportFactory transportFactory) {
     this.transportFactory = firstNonNull(transportFactory,
         getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
@@ -230,8 +240,10 @@ public class ComputeEngineCredentials extends GoogleCredentials {
   public static class Builder extends GoogleCredentials.Builder {
     private HttpTransportFactory transportFactory;
 
-    public ComputeEngineCredentials build() {
-      return new ComputeEngineCredentials(transportFactory);
+    protected Builder() {}
+
+    protected Builder(ComputeEngineCredentials credentials) {
+      this.transportFactory = credentials.transportFactory;
     }
 
     public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
@@ -243,10 +255,8 @@ public class ComputeEngineCredentials extends GoogleCredentials {
       return transportFactory;
     }
 
-    protected Builder() {}
-
-    protected Builder(ComputeEngineCredentials credentials) {
-      this.transportFactory = credentials.transportFactory;
+    public ComputeEngineCredentials build() {
+      return new ComputeEngineCredentials(transportFactory);
     }
   }
 }

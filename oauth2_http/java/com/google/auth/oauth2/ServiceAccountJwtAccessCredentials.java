@@ -85,6 +85,20 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   transient Clock clock = Clock.SYSTEM;
 
   /**
+   * Constructor with minimum identifying information.
+   *
+   * @param clientId Client ID of the service account from the console. May be null.
+   * @param clientEmail Client email address of the service account from the console.
+   * @param privateKey RSA private key object for the service account.
+   * @param privateKeyId Private key identifier for the service account. May be null.
+   */
+  @Deprecated
+  public ServiceAccountJwtAccessCredentials(
+      String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId) {
+    this(clientId, clientEmail, privateKey, privateKeyId, null);
+  }
+
+  /**
    * Constructor with full information.
    *
    * @param clientId Client ID of the service account from the console. May be null.
@@ -368,9 +382,14 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     private String privateKeyId;
     private URI defaultAudience;
 
-    public ServiceAccountJwtAccessCredentials build() {
-      return new ServiceAccountJwtAccessCredentials(
-          clientId, clientEmail, privateKey, privateKeyId, defaultAudience);
+    protected Builder() {}
+
+    protected Builder(ServiceAccountJwtAccessCredentials credentials) {
+      this.clientId = credentials.clientId;
+      this.clientEmail = credentials.clientEmail;
+      this.privateKey = credentials.privateKey;
+      this.privateKeyId = credentials.privateKeyId;
+      this.defaultAudience = credentials.defaultAudience;
     }
 
     public Builder setClientId(String clientId) {
@@ -413,14 +432,9 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
       return defaultAudience;
     }
 
-    protected Builder() {}
-
-    protected Builder(ServiceAccountJwtAccessCredentials credentials) {
-      this.clientId = credentials.clientId;
-      this.clientEmail = credentials.clientEmail;
-      this.privateKey = credentials.privateKey;
-      this.privateKeyId = credentials.privateKeyId;
-      this.defaultAudience = credentials.defaultAudience;
+    public ServiceAccountJwtAccessCredentials build() {
+      return new ServiceAccountJwtAccessCredentials(
+          clientId, clientEmail, privateKey, privateKeyId, defaultAudience);
     }
   }
 }
