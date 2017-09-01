@@ -168,8 +168,7 @@ public class GoogleCredentials extends OAuth2Credentials {
   /**
    * Default constructor.
    **/
-  @Deprecated
-  public GoogleCredentials() {
+  protected GoogleCredentials() {
     this(null);
   }
 
@@ -178,7 +177,8 @@ public class GoogleCredentials extends OAuth2Credentials {
    *
    * @param accessToken Initial or temporary access token.
    **/
-  protected GoogleCredentials(AccessToken accessToken) {
+  @Deprecated
+  public GoogleCredentials(AccessToken accessToken) {
     super(accessToken);
   }
 

@@ -82,14 +82,13 @@ public class ComputeEngineCredentials extends GoogleCredentials {
 
   private transient HttpTransportFactory transportFactory;
 
-   /**
-    * Constructor with minimum information and default behavior.
-    */
-   @Deprecated
-   public ComputeEngineCredentials() {
-     this(null);
-   }
-
+  /**
+   * Constructor with minimum information and default behavior.
+   */
+  @Deprecated
+  public ComputeEngineCredentials() {
+    this(null);
+  }
 
   /**
    * Constructor with overridden transport.

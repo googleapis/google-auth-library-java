@@ -90,8 +90,7 @@ public class UserAuthorizer {
    * @param callbackUri URI for implementation of the OAuth2 web callback.
    */
   @Deprecated
-  public UserAuthorizer(ClientId clientId, Collection<String> scopes, TokenStore tokenStore,
-                        URI callbackUri) {
+  public UserAuthorizer(ClientId clientId, Collection<String> scopes, TokenStore tokenStore, URI callbackUri) {
     this(clientId, scopes, tokenStore, callbackUri, null, null, null);
   }
 

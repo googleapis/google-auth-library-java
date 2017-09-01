@@ -114,14 +114,6 @@ public class ClientId {
     return fromJson(parsedJson);
   }
 
-  public static Builder newBuilder() {
-    return new Builder();
-  }
-
-  public Builder toBuilder() {
-    return new Builder(this);
-  }
-
   /**
    * Constructs a client ID using an explicit ID and secret
    *
@@ -149,6 +141,14 @@ public class ClientId {
    */
   public final String getClientSecret() {
     return clientSecret;
+  }
+
+  public static Builder newBuilder() {
+    return new Builder();
+  }
+
+  public Builder toBuilder() {
+    return new Builder(this);
   }
 
   public static class Builder {
