@@ -107,7 +107,8 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    * @param privateKeyId Private key identifier for the service account. May be null.
    * @param defaultAudience Audience to use if not provided by transport. May be null.
    */
-  protected ServiceAccountJwtAccessCredentials(String clientId, String clientEmail,
+  @Deprecated
+  public ServiceAccountJwtAccessCredentials(String clientId, String clientEmail,
       PrivateKey privateKey, String privateKeyId, URI defaultAudience) {
     this.clientId = clientId;
     this.clientEmail = Preconditions.checkNotNull(clientEmail);

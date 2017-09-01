@@ -83,6 +83,16 @@ public class ComputeEngineCredentials extends GoogleCredentials {
   private transient HttpTransportFactory transportFactory;
 
   /**
+   * Returns a credentials instance from the given transport factory
+   *
+   * @param transportFactory The Http transport factory
+   * @return the credential instance
+   */
+  public static ComputeEngineCredentials of(HttpTransportFactory transportFactory) {
+    return ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+  }
+
+  /**
    * Constructor with minimum information and default behavior.
    */
   @Deprecated

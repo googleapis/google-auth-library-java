@@ -73,6 +73,16 @@ public class OAuth2Credentials extends Credentials {
   transient Clock clock = Clock.SYSTEM;
 
   /**
+   * Returns the credentials instance from the given access token.
+   *
+   * @param accessToken the access token
+   * @return the credentials instance
+   */
+  public static OAuth2Credentials of(AccessToken accessToken) {
+    return OAuth2Credentials.newBuilder().setAccessToken(accessToken).build();
+  }
+
+  /**
    * Default constructor.
    **/
   @Deprecated
