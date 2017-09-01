@@ -85,8 +85,7 @@ public class OAuth2Credentials extends Credentials {
   /**
    * Default constructor.
    **/
-  @Deprecated
-  public OAuth2Credentials() {
+  protected OAuth2Credentials() {
     this(null);
   }
 
