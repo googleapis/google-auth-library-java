@@ -187,6 +187,7 @@ public class DefaultCredentialsProviderTest {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.addType(DefaultCredentialsProvider.APP_ENGINE_SIGNAL_CLASS,
         MockOffAppEngineSystemProperty.class);
+    testProvider.setProperty("isOnGAEStandard7", "true");
 
     try {
       testProvider.getDefaultCredentials(transportFactory);
@@ -203,6 +204,7 @@ public class DefaultCredentialsProviderTest {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.addType(DefaultCredentialsProvider.APP_ENGINE_SIGNAL_CLASS,
         MockAppEngineSystemProperty.class);
+    testProvider.setProperty("isOnGAEStandard7", "true");
 
     try {
       testProvider.getDefaultCredentials(transportFactory);
@@ -223,6 +225,7 @@ public class DefaultCredentialsProviderTest {
         MockOffAppEngineSystemProperty.class);
     testProvider.setEnv(DefaultCredentialsProvider.CLOUD_SHELL_ENV_VAR,"9090");
     testProvider.setEnv(DefaultCredentialsProvider.SKIP_APP_ENGINE_ENV_VAR, "true");
+    testProvider.setProperty("isOnGAEStanadard7", "true");
     GoogleCredentials credentials = testProvider.getDefaultCredentials(transportFactory);
     assertNotNull(credentials);
     assertTrue(credentials instanceof CloudShellCredentials);
@@ -576,6 +579,11 @@ public class DefaultCredentialsProviderTest {
         return lookup;
       }
       throw new ClassNotFoundException("TestDefaultCredentialProvider: Class not found.");
+    }
+
+    @Override
+    protected boolean isOnGAEStandard7() {
+      return getProperty("isOnGAEStandard7", "false").equals("true");
     }
 
     int getForNameCallCount() {

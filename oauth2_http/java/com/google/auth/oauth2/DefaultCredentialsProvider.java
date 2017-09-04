@@ -69,6 +69,9 @@ class DefaultCredentialsProvider {
   static final String CLOUD_SHELL_ENV_VAR = "DEVSHELL_CLIENT_PORT";
 
   static final String SKIP_APP_ENGINE_ENV_VAR = "GOOGLE_APPLICATION_CREDENTIALS_SKIP_APP_ENGINE";
+  static final String SPECIFICATION_VERSION = System.getProperty("java.specification.version");
+  static final String GAE_RUNTIME_VERSION = System.getProperty("com.google.appengine.runtime.version");
+  static final String RUNTIME_JETTY_LOGGER = System.getProperty("org.eclipse.jetty.util.log.class");
 
   static final String NO_GCE_CHECK_ENV_VAR = "NO_GCE_CHECK";
   static final String GCE_METADATA_HOST_ENV_VAR = "GCE_METADATA_HOST";
@@ -175,8 +178,8 @@ class DefaultCredentialsProvider {
       }
     }
 
-    // Then try App Engine
-    if (credentials == null && !skipAppEngineCredentialsCheck()) {
+    // Then try GAE 7 standard environment
+    if (credentials == null && isOnGAEStandard7() && !skipAppEngineCredentialsCheck()) {
       credentials = tryGetAppEngineCredential();
     }
 
@@ -186,7 +189,7 @@ class DefaultCredentialsProvider {
       credentials = tryGetCloudShellCredentials();
     }
 
-    // Then try Compute Engine
+    // Then try Compute Engine and GAE 8 standard environment
     if (credentials == null) {
       credentials = tryGetComputeCredentials(transportFactory);
     }
@@ -281,6 +284,11 @@ class DefaultCredentialsProvider {
       skip = value.equalsIgnoreCase("true") || value.equals("1");
     }
     return skip;
+  }
+
+  protected boolean isOnGAEStandard7() {
+    return GAE_RUNTIME_VERSION != null
+        && (SPECIFICATION_VERSION.equals("1.7") || RUNTIME_JETTY_LOGGER == null);
   }
 
   /*
