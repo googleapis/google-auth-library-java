@@ -76,6 +76,7 @@ public class UserAuthorizer {
    * @param scopes OAUth2 scopes defining the user consent.
    * @param tokenStore Implementation of component for long term storage of tokens.
    */
+  @Deprecated
   public UserAuthorizer(ClientId clientId, Collection<String> scopes, TokenStore tokenStore) {
     this(clientId, scopes, tokenStore, null, null, null, null);
   }
@@ -88,8 +89,8 @@ public class UserAuthorizer {
    * @param tokenStore Implementation of component for long term storage of tokens.
    * @param callbackUri URI for implementation of the OAuth2 web callback.
    */
-  public UserAuthorizer(ClientId clientId, Collection<String> scopes, TokenStore tokenStore,
-      URI callbackUri) {
+  @Deprecated
+  public UserAuthorizer(ClientId clientId, Collection<String> scopes, TokenStore tokenStore, URI callbackUri) {
     this(clientId, scopes, tokenStore, callbackUri, null, null, null);
   }
 
@@ -105,8 +106,9 @@ public class UserAuthorizer {
    * @param tokenServerUri URI of the end point that provides tokens.
    * @param userAuthUri URI of the Web UI for user consent.
    */
+  @Deprecated
   public UserAuthorizer(ClientId clientId, Collection<String> scopes, TokenStore tokenStore,
-      URI callbackUri, HttpTransportFactory transportFactory, URI tokenServerUri, URI userAuthUri) {
+                        URI callbackUri, HttpTransportFactory transportFactory, URI tokenServerUri, URI userAuthUri) {
     this.clientId = Preconditions.checkNotNull(clientId);
     this.scopes = ImmutableList.copyOf(Preconditions.checkNotNull(scopes));
     this.callbackUri = (callbackUri == null) ? DEFAULT_CALLBACK_URI : callbackUri;
@@ -116,6 +118,7 @@ public class UserAuthorizer {
     this.userAuthUri = (userAuthUri == null) ? OAuth2Utils.USER_AUTH_URI : userAuthUri;
     this.tokenStore = tokenStore;
   }
+
 
   /**
    * Returns the Client ID user to identify the OAuth2 consent prompt.
@@ -387,6 +390,105 @@ public class UserAuthorizer {
     public void onChanged(OAuth2Credentials credentials) throws IOException {
       UserCredentials userCredentials = (UserCredentials)credentials;
       storeCredentials(userId, userCredentials);
+    }
+  }
+
+  public static Builder newBuilder() {
+    return new Builder();
+  }
+
+  public Builder toBuilder() {
+    return new Builder(this);
+  }
+
+  public static class Builder {
+
+    private ClientId clientId;
+    private TokenStore tokenStore;
+    private URI callbackUri;
+    private URI tokenServerUri;
+    private URI userAuthUri;
+    private Collection<String> scopes;
+    private HttpTransportFactory transportFactory;
+
+    protected Builder() {}
+
+    protected Builder(UserAuthorizer authorizer) {
+      this.clientId = authorizer.clientId;
+      this.scopes = authorizer.scopes;
+      this.transportFactory = authorizer.transportFactory;
+      this.tokenServerUri = authorizer.tokenServerUri;
+      this.tokenStore = authorizer.tokenStore;
+      this.callbackUri = authorizer.callbackUri;
+      this.userAuthUri = authorizer.userAuthUri;
+    }
+
+    public Builder setClientId(ClientId clientId) {
+      this.clientId = clientId;
+      return this;
+    }
+
+    public Builder setTokenStore(TokenStore tokenStore) {
+      this.tokenStore = tokenStore;
+      return this;
+    }
+
+    public Builder setScopes(Collection<String> scopes) {
+      this.scopes = scopes;
+      return this;
+    }
+
+    public Builder setTokenServerUri(URI tokenServerUri) {
+      this.tokenServerUri = tokenServerUri;
+      return this;
+    }
+
+    public Builder setCallbackUri(URI callbackUri) {
+      this.callbackUri = callbackUri;
+      return this;
+    }
+
+    public Builder setUserAuthUri(URI userAuthUri) {
+      this.userAuthUri = userAuthUri;
+      return this;
+    }
+
+    public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
+      this.transportFactory = transportFactory;
+      return this;
+    }
+
+    public ClientId getClientId() {
+      return clientId;
+    }
+
+    public TokenStore getTokenStore() {
+      return tokenStore;
+    }
+
+    public Collection<String> getScopes() {
+      return scopes;
+    }
+
+    public URI getTokenServerUri() {
+      return tokenServerUri;
+    }
+
+    public URI getCallbackUri() {
+      return callbackUri;
+    }
+
+    public URI getUserAuthUri() {
+      return userAuthUri;
+    }
+
+    public HttpTransportFactory getHttpTransportFactory() {
+      return transportFactory;
+    }
+
+    public UserAuthorizer build() {
+      return new UserAuthorizer(clientId, scopes, tokenStore,
+          callbackUri, transportFactory, tokenServerUri, userAuthUri);
     }
   }
 }

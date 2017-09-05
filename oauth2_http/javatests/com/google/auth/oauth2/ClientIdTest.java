@@ -55,7 +55,10 @@ public class ClientIdTest {
 
   @Test
   public void constructor() {
-    ClientId clientId = new ClientId(CLIENT_ID, CLIENT_SECRET);
+    ClientId clientId = ClientId.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .build();
 
     assertEquals(CLIENT_ID, clientId.getClientId());
     assertEquals(CLIENT_SECRET, clientId.getClientSecret());
@@ -63,13 +66,16 @@ public class ClientIdTest {
 
   @Test(expected = NullPointerException.class)
   public void constructor_nullClientId_throws() {
-    new ClientId(null, CLIENT_SECRET);
+    ClientId clientId = ClientId.newBuilder()
+        .setClientSecret(CLIENT_SECRET)
+        .build();
   }
 
   @Test
   public void constructor_nullClientSecret() {
-    ClientId clientId = new ClientId(CLIENT_ID, null);
-
+    ClientId clientId = ClientId.newBuilder()
+        .setClientId(CLIENT_ID)
+        .build();
     assertEquals(CLIENT_ID, clientId.getClientId());
     assertNull(clientId.getClientSecret());
   }
