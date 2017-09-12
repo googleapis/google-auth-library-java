@@ -45,6 +45,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -60,10 +62,8 @@ class OAuth2Utils {
   static final URI TOKEN_SERVER_URI = URI.create("https://accounts.google.com/o/oauth2/token");
   static final URI TOKEN_REVOKE_URI = URI.create("https://accounts.google.com/o/oauth2/revoke");
   static final URI USER_AUTH_URI = URI.create("https://accounts.google.com/o/oauth2/auth");
-
-  static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
-
-  static final HttpTransportFactory HTTP_TRANSPORT_FACTORY = new DefaultHttpTransportFactory();
+  
+  static final HttpTransportFactory HTTP_TRANSPORT_FACTORY = new ProxySuitableHttpTransportFactory();
 
   static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
 
@@ -74,10 +74,40 @@ class OAuth2Utils {
 
   static final String BEARER_PREFIX = AuthHttpConstants.BEARER + " ";
 
-  static class DefaultHttpTransportFactory implements HttpTransportFactory {
+  /**
+   * Checks if either HTTP_PROXY or SOCKS_PROXY environment variable is specified than uses proxy.
+   * Otherwise uses usual direct connection.
+   */
+  static class ProxySuitableHttpTransportFactory implements HttpTransportFactory {
+
+    private Proxy defineProxyIfApplicable() {
+      Proxy.Type proxyType = Proxy.Type.DIRECT;
+      String proxy = System.getenv("HTTP_PROXY");
+      if (proxy != null) {
+        proxyType = Proxy.Type.HTTP;
+      } else {
+        proxy = System.getenv("SOCKS_PROXY");
+        if (proxy != null) {
+          proxyType = Proxy.Type.SOCKS;
+        }
+      }
+
+      if (proxy != null) {
+        String[] parts = proxy.split(":", 2);
+        int proxyPort = 80;
+        if (parts.length > 1) {
+          proxyPort = Integer.parseInt(parts[1]);
+        }
+        return new Proxy(proxyType, new InetSocketAddress(parts[0], proxyPort));
+      }
+
+      return null;
+    }
 
     public HttpTransport create() {
-      return HTTP_TRANSPORT;
+      return new NetHttpTransport.Builder()
+              .setProxy(defineProxyIfApplicable())
+              .build();
     }
   }
 
