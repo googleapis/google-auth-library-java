@@ -101,7 +101,7 @@ class OAuth2Utils {
         return new Proxy(proxyType, new InetSocketAddress(parts[0], proxyPort));
       }
 
-      return null;
+      return Proxy.NO_PROXY;
     }
 
     public HttpTransport create() {
