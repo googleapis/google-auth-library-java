@@ -42,6 +42,7 @@ import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Joiner;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.oauth2.storage.MemoryTokensStorage;
 import com.google.auth.oauth2.storage.TokenStore;
 import com.google.common.collect.ImmutableList;
 
@@ -117,7 +118,7 @@ public class UserAuthorizer {
         (transportFactory == null) ? OAuth2Utils.HTTP_TRANSPORT_FACTORY : transportFactory;
     this.tokenServerUri = (tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : tokenServerUri;
     this.userAuthUri = (userAuthUri == null) ? OAuth2Utils.USER_AUTH_URI : userAuthUri;
-    this.tokenStore = tokenStore;
+    this.tokenStore = (tokenStore == null) ? new MemoryTokensStorage() : tokenStore;
   }
 
 
