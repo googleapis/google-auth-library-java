@@ -58,9 +58,10 @@ import java.util.Objects;
  */
 public class UserCredentials extends GoogleCredentials {
 
+  public static final String USER_CREDENTIALS_FILE_NAME = "GOOGLE_AUTH_USER_CREDENTIALS_FILE_NAME";
+
   private static final String GRANT_TYPE = "refresh_token";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
-  private static final String USER_CREDENTIALS_FILE_NAME = "GOOGLE_AUTH_USER_CREDENTIALS_FILE_NAME";
   private static final long serialVersionUID = -4800758775038679176L;
 
   private final String clientId;
