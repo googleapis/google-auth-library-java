@@ -31,6 +31,8 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.oauth2.OAuth2Utils.JSON_FACTORY;
+import static com.google.auth.oauth2.OAuth2Utils.UTF_8;
 import static com.google.common.base.MoreObjects.firstNonNull;
 
 import com.google.api.client.http.GenericUrl;
@@ -45,9 +47,7 @@ import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.http.HttpTransportFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
+import java.io.*;
 import java.net.URI;
 import java.util.Date;
 import java.util.Map;
@@ -60,6 +60,7 @@ public class UserCredentials extends GoogleCredentials {
 
   private static final String GRANT_TYPE = "refresh_token";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
+  private static final String USER_CREDENTIALS_FILE_NAME = "GOOGLE_AUTH_USER_CREDENTIALS_FILE_NAME";
   private static final long serialVersionUID = -4800758775038679176L;
 
   private final String clientId;
@@ -170,7 +171,7 @@ public class UserCredentials extends GoogleCredentials {
     Preconditions.checkNotNull(credentialsStream);
     Preconditions.checkNotNull(transportFactory);
 
-    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
+    JsonFactory jsonFactory = JSON_FACTORY;
     JsonObjectParser parser = new JsonObjectParser(jsonFactory);
     GenericJson fileContents = parser.parseAndClose(
         credentialsStream, OAuth2Utils.UTF_8, GenericJson.class);
@@ -206,7 +207,7 @@ public class UserCredentials extends GoogleCredentials {
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request =
         requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
-    request.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
+    request.setParser(new JsonObjectParser(JSON_FACTORY));
     HttpResponse response = request.execute();
     GenericData responseData = response.parseAs(GenericData.class);
     String accessToken =
@@ -242,6 +243,30 @@ public class UserCredentials extends GoogleCredentials {
    */
   public final String getRefreshToken() {
     return refreshToken;
+  }
+
+  private InputStream getUserCredentialsStream() throws IOException {
+    GenericJson json = new GenericJson();
+    json.put("type", GoogleCredentials.USER_FILE_TYPE);
+    if (refreshToken != null) {
+      json.put("refresh_token", refreshToken);
+    }
+    if (tokenServerUri != null) {
+      json.put("token_server_uri", tokenServerUri);
+    }
+    if (clientId != null) {
+      json.put("client_id", clientId);
+    }
+    if (clientSecret != null) {
+      json.put("client_secret", clientSecret);
+    }
+    json.setFactory(JSON_FACTORY);
+    String text = json.toPrettyString();
+    return new ByteArrayInputStream(text.getBytes(UTF_8));
+  }
+
+  public void saveUserCredentials() throws IOException {
+    super.saveCredentialsToFile(getUserCredentialsStream(), USER_CREDENTIALS_FILE_NAME);
   }
 
   @Override

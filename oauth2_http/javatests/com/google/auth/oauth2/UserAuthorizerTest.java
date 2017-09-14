@@ -40,6 +40,7 @@ import static org.junit.Assert.fail;
 import com.google.auth.TestUtils;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
 
+import com.google.auth.oauth2.storage.TokenStore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;

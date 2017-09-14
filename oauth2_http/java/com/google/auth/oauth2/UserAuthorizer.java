@@ -42,6 +42,7 @@ import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Joiner;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.oauth2.storage.TokenStore;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
