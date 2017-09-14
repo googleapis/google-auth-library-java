@@ -245,6 +245,12 @@ public class UserCredentials extends GoogleCredentials {
     return refreshToken;
   }
 
+
+  /**
+   * Returns the instance of InputStream containing user credentials in JSON format
+   *
+   * @return user credentials stream
+   */
   private InputStream getUserCredentialsStream() throws IOException {
     GenericJson json = new GenericJson();
     json.put("type", GoogleCredentials.USER_FILE_TYPE);
@@ -265,6 +271,11 @@ public class UserCredentials extends GoogleCredentials {
     return new ByteArrayInputStream(text.getBytes(UTF_8));
   }
 
+  /**
+   * Saves the end user credentials in file
+   *
+   * @throws IOException An error storing the credentials.
+   */
   public void saveUserCredentials() throws IOException {
     super.saveCredentialsToFile(getUserCredentialsStream(), USER_CREDENTIALS_FILE_NAME);
   }

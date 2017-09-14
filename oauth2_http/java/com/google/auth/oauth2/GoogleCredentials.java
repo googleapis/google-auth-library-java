@@ -164,6 +164,13 @@ public class GoogleCredentials extends OAuth2Credentials {
         fileType, USER_FILE_TYPE, SERVICE_ACCOUNT_FILE_TYPE));
   }
 
+  /**
+   * Saves the end user credentials in specified file
+   *
+   * @param credentials InputStream containing user credentials in JSON format
+   * @param credentialsFileName Name of file where to store the credentials
+   * @throws IOException An error saving the credentials.
+   */
   public void saveCredentialsToFile(InputStream credentials, String credentialsFileName) throws IOException {
     byte[] buffer = new byte[credentials.available()];
     credentials.read(buffer);
