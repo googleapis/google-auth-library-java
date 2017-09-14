@@ -45,7 +45,6 @@ import com.google.auth.oauth2.storage.TokenStore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import sun.tools.jstat.Token;
 
 import java.io.IOException;
 import java.net.URI;
@@ -53,7 +52,6 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 
 /**

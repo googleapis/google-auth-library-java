@@ -47,7 +47,10 @@ import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.http.HttpTransportFactory;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.net.URI;
 import java.util.Date;
 import java.util.Map;
@@ -58,7 +61,7 @@ import java.util.Objects;
  */
 public class UserCredentials extends GoogleCredentials {
 
-  public static final String USER_CREDENTIALS_FILE_NAME = "GOOGLE_AUTH_USER_CREDENTIALS_FILE_NAME";
+  public static final String USER_CREDENTIALS_FILE_NAME = "GOOGLE_APPLICATION_CREDENTIALS";
 
   private static final String GRANT_TYPE = "refresh_token";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
