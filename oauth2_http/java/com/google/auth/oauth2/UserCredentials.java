@@ -251,7 +251,11 @@ public class UserCredentials extends GoogleCredentials {
 
 
   /**
-   * Returns the instance of InputStream containing user credentials in JSON format
+   * Returns the instance of InputStream containing the following user credentials in JSON format:
+   *  - RefreshToken
+   *  - ClientId
+   *  - ClientSecret
+   *  - ServerTokenUri
    *
    * @return user credentials stream
    */
