@@ -90,7 +90,7 @@ following are searched (in order) to find the Application Default Credentials:
 To get Credentials from a Service Account JSON key use `GoogleCredentials.fromStream(InputStream)`
 or `GoogleCredentials.fromStream(InputStream, HttpTransportFactory)`.
 
-Proxy support
+OAuth2 Proxy support
 -------------------------------
 Proxy settings can be configured using `HTTP_PROXY` or `SOCKS_PROXY` environment variables. 
 In case both variables are specified `HTTP_PROXY` will be used.  
