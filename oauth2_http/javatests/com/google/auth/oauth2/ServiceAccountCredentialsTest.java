@@ -109,8 +109,15 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void createdScoped_clones() throws IOException {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
-    GoogleCredentials credentials = new ServiceAccountCredentials(
-        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, SCOPES, null, null, SERVICE_ACCOUNT_USER, PROJECT_ID);
+    GoogleCredentials credentials = ServiceAccountCredentials.newBuilder()
+        .setClientId(SA_CLIENT_ID)
+        .setClientEmail(SA_CLIENT_EMAIL)
+        .setPrivateKey(privateKey)
+        .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+        .setScopes(SCOPES)
+        .setServiceAccountUser(SERVICE_ACCOUNT_USER)
+        .setProjectId(PROJECT_ID)
+        .build();
     List<String> newScopes = Arrays.asList("scope1", "scope2");
 
     ServiceAccountCredentials newCredentials =
@@ -130,8 +137,15 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     @Test
   public void createdDelegated_clones() throws IOException {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
-    GoogleCredentials credentials = new ServiceAccountCredentials(
-        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, SCOPES, null, null, SERVICE_ACCOUNT_USER, PROJECT_ID);
+    ServiceAccountCredentials credentials = ServiceAccountCredentials.newBuilder()
+        .setClientId(SA_CLIENT_ID)
+        .setClientEmail(SA_CLIENT_EMAIL)
+        .setPrivateKey(privateKey)
+        .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+        .setScopes(SCOPES)
+        .setServiceAccountUser(SERVICE_ACCOUNT_USER)
+        .setProjectId(PROJECT_ID)
+        .build();
     String newServiceAccountUser = "stranger@other.org";
 
     ServiceAccountCredentials newCredentials =
@@ -152,8 +166,15 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   public void createAssertion_correct() throws IOException {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     List<String> scopes = Arrays.asList("scope1", "scope2");
-    ServiceAccountCredentials credentials = new ServiceAccountCredentials(
-        SA_CLIENT_ID, SA_CLIENT_EMAIL, privateKey, SA_PRIVATE_KEY_ID, scopes, null, null, SERVICE_ACCOUNT_USER, PROJECT_ID);
+    ServiceAccountCredentials credentials = ServiceAccountCredentials.newBuilder()
+        .setClientId(SA_CLIENT_ID)
+        .setClientEmail(SA_CLIENT_EMAIL)
+        .setPrivateKey(privateKey)
+        .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+        .setScopes(scopes)
+        .setServiceAccountUser(SERVICE_ACCOUNT_USER)
+        .setProjectId(PROJECT_ID)
+        .build();
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();

@@ -73,6 +73,16 @@ public class OAuth2Credentials extends Credentials {
   transient Clock clock = Clock.SYSTEM;
 
   /**
+   * Returns the credentials instance from the given access token.
+   *
+   * @param accessToken the access token
+   * @return the credentials instance
+   */
+  public static OAuth2Credentials of(AccessToken accessToken) {
+    return OAuth2Credentials.newBuilder().setAccessToken(accessToken).build();
+  }
+
+  /**
    * Default constructor.
    **/
   protected OAuth2Credentials() {
@@ -84,6 +94,7 @@ public class OAuth2Credentials extends Credentials {
    *
    * @param accessToken Initial or temporary access token.
    **/
+  @Deprecated
   public OAuth2Credentials(AccessToken accessToken) {
     if (accessToken != null) {
       useAccessToken(accessToken);
@@ -278,5 +289,37 @@ public class OAuth2Credentials extends Credentials {
 
   protected static <T> T getFromServiceLoader(Class<? extends T> clazz, T defaultInstance) {
     return Iterables.getFirst(ServiceLoader.load(clazz), defaultInstance);
+  }
+
+  public static Builder newBuilder() {
+    return new Builder();
+  }
+
+  public Builder toBuilder() {
+    return new Builder(this);
+  }
+
+  public static class Builder {
+
+    private AccessToken accessToken;
+
+    protected Builder() {}
+
+    protected Builder(OAuth2Credentials credentials) {
+      this.accessToken = credentials.getAccessToken();
+    }
+
+    public Builder setAccessToken(AccessToken token) {
+      this.accessToken = token;
+      return this;
+    }
+
+    public AccessToken getAccessToken() {
+      return accessToken;
+    }
+
+    public OAuth2Credentials build() {
+      return new OAuth2Credentials(accessToken);
+    }
   }
 }

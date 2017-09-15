@@ -83,8 +83,19 @@ public class ComputeEngineCredentials extends GoogleCredentials {
   private transient HttpTransportFactory transportFactory;
 
   /**
+   * Returns a credentials instance from the given transport factory
+   *
+   * @param transportFactory The Http transport factory
+   * @return the credential instance
+   */
+  public static ComputeEngineCredentials of(HttpTransportFactory transportFactory) {
+    return ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+  }
+
+  /**
    * Constructor with minimum information and default behavior.
    */
+  @Deprecated
   public ComputeEngineCredentials() {
     this(null);
   }
@@ -95,6 +106,7 @@ public class ComputeEngineCredentials extends GoogleCredentials {
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *        tokens.
    */
+  @Deprecated
   public ComputeEngineCredentials(HttpTransportFactory transportFactory) {
     this.transportFactory = firstNonNull(transportFactory,
         getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
@@ -224,5 +236,36 @@ public class ComputeEngineCredentials extends GoogleCredentials {
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
     input.defaultReadObject();
     transportFactory = newInstance(transportFactoryClassName);
+  }
+
+  public Builder toBuilder() {
+    return new Builder(this);
+  }
+
+  public static Builder newBuilder() {
+    return new Builder();
+  }
+
+  public static class Builder extends GoogleCredentials.Builder {
+    private HttpTransportFactory transportFactory;
+
+    protected Builder() {}
+
+    protected Builder(ComputeEngineCredentials credentials) {
+      this.transportFactory = credentials.transportFactory;
+    }
+
+    public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
+      this.transportFactory = transportFactory;
+      return this;
+    }
+
+    public HttpTransportFactory getHttpTransportFactory() {
+      return transportFactory;
+    }
+
+    public ComputeEngineCredentials build() {
+      return new ComputeEngineCredentials(transportFactory);
+    }
   }
 }

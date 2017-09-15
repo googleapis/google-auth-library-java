@@ -63,6 +63,11 @@ public class CloudShellCredentials extends GoogleCredentials {
 
   private final int authPort;
 
+  public static CloudShellCredentials of(int authPort) {
+    return CloudShellCredentials.newBuilder().setAuthPort(authPort).build();
+  }
+
+  @Deprecated
   public CloudShellCredentials(int authPort) {
     this.authPort = authPort;
   }
@@ -111,5 +116,36 @@ public class CloudShellCredentials extends GoogleCredentials {
     }
     CloudShellCredentials other = (CloudShellCredentials) obj;
     return this.authPort == other.authPort;
+  }
+
+  public Builder toBuilder() {
+    return new Builder(this);
+  }
+
+  public static Builder newBuilder() {
+    return new Builder();
+  }
+
+  public static class Builder extends GoogleCredentials.Builder {
+    private int authPort;
+
+    protected Builder() {}
+
+    protected Builder(CloudShellCredentials credentials) {
+      this.authPort = credentials.authPort;
+    }
+
+    public Builder setAuthPort(int authPort) {
+      this.authPort = authPort;
+      return this;
+    }
+
+    public int getAuthPort() {
+      return authPort;
+    }
+
+    public CloudShellCredentials build() {
+      return new CloudShellCredentials(authPort);
+    }
   }
 }
