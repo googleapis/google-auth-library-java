@@ -144,6 +144,42 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void removeChangeListener_unregisters_observer() throws IOException {
+    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
+    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessToken1);
+    OAuth2Credentials userCredentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setHttpTransportFactory(transportFactory)
+        .build();
+    // Use a fixed clock so tokens don't expire
+    userCredentials.clock = new TestClock();
+    TestChangeListener listener = new TestChangeListener();
+    userCredentials.addChangeListener(listener);
+    assertEquals(0, listener.callCount);
+
+    // Get a first token
+    userCredentials.getRequestMetadata(CALL_URI);
+    assertEquals(1, listener.callCount);
+
+    // Change server to a different token and refresh
+    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessToken2);
+    // Refresh to force getting next token
+    userCredentials.refresh();
+    assertEquals(2, listener.callCount);
+
+    // Remove the listener and refresh the credential again
+    userCredentials.removeChangeListener(listener);
+    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessToken2);
+    userCredentials.refresh();
+    assertEquals(2, listener.callCount);
+  }
+
+  @Test
   public void getRequestMetadata_blocking_cachesExpiringToken() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";

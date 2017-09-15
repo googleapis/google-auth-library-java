@@ -213,6 +213,19 @@ public class OAuth2Credentials extends Credentials {
   }
 
   /**
+   * Removes a listener that was added previously.
+   *
+   * @param listener The listener to be removed.
+   */
+  public final void removeChangeListener(CredentialsChangedListener listener) {
+    synchronized(lock) {
+      if (changeListeners != null) {
+        changeListeners.remove(listener);
+      }
+    }
+  }
+
+  /**
    * Return the remaining time the current access token will be valid, or null if there is no
    * token or expiry information. Must be called under lock.
    */
