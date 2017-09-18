@@ -60,6 +60,7 @@ import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.URI;
@@ -516,6 +517,13 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
           "Error signing service account access token request with private key.", e);
     }
     return assertion;
+  }
+
+  @SuppressWarnings("unused")
+  private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
+    // properly deserialize the transient transportFactory
+    input.defaultReadObject();
+    transportFactory = newInstance(transportFactoryClassName);
   }
 
   public static Builder newBuilder() {
