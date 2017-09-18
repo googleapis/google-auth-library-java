@@ -616,7 +616,6 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     ServiceAccountCredentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
         SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, transportFactory,
         tokenServer);
-
     ServiceAccountCredentials deserializedCredentials = serializeAndDeserialize(credentials);
     assertEquals(credentials, deserializedCredentials);
     assertEquals(credentials.hashCode(), deserializedCredentials.hashCode());
