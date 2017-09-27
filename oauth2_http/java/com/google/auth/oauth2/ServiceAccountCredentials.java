@@ -204,7 +204,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
    * @param clientEmail Client email address of the service account from the console.
    * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
    * @param privateKeyId Private key identifier for the service account. May be null.
-   * @param scopes Scope strings for the APIs to be called. May be null or an emptt collection,
+   * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
    *        which results in a credential that must have createScoped called before use.
    */
   public static ServiceAccountCredentials fromPkcs8(
@@ -221,7 +221,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
    * @param clientEmail Client email address of the service account from the console.
    * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
    * @param privateKeyId Private key identifier for the service account. May be null.
-   * @param scopes Scope strings for the APIs to be called. May be null or an emptt collection,
+   * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
    *        which results in a credential that must have createScoped called before use.
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *        tokens.
@@ -242,7 +242,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
    * @param clientEmail Client email address of the service account from the console.
    * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
    * @param privateKeyId Private key identifier for the service account. May be null.
-   * @param scopes Scope strings for the APIs to be called. May be null or an emptt collection,
+   * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
    *        which results in a credential that must have createScoped called before use.
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *        tokens.
