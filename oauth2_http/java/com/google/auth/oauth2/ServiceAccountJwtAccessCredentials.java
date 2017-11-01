@@ -91,6 +91,8 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    * @param clientEmail Client email address of the service account from the console.
    * @param privateKey RSA private key object for the service account.
    * @param privateKeyId Private key identifier for the service account. May be null.
+   * @deprecated Use {@link #newBuilder()} instead to construct an instance using the builder. This
+   *             constructor will either be deleted or made private in a later version.
    */
   @Deprecated
   public ServiceAccountJwtAccessCredentials(
@@ -106,6 +108,8 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    * @param privateKey RSA private key object for the service account.
    * @param privateKeyId Private key identifier for the service account. May be null.
    * @param defaultAudience Audience to use if not provided by transport. May be null.
+   * @deprecated Use {@link #newBuilder()} instead to construct an instance using the builder. This
+   *             constructor will either be deleted or made private in a later version.
    */
   @Deprecated
   public ServiceAccountJwtAccessCredentials(String clientId, String clientEmail,
@@ -410,6 +414,11 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
 
     public Builder setPrivateKeyId(String privateKeyId) {
       this.privateKeyId = privateKeyId;
+      return this;
+    }
+
+    public Builder setDefaultAudience(URI defaultAudience) {
+      this.defaultAudience = defaultAudience;
       return this;
     }
 

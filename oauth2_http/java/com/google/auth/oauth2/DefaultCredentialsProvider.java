@@ -242,7 +242,7 @@ class DefaultCredentialsProvider {
   private GoogleCredentials tryGetCloudShellCredentials() {
     String port = getEnv(CLOUD_SHELL_ENV_VAR);
     if (port != null) {
-      return new CloudShellCredentials(Integer.parseInt(port));
+      return CloudShellCredentials.create(Integer.parseInt(port));
     } else {
       return null;
     }
@@ -270,7 +270,7 @@ class DefaultCredentialsProvider {
         ComputeEngineCredentials.runningOnComputeEngine(transportFactory, this);
     checkedComputeEngine = true;
     if (runningOnComputeEngine) {
-      return new ComputeEngineCredentials(transportFactory);
+      return ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
     }
     return null;
   }
