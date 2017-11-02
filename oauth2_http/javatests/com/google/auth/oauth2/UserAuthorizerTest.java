@@ -65,7 +65,7 @@ public class UserAuthorizerTest {
   private static final Long EXPIRATION_TIME = 504000300L;
   private static final AccessToken ACCESS_TOKEN =
       new AccessToken(ACCESS_TOKEN_VALUE, new Date(EXPIRATION_TIME));
-  private static final ClientId CLIENT_ID = new ClientId(CLIENT_ID_VALUE, CLIENT_SECRET);
+  private static final ClientId CLIENT_ID = ClientId.of(CLIENT_ID_VALUE, CLIENT_SECRET);
   private static final String SCOPE = "dummy.scope";
   private static final Collection<String> SCOPES = Collections.singletonList(SCOPE);
   private static final String USER_ID = "foo@bar.com";

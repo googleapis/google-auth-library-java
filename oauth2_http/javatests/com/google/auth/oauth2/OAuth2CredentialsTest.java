@@ -436,7 +436,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     OAuth2Credentials credentials = OAuth2Credentials.newBuilder()
         .setAccessToken(new AccessToken(accessToken, null))
         .build();
-    OAuth2Credentials otherCredentials = new OAuth2Credentials(new AccessToken(accessToken, null));
+    OAuth2Credentials otherCredentials = OAuth2Credentials.create(new AccessToken(accessToken, null));
     assertEquals(credentials.hashCode(), otherCredentials.hashCode());
   }
 
