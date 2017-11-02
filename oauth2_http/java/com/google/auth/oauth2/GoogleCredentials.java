@@ -36,13 +36,9 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.http.HttpTransportFactory;
-import com.google.common.io.ByteStreams;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.FileOutputStream;
 
 import java.util.Collection;
 
@@ -181,22 +177,6 @@ public class GoogleCredentials extends OAuth2Credentials {
         "Error reading credentials from stream, 'type' value '%s' not recognized."
             + " Expecting '%s' or '%s'.",
         fileType, USER_FILE_TYPE, SERVICE_ACCOUNT_FILE_TYPE));
-  }
-
-  /**
-   * Saves the end user credentials in specified file
-   *
-   * @param credentials InputStream containing user credentials in JSON format
-   * @param filePath Path to file where to store the credentials
-   * @throws IOException An error saving the credentials.
-   */
-  public void saveCredentialsToFile(InputStream credentials, String filePath) throws IOException {
-    final OutputStream outputStream = new FileOutputStream(new File(filePath));
-    try {
-      ByteStreams.copy(credentials, outputStream);
-    } finally {
-      outputStream.close();
-    }
   }
 
   /**

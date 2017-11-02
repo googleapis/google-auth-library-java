@@ -292,14 +292,14 @@ public class UserCredentials extends GoogleCredentials {
   }
 
   /**
-   * Saves the end user credentials in file
+   * Saves the end user credentials into the given file path.
    *
    * @param filePath Path to file where to store the credentials
    *
    * @throws IOException An error storing the credentials.
    */
   public void save(String filePath) throws IOException {
-    super.saveCredentialsToFile(getUserCredentialsStream(), filePath);
+    OAuth2Utils.saveCredentialsToFile(getUserCredentialsStream(), filePath);
   }
 
   @Override

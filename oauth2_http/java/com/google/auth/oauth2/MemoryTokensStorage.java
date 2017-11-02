@@ -35,6 +35,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Represents an in-memory storage of tokens.
+ */
 public class MemoryTokensStorage implements TokenStore {
   private final Map<String, String> tokensStorage = new HashMap<>();
 
