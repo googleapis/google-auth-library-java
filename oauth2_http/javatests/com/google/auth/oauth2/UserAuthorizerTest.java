@@ -218,16 +218,6 @@ public class UserAuthorizerTest {
     authorizer.getCredentials(null);
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void getCredentials_nullTokenStore_throws() throws IOException {
-    UserAuthorizer authorizer = UserAuthorizer.newBuilder()
-        .setClientId(CLIENT_ID)
-        .setScopes(SCOPES)
-        .build();
-
-    authorizer.getCredentials(USER_ID);
-  }
-
   @Test
   public void getCredentials_refreshedToken_stored() throws IOException {
     final String accessTokenValue1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
