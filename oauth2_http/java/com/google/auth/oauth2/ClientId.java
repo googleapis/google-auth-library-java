@@ -57,6 +57,19 @@ public class ClientId {
   private final String clientSecret;
 
   /**
+   * Constructs a client ID from an explicit ID and secret.
+   *
+   * <p>Note: Direct use of this factory method in application code is not recommended to avoid
+   * having secrets or values that need to be updated in source code.
+   *
+   * @param clientId Text identifier of the Client ID.
+   * @param clientSecret Secret to associated with the Client ID.
+   */
+  public static ClientId of(String clientId, String clientSecret) {
+    return new ClientId(clientId, clientSecret);
+  }
+
+  /**
    * Constructs a Client ID from JSON from a downloaded file.
    *
    * @param json The JSON from the downloaded file.
@@ -122,6 +135,8 @@ public class ClientId {
    *
    * @param clientId Text identifier of the Client ID.
    * @param clientSecret Secret to associated with the Client ID.
+   * @deprecated Use {@link #of(String, String)} instead. This constructor will either be deleted
+   *             or made private in a later version.
    */
   @Deprecated
   public ClientId(String clientId, String clientSecret) {
