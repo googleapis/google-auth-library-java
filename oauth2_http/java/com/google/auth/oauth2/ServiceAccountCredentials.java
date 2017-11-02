@@ -110,8 +110,8 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
    * @param privateKeyId Private key identifier for the service account. May be null.
    * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
    *        which results in a credential that must have createScoped called before use.
-   * @deprecated Use {@link #newBuilder()} instead to construct an instance using the builder. This
-   *             constructor will either be deleted or made private in a later version.
+   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
+   *             private in a later version.
    */
   @Deprecated
   public ServiceAccountCredentials(
@@ -132,8 +132,8 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *        tokens.
    * @param tokenServerUri URI of the end point that provides tokens.
-   * @deprecated Use {@link #newBuilder()} instead to construct an instance using the builder. This
-   *             constructor will either be deleted or made private in a later version.
+   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
+   *             private in a later version.
    */
   @Deprecated
   public ServiceAccountCredentials(

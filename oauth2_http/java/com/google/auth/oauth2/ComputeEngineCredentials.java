@@ -87,8 +87,8 @@ public class ComputeEngineCredentials extends GoogleCredentials {
    *
    * @param transportFactory The Http transport factory
    * @return the credential instance
-   * @deprecated Use {@link #newBuilder()} instead to construct an instance using the builder. This
-   *             method will be deleted in a later version.
+   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
+   *             private in a later version.
    */
   @Deprecated
   public static ComputeEngineCredentials of(HttpTransportFactory transportFactory) {
@@ -96,7 +96,7 @@ public class ComputeEngineCredentials extends GoogleCredentials {
   }
 
   /**
-   * Constructor with minimum information and default behavior.
+   * Create a new ComputeEngineCredentials instance with default behavior.
    *
    * @deprecated Use {@link #create()} instead. This constructor will either be deleted or
    *             made private in a later version.
@@ -111,8 +111,8 @@ public class ComputeEngineCredentials extends GoogleCredentials {
    *
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *        tokens.
-   * @deprecated Use {@link #newBuilder()} instead to construct an instance using the builder. This
-   *             constructor will either be deleted or made private in a later version.
+   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
+   *             private in a later version.
    */
   @Deprecated
   public ComputeEngineCredentials(HttpTransportFactory transportFactory) {
@@ -122,7 +122,7 @@ public class ComputeEngineCredentials extends GoogleCredentials {
   }
 
   /**
-   * Create a new ComputeEngineCredentials instance.
+   * Create a new ComputeEngineCredentials instance with default behavior.
    */
   public static ComputeEngineCredentials create() {
     return new ComputeEngineCredentials(null);

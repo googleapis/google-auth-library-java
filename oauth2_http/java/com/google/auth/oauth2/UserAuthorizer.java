@@ -75,8 +75,8 @@ public class UserAuthorizer {
    * @param clientId Client ID to identify the OAuth2 consent prompt.
    * @param scopes OAUth2 scopes defining the user consent.
    * @param tokenStore Implementation of component for long term storage of tokens.
-   * @deprecated Use {@link #newBuilder()} instead to construct an instance using the builder. This
-   *             constructor will either be deleted or made private in a later version.
+   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
+   *             private in a later version.
    */
   @Deprecated
   public UserAuthorizer(ClientId clientId, Collection<String> scopes, TokenStore tokenStore) {
@@ -90,8 +90,8 @@ public class UserAuthorizer {
    * @param scopes OAUth2 scopes defining the user consent.
    * @param tokenStore Implementation of component for long term storage of tokens.
    * @param callbackUri URI for implementation of the OAuth2 web callback.
-   * @deprecated Use {@link #newBuilder()} instead to construct an instance using the builder. This
-   *             constructor will either be deleted or made private in a later version.
+   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
+   *             private in a later version.
    */
   @Deprecated
   public UserAuthorizer(ClientId clientId, Collection<String> scopes, TokenStore tokenStore, URI callbackUri) {
@@ -109,8 +109,8 @@ public class UserAuthorizer {
    *        tokens.
    * @param tokenServerUri URI of the end point that provides tokens.
    * @param userAuthUri URI of the Web UI for user consent.
-   * @deprecated Use {@link #newBuilder()} instead to construct an instance using the builder. This
-   *             constructor will either be deleted or made private in a later version.
+   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
+   *             private in a later version.
    */
   @Deprecated
   public UserAuthorizer(ClientId clientId, Collection<String> scopes, TokenStore tokenStore,

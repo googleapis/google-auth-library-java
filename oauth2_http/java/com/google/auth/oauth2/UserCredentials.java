@@ -77,8 +77,8 @@ public class UserCredentials extends GoogleCredentials {
    * @param clientId Client ID of the credential from the console.
    * @param clientSecret Client ID of the credential from the console.
    * @param refreshToken A refresh token resulting from a OAuth2 consent flow.
-   * @deprecated Use {@link #newBuilder()} instead to construct an instance using the builder. This
-   *             constructor will either be deleted or made private in a later version.
+   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
+   *             private in a later version.
    */
   @Deprecated
   public UserCredentials(String clientId, String clientSecret, String refreshToken) {
@@ -92,8 +92,8 @@ public class UserCredentials extends GoogleCredentials {
    * @param clientSecret Client ID of the credential from the console.
    * @param refreshToken A refresh token resulting from a OAuth2 consent flow.
    * @param accessToken Initial or temporary access token.
-   * @deprecated Use {@link #newBuilder()} instead to construct an instance using the builder. This
-   *             constructor will either be deleted or made private in a later version.
+   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
+   *             private in a later version.
    */
   @Deprecated
   public UserCredentials(
@@ -112,8 +112,8 @@ public class UserCredentials extends GoogleCredentials {
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *        tokens.
    * @param tokenServerUri URI of the end point that provides tokens.
-   * @deprecated Use {@link #newBuilder()} instead to construct an instance using the builder. This
-   *             constructor will either be deleted or made private in a later version.
+   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
+   *             private in a later version.
    */
   @Deprecated
   public UserCredentials(String clientId, String clientSecret, String refreshToken,
