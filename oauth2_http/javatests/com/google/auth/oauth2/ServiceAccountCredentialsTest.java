@@ -621,6 +621,8 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(credentials.hashCode(), deserializedCredentials.hashCode());
     assertEquals(credentials.toString(), deserializedCredentials.toString());
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
+    assertEquals(MockTokenServerTransportFactory.class,
+        deserializedCredentials.toBuilder().getHttpTransportFactory().getClass());
   }
 
   @Test

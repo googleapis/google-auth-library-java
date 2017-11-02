@@ -60,6 +60,7 @@ import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.URI;
@@ -203,7 +204,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
    * @param clientEmail Client email address of the service account from the console.
    * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
    * @param privateKeyId Private key identifier for the service account. May be null.
-   * @param scopes Scope strings for the APIs to be called. May be null or an emptt collection,
+   * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
    *        which results in a credential that must have createScoped called before use.
    */
   public static ServiceAccountCredentials fromPkcs8(
@@ -220,7 +221,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
    * @param clientEmail Client email address of the service account from the console.
    * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
    * @param privateKeyId Private key identifier for the service account. May be null.
-   * @param scopes Scope strings for the APIs to be called. May be null or an emptt collection,
+   * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
    *        which results in a credential that must have createScoped called before use.
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *        tokens.
@@ -241,7 +242,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
    * @param clientEmail Client email address of the service account from the console.
    * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
    * @param privateKeyId Private key identifier for the service account. May be null.
-   * @param scopes Scope strings for the APIs to be called. May be null or an emptt collection,
+   * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
    *        which results in a credential that must have createScoped called before use.
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *        tokens.
@@ -516,6 +517,13 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
           "Error signing service account access token request with private key.", e);
     }
     return assertion;
+  }
+
+  @SuppressWarnings("unused")
+  private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
+    // properly deserialize the transient transportFactory
+    input.defaultReadObject();
+    transportFactory = newInstance(transportFactoryClassName);
   }
 
   public static Builder newBuilder() {
