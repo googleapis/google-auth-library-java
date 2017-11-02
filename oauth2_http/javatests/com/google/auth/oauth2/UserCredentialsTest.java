@@ -51,9 +51,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
@@ -502,6 +504,44 @@ public class UserCredentialsTest extends BaseSerializationTest {
     InputStream userStream = writeUserStream(CLIENT_ID, CLIENT_SECRET, null);
 
     testFromStreamException(userStream, "refresh_token");
+  }
+
+  @Test
+  public void saveUserCredentials_saved_throws() throws IOException {
+    UserCredentials userCredentials = UserCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .build();
+    File file = File.createTempFile("GOOGLE_APPLICATION_CREDENTIALS", null, null);
+    file.deleteOnExit();
+
+    String filePath = file.getAbsolutePath();
+    userCredentials.save(filePath);
+  }
+
+  @Test
+  public void saveAndRestoreUserCredential_saveAndRestored_throws() throws IOException {
+    UserCredentials userCredentials = UserCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .build();
+
+    File file = File.createTempFile("GOOGLE_APPLICATION_CREDENTIALS", null, null);
+    file.deleteOnExit();
+
+    String filePath = file.getAbsolutePath();
+
+    userCredentials.save(filePath);
+
+    FileInputStream inputStream = new FileInputStream(new File(filePath));
+
+    UserCredentials restoredCredentials = UserCredentials.fromStream(inputStream);
+
+    assertEquals(userCredentials.getClientId(), restoredCredentials.getClientId());
+    assertEquals(userCredentials.getClientSecret(), restoredCredentials.getClientSecret());
+    assertEquals(userCredentials.getRefreshToken(), restoredCredentials.getRefreshToken());
   }
 
   static GenericJson writeUserJson(String clientId, String clientSecret, String refreshToken) {

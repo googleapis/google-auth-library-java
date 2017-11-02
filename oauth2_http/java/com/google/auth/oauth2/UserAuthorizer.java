@@ -122,7 +122,7 @@ public class UserAuthorizer {
         (transportFactory == null) ? OAuth2Utils.HTTP_TRANSPORT_FACTORY : transportFactory;
     this.tokenServerUri = (tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : tokenServerUri;
     this.userAuthUri = (userAuthUri == null) ? OAuth2Utils.USER_AUTH_URI : userAuthUri;
-    this.tokenStore = tokenStore;
+    this.tokenStore = (tokenStore == null) ? new MemoryTokensStorage() : tokenStore;
   }
 
 
