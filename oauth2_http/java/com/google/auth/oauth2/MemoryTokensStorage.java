@@ -29,7 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.google.auth.oauth2.storage;
+package com.google.auth.oauth2;
 
 import java.io.IOException;
 import java.util.HashMap;

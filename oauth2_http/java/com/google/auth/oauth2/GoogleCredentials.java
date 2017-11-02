@@ -37,7 +37,6 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.io.ByteStreams;
-import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
