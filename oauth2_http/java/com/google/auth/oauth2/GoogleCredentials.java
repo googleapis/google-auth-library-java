@@ -36,6 +36,7 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.common.io.ByteStreams;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -179,7 +180,12 @@ public class GoogleCredentials extends OAuth2Credentials {
    */
   public void saveCredentialsToFile(InputStream credentials, String credentialsFileName) throws IOException {
     String userDirectory = System.getProperty("user.dir");
-    FileUtils.copyInputStreamToFile(credentials, new File(userDirectory, credentialsFileName));
+    final OutputStream outputStream = new FileOutputStream(new File(userDirectory, credentialsFileName));
+    try {
+      ByteStreams.copy(credentials, outputStream);
+    } finally {
+      outputStream.close();
+    }
   }
 
   /**
