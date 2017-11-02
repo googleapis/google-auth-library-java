@@ -61,8 +61,6 @@ import java.util.Objects;
  */
 public class UserCredentials extends GoogleCredentials {
 
-  public static final String USER_CREDENTIALS_FILE_NAME = "GOOGLE_APPLICATION_CREDENTIALS";
-
   private static final String GRANT_TYPE = "refresh_token";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final long serialVersionUID = -4800758775038679176L;
@@ -282,10 +280,12 @@ public class UserCredentials extends GoogleCredentials {
   /**
    * Saves the end user credentials in file
    *
+   * @param filePath Path to file where to store the credentials
+   *
    * @throws IOException An error storing the credentials.
    */
-  public void saveUserCredentials() throws IOException {
-    super.saveCredentialsToFile(getUserCredentialsStream(), USER_CREDENTIALS_FILE_NAME);
+  public void save(String filePath) throws IOException {
+    super.saveCredentialsToFile(getUserCredentialsStream(), filePath);
   }
 
   @Override

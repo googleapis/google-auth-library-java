@@ -501,7 +501,8 @@ public class UserCredentialsTest extends BaseSerializationTest {
             .setClientSecret(CLIENT_SECRET)
             .setRefreshToken(REFRESH_TOKEN)
             .build();
-    userCredentials.saveUserCredentials();
+    String filePath = System.getProperty("user.dir") + File.separator + "GOOGLE_APPLICATION_CREDENTIALS";
+    userCredentials.save(filePath);
   }
 
   @Test
@@ -511,11 +512,13 @@ public class UserCredentialsTest extends BaseSerializationTest {
             .setClientSecret(CLIENT_SECRET)
             .setRefreshToken(REFRESH_TOKEN)
             .build();
-    userCredentials.saveUserCredentials();
 
-    String userDirectory = System.getProperty("user.dir");
-    System.out.println(userDirectory);
-    FileInputStream inputStream = new FileInputStream(new File(userDirectory, UserCredentials.USER_CREDENTIALS_FILE_NAME));
+    String filePath = System.getProperty("user.dir") + File.separator + "GOOGLE_APPLICATION_CREDENTIALS";
+
+    userCredentials.save(filePath);
+
+
+    FileInputStream inputStream = new FileInputStream(new File(filePath));
 
     UserCredentials restoredCredentials = UserCredentials.fromStream(inputStream);
 
