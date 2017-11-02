@@ -45,6 +45,7 @@ import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.http.HttpTransportFactory;
 
+import com.google.common.base.MoreObjects;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -76,6 +77,8 @@ public class UserCredentials extends GoogleCredentials {
    * @param clientId Client ID of the credential from the console.
    * @param clientSecret Client ID of the credential from the console.
    * @param refreshToken A refresh token resulting from a OAuth2 consent flow.
+   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
+   *             private in a later version.
    */
   @Deprecated
   public UserCredentials(String clientId, String clientSecret, String refreshToken) {
@@ -89,6 +92,8 @@ public class UserCredentials extends GoogleCredentials {
    * @param clientSecret Client ID of the credential from the console.
    * @param refreshToken A refresh token resulting from a OAuth2 consent flow.
    * @param accessToken Initial or temporary access token.
+   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
+   *             private in a later version.
    */
   @Deprecated
   public UserCredentials(
@@ -107,6 +112,8 @@ public class UserCredentials extends GoogleCredentials {
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *        tokens.
    * @param tokenServerUri URI of the end point that provides tokens.
+   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
+   *             private in a later version.
    */
   @Deprecated
   public UserCredentials(String clientId, String clientSecret, String refreshToken,
@@ -141,7 +148,14 @@ public class UserCredentials extends GoogleCredentials {
       throw new IOException("Error reading user credential from JSON, "
           + " expecting 'client_id', 'client_secret' and 'refresh_token'.");
     }
-    return new UserCredentials(clientId, clientSecret, refreshToken, null, transportFactory, null);
+    return UserCredentials.newBuilder()
+        .setClientId(clientId)
+        .setClientSecret(clientSecret)
+        .setRefreshToken(refreshToken)
+        .setAccessToken(null)
+        .setHttpTransportFactory(transportFactory)
+        .setTokenServerUri(null)
+        .build();
   }
 
   /**
@@ -252,7 +266,9 @@ public class UserCredentials extends GoogleCredentials {
 
   @Override
   public String toString() {
-    return toStringHelper()
+    return MoreObjects.toStringHelper(this)
+        .add("requestMetadata", getRequestMetadataInternal())
+        .add("temporaryAccess", getAccessToken())
         .add("clientId", clientId)
         .add("refreshToken", refreshToken)
         .add("tokenServerUri", tokenServerUri)

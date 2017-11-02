@@ -278,10 +278,22 @@ public class UserCredentialsTest extends BaseSerializationTest {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
     MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
-    OAuth2Credentials credentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN,
-        accessToken, httpTransportFactory, tokenServer1);
-    OAuth2Credentials otherCredentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET,
-        "otherRefreshToken", accessToken, httpTransportFactory, tokenServer1);
+    OAuth2Credentials credentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setAccessToken(accessToken)
+        .setHttpTransportFactory(httpTransportFactory)
+        .setTokenServerUri(tokenServer1)
+        .build();
+    OAuth2Credentials otherCredentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken("otherRefreshToken")
+        .setAccessToken(accessToken)
+        .setHttpTransportFactory(httpTransportFactory)
+        .setTokenServerUri(tokenServer1)
+        .build();
     assertFalse(credentials.equals(otherCredentials));
     assertFalse(otherCredentials.equals(credentials));
   }

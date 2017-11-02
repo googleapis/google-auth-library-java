@@ -74,7 +74,10 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
 
     MockAppIdentityService appIdentity = new MockAppIdentityService();
     appIdentity.setAccessTokenText(expectedAccessToken);
-    Credentials credentials = new AppEngineCredentials(SCOPES, appIdentity);
+    Credentials credentials = AppEngineCredentials.newBuilder()
+        .setScopes(SCOPES)
+        .setAppIdentityService(appIdentity)
+        .build();
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
