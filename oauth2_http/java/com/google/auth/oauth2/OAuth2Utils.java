@@ -133,7 +133,7 @@ class OAuth2Utils {
    * @param filePath Path to file where to store the credentials
    * @throws IOException An error saving the credentials.
    */
-  static void saveCredentialsToFile(InputStream credentials, String filePath) throws IOException {
+  static void writeInputStreamToFile(InputStream credentials, String filePath) throws IOException {
     final OutputStream outputStream = new FileOutputStream(new File(filePath));
     try {
       ByteStreams.copy(credentials, outputStream);

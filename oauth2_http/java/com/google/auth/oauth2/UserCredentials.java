@@ -299,7 +299,7 @@ public class UserCredentials extends GoogleCredentials {
    * @throws IOException An error storing the credentials.
    */
   public void save(String filePath) throws IOException {
-    OAuth2Utils.saveCredentialsToFile(getUserCredentialsStream(), filePath);
+    OAuth2Utils.writeInputStreamToFile(getUserCredentialsStream(), filePath);
   }
 
   @Override
