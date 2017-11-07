@@ -70,7 +70,7 @@ Prepare release
 ---------------
 * Update all ```pom.xml``` files in the package to the release version you want.
 * Update version numbers appearing in `README.md`.
-* Submit a pull request, get it reviewed, but wait to submit it.
+* Submit a pull request, get it reviewed, but wait to submit it in case there are errors during publishing.
 * ```mvn clean install deploy -DperformRelease=true```
 * Verify the result [here](https://oss.sonatype.org/#nexus-search;quick~com.google.auth).
   * If there is a problem, undo by ```mvn nexus-staging:drop```.
