@@ -54,11 +54,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.security.AccessControlException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -284,6 +281,18 @@ public class DefaultCredentialsProviderTest {
       assertTrue(message.contains(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR));
       assertTrue(message.contains(invalidPath));
     }
+  }
+
+  @Test
+  public void getDefaultCredentials_envMissingFile_providesJSON() throws IOException {
+    InputStream userStream =
+            UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+
+    testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, TestUtils.inputStreamToString(userStream));
+
+    testUserProvidesToken(
+            testProvider, USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
   }
 
   @Test

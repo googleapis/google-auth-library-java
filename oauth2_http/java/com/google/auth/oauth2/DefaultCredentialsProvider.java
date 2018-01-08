@@ -33,17 +33,15 @@ package com.google.auth.oauth2;
 
 import com.google.auth.http.HttpTransportFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.AccessControlException;
 import java.util.Collections;
 import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Provides the Application Default Credential from the environment.
@@ -127,6 +125,8 @@ class DefaultCredentialsProvider {
   private final GoogleCredentials getDefaultCredentialsUnsynchronized(
       HttpTransportFactory transportFactory) throws IOException {
 
+    final Logger LOGGER = Logger.getLogger(GoogleCredentials.class.getName());
+
     // First try the environment variable
     GoogleCredentials credentials = null;
     String credentialsPath = getEnv(CREDENTIAL_ENV_VAR);
@@ -141,12 +141,17 @@ class DefaultCredentialsProvider {
         credentialsStream = readStream(credentialsFile);
         credentials = GoogleCredentials.fromStream(credentialsStream, transportFactory);
       } catch (IOException e) {
-        // Although it is also the cause, the message of the caught exception can have very
-        // important information for diagnosing errors, so include its message in the
-        // outer exception message also.
-        throw new IOException(String.format(
-            "Error reading credential file from environment variable %s, value '%s': %s",
-            CREDENTIAL_ENV_VAR, credentialsPath, e.getMessage()), e);
+        try {
+          // Before throwing an error, CREDENTIAL_ENV_VAR is set, let's try to see if it's the credentials
+          credentials = GoogleCredentials.fromStream(new ByteArrayInputStream(credentialsPath.getBytes("UTF-8")), transportFactory);
+        } catch (IOException ex) {
+          // Although it is also the cause, the message of the caught exception can have very
+          // important information for diagnosing errors, so include its message in the
+          // outer exception message also.
+          throw new IOException(String.format(
+                  "Error reading credential as input from environment variable %s, value '%s': %s",
+                  CREDENTIAL_ENV_VAR, credentialsPath, ex.getMessage()), ex);
+        }
       } catch (AccessControlException expected) {
         // Exception querying file system is expected on App-Engine
       } finally {
