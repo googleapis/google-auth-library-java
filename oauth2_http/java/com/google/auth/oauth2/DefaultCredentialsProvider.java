@@ -40,8 +40,6 @@ import java.lang.reflect.Method;
 import java.security.AccessControlException;
 import java.util.Collections;
 import java.util.Locale;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Provides the Application Default Credential from the environment.
@@ -124,8 +122,6 @@ class DefaultCredentialsProvider {
 
   private final GoogleCredentials getDefaultCredentialsUnsynchronized(
       HttpTransportFactory transportFactory) throws IOException {
-
-    final Logger LOGGER = Logger.getLogger(GoogleCredentials.class.getName());
 
     // First try the environment variable
     GoogleCredentials credentials = null;
