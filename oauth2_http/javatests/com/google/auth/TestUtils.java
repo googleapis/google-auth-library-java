@@ -42,10 +42,7 @@ import com.google.auth.http.AuthHttpConstants;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.io.IOException;
+import java.io.*;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.List;
@@ -88,6 +85,24 @@ public class TestUtils {
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException("Unexpected encoding exception", e);
     }
+  }
+
+  public static String inputStreamToString(InputStream in) {
+    try {
+      BufferedInputStream bis = new BufferedInputStream(in);
+      ByteArrayOutputStream buf = new ByteArrayOutputStream();
+      int result = bis.read();
+      while (result != -1) {
+        byte b = (byte) result;
+        buf.write(b);
+        result = bis.read();
+      }
+
+      return buf.toString();
+    } catch (IOException e) {
+      throw new RuntimeException("Unexpected IO exception", e);
+    }
+
   }
 
   public static Map<String, String> parseQuery(String query) throws IOException {
