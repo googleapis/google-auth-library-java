@@ -50,7 +50,6 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -65,7 +64,7 @@ public class UserAuthorizerTest {
   private static final Long EXPIRATION_TIME = 504000300L;
   private static final AccessToken ACCESS_TOKEN =
       new AccessToken(ACCESS_TOKEN_VALUE, new Date(EXPIRATION_TIME));
-  private static final ClientId CLIENT_ID = new ClientId(CLIENT_ID_VALUE, CLIENT_SECRET);
+  private static final ClientId CLIENT_ID = ClientId.of(CLIENT_ID_VALUE, CLIENT_SECRET);
   private static final String SCOPE = "dummy.scope";
   private static final Collection<String> SCOPES = Collections.singletonList(SCOPE);
   private static final String USER_ID = "foo@bar.com";
@@ -75,7 +74,7 @@ public class UserAuthorizerTest {
 
   @Test
   public void constructorMinimum() {
-    TestTokenStore store = new TestTokenStore();
+    TokenStore store = new MemoryTokensStorage();
 
     UserAuthorizer authorizer = UserAuthorizer.newBuilder()
         .setClientId(CLIENT_ID)
@@ -91,7 +90,7 @@ public class UserAuthorizerTest {
 
   @Test
   public void constructorCommon() {
-    TestTokenStore store = new TestTokenStore();
+    TokenStore store = new MemoryTokensStorage();
 
     UserAuthorizer authorizer = UserAuthorizer.newBuilder()
         .setClientId(CLIENT_ID)
@@ -172,7 +171,7 @@ public class UserAuthorizerTest {
     UserAuthorizer authorizer = UserAuthorizer.newBuilder()
         .setClientId(CLIENT_ID)
         .setScopes(SCOPES)
-        .setTokenStore(new TestTokenStore())
+        .setTokenStore(new MemoryTokensStorage())
         .build();
 
     UserCredentials credentials = authorizer.getCredentials(USER_ID);
@@ -182,7 +181,7 @@ public class UserAuthorizerTest {
 
   @Test
   public void getCredentials_storedCredentials_returnsStored() throws IOException {
-    TestTokenStore tokenStore = new TestTokenStore();
+    TokenStore tokenStore = new MemoryTokensStorage();
 
     UserCredentials initialCredentials = UserCredentials.newBuilder()
         .setClientId(CLIENT_ID_VALUE)
@@ -207,7 +206,7 @@ public class UserAuthorizerTest {
 
   @Test(expected = NullPointerException.class)
   public void getCredentials_nullUserId_throws() throws IOException {
-    TestTokenStore tokenStore = new TestTokenStore();
+    TokenStore tokenStore = new MemoryTokensStorage();
     UserAuthorizer authorizer = UserAuthorizer.newBuilder()
         .setClientId(CLIENT_ID)
         .setScopes(SCOPES)
@@ -215,16 +214,6 @@ public class UserAuthorizerTest {
         .build();
 
     authorizer.getCredentials(null);
-  }
-
-  @Test(expected = IllegalStateException.class)
-  public void getCredentials_nullTokenStore_throws() throws IOException {
-    UserAuthorizer authorizer = UserAuthorizer.newBuilder()
-        .setClientId(CLIENT_ID)
-        .setScopes(SCOPES)
-        .build();
-
-    authorizer.getCredentials(USER_ID);
   }
 
   @Test
@@ -236,7 +225,7 @@ public class UserAuthorizerTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessTokenValue2);
-    TestTokenStore tokenStore = new TestTokenStore();
+    TokenStore tokenStore = new MemoryTokensStorage();
     UserAuthorizer authorizer = UserAuthorizer.newBuilder()
         .setClientId(CLIENT_ID)
         .setScopes(SCOPES)
@@ -277,7 +266,7 @@ public class UserAuthorizerTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
     transportFactory.transport.addAuthorizationCode(CODE, REFRESH_TOKEN, ACCESS_TOKEN_VALUE);
-    TestTokenStore tokenStore = new TestTokenStore();
+    TokenStore tokenStore = new MemoryTokensStorage();
     UserAuthorizer authorizer = UserAuthorizer.newBuilder()
         .setClientId(CLIENT_ID)
         .setScopes(SCOPES)
@@ -296,7 +285,7 @@ public class UserAuthorizerTest {
     UserAuthorizer authorizer = UserAuthorizer.newBuilder()
         .setClientId(CLIENT_ID)
         .setScopes(SCOPES)
-        .setTokenStore(new TestTokenStore())
+        .setTokenStore(new MemoryTokensStorage())
         .build();
 
     authorizer.getCredentialsFromCode(null, BASE_URI);
@@ -309,7 +298,7 @@ public class UserAuthorizerTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
     transportFactory.transport.addAuthorizationCode(CODE, REFRESH_TOKEN, accessTokenValue1);
-    TestTokenStore tokenStore = new TestTokenStore();
+    TokenStore tokenStore = new MemoryTokensStorage();
     UserAuthorizer authorizer = UserAuthorizer.newBuilder()
         .setClientId(CLIENT_ID)
         .setScopes(SCOPES)
@@ -342,7 +331,7 @@ public class UserAuthorizerTest {
     UserAuthorizer authorizer = UserAuthorizer.newBuilder()
         .setClientId(CLIENT_ID)
         .setScopes(SCOPES)
-        .setTokenStore(new TestTokenStore())
+        .setTokenStore(new MemoryTokensStorage())
         .build();
 
     authorizer.getAndStoreCredentialsFromCode(USER_ID, null, BASE_URI);
@@ -353,7 +342,7 @@ public class UserAuthorizerTest {
     UserAuthorizer authorizer = UserAuthorizer.newBuilder()
         .setClientId(CLIENT_ID)
         .setScopes(SCOPES)
-        .setTokenStore(new TestTokenStore())
+        .setTokenStore(new MemoryTokensStorage())
         .build();
 
     authorizer.getAndStoreCredentialsFromCode(null, CODE, BASE_URI);
@@ -361,7 +350,7 @@ public class UserAuthorizerTest {
 
   @Test
   public void revokeAuthorization_revokesAndClears() throws IOException {
-    TestTokenStore tokenStore = new TestTokenStore();
+    TokenStore tokenStore = new MemoryTokensStorage();
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN_VALUE);
@@ -397,25 +386,5 @@ public class UserAuthorizerTest {
     }
     UserCredentials credentials2 = authorizer.getCredentials(USER_ID);
     assertNull(credentials2);
-  }
-
-  private static class TestTokenStore implements TokenStore {
-
-    private final Map<String, String> map = new HashMap<>();
-
-    @Override
-    public String load(String id) throws IOException {
-      return map.get(id);
-    }
-
-    @Override
-    public void store(String id, String tokens) throws IOException {
-      map.put(id, tokens);
-    }
-
-    @Override
-    public void delete(String id) throws IOException {
-      map.remove(id);
-    }
   }
 }
