@@ -34,24 +34,24 @@ package com.google.auth.oauth2;
 import com.google.api.client.http.LowLevelHttpRequest;
 import com.google.api.client.http.LowLevelHttpResponse;
 import com.google.api.client.json.GenericJson;
-import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.Json;
+import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.auth.TestUtils;
-
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Queue;
 
-/**
- * Mock transport to simulate providing Google OAuth2 access tokens
- */
+/** Mock transport to simulate providing Google OAuth2 access tokens */
 public class MockTokenServerTransport extends MockHttpTransport {
 
   static final String EXPECTED_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
@@ -63,9 +63,11 @@ public class MockTokenServerTransport extends MockHttpTransport {
   final Map<String, String> codes = new HashMap<String, String>();
   URI tokenServerUri = OAuth2Utils.TOKEN_SERVER_URI;
   private IOException error;
+  private Queue<IOException> responseErrorSequence = new ArrayDeque<IOException>();
+  private Queue<LowLevelHttpResponse> responseSequence = new ArrayDeque<LowLevelHttpResponse>();
+  private int expiresInSeconds = 3600;
 
-  public MockTokenServerTransport()  {
-  }
+  public MockTokenServerTransport() {}
 
   public URI getTokenServerUri() {
     return tokenServerUri;
@@ -100,6 +102,22 @@ public class MockTokenServerTransport extends MockHttpTransport {
     this.error = error;
   }
 
+  public void addResponseErrorSequence(IOException... errors) {
+    for (IOException error : errors) {
+      responseErrorSequence.add(error);
+    }
+  }
+
+  public void addResponseSequence(LowLevelHttpResponse... responses) {
+    for (LowLevelHttpResponse response : responses) {
+      responseSequence.add(response);
+    }
+  }
+
+  public void setExpiresInSeconds(int expiresInSeconds) {
+    this.expiresInSeconds = expiresInSeconds;
+  }
+
   @Override
   public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
     buildRequestCount++;
@@ -113,6 +131,14 @@ public class MockTokenServerTransport extends MockHttpTransport {
       return new MockLowLevelHttpRequest(url) {
         @Override
         public LowLevelHttpResponse execute() throws IOException {
+          IOException responseError = responseErrorSequence.poll();
+          if (responseError != null) {
+            throw responseError;
+          }
+          LowLevelHttpResponse response = responseSequence.poll();
+          if (response != null) {
+            return response;
+          }
           String content = this.getContentAsString();
           Map<String, String> query = TestUtils.parseQuery(content);
           String accessToken;
@@ -166,16 +192,16 @@ public class MockTokenServerTransport extends MockHttpTransport {
           GenericJson refreshContents = new GenericJson();
           refreshContents.setFactory(JSON_FACTORY);
           refreshContents.put("access_token", accessToken);
-          refreshContents.put("expires_in", 3600);
+          refreshContents.put("expires_in", expiresInSeconds);
           refreshContents.put("token_type", "Bearer");
           if (refreshToken != null) {
             refreshContents.put("refresh_token", refreshToken);
           }
-          String refreshText  = refreshContents.toPrettyString();
+          String refreshText = refreshContents.toPrettyString();
 
           return new MockLowLevelHttpResponse()
-            .setContentType(Json.MEDIA_TYPE)
-            .setContent(refreshText);
+              .setContentType(Json.MEDIA_TYPE)
+              .setContent(refreshText);
         }
       };
     } else if (urlWithoutQUery.equals(OAuth2Utils.TOKEN_REVOKE_URI.toString())) {

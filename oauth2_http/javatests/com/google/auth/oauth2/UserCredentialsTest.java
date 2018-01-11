@@ -51,9 +51,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
@@ -75,25 +77,39 @@ public class UserCredentialsTest extends BaseSerializationTest {
 
   @Test(expected = IllegalStateException.class)
   public void constructor_accessAndRefreshTokenNull_throws() {
-    new UserCredentials(CLIENT_ID, CLIENT_SECRET, null, null);
+    UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .build();
   }
 
   @Test
   public void constructor_storesRefreshToken() {
-    UserCredentials credentials =
-        new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, null);
+    UserCredentials credentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .build();
     assertEquals(REFRESH_TOKEN, credentials.getRefreshToken());
   }
 
   @Test
   public void createScoped_same() {
-    UserCredentials userCredentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN);
+    UserCredentials userCredentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .build();
     assertSame(userCredentials, userCredentials.createScoped(SCOPES));
   }
 
   @Test
   public void createScopedRequired_false() {
-    UserCredentials userCredentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN);
+    UserCredentials userCredentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .build();
     assertFalse(userCredentials.createScopedRequired());
   }
 
@@ -115,8 +131,12 @@ public class UserCredentialsTest extends BaseSerializationTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
-    OAuth2Credentials userCredentials = new UserCredentials(
-        CLIENT_ID, CLIENT_SECRET, null, accessToken, transportFactory, null);
+    UserCredentials userCredentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setAccessToken(accessToken)
+        .setHttpTransportFactory(transportFactory)
+        .build();
 
     Map<String, List<String>> metadata = userCredentials.getRequestMetadata(CALL_URI);
 
@@ -128,8 +148,12 @@ public class UserCredentialsTest extends BaseSerializationTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
-    OAuth2Credentials userCredentials = new UserCredentials(
-        CLIENT_ID, CLIENT_SECRET, null, accessToken, transportFactory, null);
+    UserCredentials userCredentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setAccessToken(accessToken)
+        .setHttpTransportFactory(transportFactory)
+        .build();
 
     try {
       userCredentials.refresh();
@@ -144,8 +168,12 @@ public class UserCredentialsTest extends BaseSerializationTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
-    OAuth2Credentials userCredentials = new UserCredentials(
-        CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, null, transportFactory, null);
+    UserCredentials userCredentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setHttpTransportFactory(transportFactory)
+        .build();
 
     Map<String, List<String>> metadata = userCredentials.getRequestMetadata(CALL_URI);
 
@@ -159,8 +187,13 @@ public class UserCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
     transportFactory.transport.setTokenServerUri(TOKEN_SERVER);
-    OAuth2Credentials userCredentials = new UserCredentials(
-        CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, null, transportFactory, TOKEN_SERVER);
+    UserCredentials userCredentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setHttpTransportFactory(transportFactory)
+        .setTokenServerUri(TOKEN_SERVER)
+        .build();
 
     Map<String, List<String>> metadata = userCredentials.getRequestMetadata(CALL_URI);
 
@@ -172,10 +205,22 @@ public class UserCredentialsTest extends BaseSerializationTest {
     final URI tokenServer = URI.create("https://foo.com/bar");
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
-    OAuth2Credentials credentials = new UserCredentials(
-        CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, accessToken, transportFactory, tokenServer);
-    OAuth2Credentials otherCredentials = new UserCredentials(
-        CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, accessToken, transportFactory, tokenServer);
+    UserCredentials credentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setAccessToken(accessToken)
+        .setHttpTransportFactory(transportFactory)
+        .setTokenServerUri(tokenServer)
+        .build();
+    UserCredentials otherCredentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setAccessToken(accessToken)
+        .setHttpTransportFactory(transportFactory)
+        .setTokenServerUri(tokenServer)
+        .build();
     assertTrue(credentials.equals(otherCredentials));
     assertTrue(otherCredentials.equals(credentials));
   }
@@ -185,10 +230,22 @@ public class UserCredentialsTest extends BaseSerializationTest {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
     MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
-    OAuth2Credentials credentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN,
-        accessToken, httpTransportFactory, tokenServer1);
-    OAuth2Credentials otherCredentials = new UserCredentials("otherClientId", CLIENT_SECRET,
-        REFRESH_TOKEN, accessToken, httpTransportFactory, tokenServer1);
+    UserCredentials credentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setAccessToken(accessToken)
+        .setHttpTransportFactory(httpTransportFactory)
+        .setTokenServerUri(tokenServer1)
+        .build();
+    UserCredentials otherCredentials = UserCredentials.newBuilder()
+        .setClientId("other client id")
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setAccessToken(accessToken)
+        .setHttpTransportFactory(httpTransportFactory)
+        .setTokenServerUri(tokenServer1)
+        .build();
     assertFalse(credentials.equals(otherCredentials));
     assertFalse(otherCredentials.equals(credentials));
   }
@@ -198,10 +255,22 @@ public class UserCredentialsTest extends BaseSerializationTest {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
     MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
-    OAuth2Credentials credentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN,
-        accessToken, httpTransportFactory, tokenServer1);
-    OAuth2Credentials otherCredentials = new UserCredentials(CLIENT_ID, "otherClientSecret",
-        REFRESH_TOKEN, accessToken, httpTransportFactory, tokenServer1);
+    UserCredentials credentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setAccessToken(accessToken)
+        .setHttpTransportFactory(httpTransportFactory)
+        .setTokenServerUri(tokenServer1)
+        .build();
+    UserCredentials otherCredentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret("other client secret")
+        .setRefreshToken(REFRESH_TOKEN)
+        .setAccessToken(accessToken)
+        .setHttpTransportFactory(httpTransportFactory)
+        .setTokenServerUri(tokenServer1)
+        .build();
     assertFalse(credentials.equals(otherCredentials));
     assertFalse(otherCredentials.equals(credentials));
   }
@@ -211,10 +280,22 @@ public class UserCredentialsTest extends BaseSerializationTest {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
     MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
-    OAuth2Credentials credentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN,
-        accessToken, httpTransportFactory, tokenServer1);
-    OAuth2Credentials otherCredentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET,
-        "otherRefreshToken", accessToken, httpTransportFactory, tokenServer1);
+    OAuth2Credentials credentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setAccessToken(accessToken)
+        .setHttpTransportFactory(httpTransportFactory)
+        .setTokenServerUri(tokenServer1)
+        .build();
+    OAuth2Credentials otherCredentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken("otherRefreshToken")
+        .setAccessToken(accessToken)
+        .setHttpTransportFactory(httpTransportFactory)
+        .setTokenServerUri(tokenServer1)
+        .build();
     assertFalse(credentials.equals(otherCredentials));
     assertFalse(otherCredentials.equals(credentials));
   }
@@ -225,10 +306,22 @@ public class UserCredentialsTest extends BaseSerializationTest {
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
     AccessToken otherAccessToken = new AccessToken("otherAccessToken", null);
     MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
-    OAuth2Credentials credentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN,
-        accessToken, httpTransportFactory, tokenServer1);
-    OAuth2Credentials otherCredentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET,
-        REFRESH_TOKEN, otherAccessToken, httpTransportFactory, tokenServer1);
+    UserCredentials credentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setAccessToken(accessToken)
+        .setHttpTransportFactory(httpTransportFactory)
+        .setTokenServerUri(tokenServer1)
+        .build();
+    UserCredentials otherCredentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setAccessToken(otherAccessToken)
+        .setHttpTransportFactory(httpTransportFactory)
+        .setTokenServerUri(tokenServer1)
+        .build();
     assertFalse(credentials.equals(otherCredentials));
     assertFalse(otherCredentials.equals(credentials));
   }
@@ -239,10 +332,22 @@ public class UserCredentialsTest extends BaseSerializationTest {
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
     MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
     MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
-    OAuth2Credentials credentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN,
-        accessToken, httpTransportFactory, tokenServer1);
-    OAuth2Credentials otherCredentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET,
-        REFRESH_TOKEN, accessToken, serverTransportFactory, tokenServer1);
+    UserCredentials credentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setAccessToken(accessToken)
+        .setHttpTransportFactory(httpTransportFactory)
+        .setTokenServerUri(tokenServer1)
+        .build();
+    UserCredentials otherCredentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setAccessToken(accessToken)
+        .setHttpTransportFactory(serverTransportFactory)
+        .setTokenServerUri(tokenServer1)
+        .build();
     assertFalse(credentials.equals(otherCredentials));
     assertFalse(otherCredentials.equals(credentials));
   }
@@ -253,10 +358,22 @@ public class UserCredentialsTest extends BaseSerializationTest {
     final URI tokenServer2 = URI.create("https://foo2.com/bar");
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
     MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
-    OAuth2Credentials credentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN,
-        accessToken, httpTransportFactory, tokenServer1);
-    OAuth2Credentials otherCredentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET,
-        REFRESH_TOKEN, accessToken, httpTransportFactory, tokenServer2);
+    UserCredentials credentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setAccessToken(accessToken)
+        .setHttpTransportFactory(httpTransportFactory)
+        .setTokenServerUri(tokenServer1)
+        .build();
+    UserCredentials otherCredentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setAccessToken(accessToken)
+        .setHttpTransportFactory(httpTransportFactory)
+        .setTokenServerUri(tokenServer2)
+        .build();
     assertFalse(credentials.equals(otherCredentials));
     assertFalse(otherCredentials.equals(credentials));
   }
@@ -266,8 +383,15 @@ public class UserCredentialsTest extends BaseSerializationTest {
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
     final URI tokenServer = URI.create("https://foo.com/bar");
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    OAuth2Credentials credentials = new UserCredentials(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN,
-        accessToken, transportFactory, tokenServer);
+    UserCredentials credentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setAccessToken(accessToken)
+        .setHttpTransportFactory(transportFactory)
+        .setTokenServerUri(tokenServer)
+        .build();
+
     String expectedToString = String.format(
         "UserCredentials{requestMetadata=%s, temporaryAccess=%s, clientId=%s, refreshToken=%s, "
             + "tokenServerUri=%s, transportFactoryClassName=%s}",
@@ -286,10 +410,22 @@ public class UserCredentialsTest extends BaseSerializationTest {
     final URI tokenServer = URI.create("https://foo.com/bar");
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
-    OAuth2Credentials credentials = new UserCredentials(
-        CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, accessToken, transportFactory, tokenServer);
-    OAuth2Credentials otherCredentials = new UserCredentials(
-        CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, accessToken, transportFactory, tokenServer);
+    UserCredentials credentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setAccessToken(accessToken)
+        .setHttpTransportFactory(transportFactory)
+        .setTokenServerUri(tokenServer)
+        .build();
+    UserCredentials otherCredentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setAccessToken(accessToken)
+        .setHttpTransportFactory(transportFactory)
+        .setTokenServerUri(tokenServer)
+        .build();
     assertEquals(credentials.hashCode(), otherCredentials.hashCode());
   }
 
@@ -298,8 +434,14 @@ public class UserCredentialsTest extends BaseSerializationTest {
     final URI tokenServer = URI.create("https://foo.com/bar");
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
-    UserCredentials credentials = new UserCredentials(
-        CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, accessToken, transportFactory, tokenServer);
+    UserCredentials credentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setAccessToken(accessToken)
+        .setHttpTransportFactory(transportFactory)
+        .setTokenServerUri(tokenServer)
+        .build();
     UserCredentials deserializedCredentials = serializeAndDeserialize(credentials);
     assertEquals(credentials, deserializedCredentials);
     assertEquals(credentials.hashCode(), deserializedCredentials.hashCode());
@@ -362,6 +504,44 @@ public class UserCredentialsTest extends BaseSerializationTest {
     InputStream userStream = writeUserStream(CLIENT_ID, CLIENT_SECRET, null);
 
     testFromStreamException(userStream, "refresh_token");
+  }
+
+  @Test
+  public void saveUserCredentials_saved_throws() throws IOException {
+    UserCredentials userCredentials = UserCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .build();
+    File file = File.createTempFile("GOOGLE_APPLICATION_CREDENTIALS", null, null);
+    file.deleteOnExit();
+
+    String filePath = file.getAbsolutePath();
+    userCredentials.save(filePath);
+  }
+
+  @Test
+  public void saveAndRestoreUserCredential_saveAndRestored_throws() throws IOException {
+    UserCredentials userCredentials = UserCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .build();
+
+    File file = File.createTempFile("GOOGLE_APPLICATION_CREDENTIALS", null, null);
+    file.deleteOnExit();
+
+    String filePath = file.getAbsolutePath();
+
+    userCredentials.save(filePath);
+
+    FileInputStream inputStream = new FileInputStream(new File(filePath));
+
+    UserCredentials restoredCredentials = UserCredentials.fromStream(inputStream);
+
+    assertEquals(userCredentials.getClientId(), restoredCredentials.getClientId());
+    assertEquals(userCredentials.getClientSecret(), restoredCredentials.getClientSecret());
+    assertEquals(userCredentials.getRefreshToken(), restoredCredentials.getRefreshToken());
   }
 
   static GenericJson writeUserJson(String clientId, String clientSecret, String refreshToken) {

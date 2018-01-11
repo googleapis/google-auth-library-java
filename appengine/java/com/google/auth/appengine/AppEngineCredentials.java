@@ -62,10 +62,20 @@ public class AppEngineCredentials extends GoogleCredentials implements ServiceAc
 
   private transient AppIdentityService appIdentityService;
 
+  /**
+   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
+   *             private in a later version.
+   */
+  @Deprecated
   public AppEngineCredentials(Collection<String> scopes) {
     this(scopes, null);
   }
 
+  /**
+   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
+   *             private in a later version.
+   */
+  @Deprecated
   public AppEngineCredentials(Collection<String> scopes, AppIdentityService appIdentityService) {
     this.scopes = scopes == null ? ImmutableSet.<String>of() : ImmutableList.copyOf(scopes);
     this.appIdentityService = appIdentityService != null ? appIdentityService 
@@ -136,5 +146,48 @@ public class AppEngineCredentials extends GoogleCredentials implements ServiceAc
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
     input.defaultReadObject();
     appIdentityService = newInstance(appIdentityServiceClassName);
+  }
+
+  public static Builder newBuilder() {
+    return new Builder();
+  }
+
+  public Builder toBuilder() {
+    return new Builder(this);
+  }
+
+  public static class Builder extends GoogleCredentials.Builder {
+
+    private Collection<String> scopes;
+    private AppIdentityService appIdentityService;
+
+    protected Builder() {}
+
+    protected Builder(AppEngineCredentials credentials) {
+      this.scopes = credentials.scopes;
+      this.appIdentityService = credentials.appIdentityService;
+    }
+
+    public Builder setScopes(Collection<String> scopes) {
+      this.scopes = scopes;
+      return this;
+    }
+
+    public Builder setAppIdentityService(AppIdentityService appIdentityService) {
+      this.appIdentityService = appIdentityService;
+      return this;
+    }
+
+    public Collection<String> getScopes() {
+      return scopes;
+    }
+
+    public AppIdentityService getAppIdentityService() {
+      return appIdentityService;
+    }
+
+    public AppEngineCredentials build() {
+      return new AppEngineCredentials(scopes, appIdentityService);
+    }
   }
 }

@@ -1,5 +1,5 @@
-Release Instructions
-====================
+One-time setup
+==============
 
 Set up Sonatype Account
 -----------------------
@@ -47,7 +47,7 @@ Create a Maven settings file
         <gpg.passphrase>[the password for your gpg key]</gpg.passphrase>
       </properties>
     </profile>
-  </profiles>  
+  </profiles>
   <servers>
     <server>
       <id>ossrh</id>
@@ -58,24 +58,40 @@ Create a Maven settings file
 </settings>
 ```
 
-Deploy to Sonatype
-------------------
-* Update all ```pom.xml``` files in the package to the release version you want. Submit a pull request, get it reviewed, and submit
-* ```mvn clean install deploy -DperformRelease=true```
-* Verify the result [here](https://oss.sonatype.org/#nexus-search;quick~com.google.auth)
-  * If there is a problem, undo by ```mvn nexus-staging:drop```
-* ```mvn nexus-staging:release -DperformRelease=true```
-* Update all ```pom.xml``` files to the new snapshot version (unless it's a bugfix release, we
-update from 0.4.0 to 0.5.0-SNAPSHOT)
+To prepare a release
+====================
 
-Publish the release
--------------------
-* Go to [Sonatype](https://oss.sonatype.org/) and log in
-* Click on *Staging Repositories* on the left
-* Filter down to the repository by typing the package's groupId without periods in the search box
-  * In our case, ```comgoogleauth```
-* Click the *release* button just below the top tabs
-* It will take some time (up to 10 minutes) for the package to transition
+Versioning
+----------
+Minor changes should be a point increase (0.6.0 -> 0.6.1).  Additions to API or breaking changes should be
+a major release. (0.6.0 -> 0.7.0)
+
+Prepare release
+---------------
+* Update all ```pom.xml``` files in the package to the release version you want.
+* Update version numbers appearing in `README.md`.
+* Submit a pull request, get it reviewed, but wait to submit it in case there are errors during publishing.
+* ```mvn clean install deploy -DperformRelease=true```
+* Verify the result [here](https://oss.sonatype.org/#nexus-search;quick~com.google.auth).
+  * If there is a problem, undo by ```mvn nexus-staging:drop```.
+
+Publish release
+---------------
+* ```mvn nexus-staging:release -DperformRelease=true```
+* It will take some time (10 minutes to 8 hours) for the package to be released
+* Confirm that the release appears in the [parent folder on Maven
+Central](https://repo1.maven.org/maven2/com/google/auth/google-auth-library-parent/)
+* If the release doesn't show up, do the following to check for failures:
+  * Go to [Sonatype](https://oss.sonatype.org/) and log in
+  * Click on *Staging Repositories* on the left
+  * Filter down to the repository by typing the package's groupId without periods in the search box
+    * In our case, ```comgoogleauth```
+  * Click on the repository and check for errors
+* Submit the pull request to bump the version numbers
+* Update Javadoc on Github using `scripts/update_javadoc.sh`.
+* On the [releases](https://github.com/google/google-auth-library-java/releases) page, create a corresponding Git tag (e.g., "v0.7.0") on the release commit, and summarize the commits since the last release. Follow the style of previous release notes.
+* Update all ```pom.xml``` files to the new snapshot version (increment patch version number, e.g., from 0.4.0 to 0.4.1-SNAPSHOT).
+* Submit a pull request, get it reviewed, and submit.
 
 Special cases
 =============

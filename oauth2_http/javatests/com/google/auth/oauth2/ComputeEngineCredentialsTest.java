@@ -76,8 +76,8 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setAccessToken(accessToken);
-    ComputeEngineCredentials credentials = new ComputeEngineCredentials(transportFactory);
-
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
     TestUtils.assertContainsBearerToken(metadata, accessToken);
@@ -89,8 +89,8 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setAccessToken(accessToken);
     transportFactory.transport.setTokenRequestStatusCode(HttpStatusCodes.STATUS_CODE_NOT_FOUND);
-    ComputeEngineCredentials credentials = new ComputeEngineCredentials(transportFactory);
-
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
     try {
       credentials.getRequestMetadata(CALL_URI);
       fail("Expected error refreshing token.");
@@ -107,8 +107,8 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setAccessToken(accessToken);
     transportFactory.transport.setTokenRequestStatusCode(HttpStatusCodes.STATUS_CODE_NOT_FOUND);
-    ComputeEngineCredentials credentials = new ComputeEngineCredentials(transportFactory);
-
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
     try {
       credentials.getRequestMetadata(CALL_URI);
       fail("Expected error refreshing token.");
@@ -122,8 +122,10 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   @Test
   public void equals_true() throws IOException {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-    ComputeEngineCredentials credentials = new ComputeEngineCredentials(transportFactory);
-    ComputeEngineCredentials otherCredentials = new ComputeEngineCredentials(transportFactory);
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+    ComputeEngineCredentials otherCredentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
     assertTrue(credentials.equals(otherCredentials));
     assertTrue(otherCredentials.equals(credentials));
   }
@@ -133,8 +135,10 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
     MockMetadataServerTransportFactory serverTransportFactory =
         new MockMetadataServerTransportFactory();
-    ComputeEngineCredentials credentials = new ComputeEngineCredentials(serverTransportFactory);
-    ComputeEngineCredentials otherCredentials = new ComputeEngineCredentials(httpTransportFactory);
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(serverTransportFactory).build();
+    ComputeEngineCredentials otherCredentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(httpTransportFactory).build();
     assertFalse(credentials.equals(otherCredentials));
     assertFalse(otherCredentials.equals(credentials));
   }
@@ -146,7 +150,8 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     String expectedToString =
         String.format("ComputeEngineCredentials{transportFactoryClassName=%s}",
             MockMetadataServerTransportFactory.class.getName());
-    ComputeEngineCredentials credentials = new ComputeEngineCredentials(serverTransportFactory);
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(serverTransportFactory).build();
     assertEquals(expectedToString, credentials.toString());
   }
 
@@ -154,9 +159,10 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   public void hashCode_equals() throws IOException {
     MockMetadataServerTransportFactory serverTransportFactory =
         new MockMetadataServerTransportFactory();
-    ComputeEngineCredentials credentials = new ComputeEngineCredentials(serverTransportFactory);
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(serverTransportFactory).build();
     ComputeEngineCredentials otherCredentials =
-        new ComputeEngineCredentials(serverTransportFactory);
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(serverTransportFactory).build();
     assertEquals(credentials.hashCode(), otherCredentials.hashCode());
   }
 
@@ -164,13 +170,14 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   public void serialize() throws IOException, ClassNotFoundException {
     MockMetadataServerTransportFactory serverTransportFactory =
         new MockMetadataServerTransportFactory();
-    ComputeEngineCredentials credentials = new ComputeEngineCredentials(serverTransportFactory);
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(serverTransportFactory).build();
     GoogleCredentials deserializedCredentials = serializeAndDeserialize(credentials);
     assertEquals(credentials, deserializedCredentials);
     assertEquals(credentials.hashCode(), deserializedCredentials.hashCode());
     assertEquals(credentials.toString(), deserializedCredentials.toString());
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
-    credentials = new ComputeEngineCredentials();
+    credentials = ComputeEngineCredentials.newBuilder().build();
     deserializedCredentials = serializeAndDeserialize(credentials);
     assertEquals(credentials, deserializedCredentials);
     assertEquals(credentials.hashCode(), deserializedCredentials.hashCode());

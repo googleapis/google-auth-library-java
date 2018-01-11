@@ -75,7 +75,10 @@ public class UserAuthorizer {
    * @param clientId Client ID to identify the OAuth2 consent prompt.
    * @param scopes OAUth2 scopes defining the user consent.
    * @param tokenStore Implementation of component for long term storage of tokens.
+   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
+   *             private in a later version.
    */
+  @Deprecated
   public UserAuthorizer(ClientId clientId, Collection<String> scopes, TokenStore tokenStore) {
     this(clientId, scopes, tokenStore, null, null, null, null);
   }
@@ -87,9 +90,11 @@ public class UserAuthorizer {
    * @param scopes OAUth2 scopes defining the user consent.
    * @param tokenStore Implementation of component for long term storage of tokens.
    * @param callbackUri URI for implementation of the OAuth2 web callback.
+   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
+   *             private in a later version.
    */
-  public UserAuthorizer(ClientId clientId, Collection<String> scopes, TokenStore tokenStore,
-      URI callbackUri) {
+  @Deprecated
+  public UserAuthorizer(ClientId clientId, Collection<String> scopes, TokenStore tokenStore, URI callbackUri) {
     this(clientId, scopes, tokenStore, callbackUri, null, null, null);
   }
 
@@ -104,9 +109,12 @@ public class UserAuthorizer {
    *        tokens.
    * @param tokenServerUri URI of the end point that provides tokens.
    * @param userAuthUri URI of the Web UI for user consent.
+   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
+   *             private in a later version.
    */
+  @Deprecated
   public UserAuthorizer(ClientId clientId, Collection<String> scopes, TokenStore tokenStore,
-      URI callbackUri, HttpTransportFactory transportFactory, URI tokenServerUri, URI userAuthUri) {
+                        URI callbackUri, HttpTransportFactory transportFactory, URI tokenServerUri, URI userAuthUri) {
     this.clientId = Preconditions.checkNotNull(clientId);
     this.scopes = ImmutableList.copyOf(Preconditions.checkNotNull(scopes));
     this.callbackUri = (callbackUri == null) ? DEFAULT_CALLBACK_URI : callbackUri;
@@ -114,8 +122,9 @@ public class UserAuthorizer {
         (transportFactory == null) ? OAuth2Utils.HTTP_TRANSPORT_FACTORY : transportFactory;
     this.tokenServerUri = (tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : tokenServerUri;
     this.userAuthUri = (userAuthUri == null) ? OAuth2Utils.USER_AUTH_URI : userAuthUri;
-    this.tokenStore = tokenStore;
+    this.tokenStore = (tokenStore == null) ? new MemoryTokensStorage() : tokenStore;
   }
+
 
   /**
    * Returns the Client ID user to identify the OAuth2 consent prompt.
@@ -220,8 +229,14 @@ public class UserAuthorizer {
     AccessToken accessToken = new AccessToken(accessTokenValue, expirationTime);
     String refreshToken = OAuth2Utils.validateOptionalString(
         tokenJson, "refresh_token", TOKEN_STORE_ERROR);
-    UserCredentials credentials = new UserCredentials(clientId.getClientId(),
-        clientId.getClientSecret(), refreshToken, accessToken, transportFactory, tokenServerUri);
+    UserCredentials credentials = UserCredentials.newBuilder()
+        .setClientId(clientId.getClientId())
+        .setClientSecret(clientId.getClientSecret())
+        .setRefreshToken(refreshToken)
+        .setAccessToken(accessToken)
+        .setHttpTransportFactory(transportFactory)
+        .setTokenServerUri(tokenServerUri)
+        .build();
     monitorCredentials(userId, credentials);
     return credentials;
   }
@@ -261,8 +276,14 @@ public class UserAuthorizer {
     String refreshToken = OAuth2Utils.validateOptionalString(
         parsedTokens, "refresh_token", FETCH_TOKEN_ERROR);
 
-    return new UserCredentials(clientId.getClientId(), clientId.getClientSecret(), refreshToken,
-        accessToken, transportFactory, tokenServerUri);
+    return UserCredentials.newBuilder()
+        .setClientId(clientId.getClientId())
+        .setClientSecret(clientId.getClientSecret())
+        .setRefreshToken(refreshToken)
+        .setAccessToken(accessToken)
+        .setHttpTransportFactory(transportFactory)
+        .setTokenServerUri(tokenServerUri)
+        .build();
   }
 
   /**
@@ -387,6 +408,105 @@ public class UserAuthorizer {
     public void onChanged(OAuth2Credentials credentials) throws IOException {
       UserCredentials userCredentials = (UserCredentials)credentials;
       storeCredentials(userId, userCredentials);
+    }
+  }
+
+  public static Builder newBuilder() {
+    return new Builder();
+  }
+
+  public Builder toBuilder() {
+    return new Builder(this);
+  }
+
+  public static class Builder {
+
+    private ClientId clientId;
+    private TokenStore tokenStore;
+    private URI callbackUri;
+    private URI tokenServerUri;
+    private URI userAuthUri;
+    private Collection<String> scopes;
+    private HttpTransportFactory transportFactory;
+
+    protected Builder() {}
+
+    protected Builder(UserAuthorizer authorizer) {
+      this.clientId = authorizer.clientId;
+      this.scopes = authorizer.scopes;
+      this.transportFactory = authorizer.transportFactory;
+      this.tokenServerUri = authorizer.tokenServerUri;
+      this.tokenStore = authorizer.tokenStore;
+      this.callbackUri = authorizer.callbackUri;
+      this.userAuthUri = authorizer.userAuthUri;
+    }
+
+    public Builder setClientId(ClientId clientId) {
+      this.clientId = clientId;
+      return this;
+    }
+
+    public Builder setTokenStore(TokenStore tokenStore) {
+      this.tokenStore = tokenStore;
+      return this;
+    }
+
+    public Builder setScopes(Collection<String> scopes) {
+      this.scopes = scopes;
+      return this;
+    }
+
+    public Builder setTokenServerUri(URI tokenServerUri) {
+      this.tokenServerUri = tokenServerUri;
+      return this;
+    }
+
+    public Builder setCallbackUri(URI callbackUri) {
+      this.callbackUri = callbackUri;
+      return this;
+    }
+
+    public Builder setUserAuthUri(URI userAuthUri) {
+      this.userAuthUri = userAuthUri;
+      return this;
+    }
+
+    public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
+      this.transportFactory = transportFactory;
+      return this;
+    }
+
+    public ClientId getClientId() {
+      return clientId;
+    }
+
+    public TokenStore getTokenStore() {
+      return tokenStore;
+    }
+
+    public Collection<String> getScopes() {
+      return scopes;
+    }
+
+    public URI getTokenServerUri() {
+      return tokenServerUri;
+    }
+
+    public URI getCallbackUri() {
+      return callbackUri;
+    }
+
+    public URI getUserAuthUri() {
+      return userAuthUri;
+    }
+
+    public HttpTransportFactory getHttpTransportFactory() {
+      return transportFactory;
+    }
+
+    public UserAuthorizer build() {
+      return new UserAuthorizer(clientId, scopes, tokenStore,
+          callbackUri, transportFactory, tokenServerUri, userAuthUri);
     }
   }
 }

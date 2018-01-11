@@ -40,10 +40,14 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.common.io.ByteStreams;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.Charset;
@@ -120,6 +124,22 @@ class OAuth2Utils {
           String.format(VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "string", key));
     }
     return (String) value;
+  }
+
+  /**
+   * Saves the end user credentials into the given file path.
+   *
+   * @param credentials InputStream containing user credentials in JSON format
+   * @param filePath Path to file where to store the credentials
+   * @throws IOException An error saving the credentials.
+   */
+  static void writeInputStreamToFile(InputStream credentials, String filePath) throws IOException {
+    final OutputStream outputStream = new FileOutputStream(new File(filePath));
+    try {
+      ByteStreams.copy(credentials, outputStream);
+    } finally {
+      outputStream.close();
+    }
   }
 
   /**

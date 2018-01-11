@@ -39,6 +39,7 @@ import com.google.auth.http.HttpTransportFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+
 import java.util.Collection;
 
 /**
@@ -52,6 +53,29 @@ public class GoogleCredentials extends OAuth2Credentials {
 
   private static final DefaultCredentialsProvider defaultCredentialsProvider =
       new DefaultCredentialsProvider();
+
+  /**
+   * Returns the credentials instance from the given access token.
+   *
+   * @param accessToken the access token
+   * @return the credentials instance
+   * @deprecated Use {@link #create(AccessToken)} instead. This method will be deleted in a later
+   *             version.
+   */
+  @Deprecated
+  public static GoogleCredentials of(AccessToken accessToken) {
+    return create(accessToken);
+  }
+
+  /**
+   * Returns the credentials instance from the given access token.
+   *
+   * @param accessToken the access token
+   * @return the credentials instance
+   */
+  public static GoogleCredentials create(AccessToken accessToken) {
+    return GoogleCredentials.newBuilder().setAccessToken(accessToken).build();
+  }
 
   /**
    * Returns the Application Default Credentials.
@@ -166,9 +190,20 @@ public class GoogleCredentials extends OAuth2Credentials {
    * Constructor with explicit access token.
    *
    * @param accessToken Initial or temporary access token.
+   * @deprecated Use {@link #create(AccessToken)} instead. This constructor will either be deleted
+   *             or made protected/private in a later version.
    **/
+  @Deprecated
   public GoogleCredentials(AccessToken accessToken) {
     super(accessToken);
+  }
+
+  public static Builder newBuilder() {
+    return new Builder();
+  }
+
+  public Builder toBuilder() {
+    return new Builder(this);
   }
 
   /**
@@ -180,11 +215,37 @@ public class GoogleCredentials extends OAuth2Credentials {
   }
 
   /**
-   * If the credentials support scopes, create a copy of the the idenitity with the specified
-   * scopes, otherwise returns the same instance.
+   * If the credentials support scopes, creates a copy of the the identity with the specified
+   * scopes; otherwise, returns the same instance.
    */
-  @SuppressWarnings("unused")
   public GoogleCredentials createScoped(Collection<String> scopes) {
     return this;
+  }
+
+  /**
+   * If the credentials support domain-wide delegation, creates a copy
+   * of the identity so that it impersonates the specified user;
+   * otherwise, returns the same instance.
+   */
+  public GoogleCredentials createDelegated(String user) {
+    return this;
+  }
+
+  public static class Builder extends OAuth2Credentials.Builder {
+    protected Builder() {}
+
+    protected Builder(GoogleCredentials credentials) {
+      setAccessToken(credentials.getAccessToken());
+    }
+
+    public GoogleCredentials build() {
+      return new GoogleCredentials(getAccessToken());
+    }
+
+    @Override
+    public Builder setAccessToken(AccessToken token) {
+      super.setAccessToken(token);
+      return this;
+    }
   }
 }

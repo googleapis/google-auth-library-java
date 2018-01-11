@@ -59,7 +59,7 @@ import java.util.concurrent.Executor;
 public class OAuth2Credentials extends Credentials {
 
   private static final long serialVersionUID = 4556936364828217687L;
-  private static final int MINIMUM_TOKEN_MILLISECONDS = 60000;
+  private static final long MINIMUM_TOKEN_MILLISECONDS = 60000L * 5L;
 
   // byte[] is serializable, so the lock variable can be final
   private final Object lock = new byte[0];
@@ -73,6 +73,29 @@ public class OAuth2Credentials extends Credentials {
   transient Clock clock = Clock.SYSTEM;
 
   /**
+   * Returns the credentials instance from the given access token.
+   *
+   * @param accessToken the access token
+   * @return the credentials instance
+   * @deprecated Use {@link #create(AccessToken)} instead. This method will be deleted in a later
+   *             version.
+   */
+  @Deprecated
+  public static OAuth2Credentials of(AccessToken accessToken) {
+    return create(accessToken);
+  }
+
+  /**
+   * Returns the credentials instance from the given access token.
+   *
+   * @param accessToken the access token
+   * @return the credentials instance
+   */
+  public static OAuth2Credentials create(AccessToken accessToken) {
+    return OAuth2Credentials.newBuilder().setAccessToken(accessToken).build();
+  }
+
+  /**
    * Default constructor.
    **/
   protected OAuth2Credentials() {
@@ -83,7 +106,10 @@ public class OAuth2Credentials extends Credentials {
    * Constructor with explicit access token.
    *
    * @param accessToken Initial or temporary access token.
+   * @deprecated Use {@link #create(AccessToken)} instead. This constructor will either be deleted
+   *             or made private in a later version.
    **/
+  @Deprecated
   public OAuth2Credentials(AccessToken accessToken) {
     if (accessToken != null) {
       useAccessToken(accessToken);
@@ -181,7 +207,7 @@ public class OAuth2Credentials extends Credentials {
   public AccessToken refreshAccessToken() throws IOException {
     throw new IllegalStateException("OAuth2Credentials instance does not support refreshing the"
         + " access token. An instance with a new access token should be used, or a derived type"
-        + " that supports refreshing should be used.");
+        + " that supports refreshing.");
   }
 
   /**
@@ -198,6 +224,19 @@ public class OAuth2Credentials extends Credentials {
         changeListeners = new ArrayList<>();
       }
       changeListeners.add(listener);
+    }
+  }
+
+  /**
+   * Removes a listener that was added previously.
+   *
+   * @param listener The listener to be removed.
+   */
+  public final void removeChangeListener(CredentialsChangedListener listener) {
+    synchronized(lock) {
+      if (changeListeners != null) {
+        changeListeners.remove(listener);
+      }
     }
   }
 
@@ -241,15 +280,15 @@ public class OAuth2Credentials extends Credentials {
     return Objects.hash(requestMetadata, temporaryAccess);
   }
 
-  protected ToStringHelper toStringHelper() {
-    return MoreObjects.toStringHelper(this)
-        .add("requestMetadata", requestMetadata)
-        .add("temporaryAccess", temporaryAccess);
+  protected Map<String, List<String>> getRequestMetadataInternal() {
+    return requestMetadata;
   }
 
   @Override
   public String toString() {
-    return toStringHelper().toString();
+    return MoreObjects.toStringHelper(this)
+        .add("requestMetadata", requestMetadata)
+        .add("temporaryAccess", temporaryAccess).toString();
   }
 
   @Override
@@ -278,5 +317,37 @@ public class OAuth2Credentials extends Credentials {
 
   protected static <T> T getFromServiceLoader(Class<? extends T> clazz, T defaultInstance) {
     return Iterables.getFirst(ServiceLoader.load(clazz), defaultInstance);
+  }
+
+  public static Builder newBuilder() {
+    return new Builder();
+  }
+
+  public Builder toBuilder() {
+    return new Builder(this);
+  }
+
+  public static class Builder {
+
+    private AccessToken accessToken;
+
+    protected Builder() {}
+
+    protected Builder(OAuth2Credentials credentials) {
+      this.accessToken = credentials.getAccessToken();
+    }
+
+    public Builder setAccessToken(AccessToken token) {
+      this.accessToken = token;
+      return this;
+    }
+
+    public AccessToken getAccessToken() {
+      return accessToken;
+    }
+
+    public OAuth2Credentials build() {
+      return new OAuth2Credentials(accessToken);
+    }
   }
 }

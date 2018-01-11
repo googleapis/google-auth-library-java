@@ -63,7 +63,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
   @Override
   public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
-    if (url.equals(ComputeEngineCredentials.TOKEN_SERVER_ENCODED_URL)) {
+    if (url.equals(ComputeEngineCredentials.getTokenServerEncodedUrl())) {
 
       return new MockLowLevelHttpRequest(url) {
         @Override
@@ -93,7 +93,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
             .setContent(refreshText);
         }
       };
-    } else if (url.equals(ComputeEngineCredentials.METADATA_SERVER_URL)) {
+    } else if (url.equals(ComputeEngineCredentials.getMetadataServerUrl())) {
       return new MockLowLevelHttpRequest(url) {
         @Override
         public LowLevelHttpResponse execute() {
