@@ -251,7 +251,7 @@ public class ComputeEngineCredentials extends GoogleCredentials {
 
   @Override
   public int hashCode() {
-    return Objects.hash(transportFactoryClassName, scopes, scopeRequired);
+    return Objects.hash(transportFactoryClassName, scopes, scopesRequired);
   }
 
   @Override
@@ -259,7 +259,7 @@ public class ComputeEngineCredentials extends GoogleCredentials {
     return MoreObjects.toStringHelper(this)
         .add("transportFactoryClassName", transportFactoryClassName)
         .add("scopes", scopes)
-        .add("scopesRequired", scopeRequired)
+        .add("scopesRequired", scopesRequired)
         .toString();
   }
 

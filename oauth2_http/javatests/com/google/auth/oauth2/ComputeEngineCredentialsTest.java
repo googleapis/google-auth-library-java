@@ -117,7 +117,6 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
     assertThat(credentials.createScopedRequired()).isTrue();
-
     GoogleCredentials scopedCredentials = credentials.createScoped(SCOPES);
     assertThat(scopedCredentials.createScopedRequired()).isFalse();
   }
@@ -182,8 +181,8 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     MockMetadataServerTransportFactory serverTransportFactory =
         new MockMetadataServerTransportFactory();
     String expectedToString =
-        String.format("ComputeEngineCredentials{transportFactoryClassName=%s}",
-            MockMetadataServerTransportFactory.class.getName());
+        String.format("ComputeEngineCredentials{transportFactoryClassName=%s, scopes=%s, scopesRequired=%s}",
+            MockMetadataServerTransportFactory.class.getName(), "[]", "true");
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(serverTransportFactory).build();
     assertEquals(expectedToString, credentials.toString());
