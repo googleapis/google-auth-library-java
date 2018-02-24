@@ -32,6 +32,8 @@
 package com.google.auth.oauth2;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpHeaders;
@@ -48,6 +50,7 @@ import java.io.ObjectInputStream;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.Date;
+import java.util.Collection;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -79,6 +82,9 @@ public class ComputeEngineCredentials extends GoogleCredentials {
   private static final long serialVersionUID = -4113476462526554235L;
 
   private final String transportFactoryClassName;
+
+  private final Collection<String> scopes;
+  private final boolean scopesRequired;
 
   private transient HttpTransportFactory transportFactory;
 
@@ -116,9 +122,15 @@ public class ComputeEngineCredentials extends GoogleCredentials {
    */
   @Deprecated
   public ComputeEngineCredentials(HttpTransportFactory transportFactory) {
+    this(transportFactory, null);
+  }
+
+  private ComputeEngineCredentials(HttpTransportFactory transportFactory, Collection<String> scopes) {
     this.transportFactory = firstNonNull(transportFactory,
         getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
+    this.scopes = scopes == null ? ImmutableSet.<String>of() : ImmutableList.copyOf(scopes);
+    this.scopesRequired = this.scopes.isEmpty();
   }
 
   /**
@@ -228,14 +240,26 @@ public class ComputeEngineCredentials extends GoogleCredentials {
   }
 
   @Override
+  public boolean createScopedRequired() {
+    return scopesRequired;
+  }
+
+  @Override
+  public GoogleCredentials createScoped(Collection<String> scopes) {
+    return this.toBuilder().setScopes(scopes).build();
+  }
+
+  @Override
   public int hashCode() {
-    return Objects.hash(transportFactoryClassName);
+    return Objects.hash(transportFactoryClassName, scopes, scopeRequired);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("transportFactoryClassName", transportFactoryClassName)
+        .add("scopes", scopes)
+        .add("scopesRequired", scopeRequired)
         .toString();
   }
 
@@ -245,7 +269,9 @@ public class ComputeEngineCredentials extends GoogleCredentials {
       return false;
     }
     ComputeEngineCredentials other = (ComputeEngineCredentials) obj;
-    return Objects.equals(this.transportFactoryClassName, other.transportFactoryClassName);
+    return Objects.equals(this.transportFactoryClassName, other.transportFactoryClassName)
+      && Objects.equals(this.scopes, other.scopes)
+      && this.scopesRequired == other.scopesRequired;
   }
 
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
@@ -262,16 +288,24 @@ public class ComputeEngineCredentials extends GoogleCredentials {
   }
 
   public static class Builder extends GoogleCredentials.Builder {
+    
     private HttpTransportFactory transportFactory;
+    private Collection<String> scopes;
 
     protected Builder() {}
 
     protected Builder(ComputeEngineCredentials credentials) {
       this.transportFactory = credentials.transportFactory;
+      this.scopes = credentials.scopes;
     }
 
     public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
       this.transportFactory = transportFactory;
+      return this;
+    }
+
+    public Builder setScopes(Collection<String> scopes) {
+      this.scopes = scopes;
       return this;
     }
 
@@ -280,7 +314,7 @@ public class ComputeEngineCredentials extends GoogleCredentials {
     }
 
     public ComputeEngineCredentials build() {
-      return new ComputeEngineCredentials(transportFactory);
+      return new ComputeEngineCredentials(transportFactory, scopes);
     }
   }
 }

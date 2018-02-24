@@ -36,6 +36,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.http.HttpTransport;
@@ -43,6 +44,7 @@ import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,6 +54,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.Collection;
 
 /**
  * Test case for {@link ComputeEngineCredentials}.
@@ -60,6 +63,9 @@ import java.util.Map;
 public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
+
+  private static final Collection<String> SCOPES =
+      ImmutableSet.<String>of("SCOPE1", "SCOPE2");
 
   static class MockMetadataServerTransportFactory implements HttpTransportFactory {
 
@@ -100,6 +106,34 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
       // Message should mention scopes are missing on the VM.
       assertTrue(message.contains("scope"));
     }
+  }
+
+  @Test
+  public void createScoped_fromInstanceAndScopes() throws IOException {
+    final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    transportFactory.transport.setAccessToken(accessToken);
+    transportFactory.transport.setTokenRequestStatusCode(HttpStatusCodes.STATUS_CODE_NOT_FOUND);
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+    assertThat(credentials.createScopedRequired()).isTrue();
+
+    GoogleCredentials scopedCredentials = credentials.createScoped(SCOPES);
+    assertThat(scopedCredentials.createScopedRequired()).isFalse();
+  }
+
+  @Test
+  public void createScoped_fromBuilder() throws IOException {
+    final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    transportFactory.transport.setAccessToken(accessToken);
+    transportFactory.transport.setTokenRequestStatusCode(HttpStatusCodes.STATUS_CODE_NOT_FOUND);
+    ComputeEngineCredentials credentials = ComputeEngineCredentials
+      .newBuilder()
+      .setHttpTransportFactory(transportFactory)
+      .setScopes(SCOPES)
+      .build();
+    assertThat(credentials.createScopedRequired()).isFalse();
   }
 
   public void getRequestMetadata_serverError_throws() {
