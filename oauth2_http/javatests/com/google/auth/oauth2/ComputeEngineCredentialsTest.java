@@ -31,19 +31,12 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -52,6 +45,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+
+import static org.junit.Assert.*;
 
 /**
  * Test case for {@link ComputeEngineCredentials}.
@@ -183,5 +178,31 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     assertEquals(credentials.hashCode(), deserializedCredentials.hashCode());
     assertEquals(credentials.toString(), deserializedCredentials.toString());
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
+  }
+
+  @Test
+  public void getAccount_sameAs() throws IOException {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    String defaultAccountEmail = "mail@mail.com";
+
+    transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);
+    ComputeEngineCredentials credentials =
+            ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+    assertEquals(defaultAccountEmail, credentials.getAccount());
+  }
+
+  @Test
+  public void sign_sameAs() throws IOException {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    String defaultAccountEmail = "mail@mail.com";
+    byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
+
+    transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);
+    transportFactory.transport.setSignature(expectedSignature);
+    ComputeEngineCredentials credentials =
+            ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+    assertArrayEquals(expectedSignature, credentials.sign(expectedSignature));
   }
 }

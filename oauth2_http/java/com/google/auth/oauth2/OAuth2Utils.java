@@ -198,6 +198,23 @@ class OAuth2Utils {
     return (Long) value;
   }
 
+  /**
+   * Return the specified map from JSON or throw a helpful error message.
+   */
+  @SuppressWarnings("unchecked")
+  static Map<String, Object> validateMap(Map<String, Object> map, String key, String errorPrefix)
+      throws IOException {
+    Object value = map.get(key);
+    if (value == null) {
+      throw new IOException(String.format(VALUE_NOT_FOUND_MESSAGE, errorPrefix, key));
+    }
+    if (!(value instanceof Map)) {
+      throw new IOException(
+          String.format(VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "Map", key));
+    }
+    return (Map) value;
+  }
+
   private OAuth2Utils() {
   }
 }
