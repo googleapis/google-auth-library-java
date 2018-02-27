@@ -195,9 +195,11 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   @Test
   public void sign_sameAs() throws IOException {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     String defaultAccountEmail = "mail@mail.com";
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
+    transportFactory.transport.setAccessToken(accessToken);
     transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);
     transportFactory.transport.setSignature(expectedSignature);
     ComputeEngineCredentials credentials =
