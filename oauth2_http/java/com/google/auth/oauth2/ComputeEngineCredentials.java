@@ -81,6 +81,9 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
   static final int COMPUTE_PING_CONNECTION_TIMEOUT_MS = 500;
 
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
+  private static final String PARSE_ERROR_ACCOUNT = "Error parsing service account response. ";
+  private static final String PARSE_ERROR_SIGNATURE = "Error parsing signature response. ";
+  private static final String PARSE_ERROR_MESSAGE = "Error parsing error message response. ";
   private static final long serialVersionUID = -4113476462526554235L;
 
   private final String transportFactoryClassName;
@@ -305,10 +308,12 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
 
     HttpResponse response = request.execute();
     int statusCode = response.getStatusCode();
-    if (statusCode == HttpStatusCodes.STATUS_CODE_FORBIDDEN) {
-      throw new IOException(String.format("Error code %s trying to sign provided bytes. This may be because"
-          + " the virtual machine instance does not have https://www.googleapis.com/auth/iam scope specified.",
-          statusCode));
+    if (statusCode >= 400 && statusCode < HttpStatusCodes.STATUS_CODE_SERVER_ERROR) {
+      GenericData responseError = response.parseAs(GenericData.class);
+      Map<String, Object> error = OAuth2Utils.validateMap(responseError, "error", PARSE_ERROR_MESSAGE);
+      String errorMessage = OAuth2Utils.validateString(error, "message", PARSE_ERROR_MESSAGE);
+      throw new IOException(String.format("Error code %s trying to sign provided bytes: %s",
+          statusCode, errorMessage));
     }
     if (statusCode != HttpStatusCodes.STATUS_CODE_OK) {
       throw new IOException(String.format("Unexpected Error code %s trying to sign provided bytes: %s", statusCode,
@@ -322,7 +327,7 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
-    String signature = OAuth2Utils.validateString(responseData, "signature", PARSE_ERROR_PREFIX);
+    String signature = OAuth2Utils.validateString(responseData, "signature", PARSE_ERROR_SIGNATURE);
     return base64.decode(signature);
   }
 
@@ -347,8 +352,8 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
       throw new IOException("Empty content from metadata token server request.");
     }
     GenericData responseData = response.parseAs(GenericData.class);
-    Map<String, Object> defaultAccount = OAuth2Utils.validateMap(responseData, "default", PARSE_ERROR_PREFIX);
-    return OAuth2Utils.validateString(defaultAccount, "email", PARSE_ERROR_PREFIX);
+    Map<String, Object> defaultAccount = OAuth2Utils.validateMap(responseData, "default", PARSE_ERROR_ACCOUNT);
+    return OAuth2Utils.validateString(defaultAccount, "email", PARSE_ERROR_ACCOUNT);
   }
 
   public static class Builder extends GoogleCredentials.Builder {
