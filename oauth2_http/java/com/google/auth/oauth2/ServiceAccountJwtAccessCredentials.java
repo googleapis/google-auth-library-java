@@ -47,6 +47,11 @@ import com.google.auth.http.AuthHttpConstants;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 
+import com.google.common.base.Throwables;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -61,7 +66,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Service Account credentials for calling Google APIs using a JWT directly for access.
@@ -73,12 +80,15 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
 
   private static final long serialVersionUID = -7274955171379494197L;
   static final String JWT_ACCESS_PREFIX = OAuth2Utils.BEARER_PREFIX;
+  private static final int LIFE_SPAN_SECS = 3600;
 
   private final String clientId;
   private final String clientEmail;
   private final PrivateKey privateKey;
   private final String privateKeyId;
   private final URI defaultAudience;
+  private transient LoadingCache<URI, String> tokenCache;
+
 
   // Until we expose this to the users it can remain transient and non-serializable
   @VisibleForTesting
@@ -119,6 +129,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     this.privateKey = Preconditions.checkNotNull(privateKey);
     this.privateKeyId = privateKeyId;
     this.defaultAudience = defaultAudience;
+    this.tokenCache = createCache();
   }
 
   /**
@@ -228,6 +239,20 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
             + " Expecting '%s'.", fileType, SERVICE_ACCOUNT_FILE_TYPE));
   }
 
+  private LoadingCache<URI, String> createCache() {
+    return CacheBuilder.newBuilder()
+        .maximumSize(100)
+        .expireAfterWrite(LIFE_SPAN_SECS - 10, TimeUnit.SECONDS)
+        .build(
+            new CacheLoader<URI, String>() {
+              @Override
+              public String load(URI key) throws Exception {
+                return generateJwtAccess(key);
+              }
+            }
+        );
+  }
+
   @Override
   public String getAuthenticationType() {
     return "JWTAccess";
@@ -275,10 +300,24 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    */
   @Override
   public void refresh() {
+    tokenCache.invalidateAll();
   }
 
   private String getJwtAccess(URI uri) throws IOException {
+    try {
+      return tokenCache.get(uri);
+    } catch (ExecutionException e) {
+      Throwables.propagateIfPossible(e.getCause(), IOException.class);
+      // Should never happen
+      throw new IllegalStateException("generateJwtAccess threw an unexpected checked exception", e.getCause());
 
+    } catch (UncheckedExecutionException e) {
+      Throwables.propagateIfPossible(e);
+      // Should never happen
+      throw new IllegalStateException("generateJwtAccess threw an unchecked exception that couldn't be rethrown", e);
+    }
+  }
+  private String generateJwtAccess(URI uri) throws IOException {
     JsonWebSignature.Header header = new JsonWebSignature.Header();
     header.setAlgorithm("RS256");
     header.setType("JWT");
@@ -291,7 +330,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     payload.setSubject(clientEmail);
     payload.setAudience(uri.toString());
     payload.setIssuedAtTimeSeconds(currentTime / 1000);
-    payload.setExpirationTimeSeconds(currentTime / 1000 + 3600);
+    payload.setExpirationTimeSeconds(currentTime / 1000 + LIFE_SPAN_SECS);
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
 
@@ -369,6 +408,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
     input.defaultReadObject();
     clock = Clock.SYSTEM;
+    tokenCache = createCache();
   }
 
   public static Builder newBuilder() {
