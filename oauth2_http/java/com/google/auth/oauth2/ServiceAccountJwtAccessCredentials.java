@@ -48,6 +48,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 
 import com.google.common.base.Throwables;
+import com.google.common.base.Ticker;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -80,7 +81,9 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
 
   private static final long serialVersionUID = -7274955171379494197L;
   static final String JWT_ACCESS_PREFIX = OAuth2Utils.BEARER_PREFIX;
-  private static final int LIFE_SPAN_SECS = 3600;
+  @VisibleForTesting
+  static final long LIFE_SPAN_SECS = TimeUnit.HOURS.toSeconds(1);
+
 
   private final String clientId;
   private final String clientEmail;
@@ -243,6 +246,14 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     return CacheBuilder.newBuilder()
         .maximumSize(100)
         .expireAfterWrite(LIFE_SPAN_SECS - 10, TimeUnit.SECONDS)
+        .ticker(
+            new Ticker() {
+              @Override
+              public long read() {
+                return TimeUnit.MILLISECONDS.toNanos(clock.currentTimeMillis());
+              }
+            }
+        )
         .build(
             new CacheLoader<URI, String>() {
               @Override
