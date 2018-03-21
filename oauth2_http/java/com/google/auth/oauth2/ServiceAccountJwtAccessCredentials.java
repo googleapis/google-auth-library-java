@@ -317,6 +317,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
       throw new IllegalStateException("generateJwtAccess threw an unchecked exception that couldn't be rethrown", e);
     }
   }
+
   private String generateJwtAccess(URI uri) throws IOException {
     JsonWebSignature.Header header = new JsonWebSignature.Header();
     header.setAlgorithm("RS256");
