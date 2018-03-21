@@ -84,7 +84,6 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   @VisibleForTesting
   static final long LIFE_SPAN_SECS = TimeUnit.HOURS.toSeconds(1);
 
-
   private final String clientId;
   private final String clientEmail;
   private final PrivateKey privateKey;
@@ -245,7 +244,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   private LoadingCache<URI, String> createCache() {
     return CacheBuilder.newBuilder()
         .maximumSize(100)
-        .expireAfterWrite(LIFE_SPAN_SECS - 10, TimeUnit.SECONDS)
+        .expireAfterWrite(LIFE_SPAN_SECS - 300, TimeUnit.SECONDS)
         .ticker(
             new Ticker() {
               @Override
