@@ -34,6 +34,7 @@ package com.google.auth.oauth2;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
@@ -45,6 +46,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.util.Clock;
 import com.google.auth.Credentials;
+import com.google.auth.TestClock;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
 
@@ -62,6 +64,7 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Test case for {@link ServiceAccountCredentials}.
@@ -225,6 +228,54 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
   }
 
   @Test
+  public void getRequestMetadata_blocking_cached() throws IOException {
+    TestClock testClock = new TestClock();
+
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    ServiceAccountJwtAccessCredentials credentials = ServiceAccountJwtAccessCredentials.newBuilder()
+        .setClientId(SA_CLIENT_ID)
+        .setClientEmail(SA_CLIENT_EMAIL)
+        .setPrivateKey(privateKey)
+        .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+        .build();
+    credentials.clock = testClock;
+
+    Map<String, List<String>> metadata1 = credentials.getRequestMetadata(CALL_URI);
+
+    // Fast forward time a little
+    long lifeSpanMs = TimeUnit.SECONDS.toMillis(10);
+    testClock.setCurrentTime(lifeSpanMs);
+
+    Map<String, List<String>> metadata2 = credentials.getRequestMetadata(CALL_URI);
+
+    assertEquals(metadata1, metadata2);
+  }
+
+  @Test
+  public void getRequestMetadata_blocking_cache_expired() throws IOException {
+    TestClock testClock = new TestClock();
+
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    ServiceAccountJwtAccessCredentials credentials = ServiceAccountJwtAccessCredentials.newBuilder()
+        .setClientId(SA_CLIENT_ID)
+        .setClientEmail(SA_CLIENT_EMAIL)
+        .setPrivateKey(privateKey)
+        .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+        .build();
+    credentials.clock = testClock;
+
+    Map<String, List<String>> metadata1 = credentials.getRequestMetadata(CALL_URI);
+
+    // Fast forward time past the expiration
+    long lifeSpanMs = TimeUnit.SECONDS.toMillis(ServiceAccountJwtAccessCredentials.LIFE_SPAN_SECS);
+    testClock.setCurrentTime(lifeSpanMs);
+
+    Map<String, List<String>> metadata2 = credentials.getRequestMetadata(CALL_URI);
+
+    assertNotEquals(metadata1, metadata2);
+  }
+
+  @Test
   public void getRequestMetadata_async_hasJwtAccess() throws IOException {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials = ServiceAccountJwtAccessCredentials.newBuilder()
@@ -276,6 +327,60 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
     credentials.getRequestMetadata(null, executor, callback);
     assertEquals(0, executor.numTasks());
     assertNotNull(callback.exception);
+  }
+
+  @Test
+  public void getRequestMetadata_async_cache_expired() throws IOException {
+    TestClock testClock = new TestClock();
+
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    ServiceAccountJwtAccessCredentials credentials = ServiceAccountJwtAccessCredentials.newBuilder()
+        .setClientId(SA_CLIENT_ID)
+        .setClientEmail(SA_CLIENT_EMAIL)
+        .setPrivateKey(privateKey)
+        .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+        .build();
+    credentials.clock = testClock;
+    MockExecutor executor = new MockExecutor();
+
+    MockRequestMetadataCallback callback1 = new MockRequestMetadataCallback();
+    credentials.getRequestMetadata(CALL_URI, executor, callback1);
+
+    // Fast forward time past the expiration
+    long lifeSpanMs = TimeUnit.SECONDS.toMillis(ServiceAccountJwtAccessCredentials.LIFE_SPAN_SECS);
+    testClock.setCurrentTime(lifeSpanMs);
+
+    MockRequestMetadataCallback callback2 = new MockRequestMetadataCallback();
+    credentials.getRequestMetadata(CALL_URI, executor, callback2);
+
+    assertNotEquals(callback1.metadata, callback2.metadata);
+  }
+
+  @Test
+  public void getRequestMetadata_async_cached() throws IOException {
+    TestClock testClock = new TestClock();
+
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    ServiceAccountJwtAccessCredentials credentials = ServiceAccountJwtAccessCredentials.newBuilder()
+        .setClientId(SA_CLIENT_ID)
+        .setClientEmail(SA_CLIENT_EMAIL)
+        .setPrivateKey(privateKey)
+        .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+        .build();
+    credentials.clock = testClock;
+    MockExecutor executor = new MockExecutor();
+
+    MockRequestMetadataCallback callback1 = new MockRequestMetadataCallback();
+    credentials.getRequestMetadata(CALL_URI, executor, callback1);
+
+    // Fast forward time a little
+    long lifeSpanMs = TimeUnit.SECONDS.toMillis(10);
+    testClock.setCurrentTime(lifeSpanMs);
+
+    MockRequestMetadataCallback callback2 = new MockRequestMetadataCallback();
+    credentials.getRequestMetadata(CALL_URI, executor, callback2);
+
+    assertEquals(callback1.metadata, callback2.metadata);
   }
 
   @Test
@@ -466,6 +571,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
         .build();
     ServiceAccountJwtAccessCredentials deserializedCredentials =
         serializeAndDeserialize(credentials);
+    verifyJwtAccess(deserializedCredentials.getRequestMetadata(), SA_CLIENT_EMAIL, CALL_URI, SA_PRIVATE_KEY_ID);
     assertEquals(credentials, deserializedCredentials);
     assertEquals(credentials.hashCode(), deserializedCredentials.hashCode());
     assertEquals(credentials.toString(), deserializedCredentials.toString());
