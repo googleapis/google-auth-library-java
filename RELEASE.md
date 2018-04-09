@@ -84,8 +84,8 @@ Central](https://repo1.maven.org/maven2/com/google/auth/google-auth-library-pare
 * If the release doesn't show up, do the following to check for failures:
   * Go to [Sonatype](https://oss.sonatype.org/) and log in
   * Click on *Staging Repositories* on the left
-  * Filter down to the repository by typing the package's groupId without periods in the search box
-    * In our case, ```comgoogleauth```
+  * Filter down to the repository by typing the package's groupId in the search box
+    * In our case, `com.google.auth`
   * Click on the repository and check for errors
 * Submit the pull request to bump the version numbers
 * Update Javadoc on Github using `scripts/update_javadoc.sh`.
