@@ -30,6 +30,7 @@ Set up PGP keys
   * The ```ABCDEFGH``` is the ID for your public key
 
 * Upload your public key to a public server: ```gpg --send-keys --keyserver hkp://pgp.mit.edu ABCDEFGH```
+  * If you see the error, `gpg: keyserver send failed: No data`, try again in ~5m. The mit server semi-frequently has trouble accepting keys
 
 Create a Maven settings file
 ----------------------------
