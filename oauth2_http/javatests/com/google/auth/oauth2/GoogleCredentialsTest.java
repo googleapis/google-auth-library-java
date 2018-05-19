@@ -72,6 +72,7 @@ public class GoogleCredentialsTest {
   private static final String USER_CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
   private static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
+  private static final String ID_TOKEN = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjU0MjViYjg0NjE2ZWJmOTczYWU4MGJjNjJhYzY4OGQyYTcyNzE1YWQifQ.eyJhenAiOiI4ODIwMzQ1NDEwMzctYjM5a3B2OWU4M2d2MmVzNnAyY243bG5lb3E0aHVqMDAuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI4ODIwMzQ1NDEwMzctYjM5a3B2OWU4M2d2MmVzNnAyY243bG5lb3E0aHVqMDAuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMDY5NTgzMjUxNzYwMTY0MzYyOTYiLCJoZCI6Im5pYW50aWNsYWJzLmNvbSIsImVtYWlsIjoiYWNhYnJlcmFAbmlhbnRpY2xhYnMuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImF0X2hhc2giOiJzMGVzY1VZc0RMb09UUlptRkRKS0FnIiwibm9uY2UiOiJOMC41MDA5MzE4NDMxMDYzNTYxMTUyNDMyNjU0Nzg2MyIsImV4cCI6MTUyNDMzMDE0OCwiaXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwianRpIjoiYTU4Y2JlYjBlNWJkMmUxZDRlY2M3MmQ3MjljOGRlZjViNzdiNDYyMCIsImlhdCI6MTUyNDMyNjU0OCwibmFtZSI6IkFsYW4gQ2FicmVyYSIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vLTRjTjQ0cUEteUNrL0FBQUFBQUFBQUFJL0FBQUFBQUFBQUFjL2p0UUtQcVpDWGRjL3M5Ni1jL3Bob3RvLmpwZyIsImdpdmVuX25hbWUiOiJBbGFuIiwiZmFtaWx5X25hbWUiOiJDYWJyZXJhIiwibG9jYWxlIjoiZW4ifQ.Ro3ru4YuhPIQqDLIQiGp81Pha1hMVxFfeaeIIrEgZbp9-UG8I6cZEqlhLpOeLCJP3bQk5r9sHAZLUY_eoG-i_OBicX5g3Kos643ZMXgBPxLHRQcwAJfhlpwzLS-dxrYCqUOMw2JQUDji0KSIzTDREbO7r_54agvEn4WWYTxuj2jyBxm66GkiigNzCIfp1n3BQ5O94yGU77DUjA2o6SXaPVh82IwrNDXpp8wnRXtY_jzCMS5k8pAs8f62EqFUSZfJO6MwV7QG7SZ460ORWNV3zJiuaWx2UhStis6cjVxxaB6LiR5pDa4QvKLmyysXc6EeZ12h8EOgcP4C_EDSWmUmnA";
   private static final HttpTransportFactory DUMMY_TRANSPORT_FACTORY =
       new MockTokenServerTransportFactory();
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
@@ -134,7 +135,7 @@ public class GoogleCredentialsTest {
   @Test
   public void fromStream_serviceAccount_providesToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN, ID_TOKEN);
     InputStream serviceAccountStream = ServiceAccountCredentialsTest
         .writeServiceAccountStream(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
@@ -146,6 +147,13 @@ public class GoogleCredentialsTest {
     credentials = credentials.createScoped(SCOPES);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+
+    GoogleCredentials credentialsForEsp = credentials.forEsp();
+
+    assertNotNull(credentialsForEsp);
+    credentialsForEsp = credentialsForEsp.createScoped(SCOPES);
+    metadata = credentialsForEsp.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, ID_TOKEN);
   }
 
   @Test
@@ -184,7 +192,7 @@ public class GoogleCredentialsTest {
   public void fromStream_user_providesToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(USER_CLIENT_ID, USER_CLIENT_SECRET);
-    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
+    transportFactory.transport.addRefreshTokens(REFRESH_TOKEN, ACCESS_TOKEN, ID_TOKEN);
     InputStream userStream =
         UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
 
@@ -193,6 +201,11 @@ public class GoogleCredentialsTest {
     assertNotNull(credentials);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+
+    GoogleCredentials credentialsForEsp = credentials.forEsp();
+
+    metadata = credentialsForEsp.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, ID_TOKEN);
   }
 
   @Test

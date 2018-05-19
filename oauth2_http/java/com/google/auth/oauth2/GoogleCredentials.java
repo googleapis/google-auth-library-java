@@ -128,6 +128,15 @@ public class GoogleCredentials extends OAuth2Credentials {
   }
 
   /**
+   * Returns a copy of credentials that can be used to connect to
+   * Cloud Endpoints' Extensible Service Proxy (ESP), which
+   * requires a JWT instead of an access token.
+   */
+  public static GoogleCredentials forEsp(GoogleCredentials credentials) {
+    return credentials.forEsp();
+  }
+
+  /**
    * Returns credentials defined by a JSON file stream.
    *
    * <p>The stream can contain a Service Account key file in JSON format from the Google Developers
@@ -228,6 +237,16 @@ public class GoogleCredentials extends OAuth2Credentials {
    * otherwise, returns the same instance.
    */
   public GoogleCredentials createDelegated(String user) {
+    return this;
+  }
+
+  /**
+   * If the credentials are to be used to connect to Cloud Endpoints'
+   * Extensible Service Proxy (ESP), creates a copy of the identity so
+   * that it uses the id_token field of a refreshed token which is a JWT;
+   * otherwise, returns the same instance.
+   */
+  public GoogleCredentials forEsp() {
     return this;
   }
 

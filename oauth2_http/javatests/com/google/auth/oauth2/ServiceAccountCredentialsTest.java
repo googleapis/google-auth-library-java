@@ -98,6 +98,11 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
       + "ADj3e1YhMVdjJW5jqwlD/VNddGjgzyunmiZg0uOXsHXbytYmsA545S8KRQFaJKFXYYFo2kOjqOiC1T2cAzMDjCQ"
       + "==\n-----END PRIVATE KEY-----\n";
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
+  private static final String ID_TOKEN = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjU0MjViYjg0NjE2ZWJmOTczYWU4MGJjNjJhYzY4OGQyYTcyNzE1YWQifQ.eyJhenAiOiI4ODIwMzQ1NDEwMzctYjM5a3B2OWU4M2d2MmVzNnAyY243bG5lb3E0aHVqMDAuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI4ODIwMzQ1NDEwMzctYjM5a3B2OWU4M2d2MmVzNnAyY243bG5lb3E0aHVqMDAuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMDY5NTgzMjUxNzYwMTY0MzYyOTYiLCJoZCI6Im5pYW50aWNsYWJzLmNvbSIsImVtYWlsIjoiYWNhYnJlcmFAbmlhbnRpY2xhYnMuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImF0X2hhc2giOiJzMGVzY1VZc0RMb09UUlptRkRKS0FnIiwibm9uY2UiOiJOMC41MDA5MzE4NDMxMDYzNTYxMTUyNDMyNjU0Nzg2MyIsImV4cCI6MTUyNDMzMDE0OCwiaXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwianRpIjoiYTU4Y2JlYjBlNWJkMmUxZDRlY2M3MmQ3MjljOGRlZjViNzdiNDYyMCIsImlhdCI6MTUyNDMyNjU0OCwibmFtZSI6IkFsYW4gQ2FicmVyYSIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vLTRjTjQ0cUEteUNrL0FBQUFBQUFBQUFJL0FBQUFBQUFBQUFjL2p0UUtQcVpDWGRjL3M5Ni1jL3Bob3RvLmpwZyIsImdpdmVuX25hbWUiOiJBbGFuIiwiZmFtaWx5X25hbWUiOiJDYWJyZXJhIiwibG9jYWxlIjoiZW4ifQ.Ro3ru4YuhPIQqDLIQiGp81Pha1hMVxFfeaeIIrEgZbp9-UG8I6cZEqlhLpOeLCJP3bQk5r9sHAZLUY_eoG-i_OBicX5g3Kos643ZMXgBPxLHRQcwAJfhlpwzLS-dxrYCqUOMw2JQUDji0KSIzTDREbO7r_54agvEn4WWYTxuj2jyBxm66GkiigNzCIfp1n3BQ5O94yGU77DUjA2o6SXaPVh82IwrNDXpp8wnRXtY_jzCMS5k8pAs8f62EqFUSZfJO6MwV7QG7SZ460ORWNV3zJiuaWx2UhStis6cjVxxaB6LiR5pDa4QvKLmyysXc6EeZ12h8EOgcP4C_EDSWmUmnA";
+  private static final String ACCESS_TOKEN_1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+  private static final String ACCESS_TOKEN_2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
+  private static final String ID_TOKEN_1 = "1/eyJhbGciOiJSUzI1NiIsImtpZCI6IjU0MjViYjg0NjE2ZWJmOTczYWU4MGJjNjJhYzY4OGQyYTcyNzE1YWQifQ.eyJhenAiOiI4ODIwMzQ1NDEwMzctYjM5a3B2OWU4M2d2MmVzNnAyY243bG5lb3E0aHVqMDAuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI4ODIwMzQ1NDEwMzctYjM5a3B2OWU4M2d2MmVzNnAyY243bG5lb3E0aHVqMDAuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMDY5NTgzMjUxNzYwMTY0MzYyOTYiLCJoZCI6Im5pYW50aWNsYWJzLmNvbSIsImVtYWlsIjoiYWNhYnJlcmFAbmlhbnRpY2xhYnMuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImF0X2hhc2giOiJzMGVzY1VZc0RMb09UUlptRkRKS0FnIiwibm9uY2UiOiJOMC41MDA5MzE4NDMxMDYzNTYxMTUyNDMyNjU0Nzg2MyIsImV4cCI6MTUyNDMzMDE0OCwiaXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwianRpIjoiYTU4Y2JlYjBlNWJkMmUxZDRlY2M3MmQ3MjljOGRlZjViNzdiNDYyMCIsImlhdCI6MTUyNDMyNjU0OCwibmFtZSI6IkFsYW4gQ2FicmVyYSIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vLTRjTjQ0cUEteUNrL0FBQUFBQUFBQUFJL0FBQUFBQUFBQUFjL2p0UUtQcVpDWGRjL3M5Ni1jL3Bob3RvLmpwZyIsImdpdmVuX25hbWUiOiJBbGFuIiwiZmFtaWx5X25hbWUiOiJDYWJyZXJhIiwibG9jYWxlIjoiZW4ifQ.Ro3ru4YuhPIQqDLIQiGp81Pha1hMVxFfeaeIIrEgZbp9-UG8I6cZEqlhLpOeLCJP3bQk5r9sHAZLUY_eoG-i_OBicX5g3Kos643ZMXgBPxLHRQcwAJfhlpwzLS-dxrYCqUOMw2JQUDji0KSIzTDREbO7r_54agvEn4WWYTxuj2jyBxm66GkiigNzCIfp1n3BQ5O94yGU77DUjA2o6SXaPVh82IwrNDXpp8wnRXtY_jzCMS5k8pAs8f62EqFUSZfJO6MwV7QG7SZ460ORWNV3zJiuaWx2UhStis6cjVxxaB6LiR5pDa4QvKLmyysXc6EeZ12h8EOgcP4C_EDSWmUmnA";
+  private static final String ID_TOKEN_2 = "2/eyJhbGciOiJSUzI1NiIsImtpZCI6IjU0MjViYjg0NjE2ZWJmOTczYWU4MGJjNjJhYzY4OGQyYTcyNzE1YWQifQ.eyJhenAiOiI4ODIwMzQ1NDEwMzctYjM5a3B2OWU4M2d2MmVzNnAyY243bG5lb3E0aHVqMDAuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI4ODIwMzQ1NDEwMzctYjM5a3B2OWU4M2d2MmVzNnAyY243bG5lb3E0aHVqMDAuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMDY5NTgzMjUxNzYwMTY0MzYyOTYiLCJoZCI6Im5pYW50aWNsYWJzLmNvbSIsImVtYWlsIjoiYWNhYnJlcmFAbmlhbnRpY2xhYnMuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImF0X2hhc2giOiJzMGVzY1VZc0RMb09UUlptRkRKS0FnIiwibm9uY2UiOiJOMC41MDA5MzE4NDMxMDYzNTYxMTUyNDMyNjU0Nzg2MyIsImV4cCI6MTUyNDMzMDE0OCwiaXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwianRpIjoiYTU4Y2JlYjBlNWJkMmUxZDRlY2M3MmQ3MjljOGRlZjViNzdiNDYyMCIsImlhdCI6MTUyNDMyNjU0OCwibmFtZSI6IkFsYW4gQ2FicmVyYSIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vLTRjTjQ0cUEteUNrL0FBQUFBQUFBQUFJL0FBQUFBQUFBQUFjL2p0UUtQcVpDWGRjL3M5Ni1jL3Bob3RvLmpwZyIsImdpdmVuX25hbWUiOiJBbGFuIiwiZmFtaWx5X25hbWUiOiJDYWJyZXJhIiwibG9jYWxlIjoiZW4ifQ.Ro3ru4YuhPIQqDLIQiGp81Pha1hMVxFfeaeIIrEgZbp9-UG8I6cZEqlhLpOeLCJP3bQk5r9sHAZLUY_eoG-i_OBicX5g3Kos643ZMXgBPxLHRQcwAJfhlpwzLS-dxrYCqUOMw2JQUDji0KSIzTDREbO7r_54agvEn4WWYTxuj2jyBxm66GkiigNzCIfp1n3BQ5O94yGU77DUjA2o6SXaPVh82IwrNDXpp8wnRXtY_jzCMS5k8pAs8f62EqFUSZfJO6MwV7QG7SZ460ORWNV3zJiuaWx2UhStis6cjVxxaB6LiR5pDa4QvKLmyysXc6EeZ12h8EOgcP4C_EDSWmUmnA";
   private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
   private static final String SERVICE_ACCOUNT_USER = "user@example.com";
   private static final String PROJECT_ID = "project-id";
@@ -193,7 +198,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void createdScoped_enablesAccessTokens() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN, ID_TOKEN);
     GoogleCredentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
         SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, null, transportFactory, null);
 
@@ -229,7 +234,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void fromJSON_getProjectId() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN, ID_TOKEN);
     GenericJson json = writeServiceAccountJson(
         SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, PROJECT_ID);
 
@@ -240,7 +245,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void fromJSON_getProjectIdNull() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN, ID_TOKEN);
     GenericJson json = writeServiceAccountJson(
         SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, null);
 
@@ -251,7 +256,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void fromJSON_hasAccessToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN, ID_TOKEN);
     GenericJson json = writeServiceAccountJson(
         SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, PROJECT_ID);
 
@@ -260,25 +265,35 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     credentials = credentials.createScoped(SCOPES);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+
+    GoogleCredentials credentialsForEsp = credentials.forEsp();
+
+    credentialsForEsp = credentialsForEsp.createScoped(SCOPES);
+    metadata = credentialsForEsp.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, ID_TOKEN);
   }
 
   @Test
   public void getRequestMetadata_hasAccessToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN, ID_TOKEN);
     OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
         SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, transportFactory, null);
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+
+    OAuth2Credentials credentialsForEsp = ((ServiceAccountCredentials) credentials).forEsp();
+    metadata = credentialsForEsp.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, ID_TOKEN);
   }
 
   @Test
   public void getRequestMetadata_customTokenServer_hasAccessToken() throws IOException {
     final URI TOKEN_SERVER = URI.create("https://foo.com/bar");
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN, ID_TOKEN);
     transportFactory.transport.setTokenServerUri(TOKEN_SERVER);
     OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(SA_CLIENT_ID,
         SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, SCOPES, transportFactory,
@@ -287,12 +302,14 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+
+    OAuth2Credentials credentialsForEsp = ((ServiceAccountCredentials) credentials).forEsp();
+    metadata = credentialsForEsp.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, ID_TOKEN);
   }
 
   @Test
   public void refreshAccessToken_refreshesToken() throws IOException {
-    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
-    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
     ServiceAccountCredentials credentials =
@@ -305,17 +322,25 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             transportFactory,
             null);
 
-    transport.addServiceAccount(SA_CLIENT_EMAIL, accessToken1);
-    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN_1, ID_TOKEN_1);
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), ACCESS_TOKEN_1);
 
-    transport.addServiceAccount(SA_CLIENT_EMAIL, accessToken2);
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN_2, ID_TOKEN_2);
     credentials.refresh();
-    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken2);
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), ACCESS_TOKEN_2);
+
+    ServiceAccountCredentials credentialsForEsp = (ServiceAccountCredentials) credentials.forEsp();
+
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN_1, ID_TOKEN_1);
+    TestUtils.assertContainsBearerToken(credentialsForEsp.getRequestMetadata(CALL_URI), ID_TOKEN_1);
+
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN_2, ID_TOKEN_2);
+    credentialsForEsp.refresh();
+    TestUtils.assertContainsBearerToken(credentialsForEsp.getRequestMetadata(CALL_URI), ID_TOKEN_2);
   }
 
   @Test
   public void refreshAccessToken_tokenExpiry() throws IOException {
-    final String tokenString = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
     ServiceAccountCredentials credentials =
@@ -329,22 +354,36 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             null);
     credentials.clock = new FixedClock(0L);
 
-    transport.addServiceAccount(SA_CLIENT_EMAIL, tokenString);
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN, ID_TOKEN);
     AccessToken accessToken = credentials.refreshAccessToken();
-    assertEquals(tokenString, accessToken.getTokenValue());
+    assertEquals(ACCESS_TOKEN, accessToken.getTokenValue());
     assertEquals(3600 * 1000L, accessToken.getExpirationTimeMillis().longValue());
 
     // Test for large expires_in values (should not overflow).
     transport.setExpiresInSeconds(3600 * 1000);
     accessToken = credentials.refreshAccessToken();
-    assertEquals(tokenString, accessToken.getTokenValue());
+    assertEquals(ACCESS_TOKEN, accessToken.getTokenValue());
+    assertEquals(3600 * 1000 * 1000L, accessToken.getExpirationTimeMillis().longValue());
+
+    ServiceAccountCredentials credentialsForEsp = (ServiceAccountCredentials) credentials.forEsp();
+    // reset time
+    credentialsForEsp.clock = new FixedClock(0L);
+    transport.setExpiresInSeconds(3600);
+
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN, ID_TOKEN);
+    accessToken = credentialsForEsp.refreshAccessToken();
+    assertEquals(ID_TOKEN, accessToken.getTokenValue());
+    assertEquals(3600 * 1000L, accessToken.getExpirationTimeMillis().longValue());
+
+    // Test for large expires_in values (should not overflow).
+    transport.setExpiresInSeconds(3600 * 1000);
+    accessToken = credentialsForEsp.refreshAccessToken();
+    assertEquals(ID_TOKEN, accessToken.getTokenValue());
     assertEquals(3600 * 1000 * 1000L, accessToken.getExpirationTimeMillis().longValue());
   }
 
   @Test
   public void refreshAccessToken_retriesIOException() throws IOException {
-    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
-    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
     ServiceAccountCredentials credentials =
@@ -357,19 +396,27 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             transportFactory,
             null);
 
-    transport.addServiceAccount(SA_CLIENT_EMAIL, accessToken1);
-    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN_1, ID_TOKEN_1);
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), ACCESS_TOKEN_1);
 
     transport.addResponseErrorSequence(new IOException());
-    transport.addServiceAccount(SA_CLIENT_EMAIL, accessToken2);
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN_2, ID_TOKEN_2);
     credentials.refresh();
-    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken2);
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), ACCESS_TOKEN_2);
+
+    ServiceAccountCredentials credentialsForEsp = (ServiceAccountCredentials) credentials.forEsp();
+
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN_1, ID_TOKEN_1);
+    TestUtils.assertContainsBearerToken(credentialsForEsp.getRequestMetadata(CALL_URI), ID_TOKEN_1);
+
+    transport.addResponseErrorSequence(new IOException());
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN_2, ID_TOKEN_2);
+    credentialsForEsp.refresh();
+    TestUtils.assertContainsBearerToken(credentialsForEsp.getRequestMetadata(CALL_URI), ID_TOKEN_2);
   }
 
   @Test
   public void refreshAccessToken_retriesForbiddenError() throws IOException {
-    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
-    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
     ServiceAccountCredentials credentials =
@@ -382,19 +429,27 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             transportFactory,
             null);
 
-    transport.addServiceAccount(SA_CLIENT_EMAIL, accessToken1);
-    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN_1, ID_TOKEN_1);
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), ACCESS_TOKEN_1);
 
     transport.addResponseSequence(new MockLowLevelHttpResponse().setStatusCode(403));
-    transport.addServiceAccount(SA_CLIENT_EMAIL, accessToken2);
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN_2, ID_TOKEN_2);
     credentials.refresh();
-    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken2);
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), ACCESS_TOKEN_2);
+
+    ServiceAccountCredentials credentialsForEsp = (ServiceAccountCredentials) credentials.forEsp();
+
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN_1, ID_TOKEN_1);
+    TestUtils.assertContainsBearerToken(credentialsForEsp.getRequestMetadata(CALL_URI), ID_TOKEN_1);
+
+    transport.addResponseSequence(new MockLowLevelHttpResponse().setStatusCode(403));
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN_2, ID_TOKEN_2);
+    credentialsForEsp.refresh();
+    TestUtils.assertContainsBearerToken(credentialsForEsp.getRequestMetadata(CALL_URI), ID_TOKEN_2);
   }
 
   @Test
   public void refreshAccessToken_retriesServerError() throws IOException {
-    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
-    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
     ServiceAccountCredentials credentials =
@@ -407,19 +462,27 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             transportFactory,
             null);
 
-    transport.addServiceAccount(SA_CLIENT_EMAIL, accessToken1);
-    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN_1, ID_TOKEN_1);
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), ACCESS_TOKEN_1);
 
     transport.addResponseSequence(new MockLowLevelHttpResponse().setStatusCode(500));
-    transport.addServiceAccount(SA_CLIENT_EMAIL, accessToken2);
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN_2, ID_TOKEN_2);
     credentials.refresh();
-    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken2);
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), ACCESS_TOKEN_2);
+
+    ServiceAccountCredentials credentialsForEsp = (ServiceAccountCredentials) credentials.forEsp();
+
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN_1, ID_TOKEN_1);
+    TestUtils.assertContainsBearerToken(credentialsForEsp.getRequestMetadata(CALL_URI), ID_TOKEN_1);
+
+    transport.addResponseSequence(new MockLowLevelHttpResponse().setStatusCode(500));
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN_2, ID_TOKEN_2);
+    credentialsForEsp.refresh();
+    TestUtils.assertContainsBearerToken(credentialsForEsp.getRequestMetadata(CALL_URI), ID_TOKEN_2);
   }
 
   @Test
   public void refreshAccessToken_failsNotFoundError() throws IOException {
-    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
-    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
     ServiceAccountCredentials credentials =
@@ -432,13 +495,27 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             transportFactory,
             null);
 
-    transport.addServiceAccount(SA_CLIENT_EMAIL, accessToken1);
-    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN_1, ID_TOKEN_1);
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), ACCESS_TOKEN_1);
 
     try {
       transport.addResponseSequence(new MockLowLevelHttpResponse().setStatusCode(404));
-      transport.addServiceAccount(SA_CLIENT_EMAIL, accessToken2);
+      transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN_2, ID_TOKEN_2);
       credentials.refresh();
+      fail("Should not retry on Not Found");
+    } catch (IOException expected) {
+      // Expected
+    }
+
+    ServiceAccountCredentials credentialsForEsp = (ServiceAccountCredentials) credentials.forEsp();
+
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN_1, ID_TOKEN_1);
+    TestUtils.assertContainsBearerToken(credentialsForEsp.getRequestMetadata(CALL_URI), ID_TOKEN_1);
+
+    try {
+      transport.addResponseSequence(new MockLowLevelHttpResponse().setStatusCode(404));
+      transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN_2, ID_TOKEN_2);
+      credentialsForEsp.refresh();
       fail("Should not retry on Not Found");
     } catch (IOException expected) {
       // Expected
@@ -585,11 +662,13 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
         tokenServer, SERVICE_ACCOUNT_USER);
     String expectedToString = String.format(
         "ServiceAccountCredentials{clientId=%s, clientEmail=%s, privateKeyId=%s, "
-            + "transportFactoryClassName=%s, tokenServerUri=%s, scopes=%s, serviceAccountUser=%s}",
+            + "transportFactoryClassName=%s, tokenType=%s, tokenServerUri=%s, "
+            + "scopes=%s, serviceAccountUser=%s}",
         SA_CLIENT_ID,
         SA_CLIENT_EMAIL,
         SA_PRIVATE_KEY_ID,
         MockTokenServerTransportFactory.class.getName(),
+        "access_token",
         tokenServer,
         SCOPES,
         SERVICE_ACCOUNT_USER);
@@ -650,7 +729,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void fromStream_providesToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN, ID_TOKEN);
     InputStream serviceAccountStream = writeServiceAccountStream(
         SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
 

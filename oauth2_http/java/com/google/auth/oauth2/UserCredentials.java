@@ -60,11 +60,11 @@ import java.util.Objects;
 /**
  * OAuth2 Credentials representing a user's identity and consent.
  */
-public class UserCredentials extends GoogleCredentials {
+public class UserCredentials extends EspFriendlyCredentials {
 
   private static final String GRANT_TYPE = "refresh_token";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
-  private static final long serialVersionUID = -4800758775038679176L;
+  private static final long serialVersionUID = -6471498792085092347L;
 
   private final String clientId;
   private final String clientSecret;
@@ -121,7 +121,13 @@ public class UserCredentials extends GoogleCredentials {
   @Deprecated
   public UserCredentials(String clientId, String clientSecret, String refreshToken,
                          AccessToken accessToken, HttpTransportFactory transportFactory, URI tokenServerUri) {
-    super(accessToken);
+    this(clientId, clientSecret, refreshToken, accessToken, transportFactory, tokenServerUri, ACCESS_TOKEN_TYPE);
+  }
+
+  private UserCredentials(String clientId, String clientSecret, String refreshToken,
+                          AccessToken accessToken, HttpTransportFactory transportFactory,
+                          URI tokenServerUri, String tokenType) {
+    super(accessToken, tokenType);
     this.clientId = Preconditions.checkNotNull(clientId);
     this.clientSecret = Preconditions.checkNotNull(clientSecret);
     this.refreshToken = refreshToken;
@@ -226,12 +232,11 @@ public class UserCredentials extends GoogleCredentials {
     request.setParser(new JsonObjectParser(JSON_FACTORY));
     HttpResponse response = request.execute();
     GenericData responseData = response.parseAs(GenericData.class);
-    String accessToken =
-        OAuth2Utils.validateString(responseData, "access_token", PARSE_ERROR_PREFIX);
+    String token = OAuth2Utils.validateString(responseData, tokenType, PARSE_ERROR_PREFIX);
     int expiresInSeconds =
         OAuth2Utils.validateInt32(responseData, "expires_in", PARSE_ERROR_PREFIX);
     long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000;
-    return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
+    return new AccessToken(token, new Date(expiresAtMilliseconds));
   }
 
   /**
@@ -303,6 +308,11 @@ public class UserCredentials extends GoogleCredentials {
   }
 
   @Override
+  public GoogleCredentials forEsp() {
+    return this.toBuilder().forEsp().build();
+  }
+
+  @Override
   public int hashCode() {
     return Objects.hash(super.hashCode(), clientId, clientSecret, refreshToken, tokenServerUri,
         transportFactoryClassName);
@@ -314,6 +324,7 @@ public class UserCredentials extends GoogleCredentials {
         .add("requestMetadata", getRequestMetadataInternal())
         .add("temporaryAccess", getAccessToken())
         .add("clientId", clientId)
+        .add("tokenType", tokenType)
         .add("refreshToken", refreshToken)
         .add("tokenServerUri", tokenServerUri)
         .add("transportFactoryClassName", transportFactoryClassName)
@@ -325,6 +336,7 @@ public class UserCredentials extends GoogleCredentials {
     if (!(obj instanceof UserCredentials)) {
       return false;
     }
+    if (!super.equals(obj)) return false;
     UserCredentials other = (UserCredentials) obj;
     return super.equals(other)
         && Objects.equals(this.clientId, other.clientId)
@@ -353,9 +365,12 @@ public class UserCredentials extends GoogleCredentials {
     private String clientSecret;
     private String refreshToken;
     private URI tokenServerUri;
+    private String tokenType;
     private HttpTransportFactory transportFactory;
 
-    protected Builder() {}
+    protected Builder() {
+      this.tokenType = ACCESS_TOKEN_TYPE;
+    }
 
     protected Builder(UserCredentials credentials) {
       this.clientId = credentials.clientId;
@@ -363,6 +378,7 @@ public class UserCredentials extends GoogleCredentials {
       this.refreshToken = credentials.refreshToken;
       this.transportFactory = credentials.transportFactory;
       this.tokenServerUri = credentials.tokenServerUri;
+      this.tokenType = credentials.tokenType;
     }
 
     public Builder setClientId(String clientId) {
@@ -382,6 +398,11 @@ public class UserCredentials extends GoogleCredentials {
 
     public Builder setTokenServerUri(URI tokenServerUri) {
       this.tokenServerUri = tokenServerUri;
+      return this;
+    }
+
+    public Builder forEsp() {
+      this.tokenType = ID_TOKEN_TYPE;
       return this;
     }
 
@@ -417,7 +438,7 @@ public class UserCredentials extends GoogleCredentials {
 
     public UserCredentials build() {
       return new UserCredentials(
-          clientId, clientSecret, refreshToken, getAccessToken(), transportFactory,tokenServerUri);
+          clientId, clientSecret, refreshToken, getAccessToken(), transportFactory, tokenServerUri, tokenType);
     }
   }
 }

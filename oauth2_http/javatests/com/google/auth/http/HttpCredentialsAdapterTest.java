@@ -63,10 +63,11 @@ public class HttpCredentialsAdapterTest {
   @Test
   public void initialize_populatesOAuth2Credentials() throws IOException {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    final String idToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjU0MjViYjg0NjE2ZWJmOTczYWU4MGJjNjJhYzY4OGQyYTcyNzE1YWQifQ.eyJhenAiOiI4ODIwMzQ1NDEwMzctYjM5a3B2OWU4M2d2MmVzNnAyY243bG5lb3E0aHVqMDAuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI4ODIwMzQ1NDEwMzctYjM5a3B2OWU4M2d2MmVzNnAyY243bG5lb3E0aHVqMDAuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMDY5NTgzMjUxNzYwMTY0MzYyOTYiLCJoZCI6Im5pYW50aWNsYWJzLmNvbSIsImVtYWlsIjoiYWNhYnJlcmFAbmlhbnRpY2xhYnMuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImF0X2hhc2giOiJzMGVzY1VZc0RMb09UUlptRkRKS0FnIiwibm9uY2UiOiJOMC41MDA5MzE4NDMxMDYzNTYxMTUyNDMyNjU0Nzg2MyIsImV4cCI6MTUyNDMzMDE0OCwiaXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwianRpIjoiYTU4Y2JlYjBlNWJkMmUxZDRlY2M3MmQ3MjljOGRlZjViNzdiNDYyMCIsImlhdCI6MTUyNDMyNjU0OCwibmFtZSI6IkFsYW4gQ2FicmVyYSIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vLTRjTjQ0cUEteUNrL0FBQUFBQUFBQUFJL0FBQUFBQUFBQUFjL2p0UUtQcVpDWGRjL3M5Ni1jL3Bob3RvLmpwZyIsImdpdmVuX25hbWUiOiJBbGFuIiwiZmFtaWx5X25hbWUiOiJDYWJyZXJhIiwibG9jYWxlIjoiZW4ifQ.Ro3ru4YuhPIQqDLIQiGp81Pha1hMVxFfeaeIIrEgZbp9-UG8I6cZEqlhLpOeLCJP3bQk5r9sHAZLUY_eoG-i_OBicX5g3Kos643ZMXgBPxLHRQcwAJfhlpwzLS-dxrYCqUOMw2JQUDji0KSIzTDREbO7r_54agvEn4WWYTxuj2jyBxm66GkiigNzCIfp1n3BQ5O94yGU77DUjA2o6SXaPVh82IwrNDXpp8wnRXtY_jzCMS5k8pAs8f62EqFUSZfJO6MwV7QG7SZ460ORWNV3zJiuaWx2UhStis6cjVxxaB6LiR5pDa4QvKLmyysXc6EeZ12h8EOgcP4C_EDSWmUmnA";
     final String expectedAuthorization = InternalAuthHttpConstants.BEARER_PREFIX + accessToken;
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
-    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessToken);
+    transportFactory.transport.addRefreshTokens(REFRESH_TOKEN, accessToken, idToken);
 
     OAuth2Credentials credentials = UserCredentials.newBuilder()
         .setClientId(CLIENT_ID)
@@ -91,16 +92,20 @@ public class HttpCredentialsAdapterTest {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
 
+    final String idToken = "1/eyJhbGciOiJSUzI1NiIsImtpZCI6IjU0MjViYjg0NjE2ZWJmOTczYWU4MGJjNjJhYzY4OGQyYTcyNzE1YWQifQ.eyJhenAiOiI4ODIwMzQ1NDEwMzctYjM5a3B2OWU4M2d2MmVzNnAyY243bG5lb3E0aHVqMDAuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI4ODIwMzQ1NDEwMzctYjM5a3B2OWU4M2d2MmVzNnAyY243bG5lb3E0aHVqMDAuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMDY5NTgzMjUxNzYwMTY0MzYyOTYiLCJoZCI6Im5pYW50aWNsYWJzLmNvbSIsImVtYWlsIjoiYWNhYnJlcmFAbmlhbnRpY2xhYnMuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImF0X2hhc2giOiJzMGVzY1VZc0RMb09UUlptRkRKS0FnIiwibm9uY2UiOiJOMC41MDA5MzE4NDMxMDYzNTYxMTUyNDMyNjU0Nzg2MyIsImV4cCI6MTUyNDMzMDE0OCwiaXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwianRpIjoiYTU4Y2JlYjBlNWJkMmUxZDRlY2M3MmQ3MjljOGRlZjViNzdiNDYyMCIsImlhdCI6MTUyNDMyNjU0OCwibmFtZSI6IkFsYW4gQ2FicmVyYSIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vLTRjTjQ0cUEteUNrL0FBQUFBQUFBQUFJL0FBQUFBQUFBQUFjL2p0UUtQcVpDWGRjL3M5Ni1jL3Bob3RvLmpwZyIsImdpdmVuX25hbWUiOiJBbGFuIiwiZmFtaWx5X25hbWUiOiJDYWJyZXJhIiwibG9jYWxlIjoiZW4ifQ.Ro3ru4YuhPIQqDLIQiGp81Pha1hMVxFfeaeIIrEgZbp9-UG8I6cZEqlhLpOeLCJP3bQk5r9sHAZLUY_eoG-i_OBicX5g3Kos643ZMXgBPxLHRQcwAJfhlpwzLS-dxrYCqUOMw2JQUDji0KSIzTDREbO7r_54agvEn4WWYTxuj2jyBxm66GkiigNzCIfp1n3BQ5O94yGU77DUjA2o6SXaPVh82IwrNDXpp8wnRXtY_jzCMS5k8pAs8f62EqFUSZfJO6MwV7QG7SZ460ORWNV3zJiuaWx2UhStis6cjVxxaB6LiR5pDa4QvKLmyysXc6EeZ12h8EOgcP4C_EDSWmUmnA";
+    final String idToken2 = "2/eyJhbGciOiJSUzI1NiIsImtpZCI6IjU0MjViYjg0NjE2ZWJmOTczYWU4MGJjNjJhYzY4OGQyYTcyNzE1YWQifQ.eyJhenAiOiI4ODIwMzQ1NDEwMzctYjM5a3B2OWU4M2d2MmVzNnAyY243bG5lb3E0aHVqMDAuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI4ODIwMzQ1NDEwMzctYjM5a3B2OWU4M2d2MmVzNnAyY243bG5lb3E0aHVqMDAuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMDY5NTgzMjUxNzYwMTY0MzYyOTYiLCJoZCI6Im5pYW50aWNsYWJzLmNvbSIsImVtYWlsIjoiYWNhYnJlcmFAbmlhbnRpY2xhYnMuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImF0X2hhc2giOiJzMGVzY1VZc0RMb09UUlptRkRKS0FnIiwibm9uY2UiOiJOMC41MDA5MzE4NDMxMDYzNTYxMTUyNDMyNjU0Nzg2MyIsImV4cCI6MTUyNDMzMDE0OCwiaXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwianRpIjoiYTU4Y2JlYjBlNWJkMmUxZDRlY2M3MmQ3MjljOGRlZjViNzdiNDYyMCIsImlhdCI6MTUyNDMyNjU0OCwibmFtZSI6IkFsYW4gQ2FicmVyYSIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vLTRjTjQ0cUEteUNrL0FBQUFBQUFBQUFJL0FBQUFBQUFBQUFjL2p0UUtQcVpDWGRjL3M5Ni1jL3Bob3RvLmpwZyIsImdpdmVuX25hbWUiOiJBbGFuIiwiZmFtaWx5X25hbWUiOiJDYWJyZXJhIiwibG9jYWxlIjoiZW4ifQ.Ro3ru4YuhPIQqDLIQiGp81Pha1hMVxFfeaeIIrEgZbp9-UG8I6cZEqlhLpOeLCJP3bQk5r9sHAZLUY_eoG-i_OBicX5g3Kos643ZMXgBPxLHRQcwAJfhlpwzLS-dxrYCqUOMw2JQUDji0KSIzTDREbO7r_54agvEn4WWYTxuj2jyBxm66GkiigNzCIfp1n3BQ5O94yGU77DUjA2o6SXaPVh82IwrNDXpp8wnRXtY_jzCMS5k8pAs8f62EqFUSZfJO6MwV7QG7SZ460ORWNV3zJiuaWx2UhStis6cjVxxaB6LiR5pDa4QvKLmyysXc6EeZ12h8EOgcP4C_EDSWmUmnA";
+
     MockTokenServerTransportFactory tokenServerTransportFactory =
         new MockTokenServerTransportFactory();
     tokenServerTransportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
-    tokenServerTransportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessToken);
+    tokenServerTransportFactory.transport.addRefreshTokens(REFRESH_TOKEN, accessToken, idToken);
 
     OAuth2Credentials credentials = UserCredentials.newBuilder()
         .setClientId(CLIENT_ID)
         .setClientSecret(CLIENT_SECRET)
         .setRefreshToken(REFRESH_TOKEN)
         .setHttpTransportFactory(tokenServerTransportFactory)
+//        .forEsp()
         .build();
 
     credentials.refresh();
@@ -114,7 +119,7 @@ public class HttpCredentialsAdapterTest {
 
     // now switch out the access token so that the original one is invalid,
     //   requiring a refresh of the access token
-    tokenServerTransportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessToken2);
+    tokenServerTransportFactory.transport.addRefreshTokens(REFRESH_TOKEN, accessToken2, idToken2);
 
     HttpResponse response = request.execute();
 
@@ -126,11 +131,12 @@ public class HttpCredentialsAdapterTest {
   @Test
   public void initialize_noURI() throws IOException {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    final String idToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String expectedAuthorization = InternalAuthHttpConstants.BEARER_PREFIX + accessToken;
     MockTokenServerTransportFactory tokenServerTransportFactory =
         new MockTokenServerTransportFactory();
     tokenServerTransportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
-    tokenServerTransportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessToken);
+    tokenServerTransportFactory.transport.addRefreshTokens(REFRESH_TOKEN, accessToken, idToken);
 
     OAuth2Credentials credentials = UserCredentials.newBuilder()
         .setClientId(CLIENT_ID)

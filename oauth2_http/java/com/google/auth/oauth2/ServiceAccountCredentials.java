@@ -83,9 +83,9 @@ import java.util.Objects;
  *
  * <p>By default uses a JSON Web Token (JWT) to fetch access tokens.
  */
-public class ServiceAccountCredentials extends GoogleCredentials implements ServiceAccountSigner {
+public class ServiceAccountCredentials extends EspFriendlyCredentials implements ServiceAccountSigner {
 
-  private static final long serialVersionUID = 7807543542681217978L;
+  private static final long serialVersionUID = 912749099128820579L;
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
 
@@ -161,6 +161,15 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
       String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId,
       Collection<String> scopes, HttpTransportFactory transportFactory, URI tokenServerUri,
       String serviceAccountUser, String projectId) {
+    this(clientId, clientEmail, privateKey, privateKeyId, scopes, transportFactory, tokenServerUri,
+         serviceAccountUser, projectId, ACCESS_TOKEN_TYPE);
+  }
+
+  private ServiceAccountCredentials(
+        String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId,
+        Collection<String> scopes, HttpTransportFactory transportFactory, URI tokenServerUri,
+        String serviceAccountUser, String projectId, String tokenType) {
+    super(tokenType);
     this.clientId = clientId;
     this.clientEmail = Preconditions.checkNotNull(clientEmail);
     this.privateKey = Preconditions.checkNotNull(privateKey);
@@ -386,12 +395,11 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
-    String accessToken = OAuth2Utils.validateString(
-        responseData, "access_token", PARSE_ERROR_PREFIX);
+    String token = OAuth2Utils.validateString(responseData, tokenType, PARSE_ERROR_PREFIX);
     int expiresInSeconds = OAuth2Utils.validateInt32(
         responseData, "expires_in", PARSE_ERROR_PREFIX);
     long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000L;
-    return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
+    return new AccessToken(token, new Date(expiresAtMilliseconds));
   }
 
   /**
@@ -409,14 +417,12 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
    */
   @Override
   public GoogleCredentials createScoped(Collection<String> newScopes) {
-    return new ServiceAccountCredentials(clientId, clientEmail, privateKey, privateKeyId, newScopes,
-        transportFactory, tokenServerUri, serviceAccountUser, projectId);
+    return this.toBuilder().setScopes(newScopes).build();
   }
 
   @Override
   public GoogleCredentials createDelegated(String user) {
-    return new ServiceAccountCredentials(clientId, clientEmail, privateKey, privateKeyId, scopes,
-        transportFactory, tokenServerUri, user, projectId);
+    return this.toBuilder().setServiceAccountUser(user).build();
   }
 
   public final String getClientId() {
@@ -465,8 +471,13 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
   }
 
   @Override
+  public GoogleCredentials forEsp() {
+    return this.toBuilder().forEsp().build();
+  }
+
+  @Override
   public int hashCode() {
-    return Objects.hash(clientId, clientEmail, privateKey, privateKeyId, transportFactoryClassName,
+    return Objects.hash(super.hashCode(), clientId, clientEmail, privateKey, privateKeyId, transportFactoryClassName,
         tokenServerUri, scopes);
   }
 
@@ -477,6 +488,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
         .add("clientEmail", clientEmail)
         .add("privateKeyId", privateKeyId)
         .add("transportFactoryClassName", transportFactoryClassName)
+        .add("tokenType", tokenType)
         .add("tokenServerUri", tokenServerUri)
         .add("scopes", scopes)
         .add("serviceAccountUser", serviceAccountUser)
@@ -488,6 +500,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
     if (!(obj instanceof ServiceAccountCredentials)) {
       return false;
     }
+    if (!super.equals(obj)) return false;
     ServiceAccountCredentials other = (ServiceAccountCredentials) obj;
     return Objects.equals(this.clientId, other.clientId)
         && Objects.equals(this.clientEmail, other.clientEmail)
@@ -547,10 +560,13 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
     private String serviceAccountUser;
     private String projectId;
     private URI tokenServerUri;
+    private String tokenType;
     private Collection<String> scopes;
     private HttpTransportFactory transportFactory;
 
-    protected Builder() {}
+    protected Builder() {
+      this.tokenType = ACCESS_TOKEN_TYPE;
+    }
 
     protected Builder(ServiceAccountCredentials credentials) {
       this.clientId = credentials.clientId;
@@ -560,6 +576,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
       this.scopes = credentials.scopes;
       this.transportFactory = credentials.transportFactory;
       this.tokenServerUri = credentials.tokenServerUri;
+      this.tokenType = credentials.tokenType;
       this.serviceAccountUser = credentials.serviceAccountUser;
       this.projectId = credentials.projectId;
     }
@@ -601,6 +618,11 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
 
     public Builder setTokenServerUri(URI tokenServerUri) {
       this.tokenServerUri = tokenServerUri;
+      return this;
+    }
+
+    public Builder forEsp() {
+      this.tokenType = ID_TOKEN_TYPE;
       return this;
     }
 
@@ -648,7 +670,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
     public ServiceAccountCredentials build() {
       return new ServiceAccountCredentials(
           clientId, clientEmail, privateKey, privateKeyId, scopes,
-          transportFactory, tokenServerUri, serviceAccountUser, projectId);
+          transportFactory, tokenServerUri, serviceAccountUser, projectId, tokenType);
     }
   }
 }

@@ -224,7 +224,7 @@ public class UserAuthorizerTest {
         new AccessToken(accessTokenValue1, new Date(EXPIRATION_TIME));
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
-    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessTokenValue2);
+    transportFactory.transport.addRefreshAccessToken(REFRESH_TOKEN, accessTokenValue2);
     TokenStore tokenStore = new MemoryTokensStorage();
     UserAuthorizer authorizer = UserAuthorizer.newBuilder()
         .setClientId(CLIENT_ID)
@@ -313,7 +313,7 @@ public class UserAuthorizerTest {
     assertEquals(accessTokenValue1, credentials1.getAccessToken().getTokenValue());
 
     // Refresh the token to get update from token server
-    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessTokenValue2);
+    transportFactory.transport.addRefreshAccessToken(REFRESH_TOKEN, accessTokenValue2);
     credentials1.refresh();
     assertEquals(REFRESH_TOKEN, credentials1.getRefreshToken());
     assertEquals(accessTokenValue2, credentials1.getAccessToken().getTokenValue());
@@ -353,7 +353,7 @@ public class UserAuthorizerTest {
     TokenStore tokenStore = new MemoryTokensStorage();
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
-    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN_VALUE);
+    transportFactory.transport.addRefreshAccessToken(REFRESH_TOKEN, ACCESS_TOKEN_VALUE);
     UserCredentials initialCredentials = UserCredentials.newBuilder()
         .setClientId(CLIENT_ID_VALUE)
         .setClientSecret(CLIENT_SECRET)
