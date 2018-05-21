@@ -143,18 +143,29 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN_2);
     assertEquals(ACCESS_TOKEN_2, listener.accessToken.getTokenValue());
     assertEquals(2, listener.callCount);
+  }
 
-    OAuth2Credentials userCredentialsForEsp = ((UserCredentials) userCredentials).forEsp();
+  @Test
+  public void addChangeListener_notifiesOnRefresh_forEsp() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshTokens(REFRESH_TOKEN, ACCESS_TOKEN_1, ID_TOKEN_1);
-
+    OAuth2Credentials userCredentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setHttpTransportFactory(transportFactory)
+        .build()
+        .forEsp();
     // Use a fixed clock so tokens don't expire
-    userCredentialsForEsp.clock = new TestClock();
-    listener = new TestChangeListener();
-    userCredentialsForEsp.addChangeListener(listener);
+    userCredentials.clock = new TestClock();
+    TestChangeListener listener = new TestChangeListener();
+    userCredentials.addChangeListener(listener);
+    Map<String, List<String>> metadata;
     assertEquals(0, listener.callCount);
 
     // Get a first token
-    metadata = userCredentialsForEsp.getRequestMetadata(CALL_URI);
+    metadata = userCredentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ID_TOKEN_1);
     assertEquals(ID_TOKEN_1, listener.accessToken.getTokenValue());
     assertEquals(1, listener.callCount);
@@ -162,9 +173,9 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     // Change server to a different token and refresh
     transportFactory.transport.addRefreshTokens(REFRESH_TOKEN, ACCESS_TOKEN_2, ID_TOKEN_2);
     // Refresh to force getting next token
-    userCredentialsForEsp.refresh();
+    userCredentials.refresh();
 
-    metadata = userCredentialsForEsp.getRequestMetadata(CALL_URI);
+    metadata = userCredentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ID_TOKEN_2);
     assertEquals(ID_TOKEN_2, listener.accessToken.getTokenValue());
     assertEquals(2, listener.callCount);
@@ -202,30 +213,40 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addRefreshTokens(REFRESH_TOKEN, ACCESS_TOKEN_2, ID_TOKEN_2);
     userCredentials.refresh();
     assertEquals(2, listener.callCount);
+  }
 
-    OAuth2Credentials userCredentialsForEsp = ((UserCredentials) userCredentials).forEsp();
+  @Test
+  public void removeChangeListener_unregisters_observer_forEsp() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshTokens(REFRESH_TOKEN, ACCESS_TOKEN_1, ID_TOKEN_1);
-
+    OAuth2Credentials userCredentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setHttpTransportFactory(transportFactory)
+        .build()
+        .forEsp();
     // Use a fixed clock so tokens don't expire
-    userCredentialsForEsp.clock = new TestClock();
-    listener = new TestChangeListener();
-    userCredentialsForEsp.addChangeListener(listener);
+    userCredentials.clock = new TestClock();
+    TestChangeListener listener = new TestChangeListener();
+    userCredentials.addChangeListener(listener);
     assertEquals(0, listener.callCount);
 
     // Get a first token
-    userCredentialsForEsp.getRequestMetadata(CALL_URI);
+    userCredentials.getRequestMetadata(CALL_URI);
     assertEquals(1, listener.callCount);
 
     // Change server to a different token and refresh
     transportFactory.transport.addRefreshTokens(REFRESH_TOKEN, ACCESS_TOKEN_2, ID_TOKEN_2);
     // Refresh to force getting next token
-    userCredentialsForEsp.refresh();
+    userCredentials.refresh();
     assertEquals(2, listener.callCount);
 
     // Remove the listener and refresh the credential again
-    userCredentialsForEsp.removeChangeListener(listener);
+    userCredentials.removeChangeListener(listener);
     transportFactory.transport.addRefreshTokens(REFRESH_TOKEN, ACCESS_TOKEN_2, ID_TOKEN_2);
-    userCredentialsForEsp.refresh();
+    userCredentials.refresh();
     assertEquals(2, listener.callCount);
   }
 
@@ -278,14 +299,26 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN_2);
     assertEquals(1, transportFactory.transport.buildRequestCount--);
+  }
 
-    OAuth2Credentials credentialsForEsp = ((UserCredentials) credentials).forEsp();
+  @Test
+  public void getRequestMetadata_blocking_cachesExpiringToken_forEsp() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshTokens(REFRESH_TOKEN, ACCESS_TOKEN_1, ID_TOKEN_1);
-    credentialsForEsp.clock = clock = new TestClock();
+    TestClock clock = new TestClock();
+    OAuth2Credentials credentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setHttpTransportFactory(transportFactory)
+        .build()
+        .forEsp();
+    credentials.clock = clock;
 
     // Verify getting the first token
     assertEquals(0, transportFactory.transport.buildRequestCount);
-    metadata = credentialsForEsp.getRequestMetadata(CALL_URI);
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ID_TOKEN_1);
     assertEquals(1, transportFactory.transport.buildRequestCount--);
 
@@ -293,12 +326,12 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addRefreshTokens(REFRESH_TOKEN, ACCESS_TOKEN_2, ID_TOKEN_2);
 
     // Make transport fail when used next time.
-    error = new IOException("error");
+    IOException error = new IOException("error");
     transportFactory.transport.setError(error);
 
     // Advance 5 minutes and verify original token
     clock.addToCurrentTime(5 * 60 * 1000);
-    metadata = credentialsForEsp.getRequestMetadata(CALL_URI);
+    metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ID_TOKEN_1);
 
     // Advance 60 minutes and verify revised token
@@ -306,7 +339,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     assertEquals(0, transportFactory.transport.buildRequestCount);
 
     try {
-      credentialsForEsp.getRequestMetadata(CALL_URI);
+      credentials.getRequestMetadata(CALL_URI);
       fail("Should throw");
     } catch (IOException e) {
       assertSame(error, e);
@@ -315,7 +348,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
 
     // Reset the error and try again
     transportFactory.transport.setError(null);
-    metadata = credentialsForEsp.getRequestMetadata(CALL_URI);
+    metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ID_TOKEN_2);
     assertEquals(1, transportFactory.transport.buildRequestCount--);
   }
@@ -385,16 +418,28 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     assertNotNull(callback.metadata);
     TestUtils.assertContainsBearerToken(callback.metadata, ACCESS_TOKEN_2);
     assertEquals(1, transportFactory.transport.buildRequestCount--);
+    }
 
-    OAuth2Credentials credentialsForEsp = ((UserCredentials) credentials).forEsp();
+  @Test
+  public void getRequestMetadata_async_forEsp() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshTokens(REFRESH_TOKEN, ACCESS_TOKEN_1, ID_TOKEN_1);
-    credentialsForEsp.clock = clock = new TestClock();
-    executor = new MockExecutor();
-    callback = new MockRequestMetadataCallback();
+    TestClock clock = new TestClock();
+    OAuth2Credentials credentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setHttpTransportFactory(transportFactory)
+        .build()
+        .forEsp();
+    credentials.clock = clock;
 
+    MockExecutor executor = new MockExecutor();
+    MockRequestMetadataCallback callback = new MockRequestMetadataCallback();
     // Verify getting the first token, which uses the transport and calls the callback in the
     // executor.
-    credentialsForEsp.getRequestMetadata(CALL_URI, executor, callback);
+    credentials.getRequestMetadata(CALL_URI, executor, callback);
     assertEquals(0, transportFactory.transport.buildRequestCount);
     assertNull(callback.metadata);
 
@@ -407,14 +452,14 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addRefreshTokens(REFRESH_TOKEN, ACCESS_TOKEN_2, ID_TOKEN_2);
 
     // Make transport fail when used next time.
-    error = new IOException("error");
+    IOException error = new IOException("error");
     transportFactory.transport.setError(error);
 
     // Advance 5 minutes and verify original token. Callback is called inline.
     callback.reset();
     clock.addToCurrentTime(5 * 60 * 1000);
     assertNull(callback.metadata);
-    credentialsForEsp.getRequestMetadata(CALL_URI, executor, callback);
+    credentials.getRequestMetadata(CALL_URI, executor, callback);
     assertNotNull(callback.metadata);
     assertEquals(0, executor.numTasks());
     TestUtils.assertContainsBearerToken(callback.metadata, ID_TOKEN_1);
@@ -422,7 +467,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     // Advance 60 minutes and verify revised token, which uses the executor.
     callback.reset();
     clock.addToCurrentTime(60 * 60 * 1000);
-    credentialsForEsp.getRequestMetadata(CALL_URI, executor, callback);
+    credentials.getRequestMetadata(CALL_URI, executor, callback);
     assertEquals(0, transportFactory.transport.buildRequestCount);
     assertNull(callback.exception);
 
@@ -433,7 +478,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     // Reset the error and try again
     transportFactory.transport.setError(null);
     callback.reset();
-    credentialsForEsp.getRequestMetadata(CALL_URI, executor, callback);
+    credentials.getRequestMetadata(CALL_URI, executor, callback);
     assertEquals(0, transportFactory.transport.buildRequestCount);
     assertNull(callback.metadata);
 
@@ -474,20 +519,34 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     assertEquals(1, executor.runTasksExhaustively());
     assertEquals(0, transportFactory.transport.buildRequestCount);
     assertSame(metadata, callback.metadata);
+  }
 
-    OAuth2Credentials credentialsForEsp = ((UserCredentials) credentials).forEsp();
+
+  @Test
+  public void getRequestMetadata_async_refreshRace_forEsp() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshTokens(REFRESH_TOKEN, ACCESS_TOKEN_1, ID_TOKEN_1);
-    executor = new MockExecutor();
-    callback = new MockRequestMetadataCallback();
+    TestClock clock = new TestClock();
+    OAuth2Credentials credentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setHttpTransportFactory(transportFactory)
+        .build()
+        .forEsp();
+    credentials.clock = clock;
 
+    MockExecutor executor = new MockExecutor();
+    MockRequestMetadataCallback callback = new MockRequestMetadataCallback();
     // Getting the first token, which uses the transport and calls the callback in the executor.
-    credentialsForEsp.getRequestMetadata(CALL_URI, executor, callback);
+    credentials.getRequestMetadata(CALL_URI, executor, callback);
     assertEquals(0, transportFactory.transport.buildRequestCount);
     assertNull(callback.metadata);
 
     // Asynchronous task is scheduled, but beaten by another blocking get call.
     assertEquals(1, executor.numTasks());
-    metadata = credentialsForEsp.getRequestMetadata(CALL_URI);
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     assertEquals(1, transportFactory.transport.buildRequestCount--);
     TestUtils.assertContainsBearerToken(metadata, ID_TOKEN_1);
 
@@ -539,13 +598,26 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     metadata = userCredentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN_2);
     assertEquals(1, transportFactory.transport.buildRequestCount--);
+  }
 
 
-    OAuth2Credentials userCredentialsForEsp = ((UserCredentials) userCredentials).forEsp();
+  @Test
+  public void refresh_refreshesToken_forEsp() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshTokens(REFRESH_TOKEN, ACCESS_TOKEN_1, ID_TOKEN_1);
+    OAuth2Credentials userCredentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setHttpTransportFactory(transportFactory)
+        .build()
+        .forEsp();
+    // Use a fixed clock so tokens don't exire
+    userCredentials.clock = new TestClock();
 
     // Get a first token
-    metadata = userCredentialsForEsp.getRequestMetadata(CALL_URI);
+    Map<String, List<String>> metadata = userCredentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ID_TOKEN_1);
     assertEquals(1, transportFactory.transport.buildRequestCount--);
 
@@ -557,8 +629,8 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     assertEquals(0, transportFactory.transport.buildRequestCount);
 
     // Refresh to force getting next token
-    userCredentialsForEsp.refresh();
-    metadata = userCredentialsForEsp.getRequestMetadata(CALL_URI);
+    userCredentials.refresh();
+    metadata = userCredentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ID_TOKEN_2);
     assertEquals(1, transportFactory.transport.buildRequestCount--);
   }

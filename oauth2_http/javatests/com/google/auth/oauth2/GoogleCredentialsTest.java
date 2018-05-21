@@ -147,12 +147,22 @@ public class GoogleCredentialsTest {
     credentials = credentials.createScoped(SCOPES);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+  }
 
-    GoogleCredentials credentialsForEsp = credentials.forEsp();
+  @Test
+  public void fromStream_serviceAccount_providesToken_forEsp() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN, ID_TOKEN);
+    InputStream serviceAccountStream = ServiceAccountCredentialsTest
+        .writeServiceAccountStream(
+            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
 
-    assertNotNull(credentialsForEsp);
-    credentialsForEsp = credentialsForEsp.createScoped(SCOPES);
-    metadata = credentialsForEsp.getRequestMetadata(CALL_URI);
+    GoogleCredentials credentials =
+        GoogleCredentials.fromStream(serviceAccountStream, transportFactory).forEsp();
+
+    assertNotNull(credentials);
+    credentials = credentials.createScoped(SCOPES);
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ID_TOKEN);
   }
 
@@ -201,10 +211,21 @@ public class GoogleCredentialsTest {
     assertNotNull(credentials);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+  }
 
-    GoogleCredentials credentialsForEsp = credentials.forEsp();
+  @Test
+  public void fromStream_user_providesToken_forEsp() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(USER_CLIENT_ID, USER_CLIENT_SECRET);
+    transportFactory.transport.addRefreshTokens(REFRESH_TOKEN, ACCESS_TOKEN, ID_TOKEN);
+    InputStream userStream =
+        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
 
-    metadata = credentialsForEsp.getRequestMetadata(CALL_URI);
+    GoogleCredentials credentials =
+        GoogleCredentials.fromStream(userStream, transportFactory).forEsp();
+
+    assertNotNull(credentials);
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ID_TOKEN);
   }
 

@@ -306,11 +306,27 @@ public class DefaultCredentialsProviderTest {
     defaultCredentials = defaultCredentials.createScoped(SCOPES);
     Map<String, List<String>> metadata = defaultCredentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+  }
 
-    GoogleCredentials defaultCredentialsForEsp = defaultCredentials.forEsp();
+  @Test
+  public void getDefaultCredentials_envServiceAccount_providesToken_forEsp() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN, ID_TOKEN);
+    InputStream serviceAccountStream = ServiceAccountCredentialsTest
+        .writeServiceAccountStream(
+            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    String serviceAccountPath = "/service_account.json";
+    testProvider.addFile(serviceAccountPath, serviceAccountStream);
+    testProvider.setEnv(
+        DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, serviceAccountPath);
 
-    defaultCredentialsForEsp = defaultCredentialsForEsp.createScoped(SCOPES);
-    metadata = defaultCredentialsForEsp.getRequestMetadata(CALL_URI);
+    GoogleCredentials defaultCredentials =
+        testProvider.getDefaultCredentials(transportFactory).forEsp();
+
+    assertNotNull(defaultCredentials);
+    defaultCredentials = defaultCredentials.createScoped(SCOPES);
+    Map<String, List<String>> metadata = defaultCredentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ID_TOKEN);
   }
 
@@ -443,7 +459,8 @@ public class DefaultCredentialsProviderTest {
     transportFactory.transport.addRefreshTokens(refreshTokenWkf, accessTokenWkf, idTokenWkf);
     transportFactory.transport.addRefreshTokens(refreshTokenEnv, accessTokenEnv, idTokenEnv);
 
-    testUserProvidesToken(testProvider, transportFactory, accessTokenEnv, idTokenEnv);
+    testUserProvidesToken(testProvider, transportFactory, accessTokenEnv);
+    testUserProvidesTokenForEsp(testProvider, transportFactory, idTokenEnv);
   }
 
   private static File getTempDirectory() {
@@ -455,23 +472,28 @@ public class DefaultCredentialsProviderTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(clientId, clientSecret);
     transportFactory.transport.addRefreshTokens(refreshToken, ACCESS_TOKEN, ID_TOKEN);
-    testUserProvidesToken(testProvider, transportFactory, ACCESS_TOKEN, ID_TOKEN);
+    testUserProvidesToken(testProvider, transportFactory, ACCESS_TOKEN);
+    testUserProvidesTokenForEsp(testProvider, transportFactory, ID_TOKEN);
   }
 
   private void testUserProvidesToken(TestDefaultCredentialsProvider testProvider,
-      HttpTransportFactory transportFactory,
-      String accessToken, String idToken) throws IOException {
+                                     HttpTransportFactory transportFactory,
+                                     String accessToken) throws IOException {
     GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory);
 
     assertNotNull(defaultCredentials);
     Map<String, List<String>> metadata = defaultCredentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, accessToken);
+  }
 
-    GoogleCredentials defaultCredentialsForEsp =
+  private void testUserProvidesTokenForEsp(TestDefaultCredentialsProvider testProvider,
+                                           HttpTransportFactory transportFactory,
+                                           String idToken) throws IOException {
+    GoogleCredentials defaultCredentials =
         testProvider.getDefaultCredentials(transportFactory).forEsp();
 
-    assertNotNull(defaultCredentialsForEsp);
-    metadata = defaultCredentialsForEsp.getRequestMetadata(CALL_URI);
+    assertNotNull(defaultCredentials);
+    Map<String, List<String>> metadata = defaultCredentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, idToken);
   }
 
