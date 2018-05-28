@@ -33,7 +33,11 @@ package com.google.auth.oauth2;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 
-import com.google.api.client.http.*;
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpHeaders;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
@@ -280,21 +284,35 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
   }
 
   @Override
-  public String getAccount() throws IOException {
+  public String getAccount() {
     if (serviceAccountEmail == null) {
-      serviceAccountEmail = getDefaultServiceAccount();
+      try {
+        serviceAccountEmail = getDefaultServiceAccount();
+      } catch (IOException ex) {
+        throw new RuntimeException("Failed to to get service account", ex);
+      }
     }
     return serviceAccountEmail;
   }
 
   @Override
-  public byte[] sign(byte[] toSign) throws IOException {
+  public byte[] sign(byte[] toSign) {
+    BaseEncoding base64 = BaseEncoding.base64();
+    String signature;
+    try {
+      signature = getSignature(base64.encode(toSign));
+    } catch (IOException ex) {
+      throw new SigningException("Failed to sign the provided bytes", ex);
+    }
+    return base64.decode(signature);
+  }
+
+  private String getSignature(String bytes) throws IOException {
     String signBlobUrl = String.format(SIGN_BLOB_URL_FORMAT, getAccount());
     GenericUrl genericUrl = new GenericUrl(signBlobUrl);
-    BaseEncoding base64 = BaseEncoding.base64();
 
     GenericData signRequest = new GenericData();
-    signRequest.set("bytesToSign", base64.encode(toSign));
+    signRequest.set("bytesToSign", bytes);
     JsonHttpContent signContent = new JsonHttpContent(OAuth2Utils.JSON_FACTORY, signRequest);
     HttpRequest request = transportFactory.create().createRequestFactory().buildPostRequest(genericUrl, signContent);
     Map<String, List<String>> headers = getRequestMetadata();
@@ -327,8 +345,7 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
-    String signature = OAuth2Utils.validateString(responseData, "signature", PARSE_ERROR_SIGNATURE);
-    return base64.decode(signature);
+    return OAuth2Utils.validateString(responseData, "signature", PARSE_ERROR_SIGNATURE);
   }
 
   private String getDefaultServiceAccount() throws IOException {

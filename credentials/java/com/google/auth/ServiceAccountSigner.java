@@ -31,7 +31,6 @@
 
 package com.google.auth;
 
-import java.io.IOException;
 import java.util.Objects;
 
 /**
@@ -70,7 +69,7 @@ public interface ServiceAccountSigner {
   /**
    * Returns the service account associated with the signer.
    */
-  String getAccount() throws IOException;
+  String getAccount();
 
   /**
    * Signs the provided bytes using the private key associated with the service account.
@@ -79,5 +78,5 @@ public interface ServiceAccountSigner {
    * @return signed bytes
    * @throws SigningException if the attempt to sign the provided bytes failed
    */
-  byte[] sign(byte[] toSign) throws IOException;
+  byte[] sign(byte[] toSign);
 }
