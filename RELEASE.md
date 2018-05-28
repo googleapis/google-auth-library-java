@@ -30,6 +30,7 @@ Set up PGP keys
   * The ```ABCDEFGH``` is the ID for your public key
 
 * Upload your public key to a public server: ```gpg --send-keys --keyserver hkp://pgp.mit.edu ABCDEFGH```
+  * If you see the error, `gpg: keyserver send failed: No data`, try again in ~5m. The mit server semi-frequently has trouble accepting keys
 
 Create a Maven settings file
 ----------------------------
@@ -84,8 +85,8 @@ Central](https://repo1.maven.org/maven2/com/google/auth/google-auth-library-pare
 * If the release doesn't show up, do the following to check for failures:
   * Go to [Sonatype](https://oss.sonatype.org/) and log in
   * Click on *Staging Repositories* on the left
-  * Filter down to the repository by typing the package's groupId without periods in the search box
-    * In our case, ```comgoogleauth```
+  * Filter down to the repository by typing the package's groupId in the search box
+    * In our case, `com.google.auth`
   * Click on the repository and check for errors
 * Submit the pull request to bump the version numbers
 * Update Javadoc on Github using `scripts/update_javadoc.sh`.
