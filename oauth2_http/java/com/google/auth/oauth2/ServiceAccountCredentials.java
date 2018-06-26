@@ -64,6 +64,7 @@ import java.io.ObjectInputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
@@ -200,6 +201,15 @@ public class ServiceAccountCredentials extends EspFriendlyCredentials implements
     String privateKeyPkcs8 = (String) json.get("private_key");
     String privateKeyId = (String) json.get("private_key_id");
     String projectId = (String) json.get("project_id");
+    String tokenServerUriStringFromCreds = (String) json.get("token_uri");
+    URI tokenServerUriFromCreds = null;
+    try {
+      if (tokenServerUriStringFromCreds != null) {
+        tokenServerUriFromCreds = new URI(tokenServerUriStringFromCreds);
+      }
+    } catch (URISyntaxException e) {
+      throw new IOException("Token server URI specified in 'token_uri' could not be parsed.");
+    }
     if (clientId == null || clientEmail == null
         || privateKeyPkcs8 == null || privateKeyId == null) {
       throw new IOException("Error reading service account credential from JSON, "
@@ -207,7 +217,7 @@ public class ServiceAccountCredentials extends EspFriendlyCredentials implements
     }
 
     return fromPkcs8(clientId, clientEmail, privateKeyPkcs8, privateKeyId, null, transportFactory,
-        null, null, projectId);
+        tokenServerUriFromCreds, null, projectId);
   }
 
   /**
@@ -359,7 +369,7 @@ public class ServiceAccountCredentials extends EspFriendlyCredentials implements
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     long currentTime = clock.currentTimeMillis();
-    String assertion = createAssertion(jsonFactory, currentTime);
+    String assertion = createAssertion(jsonFactory, currentTime, tokenServerUri.toString());
 
     GenericData tokenRequest = new GenericData();
     tokenRequest.set("grant_type", GRANT_TYPE);
@@ -453,6 +463,10 @@ public class ServiceAccountCredentials extends EspFriendlyCredentials implements
     return projectId;
   }
 
+  public final URI getTokenServerUri() {
+    return tokenServerUri;
+  }
+
   @Override
   public String getAccount() {
     return getClientEmail();
@@ -511,7 +525,8 @@ public class ServiceAccountCredentials extends EspFriendlyCredentials implements
         && Objects.equals(this.scopes, other.scopes);
   }
 
-  String createAssertion(JsonFactory jsonFactory, long currentTime) throws IOException {
+  String createAssertion(JsonFactory jsonFactory, long currentTime, String audience)
+      throws IOException {
     JsonWebSignature.Header header = new JsonWebSignature.Header();
     header.setAlgorithm("RS256");
     header.setType("JWT");
@@ -519,11 +534,16 @@ public class ServiceAccountCredentials extends EspFriendlyCredentials implements
 
     JsonWebToken.Payload payload = new JsonWebToken.Payload();
     payload.setIssuer(clientEmail);
-    payload.setAudience(OAuth2Utils.TOKEN_SERVER_URI.toString());
     payload.setIssuedAtTimeSeconds(currentTime / 1000);
     payload.setExpirationTimeSeconds(currentTime / 1000 + 3600);
     payload.setSubject(serviceAccountUser);
     payload.put("scope", Joiner.on(' ').join(scopes));
+
+    if (audience == null) {
+      payload.setAudience(OAuth2Utils.TOKEN_SERVER_URI.toString());
+    } else {
+      payload.setAudience(audience);
+    }
 
     String assertion;
     try {

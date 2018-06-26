@@ -47,6 +47,11 @@ pushd tmp_gh-pages/
 cp -r ../target/site/* releases/$VERSION/
 git add releases/$VERSION
 
+# copy to latest
+rm -rf releases/latest
+cp -r releases/$VERSION releases/latest
+git add releases/latest
+
 echo "<html><head><meta http-equiv=\"refresh\" content=\"0; URL='http://google.github.io/google-auth-library-java/releases/${VERSION}/apidocs/index.html'\" /></head><body></body></html>" > index.html
 git add index.html
 
