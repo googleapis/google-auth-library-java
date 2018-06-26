@@ -185,6 +185,17 @@ public class OAuth2Credentials extends Credentials {
     }
   }
 
+  /**
+   * Refresh these credentials only if they have expired or are expiring imminently.
+   */
+  public void refreshIfExpired() throws IOException {
+    synchronized(lock) {
+      if (shouldRefresh()) {
+        refresh();
+      }
+    }
+  }
+
   // Must be called under lock
   private void useAccessToken(AccessToken token) {
     this.temporaryAccess = token;
