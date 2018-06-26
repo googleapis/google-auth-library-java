@@ -1,5 +1,5 @@
-Google Auth Library
-===================
+# Google Auth Library
+
 
 Open source authentication client library for Java.
 
@@ -20,8 +20,7 @@ credentials as well as utility methods to create them and to get Application Def
 > Note: This client is a work-in-progress, and may occasionally
 > make backwards-incompatible changes.
 
-Quickstart
-----------
+## Quickstart
 
 If you are using Maven, add this to your pom.xml file (notice that you can replace
 `google-auth-library-oauth2-http` with any of `google-auth-library-credentials` and
@@ -42,8 +41,7 @@ If you are using SBT, add this to your dependencies
 libraryDependencies += "com.google.auth" % "google-auth-library-oauth2-http" % "0.9.1"
 ```
 
-google-auth-library-credentials
--------------------------------
+## google-auth-library-credentials
 
 This artifact contains base classes and interfaces for Google credentials:
 - `Credentials`: base class for an authorized identity. Implementations of this class can be used to
@@ -53,14 +51,15 @@ authorize your application
 - `ServiceAccountSigner`: interface for a service account signer. Implementations of this class are
 capable of signing byte arrays using the credentials associated to a Google Service Account
 
-google-auth-library-appengine
------------------------------
+## google-auth-library-appengine
+
 This artifact depends on the App Engine SDK (`appengine-api-1.0-sdk`) and should be used only by
 applications running on App Engine. The `AppEngineCredentials` class allows to authorize your App
 Engine application given an instance of [AppIdentityService](https://cloud.google.com/appengine/docs/java/javadoc/com/google/appengine/api/appidentity/AppIdentityService).
 
-google-auth-library-oauth2-http
--------------------------------
+## google-auth-library-oauth2-http
+
+### Application Default Credentials
 
 This artifact contains a wide variety of credentials as well as utility methods to create them and
 to get Application Default Credentials.
@@ -87,11 +86,21 @@ following are searched (in order) to find the Application Default Credentials:
    - Skip this check by setting the environment variable `NO_GCE_CHECK=true`
    - Customize the GCE metadata server address by setting the environment variable `GCE_METADATA_HOST=<hostname>`
 
-To get Credentials from a Service Account JSON key use `GoogleCredentials.fromStream(InputStream)`
-or `GoogleCredentials.fromStream(InputStream, HttpTransportFactory)`.
+### Explicit Credential Loading
 
-Contributing
-------------
+To get Credentials from a Service Account JSON key use `GoogleCredentials.fromStream(InputStream)`
+or `GoogleCredentials.fromStream(InputStream, HttpTransportFactory)`. Note that the credentials must
+be refreshed before the access token is available. 
+
+```java
+GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream("/path/to/credentials.json"));
+credentials.refreshIfExpired();
+AccessToken token = credentials.getAccessToken();
+// OR
+AccessToken token = credentials.refreshAccessToken();
+```
+
+## Contributing
 
 Contributions to this library are always welcome and highly encouraged.
 
@@ -101,7 +110,6 @@ Please note that this project is released with a Contributor Code of Conduct. By
 this project you agree to abide by its terms. See [Code of Conduct](CODE_OF_CONDUCT.md) for more
 information.
 
-License
--------
+## License
 
 BSD 3-Clause - See [LICENSE](LICENSE) for more information.
