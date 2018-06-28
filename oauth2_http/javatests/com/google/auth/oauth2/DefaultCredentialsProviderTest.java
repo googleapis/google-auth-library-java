@@ -59,6 +59,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -71,6 +75,10 @@ public class DefaultCredentialsProviderTest {
 
   private static final String USER_CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
   private static final String USER_CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
+  private static final String GCLOUDSDK_CLIENT_ID =
+      "764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com";
+  private static final String GCLOUD_WARNING_CONTENTS =
+      "end user credentials from Google Cloud SDK";
   private static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
   private static final String SA_CLIENT_EMAIL =
@@ -435,6 +443,46 @@ public class DefaultCredentialsProviderTest {
     transportFactory.transport.addRefreshToken(refreshTokenEnv, accessTokenEnv);
 
     testUserProvidesToken(testProvider, transportFactory, accessTokenEnv);
+  }
+
+  private class LogHandler extends Handler {
+    LogRecord lastRecord;
+
+    public void publish(LogRecord record) {
+      lastRecord = record;
+    }
+
+    public LogRecord getRecord() {
+      return lastRecord;
+    }
+
+    public void close() {}
+    public void flush() {}
+  }
+
+  @Test
+  public void getDefaultCredentials_wellKnownFile_logsGcloudWarning() throws IOException {
+    Logger logger = Logger.getLogger(DefaultCredentialsProvider.class.getName());
+    LogHandler handler = new LogHandler();
+    logger.addHandler(handler);
+
+    File homeDir = getTempDirectory();
+    File configDir = new File(homeDir, ".config");
+    File cloudConfigDir = new File(configDir, DefaultCredentialsProvider.CLOUDSDK_CONFIG_DIRECTORY);
+    InputStream userStream =
+        UserCredentialsTest.writeUserStream(GCLOUDSDK_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+    File wellKnownFile =
+        new File(cloudConfigDir, DefaultCredentialsProvider.WELL_KNOWN_CREDENTIALS_FILE);
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setProperty("os.name", "linux");
+    testProvider.setProperty("user.home", homeDir.getAbsolutePath());
+    testProvider.addFile(wellKnownFile.getAbsolutePath(), userStream);
+
+    testUserProvidesToken(
+        testProvider, GCLOUDSDK_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+    LogRecord message = handler.getRecord();
+    assertEquals(Level.WARNING, message.getLevel());
+    assertTrue(message.getMessage().contains(GCLOUD_WARNING_CONTENTS));
   }
 
   private static File getTempDirectory() {
