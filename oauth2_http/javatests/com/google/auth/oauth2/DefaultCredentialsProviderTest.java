@@ -77,8 +77,6 @@ public class DefaultCredentialsProviderTest {
   private static final String USER_CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
   private static final String GCLOUDSDK_CLIENT_ID =
       "764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com";
-  private static final String GCLOUD_WARNING_CONTENTS =
-      "end user credentials from Google Cloud SDK";
   private static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
   private static final String SA_CLIENT_EMAIL =
@@ -481,8 +479,9 @@ public class DefaultCredentialsProviderTest {
     testUserProvidesToken(
         testProvider, GCLOUDSDK_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
     LogRecord message = handler.getRecord();
+    assertNotNull(message);
     assertEquals(Level.WARNING, message.getLevel());
-    assertTrue(message.getMessage().contains(GCLOUD_WARNING_CONTENTS));
+    assertTrue(message.getMessage().contains("end user credentials from Google Cloud SDK"));
   }
 
   private static File getTempDirectory() {

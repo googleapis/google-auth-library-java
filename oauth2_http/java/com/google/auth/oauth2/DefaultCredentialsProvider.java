@@ -211,8 +211,7 @@ class DefaultCredentialsProvider {
   }
 
   private void warnAboutProblematicCredentials(GoogleCredentials credentials) {
-    if (credentials != null &&
-        (credentials instanceof UserCredentials) &&
+    if (credentials instanceof UserCredentials &&
         ((UserCredentials)credentials).getClientId().equals(CLOUDSDK_CLIENT_ID)) {
       LOGGER.log(Level.WARNING, CLOUDSDK_CREDENTIALS_WARNING);
     }
