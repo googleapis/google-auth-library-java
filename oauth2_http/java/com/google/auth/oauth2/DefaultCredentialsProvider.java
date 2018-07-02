@@ -44,6 +44,8 @@ import java.lang.reflect.Method;
 import java.security.AccessControlException;
 import java.util.Collections;
 import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Provides the Application Default Credential from the environment.
@@ -72,9 +74,19 @@ class DefaultCredentialsProvider {
   static final String SPECIFICATION_VERSION = System.getProperty("java.specification.version");
   static final String GAE_RUNTIME_VERSION = System.getProperty("com.google.appengine.runtime.version");
   static final String RUNTIME_JETTY_LOGGER = System.getProperty("org.eclipse.jetty.util.log.class");
+  static final Logger LOGGER = Logger.getLogger(DefaultCredentialsProvider.class.getName());
 
   static final String NO_GCE_CHECK_ENV_VAR = "NO_GCE_CHECK";
   static final String GCE_METADATA_HOST_ENV_VAR = "GCE_METADATA_HOST";
+  static final String CLOUDSDK_CLIENT_ID =
+      "764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com";
+  static final String CLOUDSDK_CREDENTIALS_WARNING =
+      "Your application has authenticated using end user credentials from Google "
+      + "Cloud SDK. We recommend that most server applications use service accounts "
+      + "instead. If your application continues to use end user credentials from Cloud "
+      + "SDK, you might receive a \"quota exceeded\" or \"API not enabled\" error. For "
+      + "more information about service accounts, see "
+      + "https://cloud.google.com/docs/authentication/.";
 
   // These variables should only be accessed inside a synchronized block
   private GoogleCredentials cachedCredentials = null;
@@ -176,6 +188,7 @@ class DefaultCredentialsProvider {
           credentialsStream.close();
         }
       }
+      warnAboutProblematicCredentials(credentials);
     }
 
     // Then try GAE 7 standard environment
@@ -195,6 +208,13 @@ class DefaultCredentialsProvider {
     }
 
     return credentials;
+  }
+
+  private void warnAboutProblematicCredentials(GoogleCredentials credentials) {
+    if (credentials instanceof UserCredentials &&
+        ((UserCredentials)credentials).getClientId().equals(CLOUDSDK_CLIENT_ID)) {
+      LOGGER.log(Level.WARNING, CLOUDSDK_CREDENTIALS_WARNING);
+    }
   }
 
   private final File getWellKnownCredentialsFile() {
