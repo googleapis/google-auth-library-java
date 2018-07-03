@@ -359,7 +359,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
         .setRefreshToken(REFRESH_TOKEN)
         .setHttpTransportFactory(transportFactory)
         .build();
-    // Use a fixed clock so tokens don't exire
+    // Use a fixed clock so tokens don't expire
     userCredentials.clock = new TestClock();
 
     // Get a first token
@@ -378,6 +378,49 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     userCredentials.refresh();
     metadata = userCredentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, accessToken2);
+    assertEquals(1, transportFactory.transport.buildRequestCount--);
+  }
+
+  @Test
+  public void refreshIfExpired_refreshesToken() throws IOException {
+    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
+    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessToken1);
+    OAuth2Credentials userCredentials = UserCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+        .setRefreshToken(REFRESH_TOKEN)
+        .setHttpTransportFactory(transportFactory)
+        .build();
+    // Use a fixed clock so tokens don't expire
+    TestClock mockClock = new TestClock();
+    userCredentials.clock = mockClock;
+
+    // Get a first token
+    Map<String, List<String>> metadata = userCredentials.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, accessToken1);
+    assertEquals(1, transportFactory.transport.buildRequestCount--);
+
+    // Change server to a different token
+    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessToken2);
+
+    // Confirm token being cached
+    TestUtils.assertContainsBearerToken(metadata, accessToken1);
+    assertEquals(0, transportFactory.transport.buildRequestCount);
+
+    // Should not refresh yet
+    userCredentials.refreshIfExpired();
+    metadata = userCredentials.getRequestMetadata(CALL_URI);
+    TestUtils.assertNotContainsBearerToken(metadata, accessToken2);
+
+    // Jump ahead to expire the token
+    mockClock.addToCurrentTime(3600000);
+    userCredentials.refreshIfExpired();
+    metadata = userCredentials.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, accessToken2);
+
     assertEquals(1, transportFactory.transport.buildRequestCount--);
   }
 

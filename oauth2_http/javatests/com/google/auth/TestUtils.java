@@ -63,17 +63,25 @@ public class TestUtils {
   public static void assertContainsBearerToken(Map<String, List<String>> metadata, String token) {
     assertNotNull(metadata);
     assertNotNull(token);
+    assertTrue("Bearer token not found", hasBearerToken(metadata, token));
+  }
+
+  public static void assertNotContainsBearerToken(Map<String, List<String>> metadata, String token) {
+    assertNotNull(metadata);
+    assertNotNull(token);
+    assertTrue("Bearer token found", !hasBearerToken(metadata, token));
+  }
+
+  private static boolean hasBearerToken(Map<String, List<String>> metadata, String token) {
     String expectedValue = AuthHttpConstants.BEARER + " " + token;
     List<String> authorizations = metadata.get(AuthHttpConstants.AUTHORIZATION);
     assertNotNull("Authorization headers not found", authorizations);
-    boolean found = false;
     for (String authorization : authorizations) {
       if (expectedValue.equals(authorization)) {
-        found = true;
-        break;
+        return true;
       }
     }
-    assertTrue("Bearer token not found", found);
+    return false;
   }
 
   public static InputStream jsonToInputStream(GenericJson json) throws IOException {

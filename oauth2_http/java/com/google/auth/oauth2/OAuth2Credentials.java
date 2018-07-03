@@ -37,7 +37,6 @@ import com.google.auth.RequestMetadataCallback;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 
@@ -131,6 +130,11 @@ public class OAuth2Credentials extends Credentials {
     return true;
   }
 
+  /**
+   * Returns the cached access token.
+   *
+   * <p>If not set, you should call {@link #refresh()} to fetch and cache an access token.</p>
+   */
   public final AccessToken getAccessToken() {
     return temporaryAccess;
   }
@@ -177,6 +181,17 @@ public class OAuth2Credentials extends Credentials {
         for (CredentialsChangedListener listener : changeListeners) {
           listener.onChanged(this);
         }
+      }
+    }
+  }
+
+  /**
+   * Refresh these credentials only if they have expired or are expiring imminently.
+   */
+  public void refreshIfExpired() throws IOException {
+    synchronized(lock) {
+      if (shouldRefresh()) {
+        refresh();
       }
     }
   }
