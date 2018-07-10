@@ -115,7 +115,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
           return response;
         }
       };
-    } else if (url.equals(ComputeEngineCredentials.getServiceAccountsUrl())) {
+    } else if (isGetServiceAccountsUrl(url)) {
       return new MockLowLevelHttpRequest(url) {
         @Override
         public LowLevelHttpResponse execute() throws IOException {
@@ -133,8 +133,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
                   .setContent(serviceAccounts);
         }
       };
-    } else if (serviceAccountEmail != null
-        && url.equals(String.format(ComputeEngineCredentials.SIGN_BLOB_URL_FORMAT, serviceAccountEmail))) {
+    } else if (isSignRequestUrl(url)) {
       return new MockLowLevelHttpRequest(url) {
         @Override
         public LowLevelHttpResponse execute() throws IOException {
@@ -152,5 +151,14 @@ public class MockMetadataServerTransport extends MockHttpTransport {
       };
     }
     return super.buildRequest(method, url);
+  }
+
+  protected boolean isGetServiceAccountsUrl(String url) {
+    return url.equals(ComputeEngineCredentials.getServiceAccountsUrl());
+  }
+
+  protected boolean isSignRequestUrl(String url) {
+    return serviceAccountEmail != null &&
+        url.equals(String.format(ComputeEngineCredentials.SIGN_BLOB_URL_FORMAT, serviceAccountEmail));
   }
 }

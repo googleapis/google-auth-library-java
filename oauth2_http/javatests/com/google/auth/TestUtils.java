@@ -105,6 +105,15 @@ public class TestUtils {
     return map;
   }
 
+  public static String errorJson(String message) throws IOException {
+    GenericJson errorResponse = new GenericJson();
+    errorResponse.setFactory(JSON_FACTORY);
+    GenericJson errorObject = new GenericJson();
+    errorObject.put("message", message);
+    errorResponse.put("error", errorObject);
+    return errorResponse.toPrettyString();
+  }
+
   private TestUtils() {
   }
 }
