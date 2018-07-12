@@ -38,6 +38,7 @@ import com.google.api.client.json.Json;
 import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
+import com.google.common.io.BaseEncoding;
 
 import java.io.IOException;
 
@@ -50,6 +51,10 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
   private Integer tokenRequestStatusCode;
 
+  private String serviceAccountEmail;
+
+  private byte[] signature;
+
   public MockMetadataServerTransport() {
   }
 
@@ -59,6 +64,14 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
   public void setTokenRequestStatusCode(Integer tokenRequestStatusCode) {
     this.tokenRequestStatusCode = tokenRequestStatusCode;
+  }
+
+  public void setServiceAccountEmail(String serviceAccountEmail) {
+    this.serviceAccountEmail = serviceAccountEmail;
+  }
+
+  public void setSignature(byte[] signature) {
+    this.signature = signature;
   }
 
   @Override
@@ -102,7 +115,50 @@ public class MockMetadataServerTransport extends MockHttpTransport {
           return response;
         }
       };
+    } else if (isGetServiceAccountsUrl(url)) {
+      return new MockLowLevelHttpRequest(url) {
+        @Override
+        public LowLevelHttpResponse execute() throws IOException {
+          // Create the JSON response
+          GenericJson serviceAccountsContents = new GenericJson();
+          serviceAccountsContents.setFactory(OAuth2Utils.JSON_FACTORY);
+          GenericJson defaultAccount = new GenericJson();
+          defaultAccount.put("email", serviceAccountEmail);
+          serviceAccountsContents.put("default", defaultAccount);
+
+          String serviceAccounts = serviceAccountsContents.toPrettyString();
+
+          return new MockLowLevelHttpResponse()
+                  .setContentType(Json.MEDIA_TYPE)
+                  .setContent(serviceAccounts);
+        }
+      };
+    } else if (isSignRequestUrl(url)) {
+      return new MockLowLevelHttpRequest(url) {
+        @Override
+        public LowLevelHttpResponse execute() throws IOException {
+          // Create the JSON response
+          GenericJson signContents = new GenericJson();
+          signContents.setFactory(OAuth2Utils.JSON_FACTORY);
+          signContents.put("signature", BaseEncoding.base64().encode(signature));
+
+          String signature = signContents.toPrettyString();
+
+          return new MockLowLevelHttpResponse()
+                  .setContentType(Json.MEDIA_TYPE)
+                  .setContent(signature);
+        }
+      };
     }
     return super.buildRequest(method, url);
+  }
+
+  protected boolean isGetServiceAccountsUrl(String url) {
+    return url.equals(ComputeEngineCredentials.getServiceAccountsUrl());
+  }
+
+  protected boolean isSignRequestUrl(String url) {
+    return serviceAccountEmail != null &&
+        url.equals(String.format(ComputeEngineCredentials.SIGN_BLOB_URL_FORMAT, serviceAccountEmail));
   }
 }
