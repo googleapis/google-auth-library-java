@@ -70,8 +70,7 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
   // Note: the explicit IP address is used to avoid name server resolution issues.
   static final String DEFAULT_METADATA_SERVER_URL = "http://169.254.169.254";
 
-  static final String IAM_API_ROOT_URL = "https://iam.googleapis.com/v1";
-  static final String SIGN_BLOB_URL_FORMAT = IAM_API_ROOT_URL + "/projects/-/serviceAccounts/%s:signBlob?alt=json";
+  static final String SIGN_BLOB_URL_FORMAT = "https://iam.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob?alt=json";
 
   // Note: the explicit `timeout` and `tries` below is a workaround. The underlying
   // issue is that resolving an unknown host on some networks will take

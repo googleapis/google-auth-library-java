@@ -31,9 +31,23 @@
 
 package com.google.auth.oauth2;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.LowLevelHttpRequest;
+import com.google.api.client.http.LowLevelHttpResponse;
+import com.google.api.client.json.GenericJson;
+import com.google.api.client.testing.http.MockLowLevelHttpRequest;
+import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
+import com.google.auth.ServiceAccountSigner.SigningException;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
@@ -45,8 +59,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
-
-import static org.junit.Assert.*;
 
 /**
  * Test case for {@link ComputeEngineCredentials}.
@@ -193,6 +205,81 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void getAccount_missing_throws() {
+    MockMetadataServerTransportFactory transportFactory =
+        new MockMetadataServerTransportFactory();
+    String defaultAccountEmail = "mail@mail.com";
+
+    transportFactory.transport = new MockMetadataServerTransport() {
+      @Override
+      public LowLevelHttpRequest buildRequest(String method, String url)
+          throws IOException {
+        if (isGetServiceAccountsUrl(url)) {
+          return new MockLowLevelHttpRequest(url) {
+            @Override
+            public LowLevelHttpResponse execute() throws IOException {
+              return new MockLowLevelHttpResponse()
+                  .setStatusCode(HttpStatusCodes.STATUS_CODE_NOT_FOUND)
+                  .setContent("");
+            }
+          };
+        }
+        return super.buildRequest(method, url);
+      }
+    };
+    transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+    try {
+      byte[] bytes = {0xD, 0xE, 0xA, 0xD};
+      credentials.getAccount();
+      fail("Fetching default service account should have failed");
+    } catch (RuntimeException e) {
+      assertEquals("Failed to to get service account", e.getMessage());
+      assertNotNull(e.getCause());
+      assertTrue(e.getCause().getMessage().contains("404"));
+    }
+  }
+
+  @Test
+  public void getAccount_emptyContent_throws() {
+    MockMetadataServerTransportFactory transportFactory =
+        new MockMetadataServerTransportFactory();
+    String defaultAccountEmail = "mail@mail.com";
+
+    transportFactory.transport = new MockMetadataServerTransport() {
+      @Override
+      public LowLevelHttpRequest buildRequest(String method, String url)
+          throws IOException {
+        if (isGetServiceAccountsUrl(url)) {
+          return new MockLowLevelHttpRequest(url) {
+            @Override
+            public LowLevelHttpResponse execute() throws IOException {
+              return new MockLowLevelHttpResponse()
+                  .setStatusCode(HttpStatusCodes.STATUS_CODE_OK);
+            }
+          };
+        }
+        return super.buildRequest(method, url);
+      }
+    };
+    transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+    try {
+      byte[] bytes = {0xD, 0xE, 0xA, 0xD};
+      credentials.getAccount();
+      fail("Fetching default service account should have failed");
+    } catch (RuntimeException e) {
+      assertEquals("Failed to to get service account", e.getMessage());
+      assertNotNull(e.getCause());
+      assertTrue(e.getCause().getMessage().contains("Empty content"));
+    }
+  }
+
+  @Test
   public void sign_sameAs() throws IOException {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
@@ -206,5 +293,127 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
             ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
     assertArrayEquals(expectedSignature, credentials.sign(expectedSignature));
+  }
+
+  @Test
+  public void sign_accessDenied_throws() {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    String defaultAccountEmail = "mail@mail.com";
+
+    transportFactory.transport = new MockMetadataServerTransport() {
+      @Override
+      public LowLevelHttpRequest buildRequest(String method, String url)
+          throws IOException {
+        if (isSignRequestUrl(url)) {
+          return new MockLowLevelHttpRequest(url) {
+            @Override
+            public LowLevelHttpResponse execute() throws IOException {
+              return new MockLowLevelHttpResponse()
+                  .setStatusCode(HttpStatusCodes.STATUS_CODE_FORBIDDEN)
+                  .setContent(TestUtils.errorJson("Sign Error"));
+            }
+          };
+        }
+        return super.buildRequest(method, url);
+      }
+    };
+
+    transportFactory.transport.setAccessToken(accessToken);
+    transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);
+
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+    try {
+      byte[] bytes = {0xD, 0xE, 0xA, 0xD};
+      credentials.sign(bytes);
+      fail("Signing should have failed");
+    } catch (SigningException e) {
+      assertEquals("Failed to sign the provided bytes", e.getMessage());
+      assertNotNull(e.getCause());
+      assertTrue(e.getCause().getMessage().contains("403"));
+    }
+  }
+
+  @Test
+  public void sign_serverError_throws() {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    String defaultAccountEmail = "mail@mail.com";
+
+    transportFactory.transport = new MockMetadataServerTransport() {
+      @Override
+      public LowLevelHttpRequest buildRequest(String method, String url)
+          throws IOException {
+        if (isSignRequestUrl(url)) {
+          return new MockLowLevelHttpRequest(url) {
+            @Override
+            public LowLevelHttpResponse execute() throws IOException {
+              return new MockLowLevelHttpResponse()
+                  .setStatusCode(HttpStatusCodes.STATUS_CODE_SERVER_ERROR)
+                  .setContent(TestUtils.errorJson("Sign Error"));
+            }
+          };
+        }
+        return super.buildRequest(method, url);
+      }
+    };
+
+    transportFactory.transport.setAccessToken(accessToken);
+    transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);
+
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+    try {
+      byte[] bytes = {0xD, 0xE, 0xA, 0xD};
+      credentials.sign(bytes);
+      fail("Signing should have failed");
+    } catch (SigningException e) {
+      assertEquals("Failed to sign the provided bytes", e.getMessage());
+      assertNotNull(e.getCause());
+      assertTrue(e.getCause().getMessage().contains("500"));
+    }
+  }
+
+  @Test
+  public void sign_emptyContent_throws() {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    String defaultAccountEmail = "mail@mail.com";
+
+    transportFactory.transport = new MockMetadataServerTransport() {
+      @Override
+      public LowLevelHttpRequest buildRequest(String method, String url)
+          throws IOException {
+        if (isSignRequestUrl(url)) {
+          return new MockLowLevelHttpRequest(url) {
+            @Override
+            public LowLevelHttpResponse execute() throws IOException {
+              return new MockLowLevelHttpResponse()
+                  .setStatusCode(HttpStatusCodes.STATUS_CODE_OK);
+            }
+          };
+        }
+        return super.buildRequest(method, url);
+      }
+    };
+
+    transportFactory.transport.setAccessToken(accessToken);
+    transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);
+
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+    try {
+      byte[] bytes = {0xD, 0xE, 0xA, 0xD};
+      credentials.sign(bytes);
+      fail("Signing should have failed");
+    } catch (SigningException e) {
+      assertEquals("Failed to sign the provided bytes", e.getMessage());
+      assertNotNull(e.getCause());
+      assertTrue(e.getCause().getMessage().contains("Empty content"));
+    }
   }
 }
