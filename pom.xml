@@ -45,7 +45,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>1.6</java.version>
-    <project.google.http.version>1.23.0</project.google.http.version>
+    <project.google.http.version>1.24.1</project.google.http.version>
     <project.junit.version>4.12</project.junit.version>
     <project.guava.version>20.0</project.guava.version>
     <project.appengine.version>1.9.64</project.appengine.version>
