@@ -3,6 +3,7 @@
 
 Open source authentication client library for Java.
 
+[![unstable](http://badges.github.io/stability-badges/dist/unstable.svg)](http://github.com/badges/stability-badges)
 [![Build Status](https://travis-ci.org/google/google-auth-library-java.svg?branch=master)](https://travis-ci.org/google/google-auth-library-java.svg)
 [![Maven](https://img.shields.io/maven-central/v/com.google.auth/google-auth-library-credentials.svg)](https://img.shields.io/maven-central/v/com.google.auth/google-auth-library-credentials.svg)
 
