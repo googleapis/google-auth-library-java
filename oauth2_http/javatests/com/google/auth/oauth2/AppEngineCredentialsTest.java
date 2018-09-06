@@ -172,57 +172,18 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
   }
 
   private static class TestSigningResult {
-
-    private final byte[] signature;
-
-    TestSigningResult(byte[] signature) {
-      this.signature = signature;
-    }
-
-    public byte[] getSignature() {
-      return this.signature;
-    }
   }
 
   private static class TestAppIdentityServiceFactory {
 
-    public static TestAppIdentityService getAppIdentityService() {
-      return new TestAppIdentityService();
-    }
   }
 
   private static class TestAppIdentityService {
-
-    public TestGetAccessTokenResult getAccessToken(Iterable<String> scopes) {
-      return new TestGetAccessTokenResult(EXPECTED_ACCESS_TOKEN, EXPECTED_EXPIRATION_DATE);
-    }
-
-    public String getServiceAccountName() {
-      return EXPECTED_ACCOUNT;
-    }
-
-    public TestSigningResult signForApp(byte[] toSign) {
-      return new TestSigningResult(EXPECTED_SIGNATURE);
-    }
   }
 
   private static class TestGetAccessTokenResult {
 
-    private final String accessToken;
-    private final Date expirationTime;
 
-    TestGetAccessTokenResult(String accessToken, Date expirationTime) {
-      this.accessToken = accessToken;
-      this.expirationTime = expirationTime;
-    }
-
-    public String getAccessToken() {
-      return this.accessToken;
-    }
-
-    public Date getExpirationTime() {
-      return this.expirationTime;
-    }
   }
 
   private static class TestAppEngineCredentials extends AppEngineCredentials {

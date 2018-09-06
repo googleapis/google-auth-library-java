@@ -586,7 +586,6 @@ public class DefaultCredentialsProviderTest {
     private final Map<String, String> properties = new HashMap<>();
     private final Map<String, InputStream> files = new HashMap<>();
     private boolean fileSandbox = false;
-    private int forNameCallCount = 0;
 
     TestDefaultCredentialsProvider () {
     }
@@ -620,7 +619,6 @@ public class DefaultCredentialsProviderTest {
 
     @Override
     Class<?> forName(String className) throws ClassNotFoundException {
-      forNameCallCount++;
       Class<?> lookup = types.get(className);
       if (lookup != null) {
         return lookup;
@@ -631,10 +629,6 @@ public class DefaultCredentialsProviderTest {
     @Override
     protected boolean isOnGAEStandard7() {
       return getProperty("isOnGAEStandard7", "false").equals("true");
-    }
-
-    int getForNameCallCount() {
-      return forNameCallCount;
     }
 
     @Override
