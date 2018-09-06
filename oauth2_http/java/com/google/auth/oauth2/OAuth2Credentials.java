@@ -76,19 +76,6 @@ public class OAuth2Credentials extends Credentials {
    *
    * @param accessToken the access token
    * @return the credentials instance
-   * @deprecated Use {@link #create(AccessToken)} instead. This method will be deleted in a later
-   *             version.
-   */
-  @Deprecated
-  public static OAuth2Credentials of(AccessToken accessToken) {
-    return create(accessToken);
-  }
-
-  /**
-   * Returns the credentials instance from the given access token.
-   *
-   * @param accessToken the access token
-   * @return the credentials instance
    */
   public static OAuth2Credentials create(AccessToken accessToken) {
     return OAuth2Credentials.newBuilder().setAccessToken(accessToken).build();
@@ -104,12 +91,9 @@ public class OAuth2Credentials extends Credentials {
   /**
    * Constructor with explicit access token.
    *
-   * @param accessToken Initial or temporary access token.
-   * @deprecated Use {@link #create(AccessToken)} instead. This constructor will either be deleted
-   *             or made private in a later version.
+   * @param accessToken initial or temporary access token
    **/
-  @Deprecated
-  public OAuth2Credentials(AccessToken accessToken) {
+  protected OAuth2Credentials(AccessToken accessToken) {
     if (accessToken != null) {
       useAccessToken(accessToken);
     }

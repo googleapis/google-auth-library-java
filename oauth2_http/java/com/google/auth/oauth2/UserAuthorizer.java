@@ -70,51 +70,19 @@ public class UserAuthorizer {
   private final URI userAuthUri;
 
   /**
-   * Constructor with minimal parameters.
-   *
-   * @param clientId Client ID to identify the OAuth2 consent prompt.
-   * @param scopes OAUth2 scopes defining the user consent.
-   * @param tokenStore Implementation of component for long term storage of tokens.
-   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
-   *             private in a later version.
-   */
-  @Deprecated
-  public UserAuthorizer(ClientId clientId, Collection<String> scopes, TokenStore tokenStore) {
-    this(clientId, scopes, tokenStore, null, null, null, null);
-  }
-
-  /**
-   * Constructor with common parameters.
-   *
-   * @param clientId Client ID to identify the OAuth2 consent prompt.
-   * @param scopes OAUth2 scopes defining the user consent.
-   * @param tokenStore Implementation of component for long term storage of tokens.
-   * @param callbackUri URI for implementation of the OAuth2 web callback.
-   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
-   *             private in a later version.
-   */
-  @Deprecated
-  public UserAuthorizer(ClientId clientId, Collection<String> scopes, TokenStore tokenStore, URI callbackUri) {
-    this(clientId, scopes, tokenStore, callbackUri, null, null, null);
-  }
-
-  /**
    * Constructor with all parameters.
    *
-   * @param clientId Client ID to identify the OAuth2 consent prompt.
-   * @param scopes OAUth2 scopes defining the user consent.
-   * @param tokenStore Implementation of a component for long term storage of tokens.
-   * @param callbackUri URI for implementation of the OAuth2 web callback.
+   * @param clientId Client ID to identify the OAuth2 consent prompt
+   * @param scopes OAuth2 scopes defining the user consent
+   * @param tokenStore Implementation of a component for long term storage of tokens
+   * @param callbackUri URI for implementation of the OAuth2 web callback
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *        tokens.
-   * @param tokenServerUri URI of the end point that provides tokens.
-   * @param userAuthUri URI of the Web UI for user consent.
-   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
-   *             private in a later version.
+   * @param tokenServerUri URI of the end point that provides tokens
+   * @param userAuthUri URI of the Web UI for user consent
    */
-  @Deprecated
-  public UserAuthorizer(ClientId clientId, Collection<String> scopes, TokenStore tokenStore,
-                        URI callbackUri, HttpTransportFactory transportFactory, URI tokenServerUri, URI userAuthUri) {
+  private UserAuthorizer(ClientId clientId, Collection<String> scopes, TokenStore tokenStore,
+      URI callbackUri, HttpTransportFactory transportFactory, URI tokenServerUri, URI userAuthUri) {
     this.clientId = Preconditions.checkNotNull(clientId);
     this.scopes = ImmutableList.copyOf(Preconditions.checkNotNull(scopes));
     this.callbackUri = (callbackUri == null) ? DEFAULT_CALLBACK_URI : callbackUri;
