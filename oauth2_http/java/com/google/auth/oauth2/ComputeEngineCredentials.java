@@ -61,7 +61,10 @@ import java.util.logging.Logger;
 /**
  * OAuth2 credentials representing the built-in service account for a Google Compute Engine VM.
  *
- * <p>Fetches access tokens from the Google Compute Engine metadata server.
+ * <p>Fetches access tokens from the Google Compute Engine metadata server.</p>
+ *
+ * <p>These credentials use the IAM API to sign data. See {@link #sign(byte[])} for more details.
+ * </p>
  */
 public class ComputeEngineCredentials extends GoogleCredentials implements ServiceAccountSigner {
 
@@ -294,6 +297,17 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
     return serviceAccountEmail;
   }
 
+  /**
+   * Signs the provided bytes using the private key associated with the service account.
+   *
+   * <p>The Compute Engine's project must enable the Identity and Access Management (IAM) API and
+   * the instance's service account must have the iam.serviceAccounts.signBlob permission.</p>
+   *
+   * @param toSign bytes to sign
+   * @return signed bytes
+   * @throws SigningException if the attempt to sign the provided bytes failed
+   * @see <a href="https://cloud.google.com/iam/reference/rest/v1/projects.serviceAccounts/signBlob">Blob Signing</a>
+   */
   @Override
   public byte[] sign(byte[] toSign) {
     BaseEncoding base64 = BaseEncoding.base64();

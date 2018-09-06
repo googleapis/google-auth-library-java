@@ -6,7 +6,7 @@ Open source authentication client library for Java.
 [![Build Status](https://travis-ci.org/google/google-auth-library-java.svg?branch=master)](https://travis-ci.org/google/google-auth-library-java.svg)
 [![Maven](https://img.shields.io/maven-central/v/com.google.auth/google-auth-library-credentials.svg)](https://img.shields.io/maven-central/v/com.google.auth/google-auth-library-credentials.svg)
 
--  [API Documentation] (https://google.github.io/google-auth-library-java/releases/latest/apidocs)
+-  [API Documentation](https://google.github.io/google-auth-library-java/releases/latest/apidocs)
 
 This project consists of 3 artifacts:
 
@@ -29,16 +29,16 @@ If you are using Maven, add this to your pom.xml file (notice that you can repla
 <dependency>
   <groupId>com.google.auth</groupId>
   <artifactId>google-auth-library-oauth2-http</artifactId>
-  <version>0.10.0</version>
+  <version>0.11.0</version>
 </dependency>
 ```
 If you are using Gradle, add this to your dependencies
 ```Groovy
-compile 'com.google.auth:google-auth-library-oauth2-http:0.10.0'
+compile 'com.google.auth:google-auth-library-oauth2-http:0.11.0'
 ```
 If you are using SBT, add this to your dependencies
 ```Scala
-libraryDependencies += "com.google.auth" % "google-auth-library-oauth2-http" % "0.10.0"
+libraryDependencies += "com.google.auth" % "google-auth-library-oauth2-http" % "0.11.0"
 ```
 
 ## google-auth-library-credentials
