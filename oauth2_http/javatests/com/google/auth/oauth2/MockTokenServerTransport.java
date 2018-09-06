@@ -45,7 +45,6 @@ import com.google.auth.TestUtils;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayDeque;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
