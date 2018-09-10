@@ -53,6 +53,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.file.Paths;
 import java.security.AccessControlException;
 import java.util.Collection;
 import java.util.Collections;
@@ -444,7 +445,7 @@ public class DefaultCredentialsProviderTest {
   }
 
   private String tempFilePath(String filename) {
-    return System.getProperty("java.io.tmpdir") + File.separator + filename;
+    return Paths.get(System.getProperty("java.io.tmpdir"), filename).toString();
   }
 
   private class LogHandler extends Handler {
