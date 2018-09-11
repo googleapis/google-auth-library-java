@@ -66,7 +66,7 @@ public class ClientIdTest {
 
   @Test(expected = NullPointerException.class)
   public void constructor_nullClientId_throws() {
-    ClientId clientId = ClientId.newBuilder()
+    ClientId.newBuilder()
         .setClientSecret(CLIENT_SECRET)
         .build();
   }
