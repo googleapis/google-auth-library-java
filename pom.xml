@@ -95,6 +95,12 @@
         <scope>test</scope>
       </dependency>
       <dependency>
+        <groupId>com.google.appengine</groupId>
+        <artifactId>appengine</artifactId>
+        <version>1.9.64</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
         <groupId>com.google.auth</groupId>
         <artifactId>google-auth-library-oauth2-http</artifactId>
         <version>${project.version}</version>
