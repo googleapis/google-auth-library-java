@@ -14,7 +14,7 @@ This project consists of 3 artifacts:
 -  [*google-auth-library-credentials*](#google-auth-library-credentials): contains base classes and
 interfaces for Google credentials
 -  [*google-auth-library-appengine*](#google-auth-library-appengine): contains App Engine
-credentials. This artifact depends on the App Engine SDK,
+credentials. This artifact depends on the App Engine SDK.
 -  [*google-auth-library-oauth2-http*](#google-auth-library-oauth2-http): contains a wide variety of
 credentials as well as utility methods to create them and to get Application Default Credentials
 
