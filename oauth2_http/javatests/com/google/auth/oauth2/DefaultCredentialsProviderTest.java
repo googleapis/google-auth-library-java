@@ -53,6 +53,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.file.Paths;
 import java.security.AccessControlException;
 import java.util.Collection;
 import java.util.Collections;
@@ -136,7 +137,7 @@ public class DefaultCredentialsProviderTest {
         UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setFileSandbox(true);
-    String userPath = "/user.json";
+    String userPath = tempFilePath("user.json");
     testProvider.addFile(userPath, userStream);
     testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, userPath);
 
@@ -300,7 +301,7 @@ public class DefaultCredentialsProviderTest {
         .writeServiceAccountStream(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
-    String serviceAccountPath = "/service_account.json";
+    String serviceAccountPath = tempFilePath("service_account.json");
     testProvider.addFile(serviceAccountPath, serviceAccountStream);
     testProvider.setEnv(
         DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, serviceAccountPath);
@@ -318,7 +319,7 @@ public class DefaultCredentialsProviderTest {
     InputStream userStream =
         UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
-    String userPath = "/user.json";
+    String userPath = tempFilePath("user.json");
     testProvider.addFile(userPath, userStream);
     testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, userPath);
 
@@ -420,7 +421,7 @@ public class DefaultCredentialsProviderTest {
 
     InputStream envStream =
         UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, refreshTokenEnv);
-    String envPath = "/env.json";
+    String envPath = tempFilePath("env.json");
     testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, envPath);
     testProvider.addFile(envPath, envStream);
 
@@ -441,6 +442,10 @@ public class DefaultCredentialsProviderTest {
     transportFactory.transport.addRefreshToken(refreshTokenEnv, accessTokenEnv);
 
     testUserProvidesToken(testProvider, transportFactory, accessTokenEnv);
+  }
+
+  private String tempFilePath(String filename) {
+    return Paths.get(System.getProperty("java.io.tmpdir"), filename).toString();
   }
 
   private class LogHandler extends Handler {
