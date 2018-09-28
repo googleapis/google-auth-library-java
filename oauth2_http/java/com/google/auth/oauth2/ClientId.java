@@ -60,10 +60,11 @@ public class ClientId {
    * Constructs a client ID from an explicit ID and secret.
    *
    * <p>Note: Direct use of this factory method in application code is not recommended to avoid
-   * having secrets or values that need to be updated in source code.
+   * having secrets or values that need to be updated in source code.</p>
    *
    * @param clientId Text identifier of the Client ID.
    * @param clientSecret Secret to associated with the Client ID.
+   * @return The ClientId instance.
    */
   public static ClientId of(String clientId, String clientSecret) {
     return new ClientId(clientId, clientSecret);
@@ -146,6 +147,8 @@ public class ClientId {
 
   /**
    * Returns the text identifier of the Client ID.
+   *
+   * @return The text identifier of the Client ID.
    */
   public final String getClientId() {
     return clientId;
@@ -153,6 +156,8 @@ public class ClientId {
 
   /**
    * Returns the secret associated with the Client ID.
+   *
+   * @return The secret associated with the Client ID.
    */
   public final String getClientSecret() {
     return clientSecret;
