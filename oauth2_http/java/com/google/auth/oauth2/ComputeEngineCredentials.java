@@ -222,7 +222,7 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
         // Ignore logging timeouts which is the expected failure mode in non GCE environments.
       } catch (IOException e) {
         LOGGER.log(
-            Level.WARNING, "Failed to detect whether we are running on Google Compute Engine.", e);
+            Level.INFO, "Failed to detect whether we are running on Google Compute Engine.", e);
       }
     }
     return false;
