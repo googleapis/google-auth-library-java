@@ -101,6 +101,16 @@ AccessToken token = credentials.getAccessToken();
 AccessToken token = credentials.refreshAccessToken();
 ```
 
+## CI Status
+
+Java Version | Status
+------------ | ------
+Java 7 | [![Kokoro CI](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java7.svg)](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java7.html)
+Java 8 | [![Kokoro CI](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8.svg)](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8.html)
+Java 8 OSX | [![Kokoro CI](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8-osx.svg)](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8-osx.html)
+Java 8 Windows | [![Kokoro CI](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8-win.svg)](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8-win.html)
+Java 10 | [![Kokoro CI](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java10.svg)](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java10.html)
+
 ## Contributing
 
 Contributions to this library are always welcome and highly encouraged.
