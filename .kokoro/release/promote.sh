@@ -15,16 +15,11 @@
 
 set -eo pipefail
 
-GPG_PASSPHRASE=$(cat ${KOKORO_ROOT}/src/keystore/70247_maven-gpg-passphrase)
+source $(dirname "$0")/common.sh
+MAVEN_SETTINGS_FILE=$(realpath $(dirname "$0")/../)/settings.xml
+pushd $(dirname "$0")/../
 
-# Set up gpg-agent
-GPG_HOME=$(mktemp -d -t gpg)
-cp {KOKORO_ROOT}/src/keystore/70247_maven-gpg-pubkeyring $GPG_HOME/pubring.gpg
-cp {KOKORO_ROOT}/src/keystore/70247_maven-gpg-keyring $GPG_HOME/secring.gpg
-eval $(gpg-agent --homedir=$GPG_HOME --daemon)
+setup_environment_secrets
+create_settings_xml_file "settings.xml"
 
-# setup Sonatype credentials
-
-cd github/google-auth-library-java/
-
-mvn clean install deploy -DperformRelease=true -Dgpg.passphrase=$GPG_PASSPHRASE
+mvn nexus-staging:release -DperformRelease=true

@@ -15,6 +15,11 @@
 
 set -eo pipefail
 
-cd github/google-auth-library-java/
+source $(dirname "$0")/common.sh
+MAVEN_SETTINGS_FILE=$(realpath $(dirname "$0")/../)/settings.xml
+pushd $(dirname "$0")/../
 
-mvn nexus-staging:release -DperformRelease=true
+setup_environment_secrets
+create_settings_xml_file "settings.xml"
+
+mvn nexus-staging:drop -DperformRelease=true
