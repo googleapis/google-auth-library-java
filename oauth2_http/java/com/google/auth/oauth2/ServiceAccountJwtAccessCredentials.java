@@ -176,6 +176,8 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    * @param clientEmail Client email address of the service account from the console.
    * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
    * @param privateKeyId Private key identifier for the service account. May be null.
+   * @return New ServiceAccountJwtAcceessCredentials created from a private key.
+   * @throws IOException if the credential cannot be created from the private key.
    */
   public static ServiceAccountJwtAccessCredentials fromPkcs8(String clientId, String clientEmail, 
       String privateKeyPkcs8, String privateKeyId) throws IOException {
@@ -190,6 +192,8 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
    * @param privateKeyId Private key identifier for the service account. May be null.
    * @param defaultAudience Audience to use if not provided by transport. May be null.
+   * @return New ServiceAccountJwtAcceessCredentials created from a private key.
+   * @throws IOException if the credential cannot be created from the private key.
    */
   public static ServiceAccountJwtAccessCredentials fromPkcs8(String clientId, String clientEmail, 
       String privateKeyPkcs8, String privateKeyId, URI defaultAudience) throws IOException {

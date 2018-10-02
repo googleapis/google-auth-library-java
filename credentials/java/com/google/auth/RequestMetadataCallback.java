@@ -42,11 +42,15 @@ import java.util.Map;
 public interface RequestMetadataCallback {
   /**
    * Called when metadata is successfully produced.
+   *
+   * @param metadata Metadata returned for the request.
    */
   void onSuccess(Map<String, List<String>> metadata);
 
   /**
    * Called when metadata generation failed.
+   *
+   * @param exception The thrown exception which caused the request metadata fetch to fail.
    */
   void onFailure(Throwable exception);
 }

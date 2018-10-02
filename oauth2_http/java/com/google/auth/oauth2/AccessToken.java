@@ -58,6 +58,8 @@ public class AccessToken implements Serializable {
 
   /**
    * String representation of the access token.
+   *
+   * @return The raw access token string value.
    */
   public String getTokenValue() {
     return tokenValue;
@@ -65,6 +67,8 @@ public class AccessToken implements Serializable {
 
   /**
    * Time when access token will expire.
+   *
+   * @return The expiration time as a {@link Date}.
    */
   public Date getExpirationTime() {
     if (expirationTimeMillis == null) {

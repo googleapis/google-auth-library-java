@@ -43,7 +43,6 @@ import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.LowLevelHttpRequest;
 import com.google.api.client.http.LowLevelHttpResponse;
-import com.google.api.client.json.GenericJson;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
@@ -232,7 +231,6 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
     try {
-      byte[] bytes = {0xD, 0xE, 0xA, 0xD};
       credentials.getAccount();
       fail("Fetching default service account should have failed");
     } catch (RuntimeException e) {
@@ -269,7 +267,6 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
     try {
-      byte[] bytes = {0xD, 0xE, 0xA, 0xD};
       credentials.getAccount();
       fail("Fetching default service account should have failed");
     } catch (RuntimeException e) {

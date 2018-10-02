@@ -64,6 +64,8 @@ public class CloudShellCredentials extends GoogleCredentials {
   private final int authPort;
 
   /**
+   * @param authPort Authentication port.
+   * @return The CloudShellCredentials.
    * @deprecated Use {@link #create(int)} instead. This method will be deleted in a later version.
    */
   @Deprecated
@@ -76,6 +78,7 @@ public class CloudShellCredentials extends GoogleCredentials {
   }
 
   /**
+   * @param authPort Authentication port.
    * @deprecated Use {@link #create(int)} instead. This constructor will either be deleted or
    *             made private in a later version.
    */
