@@ -43,6 +43,8 @@ public interface HttpTransportFactory {
 
   /**
    * Creates a {@code HttpTransport} instance.
+   *
+   * @return The HttpTransport instance.
    */
   HttpTransport create();
 }

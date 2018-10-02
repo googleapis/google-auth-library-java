@@ -134,6 +134,8 @@ public class OAuth2Credentials extends Credentials {
    * Returns the cached access token.
    *
    * <p>If not set, you should call {@link #refresh()} to fetch and cache an access token.</p>
+   *
+   * @return The cached access token.
    */
   public final AccessToken getAccessToken() {
     return temporaryAccess;
@@ -187,6 +189,8 @@ public class OAuth2Credentials extends Credentials {
 
   /**
    * Refresh these credentials only if they have expired or are expiring imminently.
+   *
+   * @throws IOException during token refresh.
    */
   public void refreshIfExpired() throws IOException {
     synchronized(lock) {
@@ -217,6 +221,7 @@ public class OAuth2Credentials extends Credentials {
    * Throws IllegalStateException if not overridden since direct use of OAuth2Credentials is only
    * for temporary or non-refreshing access tokens.
    *
+   * @return Refreshed access token.
    * @throws IOException from derived implementations
    */
   public AccessToken refreshAccessToken() throws IOException {
