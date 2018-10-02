@@ -63,6 +63,10 @@ public class AppEngineCredentials extends GoogleCredentials implements ServiceAc
   private transient AppIdentityService appIdentityService;
 
   /**
+   * Create a new AppEngineCredential.
+   *
+   * @param scopes Collection of scopes to request.
+   *
    * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
    *             private in a later version.
    */
@@ -72,6 +76,11 @@ public class AppEngineCredentials extends GoogleCredentials implements ServiceAc
   }
 
   /**
+   * Create a new AppEngineCredential.
+   *
+   * @param scopes Collection of scopes to request.
+   * @param appIdentityService Custom service used for signing.
+   *
    * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
    *             private in a later version.
    */

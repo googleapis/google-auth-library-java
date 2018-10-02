@@ -68,6 +68,8 @@ public interface ServiceAccountSigner {
 
   /**
    * Returns the service account associated with the signer.
+   *
+   * @return The service account associated with the signer.
    */
   String getAccount();
 

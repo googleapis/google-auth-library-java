@@ -138,6 +138,8 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
 
   /**
    * Create a new ComputeEngineCredentials instance with default behavior.
+   *
+   * @return New ComputeEngineCredentials.
    */
   public static ComputeEngineCredentials create() {
     return new ComputeEngineCredentials(null);
@@ -220,7 +222,7 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
         // Ignore logging timeouts which is the expected failure mode in non GCE environments.
       } catch (IOException e) {
         LOGGER.log(
-            Level.WARNING, "Failed to detect whether we are running on Google Compute Engine.", e);
+            Level.INFO, "Failed to detect whether we are running on Google Compute Engine.", e);
       }
     }
     return false;
