@@ -10,7 +10,6 @@
   </parent>
 
   <artifactId>google-auth-library-appengine</artifactId>
-  <version>0.11.1-SNAPSHOT</version><!-- {x-version-update:google-auth-library-appengine:current} -->
   <name>Google Auth Library for Java - Google App Engine</name>
 
   <distributionManagement>

@@ -10,7 +10,6 @@
   </parent>
 
   <artifactId>google-auth-library-oauth2-http</artifactId>
-  <version>0.11.1-SNAPSHOT</version><!-- {x-version-update:google-auth-library-oauth2-http:current} -->
   <name>Google Auth Library for Java - OAuth2 HTTP</name>
 
   <distributionManagement>
