@@ -1,0 +1,7 @@
+# Format:
+# module:released-version:current-version
+
+google-auth-library-parent:0.11.0:0.11.1-SNAPSHOT
+google-auth-library-appengine:0.11.0:0.11.1-SNAPSHOT
+google-auth-library-credentials:0.11.0:0.11.1-SNAPSHOT
+google-auth-library-oauth2-http:0.11.0:0.11.1-SNAPSHOT
