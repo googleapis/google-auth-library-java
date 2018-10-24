@@ -27,6 +27,9 @@ credentials as well as utility methods to create them and to get Application Def
 If you are using Maven, add this to your pom.xml file (notice that you can replace
 `google-auth-library-oauth2-http` with any of `google-auth-library-credentials` and
 `google-auth-library-appengine`, depending on your application needs):
+
+[//]: # ({x-version-update-start:google-auth-library-oauth2-http:released})
+
 ```xml
 <dependency>
   <groupId>com.google.auth</groupId>
@@ -34,14 +37,24 @@ If you are using Maven, add this to your pom.xml file (notice that you can repla
   <version>0.11.0</version>
 </dependency>
 ```
+[//]: # ({x-version-update-end})
+
+
 If you are using Gradle, add this to your dependencies
+
+[//]: # ({x-version-update-start:google-auth-library-oauth2-http:released})
 ```Groovy
 compile 'com.google.auth:google-auth-library-oauth2-http:0.11.0'
 ```
+[//]: # ({x-version-update-end})
+
 If you are using SBT, add this to your dependencies
+
+[//]: # ({x-version-update-start:google-auth-library-oauth2-http:released})
 ```Scala
 libraryDependencies += "com.google.auth" % "google-auth-library-oauth2-http" % "0.11.0"
 ```
+[//]: # ({x-version-update-end})
 
 ## google-auth-library-credentials
 
