@@ -398,7 +398,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
     try {
       response = request.execute();
     } catch (IOException e) {
-      throw new IOException("Error getting access token for service account: ", e);
+      throw new IOException(String.format("Error getting access token for service account: %s", e.getMessage()), e);
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
