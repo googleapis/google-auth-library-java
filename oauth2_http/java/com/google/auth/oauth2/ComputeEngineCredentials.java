@@ -155,8 +155,9 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
     if (statusCode == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
       throw new IOException(String.format("Error code %s trying to get security access token from"
           + " Compute Engine metadata for the default service account. This may be because"
-          + " the virtual machine instance does not have permission scopes specified.",
-          statusCode));
+          + " the virtual machine instance does not have permission scopes specified."
+          + " It is possible to skip checking for Compute Engine metadata by specifying the environment "
+          + " variable " + DefaultCredentialsProvider.NO_GCE_CHECK_ENV_VAR + "=true.", statusCode));
     }
     if (statusCode != HttpStatusCodes.STATUS_CODE_OK) {
       throw new IOException(String.format("Unexpected Error code %s trying to get security access"
