@@ -72,6 +72,14 @@ This artifact depends on the App Engine SDK (`appengine-api-1.0-sdk`) and should
 applications running on App Engine. The `AppEngineCredentials` class allows to authorize your App
 Engine application given an instance of [AppIdentityService](https://cloud.google.com/appengine/docs/java/javadoc/com/google/appengine/api/appidentity/AppIdentityService).
 
+You can install the App Engine SDK from Maven Central:
+
+```bash
+$ mvn dependency:get -Dartifact=com.google.appengine:appengine-api-1.0-sdk:1.9.65
+```
+
+You can find [all available versions][appengine-sdk-versions] on Maven Central.
+
 ## google-auth-library-oauth2-http
 
 ### Application Default Credentials
@@ -135,6 +143,21 @@ Please note that this project is released with a Contributor Code of Conduct. By
 this project you agree to abide by its terms. See [Code of Conduct](CODE_OF_CONDUCT.md) for more
 information.
 
+## Running the Tests
+
+To run the tests you will need:
+
+* Maven 3+
+* App Engine SDK (see [installation instructions above][appengine-sdk-install])
+
+```bash
+$ mvn install -DskipTests=true
+$ mvn test
+```
+
 ## License
 
 BSD 3-Clause - See [LICENSE](LICENSE) for more information.
+
+[appengine-sdk-versions]: https://search.maven.org/search?q=g:com.google.appengine%20AND%20a:appengine-api-1.0-sdk&core=gav
+[appengine-sdk-install]: https://github.com/googleapis/google-auth-library-java/blob/master/README.md#google-auth-library-appengine
