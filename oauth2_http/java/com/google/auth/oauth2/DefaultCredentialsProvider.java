@@ -212,9 +212,9 @@ class DefaultCredentialsProvider {
   }
 
   private void warnAboutProblematicCredentials(GoogleCredentials credentials) {
-    if (!Boolean.parseBoolean(getEnv(SUPPRESS_GCLOUD_CREDS_WARNING_ENV_VAR))
-        && credentials instanceof UserCredentials
-        && ((UserCredentials) credentials).getClientId().equals(CLOUDSDK_CLIENT_ID)) {
+    if (credentials instanceof UserCredentials
+        && ((UserCredentials) credentials).getClientId().equals(CLOUDSDK_CLIENT_ID)
+        && !Boolean.parseBoolean(getEnv(SUPPRESS_GCLOUD_CREDS_WARNING_ENV_VAR))) {
       LOGGER.log(Level.WARNING, CLOUDSDK_CREDENTIALS_WARNING);
     }
   }
