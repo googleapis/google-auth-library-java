@@ -87,6 +87,7 @@ class DefaultCredentialsProvider {
       + "SDK, you might receive a \"quota exceeded\" or \"API not enabled\" error. For "
       + "more information about service accounts, see "
       + "https://cloud.google.com/docs/authentication/.";
+  public static final String SUPPRESS_GCLOUD_CREDS_WARNING_ENV_VAR = "SUPPRESS_GCLOUD_CREDS_WARNING";
 
   // These variables should only be accessed inside a synchronized block
   private GoogleCredentials cachedCredentials = null;
@@ -211,8 +212,9 @@ class DefaultCredentialsProvider {
   }
 
   private void warnAboutProblematicCredentials(GoogleCredentials credentials) {
-    if (credentials instanceof UserCredentials &&
-        ((UserCredentials)credentials).getClientId().equals(CLOUDSDK_CLIENT_ID)) {
+    if (credentials instanceof UserCredentials
+        && ((UserCredentials) credentials).getClientId().equals(CLOUDSDK_CLIENT_ID)
+        && !Boolean.parseBoolean(getEnv(SUPPRESS_GCLOUD_CREDS_WARNING_ENV_VAR))) {
       LOGGER.log(Level.WARNING, CLOUDSDK_CREDENTIALS_WARNING);
     }
   }
