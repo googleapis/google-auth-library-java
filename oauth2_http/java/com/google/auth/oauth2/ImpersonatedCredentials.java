@@ -87,7 +87,6 @@ public class ImpersonatedCredentials extends GoogleCredentials {
   private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
   private static final int ONE_HOUR_IN_SECONDS = 3600;
   private static final String CLOUD_PLATFORM_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
-  private static final String ERROR_PREFIX = "Error processing IamCredentials generateAccessToken: ";
   private static final String IAM_ENDPOINT = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken";
 
   private static final String SCOPE_EMPTY_ERROR = "Scopes cannot be null";
@@ -225,7 +224,7 @@ public class ImpersonatedCredentials extends GoogleCredentials {
     try {
       date = format.parse(expireTime);
     } catch (ParseException pe) {
-      throw new IOException(ERROR_PREFIX + pe.getMessage());
+      throw new IOException("Error parsing expireTime: " + pe.getMessage());
     }
     return new AccessToken(accessToken, date);
   }
