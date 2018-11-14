@@ -113,7 +113,7 @@ following are searched (in order) to find the Application Default Credentials:
 
 To get Credentials from a Service Account JSON key use `GoogleCredentials.fromStream(InputStream)`
 or `GoogleCredentials.fromStream(InputStream, HttpTransportFactory)`. Note that the credentials must
-be refreshed before the access token is available. 
+be refreshed before the access token is available.
 
 ```java
 GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream("/path/to/credentials.json"));
@@ -121,6 +121,31 @@ credentials.refreshIfExpired();
 AccessToken token = credentials.getAccessToken();
 // OR
 AccessToken token = credentials.refreshAccessToken();
+```
+
+### ImpersonatedCredentials
+
+Allows a credentials issued to a user or service account to
+impersonate another.  The source project using ImpersonaedCredentials must enable the
+"IAMCredentials" API.  Also, the target service account must grant the orginating principal
+the "Service Account Token Creator" IAM role.
+
+```java
+String credPath = "/path/to/svc_account.json";
+ServiceAccountCredentials sourceCredentials = ServiceAccountCredentials
+     .fromStream(new FileInputStream(credPath));
+sourceCredentials = (ServiceAccountCredentials) sourceCredentials
+    .createScoped(Arrays.asList("https://www.googleapis.com/auth/iam"));
+
+ImpersonatedCredentials targetCredentials = ImpersonatedCredentials.create(sourceCredentials,
+    "impersonated-account@project.iam.gserviceaccount.com", null,
+    Arrays.asList("https://www.googleapis.com/auth/devstorage.read_only"), 300);
+
+Storage storage_service = StorageOptions.newBuilder().setProjectId("project-id")
+    .setCredentials(targetCredentials).build().getService();
+
+for (Bucket b : storage_service.list().iterateAll())
+    System.out.println(b); 
 ```
 
 ## CI Status
