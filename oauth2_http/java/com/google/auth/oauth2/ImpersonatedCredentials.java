@@ -59,15 +59,10 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
 
 /**
- * ImpersonatedCredentials allowing credentials issued to a user or
- * service account to impersonate another.
- * <br/>
- * The source project using ImpersonatedCredentials must enable the
- * "IAMCredentials" API.<br/>
- * Also, the target service account must grant the orginating principal the
- * "Service Account Token Creator" IAM role.
- * <br/>
- * Usage:<br/>
+ * ImpersonatedCredentials allowing credentials issued to a user or service account to impersonate
+ * another. <br/> The source project using ImpersonatedCredentials must enable the "IAMCredentials"
+ * API.<br/> Also, the target service account must grant the orginating principal the "Service
+ * Account Token Creator" IAM role. <br/> Usage:<br/>
  * <pre>
  * String credPath = "/path/to/svc_account.json";
  * ServiceAccountCredentials sourceCredentials = ServiceAccountCredentials
@@ -92,7 +87,7 @@ public class ImpersonatedCredentials extends GoogleCredentials {
   private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
   private static final int ONE_HOUR_IN_SECONDS = 3600;
   private static final String CLOUD_PLATFORM_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
-  private static final String ERROR_PREFIX = "Error processng IamCredentials generateAccessToken: ";
+  private static final String ERROR_PREFIX = "Error processing IamCredentials generateAccessToken: ";
   private static final String IAM_ENDPOINT = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken";
 
   private static final String SCOPE_EMPTY_ERROR = "Scopes cannot be null";
@@ -108,75 +103,66 @@ public class ImpersonatedCredentials extends GoogleCredentials {
   private transient HttpTransportFactory transportFactory;
 
   /**
-   * @param sourceCredentials The source credential used as to acquire the
-   * impersonated credentials
-   * @param targetPrincipal   The service account to impersonate.
-   * @param delegates         The chained list of delegates required to grant
-   * the final access_token.  <br/>If set, the sequence of identities must
-   * have "Service Account Token Creator" capability granted to the
-   * prceeding identity.  <br/>For example, if set to
-   * [serviceAccountB, serviceAccountC], the sourceCredential
-   * must have the Token Creator role on serviceAccountB. serviceAccountB must
-   * have the Token Creator on serviceAccountC.  <br/>Finally, C must have
-   * Token Creator on target_principal. If left unset, sourceCredential
-   * must have that role on targetPrincipal.
-   * @param scopes            Scopes to request during the authorization grant.
-   * @param lifetime          Number of seconds the delegated credential should
-   * be valid for (upto 3600).
-   * @param transportFactory  HTTP transport factory, creates the transport used
-   *                          to get access tokens.
+   * @param sourceCredentials The source credential used as to acquire the impersonated credentials
+   * @param targetPrincipal The service account to impersonate.
+   * @param delegates The chained list of delegates required to grant the final access_token.
+   *        If set, the sequence of identities must have "Service Account Token Creator" capability
+   *        granted to the prceeding identity.  <br/>For example, if set to [serviceAccountB,
+   *        serviceAccountC], the sourceCredential must have the Token Creator role on serviceAccountB.
+   *        serviceAccountB must have the Token Creator on serviceAccountC.  <br/>Finally, C must have
+   *        Token Creator on target_principal. If left unset, sourceCredential must have that role on
+   *        targetPrincipal.
+   * @param scopes Scopes to request during the authorization grant.
+   * @param lifetime Number of seconds the delegated credential should be valid for (upto 3600).
+   * @param transportFactory HTTP transport factory, creates the transport used to get access
+   * tokens.
    */
-  public static ImpersonatedCredentials create(GoogleCredentials sourceCredentials, String targetPrincipal,
-      List<String> delegates, List<String> scopes, int lifetime, HttpTransportFactory transportFactory) {
-    return ImpersonatedCredentials.newBuilder().setSourceCredentials(sourceCredentials)
-        .setTargetPrincipal(targetPrincipal).setDelegates(delegates).setScopes(scopes).setLifetime(lifetime)
-        .setHttpTransportFactory(transportFactory).build();
+  public static ImpersonatedCredentials create(GoogleCredentials sourceCredentials,
+      String targetPrincipal,
+      List<String> delegates, List<String> scopes, int lifetime,
+      HttpTransportFactory transportFactory) {
+    return ImpersonatedCredentials.newBuilder()
+        .setSourceCredentials(sourceCredentials)
+        .setTargetPrincipal(targetPrincipal)
+        .setDelegates(delegates)
+        .setScopes(scopes)
+        .setLifetime(lifetime)
+        .setHttpTransportFactory(transportFactory)
+        .build();
   }
 
   /**
-   * @param sourceCredentials The source credential used as to acquire the
-   * impersonated credentials
-   * @param targetPrincipal   The service account to impersonate.
-   * @param delegates         The chained list of delegates required to grant
-   * the final access_token.  <br/>If set, the sequence of identities must
-   * have "Service Account Token Creator" capability granted to the
-   * prceeding identity.  <br/>For example, if set to
-   * [serviceAccountB, serviceAccountC], the sourceCredential
-   * must have the Token Creator role on serviceAccountB. serviceAccountB must
-   * have the Token Creator on serviceAccountC.  <br/>Finally, C must have
-   * Token Creator on target_principal. If left unset, sourceCredential
-   * must have that role on targetPrincipal.
-   * @param scopes            Scopes to request during the authorization grant.
-   * @param lifetime          Number of seconds the delegated credential should
-   * be valid for (upto 3600).
-   */ 
-  public static ImpersonatedCredentials create(GoogleCredentials sourceCredentials, String targetPrincipal,
+   * @param sourceCredentials The source credential used as to acquire the impersonated credentials
+   * @param targetPrincipal The service account to impersonate.
+   * @param delegates The chained list of delegates required to grant the final access_token. If
+   *        set, the sequence of identities must have "Service Account Token Creator" capability
+   *        granted to the prceeding identity.  <br/>For example, if set to [serviceAccountB,
+   *        serviceAccountC], the sourceCredential must have the Token Creator role on serviceAccountB.
+   *        serviceAccountB must have the Token Creator on serviceAccountC.  <br/>Finally, C must have
+   *        Token Creator on target_principal. If left unset, sourceCredential must have that role on
+   *        targetPrincipal.
+   * @param scopes Scopes to request during the authorization grant.
+   * @param lifetime Number of seconds the delegated credential should be valid for (upto 3600).
+   */
+  public static ImpersonatedCredentials create(GoogleCredentials sourceCredentials,
+      String targetPrincipal,
       List<String> delegates, List<String> scopes, int lifetime) {
-    return ImpersonatedCredentials.newBuilder().setSourceCredentials(sourceCredentials)
-        .setTargetPrincipal(targetPrincipal).setDelegates(delegates).setScopes(scopes).setLifetime(lifetime).build();
+    return ImpersonatedCredentials.newBuilder()
+        .setSourceCredentials(sourceCredentials)
+        .setTargetPrincipal(targetPrincipal)
+        .setDelegates(delegates)
+        .setScopes(scopes)
+        .setLifetime(lifetime)
+        .build();
   }
 
-  /**
-   * @param sourceCredentials = Source Credentials.
-   * @param targetPrincipal   = targetPrincipal;
-   * @param delegates         = delegates;
-   * @param scopes            = scopes;
-   * @param lifetime          = lifetime;
-   * @param transportFactory  = HTTP transport factory, creates the transport used
-   *                          to get access tokens.
-   * @deprecated Use {@link #create(ImpersonatedCredentials)} instead. This constructor
-   *             will either be deleted or made private in a later version.
-   */
-  @Deprecated
-  private ImpersonatedCredentials(GoogleCredentials sourceCredentials, String targetPrincipal, List<String> delegates,
-      List<String> scopes, int lifetime, HttpTransportFactory transportFactory) {
-    this.sourceCredentials = sourceCredentials;
-    this.targetPrincipal = targetPrincipal;
-    this.delegates = delegates;
-    this.scopes = scopes;
-    this.lifetime = lifetime;
-    this.transportFactory = firstNonNull(transportFactory,
-        getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
+  private ImpersonatedCredentials(Builder builder) {
+    this.sourceCredentials = builder.getSourceCredentials();
+    this.targetPrincipal = builder.getTargetPrincipal();
+    this.delegates = builder.getDelegates();
+    this.scopes = builder.getScopes();
+    this.lifetime = builder.getLifetime();
+    this.transportFactory = builder.getHttpTransportFactory();
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
     if (this.delegates == null) {
       this.delegates = new ArrayList<String>();
@@ -189,47 +175,17 @@ public class ImpersonatedCredentials extends GoogleCredentials {
     }
   }
 
-  /**
-   * @param sourceCredentials = Source Credentials.
-   * @param targetPrincipal   = targetPrincipal;
-   * @param scopes            = scopes;
-   * @param lifetime          = lifetime;
-   * @param transportFactory  = HTTP transport factory, creates the transport used
-   *                          to get access tokens.
-   * @deprecated Use {@link #create(ImpersonatedCredentials)} instead. This constructor
-   *             will either be deleted or made private in a later version.
-   */
-  @Deprecated
-  private ImpersonatedCredentials(GoogleCredentials sourceCredentials, String targetPrincipal, List<String> scopes,
-      int lifetime, HttpTransportFactory transportFactory) {
-    this(sourceCredentials, targetPrincipal, new ArrayList<String>(), scopes, lifetime, transportFactory);
-  }
-
-  /**
-   * @param sourceCredentials = Source Credentials.
-   * @param targetPrincipal   = targetPrincipal;
-   * @param delegates         = delegates;
-   * @param scopes            = scopes;
-   * @param lifetime          = lifetime;
-   * @deprecated Use {@link #create(ImpersonatedCredentials)} instead. This constructor
-   *             will either be deleted or made private in a later version.
-   */
-  @Deprecated
-  private ImpersonatedCredentials(GoogleCredentials sourceCredentials, String targetPrincipal, List<String> scopes,
-      int lifetime) {
-    this(sourceCredentials, targetPrincipal, new ArrayList<String>(), scopes, lifetime, null);
-  }
-
   @Override
   public AccessToken refreshAccessToken() throws IOException {
-    
+    if (this.sourceCredentials.getAccessToken() == null) {
+      this.sourceCredentials = this.sourceCredentials
+          .createScoped(Arrays.asList(CLOUD_PLATFORM_SCOPE));
+    }
+
     try {
-      if (this.sourceCredentials.getAccessToken() == null) {
-        this.sourceCredentials = this.sourceCredentials.createScoped(Arrays.asList(CLOUD_PLATFORM_SCOPE));
-      }
       this.sourceCredentials.refreshIfExpired();
     } catch (IOException e) {
-      throw new IOException(ERROR_PREFIX + "Unable to refresh sourceCredentials " + e.toString());
+      throw new IOException("Unable to refresh sourceCredentials", e);
     }
 
     HttpTransport httpTransport = this.transportFactory.create();
@@ -241,7 +197,8 @@ public class ImpersonatedCredentials extends GoogleCredentials {
     String endpointUrl = String.format(IAM_ENDPOINT, this.targetPrincipal);
     GenericUrl url = new GenericUrl(endpointUrl);
 
-    Map<String, Object> body = ImmutableMap.<String, Object>of("delegates", this.delegates, "scope", this.scopes,
+    Map<String, Object> body = ImmutableMap.<String, Object>of("delegates", this.delegates, "scope",
+        this.scopes,
         "lifetime", this.lifetime + "s");
 
     HttpContent requestContent = new JsonHttpContent(parser.getJsonFactory(), body);
@@ -253,7 +210,7 @@ public class ImpersonatedCredentials extends GoogleCredentials {
     try {
       response = request.execute();
     } catch (IOException e) {
-      throw new IOException(ERROR_PREFIX + e.toString());
+      throw new IOException(ERROR_PREFIX, e);
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
@@ -383,8 +340,7 @@ public class ImpersonatedCredentials extends GoogleCredentials {
     }
 
     public ImpersonatedCredentials build() {
-      return new ImpersonatedCredentials(this.sourceCredentials, this.targetPrincipal, this.delegates, this.scopes,
-          this.lifetime, this.transportFactory);
+      return new ImpersonatedCredentials(this);
     }
 
   }
