@@ -43,7 +43,6 @@ import java.security.PrivateKey;
 import java.util.Arrays;
 import java.util.List;
 
-import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
@@ -134,7 +133,8 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
       targetCredentials.refreshAccessToken().getTokenValue();
       fail(String.format("Should throw exception with message containing '%s'", expectedMessage));
     } catch (IOException expected) {
-      assertTrue(expected.getMessage().contains(expectedMessage));
+      assertEquals("Error requesting access token", expected.getMessage());
+      assertTrue(expected.getCause().getMessage().contains(expectedMessage));
     }
   }
 
@@ -158,7 +158,8 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
       targetCredentials.refreshAccessToken().getTokenValue();
       fail(String.format("Should throw exception with message containing '%s'", expectedMessage));
     } catch (IOException expected) {
-      assertTrue(expected.getMessage().contains(expectedMessage));
+      assertEquals("Error requesting access token", expected.getMessage());
+      assertTrue(expected.getCause().getMessage().contains(expectedMessage));
     }
   }
 

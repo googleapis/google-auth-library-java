@@ -60,9 +60,9 @@ import com.google.common.collect.ImmutableMap;
 
 /**
  * ImpersonatedCredentials allowing credentials issued to a user or service account to impersonate
- * another. <br/> The source project using ImpersonatedCredentials must enable the "IAMCredentials"
- * API.<br/> Also, the target service account must grant the orginating principal the "Service
- * Account Token Creator" IAM role. <br/> Usage:<br/>
+ * another. <br> The source project using ImpersonatedCredentials must enable the "IAMCredentials"
+ * API.<br> Also, the target service account must grant the orginating principal the "Service
+ * Account Token Creator" IAM role. <br> Usage:<br>
  * <pre>
  * String credPath = "/path/to/svc_account.json";
  * ServiceAccountCredentials sourceCredentials = ServiceAccountCredentials
@@ -105,15 +105,14 @@ public class ImpersonatedCredentials extends GoogleCredentials {
   /**
    * @param sourceCredentials The source credential used as to acquire the impersonated credentials
    * @param targetPrincipal The service account to impersonate.
-   * @param delegates The chained list of delegates required to grant the final access_token.
-   *        If set, the sequence of identities must have "Service Account Token Creator" capability
-   *        granted to the prceeding identity.  <br/>For example, if set to [serviceAccountB,
-   *        serviceAccountC], the sourceCredential must have the Token Creator role on serviceAccountB.
-   *        serviceAccountB must have the Token Creator on serviceAccountC.  <br/>Finally, C must have
-   *        Token Creator on target_principal. If left unset, sourceCredential must have that role on
-   *        targetPrincipal.
+   * @param delegates The chained list of delegates required to grant the final access_token. If
+   * set, the sequence of identities must have "Service Account Token Creator" capability granted to
+   * the preceeding identity. For example, if set to [serviceAccountB, serviceAccountC], the
+   * sourceCredential must have the Token Creator role on serviceAccountB. serviceAccountB must have
+   * the Token Creator on serviceAccountC. Finally, C must have Token Creator on target_principal.
+   * If left unset, sourceCredential must have that role on targetPrincipal.
    * @param scopes Scopes to request during the authorization grant.
-   * @param lifetime Number of seconds the delegated credential should be valid for (upto 3600).
+   * @param lifetime Number of seconds the delegated credential should be valid for (up to 3600).
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    * tokens.
    */
@@ -135,14 +134,13 @@ public class ImpersonatedCredentials extends GoogleCredentials {
    * @param sourceCredentials The source credential used as to acquire the impersonated credentials
    * @param targetPrincipal The service account to impersonate.
    * @param delegates The chained list of delegates required to grant the final access_token. If
-   *        set, the sequence of identities must have "Service Account Token Creator" capability
-   *        granted to the prceeding identity.  <br/>For example, if set to [serviceAccountB,
-   *        serviceAccountC], the sourceCredential must have the Token Creator role on serviceAccountB.
-   *        serviceAccountB must have the Token Creator on serviceAccountC.  <br/>Finally, C must have
-   *        Token Creator on target_principal. If left unset, sourceCredential must have that role on
-   *        targetPrincipal.
+   * set, the sequence of identities must have "Service Account Token Creator" capability granted to
+   * the preceeding identity. For example, if set to [serviceAccountB, serviceAccountC], the
+   * sourceCredential must have the Token Creator role on serviceAccountB. serviceAccountB must have
+   * the Token Creator on serviceAccountC. Finally, C must have Token Creator on target_principal.
+   * If left unset, sourceCredential must have that role on targetPrincipal.
    * @param scopes Scopes to request during the authorization grant.
-   * @param lifetime Number of seconds the delegated credential should be valid for (upto 3600).
+   * @param lifetime Number of seconds the delegated credential should be valid for (up to 3600).
    */
   public static ImpersonatedCredentials create(GoogleCredentials sourceCredentials,
       String targetPrincipal,
@@ -162,7 +160,8 @@ public class ImpersonatedCredentials extends GoogleCredentials {
     this.delegates = builder.getDelegates();
     this.scopes = builder.getScopes();
     this.lifetime = builder.getLifetime();
-    this.transportFactory = builder.getHttpTransportFactory();
+    this.transportFactory = firstNonNull(builder.getHttpTransportFactory(),
+        getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
     if (this.delegates == null) {
       this.delegates = new ArrayList<String>();
@@ -210,14 +209,16 @@ public class ImpersonatedCredentials extends GoogleCredentials {
     try {
       response = request.execute();
     } catch (IOException e) {
-      throw new IOException(ERROR_PREFIX, e);
+      throw new IOException("Error requesting access token", e);
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
     response.disconnect();
 
-    String accessToken = OAuth2Utils.validateString(responseData, "accessToken", ERROR_PREFIX);
-    String expireTime = OAuth2Utils.validateString(responseData, "expireTime", ERROR_PREFIX);
+    String accessToken = OAuth2Utils
+        .validateString(responseData, "accessToken", "Expected to find an accessToken");
+    String expireTime = OAuth2Utils
+        .validateString(responseData, "expireTime", "Expected to find an expireTime");
 
     DateFormat format = new SimpleDateFormat(RFC3339);
     Date date;
