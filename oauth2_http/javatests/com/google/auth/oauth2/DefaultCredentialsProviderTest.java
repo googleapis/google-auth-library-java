@@ -34,6 +34,7 @@ package com.google.auth.oauth2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -465,6 +466,19 @@ public class DefaultCredentialsProviderTest {
 
   @Test
   public void getDefaultCredentials_wellKnownFile_logsGcloudWarning() throws IOException {
+    LogRecord message = getCredentialsAndReturnLogMessage(false);
+    assertNotNull(message);
+    assertEquals(Level.WARNING, message.getLevel());
+    assertTrue(message.getMessage().contains("end user credentials from Google Cloud SDK"));
+  }
+
+  @Test
+  public void getDefaultCredentials_wellKnownFile_suppressGcloudWarning() throws IOException {
+    LogRecord message = getCredentialsAndReturnLogMessage(true);
+    assertNull(message);
+  }
+
+  private LogRecord getCredentialsAndReturnLogMessage(boolean suppressWarning) throws IOException {
     Logger logger = Logger.getLogger(DefaultCredentialsProvider.class.getName());
     LogHandler handler = new LogHandler();
     logger.addHandler(handler);
@@ -477,16 +491,13 @@ public class DefaultCredentialsProviderTest {
     File wellKnownFile =
         new File(cloudConfigDir, DefaultCredentialsProvider.WELL_KNOWN_CREDENTIALS_FILE);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setEnv(DefaultCredentialsProvider.SUPPRESS_GCLOUD_CREDS_WARNING_ENV_VAR, Boolean.toString(suppressWarning));
     testProvider.setProperty("os.name", "linux");
     testProvider.setProperty("user.home", homeDir.getAbsolutePath());
     testProvider.addFile(wellKnownFile.getAbsolutePath(), userStream);
-
     testUserProvidesToken(
         testProvider, GCLOUDSDK_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
-    LogRecord message = handler.getRecord();
-    assertNotNull(message);
-    assertEquals(Level.WARNING, message.getLevel());
-    assertTrue(message.getMessage().contains("end user credentials from Google Cloud SDK"));
+    return handler.getRecord();
   }
 
   private static File getTempDirectory() {
