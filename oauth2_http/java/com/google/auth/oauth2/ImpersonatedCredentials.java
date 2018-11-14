@@ -49,7 +49,6 @@ import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
-import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.json.JsonObjectParser;
@@ -75,7 +74,7 @@ import com.google.common.collect.ImmutableMap;
  *     .fromStream(new FileInputStream(credPath));
  * sourceCredentials = (ServiceAccountCredentials) sourceCredentials
  *     .createScoped(Arrays.asList("https://www.googleapis.com/auth/iam"));
- * 
+ *
  * ImpersonatedCredentials targetCredentials = ImpersonatedCredentials.create(sourceCredentials,
  *     "impersonated-account@project.iam.gserviceaccount.com", null,
  *     Arrays.asList("https://www.googleapis.com/auth/devstorage.read_only"), 300);
@@ -84,7 +83,7 @@ import com.google.common.collect.ImmutableMap;
  *    .setCredentials(targetCredentials).build().getService();
  *
  * for (Bucket b : storage_service.list().iterateAll())
- *     System.out.println(b); 
+ *     System.out.println(b);
  * </pre>
  */
 public class ImpersonatedCredentials extends GoogleCredentials {
@@ -93,12 +92,12 @@ public class ImpersonatedCredentials extends GoogleCredentials {
   private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
   private static final int ONE_HOUR_IN_SECONDS = 3600;
   private static final String CLOUD_PLATFORM_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
-  private static final String ERROR_PREFIX = "Error processng IamCredentials generateAccessToken response. ";
+  private static final String ERROR_PREFIX = "Error processng IamCredentials generateAccessToken: ";
   private static final String IAM_ENDPOINT = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken";
 
   private static final String SCOPE_EMPTY_ERROR = "Scopes cannot be null";
   private static final String LIFETIME_EXCEEDED_ERROR = "lifetime must be less than or equal to 3600";
-  
+
   private GoogleCredentials sourceCredentials;
   private String targetPrincipal;
   private List<String> delegates;
@@ -126,7 +125,7 @@ public class ImpersonatedCredentials extends GoogleCredentials {
    * be valid for (upto 3600).
    * @param transportFactory  HTTP transport factory, creates the transport used
    *                          to get access tokens.
-   */  
+   */
   public static ImpersonatedCredentials create(GoogleCredentials sourceCredentials, String targetPrincipal,
       List<String> delegates, List<String> scopes, int lifetime, HttpTransportFactory transportFactory) {
     return ImpersonatedCredentials.newBuilder().setSourceCredentials(sourceCredentials)
@@ -150,7 +149,7 @@ public class ImpersonatedCredentials extends GoogleCredentials {
    * @param scopes            Scopes to request during the authorization grant.
    * @param lifetime          Number of seconds the delegated credential should
    * be valid for (upto 3600).
-   */  
+   */ 
   public static ImpersonatedCredentials create(GoogleCredentials sourceCredentials, String targetPrincipal,
       List<String> delegates, List<String> scopes, int lifetime) {
     return ImpersonatedCredentials.newBuilder().setSourceCredentials(sourceCredentials)
@@ -169,7 +168,7 @@ public class ImpersonatedCredentials extends GoogleCredentials {
    *             will either be deleted or made private in a later version.
    */
   @Deprecated
-  ImpersonatedCredentials(GoogleCredentials sourceCredentials, String targetPrincipal, List<String> delegates,
+  private ImpersonatedCredentials(GoogleCredentials sourceCredentials, String targetPrincipal, List<String> delegates,
       List<String> scopes, int lifetime, HttpTransportFactory transportFactory) {
     this.sourceCredentials = sourceCredentials;
     this.targetPrincipal = targetPrincipal;
@@ -199,9 +198,9 @@ public class ImpersonatedCredentials extends GoogleCredentials {
    *                          to get access tokens.
    * @deprecated Use {@link #create(ImpersonatedCredentials)} instead. This constructor
    *             will either be deleted or made private in a later version.
-   */  
+   */
   @Deprecated
-  ImpersonatedCredentials(GoogleCredentials sourceCredentials, String targetPrincipal, List<String> scopes,
+  private ImpersonatedCredentials(GoogleCredentials sourceCredentials, String targetPrincipal, List<String> scopes,
       int lifetime, HttpTransportFactory transportFactory) {
     this(sourceCredentials, targetPrincipal, new ArrayList<String>(), scopes, lifetime, transportFactory);
   }
@@ -214,21 +213,23 @@ public class ImpersonatedCredentials extends GoogleCredentials {
    * @param lifetime          = lifetime;
    * @deprecated Use {@link #create(ImpersonatedCredentials)} instead. This constructor
    *             will either be deleted or made private in a later version.
-   */  
+   */
   @Deprecated
-  ImpersonatedCredentials(GoogleCredentials sourceCredentials, String targetPrincipal, List<String> scopes,
+  private ImpersonatedCredentials(GoogleCredentials sourceCredentials, String targetPrincipal, List<String> scopes,
       int lifetime) {
     this(sourceCredentials, targetPrincipal, new ArrayList<String>(), scopes, lifetime, null);
   }
 
   @Override
   public AccessToken refreshAccessToken() throws IOException {
-    if (this.sourceCredentials.getAccessToken() == null) {
-      this.sourceCredentials = this.sourceCredentials.createScoped(Arrays.asList(CLOUD_PLATFORM_SCOPE));
-      this.sourceCredentials.refresh();
-    }
-    if (this.sourceCredentials.getAccessToken().getExpirationTime().before(new Date())) {
-      this.sourceCredentials.refresh();
+    
+    try {
+      if (this.sourceCredentials.getAccessToken() == null) {
+        this.sourceCredentials = this.sourceCredentials.createScoped(Arrays.asList(CLOUD_PLATFORM_SCOPE));
+      }
+      this.sourceCredentials.refreshIfExpired();
+    } catch (IOException e) {
+      throw new IOException(ERROR_PREFIX + "Unable to refresh sourceCredentials " + e.toString());
     }
 
     HttpTransport httpTransport = this.transportFactory.create();
@@ -248,26 +249,11 @@ public class ImpersonatedCredentials extends GoogleCredentials {
     adapter.initialize(request);
     request.setParser(parser);
 
-    HttpResponse response = request.execute();
-    int statusCode = response.getStatusCode();
-
-    if (statusCode == HttpStatusCodes.STATUS_CODE_UNAUTHORIZED) {
-      GenericData responseError = response.parseAs(GenericData.class);
-      throw new IOException(responseError.toString());
-    }
-
-    if (statusCode == HttpStatusCodes.STATUS_CODE_BAD_REQUEST) {
-      GenericData responseError = response.parseAs(GenericData.class);
-      throw new IOException(responseError.toString());
-    }
-
-    if (statusCode >= 400 && statusCode < HttpStatusCodes.STATUS_CODE_SERVER_ERROR) {
-      GenericData responseError = response.parseAs(GenericData.class);
-      throw new IOException(responseError.toString());
-    }
-
-    if (statusCode != HttpStatusCodes.STATUS_CODE_OK) {
-      throw new IOException(response.parseAsString());
+    HttpResponse response = null;
+    try {
+      response = request.execute();
+    } catch (IOException e) {
+      throw new IOException(ERROR_PREFIX + e.toString());
     }
 
     GenericData responseData = response.parseAs(GenericData.class);

@@ -133,7 +133,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     try {
       targetCredentials.refreshAccessToken().getTokenValue();
       fail(String.format("Should throw exception with message containing '%s'", expectedMessage));
-    } catch (HttpResponseException expected) {
+    } catch (IOException expected) {
       assertTrue(expected.getMessage().contains(expectedMessage));
     }
   }
@@ -157,7 +157,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     try {
       targetCredentials.refreshAccessToken().getTokenValue();
       fail(String.format("Should throw exception with message containing '%s'", expectedMessage));
-    } catch (HttpResponseException expected) {
+    } catch (IOException expected) {
       assertTrue(expected.getMessage().contains(expectedMessage));
     }
   }
