@@ -106,7 +106,7 @@ public class ImpersonatedCredentials extends GoogleCredentials {
    * @param targetPrincipal The service account to impersonate.
    * @param delegates The chained list of delegates required to grant the final access_token. If
    * set, the sequence of identities must have "Service Account Token Creator" capability granted to
-   * the preceeding identity. For example, if set to [serviceAccountB, serviceAccountC], the
+   * the preceding identity. For example, if set to [serviceAccountB, serviceAccountC], the
    * sourceCredential must have the Token Creator role on serviceAccountB. serviceAccountB must have
    * the Token Creator on serviceAccountC. Finally, C must have Token Creator on target_principal.
    * If left unset, sourceCredential must have that role on targetPrincipal.
@@ -134,7 +134,7 @@ public class ImpersonatedCredentials extends GoogleCredentials {
    * @param targetPrincipal The service account to impersonate.
    * @param delegates The chained list of delegates required to grant the final access_token. If
    * set, the sequence of identities must have "Service Account Token Creator" capability granted to
-   * the preceeding identity. For example, if set to [serviceAccountB, serviceAccountC], the
+   * the preceding identity. For example, if set to [serviceAccountB, serviceAccountC], the
    * sourceCredential must have the Token Creator role on serviceAccountB. serviceAccountB must have
    * the Token Creator on serviceAccountC. Finally, C must have Token Creator on target_principal.
    * If left unset, sourceCredential must have that role on targetPrincipal.
