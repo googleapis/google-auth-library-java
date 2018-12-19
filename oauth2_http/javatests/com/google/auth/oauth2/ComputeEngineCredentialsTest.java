@@ -121,7 +121,6 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
       fail("Expected error refreshing token.");
     } catch (IOException expected) {
       String message = expected.getMessage();
-      System.out.println(message);
       assertTrue(message.contains(Integer.toString(HttpStatusCodes.STATUS_CODE_SERVER_ERROR)));
       assertTrue(message.contains("Unexpected"));
     }
