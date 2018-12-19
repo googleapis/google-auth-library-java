@@ -37,6 +37,7 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.http.HttpTransportFactory;
 
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -225,6 +226,17 @@ public class GoogleCredentials extends OAuth2Credentials {
    */
   public GoogleCredentials createScoped(Collection<String> scopes) {
     return this;
+  }
+
+  /**
+   * If the credentials support scopes, creates a copy of the the identity with the specified
+   * scopes; otherwise, returns the same instance.
+   *
+   * @param scopes Collection of scopes to request.
+   * @return GoogleCredentials with requested scopes.
+   */
+  public GoogleCredentials createScoped(String... scopes) {
+    return createScoped(scopes);
   }
 
   /**
