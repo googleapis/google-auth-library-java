@@ -1,6 +1,5 @@
 #!/bin/bash
-
-# Copyright 2017, Google Inc. All rights reserved.
+# Copyright 2018, Google Inc. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -31,32 +30,36 @@
 
 set -e
 
-VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -Ev '(^\[|\w+:)')
-
-if [ -z "$VERSION" ]; then
-    echo "Error updating Javadoc: could not obtain version number from maven-help-plugin."
+if [[ -z "${BUCKET}" ]]; then
+    echo "Must set BUCKET environment variable"
     exit 1
 fi
 
-git clone --branch gh-pages --single-branch git@github.com:googleapis/google-auth-library-java.git tmp_gh-pages
-mkdir -p tmp_gh-pages/releases/$VERSION
+pushd $(dirname "$0")/../../
 
-mvn javadoc:aggregate
+# Pull the library version from project properties
+VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -Ev '(^\[|\w+:)')
 
-pushd tmp_gh-pages/
-cp -r ../target/site/* releases/$VERSION/
-git add releases/$VERSION
+case "${VERSION}" in
+    *-SNAPSHOT)
+        echo "Cannot publish javadoc for -SNAPSHOT versions"
+        exit 1
+        ;;
+    "")
+        echo "Could not obtain version number from maven-help-plugin."
+        exit 1
+        ;;
+esac
 
-# copy to latest
-rm -rf releases/latest
-cp -r releases/$VERSION releases/latest
-git add releases/latest
+# Generate the javadoc from scratch
+mvn clean install javadoc:aggregate -DskipTests=true -B
 
-echo "<html><head><meta http-equiv=\"refresh\" content=\"0; URL='http://googleapis.github.io/google-auth-library-java/releases/${VERSION}/apidocs/index.html'\" /></head><body></body></html>" > index.html
-git add index.html
+# Sync the current version to gCS
+gsutil -m rsync -d target/site gs://${BUCKET}/java/google-auth-library-java/${VERSION}
 
-git commit --quiet -m "Add version $VERSION and update root redirect [ci skip]"
-git push
+if [[ "${LINK_LATEST}" == "true" ]]; then
+    # Sync the current content to latest
+    gsutil -m rsync gs://${BUCKET}/java/google-auth-library-java/${VERSION} gs://${BUCKET}/java/google-auth-library-java/latest
+fi
 
 popd
-rm -rf tmp_gh-pages

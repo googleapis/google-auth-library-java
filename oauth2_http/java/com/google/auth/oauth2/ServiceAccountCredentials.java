@@ -179,6 +179,8 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
    * @param privateKeyId Private key identifier for the service account. May be null.
    * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
    *        which results in a credential that must have createScoped called before use.
+   * @return New ServiceAccountCredentials created from a private key.
+   * @throws IOException if the credential cannot be created from the private key.
    */
   public static ServiceAccountCredentials fromPkcs8(
       String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId,
@@ -199,6 +201,8 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *        tokens.
    * @param tokenServerUri URI of the end point that provides tokens.
+   * @return New ServiceAccountCredentials created from a private key.
+   * @throws IOException if the credential cannot be created from the private key.
    */
   public static ServiceAccountCredentials fromPkcs8(
       String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId,
@@ -222,6 +226,8 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
    * @param tokenServerUri URI of the end point that provides tokens.
    * @param serviceAccountUser The email of the user account to impersonate, if delegating
    *        domain-wide authority to the service account.
+   * @return New ServiceAccountCredentials created from a private key.
+   * @throws IOException if the credential cannot be created from the private key.
    */
   public static ServiceAccountCredentials fromPkcs8(
       String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId,
@@ -351,7 +357,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
     try {
       response = request.execute();
     } catch (IOException e) {
-      throw new IOException("Error getting access token for service account: ", e);
+      throw new IOException(String.format("Error getting access token for service account: %s", e.getMessage()), e);
     }
 
     GenericData responseData = response.parseAs(GenericData.class);

@@ -194,7 +194,9 @@ public class GoogleCredentials extends OAuth2Credentials {
 
   /**
    * Indicates whether the credentials require scopes to be specified via a call to
-   * {link GoogleCredentials#createScoped} before use.
+   * {@link GoogleCredentials#createScoped} before use.
+   *
+   * @return Whether the credentials require scopes to be specified.
    */
   public boolean createScopedRequired() {
     return false;
@@ -203,15 +205,32 @@ public class GoogleCredentials extends OAuth2Credentials {
   /**
    * If the credentials support scopes, creates a copy of the the identity with the specified
    * scopes; otherwise, returns the same instance.
+   *
+   * @param scopes Collection of scopes to request.
+   * @return GoogleCredentials with requested scopes.
    */
   public GoogleCredentials createScoped(Collection<String> scopes) {
     return this;
   }
 
   /**
+   * If the credentials support scopes, creates a copy of the the identity with the specified
+   * scopes; otherwise, returns the same instance.
+   *
+   * @param scopes Collection of scopes to request.
+   * @return GoogleCredentials with requested scopes.
+   */
+  public GoogleCredentials createScoped(String... scopes) {
+    return createScoped(scopes);
+  }
+
+  /**
    * If the credentials support domain-wide delegation, creates a copy
    * of the identity so that it impersonates the specified user;
    * otherwise, returns the same instance.
+   *
+   * @param user User to impersonate.
+   * @return GoogleCredentials with a delegated user.
    */
   public GoogleCredentials createDelegated(String user) {
     return this;
