@@ -83,7 +83,7 @@ public class HttpCredentialsAdapterTest {
 
     HttpHeaders requestHeaders = request.getHeaders();
     String authorizationHeader = requestHeaders.getAuthorization();
-    assertEquals(authorizationHeader, expectedAuthorization);
+    assertEquals(expectedAuthorization, authorizationHeader);
   }
 
   @Test
@@ -148,6 +148,6 @@ public class HttpCredentialsAdapterTest {
 
     HttpHeaders requestHeaders = request.getHeaders();
     String authorizationHeader = requestHeaders.getAuthorization();
-    assertEquals(authorizationHeader, expectedAuthorization);
+    assertEquals(expectedAuthorization, authorizationHeader);
   }
 }
