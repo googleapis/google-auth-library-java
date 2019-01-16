@@ -41,13 +41,24 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestInitializer;
+import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.LowLevelHttpRequest;
+import com.google.api.client.http.LowLevelHttpResponse;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
+import com.google.api.client.testing.http.MockLowLevelHttpRequest;
+import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.auth.Credentials;
 import com.google.auth.TestClock;
 import com.google.auth.http.AuthHttpConstants;
+import com.google.auth.http.HttpCredentialsAdapter;
+import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
 
 import org.junit.Test;
@@ -207,6 +218,39 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
     Map<String, List<String>> metadata = credentials.getRequestMetadata();
 
     verifyJwtAccess(metadata, SA_CLIENT_EMAIL, CALL_URI, SA_PRIVATE_KEY_ID);
+  }
+
+  @Test
+  public void getRequestMetadata_blocking_requestURI_hasJwtAccess() throws IOException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    Credentials credentials = ServiceAccountJwtAccessCredentials.newBuilder()
+        .setClientId(SA_CLIENT_ID)
+        .setClientEmail(SA_CLIENT_EMAIL)
+        .setPrivateKey(privateKey)
+        .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+        .build();
+    HttpRequestInitializer adapter = new HttpCredentialsAdapter(credentials);
+    HttpTransportFactory transportFactory = new HttpTransportFactory() {
+      @Override
+      public HttpTransport create() {
+        return new HttpTransport() {
+          @Override
+          protected LowLevelHttpRequest buildRequest(String method, String url) {
+            assertEquals("http://foo", url);
+            return new MockLowLevelHttpRequest() {
+              @Override
+              public LowLevelHttpResponse execute() throws IOException {
+                return new MockLowLevelHttpResponse()
+                    .setContent("success");
+              }
+            };
+          }
+        };
+      }
+    };
+    HttpRequest request = transportFactory.create().createRequestFactory(adapter).buildGetRequest(new GenericUrl("http://foo"));
+    HttpResponse response = request.execute();
+    assertEquals("success", response.parseAsString());
   }
 
   @Test
