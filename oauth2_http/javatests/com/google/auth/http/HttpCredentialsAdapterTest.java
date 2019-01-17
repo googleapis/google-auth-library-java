@@ -34,13 +34,17 @@ package com.google.auth.http;
 import static org.junit.Assert.assertEquals;
 
 import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.LowLevelHttpRequest;
+import com.google.api.client.http.LowLevelHttpResponse;
+import com.google.api.client.testing.http.MockLowLevelHttpRequest;
+import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
 import com.google.auth.oauth2.MockTokenCheckingTransport;
+import com.google.auth.oauth2.MockTokenServerTransport;
 import com.google.auth.oauth2.OAuth2Credentials;
 import com.google.auth.oauth2.UserCredentials;
 
@@ -59,14 +63,37 @@ public class HttpCredentialsAdapterTest {
   private static final String CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
   private static final String CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
   private static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
+  private static final String EXAMPLE_URL = "http://foo";
 
   @Test
-  public void initialize_populatesOAuth2Credentials() throws IOException {
+  public void execute_populatesOAuth2Credentials() throws IOException {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String expectedAuthorization = InternalAuthHttpConstants.BEARER_PREFIX + accessToken;
-    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
-    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessToken);
+    HttpTransportFactory transportFactory = new HttpTransportFactory() {
+      @Override
+      public HttpTransport create() {
+        MockTokenServerTransport transport = new MockTokenServerTransport() {
+          @Override
+          public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+            if (url.equals(EXAMPLE_URL)) {
+              return new MockLowLevelHttpRequest() {
+                @Override
+                public LowLevelHttpResponse execute() throws IOException {
+                  assertEquals(expectedAuthorization, getFirstHeaderValue("Authorization"));
+                  return new MockLowLevelHttpResponse()
+                      .setContent("success");
+                }
+              };
+            } else {
+              return super.buildRequest(method, url);
+            }
+          }
+        };
+        transport.addClient(CLIENT_ID, CLIENT_SECRET);
+        transport.addRefreshToken(REFRESH_TOKEN, accessToken);
+        return transport;
+      }
+    };
 
     OAuth2Credentials credentials = UserCredentials.newBuilder()
         .setClientId(CLIENT_ID)
@@ -75,19 +102,18 @@ public class HttpCredentialsAdapterTest {
         .setHttpTransportFactory(transportFactory)
         .build();
 
+    GenericUrl testUrl = new GenericUrl(EXAMPLE_URL);
+
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
-    HttpRequestFactory requestFactory = transportFactory.transport.createRequestFactory();
-    HttpRequest request = requestFactory.buildGetRequest(new GenericUrl("http://foo"));
+    HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory(adapter);
+    HttpRequest request = requestFactory.buildGetRequest(testUrl);
 
-    adapter.initialize(request);
-
-    HttpHeaders requestHeaders = request.getHeaders();
-    String authorizationHeader = requestHeaders.getAuthorization();
-    assertEquals(expectedAuthorization, authorizationHeader);
+    HttpResponse response = request.execute();
+    assertEquals("success", response.parseAsString());
   }
 
   @Test
-  public void initialize_populatesOAuth2Credentials_handle401() throws IOException {
+  public void execute_populatesOAuth2Credentials_handle401() throws IOException {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
 
@@ -108,9 +134,8 @@ public class HttpCredentialsAdapterTest {
 
     HttpTransport primaryHttpTransport =
         new MockTokenCheckingTransport(tokenServerTransportFactory.transport, REFRESH_TOKEN);
-    HttpRequestFactory requestFactory = primaryHttpTransport.createRequestFactory();
-    HttpRequest request = requestFactory.buildGetRequest(new GenericUrl("http://foo"));
-    adapter.initialize(request);
+    HttpRequestFactory requestFactory = primaryHttpTransport.createRequestFactory(adapter);
+    HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(EXAMPLE_URL));
 
     // now switch out the access token so that the original one is invalid,
     //   requiring a refresh of the access token
@@ -124,30 +149,49 @@ public class HttpCredentialsAdapterTest {
   }
 
   @Test
-  public void initialize_noURI() throws IOException {
+  public void execute_noURI() throws IOException {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String expectedAuthorization = InternalAuthHttpConstants.BEARER_PREFIX + accessToken;
-    MockTokenServerTransportFactory tokenServerTransportFactory =
-        new MockTokenServerTransportFactory();
-    tokenServerTransportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
-    tokenServerTransportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessToken);
+    HttpTransportFactory transportFactory = new HttpTransportFactory() {
+      @Override
+      public HttpTransport create() {
+        MockTokenServerTransport transport = new MockTokenServerTransport() {
+          @Override
+          public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+            if (url.equals(EXAMPLE_URL)) {
+              return new MockLowLevelHttpRequest() {
+                @Override
+                public LowLevelHttpResponse execute() throws IOException {
+                  assertEquals(expectedAuthorization, getFirstHeaderValue("Authorization"));
+                  return new MockLowLevelHttpResponse()
+                      .setContent("success");
+                }
+              };
+            } else {
+              return super.buildRequest(method, url);
+            }
+          }
+        };
+        transport.addClient(CLIENT_ID, CLIENT_SECRET);
+        transport.addRefreshToken(REFRESH_TOKEN, accessToken);
+        return transport;
+      }
+    };
 
     OAuth2Credentials credentials = UserCredentials.newBuilder()
         .setClientId(CLIENT_ID)
         .setClientSecret(CLIENT_SECRET)
         .setRefreshToken(REFRESH_TOKEN)
-        .setHttpTransportFactory(tokenServerTransportFactory)
+        .setHttpTransportFactory(transportFactory)
         .build();
 
+    GenericUrl testUrl = new GenericUrl(EXAMPLE_URL);
+
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
-    HttpRequestFactory requestFactory =
-        tokenServerTransportFactory.transport.createRequestFactory();
-    HttpRequest request = requestFactory.buildGetRequest(null);
+    HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory(adapter);
+    HttpRequest request = requestFactory.buildGetRequest(testUrl);
 
-    adapter.initialize(request);
-
-    HttpHeaders requestHeaders = request.getHeaders();
-    String authorizationHeader = requestHeaders.getAuthorization();
-    assertEquals(expectedAuthorization, authorizationHeader);
+    HttpResponse response = request.execute();
+    assertEquals("success", response.parseAsString());
   }
 }

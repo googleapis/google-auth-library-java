@@ -31,6 +31,7 @@
 
 package com.google.auth.http;
 
+import com.google.api.client.http.HttpExecuteInterceptor;
 import com.google.auth.Credentials;
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
@@ -88,21 +89,33 @@ public class HttpCredentialsAdapter
     if (!credentials.hasRequestMetadata()) {
       return;
     }
-    HttpHeaders requestHeaders = request.getHeaders();
-    URI uri = null;
-    if (request.getUrl() != null) {
-      uri = request.getUrl().toURI();
-    }
-    Map<String, List<String>> credentialHeaders = credentials.getRequestMetadata(uri);
-    if (credentialHeaders == null) {
-      return;
-    }
-    for (Map.Entry<String, List<String>> entry : credentialHeaders.entrySet()) {
-      String headerName = entry.getKey();
-      List<String> requestValues = new ArrayList<>();
-      requestValues.addAll(entry.getValue());
-      requestHeaders.put(headerName, requestValues);
-    }
+
+    final HttpExecuteInterceptor originalInterceptor = request.getInterceptor();
+    request.setInterceptor(new HttpExecuteInterceptor() {
+      @Override
+      public void intercept(HttpRequest request) throws IOException {
+        if (originalInterceptor != null) {
+          originalInterceptor.intercept(request);
+        }
+
+        HttpHeaders requestHeaders = request.getHeaders();
+        URI uri = null;
+        if (request.getUrl() != null) {
+          uri = request.getUrl().toURI();
+        }
+
+        Map<String, List<String>> credentialHeaders = credentials.getRequestMetadata(uri);
+        if (credentialHeaders == null) {
+          return;
+        }
+        for (Map.Entry<String, List<String>> entry : credentialHeaders.entrySet()) {
+          String headerName = entry.getKey();
+          List<String> requestValues = new ArrayList<>();
+          requestValues.addAll(entry.getValue());
+          requestHeaders.put(headerName, requestValues);
+        }
+      }
+    });
   }
 
   /**
