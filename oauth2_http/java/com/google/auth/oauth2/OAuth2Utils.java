@@ -201,7 +201,7 @@ class OAuth2Utils {
   /**
    * Return the specified map from JSON or throw a helpful error message.
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   static Map<String, Object> validateMap(Map<String, Object> map, String key, String errorPrefix)
       throws IOException {
     Object value = map.get(key);

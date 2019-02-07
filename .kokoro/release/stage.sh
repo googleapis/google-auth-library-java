@@ -15,14 +15,16 @@
 
 set -eo pipefail
 
-cd github/google-auth-library-java/
+source $(dirname "$0")/common.sh
+MAVEN_SETTINGS_FILE=$(realpath $(dirname "$0")/../../)/settings.xml
+pushd $(dirname "$0")/../../
 
-# Print out Java version
-java -version
-echo $JOB_TYPE
+setup_environment_secrets
+create_settings_xml_file "settings.xml"
 
-mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
-mvn test -B
-
-bash $KOKORO_GFILE_DIR/codecov.sh
-#bash .kokoro/codecov.sh
+mvn clean install deploy \
+  --settings ${MAVEN_SETTINGS_FILE} \
+  -DperformRelease=true \
+  -Dgpg.executable=gpg \
+  -Dgpg.passphrase=${GPG_PASSPHRASE} \
+  -Dgpg.homedir=${GPG_HOMEDIR}

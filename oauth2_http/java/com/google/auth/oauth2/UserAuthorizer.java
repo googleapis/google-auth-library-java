@@ -96,6 +96,8 @@ public class UserAuthorizer {
 
   /**
    * Returns the Client ID user to identify the OAuth2 consent prompt.
+   *
+   * @return The Client ID.
    */
   public ClientId getClientId() {
     return clientId;
@@ -103,6 +105,8 @@ public class UserAuthorizer {
 
   /**
    * Returns the scopes defining the user consent.
+   *
+   * @return The collection of scopes defining the user consent.
    */
   public Collection<String> getScopes() {
     return scopes;
@@ -110,6 +114,8 @@ public class UserAuthorizer {
 
   /**
    * Returns the URI for implementation of the OAuth2 web callback.
+   *
+   * @return The URI for the OAuth2 web callback.
    */
   public URI getCallbackUri() {
     return callbackUri;
@@ -138,6 +144,8 @@ public class UserAuthorizer {
 
   /**
    * Returns the implementation of a component for long term storage of tokens.
+   *
+   * @return The token storage implementation for long term storage of tokens.
    */
   public TokenStore getTokenStore() {
     return tokenStore;

@@ -111,6 +111,8 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
 
   /**
    * Create a new ComputeEngineCredentials instance with default behavior.
+   *
+   * @return New ComputeEngineCredentials.
    */
   public static ComputeEngineCredentials create() {
     return new ComputeEngineCredentials(null);
@@ -126,8 +128,9 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
     if (statusCode == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
       throw new IOException(String.format("Error code %s trying to get security access token from"
           + " Compute Engine metadata for the default service account. This may be because"
-          + " the virtual machine instance does not have permission scopes specified.",
-          statusCode));
+          + " the virtual machine instance does not have permission scopes specified."
+          + " It is possible to skip checking for Compute Engine metadata by specifying the environment "
+          + " variable " + DefaultCredentialsProvider.NO_GCE_CHECK_ENV_VAR + "=true.", statusCode));
     }
     if (statusCode != HttpStatusCodes.STATUS_CODE_OK) {
       throw new IOException(String.format("Unexpected Error code %s trying to get security access"
@@ -192,10 +195,11 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
       } catch (SocketTimeoutException expected) {
         // Ignore logging timeouts which is the expected failure mode in non GCE environments.
       } catch (IOException e) {
-        LOGGER.log(
-            Level.WARNING, "Failed to detect whether we are running on Google Compute Engine.", e);
+        LOGGER.log(Level.FINE, "Encountered an unexpected exception when determining" +
+            " if we are running on Google Compute Engine.", e);
       }
     }
+    LOGGER.log(Level.INFO, "Failed to detect whether we are running on Google Compute Engine.");
     return false;
   }
 

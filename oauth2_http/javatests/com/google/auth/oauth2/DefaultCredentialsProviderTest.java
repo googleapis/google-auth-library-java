@@ -34,6 +34,7 @@ package com.google.auth.oauth2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -53,6 +54,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.file.Paths;
 import java.security.AccessControlException;
 import java.util.Collection;
 import java.util.Collections;
@@ -136,7 +138,7 @@ public class DefaultCredentialsProviderTest {
         UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setFileSandbox(true);
-    String userPath = "/user.json";
+    String userPath = tempFilePath("user.json");
     testProvider.addFile(userPath, userStream);
     testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, userPath);
 
@@ -300,7 +302,7 @@ public class DefaultCredentialsProviderTest {
         .writeServiceAccountStream(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
-    String serviceAccountPath = "/service_account.json";
+    String serviceAccountPath = tempFilePath("service_account.json");
     testProvider.addFile(serviceAccountPath, serviceAccountStream);
     testProvider.setEnv(
         DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, serviceAccountPath);
@@ -318,7 +320,7 @@ public class DefaultCredentialsProviderTest {
     InputStream userStream =
         UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
-    String userPath = "/user.json";
+    String userPath = tempFilePath("user.json");
     testProvider.addFile(userPath, userStream);
     testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, userPath);
 
@@ -420,7 +422,7 @@ public class DefaultCredentialsProviderTest {
 
     InputStream envStream =
         UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, refreshTokenEnv);
-    String envPath = "/env.json";
+    String envPath = tempFilePath("env.json");
     testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, envPath);
     testProvider.addFile(envPath, envStream);
 
@@ -443,6 +445,10 @@ public class DefaultCredentialsProviderTest {
     testUserProvidesToken(testProvider, transportFactory, accessTokenEnv);
   }
 
+  private String tempFilePath(String filename) {
+    return Paths.get(System.getProperty("java.io.tmpdir"), filename).toString();
+  }
+
   private class LogHandler extends Handler {
     LogRecord lastRecord;
 
@@ -460,6 +466,19 @@ public class DefaultCredentialsProviderTest {
 
   @Test
   public void getDefaultCredentials_wellKnownFile_logsGcloudWarning() throws IOException {
+    LogRecord message = getCredentialsAndReturnLogMessage(false);
+    assertNotNull(message);
+    assertEquals(Level.WARNING, message.getLevel());
+    assertTrue(message.getMessage().contains("end user credentials from Google Cloud SDK"));
+  }
+
+  @Test
+  public void getDefaultCredentials_wellKnownFile_suppressGcloudWarning() throws IOException {
+    LogRecord message = getCredentialsAndReturnLogMessage(true);
+    assertNull(message);
+  }
+
+  private LogRecord getCredentialsAndReturnLogMessage(boolean suppressWarning) throws IOException {
     Logger logger = Logger.getLogger(DefaultCredentialsProvider.class.getName());
     LogHandler handler = new LogHandler();
     logger.addHandler(handler);
@@ -472,16 +491,13 @@ public class DefaultCredentialsProviderTest {
     File wellKnownFile =
         new File(cloudConfigDir, DefaultCredentialsProvider.WELL_KNOWN_CREDENTIALS_FILE);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setEnv(DefaultCredentialsProvider.SUPPRESS_GCLOUD_CREDS_WARNING_ENV_VAR, Boolean.toString(suppressWarning));
     testProvider.setProperty("os.name", "linux");
     testProvider.setProperty("user.home", homeDir.getAbsolutePath());
     testProvider.addFile(wellKnownFile.getAbsolutePath(), userStream);
-
     testUserProvidesToken(
         testProvider, GCLOUDSDK_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
-    LogRecord message = handler.getRecord();
-    assertNotNull(message);
-    assertEquals(Level.WARNING, message.getLevel());
-    assertTrue(message.getMessage().contains("end user credentials from Google Cloud SDK"));
+    return handler.getRecord();
   }
 
   private static File getTempDirectory() {
@@ -586,7 +602,6 @@ public class DefaultCredentialsProviderTest {
     private final Map<String, String> properties = new HashMap<>();
     private final Map<String, InputStream> files = new HashMap<>();
     private boolean fileSandbox = false;
-    private int forNameCallCount = 0;
 
     TestDefaultCredentialsProvider () {
     }
@@ -620,7 +635,6 @@ public class DefaultCredentialsProviderTest {
 
     @Override
     Class<?> forName(String className) throws ClassNotFoundException {
-      forNameCallCount++;
       Class<?> lookup = types.get(className);
       if (lookup != null) {
         return lookup;
@@ -631,10 +645,6 @@ public class DefaultCredentialsProviderTest {
     @Override
     protected boolean isOnGAEStandard7() {
       return getProperty("isOnGAEStandard7", "false").equals("true");
-    }
-
-    int getForNameCallCount() {
-      return forNameCallCount;
     }
 
     @Override
