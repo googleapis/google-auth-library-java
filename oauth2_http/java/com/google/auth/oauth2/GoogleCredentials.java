@@ -176,10 +176,8 @@ public class GoogleCredentials extends OAuth2Credentials {
   /**
    * Constructor with explicit access token.
    *
-   * @param accessToken Initial or temporary access token.
-   * @deprecated Use {@link #create(AccessToken)} instead. This constructor will either be deleted
-   *             or made protected/private in a later version.
-   **/
+   * @param accessToken initial or temporary access token
+   */
   public GoogleCredentials(AccessToken accessToken) {
     super(accessToken);
   }
