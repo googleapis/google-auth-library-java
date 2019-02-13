@@ -75,37 +75,6 @@ public class UserCredentials extends GoogleCredentials {
   private transient HttpTransportFactory transportFactory;
 
   /**
-   * Constructor with minimum information and default behavior.
-   *
-   * @param clientId Client ID of the credential from the console.
-   * @param clientSecret Client ID of the credential from the console.
-   * @param refreshToken A refresh token resulting from a OAuth2 consent flow.
-   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
-   *             private in a later version.
-   */
-  @Deprecated
-  public UserCredentials(String clientId, String clientSecret, String refreshToken) {
-    this(clientId, clientSecret, refreshToken, null, null, null);
-  }
-
-  /**
-   * Constructor to allow both refresh token and initial access token for 3LO scenarios.
-   *
-   * @param clientId Client ID of the credential from the console.
-   * @param clientSecret Client ID of the credential from the console.
-   * @param refreshToken A refresh token resulting from a OAuth2 consent flow.
-   * @param accessToken Initial or temporary access token.
-   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
-   *             private in a later version.
-   */
-  @Deprecated
-  public UserCredentials(
-      String clientId, String clientSecret, String refreshToken, AccessToken accessToken) {
-    this(clientId, clientSecret, refreshToken, accessToken, null, null);
-  }
-
-
-  /**
    * Constructor with all parameters allowing custom transport and server URL.
    *
    * @param clientId Client ID of the credential from the console.
@@ -114,13 +83,10 @@ public class UserCredentials extends GoogleCredentials {
    * @param accessToken Initial or temporary access token.
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *        tokens.
-   * @param tokenServerUri URI of the end point that provides tokens.
-   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
-   *             private in a later version.
+   * @param tokenServerUri URI of the end point that provides tokens
    */
-  @Deprecated
-  public UserCredentials(String clientId, String clientSecret, String refreshToken,
-                         AccessToken accessToken, HttpTransportFactory transportFactory, URI tokenServerUri) {
+  private UserCredentials(String clientId, String clientSecret, String refreshToken,
+      AccessToken accessToken, HttpTransportFactory transportFactory, URI tokenServerUri) {
     super(accessToken);
     this.clientId = Preconditions.checkNotNull(clientId);
     this.clientSecret = Preconditions.checkNotNull(clientSecret);

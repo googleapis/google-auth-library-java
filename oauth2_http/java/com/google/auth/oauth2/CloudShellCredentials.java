@@ -55,7 +55,7 @@ public class CloudShellCredentials extends GoogleCredentials {
 
   /**
    * The Cloud Shell back authorization channel uses serialized
-   * Javascript Protobufers, preceeded by the message length and a
+   * Javascript Protobuffers, preceded by the message length and a
    * new line character. However, the request message has no content,
    * so a token request consists of an empty JsPb, and its 2 character
    * length prefix.
@@ -65,27 +65,11 @@ public class CloudShellCredentials extends GoogleCredentials {
 
   private final int authPort;
 
-  /**
-   * @param authPort Authentication port.
-   * @return The CloudShellCredentials.
-   * @deprecated Use {@link #create(int)} instead. This method will be deleted in a later version.
-   */
-  @Deprecated
-  public static CloudShellCredentials of(int authPort) {
-    return create(authPort);
-  }
-
   public static CloudShellCredentials create(int authPort) {
     return CloudShellCredentials.newBuilder().setAuthPort(authPort).build();
   }
 
-  /**
-   * @param authPort Authentication port.
-   * @deprecated Use {@link #create(int)} instead. This constructor will either be deleted or
-   *             made private in a later version.
-   */
-  @Deprecated
-  public CloudShellCredentials(int authPort) {
+  private CloudShellCredentials(int authPort) {
     this.authPort = authPort;
   }
 

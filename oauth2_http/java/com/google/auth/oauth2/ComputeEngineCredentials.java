@@ -98,39 +98,12 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
   private transient String serviceAccountEmail;
 
   /**
-   * Returns a credentials instance from the given transport factory
-   *
-   * @param transportFactory The Http transport factory
-   * @return the credential instance
-   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
-   *             private in a later version.
-   */
-  @Deprecated
-  public static ComputeEngineCredentials of(HttpTransportFactory transportFactory) {
-    return ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
-  }
-
-  /**
-   * Create a new ComputeEngineCredentials instance with default behavior.
-   *
-   * @deprecated Use {@link #create()} instead. This constructor will either be deleted or
-   *             made private in a later version.
-   */
-  @Deprecated
-  public ComputeEngineCredentials() {
-    this(null);
-  }
-
-  /**
    * Constructor with overridden transport.
    *
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *        tokens.
-   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
-   *             private in a later version.
    */
-  @Deprecated
-  public ComputeEngineCredentials(HttpTransportFactory transportFactory) {
+  private ComputeEngineCredentials(HttpTransportFactory transportFactory) {
     this.transportFactory = firstNonNull(transportFactory,
         getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     this.transportFactoryClassName = this.transportFactory.getClass().getName();

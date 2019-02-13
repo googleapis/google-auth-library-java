@@ -59,19 +59,6 @@ public class GoogleCredentials extends OAuth2Credentials {
    *
    * @param accessToken the access token
    * @return the credentials instance
-   * @deprecated Use {@link #create(AccessToken)} instead. This method will be deleted in a later
-   *             version.
-   */
-  @Deprecated
-  public static GoogleCredentials of(AccessToken accessToken) {
-    return create(accessToken);
-  }
-
-  /**
-   * Returns the credentials instance from the given access token.
-   *
-   * @param accessToken the access token
-   * @return the credentials instance
    */
   public static GoogleCredentials create(AccessToken accessToken) {
     return GoogleCredentials.newBuilder().setAccessToken(accessToken).build();
@@ -189,11 +176,8 @@ public class GoogleCredentials extends OAuth2Credentials {
   /**
    * Constructor with explicit access token.
    *
-   * @param accessToken Initial or temporary access token.
-   * @deprecated Use {@link #create(AccessToken)} instead. This constructor will either be deleted
-   *             or made protected/private in a later version.
-   **/
-  @Deprecated
+   * @param accessToken initial or temporary access token
+   */
   public GoogleCredentials(AccessToken accessToken) {
     super(accessToken);
   }
