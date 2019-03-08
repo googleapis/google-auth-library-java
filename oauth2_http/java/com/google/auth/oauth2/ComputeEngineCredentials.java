@@ -71,7 +71,7 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
   private static final Logger LOGGER = Logger.getLogger(ComputeEngineCredentials.class.getName());
 
   // Note: the explicit IP address is used to avoid name server resolution issues.
-  static final String DEFAULT_METADATA_SERVER_URL = "http://169.254.169.254";
+  static final String DEFAULT_METADATA_SERVER_URL = "http://metadata.google.internal";
 
   static final String SIGN_BLOB_URL_FORMAT = "https://iam.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob?alt=json";
 
