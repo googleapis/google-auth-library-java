@@ -140,7 +140,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
           // Create the JSON response
           GenericJson signContents = new GenericJson();
           signContents.setFactory(OAuth2Utils.JSON_FACTORY);
-          signContents.put("signature", BaseEncoding.base64().encode(signature));
+          signContents.put("signedBlob", BaseEncoding.base64().encode(signature));
 
           String signature = signContents.toPrettyString();
 

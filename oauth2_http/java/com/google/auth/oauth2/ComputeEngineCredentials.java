@@ -73,7 +73,7 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
   // Note: the explicit IP address is used to avoid name server resolution issues.
   static final String DEFAULT_METADATA_SERVER_URL = "http://169.254.169.254";
 
-  static final String SIGN_BLOB_URL_FORMAT = "https://iam.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob?alt=json";
+  static final String SIGN_BLOB_URL_FORMAT = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
 
   // Note: the explicit `timeout` and `tries` below is a workaround. The underlying
   // issue is that resolving an unknown host on some networks will take
@@ -283,7 +283,7 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
    * @param toSign bytes to sign
    * @return signed bytes
    * @throws SigningException if the attempt to sign the provided bytes failed
-   * @see <a href="https://cloud.google.com/iam/reference/rest/v1/projects.serviceAccounts/signBlob">Blob Signing</a>
+   * @see <a href="https://cloud.google.com/iam/credentials/reference/rest/v1/projects.serviceAccounts/signBlob">Blob Signing</a>
    */
   @Override
   public byte[] sign(byte[] toSign) {
@@ -302,7 +302,7 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
     GenericUrl genericUrl = new GenericUrl(signBlobUrl);
 
     GenericData signRequest = new GenericData();
-    signRequest.set("bytesToSign", bytes);
+    signRequest.set("payload", bytes);
     JsonHttpContent signContent = new JsonHttpContent(OAuth2Utils.JSON_FACTORY, signRequest);
     HttpRequest request = transportFactory.create().createRequestFactory().buildPostRequest(genericUrl, signContent);
     Map<String, List<String>> headers = getRequestMetadata();
@@ -335,7 +335,7 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
-    return OAuth2Utils.validateString(responseData, "signature", PARSE_ERROR_SIGNATURE);
+    return OAuth2Utils.validateString(responseData, "signedBlob", PARSE_ERROR_SIGNATURE);
   }
 
   private String getDefaultServiceAccount() throws IOException {
