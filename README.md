@@ -88,7 +88,7 @@ This artifact contains a wide variety of credentials as well as utility methods 
 to get Application Default Credentials.
 Credentials classes contained in this artifact are:
 - `CloudShellCredentials`: credentials for Google Cloud Shell built-in service account
-- `CloudShellCredentials`: credentials for Google Compute Engine built-in service account
+- `ComputeEngineCredentials`: credentials for Google Compute Engine built-in service account
 - `OAuth2Credentials`: base class for OAuth2-based credentials
 - `ServiceAccountCredentials`: credentials for a Service Account - use a JSON Web Token (JWT) to get
 access tokens
