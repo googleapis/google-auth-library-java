@@ -69,13 +69,13 @@ capable of signing byte arrays using the credentials associated to a Google Serv
 ## google-auth-library-appengine
 
 This artifact depends on the App Engine SDK (`appengine-api-1.0-sdk`) and should be used only by
-applications running on App Engine. The `AppEngineCredentials` class allows to authorize your App
+applications running on App Engine. The `AppEngineCredentials` class allows you to authorize your App
 Engine application given an instance of [AppIdentityService](https://cloud.google.com/appengine/docs/java/javadoc/com/google/appengine/api/appidentity/AppIdentityService).
 
 You can install the App Engine SDK from Maven Central:
 
 ```bash
-$ mvn dependency:get -Dartifact=com.google.appengine:appengine-api-1.0-sdk:1.9.65
+$ mvn dependency:get -Dartifact=com.google.appengine:appengine-api-1.0-sdk:1.9.71
 ```
 
 You can find [all available versions][appengine-sdk-versions] on Maven Central.
