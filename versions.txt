@@ -1,7 +1,7 @@
 # Format:
 # module:released-version:current-version
 
-google-auth-library-parent:0.13.0:0.13.1-SNAPSHOT
-google-auth-library-appengine:0.13.0:0.13.1-SNAPSHOT
-google-auth-library-credentials:0.13.0:0.13.1-SNAPSHOT
-google-auth-library-oauth2-http:0.13.0:0.13.1-SNAPSHOT
+google-auth-library-parent:0.14.0:0.14.0
+google-auth-library-appengine:0.14.0:0.14.0
+google-auth-library-credentials:0.14.0:0.14.0
+google-auth-library-oauth2-http:0.14.0:0.14.0
