@@ -103,47 +103,6 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
   private transient HttpTransportFactory transportFactory;
 
   /**
-   * Constructor with minimum identifying information.
-   *
-   * @param clientId Client ID of the service account from the console. May be null.
-   * @param clientEmail Client email address of the service account from the console.
-   * @param privateKey RSA private key object for the service account.
-   * @param privateKeyId Private key identifier for the service account. May be null.
-   * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
-   *        which results in a credential that must have createScoped called before use.
-   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
-   *             private in a later version.
-   */
-  @Deprecated
-  public ServiceAccountCredentials(
-      String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId,
-      Collection<String> scopes) {
-    this(clientId, clientEmail, privateKey, privateKeyId, scopes, null, null, null, null);
-  }
-
-  /**
-   * Constructor with minimum identifying information and custom HTTP transport.
-   *
-   * @param clientId Client ID of the service account from the console. May be null.
-   * @param clientEmail Client email address of the service account from the console.
-   * @param privateKey RSA private key object for the service account.
-   * @param privateKeyId Private key identifier for the service account. May be null.
-   * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
-   *        which results in a credential that must have createScoped called before use.
-   * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *        tokens.
-   * @param tokenServerUri URI of the end point that provides tokens.
-   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
-   *             private in a later version.
-   */
-  @Deprecated
-  public ServiceAccountCredentials(
-      String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId,
-      Collection<String> scopes, HttpTransportFactory transportFactory, URI tokenServerUri) {
-    this(clientId, clientEmail, privateKey, privateKeyId, scopes, transportFactory, tokenServerUri, null, null);
-  }
-
-  /**
    * Constructor with minimum identifying information and custom HTTP transport.
    *
    * @param clientId Client ID of the service account from the console. May be null.
@@ -220,6 +179,8 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
    * @param privateKeyId Private key identifier for the service account. May be null.
    * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
    *        which results in a credential that must have createScoped called before use.
+   * @return New ServiceAccountCredentials created from a private key.
+   * @throws IOException if the credential cannot be created from the private key.
    */
   public static ServiceAccountCredentials fromPkcs8(
       String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId,
@@ -240,6 +201,8 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *        tokens.
    * @param tokenServerUri URI of the end point that provides tokens.
+   * @return New ServiceAccountCredentials created from a private key.
+   * @throws IOException if the credential cannot be created from the private key.
    */
   public static ServiceAccountCredentials fromPkcs8(
       String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId,
@@ -263,6 +226,8 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
    * @param tokenServerUri URI of the end point that provides tokens.
    * @param serviceAccountUser The email of the user account to impersonate, if delegating
    *        domain-wide authority to the service account.
+   * @return New ServiceAccountCredentials created from a private key.
+   * @throws IOException if the credential cannot be created from the private key.
    */
   public static ServiceAccountCredentials fromPkcs8(
       String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId,
@@ -392,7 +357,7 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
     try {
       response = request.execute();
     } catch (IOException e) {
-      throw new IOException("Error getting access token for service account: ", e);
+      throw new IOException(String.format("Error getting access token for service account: %s", e.getMessage()), e);
     }
 
     GenericData responseData = response.parseAs(GenericData.class);

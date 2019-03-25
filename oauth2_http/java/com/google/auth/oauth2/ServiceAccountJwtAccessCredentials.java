@@ -97,22 +97,6 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   transient Clock clock = Clock.SYSTEM;
 
   /**
-   * Constructor with minimum identifying information.
-   *
-   * @param clientId Client ID of the service account from the console. May be null.
-   * @param clientEmail Client email address of the service account from the console.
-   * @param privateKey RSA private key object for the service account.
-   * @param privateKeyId Private key identifier for the service account. May be null.
-   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
-   *             private in a later version.
-   */
-  @Deprecated
-  public ServiceAccountJwtAccessCredentials(
-      String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId) {
-    this(clientId, clientEmail, privateKey, privateKeyId, null);
-  }
-
-  /**
    * Constructor with full information.
    *
    * @param clientId Client ID of the service account from the console. May be null.
@@ -120,11 +104,8 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    * @param privateKey RSA private key object for the service account.
    * @param privateKeyId Private key identifier for the service account. May be null.
    * @param defaultAudience Audience to use if not provided by transport. May be null.
-   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
-   *             private in a later version.
    */
-  @Deprecated
-  public ServiceAccountJwtAccessCredentials(String clientId, String clientEmail,
+  private ServiceAccountJwtAccessCredentials(String clientId, String clientEmail,
       PrivateKey privateKey, String privateKeyId, URI defaultAudience) {
     this.clientId = clientId;
     this.clientEmail = Preconditions.checkNotNull(clientEmail);
@@ -135,7 +116,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   }
 
   /**
-   * Returns service account crentials defined by JSON using the format supported by the Google
+   * Returns service account credentials defined by JSON using the format supported by the Google
    * Developers Console.
    *
    * @param json a map from the JSON representing the credentials.
@@ -176,6 +157,8 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    * @param clientEmail Client email address of the service account from the console.
    * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
    * @param privateKeyId Private key identifier for the service account. May be null.
+   * @return New ServiceAccountJwtAcceessCredentials created from a private key.
+   * @throws IOException if the credential cannot be created from the private key.
    */
   public static ServiceAccountJwtAccessCredentials fromPkcs8(String clientId, String clientEmail, 
       String privateKeyPkcs8, String privateKeyId) throws IOException {
@@ -190,6 +173,8 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
    * @param privateKeyId Private key identifier for the service account. May be null.
    * @param defaultAudience Audience to use if not provided by transport. May be null.
+   * @return New ServiceAccountJwtAcceessCredentials created from a private key.
+   * @throws IOException if the credential cannot be created from the private key.
    */
   public static ServiceAccountJwtAccessCredentials fromPkcs8(String clientId, String clientEmail, 
       String privateKeyPkcs8, String privateKeyId, URI defaultAudience) throws IOException {

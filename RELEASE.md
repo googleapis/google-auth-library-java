@@ -69,16 +69,15 @@ a major release. (0.6.0 -> 0.7.0)
 
 Prepare release
 ---------------
-* Update all ```pom.xml``` files in the package to the release version you want.
-* Update version numbers appearing in `README.md`.
-* Submit a pull request, get it reviewed, but wait to submit it in case there are errors during publishing.
-* ```mvn clean install deploy -DperformRelease=true```
+* Run `releasetool start`. Select "minor" or "patch" for the release type. This will bump the
+  artifact versions, ask you to edit release notes, and create the release pull request.
+* Run `mvn clean install deploy -DperformRelease=true` to stage the release.
 * Verify the result [here](https://oss.sonatype.org/#nexus-search;quick~com.google.auth).
-  * If there is a problem, undo by ```mvn nexus-staging:drop```.
+  * If there is a problem, undo by `mvn nexus-staging:drop`.
 
 Publish release
 ---------------
-* ```mvn nexus-staging:release -DperformRelease=true```
+* `mvn nexus-staging:release -DperformRelease=true`
 * It will take some time (10 minutes to 8 hours) for the package to be released
 * Confirm that the release appears in the [parent folder on Maven
 Central](https://repo1.maven.org/maven2/com/google/auth/google-auth-library-parent/)
@@ -90,9 +89,10 @@ Central](https://repo1.maven.org/maven2/com/google/auth/google-auth-library-pare
   * Click on the repository and check for errors
 * Submit the pull request to bump the version numbers
 * Update Javadoc on Github using `scripts/update_javadoc.sh`.
-* On the [releases](https://github.com/google/google-auth-library-java/releases) page, create a corresponding Git tag (e.g., "v0.7.0") on the release commit, and summarize the commits since the last release. Follow the style of previous release notes.
-* Update all ```pom.xml``` files to the new snapshot version (increment patch version number, e.g., from 0.4.0 to 0.4.1-SNAPSHOT).
-* Submit a pull request, get it reviewed, and submit.
+* Run `releasetool tag` to create the GitHub release.
+* Run `releasetool start` to bump the next snapshot version. Select "snapshot" when prompted for
+  the release type. This will bump the artifact versions and create a pull request.
+* Review and submit the PR.
 
 Special cases
 =============

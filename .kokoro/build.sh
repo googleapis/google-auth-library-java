@@ -23,3 +23,6 @@ echo $JOB_TYPE
 
 mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
 mvn test -B
+
+bash $KOKORO_GFILE_DIR/codecov.sh
+#bash .kokoro/codecov.sh

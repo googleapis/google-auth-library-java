@@ -10,12 +10,12 @@
 
   <groupId>com.google.auth</groupId>
   <artifactId>google-auth-library-parent</artifactId>
-  <version>0.11.0</version>
+  <version>0.13.1-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
   <packaging>pom</packaging>
   <name>Google Auth Library for Java</name>
   <description>Client libraries providing authentication and
     authorization to enable calling Google APIs.</description>
-  <url>https://github.com/google/google-auth-library-java</url>
+  <url>https://github.com/googleapis/google-auth-library-java</url>
 
   <licenses>
     <license>
@@ -37,17 +37,16 @@
   </modules>
 
   <scm>
-    <connection>scm:git:https://github.com/google/google-auth-library-java.git</connection>
-    <developerConnection>scm:git:https://github.com/google/google-auth-library-java.git</developerConnection>
-    <url>https://github.com/google/google-auth-library-java</url>
+    <connection>scm:git:https://github.com/googleapis/google-auth-library-java.git</connection>
+    <developerConnection>scm:git:https://github.com/googleapis/google-auth-library-java.git</developerConnection>
+    <url>https://github.com/googleapis/google-auth-library-java</url>
   </scm>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <java.version>1.6</java.version>
-    <project.google.http.version>1.24.1</project.google.http.version>
+    <project.google.http.version>1.28.0</project.google.http.version>
     <project.junit.version>4.12</project.junit.version>
-    <project.guava.version>20.0</project.guava.version>
+    <project.guava.version>26.0-android</project.guava.version>
     <project.appengine.version>1.9.64</project.appengine.version>
   </properties>
 
@@ -92,6 +91,12 @@
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>${project.junit.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.google.appengine</groupId>
+        <artifactId>appengine</artifactId>
+        <version>1.9.71</version>
         <scope>test</scope>
       </dependency>
       <dependency>
@@ -156,6 +161,14 @@
             </execution>
           </executions>
         </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>3.0.0-M3</version>
+          <configuration>
+            <reportNameSuffix>sponge_log</reportNameSuffix>
+          </configuration>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
@@ -204,6 +217,25 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.2</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>test</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
@@ -221,7 +253,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
-            <version>1.5</version>
+            <version>1.6</version>
             <executions>
               <execution>
                 <id>sign-artifacts</id>
@@ -229,6 +261,12 @@
                 <goals>
                   <goal>sign</goal>
                 </goals>
+                <configuration>
+                  <gpgArguments>
+                    <arg>--pinentry-mode</arg>
+                    <arg>loopback</arg>
+                  </gpgArguments>
+                </configuration>
               </execution>
             </executions>
           </plugin>

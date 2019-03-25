@@ -73,7 +73,7 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
   // Note: the explicit IP address is used to avoid name server resolution issues.
   static final String DEFAULT_METADATA_SERVER_URL = "http://169.254.169.254";
 
-  static final String SIGN_BLOB_URL_FORMAT = "https://iam.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob?alt=json";
+  static final String SIGN_BLOB_URL_FORMAT = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
 
   // Note: the explicit `timeout` and `tries` below is a workaround. The underlying
   // issue is that resolving an unknown host on some networks will take
@@ -98,39 +98,12 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
   private transient String serviceAccountEmail;
 
   /**
-   * Returns a credentials instance from the given transport factory
-   *
-   * @param transportFactory The Http transport factory
-   * @return the credential instance
-   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
-   *             private in a later version.
-   */
-  @Deprecated
-  public static ComputeEngineCredentials of(HttpTransportFactory transportFactory) {
-    return ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
-  }
-
-  /**
-   * Create a new ComputeEngineCredentials instance with default behavior.
-   *
-   * @deprecated Use {@link #create()} instead. This constructor will either be deleted or
-   *             made private in a later version.
-   */
-  @Deprecated
-  public ComputeEngineCredentials() {
-    this(null);
-  }
-
-  /**
    * Constructor with overridden transport.
    *
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *        tokens.
-   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
-   *             private in a later version.
    */
-  @Deprecated
-  public ComputeEngineCredentials(HttpTransportFactory transportFactory) {
+  private ComputeEngineCredentials(HttpTransportFactory transportFactory) {
     this.transportFactory = firstNonNull(transportFactory,
         getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
@@ -138,6 +111,8 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
 
   /**
    * Create a new ComputeEngineCredentials instance with default behavior.
+   *
+   * @return New ComputeEngineCredentials.
    */
   public static ComputeEngineCredentials create() {
     return new ComputeEngineCredentials(null);
@@ -153,8 +128,9 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
     if (statusCode == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
       throw new IOException(String.format("Error code %s trying to get security access token from"
           + " Compute Engine metadata for the default service account. This may be because"
-          + " the virtual machine instance does not have permission scopes specified.",
-          statusCode));
+          + " the virtual machine instance does not have permission scopes specified."
+          + " It is possible to skip checking for Compute Engine metadata by specifying the environment "
+          + " variable " + DefaultCredentialsProvider.NO_GCE_CHECK_ENV_VAR + "=true.", statusCode));
     }
     if (statusCode != HttpStatusCodes.STATUS_CODE_OK) {
       throw new IOException(String.format("Unexpected Error code %s trying to get security access"
@@ -219,10 +195,11 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
       } catch (SocketTimeoutException expected) {
         // Ignore logging timeouts which is the expected failure mode in non GCE environments.
       } catch (IOException e) {
-        LOGGER.log(
-            Level.WARNING, "Failed to detect whether we are running on Google Compute Engine.", e);
+        LOGGER.log(Level.FINE, "Encountered an unexpected exception when determining" +
+            " if we are running on Google Compute Engine.", e);
       }
     }
+    LOGGER.log(Level.INFO, "Failed to detect whether we are running on Google Compute Engine.");
     return false;
   }
 
@@ -306,7 +283,7 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
    * @param toSign bytes to sign
    * @return signed bytes
    * @throws SigningException if the attempt to sign the provided bytes failed
-   * @see <a href="https://cloud.google.com/iam/reference/rest/v1/projects.serviceAccounts/signBlob">Blob Signing</a>
+   * @see <a href="https://cloud.google.com/iam/credentials/reference/rest/v1/projects.serviceAccounts/signBlob">Blob Signing</a>
    */
   @Override
   public byte[] sign(byte[] toSign) {
@@ -325,7 +302,7 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
     GenericUrl genericUrl = new GenericUrl(signBlobUrl);
 
     GenericData signRequest = new GenericData();
-    signRequest.set("bytesToSign", bytes);
+    signRequest.set("payload", bytes);
     JsonHttpContent signContent = new JsonHttpContent(OAuth2Utils.JSON_FACTORY, signRequest);
     HttpRequest request = transportFactory.create().createRequestFactory().buildPostRequest(genericUrl, signContent);
     Map<String, List<String>> headers = getRequestMetadata();
@@ -358,7 +335,7 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
-    return OAuth2Utils.validateString(responseData, "signature", PARSE_ERROR_SIGNATURE);
+    return OAuth2Utils.validateString(responseData, "signedBlob", PARSE_ERROR_SIGNATURE);
   }
 
   private String getDefaultServiceAccount() throws IOException {

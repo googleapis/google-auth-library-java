@@ -76,19 +76,6 @@ public class OAuth2Credentials extends Credentials {
    *
    * @param accessToken the access token
    * @return the credentials instance
-   * @deprecated Use {@link #create(AccessToken)} instead. This method will be deleted in a later
-   *             version.
-   */
-  @Deprecated
-  public static OAuth2Credentials of(AccessToken accessToken) {
-    return create(accessToken);
-  }
-
-  /**
-   * Returns the credentials instance from the given access token.
-   *
-   * @param accessToken the access token
-   * @return the credentials instance
    */
   public static OAuth2Credentials create(AccessToken accessToken) {
     return OAuth2Credentials.newBuilder().setAccessToken(accessToken).build();
@@ -104,12 +91,9 @@ public class OAuth2Credentials extends Credentials {
   /**
    * Constructor with explicit access token.
    *
-   * @param accessToken Initial or temporary access token.
-   * @deprecated Use {@link #create(AccessToken)} instead. This constructor will either be deleted
-   *             or made private in a later version.
+   * @param accessToken initial or temporary access token
    **/
-  @Deprecated
-  public OAuth2Credentials(AccessToken accessToken) {
+  protected OAuth2Credentials(AccessToken accessToken) {
     if (accessToken != null) {
       useAccessToken(accessToken);
     }
@@ -134,6 +118,8 @@ public class OAuth2Credentials extends Credentials {
    * Returns the cached access token.
    *
    * <p>If not set, you should call {@link #refresh()} to fetch and cache an access token.</p>
+   *
+   * @return The cached access token.
    */
   public final AccessToken getAccessToken() {
     return temporaryAccess;
@@ -187,6 +173,8 @@ public class OAuth2Credentials extends Credentials {
 
   /**
    * Refresh these credentials only if they have expired or are expiring imminently.
+   *
+   * @throws IOException during token refresh.
    */
   public void refreshIfExpired() throws IOException {
     synchronized(lock) {
@@ -217,6 +205,7 @@ public class OAuth2Credentials extends Credentials {
    * Throws IllegalStateException if not overridden since direct use of OAuth2Credentials is only
    * for temporary or non-refreshing access tokens.
    *
+   * @return Refreshed access token.
    * @throws IOException from derived implementations
    */
   public AccessToken refreshAccessToken() throws IOException {

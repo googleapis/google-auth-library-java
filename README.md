@@ -3,7 +3,9 @@
 
 Open source authentication client library for Java.
 
+[![unstable](http://badges.github.io/stability-badges/dist/unstable.svg)](http://github.com/badges/stability-badges)
 [![Build Status](https://travis-ci.org/google/google-auth-library-java.svg?branch=master)](https://travis-ci.org/google/google-auth-library-java.svg)
+[![codecov](https://codecov.io/gh/googleapis/google-auth-library-java/branch/master/graph/badge.svg)](https://codecov.io/gh/googleapis/google-auth-library-java)
 [![Maven](https://img.shields.io/maven-central/v/com.google.auth/google-auth-library-credentials.svg)](https://img.shields.io/maven-central/v/com.google.auth/google-auth-library-credentials.svg)
 
 -  [API Documentation](https://google.github.io/google-auth-library-java/releases/latest/apidocs)
@@ -13,7 +15,7 @@ This project consists of 3 artifacts:
 -  [*google-auth-library-credentials*](#google-auth-library-credentials): contains base classes and
 interfaces for Google credentials
 -  [*google-auth-library-appengine*](#google-auth-library-appengine): contains App Engine
-credentials. This artifacts depends on the App Engine SDK
+credentials. This artifact depends on the App Engine SDK.
 -  [*google-auth-library-oauth2-http*](#google-auth-library-oauth2-http): contains a wide variety of
 credentials as well as utility methods to create them and to get Application Default Credentials
 
@@ -25,21 +27,34 @@ credentials as well as utility methods to create them and to get Application Def
 If you are using Maven, add this to your pom.xml file (notice that you can replace
 `google-auth-library-oauth2-http` with any of `google-auth-library-credentials` and
 `google-auth-library-appengine`, depending on your application needs):
+
+[//]: # ({x-version-update-start:google-auth-library-oauth2-http:released})
+
 ```xml
 <dependency>
   <groupId>com.google.auth</groupId>
   <artifactId>google-auth-library-oauth2-http</artifactId>
-  <version>0.11.0</version>
+  <version>0.13.0</version>
 </dependency>
 ```
+[//]: # ({x-version-update-end})
+
+
 If you are using Gradle, add this to your dependencies
+
+[//]: # ({x-version-update-start:google-auth-library-oauth2-http:released})
 ```Groovy
-compile 'com.google.auth:google-auth-library-oauth2-http:0.11.0'
+compile 'com.google.auth:google-auth-library-oauth2-http:0.13.0'
 ```
+[//]: # ({x-version-update-end})
+
 If you are using SBT, add this to your dependencies
+
+[//]: # ({x-version-update-start:google-auth-library-oauth2-http:released})
 ```Scala
-libraryDependencies += "com.google.auth" % "google-auth-library-oauth2-http" % "0.11.0"
+libraryDependencies += "com.google.auth" % "google-auth-library-oauth2-http" % "0.13.0"
 ```
+[//]: # ({x-version-update-end})
 
 ## google-auth-library-credentials
 
@@ -56,6 +71,14 @@ capable of signing byte arrays using the credentials associated to a Google Serv
 This artifact depends on the App Engine SDK (`appengine-api-1.0-sdk`) and should be used only by
 applications running on App Engine. The `AppEngineCredentials` class allows to authorize your App
 Engine application given an instance of [AppIdentityService](https://cloud.google.com/appengine/docs/java/javadoc/com/google/appengine/api/appidentity/AppIdentityService).
+
+You can install the App Engine SDK from Maven Central:
+
+```bash
+$ mvn dependency:get -Dartifact=com.google.appengine:appengine-api-1.0-sdk:1.9.65
+```
+
+You can find [all available versions][appengine-sdk-versions] on Maven Central.
 
 ## google-auth-library-oauth2-http
 
@@ -90,7 +113,7 @@ following are searched (in order) to find the Application Default Credentials:
 
 To get Credentials from a Service Account JSON key use `GoogleCredentials.fromStream(InputStream)`
 or `GoogleCredentials.fromStream(InputStream, HttpTransportFactory)`. Note that the credentials must
-be refreshed before the access token is available. 
+be refreshed before the access token is available.
 
 ```java
 GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream("/path/to/credentials.json"));
@@ -99,6 +122,41 @@ AccessToken token = credentials.getAccessToken();
 // OR
 AccessToken token = credentials.refreshAccessToken();
 ```
+
+### ImpersonatedCredentials
+
+Allows a credentials issued to a user or service account to
+impersonate another.  The source project using ImpersonaedCredentials must enable the
+"IAMCredentials" API.  Also, the target service account must grant the orginating principal
+the "Service Account Token Creator" IAM role.
+
+```java
+String credPath = "/path/to/svc_account.json";
+ServiceAccountCredentials sourceCredentials = ServiceAccountCredentials
+     .fromStream(new FileInputStream(credPath));
+sourceCredentials = (ServiceAccountCredentials) sourceCredentials
+    .createScoped(Arrays.asList("https://www.googleapis.com/auth/iam"));
+
+ImpersonatedCredentials targetCredentials = ImpersonatedCredentials.create(sourceCredentials,
+    "impersonated-account@project.iam.gserviceaccount.com", null,
+    Arrays.asList("https://www.googleapis.com/auth/devstorage.read_only"), 300);
+
+Storage storage_service = StorageOptions.newBuilder().setProjectId("project-id")
+    .setCredentials(targetCredentials).build().getService();
+
+for (Bucket b : storage_service.list().iterateAll())
+    System.out.println(b); 
+```
+
+## CI Status
+
+Java Version | Status
+------------ | ------
+Java 7 | [![Kokoro CI](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java7.svg)](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java7.html)
+Java 8 | [![Kokoro CI](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8.svg)](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8.html)
+Java 8 OSX | [![Kokoro CI](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8-osx.svg)](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8-osx.html)
+Java 8 Windows | [![Kokoro CI](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8-win.svg)](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8-win.html)
+Java 10 | [![Kokoro CI](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java10.svg)](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java10.html)
 
 ## Contributing
 
@@ -110,6 +168,21 @@ Please note that this project is released with a Contributor Code of Conduct. By
 this project you agree to abide by its terms. See [Code of Conduct](CODE_OF_CONDUCT.md) for more
 information.
 
+## Running the Tests
+
+To run the tests you will need:
+
+* Maven 3+
+* App Engine SDK (see [installation instructions above][appengine-sdk-install])
+
+```bash
+$ mvn install -DskipTests=true
+$ mvn test
+```
+
 ## License
 
 BSD 3-Clause - See [LICENSE](LICENSE) for more information.
+
+[appengine-sdk-versions]: https://search.maven.org/search?q=g:com.google.appengine%20AND%20a:appengine-api-1.0-sdk&core=gav
+[appengine-sdk-install]: https://github.com/googleapis/google-auth-library-java/blob/master/README.md#google-auth-library-appengine
