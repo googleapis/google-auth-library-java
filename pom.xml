@@ -44,10 +44,10 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.google.http.version>1.28.0</project.google.http.version>
+    <project.google.http.version>1.27.0</project.google.http.version>
     <project.junit.version>4.12</project.junit.version>
-    <project.guava.version>26.0-android</project.guava.version>
-    <project.appengine.version>1.9.64</project.appengine.version>
+    <project.guava.version>27.1-android</project.guava.version>
+    <project.appengine.version>1.9.71</project.appengine.version>
   </properties>
 
   <dependencyManagement>
@@ -96,7 +96,7 @@
       <dependency>
         <groupId>com.google.appengine</groupId>
         <artifactId>appengine</artifactId>
-        <version>1.9.71</version>
+        <version>${project.appengine.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
