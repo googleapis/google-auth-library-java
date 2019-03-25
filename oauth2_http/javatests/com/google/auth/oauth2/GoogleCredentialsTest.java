@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -39,6 +40,7 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -53,6 +55,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Test case for {@link GoogleCredentials}.
@@ -217,6 +220,25 @@ public class GoogleCredentialsTest {
         UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, null);
 
     testFromStreamException(userStream, "refresh_token");
+  }
+
+  @Test
+  public void createScoped_overloadCallsImplementation() {
+    final AtomicReference<Collection<String>> called = new AtomicReference<>();
+    final GoogleCredentials expectedScopedCredentials = new GoogleCredentials();
+
+    GoogleCredentials credentials = new GoogleCredentials() {
+      @Override
+      public GoogleCredentials createScoped(Collection<String> scopes) {
+        called.set(scopes);
+        return expectedScopedCredentials;
+      }
+    };
+
+    GoogleCredentials scopedCredentials = credentials.createScoped("foo", "bar");
+
+    assertEquals(expectedScopedCredentials, scopedCredentials);
+    assertEquals(ImmutableList.of("foo", "bar"), called.get());
   }
 
   private static void testFromStreamException(InputStream stream, String expectedMessageContent) {
