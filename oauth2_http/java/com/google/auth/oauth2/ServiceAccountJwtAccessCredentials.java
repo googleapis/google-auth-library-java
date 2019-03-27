@@ -124,7 +124,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    *             private in a later version.
    */
   @Deprecated
-  public ServiceAccountJwtAccessCredentials(String clientId, String clientEmail,
+  private ServiceAccountJwtAccessCredentials(String clientId, String clientEmail,
       PrivateKey privateKey, String privateKeyId, URI defaultAudience) {
     this.clientId = clientId;
     this.clientEmail = Preconditions.checkNotNull(clientEmail);
