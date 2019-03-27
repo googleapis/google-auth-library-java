@@ -97,6 +97,22 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   transient Clock clock = Clock.SYSTEM;
 
   /**
+   * Constructor with minimum identifying information.
+   *
+   * @param clientId Client ID of the service account from the console. May be null.
+   * @param clientEmail Client email address of the service account from the console.
+   * @param privateKey RSA private key object for the service account.
+   * @param privateKeyId Private key identifier for the service account. May be null.
+   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
+   *             private in a later version.
+   */
+  @Deprecated
+  public ServiceAccountJwtAccessCredentials(
+      String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId) {
+    this(clientId, clientEmail, privateKey, privateKeyId, null);
+  }
+
+  /**
    * Constructor with full information.
    *
    * @param clientId Client ID of the service account from the console. May be null.
