@@ -135,7 +135,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   }
 
   /**
-   * Returns service account crentials defined by JSON using the format supported by the Google
+   * Returns service account credentials defined by JSON using the format supported by the Google
    * Developers Console.
    *
    * @param json a map from the JSON representing the credentials.
