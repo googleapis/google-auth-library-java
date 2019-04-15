@@ -34,7 +34,7 @@ If you are using Maven, add this to your pom.xml file (notice that you can repla
 <dependency>
   <groupId>com.google.auth</groupId>
   <artifactId>google-auth-library-oauth2-http</artifactId>
-  <version>0.12.0</version>
+  <version>0.15.0</version>
 </dependency>
 ```
 [//]: # ({x-version-update-end})
@@ -44,7 +44,7 @@ If you are using Gradle, add this to your dependencies
 
 [//]: # ({x-version-update-start:google-auth-library-oauth2-http:released})
 ```Groovy
-compile 'com.google.auth:google-auth-library-oauth2-http:0.12.0'
+compile 'com.google.auth:google-auth-library-oauth2-http:0.15.0'
 ```
 [//]: # ({x-version-update-end})
 
@@ -52,7 +52,7 @@ If you are using SBT, add this to your dependencies
 
 [//]: # ({x-version-update-start:google-auth-library-oauth2-http:released})
 ```Scala
-libraryDependencies += "com.google.auth" % "google-auth-library-oauth2-http" % "0.12.0"
+libraryDependencies += "com.google.auth" % "google-auth-library-oauth2-http" % "0.15.0"
 ```
 [//]: # ({x-version-update-end})
 
@@ -69,13 +69,13 @@ capable of signing byte arrays using the credentials associated to a Google Serv
 ## google-auth-library-appengine
 
 This artifact depends on the App Engine SDK (`appengine-api-1.0-sdk`) and should be used only by
-applications running on App Engine. The `AppEngineCredentials` class allows to authorize your App
+applications running on App Engine. The `AppEngineCredentials` class allows you to authorize your App
 Engine application given an instance of [AppIdentityService](https://cloud.google.com/appengine/docs/java/javadoc/com/google/appengine/api/appidentity/AppIdentityService).
 
 You can install the App Engine SDK from Maven Central:
 
 ```bash
-$ mvn dependency:get -Dartifact=com.google.appengine:appengine-api-1.0-sdk:1.9.65
+$ mvn dependency:get -Dartifact=com.google.appengine:appengine-api-1.0-sdk:1.9.71
 ```
 
 You can find [all available versions][appengine-sdk-versions] on Maven Central.
@@ -88,7 +88,7 @@ This artifact contains a wide variety of credentials as well as utility methods 
 to get Application Default Credentials.
 Credentials classes contained in this artifact are:
 - `CloudShellCredentials`: credentials for Google Cloud Shell built-in service account
-- `CloudShellCredentials`: credentials for Google Compute Engine built-in service account
+- `ComputeEngineCredentials`: credentials for Google Compute Engine built-in service account
 - `OAuth2Credentials`: base class for OAuth2-based credentials
 - `ServiceAccountCredentials`: credentials for a Service Account - use a JSON Web Token (JWT) to get
 access tokens

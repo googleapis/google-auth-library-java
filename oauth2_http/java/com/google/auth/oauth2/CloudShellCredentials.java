@@ -32,12 +32,13 @@
 package com.google.auth.oauth2;
 
 import com.google.api.client.json.JsonParser;
+import com.google.common.base.Charsets;
 import com.google.common.base.MoreObjects;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,36 +55,21 @@ public class CloudShellCredentials extends GoogleCredentials {
 
   /**
    * The Cloud Shell back authorization channel uses serialized
-   * Javascript Protobufers, preceeded by the message length and a
+   * Javascript Protobuffers, preceded by the message length and a
    * new line character. However, the request message has no content,
    * so a token request consists of an empty JsPb, and its 2 character
-   * lenth prefix.
+   * length prefix.
    */
   protected final static String GET_AUTH_TOKEN_REQUEST = "2\n[]";
+  protected final static byte[] GET_AUTH_TOKEN_REQUEST_BYTES = (GET_AUTH_TOKEN_REQUEST + "\n").getBytes(Charsets.UTF_8);
 
   private final int authPort;
-
-  /**
-   * @param authPort Authentication port.
-   * @return The CloudShellCredentials.
-   * @deprecated Use {@link #create(int)} instead. This method will be deleted in a later version.
-   */
-  @Deprecated
-  public static CloudShellCredentials of(int authPort) {
-    return create(authPort);
-  }
 
   public static CloudShellCredentials create(int authPort) {
     return CloudShellCredentials.newBuilder().setAuthPort(authPort).build();
   }
 
-  /**
-   * @param authPort Authentication port.
-   * @deprecated Use {@link #create(int)} instead. This constructor will either be deleted or
-   *             made private in a later version.
-   */
-  @Deprecated
-  public CloudShellCredentials(int authPort) {
+  private CloudShellCredentials(int authPort) {
     this.authPort = authPort;
   }
 
@@ -96,10 +82,9 @@ public class CloudShellCredentials extends GoogleCredentials {
     Socket socket = new Socket("localhost", this.getAuthPort());
     socket.setSoTimeout(READ_TIMEOUT_MS);
     AccessToken token;
-    try {    
-      PrintWriter out =
-        new PrintWriter(socket.getOutputStream(), true);
-      out.println(GET_AUTH_TOKEN_REQUEST);
+    try {
+      OutputStream os = socket.getOutputStream();
+      os.write(GET_AUTH_TOKEN_REQUEST_BYTES);
     
       BufferedReader input =
           new BufferedReader(new InputStreamReader(socket.getInputStream()));

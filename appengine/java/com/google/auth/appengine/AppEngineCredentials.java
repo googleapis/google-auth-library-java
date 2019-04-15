@@ -62,30 +62,7 @@ public class AppEngineCredentials extends GoogleCredentials implements ServiceAc
 
   private transient AppIdentityService appIdentityService;
 
-  /**
-   * Create a new AppEngineCredential.
-   *
-   * @param scopes Collection of scopes to request.
-   *
-   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
-   *             private in a later version.
-   */
-  @Deprecated
-  public AppEngineCredentials(Collection<String> scopes) {
-    this(scopes, null);
-  }
-
-  /**
-   * Create a new AppEngineCredential.
-   *
-   * @param scopes Collection of scopes to request.
-   * @param appIdentityService Custom service used for signing.
-   *
-   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
-   *             private in a later version.
-   */
-  @Deprecated
-  public AppEngineCredentials(Collection<String> scopes, AppIdentityService appIdentityService) {
+  private AppEngineCredentials(Collection<String> scopes, AppIdentityService appIdentityService) {
     this.scopes = scopes == null ? ImmutableSet.<String>of() : ImmutableList.copyOf(scopes);
     this.appIdentityService = appIdentityService != null ? appIdentityService 
         : AppIdentityServiceFactory.getAppIdentityService();

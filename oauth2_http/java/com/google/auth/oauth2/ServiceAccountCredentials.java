@@ -103,47 +103,6 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
   private transient HttpTransportFactory transportFactory;
 
   /**
-   * Constructor with minimum identifying information.
-   *
-   * @param clientId Client ID of the service account from the console. May be null.
-   * @param clientEmail Client email address of the service account from the console.
-   * @param privateKey RSA private key object for the service account.
-   * @param privateKeyId Private key identifier for the service account. May be null.
-   * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
-   *        which results in a credential that must have createScoped called before use.
-   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
-   *             private in a later version.
-   */
-  @Deprecated
-  public ServiceAccountCredentials(
-      String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId,
-      Collection<String> scopes) {
-    this(clientId, clientEmail, privateKey, privateKeyId, scopes, null, null, null, null);
-  }
-
-  /**
-   * Constructor with minimum identifying information and custom HTTP transport.
-   *
-   * @param clientId Client ID of the service account from the console. May be null.
-   * @param clientEmail Client email address of the service account from the console.
-   * @param privateKey RSA private key object for the service account.
-   * @param privateKeyId Private key identifier for the service account. May be null.
-   * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
-   *        which results in a credential that must have createScoped called before use.
-   * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *        tokens.
-   * @param tokenServerUri URI of the end point that provides tokens.
-   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
-   *             private in a later version.
-   */
-  @Deprecated
-  public ServiceAccountCredentials(
-      String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId,
-      Collection<String> scopes, HttpTransportFactory transportFactory, URI tokenServerUri) {
-    this(clientId, clientEmail, privateKey, privateKeyId, scopes, transportFactory, tokenServerUri, null, null);
-  }
-
-  /**
    * Constructor with minimum identifying information and custom HTTP transport.
    *
    * @param clientId Client ID of the service account from the console. May be null.
