@@ -1,65 +1,55 @@
 #!/bin/bash
-# Copyright 2018, Google Inc. All rights reserved.
+# Copyright 2019 Google Inc.
 #
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are
-# met:
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-#    * Redistributions of source code must retain the above copyright
-# notice, this list of conditions and the following disclaimer.
-#    * Redistributions in binary form must reproduce the above
-# copyright notice, this list of conditions and the following disclaimer
-# in the documentation and/or other materials provided with the
-# distribution.
+#      http://www.apache.org/licenses/LICENSE-2.0
 #
-#    * Neither the name of Google Inc. nor the names of its
-# contributors may be used to endorse or promote products derived from
-# this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-set -e
+set -eo pipefail
 
-if [[ -z "${BUCKET}" ]]; then
-    echo "Must set BUCKET environment variable"
-    exit 1
+if [[ -z "${CREDENTIALS}" ]]; then
+  CREDENTIALS=${KOKORO_KEYSTORE_DIR}/73713_docuploader_service_account
 fi
 
+if [[ -z "${STAGING_BUCKET}" ]]; then
+  echo "Need to set STAGING_BUCKET environment variable"
+  exit 1
+fi
+
+# work from the git root directory
 pushd $(dirname "$0")/../../
 
-# Pull the library version from project properties
-VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -Ev '(^\[|\w+:)')
+# install docuploader package
+python3 -m pip install gcp-docuploader
 
-case "${VERSION}" in
-    *-SNAPSHOT)
-        echo "Cannot publish javadoc for -SNAPSHOT versions"
-        exit 1
-        ;;
-    "")
-        echo "Could not obtain version number from maven-help-plugin."
-        exit 1
-        ;;
-esac
+# compile all packages
+mvn clean install -B -DskipTests=true
 
-# Generate the javadoc from scratch
-mvn clean install javadoc:aggregate -DskipTests=true -B
+NAME=google-auth-library
+VERSION=$(grep ${NAME}: versions.txt | cut -d: -f3)
 
-# Sync the current version to gCS
-gsutil -m rsync -d target/site gs://${BUCKET}/java/google-auth-library-java/${VERSION}
+# build the docs
+mvn site -B
 
-if [[ "${LINK_LATEST}" == "true" ]]; then
-    # Sync the current content to latest
-    gsutil -m rsync gs://${BUCKET}/java/google-auth-library-java/${VERSION} gs://${BUCKET}/java/google-auth-library-java/latest
-fi
+pushd target/site/apidocs
+
+# create metadata
+python3 -m docuploader create-metadata \
+  --name ${NAME} \
+  --version ${VERSION} \
+  --language java
+
+# upload docs
+python3 -m docuploader upload . \
+  --credentials ${CREDENTIALS} \
+  --staging-bucket ${STAGING_BUCKET}
 
 popd
