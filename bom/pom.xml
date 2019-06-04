@@ -30,6 +30,16 @@
     <url>https://github.com/googleapis/google-auth-library-java</url>
   </scm>
 
+  <developers>
+    <developer>
+      <name>Jeff Ching</name>
+      <email>chingor@google.com</email>
+      <roles>
+        <role>developer</role>
+      </roles>
+    </developer>
+  </developers>
+
   <dependencyManagement>
     <dependencies>
       <dependency>
