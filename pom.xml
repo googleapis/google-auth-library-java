@@ -10,7 +10,7 @@
 
   <groupId>com.google.auth</groupId>
   <artifactId>google-auth-library-parent</artifactId>
-  <version>0.16.1</version><!-- {x-version-update:google-auth-library-parent:current} -->
+  <version>0.16.2-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
   <packaging>pom</packaging>
   <name>Google Auth Library for Java</name>
   <description>Client libraries providing authentication and
