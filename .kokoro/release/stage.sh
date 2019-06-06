@@ -30,7 +30,6 @@ AUTORELEASE="false"
 if [[ -n "${AUTORELEASE_PR}" ]]
 then
   AUTORELEASE="true"
-  echo "should autorelease"
 fi
 
 mvn clean install deploy -B \
