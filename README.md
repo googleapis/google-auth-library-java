@@ -148,6 +148,24 @@ for (Bucket b : storage_service.list().iterateAll())
     System.out.println(b); 
 ```
 
+## Using Credentials with `google-http-client`
+
+Credentials provided by `google-auth-library` can be used with Google's [HTTP-based clients][apiary-clients]. We provide a [`HttpCredentialsAdapter`][http-credentials-adapter] which can be used as an [`HttpRequestInitializer`][http-request-initializer].
+
+```java
+import com.google.api.client.http.HttpRequestInitializer;
+import com.google.api.services.bigquery.Bigquery;
+import com.google.auth.http.HttpCredentialsAdapter;
+import com.google.auth.oauth2.GoogleCredentials;
+
+GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
+HttpRequestInitializer requestInitializer = new HttpCredentialsAdapter(credentials);
+
+Bigquery bq = new Bigquery.Builder(HTTP_TRANSPORT, JSON_FACTORY, requestInitializer)
+    .setApplicationName(APPLICATION_NAME)
+    .build();
+```
+
 ## CI Status
 
 Java Version | Status
@@ -186,3 +204,6 @@ BSD 3-Clause - See [LICENSE](LICENSE) for more information.
 
 [appengine-sdk-versions]: https://search.maven.org/search?q=g:com.google.appengine%20AND%20a:appengine-api-1.0-sdk&core=gav
 [appengine-sdk-install]: https://github.com/googleapis/google-auth-library-java/blob/master/README.md#google-auth-library-appengine
+[apiary-clients]: https://search.maven.org/search?q=g:com.google.apis
+[http-credentials-adapter]: https://googleapis.dev/java/google-auth-library/latest/index.html?com/google/auth/http/HttpCredentialsAdapter.html
+[http-request-initializer]: https://googleapis.dev/java/google-http-client/latest/index.html?com/google/api/client/http/HttpRequestInitializer.html
