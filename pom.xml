@@ -57,6 +57,7 @@
     <project.junit.version>4.12</project.junit.version>
     <project.guava.version>27.1-android</project.guava.version>
     <project.appengine.version>1.9.74</project.appengine.version>
+    <deploy.autorelease>false</deploy.autorelease>
   </properties>
 
   <dependencyManagement>
@@ -129,7 +130,7 @@
           <configuration>
             <serverId>ossrh</serverId>
             <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-            <autoReleaseAfterClose>false</autoReleaseAfterClose>
+            <autoReleaseAfterClose>${deploy.autorelease}</autoReleaseAfterClose>
           </configuration>
         </plugin>
         <plugin>
