@@ -89,6 +89,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   private final PrivateKey privateKey;
   private final String privateKeyId;
   private final URI defaultAudience;
+  private final URI overrideAudience;
   private transient LoadingCache<URI, String> tokenCache;
 
 
@@ -109,25 +110,25 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   @Deprecated
   public ServiceAccountJwtAccessCredentials(
       String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId) {
-    this(clientId, clientEmail, privateKey, privateKeyId, null);
+    this(newBuilder()
+        .setClientId(clientId)
+        .setClientEmail(clientEmail)
+        .setPrivateKey(privateKey)
+        .setPrivateKeyId(privateKeyId));
   }
 
   /**
-   * Constructor with full information.
+   * Constructor from the Builder.
    *
-   * @param clientId Client ID of the service account from the console. May be null.
-   * @param clientEmail Client email address of the service account from the console.
-   * @param privateKey RSA private key object for the service account.
-   * @param privateKeyId Private key identifier for the service account. May be null.
-   * @param defaultAudience Audience to use if not provided by transport. May be null.
+   * @param builder Builder options
    */
-  private ServiceAccountJwtAccessCredentials(String clientId, String clientEmail,
-      PrivateKey privateKey, String privateKeyId, URI defaultAudience) {
-    this.clientId = clientId;
-    this.clientEmail = Preconditions.checkNotNull(clientEmail);
-    this.privateKey = Preconditions.checkNotNull(privateKey);
-    this.privateKeyId = privateKeyId;
-    this.defaultAudience = defaultAudience;
+  private ServiceAccountJwtAccessCredentials(Builder builder) {
+    this.clientId = builder.getClientId();
+    this.clientEmail = Preconditions.checkNotNull(builder.getClientEmail());
+    this.privateKey = Preconditions.checkNotNull(builder.getPrivateKey());
+    this.privateKeyId = builder.getPrivateKeyId();
+    this.defaultAudience = builder.getDefaultAudience();
+    this.overrideAudience = builder.getOverrideAudence();
     this.tokenCache = createCache();
   }
 
@@ -195,8 +196,13 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   public static ServiceAccountJwtAccessCredentials fromPkcs8(String clientId, String clientEmail, 
       String privateKeyPkcs8, String privateKeyId, URI defaultAudience) throws IOException {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(privateKeyPkcs8);
-    return new ServiceAccountJwtAccessCredentials(
-        clientId, clientEmail, privateKey, privateKeyId, defaultAudience);
+    return newBuilder()
+        .setClientId(clientId)
+        .setClientEmail(clientEmail)
+        .setPrivateKey(privateKey)
+        .setPrivateKeyId(privateKeyId)
+        .setDefaultAudience(defaultAudience)
+        .build();
   }
 
   /**
@@ -292,6 +298,9 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    */
   @Override
   public Map<String, List<String>> getRequestMetadata(URI uri) throws IOException {
+    if (overrideAudience != null) {
+      uri = overrideAudience;
+    }
     if (uri == null) {
       if (defaultAudience != null) {
         uri = defaultAudience;
@@ -438,6 +447,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     private PrivateKey privateKey;
     private String privateKeyId;
     private URI defaultAudience;
+    private URI overrideAudence;
 
     protected Builder() {}
 
@@ -474,6 +484,11 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
       return this;
     }
 
+    public Builder setOverrideAudience(URI overrideAudence) {
+      this.overrideAudence = overrideAudence;
+      return this;
+    }
+
     public String getClientId() {
       return clientId;
     }
@@ -494,9 +509,12 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
       return defaultAudience;
     }
 
+    public URI getOverrideAudence() {
+      return overrideAudence;
+    }
+
     public ServiceAccountJwtAccessCredentials build() {
-      return new ServiceAccountJwtAccessCredentials(
-          clientId, clientEmail, privateKey, privateKeyId, defaultAudience);
+      return new ServiceAccountJwtAccessCredentials(this);
     }
   }
 }
