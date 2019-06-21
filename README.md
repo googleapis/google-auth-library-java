@@ -69,7 +69,7 @@ capable of signing byte arrays using the credentials associated to a Google Serv
 
 This artifact depends on the App Engine SDK (`appengine-api-1.0-sdk`) and should be used only by
 applications running on App Engine environments that use urlfetch. The `AppEngineCredentials` class
-allows you to authorize your AppEngine application given an instance of
+allows you to authorize your App Engine application given an instance of
 [AppIdentityService][appengine-app-identity-service].
 
 You can install the App Engine SDK from Maven Central:
@@ -194,7 +194,7 @@ Java 7 | [![Kokoro CI](http://storage.googleapis.com/cloud-devrel-public/java/ba
 Java 8 | [![Kokoro CI](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8.svg)](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8.html)
 Java 8 OSX | [![Kokoro CI](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8-osx.svg)](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8-osx.html)
 Java 8 Windows | [![Kokoro CI](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8-win.svg)](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8-win.html)
-Java 10 | [![Kokoro CI](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java10.svg)](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java10.html)
+Java 11 | [![Kokoro CI](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java11.svg)](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java11.html)
 
 ## Contributing
 
