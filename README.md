@@ -4,7 +4,6 @@
 Open source authentication client library for Java.
 
 [![unstable](http://badges.github.io/stability-badges/dist/unstable.svg)](http://github.com/badges/stability-badges)
-[![Build Status](https://travis-ci.org/google/google-auth-library-java.svg?branch=master)](https://travis-ci.org/google/google-auth-library-java.svg)
 [![codecov](https://codecov.io/gh/googleapis/google-auth-library-java/branch/master/graph/badge.svg)](https://codecov.io/gh/googleapis/google-auth-library-java)
 [![Maven](https://img.shields.io/maven-central/v/com.google.auth/google-auth-library-credentials.svg)](https://img.shields.io/maven-central/v/com.google.auth/google-auth-library-credentials.svg)
 
@@ -69,14 +68,35 @@ capable of signing byte arrays using the credentials associated to a Google Serv
 ## google-auth-library-appengine
 
 This artifact depends on the App Engine SDK (`appengine-api-1.0-sdk`) and should be used only by
-applications running on App Engine. The `AppEngineCredentials` class allows you to authorize your App
-Engine application given an instance of [AppIdentityService](https://cloud.google.com/appengine/docs/java/javadoc/com/google/appengine/api/appidentity/AppIdentityService).
+applications running on App Engine environments that use urlfetch. The `AppEngineCredentials` class
+allows you to authorize your AppEngine application given an instance of
+[AppIdentityService][appengine-app-identity-service].
 
 You can install the App Engine SDK from Maven Central:
 
 ```bash
-$ mvn dependency:get -Dartifact=com.google.appengine:appengine-api-1.0-sdk:1.9.71
+$ mvn dependency:get -Dartifact=com.google.appengine:appengine-api-1.0-sdk:1.9.74
 ```
+
+Usage:
+
+```java
+import com.google.appengine.api.appidentity.AppIdentityService;
+import com.google.appengine.api.appidentity.AppIdentityServiceFactory;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.appengine.AppEngineCredentials;
+
+AppIdentityService appIdentityService = AppIdentityServiceFactory.getAppIdentityService();
+
+GoogleCredentials credentials =
+    AppEngineCredentials.newBuilder()
+        .setScopes(...)
+        .setAppIdentityService(appIdentityService)
+        .build();
+```
+
+**Important: Note that `com.google.auth.appengine.AppEngineCredentials` is a separate class from
+`com.google.auth.oauth2.AppEngineCredentials`.**
 
 You can find [all available versions][appengine-sdk-versions] on Maven Central.
 
@@ -204,6 +224,7 @@ BSD 3-Clause - See [LICENSE](LICENSE) for more information.
 
 [appengine-sdk-versions]: https://search.maven.org/search?q=g:com.google.appengine%20AND%20a:appengine-api-1.0-sdk&core=gav
 [appengine-sdk-install]: https://github.com/googleapis/google-auth-library-java/blob/master/README.md#google-auth-library-appengine
+[appengine-app-identity-service]: https://cloud.google.com/appengine/docs/java/javadoc/com/google/appengine/api/appidentity/AppIdentityService
 [apiary-clients]: https://search.maven.org/search?q=g:com.google.apis
 [http-credentials-adapter]: https://googleapis.dev/java/google-auth-library/latest/index.html?com/google/auth/http/HttpCredentialsAdapter.html
 [http-request-initializer]: https://googleapis.dev/java/google-http-client/latest/index.html?com/google/api/client/http/HttpRequestInitializer.html
