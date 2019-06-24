@@ -31,9 +31,11 @@
 
 package com.google.auth.oauth2;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
@@ -51,6 +53,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.Clock;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
+import com.google.auth.ServiceAccountSigner.SigningException;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -244,6 +247,96 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
       fail(String.format("Should throw exception with message containing '%s'", expectedMessage));
     } catch (IOException expected) {
       assertTrue(expected.getMessage().contains(expectedMessage));
+    }
+  }
+
+  @Test
+  public void getAccount_sameAs() throws IOException {
+    GoogleCredentials sourceCredentials = getSourceCredentials();
+    MockIAMCredentialsServiceTransportFactory mtransportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mtransportFactory.transport.setexpireTime(getDefaultExpireTime());
+    ImpersonatedCredentials targetCredentials = ImpersonatedCredentials.create(sourceCredentials,
+        IMPERSONATED_CLIENT_EMAIL, null, SCOPES, VALID_LIFETIME, mtransportFactory);
+
+    assertEquals(IMPERSONATED_CLIENT_EMAIL, targetCredentials.getAccount());
+  }
+
+
+  @Test
+  public void sign_sameAs() throws IOException {
+    GoogleCredentials sourceCredentials = getSourceCredentials();
+    MockIAMCredentialsServiceTransportFactory mtransportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mtransportFactory.transport.setexpireTime(getDefaultExpireTime());
+    ImpersonatedCredentials targetCredentials = ImpersonatedCredentials.create(sourceCredentials,
+        IMPERSONATED_CLIENT_EMAIL, null, SCOPES, VALID_LIFETIME, mtransportFactory);
+
+    byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
+
+    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mtransportFactory.transport.setSignedBlob(expectedSignature);
+
+    assertArrayEquals(expectedSignature, targetCredentials.sign(expectedSignature));
+  }
+
+  @Test
+  public void sign_accessDenied_throws() throws IOException  {
+    GoogleCredentials sourceCredentials = getSourceCredentials();
+    MockIAMCredentialsServiceTransportFactory mtransportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mtransportFactory.transport.setexpireTime(getDefaultExpireTime());
+    ImpersonatedCredentials targetCredentials = ImpersonatedCredentials.create(sourceCredentials,
+        IMPERSONATED_CLIENT_EMAIL, null, SCOPES, VALID_LIFETIME, mtransportFactory);
+
+    byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
+
+    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mtransportFactory.transport.setSignedBlob(expectedSignature);
+    mtransportFactory.transport.setSigningErrorResponseCodeAndMessage(HttpStatusCodes.STATUS_CODE_FORBIDDEN, "Sign Error");
+
+    try {
+      byte[] bytes = {0xD, 0xE, 0xA, 0xD};
+      targetCredentials.sign(bytes);
+      fail("Signing should have failed");
+    } catch (SigningException e) {
+      assertEquals("Failed to sign the provided bytes", e.getMessage());
+      assertNotNull(e.getCause());
+      assertTrue(e.getCause().getMessage().contains("403"));
+    }
+  }
+
+  @Test
+  public void sign_serverError_throws() throws IOException {
+    GoogleCredentials sourceCredentials = getSourceCredentials();
+    MockIAMCredentialsServiceTransportFactory mtransportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mtransportFactory.transport.setexpireTime(getDefaultExpireTime());
+    ImpersonatedCredentials targetCredentials = ImpersonatedCredentials.create(sourceCredentials,
+        IMPERSONATED_CLIENT_EMAIL, null, SCOPES, VALID_LIFETIME, mtransportFactory);
+
+    byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
+
+    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mtransportFactory.transport.setSignedBlob(expectedSignature);
+    mtransportFactory.transport.setSigningErrorResponseCodeAndMessage(HttpStatusCodes.STATUS_CODE_SERVER_ERROR, "Sign Error");
+
+    try {
+      byte[] bytes = {0xD, 0xE, 0xA, 0xD};
+      targetCredentials.sign(bytes);
+      fail("Signing should have failed");
+    } catch (SigningException e) {
+      assertEquals("Failed to sign the provided bytes", e.getMessage());
+      assertNotNull(e.getCause());
+      assertTrue(e.getCause().getMessage().contains("500"));
     }
   }
 

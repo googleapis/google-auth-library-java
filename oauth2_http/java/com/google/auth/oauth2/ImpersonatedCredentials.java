@@ -34,6 +34,7 @@ package com.google.auth.oauth2;
 import static com.google.common.base.MoreObjects.firstNonNull;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -46,9 +47,11 @@ import java.util.Objects;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
+import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.json.JsonObjectParser;
@@ -57,6 +60,9 @@ import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.BaseEncoding;
+
+import com.google.auth.ServiceAccountSigner;
 
 /**
  * ImpersonatedCredentials allowing credentials issued to a user or service account to impersonate
@@ -81,16 +87,20 @@ import com.google.common.collect.ImmutableMap;
  *     System.out.println(b);
  * </pre>
  */
-public class ImpersonatedCredentials extends GoogleCredentials {
+public class ImpersonatedCredentials extends GoogleCredentials implements ServiceAccountSigner {
 
   private static final long serialVersionUID = -2133257318957488431L;
   private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
   private static final int ONE_HOUR_IN_SECONDS = 3600;
   private static final String CLOUD_PLATFORM_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
-  private static final String IAM_ENDPOINT = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken";
+  private static final String IAM_ACCESS_TOKEN_ENDPOINT = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken";
+  private static final String IAM_ID_TOKEN_ENDPOINT = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateIdToken";
+  private static final String IAM_SIGN_ENDPOINT = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
 
   private static final String SCOPE_EMPTY_ERROR = "Scopes cannot be null";
   private static final String LIFETIME_EXCEEDED_ERROR = "lifetime must be less than or equal to 3600";
+  private static final String PARSE_ERROR_SIGNATURE = "Error parsing signature response. ";
+  private static final String PARSE_ERROR_MESSAGE = "Error parsing error message response. ";
 
   private GoogleCredentials sourceCredentials;
   private String targetPrincipal;
@@ -153,6 +163,80 @@ public class ImpersonatedCredentials extends GoogleCredentials {
         .build();
   }
 
+  public String getAccount() {
+      return this.targetPrincipal;
+  }
+
+  /**
+   * Signs the provided bytes using the private key associated with the impersonated
+   * service account
+   *
+   * @param toSign bytes to sign
+   * @return signed bytes
+   * @throws SigningException if the attempt to sign the provided bytes failed
+   * @see <a href="https://cloud.google.com/iam/credentials/reference/rest/v1/projects.serviceAccounts/signBlob>Blob Signing</a>
+   */
+  @Override
+  public byte[] sign(byte[] toSign) {
+    BaseEncoding base64 = BaseEncoding.base64();
+    String signature;
+    try {
+      signature = getSignature(base64.encode(toSign));
+    } catch (IOException ex) {
+      throw new SigningException("Failed to sign the provided bytes", ex);
+    }
+    return base64.decode(signature);
+  }
+
+  private String getSignature(String bytes) throws IOException {
+
+    String signBlobUrl = String.format(IAM_SIGN_ENDPOINT, getAccount());
+    GenericUrl genericUrl = new GenericUrl(signBlobUrl);
+
+    GenericData signRequest = new GenericData();
+    signRequest.set("delegates", this.delegates);
+    signRequest.set("payload", bytes);
+    JsonHttpContent signContent = new JsonHttpContent(OAuth2Utils.JSON_FACTORY, signRequest);
+    HttpTransport httpTransport = this.transportFactory.create();
+    HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(sourceCredentials);
+    HttpRequestFactory requestFactory = httpTransport.createRequestFactory();
+
+    HttpRequest request = requestFactory.buildPostRequest(genericUrl, signContent);
+    Map<String, List<String>> headers = getRequestMetadata();
+    HttpHeaders requestHeaders = request.getHeaders();
+    for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
+      requestHeaders.put(entry.getKey(), entry.getValue());
+    }
+    JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
+    adapter.initialize(request);
+    request.setParser(parser);
+    request.setThrowExceptionOnExecuteError(false);
+
+    HttpResponse response = request.execute();
+    int statusCode = response.getStatusCode();
+    if (statusCode >= 400 && statusCode < HttpStatusCodes.STATUS_CODE_SERVER_ERROR) {
+      GenericData responseError = response.parseAs(GenericData.class);
+      Map<String, Object> error = OAuth2Utils.validateMap(responseError, "error", PARSE_ERROR_MESSAGE);
+      String errorMessage = OAuth2Utils.validateString(error, "message", PARSE_ERROR_MESSAGE);
+      throw new IOException(String.format("Error code %s trying to sign provided bytes: %s",
+          statusCode, errorMessage));
+    }
+    if (statusCode != HttpStatusCodes.STATUS_CODE_OK) {
+      throw new IOException(String.format("Unexpected Error code %s trying to sign provided bytes: %s", statusCode,
+          response.parseAsString()));
+    }
+    InputStream content = response.getContent();
+    if (content == null) {
+      // Throw explicitly here on empty content to avoid NullPointerException from parseAs call.
+      // Mock transports will have success code with empty content by default.
+      throw new IOException("Empty content from sign blob server request.");
+    }
+
+    GenericData responseData = response.parseAs(GenericData.class);
+    return OAuth2Utils.validateString(responseData, "signedBlob", PARSE_ERROR_SIGNATURE);
+  }
+
+
   private ImpersonatedCredentials(Builder builder) {
     this.sourceCredentials = builder.getSourceCredentials();
     this.targetPrincipal = builder.getTargetPrincipal();
@@ -192,7 +276,7 @@ public class ImpersonatedCredentials extends GoogleCredentials {
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(sourceCredentials);
     HttpRequestFactory requestFactory = httpTransport.createRequestFactory();
 
-    String endpointUrl = String.format(IAM_ENDPOINT, this.targetPrincipal);
+    String endpointUrl = String.format(IAM_ACCESS_TOKEN_ENDPOINT, this.targetPrincipal);
     GenericUrl url = new GenericUrl(endpointUrl);
 
     Map<String, Object> body = ImmutableMap.<String, Object>of("delegates", this.delegates, "scope",
