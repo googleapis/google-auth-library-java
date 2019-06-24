@@ -56,7 +56,7 @@
     <project.google.http.version>1.30.1</project.google.http.version>
     <project.junit.version>4.12</project.junit.version>
     <project.guava.version>27.1-android</project.guava.version>
-    <project.appengine.version>1.9.74</project.appengine.version>
+    <project.appengine.version>1.9.76</project.appengine.version>
     <deploy.autorelease>false</deploy.autorelease>
   </properties>
 
