@@ -26,16 +26,16 @@ pushd $(dirname "$0")/../../
 setup_environment_secrets
 create_settings_xml_file "settings.xml"
 
-AUTORELEASE="false"
-if [[ -n "${AUTORELEASE_PR}" ]]
-then
-  AUTORELEASE="true"
-fi
-
 mvn clean install deploy -B \
   --settings ${MAVEN_SETTINGS_FILE} \
   -DperformRelease=true \
   -Dgpg.executable=gpg \
   -Dgpg.passphrase=${GPG_PASSPHRASE} \
-  -Dgpg.homedir=${GPG_HOMEDIR} \
-  -Ddeploy.autorelease=${AUTORELEASE}
+  -Dgpg.homedir=${GPG_HOMEDIR}
+
+if [[ -n "${AUTORELEASE_PR}" ]]
+then
+  mvn nexus-staging:release -B \
+    -DperformRelease=true \
+    --settings=settings.xml
+fi
