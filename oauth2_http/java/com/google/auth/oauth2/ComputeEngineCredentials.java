@@ -86,6 +86,9 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
   static final int MAX_COMPUTE_PING_TRIES = 3;
   static final int COMPUTE_PING_CONNECTION_TIMEOUT_MS = 500;
 
+  private static final String METADATA_FLAVOR = "Metadata-Flavor";
+  private static final String GOOGLE = "Google";
+
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final String PARSE_ERROR_ACCOUNT = "Error parsing service account response. ";
   private static final String PARSE_ERROR_SIGNATURE = "Error parsing signature response. ";
@@ -157,7 +160,7 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
     HttpRequest request = transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     request.setParser(parser);
-    request.getHeaders().set("Metadata-Flavor", "Google");
+    request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
     request.setThrowExceptionOnExecuteError(false);
     HttpResponse response;
     try {
@@ -183,12 +186,14 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
         HttpRequest request =
             transportFactory.create().createRequestFactory().buildGetRequest(tokenUrl);
         request.setConnectTimeout(COMPUTE_PING_CONNECTION_TIMEOUT_MS);
+        request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
+
         HttpResponse response = request.execute();
         try {
           // Internet providers can return a generic response to all requests, so it is necessary
           // to check that metadata header is present also.
           HttpHeaders headers = response.getHeaders();
-          return OAuth2Utils.headersContainValue(headers, "Metadata-Flavor", "Google");
+          return OAuth2Utils.headersContainValue(headers, METADATA_FLAVOR, GOOGLE);
         } finally {
           response.disconnect();
         }
