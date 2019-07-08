@@ -1,5 +1,5 @@
 /*
- * Copyright 2018, Google Inc. All rights reserved.
+ * Copyright 2019, Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -163,6 +163,12 @@ public class ImpersonatedCredentials extends GoogleCredentials implements Servic
         .build();
   }
 
+  /**
+   * Returns the email field of the serviceAccount that is being impersonated.
+   *
+   * @return email address of the impesonated service account.
+   */
+  @Override
   public String getAccount() {
       return this.targetPrincipal;
   }
@@ -189,7 +195,6 @@ public class ImpersonatedCredentials extends GoogleCredentials implements Servic
   }
 
   private String getSignature(String bytes) throws IOException {
-
     String signBlobUrl = String.format(IAM_SIGN_ENDPOINT, getAccount());
     GenericUrl genericUrl = new GenericUrl(signBlobUrl);
 
