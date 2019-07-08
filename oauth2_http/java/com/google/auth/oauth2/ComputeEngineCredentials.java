@@ -99,6 +99,7 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
 
   private transient HttpTransportFactory transportFactory;
   private transient String serviceAccountEmail;
+  private transient ServiceAccountSigner signer;
 
   /**
    * Constructor with overridden transport.
@@ -292,55 +293,22 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
    */
   @Override
   public byte[] sign(byte[] toSign) {
-    BaseEncoding base64 = BaseEncoding.base64();
-    String signature;
-    try {
-      signature = getSignature(base64.encode(toSign));
-    } catch (IOException ex) {
-      throw new SigningException("Failed to sign the provided bytes", ex);
-    }
-    return base64.decode(signature);
+    return getSigner().sign(toSign);
   }
 
-  private String getSignature(String bytes) throws IOException {
-    String signBlobUrl = String.format(SIGN_BLOB_URL_FORMAT, getAccount());
-    GenericUrl genericUrl = new GenericUrl(signBlobUrl);
-
-    GenericData signRequest = new GenericData();
-    signRequest.set("payload", bytes);
-    JsonHttpContent signContent = new JsonHttpContent(OAuth2Utils.JSON_FACTORY, signRequest);
-    HttpRequest request = transportFactory.create().createRequestFactory().buildPostRequest(genericUrl, signContent);
-    Map<String, List<String>> headers = getRequestMetadata();
-    HttpHeaders requestHeaders = request.getHeaders();
-    for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
-      requestHeaders.put(entry.getKey(), entry.getValue());
+  private ServiceAccountSigner getSigner() {
+    if (signer == null) {
+      try {
+        signer = IamSigner.newBuilder()
+            .setAccount(getAccount())
+            .setHeaders(getRequestMetadata())
+            .setRequestFactory(transportFactory.create().createRequestFactory())
+            .build();
+      } catch (IOException ex) {
+        throw new RuntimeException("Failed to get IAM signer", ex);
+      }
     }
-    JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
-    request.setParser(parser);
-    request.setThrowExceptionOnExecuteError(false);
-
-    HttpResponse response = request.execute();
-    int statusCode = response.getStatusCode();
-    if (statusCode >= 400 && statusCode < HttpStatusCodes.STATUS_CODE_SERVER_ERROR) {
-      GenericData responseError = response.parseAs(GenericData.class);
-      Map<String, Object> error = OAuth2Utils.validateMap(responseError, "error", PARSE_ERROR_MESSAGE);
-      String errorMessage = OAuth2Utils.validateString(error, "message", PARSE_ERROR_MESSAGE);
-      throw new IOException(String.format("Error code %s trying to sign provided bytes: %s",
-          statusCode, errorMessage));
-    }
-    if (statusCode != HttpStatusCodes.STATUS_CODE_OK) {
-      throw new IOException(String.format("Unexpected Error code %s trying to sign provided bytes: %s", statusCode,
-          response.parseAsString()));
-    }
-    InputStream content = response.getContent();
-    if (content == null) {
-      // Throw explicitly here on empty content to avoid NullPointerException from parseAs call.
-      // Mock transports will have success code with empty content by default.
-      throw new IOException("Empty content from sign blob server request.");
-    }
-
-    GenericData responseData = response.parseAs(GenericData.class);
-    return OAuth2Utils.validateString(responseData, "signedBlob", PARSE_ERROR_SIGNATURE);
+    return signer;
   }
 
   private String getDefaultServiceAccount() throws IOException {
