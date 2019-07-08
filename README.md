@@ -83,12 +83,12 @@ Usage:
 ```java
 import com.google.appengine.api.appidentity.AppIdentityService;
 import com.google.appengine.api.appidentity.AppIdentityServiceFactory;
-import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.Credentials;
 import com.google.auth.appengine.AppEngineCredentials;
 
 AppIdentityService appIdentityService = AppIdentityServiceFactory.getAppIdentityService();
 
-GoogleCredentials credentials =
+Credentials credentials =
     AppEngineCredentials.newBuilder()
         .setScopes(...)
         .setAppIdentityService(appIdentityService)
