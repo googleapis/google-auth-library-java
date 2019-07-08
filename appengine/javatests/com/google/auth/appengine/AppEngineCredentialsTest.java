@@ -259,12 +259,16 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
 
   @Test
   @SuppressWarnings("deprecation")
-  public void warnsDefaultCredentials() throws IOException {
+  public void warnsDefaultCredentials() {
     Logger logger = Logger.getLogger(AppEngineCredentials.class.getName());
     LogHandler handler = new LogHandler();
     logger.addHandler(handler);
 
-    Credentials unused = AppEngineCredentials.getApplicationDefault();
+    try {
+      Credentials unused = AppEngineCredentials.getApplicationDefault();
+    } catch (IOException ex) {
+      // ignore - this may just fail for not being in a supported environment
+    }
 
     LogRecord message = handler.getRecord();
     assertTrue(message.getMessage().contains("You are attempting to"));
@@ -272,18 +276,22 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
 
   @Test
   @SuppressWarnings("deprecation")
-  public void warnsDefaultCredentialsWithTransport() throws IOException {
+  public void warnsDefaultCredentialsWithTransport() {
     Logger logger = Logger.getLogger(AppEngineCredentials.class.getName());
     LogHandler handler = new LogHandler();
     logger.addHandler(handler);
 
-    Credentials unused = AppEngineCredentials.getApplicationDefault(
-        new HttpTransportFactory() {
-          @Override
-          public HttpTransport create() {
-            return null;
-          }
-        });
+    try {
+      Credentials unused = AppEngineCredentials.getApplicationDefault(
+          new HttpTransportFactory() {
+            @Override
+            public HttpTransport create() {
+              return null;
+            }
+          });
+    } catch (IOException ex) {
+      // ignore - this may just fail for not being in a supported environment
+    }
 
     LogRecord message = handler.getRecord();
     assertTrue(message.getMessage().contains("You are attempting to"));
