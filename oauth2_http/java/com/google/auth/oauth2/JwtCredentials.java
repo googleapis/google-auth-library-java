@@ -57,6 +57,8 @@ public class JwtCredentials extends Credentials {
   private static final String JWT_INCOMPLETE_ERROR_MESSAGE = "JWT claims must contain audience, "
       + "issuer, and subject.";
 
+  // byte[] is serializable, so the lock variable can be final
+  private final Object lock = new byte[0];
   private final PrivateKey privateKey;
   private final String privateKeyId;
   private final Claims claims;
@@ -82,27 +84,29 @@ public class JwtCredentials extends Credentials {
 
   @Override
   public void refresh() throws IOException {
-    // TODO(chingor): Add lock for refreshing credentials
-    JsonWebSignature.Header header = new JsonWebSignature.Header();
-    header.setAlgorithm("RS256");
-    header.setType("JWT");
-    header.setKeyId(privateKeyId);
+    synchronized (lock) {
+      JsonWebSignature.Header header = new JsonWebSignature.Header();
+      header.setAlgorithm("RS256");
+      header.setType("JWT");
+      header.setKeyId(privateKeyId);
 
-    JsonWebToken.Payload payload = new JsonWebToken.Payload();
-    long currentTime = clock.currentTimeMillis();
-    payload.setAudience(claims.getAudience());
-    payload.setIssuer(claims.getIssuer());
-    payload.setSubject(claims.getSubject());
-    payload.setIssuedAtTimeSeconds(currentTime / 1000);
-    expiry = currentTime / 1000 + lifeSpanSeconds;
-    payload.setExpirationTimeSeconds(expiry);
+      JsonWebToken.Payload payload = new JsonWebToken.Payload();
+      long currentTime = clock.currentTimeMillis();
+      payload.setAudience(claims.getAudience());
+      payload.setIssuer(claims.getIssuer());
+      payload.setSubject(claims.getSubject());
+      payload.setIssuedAtTimeSeconds(currentTime / 1000);
+      expiry = currentTime / 1000 + lifeSpanSeconds;
+      payload.setExpirationTimeSeconds(expiry);
 
-    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
+      JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
 
-    try {
-      jwt = JsonWebSignature.signUsingRsaSha256(privateKey, jsonFactory, header, payload);
-    } catch (GeneralSecurityException e) {
-      throw new IOException("Error signing service account JWT access header with private key.", e);
+      try {
+        jwt = JsonWebSignature.signUsingRsaSha256(privateKey, jsonFactory, header, payload);
+      } catch (GeneralSecurityException e) {
+        throw new IOException("Error signing service account JWT access header with private key.",
+            e);
+      }
     }
   }
 
@@ -125,11 +129,13 @@ public class JwtCredentials extends Credentials {
 
   @Override
   public Map<String, List<String>> getRequestMetadata(URI uri) throws IOException {
-    if (shouldRefresh()) {
-      refresh();
+    synchronized (lock) {
+      if (shouldRefresh()) {
+        refresh();
+      }
+      List<String> newAuthorizationHeaders = Collections.singletonList(JWT_ACCESS_PREFIX + jwt);
+      return Collections.singletonMap(AuthHttpConstants.AUTHORIZATION, newAuthorizationHeaders);
     }
-    List<String> newAuthorizationHeaders = Collections.singletonList(JWT_ACCESS_PREFIX + jwt);
-    return Collections.singletonMap(AuthHttpConstants.AUTHORIZATION, newAuthorizationHeaders);
   }
 
   @Override

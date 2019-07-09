@@ -86,7 +86,6 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   private final URI defaultAudience;
   private transient LoadingCache<JwtCredentials.Claims, JwtCredentials> credentialsCache;
 
-
   // Until we expose this to the users it can remain transient and non-serializable
   @VisibleForTesting
   transient Clock clock = Clock.SYSTEM;
