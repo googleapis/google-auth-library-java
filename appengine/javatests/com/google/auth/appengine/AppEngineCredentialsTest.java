@@ -39,11 +39,16 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.google.api.client.http.HttpTransport;
 import com.google.auth.Credentials;
+import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.BaseSerializationTest;
 import com.google.auth.oauth2.GoogleCredentials;
 
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -250,5 +255,60 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
       }
     }
     assertTrue("Bearer token not found", found);
+  }
+
+  @Test
+  @SuppressWarnings("deprecation")
+  public void warnsDefaultCredentials() {
+    Logger logger = Logger.getLogger(AppEngineCredentials.class.getName());
+    LogHandler handler = new LogHandler();
+    logger.addHandler(handler);
+
+    try {
+      Credentials unused = AppEngineCredentials.getApplicationDefault();
+    } catch (IOException ex) {
+      // ignore - this may just fail for not being in a supported environment
+    }
+
+    LogRecord message = handler.getRecord();
+    assertTrue(message.getMessage().contains("You are attempting to"));
+  }
+
+  @Test
+  @SuppressWarnings("deprecation")
+  public void warnsDefaultCredentialsWithTransport() {
+    Logger logger = Logger.getLogger(AppEngineCredentials.class.getName());
+    LogHandler handler = new LogHandler();
+    logger.addHandler(handler);
+
+    try {
+      Credentials unused = AppEngineCredentials.getApplicationDefault(
+          new HttpTransportFactory() {
+            @Override
+            public HttpTransport create() {
+              return null;
+            }
+          });
+    } catch (IOException ex) {
+      // ignore - this may just fail for not being in a supported environment
+    }
+
+    LogRecord message = handler.getRecord();
+    assertTrue(message.getMessage().contains("You are attempting to"));
+  }
+
+  private class LogHandler extends Handler {
+    LogRecord lastRecord;
+
+    public void publish(LogRecord record) {
+      lastRecord = record;
+    }
+
+    public LogRecord getRecord() {
+      return lastRecord;
+    }
+
+    public void close() {}
+    public void flush() {}
   }
 }
