@@ -265,12 +265,19 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   }
 
   public JwtCredentials withClaims(JwtCredentials.Claims claims) {
-    try {
-      return credentialsCache.get(claims);
-    } catch (ExecutionException e) {
-      // Should never happen
-      throw new IllegalStateException("generateJwtAccess threw an unexpected checked exception", e.getCause());
+    JwtCredentials.Claims.Builder claimsBuilder = JwtCredentials.Claims.newBuilder()
+        .setIssuer(clientEmail)
+        .setSubject(clientEmail);
+    if (defaultAudience != null) {
+      claimsBuilder.setAudience(defaultAudience.toString());
     }
+    return JwtCredentials.newBuilder()
+        .setPrivateKey(privateKey)
+        .setPrivateKeyId(privateKeyId)
+        .setClaims(claimsBuilder.build().merge(claims))
+        .setLifeSpanSeconds(LIFE_SPAN_SECS)
+        .setClock(clock)
+        .build();
   }
 
   @Override

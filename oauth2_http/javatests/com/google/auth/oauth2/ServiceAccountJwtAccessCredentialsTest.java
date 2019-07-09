@@ -649,6 +649,58 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
     testFromStreamException(serviceAccountStream, "private_key_id");
   }
 
+  @Test
+  public void withClaims_overrideAudience() throws IOException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    ServiceAccountJwtAccessCredentials credentials = ServiceAccountJwtAccessCredentials.newBuilder()
+        .setClientId(SA_CLIENT_ID)
+        .setClientEmail(SA_CLIENT_EMAIL)
+        .setPrivateKey(privateKey)
+        .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+        .build();
+    Credentials withAudience = credentials.withClaims(
+        JwtCredentials.Claims.newBuilder()
+            .setAudience("new-audience")
+            .build());
+
+    Map<String, List<String>> metadata = withAudience.getRequestMetadata(CALL_URI);
+
+    verifyJwtAccess(metadata, SA_CLIENT_EMAIL, URI.create("new-audience"), SA_PRIVATE_KEY_ID);
+  }
+
+  @Test
+  public void withClaims_noAudience() throws IOException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    ServiceAccountJwtAccessCredentials credentials = ServiceAccountJwtAccessCredentials.newBuilder()
+        .setClientId(SA_CLIENT_ID)
+        .setClientEmail(SA_CLIENT_EMAIL)
+        .setPrivateKey(privateKey)
+        .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+        .build();
+    try {
+      credentials.withClaims(JwtCredentials.Claims.newBuilder().build());
+      fail("Expected to throw exception for missing audience");
+    } catch (IllegalStateException ex) {
+      // expected exception
+    }
+  }
+
+  @Test
+  public void withClaims_defaultAudience() throws IOException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    ServiceAccountJwtAccessCredentials credentials = ServiceAccountJwtAccessCredentials.newBuilder()
+        .setClientId(SA_CLIENT_ID)
+        .setClientEmail(SA_CLIENT_EMAIL)
+        .setPrivateKey(privateKey)
+        .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+        .setDefaultAudience(URI.create("default-audience"))
+        .build();
+    Credentials withAudience = credentials.withClaims(JwtCredentials.Claims.newBuilder().build());
+
+    Map<String, List<String>> metadata = withAudience.getRequestMetadata(CALL_URI);
+    verifyJwtAccess(metadata, SA_CLIENT_EMAIL, URI.create("default-audience"), SA_PRIVATE_KEY_ID);
+  }
+
   private void verifyJwtAccess(Map<String, List<String>> metadata, String expectedEmail,
       URI expectedAudience, String expectedKeyId) throws IOException {
     assertNotNull(metadata);
