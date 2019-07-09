@@ -32,13 +32,21 @@
 package com.google.auth.oauth2;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.util.Clock;
+import com.google.auth.http.AuthHttpConstants;
 import java.io.IOException;
+import java.net.URI;
 import java.security.PrivateKey;
+import java.util.List;
+import java.util.Map;
 import org.junit.Test;
 
 public class JwtCredentialsTest extends BaseSerializationTest {
@@ -56,6 +64,10 @@ public class JwtCredentialsTest extends BaseSerializationTest {
       + "gidhycxS86dxpEljnOMCw8CKoUBd5I880IUahEiUltk7OLJYS/Ts1wbn3kPOVX3wyJs8WBDtBkFrDHW2ezth2QJ"
       + "ADj3e1YhMVdjJW5jqwlD/VNddGjgzyunmiZg0uOXsHXbytYmsA545S8KRQFaJKFXYYFo2kOjqOiC1T2cAzMDjCQ"
       + "==\n-----END PRIVATE KEY-----\n";
+  private static final String JWT_ACCESS_PREFIX =
+      ServiceAccountJwtAccessCredentials.JWT_ACCESS_PREFIX;
+  private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
+
   static PrivateKey getPrivateKey() {
     try {
       return ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY);
@@ -209,5 +221,82 @@ public class JwtCredentialsTest extends BaseSerializationTest {
         .build();
 
     assertEquals(claims1, claims2);
+  }
+
+  @Test
+  public void withClaims_overwritesClaims() throws IOException {
+    JwtCredentials.Claims claims = JwtCredentials.Claims.newBuilder()
+        .setAudience("some-audience")
+        .setIssuer("some-issuer")
+        .setSubject("some-subject")
+        .build();
+    JwtCredentials credentials = JwtCredentials.newBuilder()
+        .setClaims(claims)
+        .setPrivateKey(getPrivateKey())
+        .setPrivateKeyId(PRIVATE_KEY_ID)
+        .build();
+    JwtCredentials.Claims claims2 = JwtCredentials.Claims.newBuilder()
+        .setAudience("some-audience2")
+        .setIssuer("some-issuer2")
+        .setSubject("some-subject2")
+        .build();
+    JwtCredentials credentials2 = credentials.withClaims(claims2);
+    Map<String, List<String>> metadata = credentials2.getRequestMetadata();
+    verifyJwtAccess(metadata, "some-audience2","some-issuer2", "some-subject2", PRIVATE_KEY_ID);
+  }
+
+  @Test
+  public void withClaims_defaultsClaims() throws IOException {
+    JwtCredentials.Claims claims = JwtCredentials.Claims.newBuilder()
+        .setAudience("some-audience")
+        .setIssuer("some-issuer")
+        .setSubject("some-subject")
+        .build();
+    JwtCredentials credentials = JwtCredentials.newBuilder()
+        .setClaims(claims)
+        .setPrivateKey(getPrivateKey())
+        .setPrivateKeyId(PRIVATE_KEY_ID)
+        .build();
+    JwtCredentials.Claims claims2 = JwtCredentials.Claims.newBuilder().build();
+    JwtCredentials credentials2 = credentials.withClaims(claims2);
+    Map<String, List<String>> metadata = credentials2.getRequestMetadata();
+    verifyJwtAccess(metadata, "some-audience","some-issuer", "some-subject", PRIVATE_KEY_ID);
+  }
+
+  @Test
+  public void getRequestMetadata_hasJwtAccess() throws IOException {
+    JwtCredentials.Claims claims = JwtCredentials.Claims.newBuilder()
+        .setAudience("some-audience")
+        .setIssuer("some-issuer")
+        .setSubject("some-subject")
+        .build();
+    JwtCredentials credentials = JwtCredentials.newBuilder()
+        .setClaims(claims)
+        .setPrivateKey(getPrivateKey())
+        .setPrivateKeyId(PRIVATE_KEY_ID)
+        .build();
+
+    Map<String, List<String>> metadata = credentials.getRequestMetadata();
+    verifyJwtAccess(metadata, "some-audience","some-issuer", "some-subject", PRIVATE_KEY_ID);
+  }
+
+  private void verifyJwtAccess(Map<String, List<String>> metadata, String expectedAudience,
+      String expectedIssuer, String expectedSubject, String expectedKeyId) throws IOException {
+    assertNotNull(metadata);
+    List<String> authorizations = metadata.get(AuthHttpConstants.AUTHORIZATION);
+    assertNotNull("Authorization headers not found", authorizations);
+    String assertion = null;
+    for (String authorization : authorizations) {
+      if (authorization.startsWith(JWT_ACCESS_PREFIX)) {
+        assertNull("Multiple bearer assertions found", assertion);
+        assertion = authorization.substring(JWT_ACCESS_PREFIX.length());
+      }
+    }
+    assertNotNull("Bearer assertion not found", assertion);
+    JsonWebSignature signature = JsonWebSignature.parse(JSON_FACTORY, assertion);
+    assertEquals(expectedIssuer, signature.getPayload().getIssuer());
+    assertEquals(expectedSubject, signature.getPayload().getSubject());
+    assertEquals(expectedAudience, signature.getPayload().getAudience());
+    assertEquals(expectedKeyId, signature.getHeader().getKeyId());
   }
 }
