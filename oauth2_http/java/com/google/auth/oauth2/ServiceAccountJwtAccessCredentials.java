@@ -36,14 +36,11 @@ import static com.google.auth.oauth2.GoogleCredentials.SERVICE_ACCOUNT_FILE_TYPE
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
-import com.google.api.client.json.webtoken.JsonWebSignature;
-import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.client.util.Clock;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.Credentials;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.ServiceAccountSigner;
-import com.google.auth.http.AuthHttpConstants;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 
@@ -57,13 +54,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.URI;
-import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.SignatureException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -89,7 +84,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   private final PrivateKey privateKey;
   private final String privateKeyId;
   private final URI defaultAudience;
-  private transient LoadingCache<URI, String> tokenCache;
+  private transient LoadingCache<JwtCredentials.Claims, JwtCredentials> credentialsCache;
 
 
   // Until we expose this to the users it can remain transient and non-serializable
@@ -128,7 +123,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     this.privateKey = Preconditions.checkNotNull(privateKey);
     this.privateKeyId = privateKeyId;
     this.defaultAudience = defaultAudience;
-    this.tokenCache = createCache();
+    this.credentialsCache = createCache();
   }
 
   /**
@@ -242,7 +237,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
             + " Expecting '%s'.", fileType, SERVICE_ACCOUNT_FILE_TYPE));
   }
 
-  private LoadingCache<URI, String> createCache() {
+  private LoadingCache<JwtCredentials.Claims, JwtCredentials> createCache() {
     return CacheBuilder.newBuilder()
         .maximumSize(100)
         .expireAfterWrite(LIFE_SPAN_SECS - 300, TimeUnit.SECONDS)
@@ -255,13 +250,27 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
             }
         )
         .build(
-            new CacheLoader<URI, String>() {
+            new CacheLoader<JwtCredentials.Claims, JwtCredentials>() {
               @Override
-              public String load(URI key) throws Exception {
-                return generateJwtAccess(key);
+              public JwtCredentials load(JwtCredentials.Claims claims) throws Exception {
+                System.out.println("creating credentials");
+                return JwtCredentials.newBuilder()
+                    .setPrivateKey(privateKey)
+                    .setPrivateKeyId(privateKeyId)
+                    .setClaims(claims)
+                    .build();
               }
             }
         );
+  }
+
+  public JwtCredentials withClaims(JwtCredentials.Claims claims) {
+    try {
+      return credentialsCache.get(claims);
+    } catch (ExecutionException e) {
+      // Should never happen
+      throw new IllegalStateException("generateJwtAccess threw an unexpected checked exception", e.getCause());
+    }
   }
 
   @Override
@@ -300,23 +309,15 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
           + "defaultAudience to be specified");
       }
     }
-    String assertion = getJwtAccess(uri);
-    String authorizationHeader = JWT_ACCESS_PREFIX + assertion;
-    List<String> newAuthorizationHeaders = Collections.singletonList(authorizationHeader);
-    return Collections.singletonMap(AuthHttpConstants.AUTHORIZATION, newAuthorizationHeaders);
-  }
 
-  /**
-   * Discard any cached data
-   */
-  @Override
-  public void refresh() {
-    tokenCache.invalidateAll();
-  }
-
-  private String getJwtAccess(URI uri) throws IOException {
     try {
-      return tokenCache.get(uri);
+      JwtCredentials.Claims defaultClaims = JwtCredentials.Claims.newBuilder()
+          .setAudience(uri.toString())
+          .setIssuer(clientEmail)
+          .setSubject(clientEmail)
+          .build();
+      JwtCredentials credentials = credentialsCache.get(defaultClaims);
+      return credentials.getRequestMetadata(uri);
     } catch (ExecutionException e) {
       Throwables.propagateIfPossible(e.getCause(), IOException.class);
       // Should never happen
@@ -329,31 +330,12 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     }
   }
 
-  private String generateJwtAccess(URI uri) throws IOException {
-    JsonWebSignature.Header header = new JsonWebSignature.Header();
-    header.setAlgorithm("RS256");
-    header.setType("JWT");
-    header.setKeyId(privateKeyId);
-
-    JsonWebToken.Payload payload = new JsonWebToken.Payload();
-    long currentTime = clock.currentTimeMillis();
-    // Both copies of the email are required
-    payload.setIssuer(clientEmail);
-    payload.setSubject(clientEmail);
-    payload.setAudience(uri.toString());
-    payload.setIssuedAtTimeSeconds(currentTime / 1000);
-    payload.setExpirationTimeSeconds(currentTime / 1000 + LIFE_SPAN_SECS);
-
-    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
-
-    String assertion;
-    try {
-      assertion = JsonWebSignature.signUsingRsaSha256(
-          privateKey, jsonFactory, header, payload);
-    } catch (GeneralSecurityException e) {
-      throw new IOException("Error signing service account JWT access header with private key.", e);
-    }
-    return assertion;
+  /**
+   * Discard any cached data
+   */
+  @Override
+  public void refresh() {
+    credentialsCache.invalidateAll();
   }
 
   public final String getClientId() {
@@ -420,7 +402,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
     input.defaultReadObject();
     clock = Clock.SYSTEM;
-    tokenCache = createCache();
+    credentialsCache = createCache();
   }
 
   public static Builder newBuilder() {
