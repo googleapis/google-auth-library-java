@@ -180,7 +180,7 @@ public class ImpersonatedCredentials extends GoogleCredentials implements Servic
    * @param toSign bytes to sign
    * @return signed bytes
    * @throws SigningException if the attempt to sign the provided bytes failed
-   * @see <a href="https://cloud.google.com/iam/credentials/reference/rest/v1/projects.serviceAccounts/signBlob>Blob Signing</a>
+   * @see <a href="https://cloud.google.com/iam/credentials/reference/rest/v1/projects.serviceAccounts/signBlob">Blob Signing</a>
    */
   @Override
   public byte[] sign(byte[] toSign) {
