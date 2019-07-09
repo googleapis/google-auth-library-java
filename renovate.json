@@ -6,6 +6,10 @@
     {
       "packagePatterns": ["^com.google.appengine:appengine-"],
       "groupName": "AppEngine packages"
+    },
+    {
+      "packagePatterns": ["^com.google.auto.value:auto-"],
+      "groupName": "AutoValue packages"
     }
   ]
 }

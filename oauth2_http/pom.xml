@@ -40,6 +40,13 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <configuration>
+          <ignoredUnusedDeclaredDependencies>com.google.auto.value:auto-value</ignoredUnusedDeclaredDependencies>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
@@ -47,13 +54,15 @@
     <dependency>
       <groupId>com.google.auto.value</groupId>
       <artifactId>auto-value-annotations</artifactId>
-      <version>1.6.2</version>
     </dependency>
     <dependency>
       <groupId>com.google.auto.value</groupId>
       <artifactId>auto-value</artifactId>
-      <version>1.6.2</version>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>jsr305</artifactId>
     </dependency>
     <dependency>
       <groupId>com.google.auth</groupId>
