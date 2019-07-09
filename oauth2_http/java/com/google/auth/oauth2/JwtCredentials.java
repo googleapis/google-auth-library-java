@@ -39,33 +39,39 @@ import com.google.auth.Credentials;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auto.value.AutoValue;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.URI;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 
 public class JwtCredentials extends Credentials {
   private static final String JWT_ACCESS_PREFIX = OAuth2Utils.BEARER_PREFIX;
+  private static final String JWT_INCOMPLETE_ERROR_MESSAGE = "JWT claims must contain audience, "
+      + "issuer, and subject.";
 
   private final PrivateKey privateKey;
   private final String privateKeyId;
   private final Claims claims;
   private final Long lifeSpanSeconds;
-  private final transient Clock clock;
+  @VisibleForTesting
+  transient Clock clock;
 
-  private String jwt;
-  private Long expiry;
+  private transient String jwt;
+  private transient Long expiry;
 
   JwtCredentials(Builder builder) {
     this.privateKey = Preconditions.checkNotNull(builder.getPrivateKey());
     this.privateKeyId = Preconditions.checkNotNull(builder.getPrivateKeyId());
     this.claims = Preconditions.checkNotNull(builder.getClaims());
+    Preconditions.checkState(claims.isComplete(), JWT_INCOMPLETE_ERROR_MESSAGE);
     this.lifeSpanSeconds = Preconditions.checkNotNull(builder.getLifeSpanSeconds());
     this.clock = Preconditions.checkNotNull(builder.getClock());
   }
@@ -101,7 +107,7 @@ public class JwtCredentials extends Credentials {
   }
 
   private boolean shouldRefresh() {
-    return expiry == null || clock.currentTimeMillis() / 1000 > expiry;
+    return expiry == null || getClock().currentTimeMillis() / 1000 > expiry;
   }
 
   public JwtCredentials withClaims(Claims newClaims) {
@@ -134,6 +140,30 @@ public class JwtCredentials extends Credentials {
   @Override
   public boolean hasRequestMetadataOnly() {
     return true;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof JwtCredentials)) {
+      return false;
+    }
+    JwtCredentials other = (JwtCredentials) obj;
+    return Objects.equals(this.privateKey, other.privateKey)
+        && Objects.equals(this.privateKeyId, other.privateKeyId)
+        && Objects.equals(this.claims, other.claims)
+        && Objects.equals(this.lifeSpanSeconds, other.lifeSpanSeconds);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.privateKey, this.privateKeyId, this.claims, this.lifeSpanSeconds);
+  }
+
+  Clock getClock() {
+    if (clock == null) {
+      clock = Clock.SYSTEM;
+    }
+    return clock;
   }
 
   public static class Builder {
@@ -195,9 +225,14 @@ public class JwtCredentials extends Credentials {
   }
 
   @AutoValue
-  public abstract static class Claims {
+  public abstract static class Claims implements Serializable {
+    @Nullable
     abstract String getAudience();
+
+    @Nullable
     abstract String getIssuer();
+
+    @Nullable
     abstract String getSubject();
 
     static Builder newBuilder() {
@@ -206,10 +241,14 @@ public class JwtCredentials extends Credentials {
 
     public Claims merge(Claims other) {
       return new AutoValue_JwtCredentials_Claims.Builder()
-          .setAudience(MoreObjects.firstNonNull(other.getAudience(), getAudience()))
-          .setIssuer(MoreObjects.firstNonNull(other.getIssuer(), getIssuer()))
-          .setSubject(MoreObjects.firstNonNull(other.getSubject(), getSubject()))
+          .setAudience(other.getAudience() == null ? getAudience() : other.getAudience())
+          .setIssuer(other.getIssuer() == null ? getIssuer() : other.getIssuer())
+          .setSubject(other.getSubject() == null ? getSubject() : other.getSubject())
           .build();
+    }
+
+    public boolean isComplete() {
+      return getAudience() != null && getIssuer() != null && getSubject() != null;
     }
 
     @AutoValue.Builder
