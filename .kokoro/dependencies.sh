@@ -15,7 +15,7 @@
 
 set -eo pipefail
 
-cd github/google-auth-librar-java/
+cd github/google-auth-library-java/
 
 # Print out Java
 java -version
