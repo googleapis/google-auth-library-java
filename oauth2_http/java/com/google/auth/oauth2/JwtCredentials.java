@@ -56,13 +56,8 @@ public class JwtCredentials extends Credentials {
   private final PrivateKey privateKey;
   private final String privateKeyId;
   private final Claims claims;
-
-  @VisibleForTesting
-  static final long LIFE_SPAN_SECS = TimeUnit.HOURS.toSeconds(1);
-
-  // Until we expose this to the users it can remain transient and non-serializable
-  @VisibleForTesting
-  transient Clock clock = Clock.SYSTEM;
+  private final Long lifeSpanSeconds;
+  private final transient Clock clock;
 
   private String jwt;
   private Long expiry;
@@ -71,6 +66,8 @@ public class JwtCredentials extends Credentials {
     this.privateKey = Preconditions.checkNotNull(builder.getPrivateKey());
     this.privateKeyId = Preconditions.checkNotNull(builder.getPrivateKeyId());
     this.claims = Preconditions.checkNotNull(builder.getClaims());
+    this.lifeSpanSeconds = Preconditions.checkNotNull(builder.getLifeSpanSeconds());
+    this.clock = Preconditions.checkNotNull(builder.getClock());
   }
 
   public static Builder newBuilder() {
@@ -79,6 +76,7 @@ public class JwtCredentials extends Credentials {
 
   @Override
   public void refresh() throws IOException {
+    // TODO(chingor): Add lock for refreshing credentials
     JsonWebSignature.Header header = new JsonWebSignature.Header();
     header.setAlgorithm("RS256");
     header.setType("JWT");
@@ -90,7 +88,7 @@ public class JwtCredentials extends Credentials {
     payload.setIssuer(claims.getIssuer());
     payload.setSubject(claims.getSubject());
     payload.setIssuedAtTimeSeconds(currentTime / 1000);
-    expiry = currentTime / 1000 + LIFE_SPAN_SECS;
+    expiry = currentTime / 1000 + lifeSpanSeconds;
     payload.setExpirationTimeSeconds(expiry);
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
@@ -143,7 +141,8 @@ public class JwtCredentials extends Credentials {
     private PrivateKey privateKey;
     private String privateKeyId;
     private Claims claims;
-    private Clock clock;
+    private Clock clock = Clock.SYSTEM;
+    private Long lifeSpanSeconds = TimeUnit.HOURS.toSeconds(1);
 
     public Builder setPrivateKey(PrivateKey privateKey) {
       this.privateKey = privateKey;
@@ -170,6 +169,24 @@ public class JwtCredentials extends Credentials {
 
     public Claims getClaims() {
       return claims;
+    }
+
+    public Builder setLifeSpanSeconds(Long lifeSpanSeconds) {
+      this.lifeSpanSeconds = lifeSpanSeconds;
+      return this;
+    }
+
+    public Long getLifeSpanSeconds() {
+      return lifeSpanSeconds;
+    }
+
+    Builder setClock(Clock clock) {
+      this.clock = clock;
+      return this;
+    }
+
+    Clock getClock() {
+      return clock;
     }
 
     public JwtCredentials build() {

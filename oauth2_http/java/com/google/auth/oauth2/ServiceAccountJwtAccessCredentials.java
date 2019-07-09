@@ -253,11 +253,12 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
             new CacheLoader<JwtCredentials.Claims, JwtCredentials>() {
               @Override
               public JwtCredentials load(JwtCredentials.Claims claims) throws Exception {
-                System.out.println("creating credentials");
                 return JwtCredentials.newBuilder()
                     .setPrivateKey(privateKey)
                     .setPrivateKeyId(privateKeyId)
                     .setClaims(claims)
+                    .setLifeSpanSeconds(LIFE_SPAN_SECS)
+                    .setClock(clock)
                     .build();
               }
             }
