@@ -31,7 +31,12 @@
 
 package com.google.auth.oauth2;
 
-import com.google.api.client.http.*;
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpHeaders;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestFactory;
+import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
@@ -43,23 +48,40 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * This internal class provides shared utilities for interacting with the IAM API for common
+ * features like signing.
+ */
 class IamUtils {
-  private static final String SIGN_BLOB_URL_FORMAT = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
+  private static final String SIGN_BLOB_URL_FORMAT =
+          "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
   private static final String PARSE_ERROR_MESSAGE = "Error parsing error message response. ";
   private static final String PARSE_ERROR_SIGNATURE = "Error parsing signature response. ";
 
-  public static byte[] sign(String serviceAccountEmail, Map<String, List<String>> requestHeaders, HttpRequestFactory requestFactory, byte[] toSign) {
+  /**
+   * Returns a signature for the provided
+   * @param serviceAccountEmail
+   * @param requestHeaders
+   * @param requestFactory
+   * @param toSign
+   * @return
+   */
+  public static byte[] sign(String serviceAccountEmail, Map<String, List<String>> requestHeaders,
+                            HttpRequestFactory requestFactory, byte[] toSign) {
     BaseEncoding base64 = BaseEncoding.base64();
     String signature;
     try {
-      signature = getSignature(serviceAccountEmail, requestHeaders, requestFactory, base64.encode(toSign));
+      signature = getSignature(serviceAccountEmail, requestHeaders, requestFactory,
+              base64.encode(toSign));
     } catch (IOException ex) {
       throw new ServiceAccountSigner.SigningException("Failed to sign the provided bytes", ex);
     }
     return base64.decode(signature);
   }
 
-  private static String getSignature(String serviceAccountEmail, Map<String, List<String>> requestHeaders, HttpRequestFactory requestFactory, String bytes) throws IOException {
+  private static String getSignature(String serviceAccountEmail, Map<String,
+          List<String>> requestHeaders, HttpRequestFactory requestFactory, String bytes)
+          throws IOException {
     String signBlobUrl = String.format(SIGN_BLOB_URL_FORMAT, serviceAccountEmail);
     GenericUrl genericUrl = new GenericUrl(signBlobUrl);
 
