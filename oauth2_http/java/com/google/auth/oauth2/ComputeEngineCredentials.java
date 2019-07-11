@@ -293,22 +293,14 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
    */
   @Override
   public byte[] sign(byte[] toSign) {
-    return getSigner().sign(toSign);
-  }
-
-  private ServiceAccountSigner getSigner() {
-    if (signer == null) {
-      try {
-        signer = IamSigner.newBuilder()
-            .setAccount(getAccount())
-            .setHeaders(getRequestMetadata())
-            .setRequestFactory(transportFactory.create().createRequestFactory())
-            .build();
-      } catch (IOException ex) {
-        throw new RuntimeException("Failed to get IAM signer", ex);
-      }
+    Map<String, List<String>> requestHeaders;
+    try {
+      requestHeaders = getRequestMetadata();
+    } catch (IOException ex) {
+      throw new SigningException("Error fetching credentials", ex);
     }
-    return signer;
+    return IamUtils.sign(getAccount(), requestHeaders,
+            transportFactory.create().createRequestFactory(), toSign);
   }
 
   private String getDefaultServiceAccount() throws IOException {

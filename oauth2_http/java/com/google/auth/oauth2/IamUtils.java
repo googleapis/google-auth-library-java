@@ -31,60 +31,36 @@
 
 package com.google.auth.oauth2;
 
-import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpHeaders;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpRequestFactory;
-import com.google.api.client.http.HttpResponse;
-import com.google.api.client.http.HttpStatusCodes;
+import com.google.api.client.http.*;
 import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.auth.ServiceAccountSigner;
 import com.google.common.io.BaseEncoding;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
-class IamSigner implements ServiceAccountSigner {
+class IamUtils {
   private static final String SIGN_BLOB_URL_FORMAT = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
   private static final String PARSE_ERROR_MESSAGE = "Error parsing error message response. ";
   private static final String PARSE_ERROR_SIGNATURE = "Error parsing signature response. ";
 
-  private String account;
-  private Map<String, List<String>> headers;
-  private HttpRequestFactory requestFactory;
-
-  IamSigner(Builder builder) {
-    account = builder.getAccount();
-    headers = builder.getHeaders();
-    requestFactory = builder.getRequestFactory();
-  }
-
-  public static Builder newBuilder() {
-    return new Builder();
-  }
-
-  @Override
-  public String getAccount() {
-    return account;
-  }
-
-  @Override
-  public byte[] sign(byte[] toSign) {
+  public static byte[] sign(String serviceAccountEmail, Map<String, List<String>> requestHeaders, HttpRequestFactory requestFactory, byte[] toSign) {
     BaseEncoding base64 = BaseEncoding.base64();
     String signature;
     try {
-      signature = getSignature(base64.encode(toSign));
+      signature = getSignature(serviceAccountEmail, requestHeaders, requestFactory, base64.encode(toSign));
     } catch (IOException ex) {
-      throw new SigningException("Failed to sign the provided bytes", ex);
+      throw new ServiceAccountSigner.SigningException("Failed to sign the provided bytes", ex);
     }
     return base64.decode(signature);
   }
 
-  private String getSignature(String bytes) throws IOException {
-    String signBlobUrl = String.format(SIGN_BLOB_URL_FORMAT, getAccount());
+  private static String getSignature(String serviceAccountEmail, Map<String, List<String>> requestHeaders, HttpRequestFactory requestFactory, String bytes) throws IOException {
+    String signBlobUrl = String.format(SIGN_BLOB_URL_FORMAT, serviceAccountEmail);
     GenericUrl genericUrl = new GenericUrl(signBlobUrl);
 
     GenericData signRequest = new GenericData();
@@ -92,9 +68,9 @@ class IamSigner implements ServiceAccountSigner {
     JsonHttpContent signContent = new JsonHttpContent(OAuth2Utils.JSON_FACTORY, signRequest);
     HttpRequest request = requestFactory.buildPostRequest(genericUrl, signContent);
 
-    HttpHeaders requestHeaders = request.getHeaders();
-    for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
-      requestHeaders.put(entry.getKey(), entry.getValue());
+    HttpHeaders headers = request.getHeaders();
+    for (Map.Entry<String, List<String>> entry : requestHeaders.entrySet()) {
+      headers.put(entry.getKey(), entry.getValue());
     }
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     request.setParser(parser);
@@ -107,11 +83,11 @@ class IamSigner implements ServiceAccountSigner {
       Map<String, Object> error = OAuth2Utils.validateMap(responseError, "error", PARSE_ERROR_MESSAGE);
       String errorMessage = OAuth2Utils.validateString(error, "message", PARSE_ERROR_MESSAGE);
       throw new IOException(String.format("Error code %s trying to sign provided bytes: %s",
-          statusCode, errorMessage));
+              statusCode, errorMessage));
     }
     if (statusCode != HttpStatusCodes.STATUS_CODE_OK) {
       throw new IOException(String.format("Unexpected Error code %s trying to sign provided bytes: %s", statusCode,
-          response.parseAsString()));
+              response.parseAsString()));
     }
     InputStream content = response.getContent();
     if (content == null) {
@@ -122,42 +98,5 @@ class IamSigner implements ServiceAccountSigner {
 
     GenericData responseData = response.parseAs(GenericData.class);
     return OAuth2Utils.validateString(responseData, "signedBlob", PARSE_ERROR_SIGNATURE);
-  }
-
-  static class Builder {
-    private String account;
-    private Map<String, List<String>> headers;
-    private HttpRequestFactory requestFactory;
-
-    public Builder setAccount(String account) {
-      this.account = account;
-      return this;
-    }
-
-    public String getAccount() {
-      return account;
-    }
-
-    public Builder setHeaders(Map<String, List<String>> headers) {
-      this.headers = headers;
-      return this;
-    }
-
-    public Map<String, List<String>> getHeaders() {
-      return headers;
-    }
-
-    public Builder setRequestFactory(HttpRequestFactory requestFactory) {
-      this.requestFactory = requestFactory;
-      return this;
-    }
-
-    public HttpRequestFactory getRequestFactory() {
-      return requestFactory;
-    }
-
-    IamSigner build() {
-      return new IamSigner(this);
-    }
   }
 }
