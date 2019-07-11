@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import com.google.auth.Credentials;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
@@ -59,14 +60,16 @@ class IamUtils {
   private static final String PARSE_ERROR_SIGNATURE = "Error parsing signature response. ";
 
   /**
-   * Returns a signature for the provided
-   * @param serviceAccountEmail
-   * @param requestHeaders
-   * @param requestFactory
-   * @param toSign
-   * @return
+   * Returns a signature for the provided bytes.
+   *
+   * @param serviceAccountEmail the email address for the service account used for signing
+   * @param requestHeaders any headers required for making the IAM call. These are usually obtained
+   *                       from {@link Credentials#getRequestMetadata()}
+   * @param requestFactory a custom request factory for building the IAM request
+   * @param toSign bytes to sign
+   * @return signed bytes
    */
-  public static byte[] sign(String serviceAccountEmail, Map<String, List<String>> requestHeaders,
+  static byte[] sign(String serviceAccountEmail, Map<String, List<String>> requestHeaders,
                             HttpRequestFactory requestFactory, byte[] toSign) {
     BaseEncoding base64 = BaseEncoding.base64();
     String signature;
