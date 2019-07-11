@@ -91,15 +91,12 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
 
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final String PARSE_ERROR_ACCOUNT = "Error parsing service account response. ";
-  private static final String PARSE_ERROR_SIGNATURE = "Error parsing signature response. ";
-  private static final String PARSE_ERROR_MESSAGE = "Error parsing error message response. ";
   private static final long serialVersionUID = -4113476462526554235L;
 
   private final String transportFactoryClassName;
 
   private transient HttpTransportFactory transportFactory;
   private transient String serviceAccountEmail;
-  private transient ServiceAccountSigner signer;
 
   /**
    * Constructor with overridden transport.
