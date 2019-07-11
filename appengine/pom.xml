@@ -48,6 +48,10 @@
       <artifactId>google-auth-library-oauth2-http</artifactId>
     </dependency>
     <dependency>
+      <groupId>com.google.http-client</groupId>
+      <artifactId>google-http-client</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-api-1.0-sdk</artifactId>
       <scope>provided</scope>
