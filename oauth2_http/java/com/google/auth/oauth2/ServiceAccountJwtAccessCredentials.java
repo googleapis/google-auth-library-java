@@ -78,6 +78,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   static final String JWT_ACCESS_PREFIX = OAuth2Utils.BEARER_PREFIX;
   @VisibleForTesting
   static final long LIFE_SPAN_SECS = TimeUnit.HOURS.toSeconds(1);
+  private static final long CLOCK_SKEW = TimeUnit.MINUTES.toSeconds(5);
 
   private final String clientId;
   private final String clientEmail;
@@ -239,7 +240,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   private LoadingCache<JwtCredentials.Claims, JwtCredentials> createCache() {
     return CacheBuilder.newBuilder()
         .maximumSize(100)
-        .expireAfterWrite(LIFE_SPAN_SECS - 300, TimeUnit.SECONDS)
+        .expireAfterWrite(LIFE_SPAN_SECS - CLOCK_SKEW, TimeUnit.SECONDS)
         .ticker(
             new Ticker() {
               @Override

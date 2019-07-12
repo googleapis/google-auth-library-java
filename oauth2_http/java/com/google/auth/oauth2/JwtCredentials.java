@@ -56,6 +56,7 @@ public class JwtCredentials extends Credentials {
   private static final String JWT_ACCESS_PREFIX = OAuth2Utils.BEARER_PREFIX;
   private static final String JWT_INCOMPLETE_ERROR_MESSAGE = "JWT claims must contain audience, "
       + "issuer, and subject.";
+  private static final long CLOCK_SKEW = TimeUnit.MINUTES.toSeconds(5);
 
   // byte[] is serializable, so the lock variable can be final
   private final Object lock = new byte[0];
@@ -111,7 +112,7 @@ public class JwtCredentials extends Credentials {
   }
 
   private boolean shouldRefresh() {
-    return expiry == null || getClock().currentTimeMillis() / 1000 > expiry;
+    return expiry == null || getClock().currentTimeMillis() / 1000 > expiry - CLOCK_SKEW;
   }
 
   public JwtCredentials withClaims(Claims newClaims) {
