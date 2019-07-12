@@ -265,7 +265,14 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
         );
   }
 
-  public JwtCredentials withClaims(JwtCredentials.Claims claims) {
+  /**
+   * Returns a new JwtCredentials instance with modified claims.
+   *
+   * @param newClaims New claims. Any unspecified claim fields will default to the the current
+   *        values.
+   * @return new credentials
+   */
+  public JwtCredentials withClaims(JwtCredentials.Claims newClaims) {
     JwtCredentials.Claims.Builder claimsBuilder = JwtCredentials.Claims.newBuilder()
         .setIssuer(clientEmail)
         .setSubject(clientEmail);
@@ -275,7 +282,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     return JwtCredentials.newBuilder()
         .setPrivateKey(privateKey)
         .setPrivateKeyId(privateKeyId)
-        .setClaims(claimsBuilder.build().merge(claims))
+        .setClaims(claimsBuilder.build().merge(newClaims))
         .setLifeSpanSeconds(LIFE_SPAN_SECS)
         .setClock(clock)
         .build();

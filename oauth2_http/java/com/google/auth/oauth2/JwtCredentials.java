@@ -52,6 +52,26 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
+/**
+ * Credentials class for calling Google APIs using a JWT with custom claims.
+ *
+ * <p>Uses a JSON Web Token (JWT) directly in the request metadata to provide authorization.
+ *
+ * <pre>
+ * <code>
+ * JwtCredentials.Claims claims = JwtCredentials.Claims.newBuilder()
+ *     .setAudience("https://example.com/some-audience")
+ *     .setIssuer("some-issuer@example.com")
+ *     .setSubject("some-subject@example.com")
+ *     .build();
+ * Credentials = JwtCredentials.newBuilder()
+ *     .setPrivateKey(privateKey)
+ *     .setPrivateKeyId("private-key-id")
+ *     .setClaims(claims)
+ *     .build();
+ * </code>
+ * </pre>
+ */
 public class JwtCredentials extends Credentials {
   private static final String JWT_ACCESS_PREFIX = OAuth2Utils.BEARER_PREFIX;
   private static final String JWT_INCOMPLETE_ERROR_MESSAGE = "JWT claims must contain audience, "
@@ -83,6 +103,9 @@ public class JwtCredentials extends Credentials {
     return new Builder();
   }
 
+  /**
+   * Refresh the token by discarding the cached token and metadata and rebuilding a new one.
+   */
   @Override
   public void refresh() throws IOException {
     synchronized (lock) {
@@ -115,6 +138,13 @@ public class JwtCredentials extends Credentials {
     return expiry == null || getClock().currentTimeMillis() / 1000 > expiry - CLOCK_SKEW;
   }
 
+  /**
+   * Returns a copy of these credentials with modified claims.
+   *
+   * @param newClaims New claims. Any unspecified claim fields will default to the the current
+   *        values.
+   * @return new credentials
+   */
   public JwtCredentials withClaims(Claims newClaims) {
     return JwtCredentials.newBuilder()
         .setPrivateKey(privateKey)
@@ -174,12 +204,13 @@ public class JwtCredentials extends Credentials {
   }
 
   public static class Builder {
-
     private PrivateKey privateKey;
     private String privateKeyId;
     private Claims claims;
     private Clock clock = Clock.SYSTEM;
     private Long lifeSpanSeconds = TimeUnit.HOURS.toSeconds(1);
+
+    protected Builder() {}
 
     public Builder setPrivateKey(PrivateKey privateKey) {
       this.privateKey = privateKey;
@@ -231,6 +262,21 @@ public class JwtCredentials extends Credentials {
     }
   }
 
+  /**
+   * Value class representing the set of fields used as the payload of a JWT token.
+   *
+   * <p>To create and customize claims, use the builder:
+   *
+   * <pre>
+   * <code>
+   * Claims claims = Claims.newBuilder()
+   *     .setAudience("https://example.com/some-audience")
+   *     .setIssuer("some-issuer@example.com")
+   *     .setSubject("some-subject@example.com")
+   *     .build();
+   * </code>
+   * </pre>
+   */
   @AutoValue
   public abstract static class Claims implements Serializable {
     @Nullable
@@ -246,14 +292,32 @@ public class JwtCredentials extends Credentials {
       return new AutoValue_JwtCredentials_Claims.Builder();
     }
 
+    /**
+     * Returns a new Claims instance with overridden fields.
+     *
+     * <p>Any non-null field will overwrite the value from the original claims instance.
+     *
+     * @param other claims to override
+     * @return new claims
+     */
     public Claims merge(Claims other) {
-      return new AutoValue_JwtCredentials_Claims.Builder()
+      return newBuilder()
           .setAudience(other.getAudience() == null ? getAudience() : other.getAudience())
           .setIssuer(other.getIssuer() == null ? getIssuer() : other.getIssuer())
           .setSubject(other.getSubject() == null ? getSubject() : other.getSubject())
           .build();
     }
 
+    /**
+     * Returns whether or not this set of claims is complete.
+     *
+     * <p>Audience, issuer, and subject are required to be set in order to use the claim set for a
+     * JWT token. An incomplete Claims instance is useful for overriding claims when using
+     * {@link ServiceAccountJwtAccessCredentials#withClaims(Claims)} or
+     * {@link JwtCredentials#withClaims(Claims)}.
+     *
+     * @return
+     */
     public boolean isComplete() {
       return getAudience() != null && getIssuer() != null && getSubject() != null;
     }
