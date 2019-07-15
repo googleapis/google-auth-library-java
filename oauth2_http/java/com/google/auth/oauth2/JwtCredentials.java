@@ -314,8 +314,8 @@ public class JwtCredentials extends Credentials implements JwtProvider {
      *
      * <p>Audience, issuer, and subject are required to be set in order to use the claim set for a
      * JWT token. An incomplete Claims instance is useful for overriding claims when using
-     * {@link ServiceAccountJwtAccessCredentials#withClaims(Claims)} or
-     * {@link JwtCredentials#withClaims(Claims)}.
+     * {@link ServiceAccountJwtAccessCredentials#jwtWithClaims(Claims)} or
+     * {@link JwtCredentials#jwtWithClaims(Claims)}.
      *
      * @return
      */
