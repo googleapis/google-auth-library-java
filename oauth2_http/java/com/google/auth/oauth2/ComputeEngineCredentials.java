@@ -288,14 +288,7 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
    */
   @Override
   public byte[] sign(byte[] toSign) {
-    Map<String, List<String>> requestHeaders;
-    try {
-      requestHeaders = getRequestMetadata();
-    } catch (IOException ex) {
-      throw new SigningException("Error fetching credentials", ex);
-    }
-    return IamUtils.sign(getAccount(), requestHeaders,
-            transportFactory.create().createRequestFactory(), toSign);
+    return IamUtils.sign(getAccount(), this, transportFactory.create(), toSign);
   }
 
   private String getDefaultServiceAccount() throws IOException {

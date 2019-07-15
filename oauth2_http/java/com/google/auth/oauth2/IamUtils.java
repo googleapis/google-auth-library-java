@@ -31,22 +31,21 @@
 
 package com.google.auth.oauth2;
 
+import com.google.api.client.http.HttpTransport;
 import com.google.auth.Credentials;
 import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.auth.ServiceAccountSigner;
+import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.common.io.BaseEncoding;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -63,18 +62,17 @@ class IamUtils {
    * Returns a signature for the provided bytes.
    *
    * @param serviceAccountEmail the email address for the service account used for signing
-   * @param requestHeaders any headers required for making the IAM call. These are usually obtained
-   *                       from {@link Credentials#getRequestMetadata()}
-   * @param requestFactory a custom request factory for building the IAM request
+   * @param credentials credentials required for making the IAM call
+   * @param transport transport used for building the HTTP request
    * @param toSign bytes to sign
    * @return signed bytes
    */
-  static byte[] sign(String serviceAccountEmail, Map<String, List<String>> requestHeaders,
-                            HttpRequestFactory requestFactory, byte[] toSign) {
+  static byte[] sign(String serviceAccountEmail, Credentials credentials,
+      HttpTransport transport, byte[] toSign) {
     BaseEncoding base64 = BaseEncoding.base64();
     String signature;
     try {
-      signature = getSignature(serviceAccountEmail, requestHeaders, requestFactory,
+      signature = getSignature(serviceAccountEmail, credentials, transport,
               base64.encode(toSign));
     } catch (IOException ex) {
       throw new ServiceAccountSigner.SigningException("Failed to sign the provided bytes", ex);
@@ -82,21 +80,20 @@ class IamUtils {
     return base64.decode(signature);
   }
 
-  private static String getSignature(String serviceAccountEmail, Map<String,
-          List<String>> requestHeaders, HttpRequestFactory requestFactory, String bytes)
-          throws IOException {
+  private static String getSignature(String serviceAccountEmail, Credentials credentials,
+      HttpTransport transport, String bytes)
+      throws IOException {
     String signBlobUrl = String.format(SIGN_BLOB_URL_FORMAT, serviceAccountEmail);
     GenericUrl genericUrl = new GenericUrl(signBlobUrl);
 
     GenericData signRequest = new GenericData();
     signRequest.set("payload", bytes);
     JsonHttpContent signContent = new JsonHttpContent(OAuth2Utils.JSON_FACTORY, signRequest);
-    HttpRequest request = requestFactory.buildPostRequest(genericUrl, signContent);
 
-    HttpHeaders headers = request.getHeaders();
-    for (Map.Entry<String, List<String>> entry : requestHeaders.entrySet()) {
-      headers.put(entry.getKey(), entry.getValue());
-    }
+    HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
+    HttpRequest request = transport.createRequestFactory(adapter)
+        .buildPostRequest(genericUrl, signContent);
+
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     request.setParser(parser);
     request.setThrowExceptionOnExecuteError(false);

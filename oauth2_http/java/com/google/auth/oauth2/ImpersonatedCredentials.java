@@ -176,14 +176,7 @@ public class ImpersonatedCredentials extends GoogleCredentials implements Servic
    */
   @Override
   public byte[] sign(byte[] toSign) {
-    Map<String, List<String>> requestHeaders;
-    try {
-      requestHeaders = getRequestMetadata();
-    } catch (IOException ex) {
-      throw new SigningException("Error fetching credentials", ex);
-    }
-    return IamUtils.sign(getAccount(), requestHeaders,
-            transportFactory.create().createRequestFactory(), toSign);
+    return IamUtils.sign(getAccount(), sourceCredentials, transportFactory.create(), toSign);
   }
 
   private ImpersonatedCredentials(Builder builder) {
