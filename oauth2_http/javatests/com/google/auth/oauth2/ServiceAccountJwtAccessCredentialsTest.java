@@ -650,7 +650,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
   }
 
   @Test
-  public void withClaims_overrideAudience() throws IOException {
+  public void jwtWithClaims_overrideAudience() throws IOException {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials = ServiceAccountJwtAccessCredentials.newBuilder()
         .setClientId(SA_CLIENT_ID)
@@ -658,7 +658,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
         .setPrivateKey(privateKey)
         .setPrivateKeyId(SA_PRIVATE_KEY_ID)
         .build();
-    Credentials withAudience = credentials.withClaims(
+    Credentials withAudience = credentials.jwtWithClaims(
         JwtCredentials.Claims.newBuilder()
             .setAudience("new-audience")
             .build());
@@ -669,7 +669,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
   }
 
   @Test
-  public void withClaims_noAudience() throws IOException {
+  public void jwtWithClaims_noAudience() throws IOException {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials = ServiceAccountJwtAccessCredentials.newBuilder()
         .setClientId(SA_CLIENT_ID)
@@ -678,7 +678,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
         .setPrivateKeyId(SA_PRIVATE_KEY_ID)
         .build();
     try {
-      credentials.withClaims(JwtCredentials.Claims.newBuilder().build());
+      credentials.jwtWithClaims(JwtCredentials.Claims.newBuilder().build());
       fail("Expected to throw exception for missing audience");
     } catch (IllegalStateException ex) {
       // expected exception
@@ -686,7 +686,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
   }
 
   @Test
-  public void withClaims_defaultAudience() throws IOException {
+  public void jwtWithClaims_defaultAudience() throws IOException {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials = ServiceAccountJwtAccessCredentials.newBuilder()
         .setClientId(SA_CLIENT_ID)
@@ -695,7 +695,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
         .setPrivateKeyId(SA_PRIVATE_KEY_ID)
         .setDefaultAudience(URI.create("default-audience"))
         .build();
-    Credentials withAudience = credentials.withClaims(JwtCredentials.Claims.newBuilder().build());
+    Credentials withAudience = credentials.jwtWithClaims(JwtCredentials.Claims.newBuilder().build());
 
     Map<String, List<String>> metadata = withAudience.getRequestMetadata(CALL_URI);
     verifyJwtAccess(metadata, SA_CLIENT_EMAIL, URI.create("default-audience"), SA_PRIVATE_KEY_ID);

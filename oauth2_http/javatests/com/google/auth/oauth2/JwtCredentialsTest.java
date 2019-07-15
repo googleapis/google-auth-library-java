@@ -224,7 +224,7 @@ public class JwtCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void withClaims_overwritesClaims() throws IOException {
+  public void jwtWithClaims_overwritesClaims() throws IOException {
     JwtCredentials.Claims claims = JwtCredentials.Claims.newBuilder()
         .setAudience("some-audience")
         .setIssuer("some-issuer")
@@ -240,13 +240,13 @@ public class JwtCredentialsTest extends BaseSerializationTest {
         .setIssuer("some-issuer2")
         .setSubject("some-subject2")
         .build();
-    JwtCredentials credentials2 = credentials.withClaims(claims2);
+    JwtCredentials credentials2 = credentials.jwtWithClaims(claims2);
     Map<String, List<String>> metadata = credentials2.getRequestMetadata();
     verifyJwtAccess(metadata, "some-audience2","some-issuer2", "some-subject2", PRIVATE_KEY_ID);
   }
 
   @Test
-  public void withClaims_defaultsClaims() throws IOException {
+  public void jwtWithClaims_defaultsClaims() throws IOException {
     JwtCredentials.Claims claims = JwtCredentials.Claims.newBuilder()
         .setAudience("some-audience")
         .setIssuer("some-issuer")
@@ -258,7 +258,7 @@ public class JwtCredentialsTest extends BaseSerializationTest {
         .setPrivateKeyId(PRIVATE_KEY_ID)
         .build();
     JwtCredentials.Claims claims2 = JwtCredentials.Claims.newBuilder().build();
-    JwtCredentials credentials2 = credentials.withClaims(claims2);
+    JwtCredentials credentials2 = credentials.jwtWithClaims(claims2);
     Map<String, List<String>> metadata = credentials2.getRequestMetadata();
     verifyJwtAccess(metadata, "some-audience","some-issuer", "some-subject", PRIVATE_KEY_ID);
   }

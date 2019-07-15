@@ -72,7 +72,7 @@ import javax.annotation.Nullable;
  * </code>
  * </pre>
  */
-public class JwtCredentials extends Credentials {
+public class JwtCredentials extends Credentials implements JwtProvider {
   private static final String JWT_ACCESS_PREFIX = OAuth2Utils.BEARER_PREFIX;
   private static final String JWT_INCOMPLETE_ERROR_MESSAGE = "JWT claims must contain audience, "
       + "issuer, and subject.";
@@ -145,7 +145,8 @@ public class JwtCredentials extends Credentials {
    *        values.
    * @return new credentials
    */
-  public JwtCredentials withClaims(Claims newClaims) {
+  @Override
+  public JwtCredentials jwtWithClaims(Claims newClaims) {
     return JwtCredentials.newBuilder()
         .setPrivateKey(privateKey)
         .setPrivateKeyId(privateKeyId)
