@@ -42,10 +42,12 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpCredentialsAdapter;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.BaseEncoding;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -66,10 +68,11 @@ class IamUtils {
    * @param credentials credentials required for making the IAM call
    * @param transport transport used for building the HTTP request
    * @param toSign bytes to sign
+   * @param additionalFields additional fields to send in the IAM call
    * @return signed bytes
    */
   static byte[] sign(String serviceAccountEmail, Credentials credentials, HttpTransport transport,
-      byte[] toSign, @Nullable Map<String, ?> additionalFields) {
+      byte[] toSign, Map<String, ?> additionalFields) {
     BaseEncoding base64 = BaseEncoding.base64();
     String signature;
     try {
@@ -82,17 +85,15 @@ class IamUtils {
   }
 
   private static String getSignature(String serviceAccountEmail, Credentials credentials,
-      HttpTransport transport, String bytes, @Nullable Map<String, ?> additionalFields)
+      HttpTransport transport, String bytes, Map<String, ?> additionalFields)
       throws IOException {
     String signBlobUrl = String.format(SIGN_BLOB_URL_FORMAT, serviceAccountEmail);
     GenericUrl genericUrl = new GenericUrl(signBlobUrl);
 
     GenericData signRequest = new GenericData();
     signRequest.set("payload", bytes);
-    if (additionalFields != null) {
-      for (Map.Entry<String, ?> entry : additionalFields.entrySet()) {
-        signRequest.set(entry.getKey(), entry.getValue());
-      }
+    for (Map.Entry<String, ?> entry : additionalFields.entrySet()) {
+      signRequest.set(entry.getKey(), entry.getValue());
     }
     JsonHttpContent signContent = new JsonHttpContent(OAuth2Utils.JSON_FACTORY, signRequest);
 
