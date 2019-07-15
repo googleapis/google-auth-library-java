@@ -176,7 +176,8 @@ public class ImpersonatedCredentials extends GoogleCredentials implements Servic
    */
   @Override
   public byte[] sign(byte[] toSign) {
-    return IamUtils.sign(getAccount(), sourceCredentials, transportFactory.create(), toSign);
+    return IamUtils.sign(getAccount(), sourceCredentials, transportFactory.create(), toSign,
+        ImmutableMap.of("delegates", this.delegates));
   }
 
   private ImpersonatedCredentials(Builder builder) {

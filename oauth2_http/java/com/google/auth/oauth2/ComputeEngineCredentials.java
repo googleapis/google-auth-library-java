@@ -288,7 +288,7 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
    */
   @Override
   public byte[] sign(byte[] toSign) {
-    return IamUtils.sign(getAccount(), this, transportFactory.create(), toSign);
+    return IamUtils.sign(getAccount(), this, transportFactory.create(), toSign, null);
   }
 
   private String getDefaultServiceAccount() throws IOException {

@@ -47,6 +47,7 @@ import com.google.common.io.BaseEncoding;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * This internal class provides shared utilities for interacting with the IAM API for common
@@ -67,13 +68,13 @@ class IamUtils {
    * @param toSign bytes to sign
    * @return signed bytes
    */
-  static byte[] sign(String serviceAccountEmail, Credentials credentials,
-      HttpTransport transport, byte[] toSign) {
+  static byte[] sign(String serviceAccountEmail, Credentials credentials, HttpTransport transport,
+      byte[] toSign, @Nullable Map<String, ?> additionalFields) {
     BaseEncoding base64 = BaseEncoding.base64();
     String signature;
     try {
       signature = getSignature(serviceAccountEmail, credentials, transport,
-              base64.encode(toSign));
+              base64.encode(toSign), additionalFields);
     } catch (IOException ex) {
       throw new ServiceAccountSigner.SigningException("Failed to sign the provided bytes", ex);
     }
@@ -81,13 +82,18 @@ class IamUtils {
   }
 
   private static String getSignature(String serviceAccountEmail, Credentials credentials,
-      HttpTransport transport, String bytes)
+      HttpTransport transport, String bytes, @Nullable Map<String, ?> additionalFields)
       throws IOException {
     String signBlobUrl = String.format(SIGN_BLOB_URL_FORMAT, serviceAccountEmail);
     GenericUrl genericUrl = new GenericUrl(signBlobUrl);
 
     GenericData signRequest = new GenericData();
     signRequest.set("payload", bytes);
+    if (additionalFields != null) {
+      for (Map.Entry<String, ?> entry : additionalFields.entrySet()) {
+        signRequest.set(entry.getKey(), entry.getValue());
+      }
+    }
     JsonHttpContent signContent = new JsonHttpContent(OAuth2Utils.JSON_FACTORY, signRequest);
 
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
