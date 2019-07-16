@@ -42,14 +42,11 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpCredentialsAdapter;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.io.BaseEncoding;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.Map;
-import javax.annotation.Nullable;
 
 /**
  * This internal class provides shared utilities for interacting with the IAM API for common
