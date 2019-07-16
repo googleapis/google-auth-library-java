@@ -57,8 +57,7 @@ import javax.annotation.Nullable;
  *
  * <p>Uses a JSON Web Token (JWT) directly in the request metadata to provide authorization.
  *
- * <pre>
- * <code>
+ * <pre><code>
  * JwtCredentials.Claims claims = JwtCredentials.Claims.newBuilder()
  *     .setAudience("https://example.com/some-audience")
  *     .setIssuer("some-issuer@example.com")
@@ -69,8 +68,7 @@ import javax.annotation.Nullable;
  *     .setPrivateKeyId("private-key-id")
  *     .setClaims(claims)
  *     .build();
- * </code>
- * </pre>
+ * </code></pre>
  */
 public class JwtCredentials extends Credentials implements JwtProvider {
   private static final String JWT_ACCESS_PREFIX = OAuth2Utils.BEARER_PREFIX;
@@ -141,8 +139,7 @@ public class JwtCredentials extends Credentials implements JwtProvider {
   /**
    * Returns a copy of these credentials with modified claims.
    *
-   * @param newClaims New claims. Any unspecified claim fields will default to the the current
-   *        values.
+   * @param newClaims New claims. Any unspecified claim fields default to the the current values.
    * @return new credentials
    */
   @Override
@@ -263,23 +260,25 @@ public class JwtCredentials extends Credentials implements JwtProvider {
     }
   }
 
+
+
   /**
    * Value class representing the set of fields used as the payload of a JWT token.
    *
    * <p>To create and customize claims, use the builder:
    *
-   * <pre>
-   * <code>
+   * <pre><code>
    * Claims claims = Claims.newBuilder()
    *     .setAudience("https://example.com/some-audience")
    *     .setIssuer("some-issuer@example.com")
    *     .setSubject("some-subject@example.com")
    *     .build();
-   * </code>
-   * </pre>
+   * </code></pre>
    */
   @AutoValue
   public abstract static class Claims implements Serializable {
+    private static final long serialVersionUID = 4974444151019426702L;
+
     @Nullable
     abstract String getAudience();
 
