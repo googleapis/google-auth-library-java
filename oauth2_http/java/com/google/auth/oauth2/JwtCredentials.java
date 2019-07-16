@@ -86,7 +86,8 @@ public class JwtCredentials extends Credentials implements JwtProvider {
   transient Clock clock;
 
   private transient String jwt;
-  private transient Long expiry;
+  // The date (represented as seconds since the epoch) that the generated JWT expires
+  private transient Long expiryInSeconds;
 
   JwtCredentials(Builder builder) {
     this.privateKey = Preconditions.checkNotNull(builder.getPrivateKey());
@@ -118,8 +119,8 @@ public class JwtCredentials extends Credentials implements JwtProvider {
       payload.setIssuer(claims.getIssuer());
       payload.setSubject(claims.getSubject());
       payload.setIssuedAtTimeSeconds(currentTime / 1000);
-      expiry = currentTime / 1000 + lifeSpanSeconds;
-      payload.setExpirationTimeSeconds(expiry);
+      expiryInSeconds = currentTime / 1000 + lifeSpanSeconds;
+      payload.setExpirationTimeSeconds(expiryInSeconds);
 
       JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
 
@@ -133,7 +134,8 @@ public class JwtCredentials extends Credentials implements JwtProvider {
   }
 
   private boolean shouldRefresh() {
-    return expiry == null || getClock().currentTimeMillis() / 1000 > expiry - CLOCK_SKEW;
+    return expiryInSeconds == null ||
+        getClock().currentTimeMillis() / 1000 > expiryInSeconds - CLOCK_SKEW;
   }
 
   /**
