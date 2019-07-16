@@ -213,7 +213,7 @@ public class JwtCredentials extends Credentials implements JwtProvider {
     protected Builder() {}
 
     public Builder setPrivateKey(PrivateKey privateKey) {
-      this.privateKey = privateKey;
+      this.privateKey = Preconditions.checkNotNull(privateKey);
       return this;
     }
 
@@ -222,7 +222,7 @@ public class JwtCredentials extends Credentials implements JwtProvider {
     }
 
     public Builder setPrivateKeyId(String privateKeyId) {
-      this.privateKeyId = privateKeyId;
+      this.privateKeyId = Preconditions.checkNotNull(privateKeyId);
       return this;
     }
 
@@ -231,7 +231,7 @@ public class JwtCredentials extends Credentials implements JwtProvider {
     }
 
     public Builder setClaims(Claims claims) {
-      this.claims = claims;
+      this.claims = Preconditions.checkNotNull(claims);
       return this;
     }
 
@@ -240,7 +240,7 @@ public class JwtCredentials extends Credentials implements JwtProvider {
     }
 
     public Builder setLifeSpanSeconds(Long lifeSpanSeconds) {
-      this.lifeSpanSeconds = lifeSpanSeconds;
+      this.lifeSpanSeconds = Preconditions.checkNotNull(lifeSpanSeconds);
       return this;
     }
 
@@ -249,7 +249,7 @@ public class JwtCredentials extends Credentials implements JwtProvider {
     }
 
     Builder setClock(Clock clock) {
-      this.clock = clock;
+      this.clock = Preconditions.checkNotNull(clock);
       return this;
     }
 
