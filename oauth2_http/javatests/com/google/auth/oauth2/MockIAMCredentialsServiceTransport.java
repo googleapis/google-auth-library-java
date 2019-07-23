@@ -63,6 +63,8 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
   private String accessToken;
   private String expireTime;
 
+  private MockLowLevelHttpRequest request;
+
   public MockIAMCredentialsServiceTransport() {
   }
 
@@ -82,7 +84,7 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
     this.accessToken = accessToken;
   }
 
-  public void setexpireTime(String expireTime) {
+  public void setExpireTime(String expireTime) {
     this.expireTime = expireTime;
   }
 
@@ -95,13 +97,17 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
     this.errorMessage = errorMessage;
   }
 
+  public MockLowLevelHttpRequest getRequest() {
+    return request;
+  }
+
   @Override
   public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
 
     String iamAccesssTokenformattedUrl = String.format(IAM_ACCESS_TOKEN_ENDPOINT, this.targetPrincipal);
     String iamSignBlobformattedUrl = String.format(IAM_SIGN_ENDPOINT, this.targetPrincipal);
     if (url.equals(iamAccesssTokenformattedUrl)) {
-      return new MockLowLevelHttpRequest(url) {
+      this.request = new MockLowLevelHttpRequest(url) {
         @Override
         public LowLevelHttpResponse execute() throws IOException {
 
@@ -124,7 +130,7 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
         }
       };
     } else if (url.equals(iamSignBlobformattedUrl) && responseCode != HttpStatusCodes.STATUS_CODE_OK) {
-      return new MockLowLevelHttpRequest(url) {
+      this.request =  new MockLowLevelHttpRequest(url) {
         @Override
         public LowLevelHttpResponse execute() throws IOException {
 
@@ -146,7 +152,7 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
         }
       };
     } else if (url.equals(iamSignBlobformattedUrl)) {
-      return new MockLowLevelHttpRequest(url) {
+      this.request = new MockLowLevelHttpRequest(url) {
         @Override
         public LowLevelHttpResponse execute() throws IOException {
 
@@ -167,9 +173,11 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
               .setContent(refreshText);
         }
       };
+    } else {
+      return super.buildRequest(method, url);
     }
 
-    return super.buildRequest(method, url);
+    return this.request;
   }
 
 }
