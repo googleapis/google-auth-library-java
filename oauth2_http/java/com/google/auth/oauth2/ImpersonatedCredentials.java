@@ -53,12 +53,12 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
+import com.google.auth.oauth2.IdTokenProvider;
+import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
-
-import com.google.auth.ServiceAccountSigner;
 
 /**
  * ImpersonatedCredentials allowing credentials issued to a user or service account to impersonate
@@ -83,7 +83,7 @@ import com.google.auth.ServiceAccountSigner;
  *     System.out.println(b);
  * </pre>
  */
-public class ImpersonatedCredentials extends GoogleCredentials implements ServiceAccountSigner {
+public class ImpersonatedCredentials extends GoogleCredentials implements ServiceAccountSigner, IdTokenProvider {
 
   private static final long serialVersionUID = -2133257318957488431L;
   private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
@@ -93,6 +93,8 @@ public class ImpersonatedCredentials extends GoogleCredentials implements Servic
 
   private static final String SCOPE_EMPTY_ERROR = "Scopes cannot be null";
   private static final String LIFETIME_EXCEEDED_ERROR = "lifetime must be less than or equal to 3600";
+
+  public static final String INCLUDE_EMAIL = "includeEmail";
 
   private GoogleCredentials sourceCredentials;
   private String targetPrincipal;
@@ -118,17 +120,17 @@ public class ImpersonatedCredentials extends GoogleCredentials implements Servic
    * tokens.
    */
   public static ImpersonatedCredentials create(GoogleCredentials sourceCredentials,
-      String targetPrincipal,
-      List<String> delegates, List<String> scopes, int lifetime,
-      HttpTransportFactory transportFactory) {
-    return ImpersonatedCredentials.newBuilder()
-        .setSourceCredentials(sourceCredentials)
-        .setTargetPrincipal(targetPrincipal)
-        .setDelegates(delegates)
-        .setScopes(scopes)
-        .setLifetime(lifetime)
-        .setHttpTransportFactory(transportFactory)
-        .build();
+        String targetPrincipal,
+        List<String> delegates, List<String> scopes, int lifetime,
+        HttpTransportFactory transportFactory) {
+      return ImpersonatedCredentials.newBuilder()
+          .setSourceCredentials(sourceCredentials)
+          .setTargetPrincipal(targetPrincipal)
+          .setDelegates(delegates)
+          .setScopes(scopes)
+          .setLifetime(lifetime)
+          .setHttpTransportFactory(transportFactory)
+          .build();        
   }
 
   /**
@@ -162,7 +164,7 @@ public class ImpersonatedCredentials extends GoogleCredentials implements Servic
    */
   @Override
   public String getAccount() {
-      return this.targetPrincipal;
+    return this.targetPrincipal;
   }
 
   /**
@@ -256,6 +258,35 @@ public class ImpersonatedCredentials extends GoogleCredentials implements Servic
     return new AccessToken(accessToken, date);
   }
 
+  /**
+   * Returns an IdToken for the current Credential
+   *
+   * @param targetAudience The audience field for the issued ID Token
+   * @param options        List of Credential specific options for for the
+   *                       token. For example, an IDToken for a
+   *                       ImpersonatedCredentials can return the email address
+   *                       within the token claims if
+   *                       "ImpersonatedCredentials.INCLUDE_EMAIL" is provided as
+   *                       a list option.<br>
+   *                       Only one option value is supported:
+   *                       "ImpersonatedCredentials.INCLUDE_EMAIL"
+   *                       If no options are set, the default excludes the 
+   *                       "includeEmail" attribute in the API request
+   * @return IdToken object which includes the raw id_token, expiration and
+   *         audience.
+   * @throws IdTokenProvider.IdTokenProviderException if the attempt to get an
+   *                                                  IdToken failed
+   */
+
+  @Override
+  public IdToken idTokenWithAudience(String targetAudience, List<String> options) {
+    boolean includeEmail = false;
+    if (options != null)
+      if (options.contains(INCLUDE_EMAIL))
+        includeEmail = true;
+    return IamUtils.getIdToken(getAccount(), sourceCredentials, transportFactory.create(), targetAudience, includeEmail,
+        ImmutableMap.of("delegates", this.delegates));
+  }
 
   @Override
   public int hashCode() {

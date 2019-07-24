@@ -190,6 +190,36 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(Joiner.on(' ').join(scopes), payload.get("scope"));
    }
 
+   @Test
+   public void createAssertionForIdToken_correct() throws IOException {
+     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+     List<String> scopes = Arrays.asList("scope1", "scope2");
+     ServiceAccountCredentials credentials = ServiceAccountCredentials.newBuilder()
+         .setClientId(SA_CLIENT_ID)
+         .setClientEmail(SA_CLIENT_EMAIL)
+         .setPrivateKey(privateKey)
+         .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+         .setScopes(scopes)
+         .setServiceAccountUser(SERVICE_ACCOUNT_USER)
+         .setProjectId(PROJECT_ID)
+         .build();
+ 
+     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
+     long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
+     String targetAudience = "https://foo.bar";
+     String assertion = credentials.createAssertionForIdToken(jsonFactory, currentTimeMillis, null, targetAudience);
+ 
+     JsonWebSignature signature = JsonWebSignature.parse(jsonFactory, assertion);
+     JsonWebToken.Payload payload = signature.getPayload();
+     assertEquals(SA_CLIENT_EMAIL, payload.getIssuer());
+     assertEquals(OAuth2Utils.TOKEN_SERVER_URI.toString(), payload.getAudience());
+     assertEquals(currentTimeMillis / 1000, (long) payload.getIssuedAtTimeSeconds());
+     assertEquals(currentTimeMillis / 1000 + 3600, (long) payload.getExpirationTimeSeconds());
+     assertEquals(SERVICE_ACCOUNT_USER, payload.getSubject());
+     assertEquals(Joiner.on(' ').join(scopes), payload.get("scope"));
+    }
+ 
+
   @Test
   public void createAssertion_withTokenUri_correct() throws IOException {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);

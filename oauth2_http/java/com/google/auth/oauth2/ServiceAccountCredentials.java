@@ -57,6 +57,7 @@ import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
+import com.google.auth.oauth2.IdTokenProvider;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -74,17 +75,18 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.sql.Date;
+import java.util.Date;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
+import java.util.List;
 
 /**
  * OAuth2 credentials representing a Service Account for calling Google APIs.
  *
  * <p>By default uses a JSON Web Token (JWT) to fetch access tokens.
  */
-public class ServiceAccountCredentials extends GoogleCredentials implements ServiceAccountSigner {
+public class ServiceAccountCredentials extends GoogleCredentials implements ServiceAccountSigner, IdTokenProvider {
 
   private static final long serialVersionUID = 7807543542681217978L;
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
@@ -340,18 +342,18 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
     request.setUnsuccessfulResponseHandler(
         new HttpBackOffUnsuccessfulResponseHandler(new ExponentialBackOff()).setBackOffRequired(
             new BackOffRequired() {
-              public boolean isRequired(HttpResponse response) {
-                int code = response.getStatusCode();
-                return (
-                    // Server error --- includes timeout errors, which use 500 instead of 408
-                    code / 100 == 5
-                    // Forbidden error --- for historical reasons, used for rate_limit_exceeded
-                    // errors instead of 429, but there currently seems no robust automatic way to
-                    // distinguish these cases: see
-                    // https://github.com/google/google-api-java-client/issues/662
-                    || code == 403);
-              }
-            }));
+          public boolean isRequired(HttpResponse response) {
+            int code = response.getStatusCode();
+            return (
+            // Server error --- includes timeout errors, which use 500 instead of 408
+            code / 100 == 5
+                // Forbidden error --- for historical reasons, used for rate_limit_exceeded
+                // errors instead of 429, but there currently seems no robust automatic way to
+                // distinguish these cases: see
+                // https://github.com/google/google-api-java-client/issues/662
+                || code == 403);
+          }
+        }));
 
     HttpResponse response;
     try {
@@ -370,7 +372,52 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
   }
 
   /**
-   * Returns whether the scopes are empty, meaning createScoped must be called before use.
+   * Returns a Google Id Token from the metadata server on ComputeEngine.
+   *
+   * @param targetAudience The aud: field the IdToken should include.
+   * @param options        List of Credential specific options for for the
+   *                       token. Currently unused for ServiceAccountCredentials.
+   * @throws IdTokenProvider.IdTokenProviderException if the attempt to get an
+   *                                                  IdToken failed
+   * @return IdToken object which includes the raw id_token, expiration and
+   *         audience.
+   */
+  @Override
+  public IdToken idTokenWithAudience(String targetAudience, List<String> options) {
+    try {
+
+      JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
+      long currentTime = clock.currentTimeMillis();
+      String assertion = createAssertionForIdToken(jsonFactory, currentTime, tokenServerUri.toString(), targetAudience);
+
+      GenericData tokenRequest = new GenericData();
+      tokenRequest.set("grant_type", GRANT_TYPE);
+      tokenRequest.set("assertion", assertion);
+      UrlEncodedContent content = new UrlEncodedContent(tokenRequest);
+
+      HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
+      HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
+      request.setParser(new JsonObjectParser(jsonFactory));
+      HttpResponse response;
+      try {
+        response = request.execute();
+      } catch (IOException e) {
+        throw new IOException(String.format("Error getting idToken for service account: %s", e.getMessage()), e);
+      }
+
+      GenericData responseData = response.parseAs(GenericData.class);
+      String rawToken = OAuth2Utils.validateString(responseData, "id_token", PARSE_ERROR_PREFIX);
+
+      JsonWebSignature jws =  JsonWebSignature.parse(OAuth2Utils.JSON_FACTORY, rawToken);
+      return new IdToken(rawToken, jws);
+    } catch (IOException ex) {
+      throw new IdTokenProvider.IdTokenProviderException("Unable to Parse IDToken " + ex.getMessage(), ex);
+    }
+  }
+
+  /**
+   * Returns whether the scopes are empty, meaning createScoped must be called
+   * before use.
    */
   @Override
   public boolean createScopedRequired() {
@@ -475,10 +522,9 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
         && Objects.equals(this.transportFactoryClassName, other.transportFactoryClassName)
         && Objects.equals(this.tokenServerUri, other.tokenServerUri)
         && Objects.equals(this.scopes, other.scopes);
-  }
+    }
 
-  String createAssertion(JsonFactory jsonFactory, long currentTime, String audience)
-      throws IOException {
+  String createAssertion(JsonFactory jsonFactory, long currentTime, String audience) throws IOException {
     JsonWebSignature.Header header = new JsonWebSignature.Header();
     header.setAlgorithm("RS256");
     header.setType("JWT");
@@ -496,6 +542,36 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
     } else {
       payload.setAudience(audience);
     }
+
+    String assertion;
+    try {
+      assertion = JsonWebSignature.signUsingRsaSha256(privateKey, jsonFactory, header, payload);
+    } catch (GeneralSecurityException e) {
+      throw new IOException("Error signing service account access token request with private key.", e);
+    }
+    return assertion;
+  }
+
+  String createAssertionForIdToken(JsonFactory jsonFactory, long currentTime, String audience, String targetAudience)
+      throws IOException {      
+    JsonWebSignature.Header header = new JsonWebSignature.Header();
+    header.setAlgorithm("RS256");
+    header.setType("JWT");
+    header.setKeyId(privateKeyId);
+
+    JsonWebToken.Payload payload = new JsonWebToken.Payload();
+    payload.setIssuer(clientEmail);
+    payload.setIssuedAtTimeSeconds(currentTime / 1000);
+    payload.setExpirationTimeSeconds(currentTime / 1000 + 3600);
+    payload.setSubject(serviceAccountUser);
+
+    if (audience == null) {
+      payload.setAudience(OAuth2Utils.TOKEN_SERVER_URI.toString());
+    } else {
+      payload.setAudience(audience);
+    }
+
+    payload.set("target_audience", targetAudience);
 
     String assertion;
     try {
@@ -632,8 +708,8 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
 
     public ServiceAccountCredentials build() {
       return new ServiceAccountCredentials(
-          clientId, clientEmail, privateKey, privateKeyId, scopes,
-          transportFactory, tokenServerUri, serviceAccountUser, projectId);
+           clientId, clientEmail, privateKey, privateKeyId, scopes,
+           transportFactory, tokenServerUri, serviceAccountUser, projectId);
     }
   }
 }

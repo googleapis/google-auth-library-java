@@ -43,6 +43,9 @@ import com.google.api.client.util.GenericData;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
+import com.google.api.client.json.webtoken.JsonWebSignature;
+import com.google.auth.oauth2.IdTokenProvider;
+import com.google.auth.oauth2.OAuth2Utils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,6 +55,7 @@ import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
+import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -64,7 +68,7 @@ import java.util.logging.Logger;
  * <p>These credentials use the IAM API to sign data. See {@link #sign(byte[])} for more details.
  * </p>
  */
-public class ComputeEngineCredentials extends GoogleCredentials implements ServiceAccountSigner {
+public class ComputeEngineCredentials extends GoogleCredentials implements ServiceAccountSigner, IdTokenProvider {
 
   private static final Logger LOGGER = Logger.getLogger(ComputeEngineCredentials.class.getName());
 
@@ -90,6 +94,9 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final String PARSE_ERROR_ACCOUNT = "Error parsing service account response. ";
   private static final long serialVersionUID = -4113476462526554235L;
+
+  public static final String ID_TOKEN_FORMAT_FULL = "format";
+  public static final String ID_TOKEN_LICENSES_TRUE = "licenses";
 
   private final String transportFactoryClassName;
 
@@ -138,7 +145,7 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
     }
     InputStream content = response.getContent();
     if (content == null) {
-      // Throw explicitly here on empty content to avoid NullPointerException from parseAs call.
+     // Throw explicitly here on empty content to avoid NullPointerException from parseAs call.
       // Mock transports will have success code with empty content by default.
       throw new IOException("Empty content from metadata token server request.");
     }
@@ -149,6 +156,49 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
         responseData, "expires_in", PARSE_ERROR_PREFIX);
     long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000;
     return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
+  }
+
+  /**
+   * Returns an Google Id Token from the metadata server on ComputeEngine.
+   * 
+   * @param targetAudience The aud: field the IdToken should include.
+   * @param options        List of Credential specific options for for the
+   *                       token. For example, an IDToken for a
+   *                       ComputeEngineCredential could have the full formated
+   *                       claims returned if
+   *                       ComputeCredentials.ID_TOKEN_FORMAT_FULL) is provided as
+   *                       a list option.  Valid option values are:
+   *                       * ComputeCredentials.ID_TOKEN_FORMAT_FULL<br>
+   *                       * ComputeCredentials.ID_TOKEN_LICENSES_TRUE<br>
+   *                       If no options are set, the default
+   *                       are "&amp;format=standard&amp;licenses=false"
+   * @throws IdTokenProvider.IdTokenProviderException if the attempt to get an
+   *                                                  IdToken failed
+   * @return IdToken object which includes the raw id_token, JsonWebSignature.
+   */
+  @Override
+  public IdToken idTokenWithAudience(String targetAudience, List<String> options) {
+    String optionalParams = "";
+    if (options != null) {
+      if (options.contains(ID_TOKEN_FORMAT_FULL))
+        optionalParams = "&format=full";
+      if (options.contains(ID_TOKEN_LICENSES_TRUE))
+        optionalParams = optionalParams + "&licenses=TRUE";
+    }
+    String documentURL = getIdentityDocumentUrl() + "?audience=" + targetAudience + optionalParams;
+    HttpResponse response = null;
+    try {
+      response = getMetadataResponse(documentURL);
+      InputStream content = response.getContent();
+      if (content == null) {
+        throw new IOException("Empty content from metadata token server request.");
+      }
+      String rawToken = response.parseAsString();
+      JsonWebSignature jws =  JsonWebSignature.parse(OAuth2Utils.JSON_FACTORY, rawToken);
+      return new IdToken(rawToken, jws);
+    } catch (IOException ex) {
+      throw new IdTokenProvider.IdTokenProviderException("Unable to get identity document ", ex);
+    }
   }
 
   private HttpResponse getMetadataResponse(String url) throws IOException {
@@ -227,6 +277,11 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
   public static String getServiceAccountsUrl() {
     return getMetadataServerUrl(DefaultCredentialsProvider.DEFAULT)
         + "/computeMetadata/v1/instance/service-accounts/?recursive=true";
+  }
+
+  public static String getIdentityDocumentUrl() {
+    return getMetadataServerUrl(DefaultCredentialsProvider.DEFAULT)
+        + "/computeMetadata/v1/instance/service-accounts/default/identity";
   }
 
   @Override
