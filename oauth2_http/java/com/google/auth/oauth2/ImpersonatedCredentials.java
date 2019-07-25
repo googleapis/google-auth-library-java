@@ -94,8 +94,6 @@ public class ImpersonatedCredentials extends GoogleCredentials implements Servic
   private static final String SCOPE_EMPTY_ERROR = "Scopes cannot be null";
   private static final String LIFETIME_EXCEEDED_ERROR = "lifetime must be less than or equal to 3600";
 
-  public static final String INCLUDE_EMAIL = "includeEmail";
-
   private GoogleCredentials sourceCredentials;
   private String targetPrincipal;
   private List<String> delegates;
@@ -274,15 +272,14 @@ public class ImpersonatedCredentials extends GoogleCredentials implements Servic
    *                       "includeEmail" attribute in the API request
    * @return IdToken object which includes the raw id_token, expiration and
    *         audience.
-   * @throws IdTokenProvider.IdTokenProviderException if the attempt to get an
-   *                                                  IdToken failed
+   * @throws IOException if the attempt to get an IdToken failed
    */
 
   @Override
-  public IdToken idTokenWithAudience(String targetAudience, List<String> options) {
+  public IdToken idTokenWithAudience(String targetAudience, List<IdTokenProvider.Option> options) throws IOException {
     boolean includeEmail = false;
     if (options != null)
-      if (options.contains(INCLUDE_EMAIL))
+      if (options.contains(IdTokenProvider.Option.INCLUDE_EMAIL))
         includeEmail = true;
     return IamUtils.getIdToken(getAccount(), sourceCredentials, transportFactory.create(), targetAudience, includeEmail,
         ImmutableMap.of("delegates", this.delegates));

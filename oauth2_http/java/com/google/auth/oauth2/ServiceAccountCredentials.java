@@ -377,14 +377,12 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
    * @param targetAudience The aud: field the IdToken should include.
    * @param options        List of Credential specific options for for the
    *                       token. Currently unused for ServiceAccountCredentials.
-   * @throws IdTokenProvider.IdTokenProviderException if the attempt to get an
-   *                                                  IdToken failed
+   * @throws IOException   if the attempt to get an IdToken failed
    * @return IdToken object which includes the raw id_token, expiration and
    *         audience.
    */
   @Override
-  public IdToken idTokenWithAudience(String targetAudience, List<String> options) {
-    try {
+  public IdToken idTokenWithAudience(String targetAudience, List<IdTokenProvider.Option> options) throws IOException {
 
       JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
       long currentTime = clock.currentTimeMillis();
@@ -399,20 +397,14 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
       HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
       request.setParser(new JsonObjectParser(jsonFactory));
       HttpResponse response;
-      try {
-        response = request.execute();
-      } catch (IOException e) {
-        throw new IOException(String.format("Error getting idToken for service account: %s", e.getMessage()), e);
-      }
+      response = request.execute();
 
       GenericData responseData = response.parseAs(GenericData.class);
       String rawToken = OAuth2Utils.validateString(responseData, "id_token", PARSE_ERROR_PREFIX);
 
       JsonWebSignature jws =  JsonWebSignature.parse(OAuth2Utils.JSON_FACTORY, rawToken);
       return new IdToken(rawToken, jws);
-    } catch (IOException ex) {
-      throw new IdTokenProvider.IdTokenProviderException("Unable to Parse IDToken " + ex.getMessage(), ex);
-    }
+
   }
 
   /**

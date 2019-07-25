@@ -100,7 +100,7 @@ public class IdTokenCredentials extends GoogleCredentials {
   private final String transportFactoryClassName;
   private String targetAudience;
   private IdToken idToken;
-  private List<String> options;
+  private List<IdTokenProvider.Option> options;
 
   private transient HttpTransportFactory transportFactory;
 
@@ -122,7 +122,7 @@ public class IdTokenCredentials extends GoogleCredentials {
    * @return IdTokenCredential
    */
   public static IdTokenCredentials create(GoogleCredentials sourceCredentials, String targetAudience,
-      HttpTransportFactory transportFactory, List<String> options) {
+      HttpTransportFactory transportFactory, List<IdTokenProvider.Option> options) {
     return IdTokenCredentials.newBuilder().setSourceCredentials(sourceCredentials).setTargetAudience(targetAudience)
         .setOptions(options).setHttpTransportFactory(transportFactory).build();
   }
@@ -143,7 +143,7 @@ public class IdTokenCredentials extends GoogleCredentials {
    *         audience.
    */
   public static IdTokenCredentials create(GoogleCredentials sourceCredentials, String targetAudience,
-      List<String> options) {
+      List<IdTokenProvider.Option> options) {
     return IdTokenCredentials.newBuilder().setSourceCredentials(sourceCredentials).setTargetAudience(targetAudience)
         .setOptions(options).build();
   }
@@ -227,7 +227,7 @@ public class IdTokenCredentials extends GoogleCredentials {
 
     private GoogleCredentials sourceCredentials;
     private String targetAudience;
-    private List<String> options;
+    private List<IdTokenProvider.Option> options;
     private HttpTransportFactory transportFactory;
 
     protected Builder() {
@@ -251,12 +251,12 @@ public class IdTokenCredentials extends GoogleCredentials {
       return this.targetAudience;
     }
 
-    public Builder setOptions(List<String> options) {
+    public Builder setOptions(List<IdTokenProvider.Option> options) {
       this.options = options;
       return this;
     }
 
-    public List<String> getOptions() {
+    public List<IdTokenProvider.Option> getOptions() {
       return this.options;
     }
 

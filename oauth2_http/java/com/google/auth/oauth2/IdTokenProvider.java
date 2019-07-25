@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import java.io.IOException;
 import java.util.Objects;
 import java.util.List;
 
@@ -42,7 +43,7 @@ import com.google.auth.oauth2.IdToken;
  */
 public interface IdTokenProvider {
 
-  class IdTokenProviderException extends RuntimeException {
+  class IdTokenProviderException extends IOException {
 
     private static final long serialVersionUID = -6503954300538942223L;
 
@@ -67,6 +68,30 @@ public interface IdTokenProvider {
       return Objects.hash(getMessage(), getCause());
     }
   }
+  /**
+   * Enum of various credential-specific options to apply to the token.
+   * 
+   * <li><b>ComputeEngineCredentials</b>:  
+   *    <li><em>FORMAT_FULL</em></li>
+   *    <li><em>LICENSES_TRUE</em></li>
+   * <li><b>ImpersonatedCredential</b>:  <em>INCLUDE_EMAIL</em>
+   * 
+  */
+  public enum Option {
+      FORMAT_FULL("formatFull"),
+      LICENSES_TRUE("licensesTrue"),
+      INCLUDE_EMAIL("includeEmail");
+
+      private String option;
+  
+      Option(String option) {
+          this.option = option;
+      }
+  
+      public String getOption() {
+          return option;
+      }    
+  }
 
   /**
    * Returns the a Google OpenID Token with the provided audience field.
@@ -84,6 +109,6 @@ public interface IdTokenProvider {
    *         audience.
    */
 
-  IdToken idTokenWithAudience(String targetAudience, List<String> options);
+  IdToken idTokenWithAudience(String targetAudience, List<Option> options) throws IOException;
 
 }

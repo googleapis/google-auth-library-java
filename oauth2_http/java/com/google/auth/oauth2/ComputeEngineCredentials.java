@@ -95,9 +95,6 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
   private static final String PARSE_ERROR_ACCOUNT = "Error parsing service account response. ";
   private static final long serialVersionUID = -4113476462526554235L;
 
-  public static final String ID_TOKEN_FORMAT_FULL = "format";
-  public static final String ID_TOKEN_LICENSES_TRUE = "licenses";
-
   private final String transportFactoryClassName;
 
   private transient HttpTransportFactory transportFactory;
@@ -166,23 +163,22 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
    *                       token. For example, an IDToken for a
    *                       ComputeEngineCredential could have the full formated
    *                       claims returned if
-   *                       ComputeCredentials.ID_TOKEN_FORMAT_FULL) is provided as
+   *                       IdTokenProvider.Option.FORMAT_FULL) is provided as
    *                       a list option.  Valid option values are:
-   *                       * ComputeCredentials.ID_TOKEN_FORMAT_FULL<br>
-   *                       * ComputeCredentials.ID_TOKEN_LICENSES_TRUE<br>
+   *                       * IdTokenProvider.Option.FORMAT_FULL<br>
+   *                       * IdTokenProvider.Option.LICENSES_TRUE<br>
    *                       If no options are set, the default
    *                       are "&amp;format=standard&amp;licenses=false"
-   * @throws IdTokenProvider.IdTokenProviderException if the attempt to get an
-   *                                                  IdToken failed
+   * @throws IOException   if the attempt to get an IdToken failed
    * @return IdToken object which includes the raw id_token, JsonWebSignature.
    */
   @Override
-  public IdToken idTokenWithAudience(String targetAudience, List<String> options) {
+  public IdToken idTokenWithAudience(String targetAudience, List<IdTokenProvider.Option> options) throws IOException {
     String optionalParams = "";
     if (options != null) {
-      if (options.contains(ID_TOKEN_FORMAT_FULL))
+      if (options.contains(IdTokenProvider.Option.FORMAT_FULL))
         optionalParams = "&format=full";
-      if (options.contains(ID_TOKEN_LICENSES_TRUE))
+      if (options.contains(IdTokenProvider.Option.LICENSES_TRUE))
         optionalParams = optionalParams + "&licenses=TRUE";
     }
     String documentURL = getIdentityDocumentUrl() + "?audience=" + targetAudience + optionalParams;

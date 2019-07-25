@@ -144,20 +144,15 @@ class IamUtils {
    */
 
   static IdToken getIdToken(String serviceAccountEmail, Credentials credentials, HttpTransport transport,
-      String targetAudience, boolean includeEmail, Map<String, ?> additionalFields) {
+      String targetAudience, boolean includeEmail, Map<String, ?> additionalFields) throws IOException {
     IdToken token;
-    try {
       token = getOIDCToken(serviceAccountEmail, credentials, transport, targetAudience, includeEmail, additionalFields);
-    } catch (IOException ex) {
-      throw new IdTokenProvider.IdTokenProviderException("Unexpected Error while getting ID Token: " + ex.getMessage(),
-          ex);
-    }
     return token;
   }
 
   private static IdToken getOIDCToken(String serviceAccountEmail, Credentials credentials, HttpTransport transport,
       String targetAudience, boolean includeEmail, Map<String, ?> additionalFields)
-      throws IOException, IdTokenProvider.IdTokenProviderException {
+      throws IOException {
     String signBlobUrl = String.format(ID_TOKEN_URL_FORMAT, serviceAccountEmail);
     GenericUrl genericUrl = new GenericUrl(signBlobUrl);
 
