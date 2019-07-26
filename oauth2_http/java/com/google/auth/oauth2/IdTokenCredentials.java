@@ -99,7 +99,6 @@ public class IdTokenCredentials extends OAuth2Credentials {
   private GoogleCredentials sourceCredentials;
   private final String transportFactoryClassName;
   private String targetAudience;
-  private IdToken idToken;
   private List<IdTokenProvider.Option> options;
 
   private transient HttpTransportFactory transportFactory;
@@ -178,20 +177,12 @@ public class IdTokenCredentials extends OAuth2Credentials {
     if (this.sourceCredentials.getAccessToken() == null) {
       this.sourceCredentials = this.sourceCredentials.createScoped(Arrays.asList(CLOUD_PLATFORM_SCOPE));
     }
-
-    try {
-      this.sourceCredentials.refreshIfExpired();
-    } catch (IOException e) {
-      throw new IOException("Unable to refresh sourceCredentials", e);
-    }
-
-    this.idToken = ((IdTokenProvider) this.sourceCredentials).idTokenWithAudience(targetAudience, options);
-
-    return this.idToken;
+    
+    return ((IdTokenProvider) this.sourceCredentials).idTokenWithAudience(targetAudience, options);
   }
 
   public IdToken getIdToken() {
-    return this.idToken;
+    return (IdToken) getAccessToken();
   }
 
   @Override

@@ -53,7 +53,7 @@ public class IdToken extends AccessToken implements Serializable {
    * @param audience       List of the Audiences the idToken was issued for.
    */
   public IdToken(String tokenValue, JsonWebSignature jws) {
-    super(tokenValue, new Date(jws.getPayload().getExpirationTimeSeconds()));
+    super(tokenValue, new Date(jws.getPayload().getExpirationTimeSeconds() * 1000));
     this.jws = jws;
   }
 
@@ -79,7 +79,7 @@ public class IdToken extends AccessToken implements Serializable {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof AccessToken)) {
+    if (!(obj instanceof IdToken)) {
       return false;
     }
     IdToken other = (IdToken) obj;

@@ -141,28 +141,22 @@ class IamUtils {
    * @param additionalFields    additional fields to send in the IAM call
    * @return New IdToken issed to the serviceAccount.
    * @throws IOException if the IdToken cannot be issued.
+   * @see    https://cloud.google.com/iam/credentials/reference/rest/v1/projects.serviceAccounts/generateIdToken
    */
 
   static IdToken getIdToken(String serviceAccountEmail, Credentials credentials, HttpTransport transport,
       String targetAudience, boolean includeEmail, Map<String, ?> additionalFields) throws IOException {
-    IdToken token;
-      token = getOIDCToken(serviceAccountEmail, credentials, transport, targetAudience, includeEmail, additionalFields);
-    return token;
-  }
 
-  private static IdToken getOIDCToken(String serviceAccountEmail, Credentials credentials, HttpTransport transport,
-      String targetAudience, boolean includeEmail, Map<String, ?> additionalFields)
-      throws IOException {
-    String signBlobUrl = String.format(ID_TOKEN_URL_FORMAT, serviceAccountEmail);
-    GenericUrl genericUrl = new GenericUrl(signBlobUrl);
+    String idTokenUrl = String.format(ID_TOKEN_URL_FORMAT, serviceAccountEmail);
+    GenericUrl genericUrl = new GenericUrl(idTokenUrl);
 
-    GenericData signRequest = new GenericData();
-    signRequest.set("audience", targetAudience);
-    signRequest.set("includeEmail", includeEmail);
+    GenericData idTokenRequest = new GenericData();
+    idTokenRequest.set("audience", targetAudience);
+    idTokenRequest.set("includeEmail", includeEmail);
     for (Map.Entry<String, ?> entry : additionalFields.entrySet()) {
-      signRequest.set(entry.getKey(), entry.getValue());
+      idTokenRequest.set(entry.getKey(), entry.getValue());
     }
-    JsonHttpContent signContent = new JsonHttpContent(OAuth2Utils.JSON_FACTORY, signRequest);
+    JsonHttpContent signContent = new JsonHttpContent(OAuth2Utils.JSON_FACTORY, idTokenRequest);
 
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
     HttpRequest request = transport.createRequestFactory(adapter).buildPostRequest(genericUrl, signContent);

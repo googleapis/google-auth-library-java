@@ -277,10 +277,7 @@ public class ImpersonatedCredentials extends GoogleCredentials implements Servic
 
   @Override
   public IdToken idTokenWithAudience(String targetAudience, List<IdTokenProvider.Option> options) throws IOException {
-    boolean includeEmail = false;
-    if (options != null)
-      if (options.contains(IdTokenProvider.Option.INCLUDE_EMAIL))
-        includeEmail = true;
+    boolean includeEmail = options != null && options.contains(IdTokenProvider.Option.INCLUDE_EMAIL);
     return IamUtils.getIdToken(getAccount(), sourceCredentials, transportFactory.create(), targetAudience, includeEmail,
         ImmutableMap.of("delegates", this.delegates));
   }
