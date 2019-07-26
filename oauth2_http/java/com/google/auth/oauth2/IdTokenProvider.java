@@ -1,5 +1,5 @@
 /*
- * Copyright 2016, Google Inc. All rights reserved.
+ * Copyright 2019, Google LLC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -12,7 +12,7 @@
  * in the documentation and/or other materials provided with the
  * distribution.
  *
- *    * Neither the name of Google Inc. nor the names of its
+ *    * Neither the name of Google LLC nor the names of its
  * contributors may be used to endorse or promote products derived from
  * this software without specific prior written permission.
  *
@@ -32,7 +32,6 @@
 package com.google.auth.oauth2;
 
 import java.io.IOException;
-import java.util.Objects;
 import java.util.List;
 
 import com.google.auth.oauth2.IdToken;
@@ -43,38 +42,14 @@ import com.google.auth.oauth2.IdToken;
  */
 public interface IdTokenProvider {
 
-  class IdTokenProviderException extends IOException {
-
-    private static final long serialVersionUID = -6503954300538942223L;
-
-    public IdTokenProviderException(String message, Exception cause) {
-      super(message, cause);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (obj == this) {
-        return true;
-      }
-      if (!(obj instanceof IdTokenProviderException)) {
-        return false;
-      }
-      IdTokenProviderException other = (IdTokenProviderException) obj;
-      return Objects.equals(getCause(), other.getCause()) && Objects.equals(getMessage(), other.getMessage());
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(getMessage(), getCause());
-    }
-  }
   /**
    * Enum of various credential-specific options to apply to the token.
    * 
    * <li><b>ComputeEngineCredentials</b>:  
    *    <li><em>FORMAT_FULL</em></li>
    *    <li><em>LICENSES_TRUE</em></li>
-   * <li><b>ImpersonatedCredential</b>:  <em>INCLUDE_EMAIL</em>
+   * <li><b>ImpersonatedCredential</b>:  
+   *    <li><em>INCLUDE_EMAIL</em><li>
    * 
   */
   public enum Option {

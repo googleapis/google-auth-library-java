@@ -174,27 +174,23 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
    */
   @Override
   public IdToken idTokenWithAudience(String targetAudience, List<IdTokenProvider.Option> options) throws IOException {
-    String optionalParams = "";
+    GenericUrl documentURL = new GenericUrl(getIdentityDocumentUrl());
     if (options != null) {
       if (options.contains(IdTokenProvider.Option.FORMAT_FULL))
-        optionalParams = "&format=full";
+        documentURL.set("format", "full");
       if (options.contains(IdTokenProvider.Option.LICENSES_TRUE))
-        optionalParams = optionalParams + "&licenses=TRUE";
+        documentURL.set("license","TRUE");
     }
-    String documentURL = getIdentityDocumentUrl() + "?audience=" + targetAudience + optionalParams;
+    documentURL.set("audience", targetAudience);
     HttpResponse response = null;
-    try {
-      response = getMetadataResponse(documentURL);
-      InputStream content = response.getContent();
-      if (content == null) {
-        throw new IOException("Empty content from metadata token server request.");
-      }
-      String rawToken = response.parseAsString();
-      JsonWebSignature jws =  JsonWebSignature.parse(OAuth2Utils.JSON_FACTORY, rawToken);
-      return new IdToken(rawToken, jws);
-    } catch (IOException ex) {
-      throw new IdTokenProvider.IdTokenProviderException("Unable to get identity document ", ex);
+    response = getMetadataResponse(documentURL.toString());
+    InputStream content = response.getContent();
+    if (content == null) {
+      throw new IOException("Empty content from metadata token server request.");
     }
+    String rawToken = response.parseAsString();
+    JsonWebSignature jws =  JsonWebSignature.parse(OAuth2Utils.JSON_FACTORY, rawToken);
+    return new IdToken(rawToken, jws);
   }
 
   private HttpResponse getMetadataResponse(String url) throws IOException {
@@ -359,8 +355,8 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
     }
     InputStream content = response.getContent();
     if (content == null) {
-      // Throw explicitly here on empty content to avoid NullPointerException from parseAs call.
-      // Mock transports will have success code with empty content by default.
+     // Throw explicitly here on empty content to avoid NullPointerException from parseAs call.
+     // Mock transports will have success code with empty content by default.
       throw new IOException("Empty content from metadata token server request.");
     }
     GenericData responseData = response.parseAs(GenericData.class);
