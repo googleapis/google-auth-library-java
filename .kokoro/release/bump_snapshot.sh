@@ -19,7 +19,7 @@ set -eo pipefail
 export NPM_CONFIG_PREFIX=/home/node/.npm-global
 
 if [ -f ${KOKORO_KEYSTORE_DIR}/73713_github-magic-proxy-url-release-please ]; then
-  # Groom the release PR as new commits are merged.
+  # Groom the snapshot release PR immediately after publishing a release
   npx release-please release-pr --token=${KOKORO_KEYSTORE_DIR}/73713_github-magic-proxy-token-release-please \
     --repo-url=googleapis/google-auth-library-java \
     --package-name="google-auth-library-java" \
