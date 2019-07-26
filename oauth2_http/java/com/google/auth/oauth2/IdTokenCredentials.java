@@ -91,7 +91,7 @@ import com.google.common.base.MoreObjects;
  * System.out.println(tokenCredential.getIdToken().getJsonWebSignature().getPayload().getExpirationTimeSeconds());
  * </pre>
  */
-public class IdTokenCredentials extends GoogleCredentials {
+public class IdTokenCredentials extends OAuth2Credentials {
 
   private static final long serialVersionUID = -2133257318957588431L;
   private static final String CLOUD_PLATFORM_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
@@ -223,7 +223,7 @@ public class IdTokenCredentials extends GoogleCredentials {
     return new Builder();
   }
 
-  public static class Builder extends GoogleCredentials.Builder {
+  public static class Builder extends OAuth2Credentials.Builder {
 
     private GoogleCredentials sourceCredentials;
     private String targetAudience;
