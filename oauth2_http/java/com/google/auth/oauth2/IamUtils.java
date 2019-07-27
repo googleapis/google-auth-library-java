@@ -131,15 +131,15 @@ class IamUtils {
 
   /**
    * Returns an IdToken issued to the serviceAccount with a specified
-   * targetAudience.
+   * targetAudience
    *
    * @param serviceAccountEmail the email address for the service account to get
-   *                            an Id Token for
-   * @param credentials         credentials required for making the IAM call
-   * @param transport           transport used for building the HTTP request
-   * @param targetAudience      the audience the issued ID token should include
-   * @param additionalFields    additional fields to send in the IAM call
-   * @return New IdToken issed to the serviceAccount.
+   *                            an ID Token for
+   * @param credentials  credentials required for making the IAM call
+   * @param transport  transport used for building the HTTP request
+   * @param targetAudience  the audience the issued ID token should include
+   * @param additionalFields  additional fields to send in the IAM call
+   * @return IdToken issed to the serviceAccount
    * @throws IOException if the IdToken cannot be issued.
    * @see    https://cloud.google.com/iam/credentials/reference/rest/v1/projects.serviceAccounts/generateIdToken
    */
@@ -156,10 +156,10 @@ class IamUtils {
     for (Map.Entry<String, ?> entry : additionalFields.entrySet()) {
       idTokenRequest.set(entry.getKey(), entry.getValue());
     }
-    JsonHttpContent signContent = new JsonHttpContent(OAuth2Utils.JSON_FACTORY, idTokenRequest);
+    JsonHttpContent idTokenContent = new JsonHttpContent(OAuth2Utils.JSON_FACTORY, idTokenRequest);
 
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
-    HttpRequest request = transport.createRequestFactory(adapter).buildPostRequest(genericUrl, signContent);
+    HttpRequest request = transport.createRequestFactory(adapter).buildPostRequest(genericUrl, idTokenContent);
 
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     request.setParser(parser);

@@ -39,7 +39,7 @@ import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.common.base.MoreObjects;
 
 /**
- * Represents a temporary IdToken and its JSONWebSingature object.
+ * Represents a temporary IdToken and its JSONWebSingature object
  */
 public class IdToken extends AccessToken implements Serializable {
 
@@ -50,7 +50,6 @@ public class IdToken extends AccessToken implements Serializable {
   /**
    * @param tokenValue     String representation of the Id token.
    * @param jws            JsonWebSignature as object
-   * @param audience       List of the Audiences the idToken was issued for.
    */
   public IdToken(String tokenValue, JsonWebSignature jws) {
     super(tokenValue, new Date(jws.getPayload().getExpirationTimeSeconds() * 1000));
@@ -60,7 +59,7 @@ public class IdToken extends AccessToken implements Serializable {
   /**
    * The JsonWebSignature as object
    *
-   * @return returns com.google.api.client.json.webtoken.JsonWebSignature.
+   * @return returns com.google.api.client.json.webtoken.JsonWebSignature
    */
   public JsonWebSignature getJsonWebSignature() {
     return jws;

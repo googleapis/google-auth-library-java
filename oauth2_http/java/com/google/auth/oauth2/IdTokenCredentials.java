@@ -129,17 +129,15 @@ public class IdTokenCredentials extends OAuth2Credentials {
   /**
    * Returns an Google Id Token from the metadata server on ComputeEngine.
    * 
-   * @param sourceCredentials The source credential for the Id Token
-   * @param targetAudience    List aud: field the IdToken should include.
-   * @param options           List of Credential specific options for for the
-   *                          token. For example, an IDToken for a
-   *                          ComputeEngineCredential could include the full
-   *                          formated claims returned if
-   *                          "ComputeEngineCredential.ID_TOKEN_FORMAT_FULL" is
-   *                          specified. Refer to the Credential type for specific
-   *                          extensions.
+   * @param sourceCredentials the source credential for the Id Token
+   * @param targetAudience aud: field the IdToken should include.
+   * @param options list of Credential specific options for for the
+   * token. For example, an IDToken for a ComputeEngineCredential could 
+   * include the full formated claims returned if 
+   * "ComputeEngineCredential.ID_TOKEN_FORMAT_FULL" is specified. 
+   * Refer to the Credential type for specific extensions.
    * @return IdToken object which includes the raw id_token, expirationn and
-   *         audience.
+   * audience
    */
   public static IdTokenCredentials create(GoogleCredentials sourceCredentials, String targetAudience,
       List<IdTokenProvider.Option> options) {
@@ -151,8 +149,8 @@ public class IdTokenCredentials extends OAuth2Credentials {
    * Returns IdToken credentials associated with the sourceCredentials and with an
    * audience specified.
    * 
-   * @param sourceCredentials The source credential for the Id Token
-   * @param targetAudience    The audience field for the issued ID Token
+   * @param sourceCredentials the source credential for the ID Token
+   * @param targetAudience the audience field for the issued ID Token
    * @return IdTokenCredential
    */
   public static IdTokenCredentials create(GoogleCredentials sourceCredentials, String targetAudience) {

@@ -374,12 +374,12 @@ public class ServiceAccountCredentials extends GoogleCredentials implements Serv
   /**
    * Returns a Google Id Token from the metadata server on ComputeEngine.
    *
-   * @param targetAudience The aud: field the IdToken should include.
-   * @param options        List of Credential specific options for for the
-   *                       token. Currently unused for ServiceAccountCredentials.
-   * @throws IOException   if the attempt to get an IdToken failed
+   * @param targetAudience the aud: field the IdToken should include.
+   * @param options list of Credential specific options for for the
+   * token. Currently unused for ServiceAccountCredentials.
+   * @throws IOException if the attempt to get an IdToken failed
    * @return IdToken object which includes the raw id_token, expiration and
-   *         audience.
+   * audience
    */
   @Override
   public IdToken idTokenWithAudience(String targetAudience, List<IdTokenProvider.Option> options) throws IOException {

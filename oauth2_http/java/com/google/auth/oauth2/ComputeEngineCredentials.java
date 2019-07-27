@@ -156,34 +156,36 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
   }
 
   /**
-   * Returns an Google Id Token from the metadata server on ComputeEngine.
+   * Returns an Google ID Token from the metadata server on ComputeEngine
    * 
-   * @param targetAudience The aud: field the IdToken should include.
-   * @param options        List of Credential specific options for for the
-   *                       token. For example, an IDToken for a
-   *                       ComputeEngineCredential could have the full formated
-   *                       claims returned if
-   *                       IdTokenProvider.Option.FORMAT_FULL) is provided as
-   *                       a list option.  Valid option values are:
-   *                       * IdTokenProvider.Option.FORMAT_FULL<br>
-   *                       * IdTokenProvider.Option.LICENSES_TRUE<br>
-   *                       If no options are set, the default
-   *                       are "&amp;format=standard&amp;licenses=false"
-   * @throws IOException   if the attempt to get an IdToken failed
-   * @return IdToken object which includes the raw id_token, JsonWebSignature.
+   * @param targetAudience the aud: field the IdToken should include
+   * @param options list of Credential specific options for for the
+   * token. For example, an IDToken for a ComputeEngineCredential could have 
+   * the full formated claims returned if IdTokenProvider.Option.FORMAT_FULL) 
+   * is provided as a list option.  Valid option values are:
+   * IdTokenProvider.Option.FORMAT_FULL<br>
+   * IdTokenProvider.Option.LICENSES_TRUE<br>
+   * If no options are set, the default
+   * are "&amp;format=standard&amp;licenses=false"
+   * @throws IOException if the attempt to get an IdToken failed
+   * @return IdToken object which includes the raw id_token, JsonWebSignature
    */
   @Override
   public IdToken idTokenWithAudience(String targetAudience, List<IdTokenProvider.Option> options) throws IOException {
-    GenericUrl documentURL = new GenericUrl(getIdentityDocumentUrl());
+    GenericUrl documentUrl = new GenericUrl(getIdentityDocumentUrl());
     if (options != null) {
-      if (options.contains(IdTokenProvider.Option.FORMAT_FULL))
-        documentURL.set("format", "full");
-      if (options.contains(IdTokenProvider.Option.LICENSES_TRUE))
-        documentURL.set("license","TRUE");
+      if (options.contains(IdTokenProvider.Option.FORMAT_FULL)) {
+        documentUrl.set("format", "full");
+      }
+      if (options.contains(IdTokenProvider.Option.LICENSES_TRUE)) {
+        // if license will only get returned if format is also full
+        documentUrl.set("format", "full");
+        documentUrl.set("license","TRUE");
+      }
     }
-    documentURL.set("audience", targetAudience);
+    documentUrl.set("audience", targetAudience);
     HttpResponse response = null;
-    response = getMetadataResponse(documentURL.toString());
+    response = getMetadataResponse(documentUrl.toString());
     InputStream content = response.getContent();
     if (content == null) {
       throw new IOException("Empty content from metadata token server request.");
