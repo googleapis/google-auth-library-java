@@ -32,7 +32,6 @@
 package com.google.auth.oauth2;
 
 import com.google.auth.http.HttpTransportFactory;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -50,9 +49,9 @@ import java.util.logging.Logger;
 /**
  * Provides the Application Default Credential from the environment.
  *
- * <p>An instance represents the per-process state used to get and cache the credential and
- * allows overriding the state and environment for testing purposes.
- **/
+ * <p>An instance represents the per-process state used to get and cache the credential and allows
+ * overriding the state and environment for testing purposes.
+ */
 class DefaultCredentialsProvider {
 
   static final DefaultCredentialsProvider DEFAULT = new DefaultCredentialsProvider();
@@ -72,7 +71,8 @@ class DefaultCredentialsProvider {
 
   static final String SKIP_APP_ENGINE_ENV_VAR = "GOOGLE_APPLICATION_CREDENTIALS_SKIP_APP_ENGINE";
   static final String SPECIFICATION_VERSION = System.getProperty("java.specification.version");
-  static final String GAE_RUNTIME_VERSION = System.getProperty("com.google.appengine.runtime.version");
+  static final String GAE_RUNTIME_VERSION =
+      System.getProperty("com.google.appengine.runtime.version");
   static final String RUNTIME_JETTY_LOGGER = System.getProperty("org.eclipse.jetty.util.log.class");
   static final Logger LOGGER = Logger.getLogger(DefaultCredentialsProvider.class.getName());
 
@@ -82,20 +82,20 @@ class DefaultCredentialsProvider {
       "764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com";
   static final String CLOUDSDK_CREDENTIALS_WARNING =
       "Your application has authenticated using end user credentials from Google "
-      + "Cloud SDK. We recommend that most server applications use service accounts "
-      + "instead. If your application continues to use end user credentials from Cloud "
-      + "SDK, you might receive a \"quota exceeded\" or \"API not enabled\" error. For "
-      + "more information about service accounts, see "
-      + "https://cloud.google.com/docs/authentication/.";
-  public static final String SUPPRESS_GCLOUD_CREDS_WARNING_ENV_VAR = "SUPPRESS_GCLOUD_CREDS_WARNING";
+          + "Cloud SDK. We recommend that most server applications use service accounts "
+          + "instead. If your application continues to use end user credentials from Cloud "
+          + "SDK, you might receive a \"quota exceeded\" or \"API not enabled\" error. For "
+          + "more information about service accounts, see "
+          + "https://cloud.google.com/docs/authentication/.";
+  public static final String SUPPRESS_GCLOUD_CREDS_WARNING_ENV_VAR =
+      "SUPPRESS_GCLOUD_CREDS_WARNING";
 
   // These variables should only be accessed inside a synchronized block
   private GoogleCredentials cachedCredentials = null;
   private boolean checkedAppEngine = false;
   private boolean checkedComputeEngine = false;
 
-  DefaultCredentialsProvider() {
-  }
+  DefaultCredentialsProvider() {}
 
   /**
    * Returns the Application Default Credentials.
@@ -103,21 +103,22 @@ class DefaultCredentialsProvider {
    * <p>Returns the Application Default Credentials which are used to identify and authorize the
    * whole application. The following are searched (in order) to find the Application Default
    * Credentials:
+   *
    * <ol>
    *   <li>Credentials file pointed to by the {@code GOOGLE_APPLICATION_CREDENTIALS} environment
-   *   variable</li>
-   *   <li>Credentials provided by the Google Cloud SDK
-   *   {@code gcloud auth application-default login} command</li>
-   *   <li>Google App Engine built-in credentials</li>
-   *   <li>Google Cloud Shell built-in credentials</li>
-   *   <li>Google Compute Engine built-in credentials</li>
+   *       variable
+   *   <li>Credentials provided by the Google Cloud SDK {@code gcloud auth application-default
+   *       login} command
+   *   <li>Google App Engine built-in credentials
+   *   <li>Google Cloud Shell built-in credentials
+   *   <li>Google Compute Engine built-in credentials
    * </ol>
    *
    * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *        tokens.
+   *     tokens.
    * @return the credentials instance.
    * @throws IOException if the credentials cannot be created in the current environment.
-   **/
+   */
   final GoogleCredentials getDefaultCredentials(HttpTransportFactory transportFactory)
       throws IOException {
     synchronized (this) {
@@ -129,12 +130,12 @@ class DefaultCredentialsProvider {
       }
     }
 
-    throw new IOException(String.format(
-        "The Application Default Credentials are not available. They are available if running"
-            + " in Google Compute Engine. Otherwise, the environment variable %s must be defined"
-            + " pointing to a file defining the credentials. See %s for more information.",
-        CREDENTIAL_ENV_VAR,
-        HELP_PERMALINK));
+    throw new IOException(
+        String.format(
+            "The Application Default Credentials are not available. They are available if running"
+                + " in Google Compute Engine. Otherwise, the environment variable %s must be defined"
+                + " pointing to a file defining the credentials. See %s for more information.",
+            CREDENTIAL_ENV_VAR, HELP_PERMALINK));
   }
 
   private final GoogleCredentials getDefaultCredentialsUnsynchronized(
@@ -157,9 +158,11 @@ class DefaultCredentialsProvider {
         // Although it is also the cause, the message of the caught exception can have very
         // important information for diagnosing errors, so include its message in the
         // outer exception message also.
-        throw new IOException(String.format(
-            "Error reading credential file from environment variable %s, value '%s': %s",
-            CREDENTIAL_ENV_VAR, credentialsPath, e.getMessage()), e);
+        throw new IOException(
+            String.format(
+                "Error reading credential file from environment variable %s, value '%s': %s",
+                CREDENTIAL_ENV_VAR, credentialsPath, e.getMessage()),
+            e);
       } catch (AccessControlException expected) {
         // Exception querying file system is expected on App-Engine
       } finally {
@@ -179,9 +182,10 @@ class DefaultCredentialsProvider {
           credentials = GoogleCredentials.fromStream(credentialsStream, transportFactory);
         }
       } catch (IOException e) {
-        throw new IOException(String.format(
-            "Error reading credential file from location %s: %s",
-            wellKnownFileLocation, e.getMessage()));
+        throw new IOException(
+            String.format(
+                "Error reading credential file from location %s: %s",
+                wellKnownFileLocation, e.getMessage()));
       } catch (AccessControlException expected) {
         // Exception querying file system is expected on App-Engine
       } finally {
@@ -252,13 +256,19 @@ class DefaultCredentialsProvider {
       Method valueMethod = environmentType.getMethod("value");
       Object environmentValueValue = valueMethod.invoke(environmentValue);
       return (environmentValueValue != null);
-    } catch (NoSuchFieldException | SecurityException | IllegalArgumentException
-        | IllegalAccessException | NoSuchMethodException | InvocationTargetException exception) {
+    } catch (NoSuchFieldException
+        | SecurityException
+        | IllegalArgumentException
+        | IllegalAccessException
+        | NoSuchMethodException
+        | InvocationTargetException exception) {
       cause = exception;
     }
-    throw new RuntimeException(String.format(
-        "Unexpected error trying to determine if runnning on Google App Engine: %s",
-        cause.getMessage()), cause);
+    throw new RuntimeException(
+        String.format(
+            "Unexpected error trying to determine if runnning on Google App Engine: %s",
+            cause.getMessage()),
+        cause);
   }
 
   private GoogleCredentials tryGetCloudShellCredentials() {
@@ -292,7 +302,9 @@ class DefaultCredentialsProvider {
         ComputeEngineCredentials.runningOnComputeEngine(transportFactory, this);
     checkedComputeEngine = true;
     if (runningOnComputeEngine) {
-      return ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+      return ComputeEngineCredentials.newBuilder()
+          .setHttpTransportFactory(transportFactory)
+          .build();
     }
     return null;
   }

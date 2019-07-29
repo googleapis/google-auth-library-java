@@ -31,28 +31,27 @@
 
 package com.google.auth.oauth2;
 
-import java.io.IOException;
-import java.util.List;
-
+import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.http.LowLevelHttpRequest;
 import com.google.api.client.http.LowLevelHttpResponse;
-import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.Json;
 import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
-import com.google.common.io.BaseEncoding;
-
 import com.google.auth.TestUtils;
-/**
- * Transport that simulates the IAMCredentials server for access tokens.
- */
+import com.google.common.io.BaseEncoding;
+import java.io.IOException;
+
+/** Transport that simulates the IAMCredentials server for access tokens. */
 public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
 
-  private static final String IAM_ACCESS_TOKEN_ENDPOINT = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken";
-  private static final String IAM_ID_TOKEN_ENDPOINT = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateIdToken";
-  private static final String IAM_SIGN_ENDPOINT = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
+  private static final String IAM_ACCESS_TOKEN_ENDPOINT =
+      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken";
+  private static final String IAM_ID_TOKEN_ENDPOINT =
+      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateIdToken";
+  private static final String IAM_SIGN_ENDPOINT =
+      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
   private Integer tokenResponseErrorCode;
   private String tokenResponseErrorContent;
   private String targetPrincipal;
@@ -65,8 +64,7 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
 
   private MockLowLevelHttpRequest request;
 
-  public MockIAMCredentialsServiceTransport() {
-  }
+  public MockIAMCredentialsServiceTransport() {}
 
   public void setTokenResponseErrorCode(Integer tokenResponseErrorCode) {
     this.tokenResponseErrorCode = tokenResponseErrorCode;
@@ -104,80 +102,84 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
   @Override
   public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
 
-    String iamAccesssTokenformattedUrl = String.format(IAM_ACCESS_TOKEN_ENDPOINT, this.targetPrincipal);
+    String iamAccesssTokenformattedUrl =
+        String.format(IAM_ACCESS_TOKEN_ENDPOINT, this.targetPrincipal);
     String iamSignBlobformattedUrl = String.format(IAM_SIGN_ENDPOINT, this.targetPrincipal);
     if (url.equals(iamAccesssTokenformattedUrl)) {
-      this.request = new MockLowLevelHttpRequest(url) {
-        @Override
-        public LowLevelHttpResponse execute() throws IOException {
+      this.request =
+          new MockLowLevelHttpRequest(url) {
+            @Override
+            public LowLevelHttpResponse execute() throws IOException {
 
-          if (tokenResponseErrorCode != null) {
-            return new MockLowLevelHttpResponse()
-                .setStatusCode(tokenResponseErrorCode)
-                .setContentType(Json.MEDIA_TYPE)
-                .setContent(tokenResponseErrorContent);
-          }
+              if (tokenResponseErrorCode != null) {
+                return new MockLowLevelHttpResponse()
+                    .setStatusCode(tokenResponseErrorCode)
+                    .setContentType(Json.MEDIA_TYPE)
+                    .setContent(tokenResponseErrorContent);
+              }
 
-          // Create the JSON response
-          GenericJson refreshContents = new GenericJson();
-          refreshContents.setFactory(OAuth2Utils.JSON_FACTORY);
-          refreshContents.put("accessToken", accessToken);
-          refreshContents.put("expireTime", expireTime);
-          String refreshText = refreshContents.toPrettyString();
-          return new MockLowLevelHttpResponse()
-              .setContentType(Json.MEDIA_TYPE)
-              .setContent(refreshText);
-        }
-      };
-    } else if (url.equals(iamSignBlobformattedUrl) && responseCode != HttpStatusCodes.STATUS_CODE_OK) {
-      this.request =  new MockLowLevelHttpRequest(url) {
-        @Override
-        public LowLevelHttpResponse execute() throws IOException {
+              // Create the JSON response
+              GenericJson refreshContents = new GenericJson();
+              refreshContents.setFactory(OAuth2Utils.JSON_FACTORY);
+              refreshContents.put("accessToken", accessToken);
+              refreshContents.put("expireTime", expireTime);
+              String refreshText = refreshContents.toPrettyString();
+              return new MockLowLevelHttpResponse()
+                  .setContentType(Json.MEDIA_TYPE)
+                  .setContent(refreshText);
+            }
+          };
+    } else if (url.equals(iamSignBlobformattedUrl)
+        && responseCode != HttpStatusCodes.STATUS_CODE_OK) {
+      this.request =
+          new MockLowLevelHttpRequest(url) {
+            @Override
+            public LowLevelHttpResponse execute() throws IOException {
 
-          if (tokenResponseErrorCode != null) {
-            return new MockLowLevelHttpResponse()
-                .setStatusCode(tokenResponseErrorCode)
-                .setContentType(Json.MEDIA_TYPE)
-                .setContent(tokenResponseErrorContent);
-          }
+              if (tokenResponseErrorCode != null) {
+                return new MockLowLevelHttpResponse()
+                    .setStatusCode(tokenResponseErrorCode)
+                    .setContentType(Json.MEDIA_TYPE)
+                    .setContent(tokenResponseErrorContent);
+              }
 
-          BaseEncoding base64 = BaseEncoding.base64();
-          GenericJson refreshContents = new GenericJson();
-          refreshContents.setFactory(OAuth2Utils.JSON_FACTORY);
-          refreshContents.put("signedBlob", base64.encode(signedBlob));
-          String refreshText = refreshContents.toPrettyString();
-          return new MockLowLevelHttpResponse()
-          .setStatusCode(responseCode)
-          .setContent(TestUtils.errorJson(errorMessage));
-        }
-      };
+              BaseEncoding base64 = BaseEncoding.base64();
+              GenericJson refreshContents = new GenericJson();
+              refreshContents.setFactory(OAuth2Utils.JSON_FACTORY);
+              refreshContents.put("signedBlob", base64.encode(signedBlob));
+              String refreshText = refreshContents.toPrettyString();
+              return new MockLowLevelHttpResponse()
+                  .setStatusCode(responseCode)
+                  .setContent(TestUtils.errorJson(errorMessage));
+            }
+          };
     } else if (url.equals(iamSignBlobformattedUrl)) {
-      this.request = new MockLowLevelHttpRequest(url) {
-        @Override
-        public LowLevelHttpResponse execute() throws IOException {
+      this.request =
+          new MockLowLevelHttpRequest(url) {
+            @Override
+            public LowLevelHttpResponse execute() throws IOException {
 
-          if (tokenResponseErrorCode != null) {
-            return new MockLowLevelHttpResponse()
-                .setStatusCode(tokenResponseErrorCode)
-                .setContentType(Json.MEDIA_TYPE)
-                .setContent(tokenResponseErrorContent);
-          }
+              if (tokenResponseErrorCode != null) {
+                return new MockLowLevelHttpResponse()
+                    .setStatusCode(tokenResponseErrorCode)
+                    .setContentType(Json.MEDIA_TYPE)
+                    .setContent(tokenResponseErrorContent);
+              }
 
-          BaseEncoding base64 = BaseEncoding.base64();
-          GenericJson refreshContents = new GenericJson();
-          refreshContents.setFactory(OAuth2Utils.JSON_FACTORY);
-          refreshContents.put("signedBlob", base64.encode(signedBlob));
-          String refreshText = refreshContents.toPrettyString();
-          return new MockLowLevelHttpResponse()
-              .setContentType(Json.MEDIA_TYPE)
-              .setContent(refreshText);
-        }
-      };
+              BaseEncoding base64 = BaseEncoding.base64();
+              GenericJson refreshContents = new GenericJson();
+              refreshContents.setFactory(OAuth2Utils.JSON_FACTORY);
+              refreshContents.put("signedBlob", base64.encode(signedBlob));
+              String refreshText = refreshContents.toPrettyString();
+              return new MockLowLevelHttpResponse()
+                  .setContentType(Json.MEDIA_TYPE)
+                  .setContent(refreshText);
+            }
+          };
     } else {
       return super.buildRequest(method, url);
     }
 
     return this.request;
   }
-
 }

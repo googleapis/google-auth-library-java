@@ -33,9 +33,7 @@ package com.google.auth;
 
 import com.google.api.client.util.Clock;
 
-/**
- * A mock clock for testing time-sensitive operations.
- */
+/** A mock clock for testing time-sensitive operations. */
 public class TestClock implements Clock {
 
   long currentTime;
@@ -52,5 +50,4 @@ public class TestClock implements Clock {
   public void setCurrentTime(long currentTime) {
     this.currentTime = currentTime;
   }
-
 }

@@ -39,11 +39,6 @@ import static org.junit.Assert.fail;
 
 import com.google.auth.TestUtils;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
@@ -51,10 +46,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Unit Tests for UserAuthorizer
- */
+/** Unit Tests for UserAuthorizer */
 @RunWith(JUnit4.class)
 public class UserAuthorizerTest {
   private static final String CLIENT_ID_VALUE = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
@@ -76,11 +72,12 @@ public class UserAuthorizerTest {
   public void constructorMinimum() {
     TokenStore store = new MemoryTokensStorage();
 
-    UserAuthorizer authorizer = UserAuthorizer.newBuilder()
-        .setClientId(CLIENT_ID)
-        .setScopes(SCOPES)
-        .setTokenStore(store)
-        .build();
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(SCOPES)
+            .setTokenStore(store)
+            .build();
 
     assertSame(CLIENT_ID, authorizer.getClientId());
     assertSame(store, authorizer.getTokenStore());
@@ -92,12 +89,13 @@ public class UserAuthorizerTest {
   public void constructorCommon() {
     TokenStore store = new MemoryTokensStorage();
 
-    UserAuthorizer authorizer = UserAuthorizer.newBuilder()
-        .setClientId(CLIENT_ID)
-        .setScopes(SCOPES)
-        .setTokenStore(store)
-        .setCallbackUri(CALLBACK_URI)
-        .build();
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(SCOPES)
+            .setTokenStore(store)
+            .setCallbackUri(CALLBACK_URI)
+            .build();
 
     assertSame(CLIENT_ID, authorizer.getClientId());
     assertSame(store, authorizer.getTokenStore());
@@ -107,28 +105,24 @@ public class UserAuthorizerTest {
 
   @Test(expected = NullPointerException.class)
   public void constructorCommon_nullClientId_throws() {
-    UserAuthorizer.newBuilder()
-        .setScopes(SCOPES)
-        .setCallbackUri(CALLBACK_URI)
-        .build();
+    UserAuthorizer.newBuilder().setScopes(SCOPES).setCallbackUri(CALLBACK_URI).build();
   }
 
   @Test(expected = NullPointerException.class)
   public void constructorCommon_nullScopes_throws() {
-    UserAuthorizer.newBuilder()
-        .setClientId(CLIENT_ID)
-        .build();
+    UserAuthorizer.newBuilder().setClientId(CLIENT_ID).build();
   }
 
   @Test
   public void getCallbackUri_relativeToBase() {
     final URI callbackURI = URI.create("/bar");
     final URI expectedCallbackURI = URI.create("http://example.com/bar");
-    UserAuthorizer authorizer = UserAuthorizer.newBuilder()
-        .setClientId(CLIENT_ID)
-        .setScopes(SCOPES)
-        .setCallbackUri(callbackURI)
-        .build();
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(SCOPES)
+            .setCallbackUri(callbackURI)
+            .build();
 
     URI absoluteCallbackURI = authorizer.getCallbackUri(BASE_URI);
 
@@ -143,12 +137,13 @@ public class UserAuthorizerTest {
     final String PATH = "/o/o/oauth2/auth";
     final URI AUTH_URI = URI.create(PROTOCOL + "://" + HOST + PATH);
     final String EXPECTED_CALLBACK = "http://example.com" + CALLBACK_URI.toString();
-    UserAuthorizer authorizer = UserAuthorizer.newBuilder()
-        .setClientId(CLIENT_ID)
-        .setScopes(SCOPES)
-        .setCallbackUri(CALLBACK_URI)
-        .setUserAuthUri(AUTH_URI)
-        .build();
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(SCOPES)
+            .setCallbackUri(CALLBACK_URI)
+            .setUserAuthUri(AUTH_URI)
+            .build();
 
     URL authorizationUrl = authorizer.getAuthorizationUrl(USER_ID, CUSTOM_STATE, BASE_URI);
 
@@ -168,11 +163,12 @@ public class UserAuthorizerTest {
 
   @Test
   public void getCredentials_noCredentials_returnsNull() throws IOException {
-    UserAuthorizer authorizer = UserAuthorizer.newBuilder()
-        .setClientId(CLIENT_ID)
-        .setScopes(SCOPES)
-        .setTokenStore(new MemoryTokensStorage())
-        .build();
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(SCOPES)
+            .setTokenStore(new MemoryTokensStorage())
+            .build();
 
     UserCredentials credentials = authorizer.getCredentials(USER_ID);
 
@@ -183,18 +179,20 @@ public class UserAuthorizerTest {
   public void getCredentials_storedCredentials_returnsStored() throws IOException {
     TokenStore tokenStore = new MemoryTokensStorage();
 
-    UserCredentials initialCredentials = UserCredentials.newBuilder()
-        .setClientId(CLIENT_ID_VALUE)
-        .setClientSecret(CLIENT_SECRET)
-        .setRefreshToken(REFRESH_TOKEN)
-        .setAccessToken(ACCESS_TOKEN)
-        .build();
+    UserCredentials initialCredentials =
+        UserCredentials.newBuilder()
+            .setClientId(CLIENT_ID_VALUE)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setAccessToken(ACCESS_TOKEN)
+            .build();
 
-    UserAuthorizer authorizer = UserAuthorizer.newBuilder()
-        .setClientId(CLIENT_ID)
-        .setScopes(SCOPES)
-        .setTokenStore(tokenStore)
-        .build();
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(SCOPES)
+            .setTokenStore(tokenStore)
+            .build();
     authorizer.storeCredentials(USER_ID, initialCredentials);
 
     UserCredentials credentials = authorizer.getCredentials(USER_ID);
@@ -207,11 +205,12 @@ public class UserAuthorizerTest {
   @Test(expected = NullPointerException.class)
   public void getCredentials_nullUserId_throws() throws IOException {
     TokenStore tokenStore = new MemoryTokensStorage();
-    UserAuthorizer authorizer = UserAuthorizer.newBuilder()
-        .setClientId(CLIENT_ID)
-        .setScopes(SCOPES)
-        .setTokenStore(tokenStore)
-        .build();
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(SCOPES)
+            .setTokenStore(tokenStore)
+            .build();
 
     authorizer.getCredentials(null);
   }
@@ -220,26 +219,27 @@ public class UserAuthorizerTest {
   public void getCredentials_refreshedToken_stored() throws IOException {
     final String accessTokenValue1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessTokenValue2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
-    AccessToken accessToken1 =
-        new AccessToken(accessTokenValue1, new Date(EXPIRATION_TIME));
+    AccessToken accessToken1 = new AccessToken(accessTokenValue1, new Date(EXPIRATION_TIME));
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessTokenValue2);
     TokenStore tokenStore = new MemoryTokensStorage();
-    UserAuthorizer authorizer = UserAuthorizer.newBuilder()
-        .setClientId(CLIENT_ID)
-        .setScopes(SCOPES)
-        .setTokenStore(tokenStore)
-        .setHttpTransportFactory(transportFactory)
-        .build();
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(SCOPES)
+            .setTokenStore(tokenStore)
+            .setHttpTransportFactory(transportFactory)
+            .build();
 
-    UserCredentials originalCredentials = UserCredentials.newBuilder()
-        .setClientId(CLIENT_ID_VALUE)
-        .setClientSecret(CLIENT_SECRET)
-        .setRefreshToken(REFRESH_TOKEN)
-        .setAccessToken(accessToken1)
-        .setHttpTransportFactory(transportFactory)
-        .build();
+    UserCredentials originalCredentials =
+        UserCredentials.newBuilder()
+            .setClientId(CLIENT_ID_VALUE)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setAccessToken(accessToken1)
+            .setHttpTransportFactory(transportFactory)
+            .build();
 
     authorizer.storeCredentials(USER_ID, originalCredentials);
 
@@ -267,12 +267,13 @@ public class UserAuthorizerTest {
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
     transportFactory.transport.addAuthorizationCode(CODE, REFRESH_TOKEN, ACCESS_TOKEN_VALUE);
     TokenStore tokenStore = new MemoryTokensStorage();
-    UserAuthorizer authorizer = UserAuthorizer.newBuilder()
-        .setClientId(CLIENT_ID)
-        .setScopes(SCOPES)
-        .setTokenStore(tokenStore)
-        .setHttpTransportFactory(transportFactory)
-        .build();
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(SCOPES)
+            .setTokenStore(tokenStore)
+            .setHttpTransportFactory(transportFactory)
+            .build();
 
     UserCredentials credentials = authorizer.getCredentialsFromCode(CODE, BASE_URI);
 
@@ -282,11 +283,12 @@ public class UserAuthorizerTest {
 
   @Test(expected = NullPointerException.class)
   public void getCredentialsFromCode_nullCode_throws() throws IOException {
-    UserAuthorizer authorizer = UserAuthorizer.newBuilder()
-        .setClientId(CLIENT_ID)
-        .setScopes(SCOPES)
-        .setTokenStore(new MemoryTokensStorage())
-        .build();
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(SCOPES)
+            .setTokenStore(new MemoryTokensStorage())
+            .build();
 
     authorizer.getCredentialsFromCode(null, BASE_URI);
   }
@@ -299,12 +301,13 @@ public class UserAuthorizerTest {
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
     transportFactory.transport.addAuthorizationCode(CODE, REFRESH_TOKEN, accessTokenValue1);
     TokenStore tokenStore = new MemoryTokensStorage();
-    UserAuthorizer authorizer = UserAuthorizer.newBuilder()
-        .setClientId(CLIENT_ID)
-        .setScopes(SCOPES)
-        .setTokenStore(tokenStore)
-        .setHttpTransportFactory(transportFactory)
-        .build();
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(SCOPES)
+            .setTokenStore(tokenStore)
+            .setHttpTransportFactory(transportFactory)
+            .build();
 
     UserCredentials credentials1 =
         authorizer.getAndStoreCredentialsFromCode(USER_ID, CODE, BASE_URI);
@@ -328,22 +331,24 @@ public class UserAuthorizerTest {
 
   @Test(expected = NullPointerException.class)
   public void getAndStoreCredentialsFromCode_nullCode_throws() throws IOException {
-    UserAuthorizer authorizer = UserAuthorizer.newBuilder()
-        .setClientId(CLIENT_ID)
-        .setScopes(SCOPES)
-        .setTokenStore(new MemoryTokensStorage())
-        .build();
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(SCOPES)
+            .setTokenStore(new MemoryTokensStorage())
+            .build();
 
     authorizer.getAndStoreCredentialsFromCode(USER_ID, null, BASE_URI);
   }
 
   @Test(expected = NullPointerException.class)
   public void getAndStoreCredentialsFromCode_nullUserId_throws() throws IOException {
-    UserAuthorizer authorizer = UserAuthorizer.newBuilder()
-        .setClientId(CLIENT_ID)
-        .setScopes(SCOPES)
-        .setTokenStore(new MemoryTokensStorage())
-        .build();
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(SCOPES)
+            .setTokenStore(new MemoryTokensStorage())
+            .build();
 
     authorizer.getAndStoreCredentialsFromCode(null, CODE, BASE_URI);
   }
@@ -354,19 +359,21 @@ public class UserAuthorizerTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN_VALUE);
-    UserCredentials initialCredentials = UserCredentials.newBuilder()
-        .setClientId(CLIENT_ID_VALUE)
-        .setClientSecret(CLIENT_SECRET)
-        .setRefreshToken(REFRESH_TOKEN)
-        .setAccessToken(ACCESS_TOKEN)
-        .build();
+    UserCredentials initialCredentials =
+        UserCredentials.newBuilder()
+            .setClientId(CLIENT_ID_VALUE)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setAccessToken(ACCESS_TOKEN)
+            .build();
 
-    UserAuthorizer authorizer = UserAuthorizer.newBuilder()
-        .setClientId(CLIENT_ID)
-        .setScopes(SCOPES)
-        .setTokenStore(tokenStore)
-        .setHttpTransportFactory(transportFactory)
-        .build();
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(SCOPES)
+            .setTokenStore(tokenStore)
+            .setHttpTransportFactory(transportFactory)
+            .build();
 
     authorizer.storeCredentials(USER_ID, initialCredentials);
 

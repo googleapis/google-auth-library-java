@@ -46,7 +46,6 @@ import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
-
 import com.google.common.base.Throwables;
 import com.google.common.base.Ticker;
 import com.google.common.cache.CacheBuilder;
@@ -81,8 +80,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
 
   private static final long serialVersionUID = -7274955171379494197L;
   static final String JWT_ACCESS_PREFIX = OAuth2Utils.BEARER_PREFIX;
-  @VisibleForTesting
-  static final long LIFE_SPAN_SECS = TimeUnit.HOURS.toSeconds(1);
+  @VisibleForTesting static final long LIFE_SPAN_SECS = TimeUnit.HOURS.toSeconds(1);
 
   private final String clientId;
   private final String clientEmail;
@@ -91,10 +89,8 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   private final URI defaultAudience;
   private transient LoadingCache<URI, String> tokenCache;
 
-
   // Until we expose this to the users it can remain transient and non-serializable
-  @VisibleForTesting
-  transient Clock clock = Clock.SYSTEM;
+  @VisibleForTesting transient Clock clock = Clock.SYSTEM;
 
   /**
    * Constructor with minimum identifying information.
@@ -104,7 +100,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    * @param privateKey RSA private key object for the service account.
    * @param privateKeyId Private key identifier for the service account. May be null.
    * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
-   *             private in a later version.
+   *     private in a later version.
    */
   @Deprecated
   public ServiceAccountJwtAccessCredentials(
@@ -121,8 +117,12 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    * @param privateKeyId Private key identifier for the service account. May be null.
    * @param defaultAudience Audience to use if not provided by transport. May be null.
    */
-  private ServiceAccountJwtAccessCredentials(String clientId, String clientEmail,
-      PrivateKey privateKey, String privateKeyId, URI defaultAudience) {
+  private ServiceAccountJwtAccessCredentials(
+      String clientId,
+      String clientEmail,
+      PrivateKey privateKey,
+      String privateKeyId,
+      URI defaultAudience) {
     this.clientId = clientId;
     this.clientEmail = Preconditions.checkNotNull(clientEmail);
     this.privateKey = Preconditions.checkNotNull(privateKey);
@@ -138,7 +138,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    * @param json a map from the JSON representing the credentials.
    * @return the credentials defined by the JSON.
    * @throws IOException if the credential cannot be created from the JSON.
-   **/
+   */
   static ServiceAccountJwtAccessCredentials fromJson(Map<String, Object> json) throws IOException {
     return fromJson(json, null);
   }
@@ -151,17 +151,20 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    * @param defaultAudience Audience to use if not provided by transport. May be null.
    * @return the credentials defined by the JSON.
    * @throws IOException if the credential cannot be created from the JSON.
-   **/
+   */
   static ServiceAccountJwtAccessCredentials fromJson(Map<String, Object> json, URI defaultAudience)
       throws IOException {
     String clientId = (String) json.get("client_id");
     String clientEmail = (String) json.get("client_email");
     String privateKeyPkcs8 = (String) json.get("private_key");
     String privateKeyId = (String) json.get("private_key_id");
-    if (clientId == null || clientEmail == null
-        || privateKeyPkcs8 == null || privateKeyId == null) {
-      throw new IOException("Error reading service account credential from JSON, "
-          + "expecting  'client_id', 'client_email', 'private_key' and 'private_key_id'.");
+    if (clientId == null
+        || clientEmail == null
+        || privateKeyPkcs8 == null
+        || privateKeyId == null) {
+      throw new IOException(
+          "Error reading service account credential from JSON, "
+              + "expecting  'client_id', 'client_email', 'private_key' and 'private_key_id'.");
     }
     return fromPkcs8(clientId, clientEmail, privateKeyPkcs8, privateKeyId, defaultAudience);
   }
@@ -176,8 +179,9 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    * @return New ServiceAccountJwtAcceessCredentials created from a private key.
    * @throws IOException if the credential cannot be created from the private key.
    */
-  public static ServiceAccountJwtAccessCredentials fromPkcs8(String clientId, String clientEmail, 
-      String privateKeyPkcs8, String privateKeyId) throws IOException {
+  public static ServiceAccountJwtAccessCredentials fromPkcs8(
+      String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId)
+      throws IOException {
     return fromPkcs8(clientId, clientEmail, privateKeyPkcs8, privateKeyId, null);
   }
 
@@ -192,8 +196,13 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    * @return New ServiceAccountJwtAcceessCredentials created from a private key.
    * @throws IOException if the credential cannot be created from the private key.
    */
-  public static ServiceAccountJwtAccessCredentials fromPkcs8(String clientId, String clientEmail, 
-      String privateKeyPkcs8, String privateKeyId, URI defaultAudience) throws IOException {
+  public static ServiceAccountJwtAccessCredentials fromPkcs8(
+      String clientId,
+      String clientEmail,
+      String privateKeyPkcs8,
+      String privateKeyId,
+      URI defaultAudience)
+      throws IOException {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(privateKeyPkcs8);
     return new ServiceAccountJwtAccessCredentials(
         clientId, clientEmail, privateKey, privateKeyId, defaultAudience);
@@ -206,7 +215,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    * @param credentialsStream the stream with the credential definition.
    * @return the credential defined by the credentialsStream.
    * @throws IOException if the credential cannot be created from the stream.
-   **/
+   */
   public static ServiceAccountJwtAccessCredentials fromStream(InputStream credentialsStream)
       throws IOException {
     return fromStream(credentialsStream, null);
@@ -220,15 +229,15 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    * @param defaultAudience Audience to use if not provided by transport. May be null.
    * @return the credential defined by the credentialsStream.
    * @throws IOException if the credential cannot be created from the stream.
-   **/
-  public static ServiceAccountJwtAccessCredentials fromStream(InputStream credentialsStream,
-      URI defaultAudience) throws IOException {
+   */
+  public static ServiceAccountJwtAccessCredentials fromStream(
+      InputStream credentialsStream, URI defaultAudience) throws IOException {
     Preconditions.checkNotNull(credentialsStream);
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     JsonObjectParser parser = new JsonObjectParser(jsonFactory);
-    GenericJson fileContents = parser.parseAndClose(
-        credentialsStream, OAuth2Utils.UTF_8, GenericJson.class);
+    GenericJson fileContents =
+        parser.parseAndClose(credentialsStream, OAuth2Utils.UTF_8, GenericJson.class);
 
     String fileType = (String) fileContents.get("type");
     if (fileType == null) {
@@ -237,9 +246,11 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     if (SERVICE_ACCOUNT_FILE_TYPE.equals(fileType)) {
       return fromJson(fileContents, defaultAudience);
     }
-    throw new IOException(String.format(
-        "Error reading credentials from stream, 'type' value '%s' not recognized."
-            + " Expecting '%s'.", fileType, SERVICE_ACCOUNT_FILE_TYPE));
+    throw new IOException(
+        String.format(
+            "Error reading credentials from stream, 'type' value '%s' not recognized."
+                + " Expecting '%s'.",
+            fileType, SERVICE_ACCOUNT_FILE_TYPE));
   }
 
   private LoadingCache<URI, String> createCache() {
@@ -252,16 +263,14 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
               public long read() {
                 return TimeUnit.MILLISECONDS.toNanos(clock.currentTimeMillis());
               }
-            }
-        )
+            })
         .build(
             new CacheLoader<URI, String>() {
               @Override
               public String load(URI key) throws Exception {
                 return generateJwtAccess(key);
               }
-            }
-        );
+            });
   }
 
   @Override
@@ -280,24 +289,23 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   }
 
   @Override
-  public void getRequestMetadata(final URI uri, Executor executor,
-      final RequestMetadataCallback callback) {
+  public void getRequestMetadata(
+      final URI uri, Executor executor, final RequestMetadataCallback callback) {
     // It doesn't use network. Only some CPU work on par with TLS handshake. So it's preferrable
     // to do it in the current thread, which is likely to be the network thread.
     blockingGetToCallback(uri, callback);
   }
 
-  /**
-   * Provide the request metadata by putting an access JWT directly in the metadata.
-   */
+  /** Provide the request metadata by putting an access JWT directly in the metadata. */
   @Override
   public Map<String, List<String>> getRequestMetadata(URI uri) throws IOException {
     if (uri == null) {
       if (defaultAudience != null) {
         uri = defaultAudience;
       } else {
-        throw new IOException("JwtAccess requires Audience uri to be passed in or the " 
-          + "defaultAudience to be specified");
+        throw new IOException(
+            "JwtAccess requires Audience uri to be passed in or the "
+                + "defaultAudience to be specified");
       }
     }
     String assertion = getJwtAccess(uri);
@@ -306,9 +314,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     return Collections.singletonMap(AuthHttpConstants.AUTHORIZATION, newAuthorizationHeaders);
   }
 
-  /**
-   * Discard any cached data
-   */
+  /** Discard any cached data */
   @Override
   public void refresh() {
     tokenCache.invalidateAll();
@@ -320,12 +326,14 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     } catch (ExecutionException e) {
       Throwables.propagateIfPossible(e.getCause(), IOException.class);
       // Should never happen
-      throw new IllegalStateException("generateJwtAccess threw an unexpected checked exception", e.getCause());
+      throw new IllegalStateException(
+          "generateJwtAccess threw an unexpected checked exception", e.getCause());
 
     } catch (UncheckedExecutionException e) {
       Throwables.propagateIfPossible(e);
       // Should never happen
-      throw new IllegalStateException("generateJwtAccess threw an unchecked exception that couldn't be rethrown", e);
+      throw new IllegalStateException(
+          "generateJwtAccess threw an unchecked exception that couldn't be rethrown", e);
     }
   }
 
@@ -348,8 +356,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
 
     String assertion;
     try {
-      assertion = JsonWebSignature.signUsingRsaSha256(
-          privateKey, jsonFactory, header, payload);
+      assertion = JsonWebSignature.signUsingRsaSha256(privateKey, jsonFactory, header, payload);
     } catch (GeneralSecurityException e) {
       throw new IOException("Error signing service account JWT access header with private key.", e);
     }

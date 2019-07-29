@@ -39,12 +39,9 @@ import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.common.io.BaseEncoding;
-
 import java.io.IOException;
 
-/**
- * Transport that simulates the GCE metadata server for access tokens.
- */
+/** Transport that simulates the GCE metadata server for access tokens. */
 public class MockMetadataServerTransport extends MockHttpTransport {
 
   private String accessToken;
@@ -55,8 +52,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
   private byte[] signature;
 
-  public MockMetadataServerTransport() {
-  }
+  public MockMetadataServerTransport() {}
 
   public void setAccessToken(String accessToken) {
     this.accessToken = accessToken;
@@ -84,8 +80,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
           if (tokenRequestStatusCode != null) {
             return new MockLowLevelHttpResponse()
-              .setStatusCode(tokenRequestStatusCode)
-              .setContent("Token Fetch Error");
+                .setStatusCode(tokenRequestStatusCode)
+                .setContent("Token Fetch Error");
           }
 
           String metadataRequestHeader = getFirstHeaderValue("Metadata-Flavor");
@@ -102,8 +98,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
           String refreshText = refreshContents.toPrettyString();
 
           return new MockLowLevelHttpResponse()
-            .setContentType(Json.MEDIA_TYPE)
-            .setContent(refreshText);
+              .setContentType(Json.MEDIA_TYPE)
+              .setContent(refreshText);
         }
       };
     } else if (url.equals(ComputeEngineCredentials.getMetadataServerUrl())) {
@@ -129,8 +125,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
           String serviceAccounts = serviceAccountsContents.toPrettyString();
 
           return new MockLowLevelHttpResponse()
-                  .setContentType(Json.MEDIA_TYPE)
-                  .setContent(serviceAccounts);
+              .setContentType(Json.MEDIA_TYPE)
+              .setContent(serviceAccounts);
         }
       };
     } else if (isSignRequestUrl(url)) {
@@ -145,8 +141,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
           String signature = signContents.toPrettyString();
 
           return new MockLowLevelHttpResponse()
-                  .setContentType(Json.MEDIA_TYPE)
-                  .setContent(signature);
+              .setContentType(Json.MEDIA_TYPE)
+              .setContent(signature);
         }
       };
     }
@@ -158,7 +154,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
   }
 
   protected boolean isSignRequestUrl(String url) {
-    return serviceAccountEmail != null &&
-        url.equals(String.format(ComputeEngineCredentials.SIGN_BLOB_URL_FORMAT, serviceAccountEmail));
+    return serviceAccountEmail != null
+        && url.equals(
+            String.format(ComputeEngineCredentials.SIGN_BLOB_URL_FORMAT, serviceAccountEmail));
   }
 }

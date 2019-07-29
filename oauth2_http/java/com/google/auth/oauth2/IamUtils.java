@@ -31,19 +31,18 @@
 
 package com.google.auth.oauth2;
 
-import com.google.api.client.http.HttpTransport;
-import com.google.auth.Credentials;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpStatusCodes;
+import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
+import com.google.auth.Credentials;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.common.io.BaseEncoding;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -54,7 +53,7 @@ import java.util.Map;
  */
 class IamUtils {
   private static final String SIGN_BLOB_URL_FORMAT =
-          "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
+      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
   private static final String PARSE_ERROR_MESSAGE = "Error parsing error message response. ";
   private static final String PARSE_ERROR_SIGNATURE = "Error parsing signature response. ";
 
@@ -68,21 +67,30 @@ class IamUtils {
    * @param additionalFields additional fields to send in the IAM call
    * @return signed bytes
    */
-  static byte[] sign(String serviceAccountEmail, Credentials credentials, HttpTransport transport,
-      byte[] toSign, Map<String, ?> additionalFields) {
+  static byte[] sign(
+      String serviceAccountEmail,
+      Credentials credentials,
+      HttpTransport transport,
+      byte[] toSign,
+      Map<String, ?> additionalFields) {
     BaseEncoding base64 = BaseEncoding.base64();
     String signature;
     try {
-      signature = getSignature(serviceAccountEmail, credentials, transport,
-              base64.encode(toSign), additionalFields);
+      signature =
+          getSignature(
+              serviceAccountEmail, credentials, transport, base64.encode(toSign), additionalFields);
     } catch (IOException ex) {
       throw new ServiceAccountSigner.SigningException("Failed to sign the provided bytes", ex);
     }
     return base64.decode(signature);
   }
 
-  private static String getSignature(String serviceAccountEmail, Credentials credentials,
-      HttpTransport transport, String bytes, Map<String, ?> additionalFields)
+  private static String getSignature(
+      String serviceAccountEmail,
+      Credentials credentials,
+      HttpTransport transport,
+      String bytes,
+      Map<String, ?> additionalFields)
       throws IOException {
     String signBlobUrl = String.format(SIGN_BLOB_URL_FORMAT, serviceAccountEmail);
     GenericUrl genericUrl = new GenericUrl(signBlobUrl);
@@ -95,8 +103,8 @@ class IamUtils {
     JsonHttpContent signContent = new JsonHttpContent(OAuth2Utils.JSON_FACTORY, signRequest);
 
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
-    HttpRequest request = transport.createRequestFactory(adapter)
-        .buildPostRequest(genericUrl, signContent);
+    HttpRequest request =
+        transport.createRequestFactory(adapter).buildPostRequest(genericUrl, signContent);
 
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     request.setParser(parser);
@@ -106,14 +114,18 @@ class IamUtils {
     int statusCode = response.getStatusCode();
     if (statusCode >= 400 && statusCode < HttpStatusCodes.STATUS_CODE_SERVER_ERROR) {
       GenericData responseError = response.parseAs(GenericData.class);
-      Map<String, Object> error = OAuth2Utils.validateMap(responseError, "error", PARSE_ERROR_MESSAGE);
+      Map<String, Object> error =
+          OAuth2Utils.validateMap(responseError, "error", PARSE_ERROR_MESSAGE);
       String errorMessage = OAuth2Utils.validateString(error, "message", PARSE_ERROR_MESSAGE);
-      throw new IOException(String.format("Error code %s trying to sign provided bytes: %s",
-              statusCode, errorMessage));
+      throw new IOException(
+          String.format(
+              "Error code %s trying to sign provided bytes: %s", statusCode, errorMessage));
     }
     if (statusCode != HttpStatusCodes.STATUS_CODE_OK) {
-      throw new IOException(String.format("Unexpected Error code %s trying to sign provided bytes: %s", statusCode,
-              response.parseAsString()));
+      throw new IOException(
+          String.format(
+              "Unexpected Error code %s trying to sign provided bytes: %s",
+              statusCode, response.parseAsString()));
     }
     InputStream content = response.getContent();
     if (content == null) {

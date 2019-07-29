@@ -34,9 +34,7 @@ package com.google.auth.oauth2;
 import java.util.LinkedList;
 import java.util.concurrent.Executor;
 
-/**
- * Mock thread-less executor.
- */
+/** Mock thread-less executor. */
 public final class MockExecutor implements Executor {
   private LinkedList<Runnable> tasks = new LinkedList<Runnable>();
 

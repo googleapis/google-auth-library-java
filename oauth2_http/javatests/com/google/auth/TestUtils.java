@@ -29,11 +29,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 package com.google.auth;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
@@ -41,19 +40,16 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.io.IOException;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Utilities for test code under com.google.auth.
- */
+/** Utilities for test code under com.google.auth. */
 public class TestUtils {
 
   public static final String UTF_8 = "UTF-8";
@@ -66,7 +62,8 @@ public class TestUtils {
     assertTrue("Bearer token not found", hasBearerToken(metadata, token));
   }
 
-  public static void assertNotContainsBearerToken(Map<String, List<String>> metadata, String token) {
+  public static void assertNotContainsBearerToken(
+      Map<String, List<String>> metadata, String token) {
     assertNotNull(metadata);
     assertNotNull(token);
     assertTrue("Bearer token found", !hasBearerToken(metadata, token));
@@ -122,6 +119,5 @@ public class TestUtils {
     return errorResponse.toPrettyString();
   }
 
-  private TestUtils() {
-  }
+  private TestUtils() {}
 }

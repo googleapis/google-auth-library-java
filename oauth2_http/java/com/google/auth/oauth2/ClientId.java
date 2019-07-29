@@ -34,7 +34,6 @@ package com.google.auth.oauth2;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.Preconditions;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -60,7 +59,7 @@ public class ClientId {
    * Constructs a client ID from an explicit ID and secret.
    *
    * <p>Note: Direct use of this factory method in application code is not recommended to avoid
-   * having secrets or values that need to be updated in source code.</p>
+   * having secrets or values that need to be updated in source code.
    *
    * @param clientId Text identifier of the Client ID.
    * @param clientSecret Secret to associated with the Client ID.
@@ -83,19 +82,23 @@ public class ClientId {
     if (rawDetail == null) {
       rawDetail = json.get(FIELD_TYPE_WEB);
     }
-    if (rawDetail == null || !(rawDetail instanceof Map<?,?>)) {
-      throw new IOException("Unable to parse Client ID JSON. Expecting top-level field '"
-          + FIELD_TYPE_WEB + "' or '" + FIELD_TYPE_INSTALLED + "' of collection type");
+    if (rawDetail == null || !(rawDetail instanceof Map<?, ?>)) {
+      throw new IOException(
+          "Unable to parse Client ID JSON. Expecting top-level field '"
+              + FIELD_TYPE_WEB
+              + "' or '"
+              + FIELD_TYPE_INSTALLED
+              + "' of collection type");
     }
     @SuppressWarnings("unchecked")
-    Map<String, Object> detail = (Map<String,Object>)rawDetail;
+    Map<String, Object> detail = (Map<String, Object>) rawDetail;
     String clientId = OAuth2Utils.validateString(detail, FIELD_CLIENT_ID, JSON_PARSE_ERROR);
     if (clientId == null || clientId.length() == 0) {
-      throw new IOException("Unable to parse ClientId. Field '"
-          + FIELD_CLIENT_ID + "' is required.");
+      throw new IOException(
+          "Unable to parse ClientId. Field '" + FIELD_CLIENT_ID + "' is required.");
     }
-    String clientSecret = OAuth2Utils.validateOptionalString(
-        detail, FIELD_CLIENT_SECRET, JSON_PARSE_ERROR);
+    String clientSecret =
+        OAuth2Utils.validateOptionalString(detail, FIELD_CLIENT_SECRET, JSON_PARSE_ERROR);
     return new ClientId(clientId, clientSecret);
   }
 
@@ -123,16 +126,16 @@ public class ClientId {
   public static ClientId fromStream(InputStream stream) throws IOException {
     Preconditions.checkNotNull(stream);
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
-    GenericJson parsedJson = parser.parseAndClose(
-        stream, StandardCharsets.UTF_8, GenericJson.class);
+    GenericJson parsedJson =
+        parser.parseAndClose(stream, StandardCharsets.UTF_8, GenericJson.class);
     return fromJson(parsedJson);
   }
 
   /**
    * Constructs a client ID using an explicit ID and secret
    *
-   * <p>Note: Direct use of this constructor in application code is not recommended to avoid
-   * having secrets or values that need to be updated in source code.
+   * <p>Note: Direct use of this constructor in application code is not recommended to avoid having
+   * secrets or values that need to be updated in source code.
    *
    * @param clientId Text identifier of the Client ID.
    * @param clientSecret Secret to associated with the Client ID.

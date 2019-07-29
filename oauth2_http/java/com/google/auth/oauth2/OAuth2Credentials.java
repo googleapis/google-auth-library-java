@@ -39,7 +39,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.URI;
@@ -52,9 +51,7 @@ import java.util.Objects;
 import java.util.ServiceLoader;
 import java.util.concurrent.Executor;
 
-/**
- * Base type for Credentials using OAuth2.
- */
+/** Base type for Credentials using OAuth2. */
 public class OAuth2Credentials extends Credentials {
 
   private static final long serialVersionUID = 4556936364828217687L;
@@ -68,8 +65,7 @@ public class OAuth2Credentials extends Credentials {
   // Change listeners are not serialized
   private transient List<CredentialsChangedListener> changeListeners;
   // Until we expose this to the users it can remain transient and non-serializable
-  @VisibleForTesting
-  transient Clock clock = Clock.SYSTEM;
+  @VisibleForTesting transient Clock clock = Clock.SYSTEM;
 
   /**
    * Returns the credentials instance from the given access token.
@@ -81,9 +77,7 @@ public class OAuth2Credentials extends Credentials {
     return OAuth2Credentials.newBuilder().setAccessToken(accessToken).build();
   }
 
-  /**
-   * Default constructor.
-   **/
+  /** Default constructor. */
   protected OAuth2Credentials() {
     this(null);
   }
@@ -92,7 +86,7 @@ public class OAuth2Credentials extends Credentials {
    * Constructor with explicit access token.
    *
    * @param accessToken initial or temporary access token
-   **/
+   */
   protected OAuth2Credentials(AccessToken accessToken) {
     if (accessToken != null) {
       useAccessToken(accessToken);
@@ -117,7 +111,7 @@ public class OAuth2Credentials extends Credentials {
   /**
    * Returns the cached access token.
    *
-   * <p>If not set, you should call {@link #refresh()} to fetch and cache an access token.</p>
+   * <p>If not set, you should call {@link #refresh()} to fetch and cache an access token.
    *
    * @return The cached access token.
    */
@@ -126,10 +120,10 @@ public class OAuth2Credentials extends Credentials {
   }
 
   @Override
-  public void getRequestMetadata(final URI uri, Executor executor,
-      final RequestMetadataCallback callback) {
+  public void getRequestMetadata(
+      final URI uri, Executor executor, final RequestMetadataCallback callback) {
     Map<String, List<String>> metadata;
-    synchronized(lock) {
+    synchronized (lock) {
       if (shouldRefresh()) {
         // The base class implementation will do a blocking get in the executor.
         super.getRequestMetadata(uri, executor, callback);
@@ -141,12 +135,12 @@ public class OAuth2Credentials extends Credentials {
   }
 
   /**
-   * Provide the request metadata by ensuring there is a current access token and providing it
-   * as an authorization bearer token.
+   * Provide the request metadata by ensuring there is a current access token and providing it as an
+   * authorization bearer token.
    */
   @Override
   public Map<String, List<String>> getRequestMetadata(URI uri) throws IOException {
-    synchronized(lock) {
+    synchronized (lock) {
       if (shouldRefresh()) {
         refresh();
       }
@@ -154,12 +148,10 @@ public class OAuth2Credentials extends Credentials {
     }
   }
 
-  /**
-   * Refresh the token by discarding the cached token and metadata and requesting the new ones.
-   */
+  /** Refresh the token by discarding the cached token and metadata and requesting the new ones. */
   @Override
   public void refresh() throws IOException {
-    synchronized(lock) {
+    synchronized (lock) {
       requestMetadata = null;
       temporaryAccess = null;
       useAccessToken(Preconditions.checkNotNull(refreshAccessToken(), "new access token"));
@@ -177,7 +169,7 @@ public class OAuth2Credentials extends Credentials {
    * @throws IOException during token refresh.
    */
   public void refreshIfExpired() throws IOException {
-    synchronized(lock) {
+    synchronized (lock) {
       if (shouldRefresh()) {
         refresh();
       }
@@ -187,9 +179,10 @@ public class OAuth2Credentials extends Credentials {
   // Must be called under lock
   private void useAccessToken(AccessToken token) {
     this.temporaryAccess = token;
-    this.requestMetadata = Collections.singletonMap(
-        AuthHttpConstants.AUTHORIZATION,
-        Collections.singletonList(OAuth2Utils.BEARER_PREFIX + token.getTokenValue()));
+    this.requestMetadata =
+        Collections.singletonMap(
+            AuthHttpConstants.AUTHORIZATION,
+            Collections.singletonList(OAuth2Utils.BEARER_PREFIX + token.getTokenValue()));
   }
 
   // Must be called under lock
@@ -202,16 +195,17 @@ public class OAuth2Credentials extends Credentials {
   /**
    * Method to refresh the access token according to the specific type of credentials.
    *
-   * Throws IllegalStateException if not overridden since direct use of OAuth2Credentials is only
+   * <p>Throws IllegalStateException if not overridden since direct use of OAuth2Credentials is only
    * for temporary or non-refreshing access tokens.
    *
    * @return Refreshed access token.
    * @throws IOException from derived implementations
    */
   public AccessToken refreshAccessToken() throws IOException {
-    throw new IllegalStateException("OAuth2Credentials instance does not support refreshing the"
-        + " access token. An instance with a new access token should be used, or a derived type"
-        + " that supports refreshing.");
+    throw new IllegalStateException(
+        "OAuth2Credentials instance does not support refreshing the"
+            + " access token. An instance with a new access token should be used, or a derived type"
+            + " that supports refreshing.");
   }
 
   /**
@@ -223,7 +217,7 @@ public class OAuth2Credentials extends Credentials {
    * @param listener The listener to be added.
    */
   public final void addChangeListener(CredentialsChangedListener listener) {
-    synchronized(lock) {
+    synchronized (lock) {
       if (changeListeners == null) {
         changeListeners = new ArrayList<>();
       }
@@ -237,7 +231,7 @@ public class OAuth2Credentials extends Credentials {
    * @param listener The listener to be removed.
    */
   public final void removeChangeListener(CredentialsChangedListener listener) {
-    synchronized(lock) {
+    synchronized (lock) {
       if (changeListeners != null) {
         changeListeners.remove(listener);
       }
@@ -245,8 +239,8 @@ public class OAuth2Credentials extends Credentials {
   }
 
   /**
-   * Return the remaining time the current access token will be valid, or null if there is no
-   * token or expiry information. Must be called under lock.
+   * Return the remaining time the current access token will be valid, or null if there is no token
+   * or expiry information. Must be called under lock.
    */
   private Long getExpiresInMilliseconds() {
     if (temporaryAccess == null) {
@@ -292,7 +286,8 @@ public class OAuth2Credentials extends Credentials {
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("requestMetadata", requestMetadata)
-        .add("temporaryAccess", temporaryAccess).toString();
+        .add("temporaryAccess", temporaryAccess)
+        .toString();
   }
 
   @Override
