@@ -263,8 +263,6 @@ public class JwtCredentials extends Credentials implements JwtProvider {
     }
   }
 
-
-
   /**
    * Value class representing the set of fields used as the payload of a JWT token.
    *
