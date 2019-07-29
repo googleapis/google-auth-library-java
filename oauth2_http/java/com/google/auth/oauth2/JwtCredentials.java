@@ -89,7 +89,7 @@ public class JwtCredentials extends Credentials implements JwtProvider {
   // The date (represented as seconds since the epoch) that the generated JWT expires
   private transient Long expiryInSeconds;
 
-  JwtCredentials(Builder builder) {
+  private JwtCredentials(Builder builder) {
     this.privateKey = Preconditions.checkNotNull(builder.getPrivateKey());
     this.privateKeyId = Preconditions.checkNotNull(builder.getPrivateKeyId());
     this.claims = Preconditions.checkNotNull(builder.getClaims());
@@ -107,25 +107,26 @@ public class JwtCredentials extends Credentials implements JwtProvider {
    */
   @Override
   public void refresh() throws IOException {
+    JsonWebSignature.Header header = new JsonWebSignature.Header();
+    header.setAlgorithm("RS256");
+    header.setType("JWT");
+    header.setKeyId(privateKeyId);
+
+    JsonWebToken.Payload payload = new JsonWebToken.Payload();
+    payload.setAudience(claims.getAudience());
+    payload.setIssuer(claims.getIssuer());
+    payload.setSubject(claims.getSubject());
+
+    long currentTime = clock.currentTimeMillis();
+    payload.setIssuedAtTimeSeconds(currentTime / 1000);
+    payload.setExpirationTimeSeconds(currentTime / 1000 + lifeSpanSeconds);
+
     synchronized (lock) {
-      JsonWebSignature.Header header = new JsonWebSignature.Header();
-      header.setAlgorithm("RS256");
-      header.setType("JWT");
-      header.setKeyId(privateKeyId);
-
-      JsonWebToken.Payload payload = new JsonWebToken.Payload();
-      long currentTime = clock.currentTimeMillis();
-      payload.setAudience(claims.getAudience());
-      payload.setIssuer(claims.getIssuer());
-      payload.setSubject(claims.getSubject());
-      payload.setIssuedAtTimeSeconds(currentTime / 1000);
-      expiryInSeconds = currentTime / 1000 + lifeSpanSeconds;
-      payload.setExpirationTimeSeconds(expiryInSeconds);
-
-      JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
+      this.expiryInSeconds = payload.getExpirationTimeSeconds();
 
       try {
-        jwt = JsonWebSignature.signUsingRsaSha256(privateKey, jsonFactory, header, payload);
+        this.jwt = JsonWebSignature.signUsingRsaSha256(privateKey, OAuth2Utils.JSON_FACTORY, header,
+            payload);
       } catch (GeneralSecurityException e) {
         throw new IOException("Error signing service account JWT access header with private key.",
             e);
@@ -141,7 +142,7 @@ public class JwtCredentials extends Credentials implements JwtProvider {
   /**
    * Returns a copy of these credentials with modified claims.
    *
-   * @param newClaims New claims. Any unspecified claim fields default to the the current values.
+   * @param newClaims new claims. Any unspecified claim fields default to the the current values.
    * @return new credentials
    */
   @Override
