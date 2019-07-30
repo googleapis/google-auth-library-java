@@ -31,7 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.client.util.Clock;
@@ -72,8 +71,8 @@ import javax.annotation.Nullable;
  */
 public class JwtCredentials extends Credentials implements JwtProvider {
   private static final String JWT_ACCESS_PREFIX = OAuth2Utils.BEARER_PREFIX;
-  private static final String JWT_INCOMPLETE_ERROR_MESSAGE = "JWT claims must contain audience, "
-      + "issuer, and subject.";
+  private static final String JWT_INCOMPLETE_ERROR_MESSAGE =
+      "JWT claims must contain audience, " + "issuer, and subject.";
   private static final long CLOCK_SKEW = TimeUnit.MINUTES.toSeconds(5);
 
   // byte[] is serializable, so the lock variable can be final
@@ -82,8 +81,7 @@ public class JwtCredentials extends Credentials implements JwtProvider {
   private final String privateKeyId;
   private final Claims claims;
   private final Long lifeSpanSeconds;
-  @VisibleForTesting
-  transient Clock clock;
+  @VisibleForTesting transient Clock clock;
 
   private transient String jwt;
   // The date (represented as seconds since the epoch) that the generated JWT expires
@@ -102,9 +100,7 @@ public class JwtCredentials extends Credentials implements JwtProvider {
     return new Builder();
   }
 
-  /**
-   * Refresh the token by discarding the cached token and metadata and rebuilding a new one.
-   */
+  /** Refresh the token by discarding the cached token and metadata and rebuilding a new one. */
   @Override
   public void refresh() throws IOException {
     JsonWebSignature.Header header = new JsonWebSignature.Header();
@@ -125,18 +121,19 @@ public class JwtCredentials extends Credentials implements JwtProvider {
       this.expiryInSeconds = payload.getExpirationTimeSeconds();
 
       try {
-        this.jwt = JsonWebSignature.signUsingRsaSha256(privateKey, OAuth2Utils.JSON_FACTORY, header,
-            payload);
+        this.jwt =
+            JsonWebSignature.signUsingRsaSha256(
+                privateKey, OAuth2Utils.JSON_FACTORY, header, payload);
       } catch (GeneralSecurityException e) {
-        throw new IOException("Error signing service account JWT access header with private key.",
-            e);
+        throw new IOException(
+            "Error signing service account JWT access header with private key.", e);
       }
     }
   }
 
   private boolean shouldRefresh() {
-    return expiryInSeconds == null ||
-        getClock().currentTimeMillis() / 1000 > expiryInSeconds - CLOCK_SKEW;
+    return expiryInSeconds == null
+        || getClock().currentTimeMillis() / 1000 > expiryInSeconds - CLOCK_SKEW;
   }
 
   /**
@@ -313,9 +310,9 @@ public class JwtCredentials extends Credentials implements JwtProvider {
      * Returns whether or not this set of claims is complete.
      *
      * <p>Audience, issuer, and subject are required to be set in order to use the claim set for a
-     * JWT token. An incomplete Claims instance is useful for overriding claims when using
-     * {@link ServiceAccountJwtAccessCredentials#jwtWithClaims(Claims)} or
-     * {@link JwtCredentials#jwtWithClaims(Claims)}.
+     * JWT token. An incomplete Claims instance is useful for overriding claims when using {@link
+     * ServiceAccountJwtAccessCredentials#jwtWithClaims(Claims)} or {@link
+     * JwtCredentials#jwtWithClaims(Claims)}.
      *
      * @return
      */
@@ -326,8 +323,11 @@ public class JwtCredentials extends Credentials implements JwtProvider {
     @AutoValue.Builder
     abstract static class Builder {
       abstract Builder setAudience(String audience);
+
       abstract Builder setIssuer(String issuer);
+
       abstract Builder setSubject(String subject);
+
       abstract Claims build();
     }
   }

@@ -33,9 +33,7 @@ package com.google.auth.oauth2;
 
 import com.google.common.annotations.Beta;
 
-/**
- * Interface for creating custom JWT tokens
- */
+/** Interface for creating custom JWT tokens */
 @Beta
 public interface JwtProvider {
 
@@ -43,7 +41,7 @@ public interface JwtProvider {
    * Returns a new JwtCredentials instance with modified claims.
    *
    * @param newClaims New claims. Any unspecified claim fields will default to the the current
-   *        values.
+   *     values.
    * @return new credentials
    */
   JwtCredentials jwtWithClaims(JwtCredentials.Claims newClaims);

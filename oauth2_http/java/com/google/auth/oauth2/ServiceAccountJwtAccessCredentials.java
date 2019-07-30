@@ -281,14 +281,13 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    * Returns a new JwtCredentials instance with modified claims.
    *
    * @param newClaims New claims. Any unspecified claim fields will default to the the current
-   *        values.
+   *     values.
    * @return new credentials
    */
   @Override
   public JwtCredentials jwtWithClaims(JwtCredentials.Claims newClaims) {
-    JwtCredentials.Claims.Builder claimsBuilder = JwtCredentials.Claims.newBuilder()
-        .setIssuer(clientEmail)
-        .setSubject(clientEmail);
+    JwtCredentials.Claims.Builder claimsBuilder =
+        JwtCredentials.Claims.newBuilder().setIssuer(clientEmail).setSubject(clientEmail);
     if (defaultAudience != null) {
       claimsBuilder.setAudience(defaultAudience.toString());
     }
@@ -338,11 +337,12 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     }
 
     try {
-      JwtCredentials.Claims defaultClaims = JwtCredentials.Claims.newBuilder()
-          .setAudience(uri.toString())
-          .setIssuer(clientEmail)
-          .setSubject(clientEmail)
-          .build();
+      JwtCredentials.Claims defaultClaims =
+          JwtCredentials.Claims.newBuilder()
+              .setAudience(uri.toString())
+              .setIssuer(clientEmail)
+              .setSubject(clientEmail)
+              .build();
       JwtCredentials credentials = credentialsCache.get(defaultClaims);
       return credentials.getRequestMetadata(uri);
     } catch (ExecutionException e) {
@@ -359,9 +359,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     }
   }
 
-  /**
-   * Discard any cached data
-   */
+  /** Discard any cached data */
   @Override
   public void refresh() {
     credentialsCache.invalidateAll();

@@ -530,14 +530,13 @@ public class ServiceAccountCredentials extends GoogleCredentials
    * Returns a new JwtCredentials instance with modified claims.
    *
    * @param newClaims New claims. Any unspecified claim fields will default to the the current
-   *        values.
+   *     values.
    * @return new credentials
    */
   @Override
   public JwtCredentials jwtWithClaims(JwtCredentials.Claims newClaims) {
-    JwtCredentials.Claims.Builder claimsBuilder = JwtCredentials.Claims.newBuilder()
-        .setIssuer(clientEmail)
-        .setSubject(clientEmail);
+    JwtCredentials.Claims.Builder claimsBuilder =
+        JwtCredentials.Claims.newBuilder().setIssuer(clientEmail).setSubject(clientEmail);
     return JwtCredentials.newBuilder()
         .setPrivateKey(privateKey)
         .setPrivateKeyId(privateKeyId)
