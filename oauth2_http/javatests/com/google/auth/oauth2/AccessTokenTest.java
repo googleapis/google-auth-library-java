@@ -35,16 +35,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
+import java.util.Date;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.io.IOException;
-import java.util.Date;
-
-/**
- * Unit tests for AccessToken
- */
+/** Unit tests for AccessToken */
 @RunWith(JUnit4.class)
 public class AccessTokenTest extends BaseSerializationTest {
 
@@ -86,8 +83,10 @@ public class AccessTokenTest extends BaseSerializationTest {
   @Test
   public void toString_containsFields() {
     AccessToken accessToken = new AccessToken(TOKEN, EXPIRATION_DATE);
-    String expectedToString = String.format("AccessToken{tokenValue=%s, expirationTimeMillis=%d}",
-        TOKEN, EXPIRATION_DATE.getTime());
+    String expectedToString =
+        String.format(
+            "AccessToken{tokenValue=%s, expirationTimeMillis=%d}",
+            TOKEN, EXPIRATION_DATE.getTime());
     assertEquals(expectedToString, accessToken.toString());
   }
 

@@ -50,18 +50,15 @@ import com.google.auth.ServiceAccountSigner.SigningException;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Test case for {@link ComputeEngineCredentials}.
- */
+/** Test case for {@link ComputeEngineCredentials}. */
 @RunWith(JUnit4.class)
 public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
@@ -143,7 +140,9 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     MockMetadataServerTransportFactory serverTransportFactory =
         new MockMetadataServerTransportFactory();
     ComputeEngineCredentials credentials =
-        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(serverTransportFactory).build();
+        ComputeEngineCredentials.newBuilder()
+            .setHttpTransportFactory(serverTransportFactory)
+            .build();
     ComputeEngineCredentials otherCredentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(httpTransportFactory).build();
     assertFalse(credentials.equals(otherCredentials));
@@ -155,10 +154,13 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     MockMetadataServerTransportFactory serverTransportFactory =
         new MockMetadataServerTransportFactory();
     String expectedToString =
-        String.format("ComputeEngineCredentials{transportFactoryClassName=%s}",
+        String.format(
+            "ComputeEngineCredentials{transportFactoryClassName=%s}",
             MockMetadataServerTransportFactory.class.getName());
     ComputeEngineCredentials credentials =
-        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(serverTransportFactory).build();
+        ComputeEngineCredentials.newBuilder()
+            .setHttpTransportFactory(serverTransportFactory)
+            .build();
     assertEquals(expectedToString, credentials.toString());
   }
 
@@ -167,9 +169,13 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     MockMetadataServerTransportFactory serverTransportFactory =
         new MockMetadataServerTransportFactory();
     ComputeEngineCredentials credentials =
-        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(serverTransportFactory).build();
+        ComputeEngineCredentials.newBuilder()
+            .setHttpTransportFactory(serverTransportFactory)
+            .build();
     ComputeEngineCredentials otherCredentials =
-        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(serverTransportFactory).build();
+        ComputeEngineCredentials.newBuilder()
+            .setHttpTransportFactory(serverTransportFactory)
+            .build();
     assertEquals(credentials.hashCode(), otherCredentials.hashCode());
   }
 
@@ -178,7 +184,9 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     MockMetadataServerTransportFactory serverTransportFactory =
         new MockMetadataServerTransportFactory();
     ComputeEngineCredentials credentials =
-        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(serverTransportFactory).build();
+        ComputeEngineCredentials.newBuilder()
+            .setHttpTransportFactory(serverTransportFactory)
+            .build();
     GoogleCredentials deserializedCredentials = serializeAndDeserialize(credentials);
     assertEquals(credentials, deserializedCredentials);
     assertEquals(credentials.hashCode(), deserializedCredentials.hashCode());
@@ -199,34 +207,33 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
     transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);
     ComputeEngineCredentials credentials =
-            ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
     assertEquals(defaultAccountEmail, credentials.getAccount());
   }
 
   @Test
   public void getAccount_missing_throws() {
-    MockMetadataServerTransportFactory transportFactory =
-        new MockMetadataServerTransportFactory();
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     String defaultAccountEmail = "mail@mail.com";
 
-    transportFactory.transport = new MockMetadataServerTransport() {
-      @Override
-      public LowLevelHttpRequest buildRequest(String method, String url)
-          throws IOException {
-        if (isGetServiceAccountsUrl(url)) {
-          return new MockLowLevelHttpRequest(url) {
-            @Override
-            public LowLevelHttpResponse execute() throws IOException {
-              return new MockLowLevelHttpResponse()
-                  .setStatusCode(HttpStatusCodes.STATUS_CODE_NOT_FOUND)
-                  .setContent("");
+    transportFactory.transport =
+        new MockMetadataServerTransport() {
+          @Override
+          public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+            if (isGetServiceAccountsUrl(url)) {
+              return new MockLowLevelHttpRequest(url) {
+                @Override
+                public LowLevelHttpResponse execute() throws IOException {
+                  return new MockLowLevelHttpResponse()
+                      .setStatusCode(HttpStatusCodes.STATUS_CODE_NOT_FOUND)
+                      .setContent("");
+                }
+              };
             }
-          };
-        }
-        return super.buildRequest(method, url);
-      }
-    };
+            return super.buildRequest(method, url);
+          }
+        };
     transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
@@ -243,26 +250,25 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void getAccount_emptyContent_throws() {
-    MockMetadataServerTransportFactory transportFactory =
-        new MockMetadataServerTransportFactory();
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     String defaultAccountEmail = "mail@mail.com";
 
-    transportFactory.transport = new MockMetadataServerTransport() {
-      @Override
-      public LowLevelHttpRequest buildRequest(String method, String url)
-          throws IOException {
-        if (isGetServiceAccountsUrl(url)) {
-          return new MockLowLevelHttpRequest(url) {
-            @Override
-            public LowLevelHttpResponse execute() throws IOException {
-              return new MockLowLevelHttpResponse()
-                  .setStatusCode(HttpStatusCodes.STATUS_CODE_OK);
+    transportFactory.transport =
+        new MockMetadataServerTransport() {
+          @Override
+          public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+            if (isGetServiceAccountsUrl(url)) {
+              return new MockLowLevelHttpRequest(url) {
+                @Override
+                public LowLevelHttpResponse execute() throws IOException {
+                  return new MockLowLevelHttpResponse()
+                      .setStatusCode(HttpStatusCodes.STATUS_CODE_OK);
+                }
+              };
             }
-          };
-        }
-        return super.buildRequest(method, url);
-      }
-    };
+            return super.buildRequest(method, url);
+          }
+        };
     transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
@@ -288,7 +294,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);
     transportFactory.transport.setSignature(expectedSignature);
     ComputeEngineCredentials credentials =
-            ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
     assertArrayEquals(expectedSignature, credentials.sign(expectedSignature));
   }
@@ -299,23 +305,23 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     String defaultAccountEmail = "mail@mail.com";
 
-    transportFactory.transport = new MockMetadataServerTransport() {
-      @Override
-      public LowLevelHttpRequest buildRequest(String method, String url)
-          throws IOException {
-        if (isSignRequestUrl(url)) {
-          return new MockLowLevelHttpRequest(url) {
-            @Override
-            public LowLevelHttpResponse execute() throws IOException {
-              return new MockLowLevelHttpResponse()
-                  .setStatusCode(HttpStatusCodes.STATUS_CODE_FORBIDDEN)
-                  .setContent(TestUtils.errorJson("Sign Error"));
+    transportFactory.transport =
+        new MockMetadataServerTransport() {
+          @Override
+          public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+            if (isSignRequestUrl(url)) {
+              return new MockLowLevelHttpRequest(url) {
+                @Override
+                public LowLevelHttpResponse execute() throws IOException {
+                  return new MockLowLevelHttpResponse()
+                      .setStatusCode(HttpStatusCodes.STATUS_CODE_FORBIDDEN)
+                      .setContent(TestUtils.errorJson("Sign Error"));
+                }
+              };
             }
-          };
-        }
-        return super.buildRequest(method, url);
-      }
-    };
+            return super.buildRequest(method, url);
+          }
+        };
 
     transportFactory.transport.setAccessToken(accessToken);
     transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);
@@ -340,23 +346,23 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     String defaultAccountEmail = "mail@mail.com";
 
-    transportFactory.transport = new MockMetadataServerTransport() {
-      @Override
-      public LowLevelHttpRequest buildRequest(String method, String url)
-          throws IOException {
-        if (isSignRequestUrl(url)) {
-          return new MockLowLevelHttpRequest(url) {
-            @Override
-            public LowLevelHttpResponse execute() throws IOException {
-              return new MockLowLevelHttpResponse()
-                  .setStatusCode(HttpStatusCodes.STATUS_CODE_SERVER_ERROR)
-                  .setContent(TestUtils.errorJson("Sign Error"));
+    transportFactory.transport =
+        new MockMetadataServerTransport() {
+          @Override
+          public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+            if (isSignRequestUrl(url)) {
+              return new MockLowLevelHttpRequest(url) {
+                @Override
+                public LowLevelHttpResponse execute() throws IOException {
+                  return new MockLowLevelHttpResponse()
+                      .setStatusCode(HttpStatusCodes.STATUS_CODE_SERVER_ERROR)
+                      .setContent(TestUtils.errorJson("Sign Error"));
+                }
+              };
             }
-          };
-        }
-        return super.buildRequest(method, url);
-      }
-    };
+            return super.buildRequest(method, url);
+          }
+        };
 
     transportFactory.transport.setAccessToken(accessToken);
     transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);
@@ -381,22 +387,22 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     String defaultAccountEmail = "mail@mail.com";
 
-    transportFactory.transport = new MockMetadataServerTransport() {
-      @Override
-      public LowLevelHttpRequest buildRequest(String method, String url)
-          throws IOException {
-        if (isSignRequestUrl(url)) {
-          return new MockLowLevelHttpRequest(url) {
-            @Override
-            public LowLevelHttpResponse execute() throws IOException {
-              return new MockLowLevelHttpResponse()
-                  .setStatusCode(HttpStatusCodes.STATUS_CODE_OK);
+    transportFactory.transport =
+        new MockMetadataServerTransport() {
+          @Override
+          public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+            if (isSignRequestUrl(url)) {
+              return new MockLowLevelHttpRequest(url) {
+                @Override
+                public LowLevelHttpResponse execute() throws IOException {
+                  return new MockLowLevelHttpResponse()
+                      .setStatusCode(HttpStatusCodes.STATUS_CODE_OK);
+                }
+              };
             }
-          };
-        }
-        return super.buildRequest(method, url);
-      }
-    };
+            return super.buildRequest(method, url);
+          }
+        };
 
     transportFactory.transport.setAccessToken(accessToken);
     transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);

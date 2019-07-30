@@ -22,6 +22,21 @@ java -version
 echo $JOB_TYPE
 
 mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
-mvn test -B
 
-bash $KOKORO_GFILE_DIR/codecov.sh
+case ${JOB_TYPE} in
+test)
+    mvn test -B
+    bash ${KOKORO_GFILE_DIR}/codecov.sh
+    ;;
+lint)
+    mvn com.coveo:fmt-maven-plugin:check
+    ;;
+javadoc)
+    mvn javadoc:javadoc javadoc:test-javadoc
+    ;;
+integration)
+    mvn -B -pl ${INTEGRATION_TEST_ARGS} -DtrimStackTrace=false -fae verify
+    ;;
+*)
+    ;;
+esac

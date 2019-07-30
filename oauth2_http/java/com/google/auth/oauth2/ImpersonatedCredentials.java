@@ -33,6 +33,20 @@ package com.google.auth.oauth2;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpContent;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestFactory;
+import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.json.JsonHttpContent;
+import com.google.api.client.json.JsonObjectParser;
+import com.google.api.client.util.GenericData;
+import com.google.auth.ServiceAccountSigner;
+import com.google.auth.http.HttpCredentialsAdapter;
+import com.google.auth.http.HttpTransportFactory;
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -44,27 +58,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpContent;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpRequestFactory;
-import com.google.api.client.http.HttpResponse;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.json.JsonHttpContent;
-import com.google.api.client.json.JsonObjectParser;
-import com.google.api.client.util.GenericData;
-import com.google.auth.http.HttpCredentialsAdapter;
-import com.google.auth.http.HttpTransportFactory;
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableMap;
-
-import com.google.auth.ServiceAccountSigner;
-
 /**
  * ImpersonatedCredentials allowing credentials issued to a user or service account to impersonate
- * another. <br> The source project using ImpersonatedCredentials must enable the "IAMCredentials"
- * API.<br> Also, the target service account must grant the orginating principal the "Service
- * Account Token Creator" IAM role. <br> Usage:<br>
+ * another. <br>
+ * The source project using ImpersonatedCredentials must enable the "IAMCredentials" API.<br>
+ * Also, the target service account must grant the orginating principal the "Service Account Token
+ * Creator" IAM role. <br>
+ * Usage:<br>
+ *
  * <pre>
  * String credPath = "/path/to/svc_account.json";
  * ServiceAccountCredentials sourceCredentials = ServiceAccountCredentials
@@ -88,11 +89,14 @@ public class ImpersonatedCredentials extends GoogleCredentials implements Servic
   private static final long serialVersionUID = -2133257318957488431L;
   private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
   private static final int ONE_HOUR_IN_SECONDS = 3600;
-  private static final String CLOUD_PLATFORM_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
-  private static final String IAM_ACCESS_TOKEN_ENDPOINT = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken";
+  private static final String CLOUD_PLATFORM_SCOPE =
+      "https://www.googleapis.com/auth/cloud-platform";
+  private static final String IAM_ACCESS_TOKEN_ENDPOINT =
+      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken";
 
   private static final String SCOPE_EMPTY_ERROR = "Scopes cannot be null";
-  private static final String LIFETIME_EXCEEDED_ERROR = "lifetime must be less than or equal to 3600";
+  private static final String LIFETIME_EXCEEDED_ERROR =
+      "lifetime must be less than or equal to 3600";
 
   private GoogleCredentials sourceCredentials;
   private String targetPrincipal;
@@ -107,19 +111,23 @@ public class ImpersonatedCredentials extends GoogleCredentials implements Servic
    * @param sourceCredentials The source credential used as to acquire the impersonated credentials
    * @param targetPrincipal The service account to impersonate.
    * @param delegates The chained list of delegates required to grant the final access_token. If
-   * set, the sequence of identities must have "Service Account Token Creator" capability granted to
-   * the preceding identity. For example, if set to [serviceAccountB, serviceAccountC], the
-   * sourceCredential must have the Token Creator role on serviceAccountB. serviceAccountB must have
-   * the Token Creator on serviceAccountC. Finally, C must have Token Creator on target_principal.
-   * If left unset, sourceCredential must have that role on targetPrincipal.
+   *     set, the sequence of identities must have "Service Account Token Creator" capability
+   *     granted to the preceding identity. For example, if set to [serviceAccountB,
+   *     serviceAccountC], the sourceCredential must have the Token Creator role on serviceAccountB.
+   *     serviceAccountB must have the Token Creator on serviceAccountC. Finally, C must have Token
+   *     Creator on target_principal. If left unset, sourceCredential must have that role on
+   *     targetPrincipal.
    * @param scopes Scopes to request during the authorization grant.
    * @param lifetime Number of seconds the delegated credential should be valid for (up to 3600).
    * @param transportFactory HTTP transport factory, creates the transport used to get access
-   * tokens.
+   *     tokens.
    */
-  public static ImpersonatedCredentials create(GoogleCredentials sourceCredentials,
+  public static ImpersonatedCredentials create(
+      GoogleCredentials sourceCredentials,
       String targetPrincipal,
-      List<String> delegates, List<String> scopes, int lifetime,
+      List<String> delegates,
+      List<String> scopes,
+      int lifetime,
       HttpTransportFactory transportFactory) {
     return ImpersonatedCredentials.newBuilder()
         .setSourceCredentials(sourceCredentials)
@@ -135,17 +143,21 @@ public class ImpersonatedCredentials extends GoogleCredentials implements Servic
    * @param sourceCredentials The source credential used as to acquire the impersonated credentials
    * @param targetPrincipal The service account to impersonate.
    * @param delegates The chained list of delegates required to grant the final access_token. If
-   * set, the sequence of identities must have "Service Account Token Creator" capability granted to
-   * the preceding identity. For example, if set to [serviceAccountB, serviceAccountC], the
-   * sourceCredential must have the Token Creator role on serviceAccountB. serviceAccountB must have
-   * the Token Creator on serviceAccountC. Finally, C must have Token Creator on target_principal.
-   * If left unset, sourceCredential must have that role on targetPrincipal.
+   *     set, the sequence of identities must have "Service Account Token Creator" capability
+   *     granted to the preceding identity. For example, if set to [serviceAccountB,
+   *     serviceAccountC], the sourceCredential must have the Token Creator role on serviceAccountB.
+   *     serviceAccountB must have the Token Creator on serviceAccountC. Finally, C must have Token
+   *     Creator on target_principal. If left unset, sourceCredential must have that role on
+   *     targetPrincipal.
    * @param scopes Scopes to request during the authorization grant.
    * @param lifetime Number of seconds the delegated credential should be valid for (up to 3600).
    */
-  public static ImpersonatedCredentials create(GoogleCredentials sourceCredentials,
+  public static ImpersonatedCredentials create(
+      GoogleCredentials sourceCredentials,
       String targetPrincipal,
-      List<String> delegates, List<String> scopes, int lifetime) {
+      List<String> delegates,
+      List<String> scopes,
+      int lifetime) {
     return ImpersonatedCredentials.newBuilder()
         .setSourceCredentials(sourceCredentials)
         .setTargetPrincipal(targetPrincipal)
@@ -162,21 +174,26 @@ public class ImpersonatedCredentials extends GoogleCredentials implements Servic
    */
   @Override
   public String getAccount() {
-      return this.targetPrincipal;
+    return this.targetPrincipal;
   }
 
   /**
-   * Signs the provided bytes using the private key associated with the impersonated
-   * service account
+   * Signs the provided bytes using the private key associated with the impersonated service account
    *
    * @param toSign bytes to sign
    * @return signed bytes
    * @throws SigningException if the attempt to sign the provided bytes failed
-   * @see <a href="https://cloud.google.com/iam/credentials/reference/rest/v1/projects.serviceAccounts/signBlob">Blob Signing</a>
+   * @see <a
+   *     href="https://cloud.google.com/iam/credentials/reference/rest/v1/projects.serviceAccounts/signBlob">Blob
+   *     Signing</a>
    */
   @Override
   public byte[] sign(byte[] toSign) {
-    return IamUtils.sign(getAccount(), sourceCredentials, transportFactory.create(), toSign,
+    return IamUtils.sign(
+        getAccount(),
+        sourceCredentials,
+        transportFactory.create(),
+        toSign,
         ImmutableMap.of("delegates", this.delegates));
   }
 
@@ -186,8 +203,10 @@ public class ImpersonatedCredentials extends GoogleCredentials implements Servic
     this.delegates = builder.getDelegates();
     this.scopes = builder.getScopes();
     this.lifetime = builder.getLifetime();
-    this.transportFactory = firstNonNull(builder.getHttpTransportFactory(),
-        getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
+    this.transportFactory =
+        firstNonNull(
+            builder.getHttpTransportFactory(),
+            getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
     if (this.delegates == null) {
       this.delegates = new ArrayList<String>();
@@ -203,8 +222,8 @@ public class ImpersonatedCredentials extends GoogleCredentials implements Servic
   @Override
   public AccessToken refreshAccessToken() throws IOException {
     if (this.sourceCredentials.getAccessToken() == null) {
-      this.sourceCredentials = this.sourceCredentials
-          .createScoped(Arrays.asList(CLOUD_PLATFORM_SCOPE));
+      this.sourceCredentials =
+          this.sourceCredentials.createScoped(Arrays.asList(CLOUD_PLATFORM_SCOPE));
     }
 
     try {
@@ -222,9 +241,9 @@ public class ImpersonatedCredentials extends GoogleCredentials implements Servic
     String endpointUrl = String.format(IAM_ACCESS_TOKEN_ENDPOINT, this.targetPrincipal);
     GenericUrl url = new GenericUrl(endpointUrl);
 
-    Map<String, Object> body = ImmutableMap.<String, Object>of("delegates", this.delegates, "scope",
-        this.scopes,
-        "lifetime", this.lifetime + "s");
+    Map<String, Object> body =
+        ImmutableMap.<String, Object>of(
+            "delegates", this.delegates, "scope", this.scopes, "lifetime", this.lifetime + "s");
 
     HttpContent requestContent = new JsonHttpContent(parser.getJsonFactory(), body);
     HttpRequest request = requestFactory.buildPostRequest(url, requestContent);
@@ -241,10 +260,10 @@ public class ImpersonatedCredentials extends GoogleCredentials implements Servic
     GenericData responseData = response.parseAs(GenericData.class);
     response.disconnect();
 
-    String accessToken = OAuth2Utils
-        .validateString(responseData, "accessToken", "Expected to find an accessToken");
-    String expireTime = OAuth2Utils
-        .validateString(responseData, "expireTime", "Expected to find an expireTime");
+    String accessToken =
+        OAuth2Utils.validateString(responseData, "accessToken", "Expected to find an accessToken");
+    String expireTime =
+        OAuth2Utils.validateString(responseData, "expireTime", "Expected to find an expireTime");
 
     DateFormat format = new SimpleDateFormat(RFC3339);
     Date date;
@@ -255,7 +274,6 @@ public class ImpersonatedCredentials extends GoogleCredentials implements Servic
     }
     return new AccessToken(accessToken, date);
   }
-
 
   @Override
   public int hashCode() {
@@ -270,7 +288,8 @@ public class ImpersonatedCredentials extends GoogleCredentials implements Servic
         .add("delegates", delegates)
         .add("scopes", scopes)
         .add("lifetime", lifetime)
-        .add("transportFactoryClassName", transportFactoryClassName).toString();
+        .add("transportFactoryClassName", transportFactoryClassName)
+        .toString();
   }
 
   @Override
@@ -304,8 +323,7 @@ public class ImpersonatedCredentials extends GoogleCredentials implements Servic
     private int lifetime;
     private HttpTransportFactory transportFactory;
 
-    protected Builder() {
-    }
+    protected Builder() {}
 
     protected Builder(GoogleCredentials sourceCredentials, String targetPrincipal) {
       this.sourceCredentials = sourceCredentials;
@@ -369,6 +387,5 @@ public class ImpersonatedCredentials extends GoogleCredentials implements Servic
     public ImpersonatedCredentials build() {
       return new ImpersonatedCredentials(this);
     }
-
   }
 }

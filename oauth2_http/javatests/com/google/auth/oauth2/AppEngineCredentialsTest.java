@@ -39,9 +39,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.common.collect.ImmutableMap;
-
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,6 +47,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
 
 public class AppEngineCredentialsTest extends BaseSerializationTest {
 
@@ -83,8 +81,10 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
       String message = e.getMessage();
       assertTrue(message.contains("Check that the App Engine SDK is deployed."));
       assertTrue(e.getCause() instanceof ClassNotFoundException);
-      assertTrue(e.getCause().getMessage().contains(
-          AppEngineCredentials.APP_IDENTITY_SERVICE_FACTORY_CLASS));
+      assertTrue(
+          e.getCause()
+              .getMessage()
+              .contains(AppEngineCredentials.APP_IDENTITY_SERVICE_FACTORY_CLASS));
     }
   }
 
@@ -148,8 +148,9 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void toString_containsFields() throws IOException {
-    String expectedToString = String.format(
-        "TestAppEngineCredentials{scopes=[%s], scopesRequired=%b}", "SomeScope", false);
+    String expectedToString =
+        String.format(
+            "TestAppEngineCredentials{scopes=[%s], scopesRequired=%b}", "SomeScope", false);
     Collection<String> scopes = Collections.singleton("SomeScope");
     AppEngineCredentials credentials = new TestAppEngineCredentials(scopes);
     assertEquals(expectedToString, credentials.toString());
@@ -229,15 +230,16 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
 
     private static final long serialVersionUID = -5191475572296306231L;
 
-    private static final Map<String, Class<?>> TYPES = ImmutableMap.of(
-        AppEngineCredentials.APP_IDENTITY_SERVICE_FACTORY_CLASS,
-        TestAppIdentityServiceFactory.class,
-        AppEngineCredentials.APP_IDENTITY_SERVICE_CLASS,
-        TestAppIdentityService.class,
-        AppEngineCredentials.GET_ACCESS_TOKEN_RESULT_CLASS,
-        TestGetAccessTokenResult.class,
-        AppEngineCredentials.SIGNING_RESULT_CLASS,
-        TestSigningResult.class);
+    private static final Map<String, Class<?>> TYPES =
+        ImmutableMap.of(
+            AppEngineCredentials.APP_IDENTITY_SERVICE_FACTORY_CLASS,
+            TestAppIdentityServiceFactory.class,
+            AppEngineCredentials.APP_IDENTITY_SERVICE_CLASS,
+            TestAppIdentityService.class,
+            AppEngineCredentials.GET_ACCESS_TOKEN_RESULT_CLASS,
+            TestGetAccessTokenResult.class,
+            AppEngineCredentials.SIGNING_RESULT_CLASS,
+            TestSigningResult.class);
     private List<String> forNameArgs;
 
     TestAppEngineCredentials(Collection<String> scopes) throws IOException {

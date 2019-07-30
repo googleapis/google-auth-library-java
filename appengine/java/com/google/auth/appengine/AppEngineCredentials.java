@@ -41,7 +41,6 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.Collection;
@@ -58,9 +57,10 @@ import java.util.logging.Logger;
 public class AppEngineCredentials extends GoogleCredentials implements ServiceAccountSigner {
 
   private static final Logger LOGGER = Logger.getLogger(AppEngineCredentials.class.getName());
-  private static final String APPLICATION_DEFAULT_CREDENTIALS_WARNING = "You are attempting to "
-      + "fetch Application Default Credentials from com.google.auth.appengine.AppEngineCredentials."
-      + " This method will not return a com.google.auth.appengine.AppEngineCredentials instance.";
+  private static final String APPLICATION_DEFAULT_CREDENTIALS_WARNING =
+      "You are attempting to "
+          + "fetch Application Default Credentials from com.google.auth.appengine.AppEngineCredentials."
+          + " This method will not return a com.google.auth.appengine.AppEngineCredentials instance.";
   private static final long serialVersionUID = -2627708355455064660L;
 
   private final String appIdentityServiceClassName;
@@ -71,8 +71,9 @@ public class AppEngineCredentials extends GoogleCredentials implements ServiceAc
 
   /**
    * {@inheritDoc}
+   *
    * @deprecated AppEngineCredentials should be instantiated via its Builder. See
-   * https://github.com/googleapis/google-auth-library-java#google-auth-library-appengine
+   *     https://github.com/googleapis/google-auth-library-java#google-auth-library-appengine
    */
   @Deprecated
   public static GoogleCredentials getApplicationDefault() throws IOException {
@@ -82,8 +83,9 @@ public class AppEngineCredentials extends GoogleCredentials implements ServiceAc
 
   /**
    * {@inheritDoc}
+   *
    * @deprecated AppEngineCredentials should be instantiated via its Builder. See
-   * https://github.com/googleapis/google-auth-library-java#google-auth-library-appengine
+   *     https://github.com/googleapis/google-auth-library-java#google-auth-library-appengine
    */
   @Deprecated
   public static GoogleCredentials getApplicationDefault(HttpTransportFactory transportFactory)
@@ -94,15 +96,15 @@ public class AppEngineCredentials extends GoogleCredentials implements ServiceAc
 
   private AppEngineCredentials(Collection<String> scopes, AppIdentityService appIdentityService) {
     this.scopes = scopes == null ? ImmutableSet.<String>of() : ImmutableList.copyOf(scopes);
-    this.appIdentityService = appIdentityService != null ? appIdentityService 
-        : AppIdentityServiceFactory.getAppIdentityService();
+    this.appIdentityService =
+        appIdentityService != null
+            ? appIdentityService
+            : AppIdentityServiceFactory.getAppIdentityService();
     this.appIdentityServiceClassName = this.appIdentityService.getClass().getName();
     scopesRequired = this.scopes.isEmpty();
   }
 
-  /**
-   * Refresh the access token by getting it from the App Identity service
-   */
+  /** Refresh the access token by getting it from the App Identity service */
   @Override
   public AccessToken refreshAccessToken() throws IOException {
     if (createScopedRequired()) {
@@ -113,7 +115,7 @@ public class AppEngineCredentials extends GoogleCredentials implements ServiceAc
     Date expirationTime = accessTokenResponse.getExpirationTime();
     return new AccessToken(accessToken, expirationTime);
   }
-  
+
   @Override
   public boolean createScopedRequired() {
     return scopesRequired;
