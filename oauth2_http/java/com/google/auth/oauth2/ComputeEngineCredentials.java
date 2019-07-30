@@ -269,7 +269,7 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
       try {
         serviceAccountEmail = getDefaultServiceAccount();
       } catch (IOException ex) {
-        throw new RuntimeException("Failed to to get service account", ex);
+        throw new RuntimeException("Failed to get service account", ex);
       }
     }
     return serviceAccountEmail;
