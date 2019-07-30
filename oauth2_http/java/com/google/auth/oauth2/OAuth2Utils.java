@@ -41,7 +41,6 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.io.ByteStreams;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -55,9 +54,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Map;
 
-/**
- * Internal utilities for the com.google.auth.oauth2 namespace.
- */
+/** Internal utilities for the com.google.auth.oauth2 namespace. */
 class OAuth2Utils {
   static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
 
@@ -86,8 +83,8 @@ class OAuth2Utils {
   }
 
   /**
-   * Returns whether the headers contain the specified value as one of the entries in the
-   * specified header.
+   * Returns whether the headers contain the specified value as one of the entries in the specified
+   * header.
    */
   static boolean headersContainValue(HttpHeaders headers, String headerName, String value) {
     Object values = headers.get(headerName);
@@ -99,20 +96,16 @@ class OAuth2Utils {
     return false;
   }
 
-  /**
-   * Parses the specified JSON text.
-   */
+  /** Parses the specified JSON text. */
   static GenericJson parseJson(String json) throws IOException {
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     InputStream stateStream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
-    GenericJson stateJson = parser.parseAndClose(
-        stateStream, StandardCharsets.UTF_8, GenericJson.class);
+    GenericJson stateJson =
+        parser.parseAndClose(stateStream, StandardCharsets.UTF_8, GenericJson.class);
     return stateJson;
   }
 
-  /**
-   * Return the specified string from JSON or throw a helpful error message.
-   */
+  /** Return the specified string from JSON or throw a helpful error message. */
   static String validateString(Map<String, Object> map, String key, String errorPrefix)
       throws IOException {
     Object value = map.get(key);
@@ -120,8 +113,7 @@ class OAuth2Utils {
       throw new IOException(String.format(VALUE_NOT_FOUND_MESSAGE, errorPrefix, key));
     }
     if (!(value instanceof String)) {
-      throw new IOException(
-          String.format(VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "string", key));
+      throw new IOException(String.format(VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "string", key));
     }
     return (String) value;
   }
@@ -142,9 +134,7 @@ class OAuth2Utils {
     }
   }
 
-  /**
-   * Return the specified optional string from JSON or throw a helpful error message.
-   */
+  /** Return the specified optional string from JSON or throw a helpful error message. */
   static String validateOptionalString(Map<String, Object> map, String key, String errorPrefix)
       throws IOException {
     Object value = map.get(key);
@@ -152,15 +142,12 @@ class OAuth2Utils {
       return null;
     }
     if (!(value instanceof String)) {
-      throw new IOException(
-          String.format(VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "string", key));
+      throw new IOException(String.format(VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "string", key));
     }
     return (String) value;
   }
 
-  /**
-   * Return the specified integer from JSON or throw a helpful error message.
-   */
+  /** Return the specified integer from JSON or throw a helpful error message. */
   static int validateInt32(Map<String, Object> map, String key, String errorPrefix)
       throws IOException {
     Object value = map.get(key);
@@ -172,15 +159,12 @@ class OAuth2Utils {
       return bigDecimalValue.intValueExact();
     }
     if (!(value instanceof Integer)) {
-      throw new IOException(
-          String.format(VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "integer", key));
+      throw new IOException(String.format(VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "integer", key));
     }
     return (Integer) value;
   }
 
-  /**
-   * Return the specified long from JSON or throw a helpful error message.
-   */
+  /** Return the specified long from JSON or throw a helpful error message. */
   static long validateLong(Map<String, Object> map, String key, String errorPrefix)
       throws IOException {
     Object value = map.get(key);
@@ -192,16 +176,13 @@ class OAuth2Utils {
       return bigDecimalValue.longValueExact();
     }
     if (!(value instanceof Long)) {
-      throw new IOException(
-          String.format(VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "long", key));
+      throw new IOException(String.format(VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "long", key));
     }
     return (Long) value;
   }
 
-  /**
-   * Return the specified map from JSON or throw a helpful error message.
-   */
-  @SuppressWarnings({ "unchecked", "rawtypes" })
+  /** Return the specified map from JSON or throw a helpful error message. */
+  @SuppressWarnings({"unchecked", "rawtypes"})
   static Map<String, Object> validateMap(Map<String, Object> map, String key, String errorPrefix)
       throws IOException {
     Object value = map.get(key);
@@ -209,12 +190,10 @@ class OAuth2Utils {
       throw new IOException(String.format(VALUE_NOT_FOUND_MESSAGE, errorPrefix, key));
     }
     if (!(value instanceof Map)) {
-      throw new IOException(
-          String.format(VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "Map", key));
+      throw new IOException(String.format(VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "Map", key));
     }
     return (Map) value;
   }
 
-  private OAuth2Utils() {
-  }
+  private OAuth2Utils() {}
 }

@@ -57,7 +57,6 @@ import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -111,24 +110,32 @@ public class ServiceAccountCredentials extends GoogleCredentials
    * @param privateKey RSA private key object for the service account.
    * @param privateKeyId Private key identifier for the service account. May be null.
    * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
-   *        which results in a credential that must have createScoped called before use.
+   *     which results in a credential that must have createScoped called before use.
    * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *        tokens.
+   *     tokens.
    * @param tokenServerUri URI of the end point that provides tokens.
    * @param serviceAccountUser Email of the user account to impersonate, if delegating domain-wide
-   *        authority to the service account.
+   *     authority to the service account.
    */
   ServiceAccountCredentials(
-      String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId,
-      Collection<String> scopes, HttpTransportFactory transportFactory, URI tokenServerUri,
-      String serviceAccountUser, String projectId) {
+      String clientId,
+      String clientEmail,
+      PrivateKey privateKey,
+      String privateKeyId,
+      Collection<String> scopes,
+      HttpTransportFactory transportFactory,
+      URI tokenServerUri,
+      String serviceAccountUser,
+      String projectId) {
     this.clientId = clientId;
     this.clientEmail = Preconditions.checkNotNull(clientEmail);
     this.privateKey = Preconditions.checkNotNull(privateKey);
     this.privateKeyId = privateKeyId;
     this.scopes = (scopes == null) ? ImmutableSet.<String>of() : ImmutableSet.copyOf(scopes);
-    this.transportFactory = firstNonNull(transportFactory,
-        getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
+    this.transportFactory =
+        firstNonNull(
+            transportFactory,
+            getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
     this.tokenServerUri = (tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : tokenServerUri;
     this.serviceAccountUser = serviceAccountUser;
@@ -141,10 +148,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
    *
    * @param json a map from the JSON representing the credentials.
    * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *        tokens.
+   *     tokens.
    * @return the credentials defined by the JSON.
    * @throws IOException if the credential cannot be created from the JSON.
-   **/
+   */
   static ServiceAccountCredentials fromJson(
       Map<String, Object> json, HttpTransportFactory transportFactory) throws IOException {
     String clientId = (String) json.get("client_id");
@@ -161,14 +168,25 @@ public class ServiceAccountCredentials extends GoogleCredentials
     } catch (URISyntaxException e) {
       throw new IOException("Token server URI specified in 'token_uri' could not be parsed.");
     }
-    if (clientId == null || clientEmail == null
-        || privateKeyPkcs8 == null || privateKeyId == null) {
-      throw new IOException("Error reading service account credential from JSON, "
-          + "expecting  'client_id', 'client_email', 'private_key' and 'private_key_id'.");
+    if (clientId == null
+        || clientEmail == null
+        || privateKeyPkcs8 == null
+        || privateKeyId == null) {
+      throw new IOException(
+          "Error reading service account credential from JSON, "
+              + "expecting  'client_id', 'client_email', 'private_key' and 'private_key_id'.");
     }
 
-    return fromPkcs8(clientId, clientEmail, privateKeyPkcs8, privateKeyId, null, transportFactory,
-        tokenServerUriFromCreds, null, projectId);
+    return fromPkcs8(
+        clientId,
+        clientEmail,
+        privateKeyPkcs8,
+        privateKeyId,
+        null,
+        transportFactory,
+        tokenServerUriFromCreds,
+        null,
+        projectId);
   }
 
   /**
@@ -179,78 +197,122 @@ public class ServiceAccountCredentials extends GoogleCredentials
    * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
    * @param privateKeyId Private key identifier for the service account. May be null.
    * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
-   *        which results in a credential that must have createScoped called before use.
+   *     which results in a credential that must have createScoped called before use.
    * @return New ServiceAccountCredentials created from a private key.
    * @throws IOException if the credential cannot be created from the private key.
    */
   public static ServiceAccountCredentials fromPkcs8(
-      String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId,
-      Collection<String> scopes) throws IOException {
-    return fromPkcs8(clientId, clientEmail, privateKeyPkcs8, privateKeyId, scopes, null, null, null);
+      String clientId,
+      String clientEmail,
+      String privateKeyPkcs8,
+      String privateKeyId,
+      Collection<String> scopes)
+      throws IOException {
+    return fromPkcs8(
+        clientId, clientEmail, privateKeyPkcs8, privateKeyId, scopes, null, null, null);
   }
 
   /**
-   * Factory with minimum identifying information and custom transport using PKCS#8 for the
-   * private key.
+   * Factory with minimum identifying information and custom transport using PKCS#8 for the private
+   * key.
    *
    * @param clientId Client ID of the service account from the console. May be null.
    * @param clientEmail Client email address of the service account from the console.
    * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
    * @param privateKeyId Private key identifier for the service account. May be null.
    * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
-   *        which results in a credential that must have createScoped called before use.
+   *     which results in a credential that must have createScoped called before use.
    * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *        tokens.
+   *     tokens.
    * @param tokenServerUri URI of the end point that provides tokens.
    * @return New ServiceAccountCredentials created from a private key.
    * @throws IOException if the credential cannot be created from the private key.
    */
   public static ServiceAccountCredentials fromPkcs8(
-      String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId,
-      Collection<String> scopes, HttpTransportFactory transportFactory, URI tokenServerUri)
+      String clientId,
+      String clientEmail,
+      String privateKeyPkcs8,
+      String privateKeyId,
+      Collection<String> scopes,
+      HttpTransportFactory transportFactory,
+      URI tokenServerUri)
       throws IOException {
-    return fromPkcs8(clientId, clientEmail, privateKeyPkcs8, privateKeyId, scopes, transportFactory, tokenServerUri, null);
+    return fromPkcs8(
+        clientId,
+        clientEmail,
+        privateKeyPkcs8,
+        privateKeyId,
+        scopes,
+        transportFactory,
+        tokenServerUri,
+        null);
   }
 
   /**
-   * Factory with minimum identifying information and custom transport using PKCS#8 for the
-   * private key.
+   * Factory with minimum identifying information and custom transport using PKCS#8 for the private
+   * key.
    *
    * @param clientId Client ID of the service account from the console. May be null.
    * @param clientEmail Client email address of the service account from the console.
    * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
    * @param privateKeyId Private key identifier for the service account. May be null.
    * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
-   *        which results in a credential that must have createScoped called before use.
+   *     which results in a credential that must have createScoped called before use.
    * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *        tokens.
+   *     tokens.
    * @param tokenServerUri URI of the end point that provides tokens.
    * @param serviceAccountUser The email of the user account to impersonate, if delegating
-   *        domain-wide authority to the service account.
+   *     domain-wide authority to the service account.
    * @return New ServiceAccountCredentials created from a private key.
    * @throws IOException if the credential cannot be created from the private key.
    */
   public static ServiceAccountCredentials fromPkcs8(
-      String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId,
-      Collection<String> scopes, HttpTransportFactory transportFactory, URI tokenServerUri,
+      String clientId,
+      String clientEmail,
+      String privateKeyPkcs8,
+      String privateKeyId,
+      Collection<String> scopes,
+      HttpTransportFactory transportFactory,
+      URI tokenServerUri,
       String serviceAccountUser)
       throws IOException {
-    return fromPkcs8(clientId, clientEmail, privateKeyPkcs8, privateKeyId, scopes, transportFactory, tokenServerUri, serviceAccountUser, null);
+    return fromPkcs8(
+        clientId,
+        clientEmail,
+        privateKeyPkcs8,
+        privateKeyId,
+        scopes,
+        transportFactory,
+        tokenServerUri,
+        serviceAccountUser,
+        null);
   }
 
   static ServiceAccountCredentials fromPkcs8(
-      String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId,
-      Collection<String> scopes, HttpTransportFactory transportFactory, URI tokenServerUri,
-      String serviceAccountUser, String projectId)
+      String clientId,
+      String clientEmail,
+      String privateKeyPkcs8,
+      String privateKeyId,
+      Collection<String> scopes,
+      HttpTransportFactory transportFactory,
+      URI tokenServerUri,
+      String serviceAccountUser,
+      String projectId)
       throws IOException {
     PrivateKey privateKey = privateKeyFromPkcs8(privateKeyPkcs8);
     return new ServiceAccountCredentials(
-        clientId, clientEmail, privateKey, privateKeyId, scopes, transportFactory, tokenServerUri, serviceAccountUser, projectId);
+        clientId,
+        clientEmail,
+        privateKey,
+        privateKeyId,
+        scopes,
+        transportFactory,
+        tokenServerUri,
+        serviceAccountUser,
+        projectId);
   }
 
-  /**
-   * Helper to convert from a PKCS#8 String to an RSA private key
-   */
+  /** Helper to convert from a PKCS#8 String to an RSA private key */
   static PrivateKey privateKeyFromPkcs8(String privateKeyPkcs8) throws IOException {
     Reader reader = new StringReader(privateKeyPkcs8);
     Section section = PemReader.readFirstSectionAndClose(reader, "PRIVATE KEY");
@@ -276,7 +338,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
    * @param credentialsStream the stream with the credential definition.
    * @return the credential defined by the credentialsStream.
    * @throws IOException if the credential cannot be created from the stream.
-   **/
+   */
   public static ServiceAccountCredentials fromStream(InputStream credentialsStream)
       throws IOException {
     return fromStream(credentialsStream, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
@@ -288,19 +350,19 @@ public class ServiceAccountCredentials extends GoogleCredentials
    *
    * @param credentialsStream the stream with the credential definition.
    * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *        tokens.
+   *     tokens.
    * @return the credential defined by the credentialsStream.
    * @throws IOException if the credential cannot be created from the stream.
-   **/
-  public static ServiceAccountCredentials fromStream(InputStream credentialsStream,
-      HttpTransportFactory transportFactory) throws IOException {
+   */
+  public static ServiceAccountCredentials fromStream(
+      InputStream credentialsStream, HttpTransportFactory transportFactory) throws IOException {
     Preconditions.checkNotNull(credentialsStream);
     Preconditions.checkNotNull(transportFactory);
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     JsonObjectParser parser = new JsonObjectParser(jsonFactory);
-    GenericJson fileContents = parser.parseAndClose(
-        credentialsStream, OAuth2Utils.UTF_8, GenericJson.class);
+    GenericJson fileContents =
+        parser.parseAndClose(credentialsStream, OAuth2Utils.UTF_8, GenericJson.class);
 
     String fileType = (String) fileContents.get("type");
     if (fileType == null) {
@@ -309,9 +371,11 @@ public class ServiceAccountCredentials extends GoogleCredentials
     if (SERVICE_ACCOUNT_FILE_TYPE.equals(fileType)) {
       return fromJson(fileContents, transportFactory);
     }
-    throw new IOException(String.format(
-        "Error reading credentials from stream, 'type' value '%s' not recognized."
-            + " Expecting '%s'.", fileType, SERVICE_ACCOUNT_FILE_TYPE));
+    throw new IOException(
+        String.format(
+            "Error reading credentials from stream, 'type' value '%s' not recognized."
+                + " Expecting '%s'.",
+            fileType, SERVICE_ACCOUNT_FILE_TYPE));
   }
 
   /**
@@ -320,8 +384,9 @@ public class ServiceAccountCredentials extends GoogleCredentials
   @Override
   public AccessToken refreshAccessToken() throws IOException {
     if (createScopedRequired()) {
-      throw new IOException("Scopes not configured for service account. Scoped should be specified"
-          + " by calling createScoped or passing scopes to constructor.");
+      throw new IOException(
+          "Scopes not configured for service account. Scoped should be specified"
+              + " by calling createScoped or passing scopes to constructor.");
     }
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
@@ -339,40 +404,41 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
     request.setIOExceptionHandler(new HttpBackOffIOExceptionHandler(new ExponentialBackOff()));
     request.setUnsuccessfulResponseHandler(
-        new HttpBackOffUnsuccessfulResponseHandler(new ExponentialBackOff()).setBackOffRequired(
-            new BackOffRequired() {
-              public boolean isRequired(HttpResponse response) {
-                int code = response.getStatusCode();
-                return (
+        new HttpBackOffUnsuccessfulResponseHandler(new ExponentialBackOff())
+            .setBackOffRequired(
+                new BackOffRequired() {
+                  public boolean isRequired(HttpResponse response) {
+                    int code = response.getStatusCode();
+                    return (
                     // Server error --- includes timeout errors, which use 500 instead of 408
                     code / 100 == 5
-                    // Forbidden error --- for historical reasons, used for rate_limit_exceeded
-                    // errors instead of 429, but there currently seems no robust automatic way to
-                    // distinguish these cases: see
-                    // https://github.com/google/google-api-java-client/issues/662
-                    || code == 403);
-              }
-            }));
+                        // Forbidden error --- for historical reasons, used for rate_limit_exceeded
+                        // errors instead of 429, but there currently seems no robust automatic way
+                        // to
+                        // distinguish these cases: see
+                        // https://github.com/google/google-api-java-client/issues/662
+                        || code == 403);
+                  }
+                }));
 
     HttpResponse response;
     try {
       response = request.execute();
     } catch (IOException e) {
-      throw new IOException(String.format("Error getting access token for service account: %s", e.getMessage()), e);
+      throw new IOException(
+          String.format("Error getting access token for service account: %s", e.getMessage()), e);
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
-    String accessToken = OAuth2Utils.validateString(
-        responseData, "access_token", PARSE_ERROR_PREFIX);
-    int expiresInSeconds = OAuth2Utils.validateInt32(
-        responseData, "expires_in", PARSE_ERROR_PREFIX);
+    String accessToken =
+        OAuth2Utils.validateString(responseData, "access_token", PARSE_ERROR_PREFIX);
+    int expiresInSeconds =
+        OAuth2Utils.validateInt32(responseData, "expires_in", PARSE_ERROR_PREFIX);
     long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000L;
     return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
   }
 
-  /**
-   * Returns whether the scopes are empty, meaning createScoped must be called before use.
-   */
+  /** Returns whether the scopes are empty, meaning createScoped must be called before use. */
   @Override
   public boolean createScopedRequired() {
     return scopes.isEmpty();
@@ -385,14 +451,30 @@ public class ServiceAccountCredentials extends GoogleCredentials
    */
   @Override
   public GoogleCredentials createScoped(Collection<String> newScopes) {
-    return new ServiceAccountCredentials(clientId, clientEmail, privateKey, privateKeyId, newScopes,
-        transportFactory, tokenServerUri, serviceAccountUser, projectId);
+    return new ServiceAccountCredentials(
+        clientId,
+        clientEmail,
+        privateKey,
+        privateKeyId,
+        newScopes,
+        transportFactory,
+        tokenServerUri,
+        serviceAccountUser,
+        projectId);
   }
 
   @Override
   public GoogleCredentials createDelegated(String user) {
-    return new ServiceAccountCredentials(clientId, clientEmail, privateKey, privateKeyId, scopes,
-        transportFactory, tokenServerUri, user, projectId);
+    return new ServiceAccountCredentials(
+        clientId,
+        clientEmail,
+        privateKey,
+        privateKeyId,
+        scopes,
+        transportFactory,
+        tokenServerUri,
+        user,
+        projectId);
   }
 
   public final String getClientId() {
@@ -466,8 +548,14 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   @Override
   public int hashCode() {
-    return Objects.hash(clientId, clientEmail, privateKey, privateKeyId, transportFactoryClassName,
-        tokenServerUri, scopes);
+    return Objects.hash(
+        clientId,
+        clientEmail,
+        privateKey,
+        privateKeyId,
+        transportFactoryClassName,
+        tokenServerUri,
+        scopes);
   }
 
   @Override
@@ -520,8 +608,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
     String assertion;
     try {
-      assertion = JsonWebSignature.signUsingRsaSha256(
-          privateKey, jsonFactory, header, payload);
+      assertion = JsonWebSignature.signUsingRsaSha256(privateKey, jsonFactory, header, payload);
     } catch (GeneralSecurityException e) {
       throw new IOException(
           "Error signing service account access token request with private key.", e);
@@ -653,8 +740,15 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
     public ServiceAccountCredentials build() {
       return new ServiceAccountCredentials(
-          clientId, clientEmail, privateKey, privateKeyId, scopes,
-          transportFactory, tokenServerUri, serviceAccountUser, projectId);
+          clientId,
+          clientEmail,
+          privateKey,
+          privateKeyId,
+          scopes,
+          transportFactory,
+          tokenServerUri,
+          serviceAccountUser,
+          projectId);
     }
   }
 }

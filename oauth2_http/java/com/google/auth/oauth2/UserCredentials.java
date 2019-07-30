@@ -46,9 +46,8 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.http.HttpTransportFactory;
-
-import java.io.ByteArrayInputStream;
 import com.google.common.base.MoreObjects;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -57,9 +56,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * OAuth2 Credentials representing a user's identity and consent.
- */
+/** OAuth2 Credentials representing a user's identity and consent. */
 public class UserCredentials extends GoogleCredentials {
 
   private static final String GRANT_TYPE = "refresh_token";
@@ -82,20 +79,28 @@ public class UserCredentials extends GoogleCredentials {
    * @param refreshToken A refresh token resulting from a OAuth2 consent flow.
    * @param accessToken Initial or temporary access token.
    * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *        tokens.
+   *     tokens.
    * @param tokenServerUri URI of the end point that provides tokens
    */
-  private UserCredentials(String clientId, String clientSecret, String refreshToken,
-      AccessToken accessToken, HttpTransportFactory transportFactory, URI tokenServerUri) {
+  private UserCredentials(
+      String clientId,
+      String clientSecret,
+      String refreshToken,
+      AccessToken accessToken,
+      HttpTransportFactory transportFactory,
+      URI tokenServerUri) {
     super(accessToken);
     this.clientId = Preconditions.checkNotNull(clientId);
     this.clientSecret = Preconditions.checkNotNull(clientSecret);
     this.refreshToken = refreshToken;
-    this.transportFactory = firstNonNull(transportFactory,
-        getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
+    this.transportFactory =
+        firstNonNull(
+            transportFactory,
+            getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     this.tokenServerUri = (tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : tokenServerUri;
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
-    Preconditions.checkState(accessToken != null || refreshToken != null,
+    Preconditions.checkState(
+        accessToken != null || refreshToken != null,
         "Either accessToken or refreshToken must not be null");
   }
 
@@ -104,18 +109,19 @@ public class UserCredentials extends GoogleCredentials {
    *
    * @param json a map from the JSON representing the credentials.
    * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *        tokens.
+   *     tokens.
    * @return the credentials defined by the JSON.
    * @throws IOException if the credential cannot be created from the JSON.
-   **/
+   */
   static UserCredentials fromJson(Map<String, Object> json, HttpTransportFactory transportFactory)
       throws IOException {
     String clientId = (String) json.get("client_id");
     String clientSecret = (String) json.get("client_secret");
     String refreshToken = (String) json.get("refresh_token");
     if (clientId == null || clientSecret == null || refreshToken == null) {
-      throw new IOException("Error reading user credential from JSON, "
-          + " expecting 'client_id', 'client_secret' and 'refresh_token'.");
+      throw new IOException(
+          "Error reading user credential from JSON, "
+              + " expecting 'client_id', 'client_secret' and 'refresh_token'.");
     }
     return UserCredentials.newBuilder()
         .setClientId(clientId)
@@ -133,9 +139,8 @@ public class UserCredentials extends GoogleCredentials {
    * @param credentialsStream the stream with the credential definition.
    * @return the credential defined by the credentialsStream.
    * @throws IOException if the credential cannot be created from the stream.
-   **/
-  public static UserCredentials fromStream(InputStream credentialsStream)
-      throws IOException {
+   */
+  public static UserCredentials fromStream(InputStream credentialsStream) throws IOException {
     return fromStream(credentialsStream, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
   }
 
@@ -144,19 +149,19 @@ public class UserCredentials extends GoogleCredentials {
    *
    * @param credentialsStream the stream with the credential definition.
    * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *        tokens.
+   *     tokens.
    * @return the credential defined by the credentialsStream.
    * @throws IOException if the credential cannot be created from the stream.
-   **/
-  public static UserCredentials fromStream(InputStream credentialsStream,
-      HttpTransportFactory transportFactory) throws IOException {
+   */
+  public static UserCredentials fromStream(
+      InputStream credentialsStream, HttpTransportFactory transportFactory) throws IOException {
     Preconditions.checkNotNull(credentialsStream);
     Preconditions.checkNotNull(transportFactory);
 
     JsonFactory jsonFactory = JSON_FACTORY;
     JsonObjectParser parser = new JsonObjectParser(jsonFactory);
-    GenericJson fileContents = parser.parseAndClose(
-        credentialsStream, OAuth2Utils.UTF_8, GenericJson.class);
+    GenericJson fileContents =
+        parser.parseAndClose(credentialsStream, OAuth2Utils.UTF_8, GenericJson.class);
 
     String fileType = (String) fileContents.get("type");
     if (fileType == null) {
@@ -165,19 +170,19 @@ public class UserCredentials extends GoogleCredentials {
     if (USER_FILE_TYPE.equals(fileType)) {
       return fromJson(fileContents, transportFactory);
     }
-    throw new IOException(String.format(
-        "Error reading credentials from stream, 'type' value '%s' not recognized."
-            + " Expecting '%s'.", fileType, USER_FILE_TYPE));
+    throw new IOException(
+        String.format(
+            "Error reading credentials from stream, 'type' value '%s' not recognized."
+                + " Expecting '%s'.",
+            fileType, USER_FILE_TYPE));
   }
 
-  /**
-   * Refreshes the OAuth2 access token by getting a new access token from the refresh token
-   */
+  /** Refreshes the OAuth2 access token by getting a new access token from the refresh token */
   @Override
   public AccessToken refreshAccessToken() throws IOException {
-    if (refreshToken ==  null) {
-      throw new IllegalStateException("UserCredentials instance cannot refresh because there is no"
-          + " refresh token.");
+    if (refreshToken == null) {
+      throw new IllegalStateException(
+          "UserCredentials instance cannot refresh because there is no" + " refresh token.");
     }
     GenericData tokenRequest = new GenericData();
     tokenRequest.set("client_id", clientId);
@@ -187,8 +192,7 @@ public class UserCredentials extends GoogleCredentials {
     UrlEncodedContent content = new UrlEncodedContent(tokenRequest);
 
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
-    HttpRequest request =
-        requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
+    HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
     request.setParser(new JsonObjectParser(JSON_FACTORY));
     HttpResponse response = request.execute();
     GenericData responseData = response.parseAs(GenericData.class);
@@ -227,13 +231,9 @@ public class UserCredentials extends GoogleCredentials {
     return refreshToken;
   }
 
-
   /**
-   * Returns the instance of InputStream containing the following user credentials in JSON format:
-   *  - RefreshToken
-   *  - ClientId
-   *  - ClientSecret
-   *  - ServerTokenUri
+   * Returns the instance of InputStream containing the following user credentials in JSON format: -
+   * RefreshToken - ClientId - ClientSecret - ServerTokenUri
    *
    * @return user credentials stream
    */
@@ -261,7 +261,6 @@ public class UserCredentials extends GoogleCredentials {
    * Saves the end user credentials into the given file path.
    *
    * @param filePath Path to file where to store the credentials
-   *
    * @throws IOException An error storing the credentials.
    */
   public void save(String filePath) throws IOException {
@@ -270,7 +269,12 @@ public class UserCredentials extends GoogleCredentials {
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), clientId, clientSecret, refreshToken, tokenServerUri,
+    return Objects.hash(
+        super.hashCode(),
+        clientId,
+        clientSecret,
+        refreshToken,
+        tokenServerUri,
         transportFactoryClassName);
   }
 
@@ -383,7 +387,7 @@ public class UserCredentials extends GoogleCredentials {
 
     public UserCredentials build() {
       return new UserCredentials(
-          clientId, clientSecret, refreshToken, getAccessToken(), transportFactory,tokenServerUri);
+          clientId, clientSecret, refreshToken, getAccessToken(), transportFactory, tokenServerUri);
     }
   }
 }

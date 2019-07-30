@@ -38,21 +38,18 @@ import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpStatusCodes;
-import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
-import com.google.common.io.BaseEncoding;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
@@ -61,10 +58,9 @@ import java.util.logging.Logger;
 /**
  * OAuth2 credentials representing the built-in service account for a Google Compute Engine VM.
  *
- * <p>Fetches access tokens from the Google Compute Engine metadata server.</p>
+ * <p>Fetches access tokens from the Google Compute Engine metadata server.
  *
  * <p>These credentials use the IAM API to sign data. See {@link #sign(byte[])} for more details.
- * </p>
  */
 public class ComputeEngineCredentials extends GoogleCredentials implements ServiceAccountSigner {
 
@@ -73,7 +69,8 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
   // Note: the explicit IP address is used to avoid name server resolution issues.
   static final String DEFAULT_METADATA_SERVER_URL = "http://metadata.google.internal";
 
-  static final String SIGN_BLOB_URL_FORMAT = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
+  static final String SIGN_BLOB_URL_FORMAT =
+      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
 
   // Note: the explicit `timeout` and `tries` below is a workaround. The underlying
   // issue is that resolving an unknown host on some networks will take
@@ -91,8 +88,6 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
 
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final String PARSE_ERROR_ACCOUNT = "Error parsing service account response. ";
-  private static final String PARSE_ERROR_SIGNATURE = "Error parsing signature response. ";
-  private static final String PARSE_ERROR_MESSAGE = "Error parsing error message response. ";
   private static final long serialVersionUID = -4113476462526554235L;
 
   private final String transportFactoryClassName;
@@ -104,11 +99,13 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
    * Constructor with overridden transport.
    *
    * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *        tokens.
+   *     tokens.
    */
   private ComputeEngineCredentials(HttpTransportFactory transportFactory) {
-    this.transportFactory = firstNonNull(transportFactory,
-        getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
+    this.transportFactory =
+        firstNonNull(
+            transportFactory,
+            getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
   }
 
@@ -121,24 +118,29 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
     return new ComputeEngineCredentials(null);
   }
 
-  /**
-   * Refresh the access token by getting it from the GCE metadata server
-   */
+  /** Refresh the access token by getting it from the GCE metadata server */
   @Override
   public AccessToken refreshAccessToken() throws IOException {
     HttpResponse response = getMetadataResponse(getTokenServerEncodedUrl());
     int statusCode = response.getStatusCode();
     if (statusCode == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
-      throw new IOException(String.format("Error code %s trying to get security access token from"
-          + " Compute Engine metadata for the default service account. This may be because"
-          + " the virtual machine instance does not have permission scopes specified."
-          + " It is possible to skip checking for Compute Engine metadata by specifying the environment "
-          + " variable " + DefaultCredentialsProvider.NO_GCE_CHECK_ENV_VAR + "=true.", statusCode));
+      throw new IOException(
+          String.format(
+              "Error code %s trying to get security access token from"
+                  + " Compute Engine metadata for the default service account. This may be because"
+                  + " the virtual machine instance does not have permission scopes specified."
+                  + " It is possible to skip checking for Compute Engine metadata by specifying the environment "
+                  + " variable "
+                  + DefaultCredentialsProvider.NO_GCE_CHECK_ENV_VAR
+                  + "=true.",
+              statusCode));
     }
     if (statusCode != HttpStatusCodes.STATUS_CODE_OK) {
-      throw new IOException(String.format("Unexpected Error code %s trying to get security access"
-          + " token from Compute Engine metadata for the default service account: %s", statusCode,
-          response.parseAsString()));
+      throw new IOException(
+          String.format(
+              "Unexpected Error code %s trying to get security access"
+                  + " token from Compute Engine metadata for the default service account: %s",
+              statusCode, response.parseAsString()));
     }
     InputStream content = response.getContent();
     if (content == null) {
@@ -147,17 +149,18 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
       throw new IOException("Empty content from metadata token server request.");
     }
     GenericData responseData = response.parseAs(GenericData.class);
-    String accessToken = OAuth2Utils.validateString(
-        responseData, "access_token", PARSE_ERROR_PREFIX);
-    int expiresInSeconds = OAuth2Utils.validateInt32(
-        responseData, "expires_in", PARSE_ERROR_PREFIX);
+    String accessToken =
+        OAuth2Utils.validateString(responseData, "access_token", PARSE_ERROR_PREFIX);
+    int expiresInSeconds =
+        OAuth2Utils.validateInt32(responseData, "expires_in", PARSE_ERROR_PREFIX);
     long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000;
     return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
   }
 
   private HttpResponse getMetadataResponse(String url) throws IOException {
     GenericUrl genericUrl = new GenericUrl(url);
-    HttpRequest request = transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
+    HttpRequest request =
+        transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     request.setParser(parser);
     request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
@@ -166,8 +169,10 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
     try {
       response = request.execute();
     } catch (UnknownHostException exception) {
-      throw new IOException("ComputeEngineCredentials cannot find the metadata server. This is"
-          + " likely because code is not running on Google Compute Engine.", exception);
+      throw new IOException(
+          "ComputeEngineCredentials cannot find the metadata server. This is"
+              + " likely because code is not running on Google Compute Engine.",
+          exception);
     }
     return response;
   }
@@ -200,8 +205,11 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
       } catch (SocketTimeoutException expected) {
         // Ignore logging timeouts which is the expected failure mode in non GCE environments.
       } catch (IOException e) {
-        LOGGER.log(Level.FINE, "Encountered an unexpected exception when determining" +
-            " if we are running on Google Compute Engine.", e);
+        LOGGER.log(
+            Level.FINE,
+            "Encountered an unexpected exception when determining"
+                + " if we are running on Google Compute Engine.",
+            e);
       }
     }
     LOGGER.log(Level.INFO, "Failed to detect whether we are running on Google Compute Engine.");
@@ -209,7 +217,8 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
   }
 
   public static String getMetadataServerUrl(DefaultCredentialsProvider provider) {
-    String metadataServerAddress = provider.getEnv(DefaultCredentialsProvider.GCE_METADATA_HOST_ENV_VAR);
+    String metadataServerAddress =
+        provider.getEnv(DefaultCredentialsProvider.GCE_METADATA_HOST_ENV_VAR);
     if (metadataServerAddress != null) {
       return "http://" + metadataServerAddress;
     }
@@ -221,7 +230,8 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
   }
 
   public static String getTokenServerEncodedUrl(DefaultCredentialsProvider provider) {
-    return getMetadataServerUrl(provider) + "/computeMetadata/v1/instance/service-accounts/default/token";
+    return getMetadataServerUrl(provider)
+        + "/computeMetadata/v1/instance/service-accounts/default/token";
   }
 
   public static String getTokenServerEncodedUrl() {
@@ -283,79 +293,42 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
    * Signs the provided bytes using the private key associated with the service account.
    *
    * <p>The Compute Engine's project must enable the Identity and Access Management (IAM) API and
-   * the instance's service account must have the iam.serviceAccounts.signBlob permission.</p>
+   * the instance's service account must have the iam.serviceAccounts.signBlob permission.
    *
    * @param toSign bytes to sign
    * @return signed bytes
    * @throws SigningException if the attempt to sign the provided bytes failed
-   * @see <a href="https://cloud.google.com/iam/credentials/reference/rest/v1/projects.serviceAccounts/signBlob">Blob Signing</a>
+   * @see <a
+   *     href="https://cloud.google.com/iam/credentials/reference/rest/v1/projects.serviceAccounts/signBlob">Blob
+   *     Signing</a>
    */
   @Override
   public byte[] sign(byte[] toSign) {
-    BaseEncoding base64 = BaseEncoding.base64();
-    String signature;
-    try {
-      signature = getSignature(base64.encode(toSign));
-    } catch (IOException ex) {
-      throw new SigningException("Failed to sign the provided bytes", ex);
-    }
-    return base64.decode(signature);
-  }
-
-  private String getSignature(String bytes) throws IOException {
-    String signBlobUrl = String.format(SIGN_BLOB_URL_FORMAT, getAccount());
-    GenericUrl genericUrl = new GenericUrl(signBlobUrl);
-
-    GenericData signRequest = new GenericData();
-    signRequest.set("payload", bytes);
-    JsonHttpContent signContent = new JsonHttpContent(OAuth2Utils.JSON_FACTORY, signRequest);
-    HttpRequest request = transportFactory.create().createRequestFactory().buildPostRequest(genericUrl, signContent);
-    Map<String, List<String>> headers = getRequestMetadata();
-    HttpHeaders requestHeaders = request.getHeaders();
-    for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
-      requestHeaders.put(entry.getKey(), entry.getValue());
-    }
-    JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
-    request.setParser(parser);
-    request.setThrowExceptionOnExecuteError(false);
-
-    HttpResponse response = request.execute();
-    int statusCode = response.getStatusCode();
-    if (statusCode >= 400 && statusCode < HttpStatusCodes.STATUS_CODE_SERVER_ERROR) {
-      GenericData responseError = response.parseAs(GenericData.class);
-      Map<String, Object> error = OAuth2Utils.validateMap(responseError, "error", PARSE_ERROR_MESSAGE);
-      String errorMessage = OAuth2Utils.validateString(error, "message", PARSE_ERROR_MESSAGE);
-      throw new IOException(String.format("Error code %s trying to sign provided bytes: %s",
-          statusCode, errorMessage));
-    }
-    if (statusCode != HttpStatusCodes.STATUS_CODE_OK) {
-      throw new IOException(String.format("Unexpected Error code %s trying to sign provided bytes: %s", statusCode,
-          response.parseAsString()));
-    }
-    InputStream content = response.getContent();
-    if (content == null) {
-      // Throw explicitly here on empty content to avoid NullPointerException from parseAs call.
-      // Mock transports will have success code with empty content by default.
-      throw new IOException("Empty content from sign blob server request.");
-    }
-
-    GenericData responseData = response.parseAs(GenericData.class);
-    return OAuth2Utils.validateString(responseData, "signedBlob", PARSE_ERROR_SIGNATURE);
+    return IamUtils.sign(
+        getAccount(),
+        this,
+        transportFactory.create(),
+        toSign,
+        Collections.<String, Object>emptyMap());
   }
 
   private String getDefaultServiceAccount() throws IOException {
     HttpResponse response = getMetadataResponse(getServiceAccountsUrl());
     int statusCode = response.getStatusCode();
     if (statusCode == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
-      throw new IOException(String.format("Error code %s trying to get service accounts from"
-          + " Compute Engine metadata. This may be because the virtual machine instance"
-          + " does not have permission scopes specified.",
-          statusCode));
+      throw new IOException(
+          String.format(
+              "Error code %s trying to get service accounts from"
+                  + " Compute Engine metadata. This may be because the virtual machine instance"
+                  + " does not have permission scopes specified.",
+              statusCode));
     }
     if (statusCode != HttpStatusCodes.STATUS_CODE_OK) {
-      throw new IOException(String.format("Unexpected Error code %s trying to get service accounts"
-          + " from Compute Engine metadata: %s", statusCode,
-          response.parseAsString()));
+      throw new IOException(
+          String.format(
+              "Unexpected Error code %s trying to get service accounts"
+                  + " from Compute Engine metadata: %s",
+              statusCode, response.parseAsString()));
     }
     InputStream content = response.getContent();
     if (content == null) {
@@ -364,7 +337,8 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
       throw new IOException("Empty content from metadata token server request.");
     }
     GenericData responseData = response.parseAs(GenericData.class);
-    Map<String, Object> defaultAccount = OAuth2Utils.validateMap(responseData, "default", PARSE_ERROR_ACCOUNT);
+    Map<String, Object> defaultAccount =
+        OAuth2Utils.validateMap(responseData, "default", PARSE_ERROR_ACCOUNT);
     return OAuth2Utils.validateString(defaultAccount, "email", PARSE_ERROR_ACCOUNT);
   }
 

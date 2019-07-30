@@ -37,12 +37,9 @@ import com.google.api.client.json.Json;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.auth.http.AuthHttpConstants;
-
 import java.io.IOException;
 
-/**
- * Mock transport to simulate an http server that checks tokens
- */
+/** Mock transport to simulate an http server that checks tokens */
 public class MockTokenCheckingTransport extends HttpTransport {
 
   public static final String SUCCESS_CONTENT = "{\"key\":\"value\"}";
@@ -50,8 +47,7 @@ public class MockTokenCheckingTransport extends HttpTransport {
   private MockTokenServerTransport tokenServer;
   private String refreshToken;
 
-  public MockTokenCheckingTransport(MockTokenServerTransport tokenServer,
-                                    String refreshToken) {
+  public MockTokenCheckingTransport(MockTokenServerTransport tokenServer, String refreshToken) {
     this.tokenServer = tokenServer;
     this.refreshToken = refreshToken;
   }
@@ -96,5 +92,4 @@ public class MockTokenCheckingTransport extends HttpTransport {
     successResponse.setContent(SUCCESS_CONTENT);
     return successResponse;
   }
-
 }

@@ -35,7 +35,6 @@ import com.google.auth.ServiceAccountSigner;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -106,22 +105,24 @@ class AppEngineCredentials extends GoogleCredentials implements ServiceAccountSi
           serviceClass.getMethod(GET_ACCESS_TOKEN_RESULT_METHOD, Iterable.class);
       this.getAccessToken = tokenResultClass.getMethod(GET_ACCESS_TOKEN_METHOD);
       this.getExpirationTime = tokenResultClass.getMethod(GET_EXPIRATION_TIME_METHOD);
-      this.account = (String) serviceClass.getMethod(GET_SERVICE_ACCOUNT_NAME_METHOD)
-          .invoke(appIdentityService);
+      this.account =
+          (String)
+              serviceClass.getMethod(GET_SERVICE_ACCOUNT_NAME_METHOD).invoke(appIdentityService);
       this.signForApp = serviceClass.getMethod(SIGN_FOR_APP_METHOD, byte[].class);
       Class<?> signingResultClass = forName(SIGNING_RESULT_CLASS);
       this.getSignature = signingResultClass.getMethod(GET_SIGNATURE_METHOD);
-    } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException
+    } catch (ClassNotFoundException
+        | NoSuchMethodException
+        | IllegalAccessException
         | InvocationTargetException ex) {
       throw new IOException(
           "Application Default Credentials failed to create the Google App Engine service account"
-              + " credentials. Check that the App Engine SDK is deployed.", ex);
+              + " credentials. Check that the App Engine SDK is deployed.",
+          ex);
     }
   }
 
-  /**
-   * Refresh the access token by getting it from the App Identity service.
-   */
+  /** Refresh the access token by getting it from the App Identity service. */
   @Override
   public AccessToken refreshAccessToken() throws IOException {
     if (createScopedRequired()) {
@@ -181,8 +182,7 @@ class AppEngineCredentials extends GoogleCredentials implements ServiceAccountSi
       return false;
     }
     AppEngineCredentials other = (AppEngineCredentials) obj;
-    return this.scopesRequired == other.scopesRequired
-        && Objects.equals(this.scopes, other.scopes);
+    return this.scopesRequired == other.scopesRequired && Objects.equals(this.scopes, other.scopes);
   }
 
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {

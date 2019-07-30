@@ -37,17 +37,13 @@ import static org.junit.Assert.fail;
 
 import com.google.api.client.json.GenericJson;
 import com.google.auth.TestUtils;
-
+import java.io.IOException;
+import java.io.InputStream;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.io.IOException;
-import java.io.InputStream;
-
-/**
- * Unit tests for ClientId
- */
+/** Unit tests for ClientId */
 @RunWith(JUnit4.class)
 public class ClientIdTest {
   private static final String CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
@@ -55,10 +51,8 @@ public class ClientIdTest {
 
   @Test
   public void constructor() {
-    ClientId clientId = ClientId.newBuilder()
-        .setClientId(CLIENT_ID)
-        .setClientSecret(CLIENT_SECRET)
-        .build();
+    ClientId clientId =
+        ClientId.newBuilder().setClientId(CLIENT_ID).setClientSecret(CLIENT_SECRET).build();
 
     assertEquals(CLIENT_ID, clientId.getClientId());
     assertEquals(CLIENT_SECRET, clientId.getClientSecret());
@@ -66,16 +60,12 @@ public class ClientIdTest {
 
   @Test(expected = NullPointerException.class)
   public void constructor_nullClientId_throws() {
-    ClientId.newBuilder()
-        .setClientSecret(CLIENT_SECRET)
-        .build();
+    ClientId.newBuilder().setClientSecret(CLIENT_SECRET).build();
   }
 
   @Test
   public void constructor_nullClientSecret() {
-    ClientId clientId = ClientId.newBuilder()
-        .setClientId(CLIENT_ID)
-        .build();
+    ClientId clientId = ClientId.newBuilder().setClientId(CLIENT_ID).build();
     assertEquals(CLIENT_ID, clientId.getClientId());
     assertNull(clientId.getClientSecret());
   }
@@ -146,12 +136,17 @@ public class ClientIdTest {
 
   @Test
   public void fromStream() throws IOException {
-    String text = "{"
-        + "\"web\": {"
-        + "\"client_id\" : \"" + CLIENT_ID + "\","
-        + "\"client_secret\" : \"" + CLIENT_SECRET + "\""
-        + "}"
-        + "}";
+    String text =
+        "{"
+            + "\"web\": {"
+            + "\"client_id\" : \""
+            + CLIENT_ID
+            + "\","
+            + "\"client_secret\" : \""
+            + CLIENT_SECRET
+            + "\""
+            + "}"
+            + "}";
     InputStream stream = TestUtils.stringToInputStream(text);
 
     ClientId clientId = ClientId.fromStream(stream);
@@ -162,11 +157,16 @@ public class ClientIdTest {
 
   @Test
   public void fromStream_invalidJson_throws() {
-    String invalidJson = "{"
-        + "\"web\": {"
-        + "\"client_id\" : \"" + CLIENT_ID + "\","
-        + "\"client_secret\" : \"" + CLIENT_SECRET + "\""
-        + "}"; // No closing brace
+    String invalidJson =
+        "{"
+            + "\"web\": {"
+            + "\"client_id\" : \""
+            + CLIENT_ID
+            + "\","
+            + "\"client_secret\" : \""
+            + CLIENT_SECRET
+            + "\""
+            + "}"; // No closing brace
     InputStream stream = TestUtils.stringToInputStream(invalidJson);
 
     try {
