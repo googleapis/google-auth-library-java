@@ -49,7 +49,6 @@ import com.google.auth.ServiceAccountSigner.SigningException;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
-
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
@@ -298,7 +297,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
     assertEquals(defaultAccountEmail, credentials.getAccount());
   }
-  
+
   @Test
   public void sign_getAccountFails() throws IOException {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
