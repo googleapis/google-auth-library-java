@@ -46,7 +46,6 @@ import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.auth.ServiceAccountSigner.SigningException;
-import com.google.auth.ServiceAccountSigner;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
@@ -314,7 +313,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     try {
       credentials.sign(expectedSignature);
       fail();
-    } catch (ServiceAccountSigner.SigningException ex) {
+    } catch (SigningException ex) {
       assertNotNull(ex.getMessage());
       assertNotNull(ex.getCause());
     }
