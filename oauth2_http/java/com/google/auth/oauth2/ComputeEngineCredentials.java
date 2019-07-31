@@ -277,7 +277,13 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
     return new Builder();
   }
 
+  /**
+   * Returns the email address associated with the GCE default service account.  
+   * 
+   * @throws RuntimeException if the default service account cannot be read
+   */
   @Override
+  // todo(#314) getAccount should not throw a RuntimeException
   public String getAccount() {
     if (serviceAccountEmail == null) {
       try {
