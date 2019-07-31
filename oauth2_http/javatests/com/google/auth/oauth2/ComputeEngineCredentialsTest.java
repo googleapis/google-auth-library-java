@@ -242,7 +242,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
       credentials.getAccount();
       fail("Fetching default service account should have failed");
     } catch (RuntimeException e) {
-      assertEquals("Failed to to get service account", e.getMessage());
+      assertEquals("Failed to get service account", e.getMessage());
       assertNotNull(e.getCause());
       assertTrue(e.getCause().getMessage().contains("404"));
     }
@@ -277,7 +277,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
       credentials.getAccount();
       fail("Fetching default service account should have failed");
     } catch (RuntimeException e) {
-      assertEquals("Failed to to get service account", e.getMessage());
+      assertEquals("Failed to get service account", e.getMessage());
       assertNotNull(e.getCause());
       assertTrue(e.getCause().getMessage().contains("Empty content"));
     }
