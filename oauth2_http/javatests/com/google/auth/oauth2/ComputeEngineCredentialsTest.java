@@ -300,6 +300,26 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void sign_getAccountFails() throws IOException {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
+
+    transportFactory.transport.setAccessToken(accessToken);
+    transportFactory.transport.setSignature(expectedSignature);
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+    try {
+      credentials.sign(expectedSignature);
+      fail();
+    } catch (SigningException ex) {
+      assertNotNull(ex.getMessage());
+      assertNotNull(ex.getCause());
+    }
+  }
+
+  @Test
   public void sign_accessDenied_throws() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";

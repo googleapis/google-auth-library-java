@@ -277,7 +277,13 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
     return new Builder();
   }
 
+  /**
+   * Returns the email address associated with the GCE default service account.
+   *
+   * @throws RuntimeException if the default service account cannot be read
+   */
   @Override
+  // todo(#314) getAccount should not throw a RuntimeException
   public String getAccount() {
     if (serviceAccountEmail == null) {
       try {
@@ -304,12 +310,15 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
    */
   @Override
   public byte[] sign(byte[] toSign) {
-    return IamUtils.sign(
-        getAccount(),
-        this,
-        transportFactory.create(),
-        toSign,
-        Collections.<String, Object>emptyMap());
+    try {
+      String account = getAccount();
+      return IamUtils.sign(
+          account, this, transportFactory.create(), toSign, Collections.<String, Object>emptyMap());
+    } catch (SigningException ex) {
+      throw ex;
+    } catch (RuntimeException ex) {
+      throw new SigningException("Signing failed", ex);
+    }
   }
 
   private String getDefaultServiceAccount() throws IOException {
