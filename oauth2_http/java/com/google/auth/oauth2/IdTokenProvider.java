@@ -34,56 +34,43 @@ package com.google.auth.oauth2;
 import java.io.IOException;
 import java.util.List;
 
-import com.google.auth.oauth2.IdToken;
-
-/**
- * Interface for an Google OIDC token Provider. This type represents a google
- * issued OIDC token.
- */
+/** Interface for an Google OIDC token Provider. This type represents a google issued OIDC token. */
 public interface IdTokenProvider {
 
   /**
    * Enum of various credential-specific options to apply to the token.
-   * 
-   * <li><b>ComputeEngineCredentials</b>:  
-   *    <li><em>FORMAT_FULL</em></li>
-   *    <li><em>LICENSES_TRUE</em></li>
-   * <li><b>ImpersonatedCredential</b>:  
-   *    <li><em>INCLUDE_EMAIL</em><li>
-   * 
-  */
+   * <li><b>ComputeEngineCredentials</b>:
+   * <li><em>FORMAT_FULL</em>
+   * <li><em>LICENSES_TRUE</em>
+   * <li><b>ImpersonatedCredential</b>:
+   * <li><em>INCLUDE_EMAIL</em>
+   * <li>
+   */
   public enum Option {
-      FORMAT_FULL("formatFull"),
-      LICENSES_TRUE("licensesTrue"),
-      INCLUDE_EMAIL("includeEmail");
+    FORMAT_FULL("formatFull"),
+    LICENSES_TRUE("licensesTrue"),
+    INCLUDE_EMAIL("includeEmail");
 
-      private String option;
-  
-      Option(String option) {
-          this.option = option;
-      }
-  
-      public String getOption() {
-          return option;
-      }    
+    private String option;
+
+    Option(String option) {
+      this.option = option;
+    }
+
+    public String getOption() {
+      return option;
+    }
   }
 
   /**
    * Returns the a Google OpenID Token with the provided audience field.
-   * 
-   * @param targetAudience List of audiences the issued ID Token should be valid for.
-   *                       targetAudience accepts a single string value (multiple audience
-   *                       are not supported)
-   * @param options        List of Credential specific options for for the
-   *                       token. For example, an IDToken for a
-   *                       ComputeEngineCredential can return platform specific
-   *                       claims if
-   *                       "ComputeEngineCredentials.ID_TOKEN_FORMAT_FULL" is
-   *                       provided as a list option.
-   * @return IdToken object which includes the raw id_token, expiration and
-   *         audience.
+   *
+   * @param targetAudience List of audiences the issued ID Token should be valid for. targetAudience
+   *     accepts a single string value (multiple audience are not supported)
+   * @param options List of Credential specific options for for the token. For example, an IDToken
+   *     for a ComputeEngineCredential can return platform specific claims if
+   *     "ComputeEngineCredentials.ID_TOKEN_FORMAT_FULL" is provided as a list option.
+   * @return IdToken object which includes the raw id_token, expiration and audience.
    */
-
   IdToken idTokenWithAudience(String targetAudience, List<Option> options) throws IOException;
-
 }

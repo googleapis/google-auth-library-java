@@ -31,10 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
-
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
@@ -49,15 +45,19 @@ import com.google.auth.Credentials;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.common.io.BaseEncoding;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
+
 /**
  * This internal class provides shared utilities for interacting with the IAM API for common
  * features like signing.
  */
 class IamUtils {
   private static final String SIGN_BLOB_URL_FORMAT =
-          "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
-  private static final String ID_TOKEN_URL_FORMAT = 
-          "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateIdToken";
+      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
+  private static final String ID_TOKEN_URL_FORMAT =
+      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateIdToken";
   private static final String PARSE_ERROR_MESSAGE = "Error parsing error message response. ";
   private static final String PARSE_ERROR_SIGNATURE = "Error parsing signature response. ";
 
@@ -71,21 +71,30 @@ class IamUtils {
    * @param additionalFields additional fields to send in the IAM call
    * @return signed bytes
    */
-  static byte[] sign(String serviceAccountEmail, Credentials credentials, HttpTransport transport,
-      byte[] toSign, Map<String, ?> additionalFields) {
+  static byte[] sign(
+      String serviceAccountEmail,
+      Credentials credentials,
+      HttpTransport transport,
+      byte[] toSign,
+      Map<String, ?> additionalFields) {
     BaseEncoding base64 = BaseEncoding.base64();
     String signature;
     try {
-      signature = getSignature(serviceAccountEmail, credentials, transport,
-              base64.encode(toSign), additionalFields);
+      signature =
+          getSignature(
+              serviceAccountEmail, credentials, transport, base64.encode(toSign), additionalFields);
     } catch (IOException ex) {
       throw new ServiceAccountSigner.SigningException("Failed to sign the provided bytes", ex);
     }
     return base64.decode(signature);
   }
 
-  private static String getSignature(String serviceAccountEmail, Credentials credentials,
-      HttpTransport transport, String bytes, Map<String, ?> additionalFields)
+  private static String getSignature(
+      String serviceAccountEmail,
+      Credentials credentials,
+      HttpTransport transport,
+      String bytes,
+      Map<String, ?> additionalFields)
       throws IOException {
     String signBlobUrl = String.format(SIGN_BLOB_URL_FORMAT, serviceAccountEmail);
     GenericUrl genericUrl = new GenericUrl(signBlobUrl);
@@ -98,8 +107,8 @@ class IamUtils {
     JsonHttpContent signContent = new JsonHttpContent(OAuth2Utils.JSON_FACTORY, signRequest);
 
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
-    HttpRequest request = transport.createRequestFactory(adapter)
-         .buildPostRequest(genericUrl, signContent);
+    HttpRequest request =
+        transport.createRequestFactory(adapter).buildPostRequest(genericUrl, signContent);
 
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     request.setParser(parser);
@@ -109,14 +118,18 @@ class IamUtils {
     int statusCode = response.getStatusCode();
     if (statusCode >= 400 && statusCode < HttpStatusCodes.STATUS_CODE_SERVER_ERROR) {
       GenericData responseError = response.parseAs(GenericData.class);
-      Map<String, Object> error = OAuth2Utils.validateMap(responseError, "error", PARSE_ERROR_MESSAGE);
+      Map<String, Object> error =
+          OAuth2Utils.validateMap(responseError, "error", PARSE_ERROR_MESSAGE);
       String errorMessage = OAuth2Utils.validateString(error, "message", PARSE_ERROR_MESSAGE);
-      throw new IOException(String.format("Error code %s trying to sign provided bytes: %s",
-                statusCode, errorMessage));
+      throw new IOException(
+          String.format(
+              "Error code %s trying to sign provided bytes: %s", statusCode, errorMessage));
     }
     if (statusCode != HttpStatusCodes.STATUS_CODE_OK) {
-      throw new IOException(String.format("Unexpected Error code %s trying to sign provided bytes: %s", statusCode,
-          response.parseAsString()));
+      throw new IOException(
+          String.format(
+              "Unexpected Error code %s trying to sign provided bytes: %s",
+              statusCode, response.parseAsString()));
     }
     InputStream content = response.getContent();
     if (content == null) {
@@ -130,22 +143,26 @@ class IamUtils {
   }
 
   /**
-   * Returns an IdToken issued to the serviceAccount with a specified
-   * targetAudience
+   * Returns an IdToken issued to the serviceAccount with a specified targetAudience
    *
-   * @param serviceAccountEmail the email address for the service account to get
-   *                            an ID Token for
-   * @param credentials  credentials required for making the IAM call
-   * @param transport  transport used for building the HTTP request
-   * @param targetAudience  the audience the issued ID token should include
-   * @param additionalFields  additional fields to send in the IAM call
+   * @param serviceAccountEmail the email address for the service account to get an ID Token for
+   * @param credentials credentials required for making the IAM call
+   * @param transport transport used for building the HTTP request
+   * @param targetAudience the audience the issued ID token should include
+   * @param additionalFields additional fields to send in the IAM call
    * @return IdToken issed to the serviceAccount
    * @throws IOException if the IdToken cannot be issued.
-   * @see    https://cloud.google.com/iam/credentials/reference/rest/v1/projects.serviceAccounts/generateIdToken
+   * @see
+   *     https://cloud.google.com/iam/credentials/reference/rest/v1/projects.serviceAccounts/generateIdToken
    */
-
-  static IdToken getIdToken(String serviceAccountEmail, Credentials credentials, HttpTransport transport,
-      String targetAudience, boolean includeEmail, Map<String, ?> additionalFields) throws IOException {
+  static IdToken getIdToken(
+      String serviceAccountEmail,
+      Credentials credentials,
+      HttpTransport transport,
+      String targetAudience,
+      boolean includeEmail,
+      Map<String, ?> additionalFields)
+      throws IOException {
 
     String idTokenUrl = String.format(ID_TOKEN_URL_FORMAT, serviceAccountEmail);
     GenericUrl genericUrl = new GenericUrl(idTokenUrl);
@@ -159,7 +176,8 @@ class IamUtils {
     JsonHttpContent idTokenContent = new JsonHttpContent(OAuth2Utils.JSON_FACTORY, idTokenRequest);
 
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
-    HttpRequest request = transport.createRequestFactory(adapter).buildPostRequest(genericUrl, idTokenContent);
+    HttpRequest request =
+        transport.createRequestFactory(adapter).buildPostRequest(genericUrl, idTokenContent);
 
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     request.setParser(parser);
@@ -169,13 +187,17 @@ class IamUtils {
     int statusCode = response.getStatusCode();
     if (statusCode >= 400 && statusCode < HttpStatusCodes.STATUS_CODE_SERVER_ERROR) {
       GenericData responseError = response.parseAs(GenericData.class);
-      Map<String, Object> error = OAuth2Utils.validateMap(responseError, "error", PARSE_ERROR_MESSAGE);
+      Map<String, Object> error =
+          OAuth2Utils.validateMap(responseError, "error", PARSE_ERROR_MESSAGE);
       String errorMessage = OAuth2Utils.validateString(error, "message", PARSE_ERROR_MESSAGE);
-      throw new IOException(String.format("Error code %s trying to getIDToken: %s", statusCode, errorMessage));
+      throw new IOException(
+          String.format("Error code %s trying to getIDToken: %s", statusCode, errorMessage));
     }
     if (statusCode != HttpStatusCodes.STATUS_CODE_OK) {
       throw new IOException(
-          String.format("Unexpected Error code %s trying to getIDToken: %s", statusCode, response.parseAsString()));
+          String.format(
+              "Unexpected Error code %s trying to getIDToken: %s",
+              statusCode, response.parseAsString()));
     }
     InputStream content = response.getContent();
     if (content == null) {
@@ -187,8 +209,7 @@ class IamUtils {
 
     GenericJson responseData = response.parseAs(GenericJson.class);
     String rawToken = OAuth2Utils.validateString(responseData, "token", PARSE_ERROR_MESSAGE);
-    JsonWebSignature jws =  JsonWebSignature.parse(OAuth2Utils.JSON_FACTORY, rawToken);
+    JsonWebSignature jws = JsonWebSignature.parse(OAuth2Utils.JSON_FACTORY, rawToken);
     return new IdToken(rawToken, jws);
   }
-
 }

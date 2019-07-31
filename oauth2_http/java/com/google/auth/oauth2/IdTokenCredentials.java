@@ -33,39 +33,37 @@ package com.google.auth.oauth2;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 
+import com.google.auth.http.HttpTransportFactory;
+import com.google.common.base.MoreObjects;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-import com.google.auth.http.HttpTransportFactory;
-import com.google.common.base.MoreObjects;
-
 /**
  * IdTokenCredentials provides a Google Issued OpenIdConnect token. <br>
- * Use an ID token to access services that require presenting an ID token for
- * authentication such as Cloud Functions or Cloud Run.<br>
- * 
- * The following Credential subclasses support IDTokens:
- * ServiceAccountCredentials, ComputeEngineCredentials, ImpersonatedCredentials.
- * 
- * For more information see <br>
+ * Use an ID token to access services that require presenting an ID token for authentication such as
+ * Cloud Functions or Cloud Run.<br>
+ * The following Credential subclasses support IDTokens: ServiceAccountCredentials,
+ * ComputeEngineCredentials, ImpersonatedCredentials.
+ *
+ * <p>For more information see <br>
  * Usage:<br>
- * 
+ *
  * <pre>
  * String credPath = "/path/to/svc_account.json";
  * String targetAudience = "https://example.com";
- * 
+ *
  * // For Application Default Credentials (as ServiceAccountCredentials)
  * // export GOOGLE_APPLICATION_CREDENTIALS=/path/to/svc.json
  * GoogleCredentials adcCreds = GoogleCredentials.getApplicationDefault();
  * IdTokenCredentials tokenCredential = IdTokenCredentials.create(adcCreds, targetAudience);
- * 
+ *
  * // for ServiceAccountCredentials
  * ServiceAccountCredentials saCreds = ServiceAccountCredentials.fromStream(new FileInputStream(credPath));
  * saCreds = (ServiceAccountCredentials) saCreds.createScoped(Arrays.asList("https://www.googleapis.com/auth/iam"));
  * IdTokenCredentials tokenCredential = IdTokenCredentials.create(saCreds, targetAudience);
- * 
+ *
  * // for ComputeEngineCredentials
  * ComputeEngineCredentials caCreds = ComputeEngineCredentials.create();
  * IdTokenCredentials tokenCredential = IdTokenCredentials.create(caCreds, targetAudience,
@@ -77,7 +75,7 @@ import com.google.common.base.MoreObjects;
  *     Arrays.asList("https://www.googleapis.com/auth/cloud-platform"), 300);
  * IdTokenCredentials tokenCredential = IdTokenCredentials.create(imCreds, targetAudience,
  *     Arrays.asList(ImpersonatedCredentials.INCLUDE_EMAIL));
- * 
+ *
  * // Use the IdTokenCredential in an authorized transport
  * GenericUrl genericUrl = new GenericUrl("https://example.com");
  * HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(tokenCredential);
@@ -94,7 +92,8 @@ import com.google.common.base.MoreObjects;
 public class IdTokenCredentials extends OAuth2Credentials {
 
   private static final long serialVersionUID = -2133257318957588431L;
-  private static final String CLOUD_PLATFORM_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
+  private static final String CLOUD_PLATFORM_SCOPE =
+      "https://www.googleapis.com/auth/cloud-platform";
 
   private GoogleCredentials sourceCredentials;
   private final String transportFactoryClassName;
@@ -104,57 +103,67 @@ public class IdTokenCredentials extends OAuth2Credentials {
   private transient HttpTransportFactory transportFactory;
 
   /**
-   * Returns IdToken credentials associated with the sourceCredentials and with an
-   * audience specified. Specify extensions and additional claims for the IdToken
-   * by applying any approprite Options for the given credential type.
-   * 
+   * Returns IdToken credentials associated with the sourceCredentials and with an audience
+   * specified. Specify extensions and additional claims for the IdToken by applying any approprite
+   * Options for the given credential type.
+   *
    * @param sourceCredentials The source credential for the Id Token
-   * @param targetAudience    The audience field for the issued ID Token
-   * @param options           List of Credential specific options for for the
-   *                          token. For example, an IDToken for a
-   *                          ComputeEngineCredential can return platform specific
-   *                          claims if
-   *                          "ComputeEngineCredentials.ID_TOKEN_FORMAT_FULL" is
-   *                          provided as a list option.
-   * @param transportFactory  HTTP transport factory, creates the transport used
-   *                          to get access tokens.
+   * @param targetAudience The audience field for the issued ID Token
+   * @param options List of Credential specific options for for the token. For example, an IDToken
+   *     for a ComputeEngineCredential can return platform specific claims if
+   *     "ComputeEngineCredentials.ID_TOKEN_FORMAT_FULL" is provided as a list option.
+   * @param transportFactory HTTP transport factory, creates the transport used to get access
+   *     tokens.
    * @return IdTokenCredential
    */
-  public static IdTokenCredentials create(GoogleCredentials sourceCredentials, String targetAudience,
-      HttpTransportFactory transportFactory, List<IdTokenProvider.Option> options) {
-    return IdTokenCredentials.newBuilder().setSourceCredentials(sourceCredentials).setTargetAudience(targetAudience)
-        .setOptions(options).setHttpTransportFactory(transportFactory).build();
+  public static IdTokenCredentials create(
+      GoogleCredentials sourceCredentials,
+      String targetAudience,
+      HttpTransportFactory transportFactory,
+      List<IdTokenProvider.Option> options) {
+    return IdTokenCredentials.newBuilder()
+        .setSourceCredentials(sourceCredentials)
+        .setTargetAudience(targetAudience)
+        .setOptions(options)
+        .setHttpTransportFactory(transportFactory)
+        .build();
   }
 
   /**
    * Returns an Google Id Token from the metadata server on ComputeEngine.
-   * 
+   *
    * @param sourceCredentials the source credential for the Id Token
    * @param targetAudience aud: field the IdToken should include.
-   * @param options list of Credential specific options for for the
-   * token. For example, an IDToken for a ComputeEngineCredential could 
-   * include the full formated claims returned if 
-   * "ComputeEngineCredential.ID_TOKEN_FORMAT_FULL" is specified. 
-   * Refer to the Credential type for specific extensions.
-   * @return IdToken object which includes the raw id_token, expirationn and
-   * audience
+   * @param options list of Credential specific options for for the token. For example, an IDToken
+   *     for a ComputeEngineCredential could include the full formated claims returned if
+   *     "ComputeEngineCredential.ID_TOKEN_FORMAT_FULL" is specified. Refer to the Credential type
+   *     for specific extensions.
+   * @return IdToken object which includes the raw id_token, expirationn and audience
    */
-  public static IdTokenCredentials create(GoogleCredentials sourceCredentials, String targetAudience,
+  public static IdTokenCredentials create(
+      GoogleCredentials sourceCredentials,
+      String targetAudience,
       List<IdTokenProvider.Option> options) {
-    return IdTokenCredentials.newBuilder().setSourceCredentials(sourceCredentials).setTargetAudience(targetAudience)
-        .setOptions(options).build();
+    return IdTokenCredentials.newBuilder()
+        .setSourceCredentials(sourceCredentials)
+        .setTargetAudience(targetAudience)
+        .setOptions(options)
+        .build();
   }
 
   /**
-   * Returns IdToken credentials associated with the sourceCredentials and with an
-   * audience specified.
-   * 
+   * Returns IdToken credentials associated with the sourceCredentials and with an audience
+   * specified.
+   *
    * @param sourceCredentials the source credential for the ID Token
    * @param targetAudience the audience field for the issued ID Token
    * @return IdTokenCredential
    */
-  public static IdTokenCredentials create(GoogleCredentials sourceCredentials, String targetAudience) {
-    return IdTokenCredentials.newBuilder().setSourceCredentials(sourceCredentials).setTargetAudience(targetAudience)
+  public static IdTokenCredentials create(
+      GoogleCredentials sourceCredentials, String targetAudience) {
+    return IdTokenCredentials.newBuilder()
+        .setSourceCredentials(sourceCredentials)
+        .setTargetAudience(targetAudience)
         .build();
   }
 
@@ -162,8 +171,10 @@ public class IdTokenCredentials extends OAuth2Credentials {
     this.sourceCredentials = builder.getSourceCredentials();
     this.targetAudience = builder.getTargetAudience();
     this.options = builder.getOptions();
-    this.transportFactory = firstNonNull(builder.getHttpTransportFactory(),
-        getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
+    this.transportFactory =
+        firstNonNull(
+            builder.getHttpTransportFactory(),
+            getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
   }
 
@@ -173,9 +184,10 @@ public class IdTokenCredentials extends OAuth2Credentials {
       throw new IOException("Provided sourceToken does not implement IdTokenProvider");
     }
     if (this.sourceCredentials.getAccessToken() == null) {
-      this.sourceCredentials = this.sourceCredentials.createScoped(Arrays.asList(CLOUD_PLATFORM_SCOPE));
+      this.sourceCredentials =
+          this.sourceCredentials.createScoped(Arrays.asList(CLOUD_PLATFORM_SCOPE));
     }
-    
+
     return ((IdTokenProvider) this.sourceCredentials).idTokenWithAudience(targetAudience, options);
   }
 
@@ -219,8 +231,7 @@ public class IdTokenCredentials extends OAuth2Credentials {
     private List<IdTokenProvider.Option> options;
     private HttpTransportFactory transportFactory;
 
-    protected Builder() {
-    }
+    protected Builder() {}
 
     public Builder setSourceCredentials(GoogleCredentials sourceCredentials) {
       this.sourceCredentials = sourceCredentials;
@@ -261,6 +272,5 @@ public class IdTokenCredentials extends OAuth2Credentials {
     public IdTokenCredentials build() {
       return new IdTokenCredentials(this);
     }
-
   }
 }
