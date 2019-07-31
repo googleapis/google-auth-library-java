@@ -31,7 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -47,9 +46,11 @@ import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.auth.ServiceAccountSigner.SigningException;
+import com.google.auth.ServiceAccountSigner;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
+
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
@@ -296,7 +297,27 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
-    assertArrayEquals(expectedSignature, credentials.sign(expectedSignature));
+    assertEquals(defaultAccountEmail, credentials.getAccount());
+  }
+  
+  @Test
+  public void sign_getAccountFails() throws IOException {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
+
+    transportFactory.transport.setAccessToken(accessToken);
+    transportFactory.transport.setSignature(expectedSignature);
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+    try {
+      credentials.sign(expectedSignature);
+      fail();
+    } catch (ServiceAccountSigner.SigningException ex) {
+      assertNotNull(ex.getMessage());
+      assertNotNull(ex.getCause());
+    }
   }
 
   @Test
