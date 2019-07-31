@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -295,7 +296,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
-    assertEquals(defaultAccountEmail, credentials.getAccount());
+    assertArrayEquals(expectedSignature, credentials.sign(expectedSignature));
   }
 
   @Test
