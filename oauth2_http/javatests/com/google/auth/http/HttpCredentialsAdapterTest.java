@@ -43,16 +43,12 @@ import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFact
 import com.google.auth.oauth2.MockTokenCheckingTransport;
 import com.google.auth.oauth2.OAuth2Credentials;
 import com.google.auth.oauth2.UserCredentials;
-
+import java.io.IOException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.io.IOException;
-
-/**
- * Test case for {@link HttpCredentialsAdapter}.
- */
+/** Test case for {@link HttpCredentialsAdapter}. */
 @RunWith(JUnit4.class)
 public class HttpCredentialsAdapterTest {
 
@@ -68,12 +64,13 @@ public class HttpCredentialsAdapterTest {
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessToken);
 
-    OAuth2Credentials credentials = UserCredentials.newBuilder()
-        .setClientId(CLIENT_ID)
-        .setClientSecret(CLIENT_SECRET)
-        .setRefreshToken(REFRESH_TOKEN)
-        .setHttpTransportFactory(transportFactory)
-        .build();
+    OAuth2Credentials credentials =
+        UserCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setHttpTransportFactory(transportFactory)
+            .build();
 
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
     HttpRequestFactory requestFactory = transportFactory.transport.createRequestFactory();
@@ -96,12 +93,13 @@ public class HttpCredentialsAdapterTest {
     tokenServerTransportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     tokenServerTransportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessToken);
 
-    OAuth2Credentials credentials = UserCredentials.newBuilder()
-        .setClientId(CLIENT_ID)
-        .setClientSecret(CLIENT_SECRET)
-        .setRefreshToken(REFRESH_TOKEN)
-        .setHttpTransportFactory(tokenServerTransportFactory)
-        .build();
+    OAuth2Credentials credentials =
+        UserCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setHttpTransportFactory(tokenServerTransportFactory)
+            .build();
 
     credentials.refresh();
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
@@ -132,12 +130,13 @@ public class HttpCredentialsAdapterTest {
     tokenServerTransportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     tokenServerTransportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessToken);
 
-    OAuth2Credentials credentials = UserCredentials.newBuilder()
-        .setClientId(CLIENT_ID)
-        .setClientSecret(CLIENT_SECRET)
-        .setRefreshToken(REFRESH_TOKEN)
-        .setHttpTransportFactory(tokenServerTransportFactory)
-        .build();
+    OAuth2Credentials credentials =
+        UserCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setHttpTransportFactory(tokenServerTransportFactory)
+            .build();
 
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
     HttpRequestFactory requestFactory =

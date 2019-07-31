@@ -34,13 +34,10 @@ package com.google.auth.appengine;
 import com.google.appengine.api.appidentity.AppIdentityService;
 import com.google.appengine.api.appidentity.AppIdentityServiceFailureException;
 import com.google.appengine.api.appidentity.PublicCertificate;
-
 import java.util.Collection;
 import java.util.Date;
 
-/**
- * Mock implementation of AppIdentityService interface for testing.
- */
+/** Mock implementation of AppIdentityService interface for testing. */
 public class MockAppIdentityService implements AppIdentityService {
 
   private int getAccessTokenCallCount = 0;
@@ -49,8 +46,7 @@ public class MockAppIdentityService implements AppIdentityService {
   private String serviceAccountName = null;
   private SigningResult signingResult = null;
 
-  public MockAppIdentityService() {
-  }
+  public MockAppIdentityService() {}
 
   public int getGetAccessTokenCallCount() {
     return getAccessTokenCallCount;

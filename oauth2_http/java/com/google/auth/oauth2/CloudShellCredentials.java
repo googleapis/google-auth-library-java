@@ -34,7 +34,6 @@ package com.google.auth.oauth2;
 import com.google.api.client.json.JsonParser;
 import com.google.common.base.Charsets;
 import com.google.common.base.MoreObjects;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -44,9 +43,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * OAuth2 credentials representing the built-in service account for Google Cloud Shell.
- */
+/** OAuth2 credentials representing the built-in service account for Google Cloud Shell. */
 public class CloudShellCredentials extends GoogleCredentials {
 
   private static final long serialVersionUID = -2133257318957488451L;
@@ -54,14 +51,14 @@ public class CloudShellCredentials extends GoogleCredentials {
   private static final int READ_TIMEOUT_MS = 5000;
 
   /**
-   * The Cloud Shell back authorization channel uses serialized
-   * Javascript Protobuffers, preceded by the message length and a
-   * new line character. However, the request message has no content,
-   * so a token request consists of an empty JsPb, and its 2 character
-   * length prefix.
+   * The Cloud Shell back authorization channel uses serialized Javascript Protobuffers, preceded by
+   * the message length and a new line character. However, the request message has no content, so a
+   * token request consists of an empty JsPb, and its 2 character length prefix.
    */
-  protected final static String GET_AUTH_TOKEN_REQUEST = "2\n[]";
-  protected final static byte[] GET_AUTH_TOKEN_REQUEST_BYTES = (GET_AUTH_TOKEN_REQUEST + "\n").getBytes(Charsets.UTF_8);
+  protected static final String GET_AUTH_TOKEN_REQUEST = "2\n[]";
+
+  protected static final byte[] GET_AUTH_TOKEN_REQUEST_BYTES =
+      (GET_AUTH_TOKEN_REQUEST + "\n").getBytes(Charsets.UTF_8);
 
   private final int authPort;
 
@@ -76,7 +73,7 @@ public class CloudShellCredentials extends GoogleCredentials {
   protected int getAuthPort() {
     return this.authPort;
   }
-  
+
   @Override
   public AccessToken refreshAccessToken() throws IOException {
     Socket socket = new Socket("localhost", this.getAuthPort());
@@ -85,14 +82,13 @@ public class CloudShellCredentials extends GoogleCredentials {
     try {
       OutputStream os = socket.getOutputStream();
       os.write(GET_AUTH_TOKEN_REQUEST_BYTES);
-    
-      BufferedReader input =
-          new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+      BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
       input.readLine(); // Skip over the first line
       JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser(input);
       List<Object> messageArray = (List<Object>) parser.parseArray(ArrayList.class, Object.class);
       String accessToken = messageArray.get(ACCESS_TOKEN_INDEX).toString();
-      token =  new AccessToken(accessToken, null);
+      token = new AccessToken(accessToken, null);
     } finally {
       socket.close();
     }

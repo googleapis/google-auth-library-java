@@ -556,6 +556,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
     mtransportFactory.transport.setExpireTime(getDefaultExpireTime());
+
     ImpersonatedCredentials credentials =
         ImpersonatedCredentials.create(
             sourceCredentials,

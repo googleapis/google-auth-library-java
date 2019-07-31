@@ -11,6 +11,13 @@
   </description>
   <url>https://github.com/googleapis/google-auth-library-java</url>
 
+  <distributionManagement>
+    <snapshotRepository>
+      <id>sonatype-nexus-snapshots</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
+
   <licenses>
     <license>
       <name>Apache-2.0</name>
@@ -84,7 +91,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-site-plugin</artifactId>
-        <version>3.7.1</version>
+        <version>3.8.2</version>
         <configuration>
           <skip>true</skip>
         </configuration>

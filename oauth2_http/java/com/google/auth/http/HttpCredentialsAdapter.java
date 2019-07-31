@@ -31,7 +31,6 @@
 
 package com.google.auth.http;
 
-import com.google.auth.Credentials;
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestInitializer;
@@ -39,7 +38,7 @@ import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.http.HttpUnsuccessfulResponseHandler;
 import com.google.api.client.util.Preconditions;
-
+import com.google.auth.Credentials;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -49,9 +48,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-/**
- * A wrapper for using Credentials with the Google API Client Libraries for Java with Http.
- */
+/** A wrapper for using Credentials with the Google API Client Libraries for Java with Http. */
 public class HttpCredentialsAdapter
     implements HttpRequestInitializer, HttpUnsuccessfulResponseHandler {
 
@@ -66,9 +63,7 @@ public class HttpCredentialsAdapter
 
   private final Credentials credentials;
 
-  /**
-   * @param credentials Credentials instance to adapt for HTTP
-   */
+  /** @param credentials Credentials instance to adapt for HTTP */
   public HttpCredentialsAdapter(Credentials credentials) {
     Preconditions.checkNotNull(credentials);
     this.credentials = credentials;
@@ -77,7 +72,7 @@ public class HttpCredentialsAdapter
   /**
    * {@inheritDoc}
    *
-   * Initialize the HTTP request prior to execution.
+   * <p>Initialize the HTTP request prior to execution.
    *
    * @param request HTTP request
    */
@@ -107,15 +102,13 @@ public class HttpCredentialsAdapter
 
   /**
    * {@inheritDoc}
-   * <p>
-   * Checks if {@code WWW-Authenticate} exists and contains a "Bearer" value
-   * (see <a href="http://tools.ietf.org/html/rfc6750#section-3.1">rfc6750 section 3.1</a> for more
-   * details). If so, it refreshes the token in case the error code contains
-   * {@code invalid_token}. If there is no "Bearer" in {@code WWW-Authenticate} and the status code
-   * is {@link HttpStatusCodes#STATUS_CODE_UNAUTHORIZED} it refreshes the token. If
-   * the token refresh throws an I/O exception, this implementation will log the
-   * exception and return {@code false}.
-   * </p>
+   *
+   * <p>Checks if {@code WWW-Authenticate} exists and contains a "Bearer" value (see <a
+   * href="http://tools.ietf.org/html/rfc6750#section-3.1">rfc6750 section 3.1</a> for more
+   * details). If so, it refreshes the token in case the error code contains {@code invalid_token}.
+   * If there is no "Bearer" in {@code WWW-Authenticate} and the status code is {@link
+   * HttpStatusCodes#STATUS_CODE_UNAUTHORIZED} it refreshes the token. If the token refresh throws
+   * an I/O exception, this implementation will log the exception and return {@code false}.
    */
   @Override
   public boolean handleResponse(HttpRequest request, HttpResponse response, boolean supportsRetry) {
