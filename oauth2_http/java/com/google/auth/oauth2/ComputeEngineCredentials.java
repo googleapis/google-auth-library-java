@@ -278,8 +278,8 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
   }
 
   /**
-   * Returns the email address associated with the GCE default service account.  
-   * 
+   * Returns the email address associated with the GCE default service account.
+   *
    * @throws RuntimeException if the default service account cannot be read
    */
   @Override
