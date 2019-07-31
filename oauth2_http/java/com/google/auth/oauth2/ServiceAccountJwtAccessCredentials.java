@@ -330,7 +330,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
           "generateJwtAccess threw an unexpected checked exception", e.getCause());
 
     } catch (UncheckedExecutionException e) {
-      Throwables.propagateIfPossible(e);
+      Throwables.throwIfUnchecked(e);
       // Should never happen
       throw new IllegalStateException(
           "generateJwtAccess threw an unchecked exception that couldn't be rethrown", e);

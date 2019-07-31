@@ -48,8 +48,6 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
 
   private static final String IAM_ACCESS_TOKEN_ENDPOINT =
       "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken";
-  private static final String IAM_ID_TOKEN_ENDPOINT =
-      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateIdToken";
   private static final String IAM_SIGN_ENDPOINT =
       "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
   private Integer tokenResponseErrorCode;
@@ -147,7 +145,6 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
               GenericJson refreshContents = new GenericJson();
               refreshContents.setFactory(OAuth2Utils.JSON_FACTORY);
               refreshContents.put("signedBlob", base64.encode(signedBlob));
-              String refreshText = refreshContents.toPrettyString();
               return new MockLowLevelHttpResponse()
                   .setStatusCode(responseCode)
                   .setContent(TestUtils.errorJson(errorMessage));
