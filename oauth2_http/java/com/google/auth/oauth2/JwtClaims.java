@@ -84,8 +84,8 @@ public abstract class JwtClaims implements Serializable {
   /**
    * Returns whether or not this set of claims is complete.
    *
-   * <p>Audience, issuer, and subject are required to be set in order to use the claim set for a
-   * JWT token. An incomplete Claims instance is useful for overriding claims when using {@link
+   * <p>Audience, issuer, and subject are required to be set in order to use the claim set for a JWT
+   * token. An incomplete Claims instance is useful for overriding claims when using {@link
    * ServiceAccountJwtAccessCredentials#jwtWithClaims(JwtClaims)} or {@link
    * JwtCredentials#jwtWithClaims(JwtClaims)}.
    *

@@ -691,8 +691,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
             .setPrivateKeyId(SA_PRIVATE_KEY_ID)
             .build();
     Credentials withAudience =
-        credentials.jwtWithClaims(
-            JwtClaims.newBuilder().setAudience("new-audience").build());
+        credentials.jwtWithClaims(JwtClaims.newBuilder().setAudience("new-audience").build());
 
     Map<String, List<String>> metadata = withAudience.getRequestMetadata(CALL_URI);
 
@@ -728,8 +727,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
             .setPrivateKeyId(SA_PRIVATE_KEY_ID)
             .setDefaultAudience(URI.create("default-audience"))
             .build();
-    Credentials withAudience =
-        credentials.jwtWithClaims(JwtClaims.newBuilder().build());
+    Credentials withAudience = credentials.jwtWithClaims(JwtClaims.newBuilder().build());
 
     Map<String, List<String>> metadata = withAudience.getRequestMetadata(CALL_URI);
     verifyJwtAccess(metadata, SA_CLIENT_EMAIL, URI.create("default-audience"), SA_PRIVATE_KEY_ID);

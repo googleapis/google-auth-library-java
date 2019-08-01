@@ -186,8 +186,7 @@ public class JwtCredentialsTest extends BaseSerializationTest {
             .setIssuer("issuer-1")
             .setSubject("subject-1")
             .build();
-    JwtClaims claims2 =
-        JwtClaims.newBuilder().setAudience("audience-2").build();
+    JwtClaims claims2 = JwtClaims.newBuilder().setAudience("audience-2").build();
     JwtClaims merged = claims1.merge(claims2);
 
     assertEquals("audience-2", merged.getAudience());
