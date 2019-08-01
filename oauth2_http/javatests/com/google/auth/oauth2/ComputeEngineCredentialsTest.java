@@ -76,7 +76,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void getRequestMetadata_hasAccessToken() throws IOException {
-    final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setAccessToken(accessToken);
     ComputeEngineCredentials credentials =
@@ -88,7 +88,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void getRequestMetadata_missingServiceAccount_throws() {
-    final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setAccessToken(accessToken);
     transportFactory.transport.setTokenRequestStatusCode(HttpStatusCodes.STATUS_CODE_NOT_FOUND);
@@ -107,7 +107,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void getRequestMetadata_serverError_throws() {
-    final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setAccessToken(accessToken);
     transportFactory.transport.setTokenRequestStatusCode(HttpStatusCodes.STATUS_CODE_SERVER_ERROR);
@@ -404,7 +404,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   @Test
   public void sign_emptyContent_throws() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-    final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     String defaultAccountEmail = "mail@mail.com";
 
     transportFactory.transport =
