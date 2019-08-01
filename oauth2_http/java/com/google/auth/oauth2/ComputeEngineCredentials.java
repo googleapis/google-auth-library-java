@@ -112,7 +112,7 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
   /**
    * Create a new ComputeEngineCredentials instance with default behavior.
    *
-   * @return New ComputeEngineCredentials.
+   * @return new ComputeEngineCredentials
    */
   public static ComputeEngineCredentials create() {
     return new ComputeEngineCredentials(null);
