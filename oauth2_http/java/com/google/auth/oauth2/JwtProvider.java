@@ -44,5 +44,5 @@ public interface JwtProvider {
    *     values.
    * @return new credentials
    */
-  JwtCredentials jwtWithClaims(JwtCredentials.Claims newClaims);
+  JwtCredentials jwtWithClaims(JwtClaims newClaims);
 }

@@ -692,7 +692,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
             .build();
     Credentials withAudience =
         credentials.jwtWithClaims(
-            JwtCredentials.Claims.newBuilder().setAudience("new-audience").build());
+            JwtClaims.newBuilder().setAudience("new-audience").build());
 
     Map<String, List<String>> metadata = withAudience.getRequestMetadata(CALL_URI);
 
@@ -710,7 +710,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
             .setPrivateKeyId(SA_PRIVATE_KEY_ID)
             .build();
     try {
-      credentials.jwtWithClaims(JwtCredentials.Claims.newBuilder().build());
+      credentials.jwtWithClaims(JwtClaims.newBuilder().build());
       fail("Expected to throw exception for missing audience");
     } catch (IllegalStateException ex) {
       // expected exception
@@ -729,7 +729,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
             .setDefaultAudience(URI.create("default-audience"))
             .build();
     Credentials withAudience =
-        credentials.jwtWithClaims(JwtCredentials.Claims.newBuilder().build());
+        credentials.jwtWithClaims(JwtClaims.newBuilder().build());
 
     Map<String, List<String>> metadata = withAudience.getRequestMetadata(CALL_URI);
     verifyJwtAccess(metadata, SA_CLIENT_EMAIL, URI.create("default-audience"), SA_PRIVATE_KEY_ID);

@@ -534,13 +534,13 @@ public class ServiceAccountCredentials extends GoogleCredentials
    * @return new credentials
    */
   @Override
-  public JwtCredentials jwtWithClaims(JwtCredentials.Claims newClaims) {
-    JwtCredentials.Claims.Builder claimsBuilder =
-        JwtCredentials.Claims.newBuilder().setIssuer(clientEmail).setSubject(clientEmail);
+  public JwtCredentials jwtWithClaims(JwtClaims newClaims) {
+    JwtClaims.Builder claimsBuilder =
+        JwtClaims.newBuilder().setIssuer(clientEmail).setSubject(clientEmail);
     return JwtCredentials.newBuilder()
         .setPrivateKey(privateKey)
         .setPrivateKeyId(privateKeyId)
-        .setClaims(claimsBuilder.build().merge(newClaims))
+        .setJwtClaims(claimsBuilder.build().merge(newClaims))
         .setClock(clock)
         .build();
   }

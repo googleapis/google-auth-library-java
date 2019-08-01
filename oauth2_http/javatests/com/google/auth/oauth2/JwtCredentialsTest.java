@@ -77,15 +77,15 @@ public class JwtCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void serialize() throws IOException, ClassNotFoundException {
-    JwtCredentials.Claims claims =
-        JwtCredentials.Claims.newBuilder()
+    JwtClaims claims =
+        JwtClaims.newBuilder()
             .setAudience("some-audience")
             .setIssuer("some-issuer")
             .setSubject("some-subject")
             .build();
     JwtCredentials credentials =
         JwtCredentials.newBuilder()
-            .setClaims(claims)
+            .setJwtClaims(claims)
             .setPrivateKey(getPrivateKey())
             .setPrivateKeyId(PRIVATE_KEY_ID)
             .build();
@@ -100,13 +100,13 @@ public class JwtCredentialsTest extends BaseSerializationTest {
   @Test
   public void builder_requiresPrivateKey() {
     try {
-      JwtCredentials.Claims claims =
-          JwtCredentials.Claims.newBuilder()
+      JwtClaims claims =
+          JwtClaims.newBuilder()
               .setAudience("some-audience")
               .setIssuer("some-issuer")
               .setSubject("some-subject")
               .build();
-      JwtCredentials.newBuilder().setClaims(claims).setPrivateKeyId(PRIVATE_KEY_ID).build();
+      JwtCredentials.newBuilder().setJwtClaims(claims).setPrivateKeyId(PRIVATE_KEY_ID).build();
       fail("Should throw exception");
     } catch (NullPointerException ex) {
       // expected
@@ -116,13 +116,13 @@ public class JwtCredentialsTest extends BaseSerializationTest {
   @Test
   public void builder_requiresPrivateKeyId() {
     try {
-      JwtCredentials.Claims claims =
-          JwtCredentials.Claims.newBuilder()
+      JwtClaims claims =
+          JwtClaims.newBuilder()
               .setAudience("some-audience")
               .setIssuer("some-issuer")
               .setSubject("some-subject")
               .build();
-      JwtCredentials.newBuilder().setClaims(claims).setPrivateKey(getPrivateKey()).build();
+      JwtCredentials.newBuilder().setJwtClaims(claims).setPrivateKey(getPrivateKey()).build();
       fail("Should throw exception");
     } catch (NullPointerException ex) {
       // expected
@@ -145,9 +145,9 @@ public class JwtCredentialsTest extends BaseSerializationTest {
   @Test
   public void builder_requiresCompleteClaims() {
     try {
-      JwtCredentials.Claims claims = JwtCredentials.Claims.newBuilder().build();
+      JwtClaims claims = JwtClaims.newBuilder().build();
       JwtCredentials.newBuilder()
-          .setClaims(claims)
+          .setJwtClaims(claims)
           .setPrivateKeyId(PRIVATE_KEY_ID)
           .setPrivateKey(getPrivateKey())
           .build();
@@ -159,19 +159,19 @@ public class JwtCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void claims_merge_overwritesFields() {
-    JwtCredentials.Claims claims1 =
-        JwtCredentials.Claims.newBuilder()
+    JwtClaims claims1 =
+        JwtClaims.newBuilder()
             .setAudience("audience-1")
             .setIssuer("issuer-1")
             .setSubject("subject-1")
             .build();
-    JwtCredentials.Claims claims2 =
-        JwtCredentials.Claims.newBuilder()
+    JwtClaims claims2 =
+        JwtClaims.newBuilder()
             .setAudience("audience-2")
             .setIssuer("issuer-2")
             .setSubject("subject-2")
             .build();
-    JwtCredentials.Claims merged = claims1.merge(claims2);
+    JwtClaims merged = claims1.merge(claims2);
 
     assertEquals("audience-2", merged.getAudience());
     assertEquals("issuer-2", merged.getIssuer());
@@ -180,15 +180,15 @@ public class JwtCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void claims_merge_defaultValues() {
-    JwtCredentials.Claims claims1 =
-        JwtCredentials.Claims.newBuilder()
+    JwtClaims claims1 =
+        JwtClaims.newBuilder()
             .setAudience("audience-1")
             .setIssuer("issuer-1")
             .setSubject("subject-1")
             .build();
-    JwtCredentials.Claims claims2 =
-        JwtCredentials.Claims.newBuilder().setAudience("audience-2").build();
-    JwtCredentials.Claims merged = claims1.merge(claims2);
+    JwtClaims claims2 =
+        JwtClaims.newBuilder().setAudience("audience-2").build();
+    JwtClaims merged = claims1.merge(claims2);
 
     assertEquals("audience-2", merged.getAudience());
     assertEquals("issuer-1", merged.getIssuer());
@@ -197,9 +197,9 @@ public class JwtCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void claims_merge_null() {
-    JwtCredentials.Claims claims1 = JwtCredentials.Claims.newBuilder().build();
-    JwtCredentials.Claims claims2 = JwtCredentials.Claims.newBuilder().build();
-    JwtCredentials.Claims merged = claims1.merge(claims2);
+    JwtClaims claims1 = JwtClaims.newBuilder().build();
+    JwtClaims claims2 = JwtClaims.newBuilder().build();
+    JwtClaims merged = claims1.merge(claims2);
 
     assertNull(merged.getAudience());
     assertNull(merged.getIssuer());
@@ -208,14 +208,14 @@ public class JwtCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void claims_equals() {
-    JwtCredentials.Claims claims1 =
-        JwtCredentials.Claims.newBuilder()
+    JwtClaims claims1 =
+        JwtClaims.newBuilder()
             .setAudience("audience-1")
             .setIssuer("issuer-1")
             .setSubject("subject-1")
             .build();
-    JwtCredentials.Claims claims2 =
-        JwtCredentials.Claims.newBuilder()
+    JwtClaims claims2 =
+        JwtClaims.newBuilder()
             .setAudience("audience-1")
             .setIssuer("issuer-1")
             .setSubject("subject-1")
@@ -226,20 +226,20 @@ public class JwtCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void jwtWithClaims_overwritesClaims() throws IOException {
-    JwtCredentials.Claims claims =
-        JwtCredentials.Claims.newBuilder()
+    JwtClaims claims =
+        JwtClaims.newBuilder()
             .setAudience("some-audience")
             .setIssuer("some-issuer")
             .setSubject("some-subject")
             .build();
     JwtCredentials credentials =
         JwtCredentials.newBuilder()
-            .setClaims(claims)
+            .setJwtClaims(claims)
             .setPrivateKey(getPrivateKey())
             .setPrivateKeyId(PRIVATE_KEY_ID)
             .build();
-    JwtCredentials.Claims claims2 =
-        JwtCredentials.Claims.newBuilder()
+    JwtClaims claims2 =
+        JwtClaims.newBuilder()
             .setAudience("some-audience2")
             .setIssuer("some-issuer2")
             .setSubject("some-subject2")
@@ -251,19 +251,19 @@ public class JwtCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void jwtWithClaims_defaultsClaims() throws IOException {
-    JwtCredentials.Claims claims =
-        JwtCredentials.Claims.newBuilder()
+    JwtClaims claims =
+        JwtClaims.newBuilder()
             .setAudience("some-audience")
             .setIssuer("some-issuer")
             .setSubject("some-subject")
             .build();
     JwtCredentials credentials =
         JwtCredentials.newBuilder()
-            .setClaims(claims)
+            .setJwtClaims(claims)
             .setPrivateKey(getPrivateKey())
             .setPrivateKeyId(PRIVATE_KEY_ID)
             .build();
-    JwtCredentials.Claims claims2 = JwtCredentials.Claims.newBuilder().build();
+    JwtClaims claims2 = JwtClaims.newBuilder().build();
     JwtCredentials credentials2 = credentials.jwtWithClaims(claims2);
     Map<String, List<String>> metadata = credentials2.getRequestMetadata();
     verifyJwtAccess(metadata, "some-audience", "some-issuer", "some-subject", PRIVATE_KEY_ID);
@@ -271,15 +271,15 @@ public class JwtCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void getRequestMetadata_hasJwtAccess() throws IOException {
-    JwtCredentials.Claims claims =
-        JwtCredentials.Claims.newBuilder()
+    JwtClaims claims =
+        JwtClaims.newBuilder()
             .setAudience("some-audience")
             .setIssuer("some-issuer")
             .setSubject("some-subject")
             .build();
     JwtCredentials credentials =
         JwtCredentials.newBuilder()
-            .setClaims(claims)
+            .setJwtClaims(claims)
             .setPrivateKey(getPrivateKey())
             .setPrivateKeyId(PRIVATE_KEY_ID)
             .build();

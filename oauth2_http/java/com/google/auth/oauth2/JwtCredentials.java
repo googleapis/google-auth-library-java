@@ -36,11 +36,9 @@ import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.client.util.Clock;
 import com.google.auth.Credentials;
 import com.google.auth.http.AuthHttpConstants;
-import com.google.auto.value.AutoValue;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.URI;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
@@ -49,7 +47,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Nullable;
 
 /**
  * Credentials class for calling Google APIs using a JWT with custom claims.
@@ -57,7 +54,7 @@ import javax.annotation.Nullable;
  * <p>Uses a JSON Web Token (JWT) directly in the request metadata to provide authorization.
  *
  * <pre><code>
- * JwtCredentials.Claims claims = JwtCredentials.Claims.newBuilder()
+ * JwtClaims claims = JwtClaims.newBuilder()
  *     .setAudience("https://example.com/some-audience")
  *     .setIssuer("some-issuer@example.com")
  *     .setSubject("some-subject@example.com")
@@ -65,7 +62,7 @@ import javax.annotation.Nullable;
  * Credentials = JwtCredentials.newBuilder()
  *     .setPrivateKey(privateKey)
  *     .setPrivateKeyId("private-key-id")
- *     .setClaims(claims)
+ *     .setJwtClaims(claims)
  *     .build();
  * </code></pre>
  */
@@ -79,7 +76,7 @@ public class JwtCredentials extends Credentials implements JwtProvider {
   private final Object lock = new byte[0];
   private final PrivateKey privateKey;
   private final String privateKeyId;
-  private final Claims claims;
+  private final JwtClaims jwtClaims;
   private final Long lifeSpanSeconds;
   @VisibleForTesting transient Clock clock;
 
@@ -90,8 +87,8 @@ public class JwtCredentials extends Credentials implements JwtProvider {
   private JwtCredentials(Builder builder) {
     this.privateKey = Preconditions.checkNotNull(builder.getPrivateKey());
     this.privateKeyId = Preconditions.checkNotNull(builder.getPrivateKeyId());
-    this.claims = Preconditions.checkNotNull(builder.getClaims());
-    Preconditions.checkState(claims.isComplete(), JWT_INCOMPLETE_ERROR_MESSAGE);
+    this.jwtClaims = Preconditions.checkNotNull(builder.getJwtClaims());
+    Preconditions.checkState(jwtClaims.isComplete(), JWT_INCOMPLETE_ERROR_MESSAGE);
     this.lifeSpanSeconds = Preconditions.checkNotNull(builder.getLifeSpanSeconds());
     this.clock = Preconditions.checkNotNull(builder.getClock());
   }
@@ -109,9 +106,9 @@ public class JwtCredentials extends Credentials implements JwtProvider {
     header.setKeyId(privateKeyId);
 
     JsonWebToken.Payload payload = new JsonWebToken.Payload();
-    payload.setAudience(claims.getAudience());
-    payload.setIssuer(claims.getIssuer());
-    payload.setSubject(claims.getSubject());
+    payload.setAudience(jwtClaims.getAudience());
+    payload.setIssuer(jwtClaims.getIssuer());
+    payload.setSubject(jwtClaims.getSubject());
 
     long currentTime = clock.currentTimeMillis();
     payload.setIssuedAtTimeSeconds(currentTime / 1000);
@@ -143,11 +140,11 @@ public class JwtCredentials extends Credentials implements JwtProvider {
    * @return new credentials
    */
   @Override
-  public JwtCredentials jwtWithClaims(Claims newClaims) {
+  public JwtCredentials jwtWithClaims(JwtClaims newClaims) {
     return JwtCredentials.newBuilder()
         .setPrivateKey(privateKey)
         .setPrivateKeyId(privateKeyId)
-        .setClaims(claims.merge(newClaims))
+        .setJwtClaims(jwtClaims.merge(newClaims))
         .build();
   }
 
@@ -185,13 +182,13 @@ public class JwtCredentials extends Credentials implements JwtProvider {
     JwtCredentials other = (JwtCredentials) obj;
     return Objects.equals(this.privateKey, other.privateKey)
         && Objects.equals(this.privateKeyId, other.privateKeyId)
-        && Objects.equals(this.claims, other.claims)
+        && Objects.equals(this.jwtClaims, other.jwtClaims)
         && Objects.equals(this.lifeSpanSeconds, other.lifeSpanSeconds);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(this.privateKey, this.privateKeyId, this.claims, this.lifeSpanSeconds);
+    return Objects.hash(this.privateKey, this.privateKeyId, this.jwtClaims, this.lifeSpanSeconds);
   }
 
   Clock getClock() {
@@ -204,7 +201,7 @@ public class JwtCredentials extends Credentials implements JwtProvider {
   public static class Builder {
     private PrivateKey privateKey;
     private String privateKeyId;
-    private Claims claims;
+    private JwtClaims jwtClaims;
     private Clock clock = Clock.SYSTEM;
     private Long lifeSpanSeconds = TimeUnit.HOURS.toSeconds(1);
 
@@ -228,13 +225,13 @@ public class JwtCredentials extends Credentials implements JwtProvider {
       return privateKeyId;
     }
 
-    public Builder setClaims(Claims claims) {
-      this.claims = Preconditions.checkNotNull(claims);
+    public Builder setJwtClaims(JwtClaims claims) {
+      this.jwtClaims = Preconditions.checkNotNull(claims);
       return this;
     }
 
-    public Claims getClaims() {
-      return claims;
+    public JwtClaims getJwtClaims() {
+      return jwtClaims;
     }
 
     public Builder setLifeSpanSeconds(Long lifeSpanSeconds) {
@@ -257,78 +254,6 @@ public class JwtCredentials extends Credentials implements JwtProvider {
 
     public JwtCredentials build() {
       return new JwtCredentials(this);
-    }
-  }
-
-  /**
-   * Value class representing the set of fields used as the payload of a JWT token.
-   *
-   * <p>To create and customize claims, use the builder:
-   *
-   * <pre><code>
-   * Claims claims = Claims.newBuilder()
-   *     .setAudience("https://example.com/some-audience")
-   *     .setIssuer("some-issuer@example.com")
-   *     .setSubject("some-subject@example.com")
-   *     .build();
-   * </code></pre>
-   */
-  @AutoValue
-  public abstract static class Claims implements Serializable {
-    private static final long serialVersionUID = 4974444151019426702L;
-
-    @Nullable
-    abstract String getAudience();
-
-    @Nullable
-    abstract String getIssuer();
-
-    @Nullable
-    abstract String getSubject();
-
-    static Builder newBuilder() {
-      return new AutoValue_JwtCredentials_Claims.Builder();
-    }
-
-    /**
-     * Returns a new Claims instance with overridden fields.
-     *
-     * <p>Any non-null field will overwrite the value from the original claims instance.
-     *
-     * @param other claims to override
-     * @return new claims
-     */
-    public Claims merge(Claims other) {
-      return newBuilder()
-          .setAudience(other.getAudience() == null ? getAudience() : other.getAudience())
-          .setIssuer(other.getIssuer() == null ? getIssuer() : other.getIssuer())
-          .setSubject(other.getSubject() == null ? getSubject() : other.getSubject())
-          .build();
-    }
-
-    /**
-     * Returns whether or not this set of claims is complete.
-     *
-     * <p>Audience, issuer, and subject are required to be set in order to use the claim set for a
-     * JWT token. An incomplete Claims instance is useful for overriding claims when using {@link
-     * ServiceAccountJwtAccessCredentials#jwtWithClaims(Claims)} or {@link
-     * JwtCredentials#jwtWithClaims(Claims)}.
-     *
-     * @return
-     */
-    public boolean isComplete() {
-      return getAudience() != null && getIssuer() != null && getSubject() != null;
-    }
-
-    @AutoValue.Builder
-    abstract static class Builder {
-      abstract Builder setAudience(String audience);
-
-      abstract Builder setIssuer(String issuer);
-
-      abstract Builder setSubject(String subject);
-
-      abstract Claims build();
     }
   }
 }

@@ -85,7 +85,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   private final String privateKeyId;
   private final URI defaultAudience;
 
-  private transient LoadingCache<JwtCredentials.Claims, JwtCredentials> credentialsCache;
+  private transient LoadingCache<JwtClaims, JwtCredentials> credentialsCache;
 
   // Until we expose this to the users it can remain transient and non-serializable
   @VisibleForTesting transient Clock clock = Clock.SYSTEM;
@@ -251,7 +251,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
             fileType, SERVICE_ACCOUNT_FILE_TYPE));
   }
 
-  private LoadingCache<JwtCredentials.Claims, JwtCredentials> createCache() {
+  private LoadingCache<JwtClaims, JwtCredentials> createCache() {
     return CacheBuilder.newBuilder()
         .maximumSize(100)
         .expireAfterWrite(LIFE_SPAN_SECS - CLOCK_SKEW, TimeUnit.SECONDS)
@@ -263,13 +263,13 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
               }
             })
         .build(
-            new CacheLoader<JwtCredentials.Claims, JwtCredentials>() {
+            new CacheLoader<JwtClaims, JwtCredentials>() {
               @Override
-              public JwtCredentials load(JwtCredentials.Claims claims) throws Exception {
+              public JwtCredentials load(JwtClaims claims) throws Exception {
                 return JwtCredentials.newBuilder()
                     .setPrivateKey(privateKey)
                     .setPrivateKeyId(privateKeyId)
-                    .setClaims(claims)
+                    .setJwtClaims(claims)
                     .setLifeSpanSeconds(LIFE_SPAN_SECS)
                     .setClock(clock)
                     .build();
@@ -285,16 +285,16 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    * @return new credentials
    */
   @Override
-  public JwtCredentials jwtWithClaims(JwtCredentials.Claims newClaims) {
-    JwtCredentials.Claims.Builder claimsBuilder =
-        JwtCredentials.Claims.newBuilder().setIssuer(clientEmail).setSubject(clientEmail);
+  public JwtCredentials jwtWithClaims(JwtClaims newClaims) {
+    JwtClaims.Builder claimsBuilder =
+        JwtClaims.newBuilder().setIssuer(clientEmail).setSubject(clientEmail);
     if (defaultAudience != null) {
       claimsBuilder.setAudience(defaultAudience.toString());
     }
     return JwtCredentials.newBuilder()
         .setPrivateKey(privateKey)
         .setPrivateKeyId(privateKeyId)
-        .setClaims(claimsBuilder.build().merge(newClaims))
+        .setJwtClaims(claimsBuilder.build().merge(newClaims))
         .setLifeSpanSeconds(LIFE_SPAN_SECS)
         .setClock(clock)
         .build();
@@ -337,8 +337,8 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     }
 
     try {
-      JwtCredentials.Claims defaultClaims =
-          JwtCredentials.Claims.newBuilder()
+      JwtClaims defaultClaims =
+          JwtClaims.newBuilder()
               .setAudience(uri.toString())
               .setIssuer(clientEmail)
               .setSubject(clientEmail)
