@@ -63,10 +63,10 @@ public interface IdTokenProvider {
   }
 
   /**
-   * Returns the a Google OpenID Token with the provided audience field.
+   * Returns a Google OpenID Token with the provided audience field.
    *
    * @param targetAudience List of audiences the issued ID Token should be valid for. targetAudience
-   *     accepts a single string value (multiple audience are not supported)
+   *     accepts a single string value (multiple audiences are not supported)
    * @param options List of Credential specific options for for the token. For example, an IDToken
    *     for a ComputeEngineCredential can return platform specific claims if
    *     "ComputeEngineCredentials.ID_TOKEN_FORMAT_FULL" is provided as a list option.

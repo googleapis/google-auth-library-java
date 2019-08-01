@@ -654,16 +654,16 @@ public class ServiceAccountCredentials extends GoogleCredentials
       payload.setAudience(audience);
     }
 
-    payload.set("target_audience", targetAudience);
-
-    String assertion;
     try {
+      payload.set("target_audience", targetAudience);
+
+      String assertion;      
       assertion = JsonWebSignature.signUsingRsaSha256(privateKey, jsonFactory, header, payload);
+      return assertion;
     } catch (GeneralSecurityException e) {
       throw new IOException(
           "Error signing service account access token request with private key.", e);
     }
-    return assertion;
   }
 
   @SuppressWarnings("unused")

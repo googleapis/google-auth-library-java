@@ -31,10 +31,12 @@
 
 package com.google.auth.oauth2;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
 
+import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.common.base.MoreObjects;
 
@@ -45,16 +47,24 @@ public class IdToken extends AccessToken implements Serializable {
 
   private static final long serialVersionUID = -8514239465808977353L;
 
-  private final JsonWebSignature jws;
+  private final JsonWebSignature jsonWebSignature;
 
   /**
-   * @param tokenValue     String representation of the Id token.
-   * @param jws            JsonWebSignature as object
+   * @param tokenValue String representation of the Id token.
+   * @param jsonWebSignature JsonWebSignature as object
    */
-  public IdToken(String tokenValue, JsonWebSignature jws) {
-    super(tokenValue, new Date(jws.getPayload().getExpirationTimeSeconds() * 1000));
-    this.jws = jws;
+  public IdToken(String tokenValue, JsonWebSignature jsonWebSignature) {
+    super(tokenValue, new Date(jsonWebSignature.getPayload().getExpirationTimeSeconds() * 1000));
+    this.jsonWebSignature = jsonWebSignature;
   }
+
+  public static IdToken create(String tokenValue) throws IOException {
+    return create(tokenValue, OAuth2Utils.JSON_FACTORY);
+  }
+  
+  public static IdToken create(String tokenValue, JsonFactory jsonFactory) throws IOException {
+    return new IdToken(tokenValue, JsonWebSignature.parse(jsonFactory, tokenValue));
+  }  
 
   /**
    * The JsonWebSignature as object
@@ -62,18 +72,18 @@ public class IdToken extends AccessToken implements Serializable {
    * @return returns com.google.api.client.json.webtoken.JsonWebSignature
    */
   public JsonWebSignature getJsonWebSignature() {
-    return jws;
+    return jsonWebSignature;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.getTokenValue(), jws);
+    return Objects.hash(super.getTokenValue(), jsonWebSignature);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this).add("tokenValue", super.getTokenValue())
-        .add("JsonWebSignature", jws).toString();
+        .add("JsonWebSignature", jsonWebSignature).toString();
   }
 
   @Override
@@ -83,6 +93,6 @@ public class IdToken extends AccessToken implements Serializable {
     }
     IdToken other = (IdToken) obj;
     return Objects.equals(super.getTokenValue(), other.getTokenValue())
-        && Objects.equals(this.jws, other.jws);
+        && Objects.equals(this.jsonWebSignature, other.jsonWebSignature);
   }
 }

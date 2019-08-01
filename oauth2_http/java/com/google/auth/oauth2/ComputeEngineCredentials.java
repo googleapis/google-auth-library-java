@@ -164,8 +164,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
    * Returns a Google ID Token from the metadata server on ComputeEngine
    *
    * @param targetAudience the aud: field the IdToken should include
-   * @param options list of Credential specific options for for the token. For example, an IDToken
-   *     for a ComputeEngineCredential could have the full formated claims returned if
+   * @param options list of Credential specific options for the token. For example, an IDToken
+   *     for a ComputeEngineCredential could have the full formatted claims returned if
    *     IdTokenProvider.Option.FORMAT_FULL) is provided as a list option. Valid option values are:
    *     <br>
    *     IdTokenProvider.Option.FORMAT_FULL<br>

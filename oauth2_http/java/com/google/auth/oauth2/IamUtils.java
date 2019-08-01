@@ -209,7 +209,7 @@ class IamUtils {
 
     GenericJson responseData = response.parseAs(GenericJson.class);
     String rawToken = OAuth2Utils.validateString(responseData, "token", PARSE_ERROR_MESSAGE);
-    JsonWebSignature jws = JsonWebSignature.parse(OAuth2Utils.JSON_FACTORY, rawToken);
-    return new IdToken(rawToken, jws);
+    JsonWebSignature signature = JsonWebSignature.parse(OAuth2Utils.JSON_FACTORY, rawToken);
+    return new IdToken(rawToken, signature);
   }
 }

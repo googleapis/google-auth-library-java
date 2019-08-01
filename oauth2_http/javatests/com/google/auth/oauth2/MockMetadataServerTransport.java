@@ -166,23 +166,22 @@ public class MockMetadataServerTransport extends MockHttpTransport {
       }
 
       // https://cloud.google.com/compute/docs/instances/verifying-instance-identity#token_format
-      URL u = new URL(url);
-      Map<String, String> query_pairs = new HashMap<String, String>();
-      String query = u.getQuery();
+      Map<String, String> queryPairs = new HashMap<String, String>();
+      String query = (new URL(url)).getQuery();
       String[] pairs = query.split("&");
       for (String pair : pairs) {
         int idx = pair.indexOf("=");
-        query_pairs.put(
+        queryPairs.put(
             URLDecoder.decode(pair.substring(0, idx), "UTF-8"),
             URLDecoder.decode(pair.substring(idx + 1), "UTF-8"));
       }
 
-      if (query_pairs.containsKey("format")) {
-        if (((String) query_pairs.get("format")).equals("full")) {
+      if (queryPairs.containsKey("format")) {
+        if (((String) queryPairs.get("format")).equals("full")) {
 
           // return license only if format=full is set
-          if (query_pairs.containsKey("license")) {
-            if (((String) query_pairs.get("license")).equals("TRUE")) {
+          if (queryPairs.containsKey("license")) {
+            if (((String) queryPairs.get("license")).equals("TRUE")) {
               return new MockLowLevelHttpRequest(url) {
                 @Override
                 public LowLevelHttpResponse execute() throws IOException {

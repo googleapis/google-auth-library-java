@@ -585,7 +585,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void idTokenWithAudience_correct() throws IOException {
-    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
     ServiceAccountCredentials credentials =
@@ -613,7 +613,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void idTokenWithAudience_incorrect() throws IOException {
-    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
     ServiceAccountCredentials credentials =
