@@ -529,7 +529,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   /**
    * Returns a new JwtCredentials instance with modified claims.
    *
-   * @param newClaims New claims. Any unspecified claim fields will default to the the current
+   * @param newClaims new claims. Any unspecified claim fields will default to the the current
    *     values.
    * @return new credentials
    */
