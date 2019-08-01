@@ -242,7 +242,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
       credentials.getAccount();
       fail("Fetching default service account should have failed");
     } catch (RuntimeException e) {
-      assertEquals("Failed to to get service account", e.getMessage());
+      assertEquals("Failed to get service account", e.getMessage());
       assertNotNull(e.getCause());
       assertTrue(e.getCause().getMessage().contains("404"));
     }
@@ -277,7 +277,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
       credentials.getAccount();
       fail("Fetching default service account should have failed");
     } catch (RuntimeException e) {
-      assertEquals("Failed to to get service account", e.getMessage());
+      assertEquals("Failed to get service account", e.getMessage());
       assertNotNull(e.getCause());
       assertTrue(e.getCause().getMessage().contains("Empty content"));
     }
@@ -297,6 +297,26 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
     assertArrayEquals(expectedSignature, credentials.sign(expectedSignature));
+  }
+
+  @Test
+  public void sign_getAccountFails() throws IOException {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
+
+    transportFactory.transport.setAccessToken(accessToken);
+    transportFactory.transport.setSignature(expectedSignature);
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+    try {
+      credentials.sign(expectedSignature);
+      fail();
+    } catch (SigningException ex) {
+      assertNotNull(ex.getMessage());
+      assertNotNull(ex.getCause());
+    }
   }
 
   @Test
