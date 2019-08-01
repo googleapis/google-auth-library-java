@@ -472,8 +472,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     GenericData responseData = response.parseAs(GenericData.class);
     String rawToken = OAuth2Utils.validateString(responseData, "id_token", PARSE_ERROR_PREFIX);
 
-    JsonWebSignature jws = JsonWebSignature.parse(OAuth2Utils.JSON_FACTORY, rawToken);
-    return new IdToken(rawToken, jws);
+    return IdToken.create(rawToken);
   }
 
   /** Returns whether the scopes are empty, meaning createScoped must be called before use. */

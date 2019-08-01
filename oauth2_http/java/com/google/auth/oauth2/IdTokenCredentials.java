@@ -54,10 +54,14 @@ import java.util.Objects;
  * // For Application Default Credentials (as ServiceAccountCredentials)
  * // export GOOGLE_APPLICATION_CREDENTIALS=/path/to/svc.json
  * GoogleCredentials adcCreds = GoogleCredentials.getApplicationDefault();
- * if (!sourceCredentials instanceof IdTokenProvider) {
+ * if (!adcCreds instanceof IdTokenProvider) {
  *   // handle error message
  * }
  * IdTokenCredentials tokenCredential = IdTokenCredentials.create((IdTokenProvider) adcCreds, targetAudience);
+ * // or
+ * IdTokenCredentials tokenCredential = IdTokenCredentials.newBuilder()
+ *     .setIdTokenProvider((IdTokenProvider) adcCreds)
+ *     .setTargetAudience(targetAudience).build();
  * 
  * // for ServiceAccountCredentials
  * ServiceAccountCredentials saCreds = ServiceAccountCredentials.fromStream(new FileInputStream(credPath));
@@ -92,10 +96,8 @@ import java.util.Objects;
 public class IdTokenCredentials extends OAuth2Credentials {
 
   private static final long serialVersionUID = -2133257318957588431L;
-  private static final String CLOUD_PLATFORM_SCOPE =
-      "https://www.googleapis.com/auth/cloud-platform";
 
-  private IdTokenProvider sourceCredentials;
+  private IdTokenProvider idTokenProvider;
   private String targetAudience;
   private List<IdTokenProvider.Option> options;
 
@@ -105,7 +107,7 @@ public class IdTokenCredentials extends OAuth2Credentials {
    * specified. Specify extensions and additional claims for the IdToken by applying any approprite
    * Options for the given credential type.
    *
-   * @param sourceCredentials The source credential for the Id Token that implements IdTokenProvider 
+   * @param idTokenProvider The source credential for the Id Token that implements IdTokenProvider 
    * @param targetAudience The audience field for the issued ID Token
    * @param options List of Credential specific options for for the token. For example, an IDToken
    *     for a ComputeEngineCredential can return platform specific claims if
@@ -114,11 +116,11 @@ public class IdTokenCredentials extends OAuth2Credentials {
    * @return IdTokenCredential
    */
   public static IdTokenCredentials create(
-      IdTokenProvider sourceCredentials,
+      IdTokenProvider idTokenProvider,
       String targetAudience,
       List<IdTokenProvider.Option> options) {
     return IdTokenCredentials.newBuilder()
-        .setSourceCredentials(sourceCredentials)
+        .setIdTokenProvider(idTokenProvider)
         .setTargetAudience(targetAudience)
         .setOptions(options)
         .build();
@@ -128,27 +130,27 @@ public class IdTokenCredentials extends OAuth2Credentials {
    * Returns IdToken credentials associated with the sourceCredentials and with an audience
    * specified.
    *
-   * @param sourceCredentials the source credential for the ID Token
-   * @param targetAudience the audience field for the issued ID Token
+   * @param idTokenProvider The source credential for the Id Token that implements IdTokenProvider 
+   * @param targetAudience The audience field for the issued ID Token
    * @return IdTokenCredential
    */
   public static IdTokenCredentials create(
-      IdTokenProvider sourceCredentials, String targetAudience) {
+      IdTokenProvider idTokenProvider, String targetAudience) {
     return IdTokenCredentials.newBuilder()
-        .setSourceCredentials(sourceCredentials)
+        .setIdTokenProvider(idTokenProvider)
         .setTargetAudience(targetAudience)
         .build();
   }
 
   private IdTokenCredentials(Builder builder) {
-    this.sourceCredentials = builder.getSourceCredentials();
+    this.idTokenProvider = builder.getIdTokenProvider();
     this.targetAudience = builder.getTargetAudience();
     this.options = builder.getOptions();
   }
 
   @Override
   public AccessToken refreshAccessToken() throws IOException {
-    return ((IdTokenProvider) this.sourceCredentials).idTokenWithAudience(targetAudience, options);
+    return this.idTokenProvider.idTokenWithAudience(targetAudience, options);
   }
 
   public IdToken getIdToken() {
@@ -157,7 +159,7 @@ public class IdTokenCredentials extends OAuth2Credentials {
 
   @Override
   public int hashCode() {
-    return Objects.hash(sourceCredentials);
+    return Objects.hash(idTokenProvider);
   }
 
   @Override
@@ -171,7 +173,7 @@ public class IdTokenCredentials extends OAuth2Credentials {
       return false;
     }
     IdTokenCredentials other = (IdTokenCredentials) obj;
-    return Objects.equals(this.sourceCredentials, other.sourceCredentials)
+    return Objects.equals(this.idTokenProvider, other.idTokenProvider)
         && Objects.equals(this.targetAudience, other.targetAudience);
   }
 
@@ -185,19 +187,19 @@ public class IdTokenCredentials extends OAuth2Credentials {
 
   public static class Builder extends OAuth2Credentials.Builder {
 
-    private IdTokenProvider sourceCredentials;
+    private IdTokenProvider idTokenProvider;
     private String targetAudience;
     private List<IdTokenProvider.Option> options;
 
     protected Builder() {}
 
-    public Builder setSourceCredentials(IdTokenProvider sourceCredentials) {
-      this.sourceCredentials = sourceCredentials;
+    public Builder setIdTokenProvider(IdTokenProvider idTokenProvider) {
+      this.idTokenProvider = idTokenProvider;
       return this;
     }
 
-    public IdTokenProvider getSourceCredentials() {
-      return this.sourceCredentials;
+    public IdTokenProvider getIdTokenProvider() {
+      return this.idTokenProvider;
     }
 
     public Builder setTargetAudience(String targetAudience) {

@@ -53,7 +53,7 @@ public class IdToken extends AccessToken implements Serializable {
    * @param tokenValue String representation of the Id token.
    * @param jsonWebSignature JsonWebSignature as object
    */
-  public IdToken(String tokenValue, JsonWebSignature jsonWebSignature) {
+  private IdToken(String tokenValue, JsonWebSignature jsonWebSignature) {
     super(tokenValue, new Date(jsonWebSignature.getPayload().getExpirationTimeSeconds() * 1000));
     this.jsonWebSignature = jsonWebSignature;
   }

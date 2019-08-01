@@ -39,7 +39,6 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
-import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.util.GenericData;
 import com.google.auth.Credentials;
 import com.google.auth.ServiceAccountSigner;
@@ -209,7 +208,6 @@ class IamUtils {
 
     GenericJson responseData = response.parseAs(GenericJson.class);
     String rawToken = OAuth2Utils.validateString(responseData, "token", PARSE_ERROR_MESSAGE);
-    JsonWebSignature signature = JsonWebSignature.parse(OAuth2Utils.JSON_FACTORY, rawToken);
-    return new IdToken(rawToken, signature);
+    return IdToken.create(rawToken);
   }
 }

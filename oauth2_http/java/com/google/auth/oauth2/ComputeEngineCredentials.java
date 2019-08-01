@@ -39,7 +39,6 @@ import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.JsonObjectParser;
-import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.util.GenericData;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
@@ -196,8 +195,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
       throw new IOException("Empty content from metadata token server request.");
     }
     String rawToken = response.parseAsString();
-    JsonWebSignature jws = JsonWebSignature.parse(OAuth2Utils.JSON_FACTORY, rawToken);
-    return new IdToken(rawToken, jws);
+    return IdToken.create(rawToken);
   }
 
   private HttpResponse getMetadataResponse(String url) throws IOException {
