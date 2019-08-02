@@ -20,12 +20,10 @@ export NPM_CONFIG_PREFIX=/home/node/.npm-global
 
 if [ -f ${KOKORO_KEYSTORE_DIR}/73713_github-magic-proxy-url-release-please ]; then
   # Groom the release PR as new commits are merged.
-  # TODO: un-pin 2.3.1 once we've debugged:
-  npx release-please@2.3.1 release-pr --token=${KOKORO_KEYSTORE_DIR}/73713_github-magic-proxy-token-release-please \
+  npx release-please release-pr --token=${KOKORO_KEYSTORE_DIR}/73713_github-magic-proxy-token-release-please \
     --repo-url=googleapis/google-auth-library-java \
     --package-name="google-auth-library-java" \
     --api-url=${KOKORO_KEYSTORE_DIR}/73713_github-magic-proxy-url-release-please \
     --proxy-key=${KOKORO_KEYSTORE_DIR}/73713_github-magic-proxy-key-release-please \
-    --release-type=java-auth-yoshi \
-    --debug
+    --release-type=java-auth-yoshi
 fi
