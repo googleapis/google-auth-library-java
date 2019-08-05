@@ -38,11 +38,13 @@ import java.util.Objects;
 
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
+import com.google.common.annotations.Beta;
 import com.google.common.base.MoreObjects;
 
 /**
- * Represents a temporary IdToken and its JSONWebSingature object
+ * Represents a temporary IdToken and its JsonWebSignature object
  */
+@Beta
 public class IdToken extends AccessToken implements Serializable {
 
   private static final long serialVersionUID = -8514239465808977353L;

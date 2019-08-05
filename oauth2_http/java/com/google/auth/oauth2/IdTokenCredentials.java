@@ -32,6 +32,7 @@
 package com.google.auth.oauth2;
 
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.MoreObjects;
 import java.io.IOException;
 import java.util.List;
@@ -93,6 +94,7 @@ import java.util.Objects;
  * System.out.println(tokenCredential.getIdToken().getJsonWebSignature().getPayload().getExpirationTimeSeconds());
  * </pre>
  */
+@Beta
 public class IdTokenCredentials extends OAuth2Credentials {
 
   private static final long serialVersionUID = -2133257318957588431L;

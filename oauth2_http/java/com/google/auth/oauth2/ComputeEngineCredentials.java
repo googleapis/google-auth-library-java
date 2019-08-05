@@ -42,6 +42,7 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.common.annotations.Beta;
 import com.google.common.base.MoreObjects;
 import java.io.IOException;
 import java.io.InputStream;
@@ -173,6 +174,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
    * @throws IOException if the attempt to get an IdToken failed
    * @return IdToken object which includes the raw id_token, JsonWebSignature
    */
+  @Beta
   @Override
   public IdToken idTokenWithAudience(String targetAudience, List<IdTokenProvider.Option> options)
       throws IOException {
