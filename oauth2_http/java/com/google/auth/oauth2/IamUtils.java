@@ -69,6 +69,7 @@ class IamUtils {
    * @param toSign bytes to sign
    * @param additionalFields additional fields to send in the IAM call
    * @return signed bytes
+   * @throws ServiceAccountSigner.SigningException if signing fails
    */
   static byte[] sign(
       String serviceAccountEmail,

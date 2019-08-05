@@ -86,7 +86,7 @@ import java.util.Objects;
  * <p>By default uses a JSON Web Token (JWT) to fetch access tokens.
  */
 public class ServiceAccountCredentials extends GoogleCredentials
-    implements ServiceAccountSigner, IdTokenProvider {
+    implements ServiceAccountSigner, IdTokenProvider, JwtProvider {
 
   private static final long serialVersionUID = 7807543542681217978L;
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
@@ -563,6 +563,25 @@ public class ServiceAccountCredentials extends GoogleCredentials
     } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException ex) {
       throw new SigningException("Failed to sign the provided bytes", ex);
     }
+  }
+
+  /**
+   * Returns a new JwtCredentials instance with modified claims.
+   *
+   * @param newClaims new claims. Any unspecified claim fields will default to the the current
+   *     values.
+   * @return new credentials
+   */
+  @Override
+  public JwtCredentials jwtWithClaims(JwtClaims newClaims) {
+    JwtClaims.Builder claimsBuilder =
+        JwtClaims.newBuilder().setIssuer(clientEmail).setSubject(clientEmail);
+    return JwtCredentials.newBuilder()
+        .setPrivateKey(privateKey)
+        .setPrivateKeyId(privateKeyId)
+        .setJwtClaims(claimsBuilder.build().merge(newClaims))
+        .setClock(clock)
+        .build();
   }
 
   @Override
