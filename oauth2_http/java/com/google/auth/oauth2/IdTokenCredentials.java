@@ -58,28 +58,35 @@ import java.util.Objects;
  * if (!adcCreds instanceof IdTokenProvider) {
  *   // handle error message
  * }
- * IdTokenCredentials tokenCredential = IdTokenCredentials.create((IdTokenProvider) adcCreds, targetAudience);
- * // or
+ * 
  * IdTokenCredentials tokenCredential = IdTokenCredentials.newBuilder()
- *     .setIdTokenProvider((IdTokenProvider) adcCreds)
+ *     .setIdTokenProvider(adcCreds)
  *     .setTargetAudience(targetAudience).build();
  * 
  * // for ServiceAccountCredentials
  * ServiceAccountCredentials saCreds = ServiceAccountCredentials.fromStream(new FileInputStream(credPath));
  * saCreds = (ServiceAccountCredentials) saCreds.createScoped(Arrays.asList("https://www.googleapis.com/auth/iam"));
- * IdTokenCredentials tokenCredential = IdTokenCredentials.create(saCreds, targetAudience);
- *
+ * IdTokenCredentials tokenCredential = IdTokenCredentials.newBuilder()
+ *     .setIdTokenProvider(saCreds)
+ *     .setTargetAudience(targetAudience).build();
+ * 
  * // for ComputeEngineCredentials
  * ComputeEngineCredentials caCreds = ComputeEngineCredentials.create();
- * IdTokenCredentials tokenCredential = IdTokenCredentials.create(caCreds, targetAudience,
- *     Arrays.asList(ComputeEngineCredentials.ID_TOKEN_FORMAT_FULL));
- *
+ * IdTokenCredentials tokenCredential = IdTokenCredentials.newBuilder()
+ *     .setIdTokenProvider(caCreds)
+ *     .setTargetAudience(targetAudience)
+ *     .setOptions(Arrays.asList(ComputeEngineCredentials.ID_TOKEN_FORMAT_FULL))
+ *     .build();
+ * 
  * // for ImpersonatedCredentials
  * ImpersonatedCredentials imCreds = ImpersonatedCredentials.create(saCreds,
  *     "impersonated-account@project.iam.gserviceaccount.com", null,
  *     Arrays.asList("https://www.googleapis.com/auth/cloud-platform"), 300);
- * IdTokenCredentials tokenCredential = IdTokenCredentials.create(imCreds, targetAudience,
- *     Arrays.asList(ImpersonatedCredentials.INCLUDE_EMAIL));
+ * IdTokenCredentials tokenCredential = IdTokenCredentials.newBuilder()
+ *     .setIdTokenProvider(imCreds)
+ *     .setTargetAudience(targetAudience)
+ *     .setOptions(Arrays.asList(ImpersonatedCredentials.INCLUDE_EMAIL))
+ *     .build();
  *
  * // Use the IdTokenCredential in an authorized transport
  * GenericUrl genericUrl = new GenericUrl("https://example.com");
@@ -103,46 +110,6 @@ public class IdTokenCredentials extends OAuth2Credentials {
   private String targetAudience;
   private List<IdTokenProvider.Option> options;
 
-
-  /**
-   * Returns IdToken credentials associated with the sourceCredentials and with an audience
-   * specified. Specify extensions and additional claims for the IdToken by applying any approprite
-   * Options for the given credential type.
-   *
-   * @param idTokenProvider The source credential for the Id Token that implements IdTokenProvider 
-   * @param targetAudience The audience field for the issued ID Token
-   * @param options List of Credential specific options for for the token. For example, an IDToken
-   *     for a ComputeEngineCredential can return platform specific claims if
-   *     "ComputeEngineCredentials.ID_TOKEN_FORMAT_FULL" is provided as a list option.
-   *     tokens.
-   * @return IdTokenCredential
-   */
-  public static IdTokenCredentials create(
-      IdTokenProvider idTokenProvider,
-      String targetAudience,
-      List<IdTokenProvider.Option> options) {
-    return IdTokenCredentials.newBuilder()
-        .setIdTokenProvider(idTokenProvider)
-        .setTargetAudience(targetAudience)
-        .setOptions(options)
-        .build();
-  }
-
-  /**
-   * Returns IdToken credentials associated with the sourceCredentials and with an audience
-   * specified.
-   *
-   * @param idTokenProvider The source credential for the Id Token that implements IdTokenProvider 
-   * @param targetAudience The audience field for the issued ID Token
-   * @return IdTokenCredential
-   */
-  public static IdTokenCredentials create(
-      IdTokenProvider idTokenProvider, String targetAudience) {
-    return IdTokenCredentials.newBuilder()
-        .setIdTokenProvider(idTokenProvider)
-        .setTargetAudience(targetAudience)
-        .build();
-  }
 
   private IdTokenCredentials(Builder builder) {
     this.idTokenProvider = builder.getIdTokenProvider();
@@ -180,7 +147,10 @@ public class IdTokenCredentials extends OAuth2Credentials {
   }
 
   public Builder toBuilder() {
-    return new Builder();
+    return new Builder()
+        .setIdTokenProvider(this.idTokenProvider)
+        .setTargetAudience(this.targetAudience)
+        .setOptions(this.options);
   }
 
   public static Builder newBuilder() {

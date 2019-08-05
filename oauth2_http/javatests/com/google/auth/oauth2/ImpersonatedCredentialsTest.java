@@ -508,8 +508,10 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     mtransportFactory.transport.setIdToken(standardIdToken);
 
     String targetAudience = "https://foo.bar";
-    IdTokenCredentials tokenCredential =
-        IdTokenCredentials.create(targetCredentials, targetAudience);
+    IdTokenCredentials tokenCredential = IdTokenCredentials.newBuilder()
+        .setIdTokenProvider(targetCredentials)
+        .setTargetAudience(targetAudience)
+        .build();
     tokenCredential.refresh();
     assertEquals(standardIdToken, tokenCredential.getAccessToken().getTokenValue());
     assertEquals(standardIdToken, tokenCredential.getIdToken().getTokenValue());
@@ -539,9 +541,11 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     mtransportFactory.transport.setIdToken(tokenWithEmail);
 
     String targetAudience = "https://foo.bar";
-    IdTokenCredentials tokenCredential =
-        IdTokenCredentials.create(
-            targetCredentials, targetAudience, Arrays.asList(IdTokenProvider.Option.INCLUDE_EMAIL));
+    IdTokenCredentials tokenCredential = IdTokenCredentials.newBuilder()
+        .setIdTokenProvider(targetCredentials)
+        .setTargetAudience(targetAudience)
+        .setOptions(Arrays.asList(IdTokenProvider.Option.INCLUDE_EMAIL))
+        .build();
     tokenCredential.refresh();
     assertEquals(tokenWithEmail, tokenCredential.getAccessToken().getTokenValue());
     Payload p = tokenCredential.getIdToken().getJsonWebSignature().getPayload();
