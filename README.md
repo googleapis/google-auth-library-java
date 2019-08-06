@@ -1,13 +1,12 @@
 # Google Auth Library
 
-
 Open source authentication client library for Java.
 
 [![unstable](http://badges.github.io/stability-badges/dist/unstable.svg)](http://github.com/badges/stability-badges)
 [![codecov](https://codecov.io/gh/googleapis/google-auth-library-java/branch/master/graph/badge.svg)](https://codecov.io/gh/googleapis/google-auth-library-java)
 [![Maven](https://img.shields.io/maven-central/v/com.google.auth/google-auth-library-credentials.svg)](https://img.shields.io/maven-central/v/com.google.auth/google-auth-library-credentials.svg)
 
--  [API Documentation](https://google.github.io/google-auth-library-java/releases/latest/apidocs)
+-  [API Documentation](https://googleapis.dev/java/google-auth-library/latest)
 
 This project consists of 3 artifacts:
 
@@ -146,7 +145,7 @@ AccessToken token = credentials.refreshAccessToken();
 ### ImpersonatedCredentials
 
 Allows a credentials issued to a user or service account to
-impersonate another.  The source project using ImpersonaedCredentials must enable the
+impersonate another.  The source project using ImpersonatedCredentials must enable the
 "IAMCredentials" API.  Also, the target service account must grant the orginating principal
 the "Service Account Token Creator" IAM role.
 
@@ -170,7 +169,10 @@ for (Bucket b : storage_service.list().iterateAll())
 
 ## Using Credentials with `google-http-client`
 
-Credentials provided by `google-auth-library` can be used with Google's [HTTP-based clients][apiary-clients]. We provide a [`HttpCredentialsAdapter`][http-credentials-adapter] which can be used as an [`HttpRequestInitializer`][http-request-initializer].
+Credentials provided by `google-auth-library` can be used with Google's 
+[HTTP-based clients][apiary-clients]. We provide a 
+[`HttpCredentialsAdapter`][http-credentials-adapter] which can be used as an 
+[`HttpRequestInitializer`][http-request-initializer].
 
 ```java
 import com.google.api.client.http.HttpRequestInitializer;
