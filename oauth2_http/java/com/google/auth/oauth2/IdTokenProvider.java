@@ -55,7 +55,7 @@ public interface IdTokenProvider {
 
     private String option;
 
-    Option(String option) {
+    private Option(String option) {
       this.option = option;
     }
 

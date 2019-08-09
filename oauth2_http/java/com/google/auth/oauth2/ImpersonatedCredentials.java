@@ -278,7 +278,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
   }
 
   /**
-   * Returns an IdToken for the current Credential
+   * Returns an IdToken for the current Credential.
    *
    * @param targetAudience the audience field for the issued ID Token
    * @param options List of Credential specific options for for the token. For example, an IDToken
