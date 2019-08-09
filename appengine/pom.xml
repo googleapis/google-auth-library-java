@@ -41,7 +41,7 @@
 	      <configuration>
 	        <archive>  
 	          <manifestEntries>
-	            <Automatic-Module-Name>com.google.auth</Automatic-Module-Name>
+	            <Automatic-Module-Name>com.google.auth.appengine</Automatic-Module-Name>
 	          </manifestEntries>
 	        </archive> 
 	      </configuration>
