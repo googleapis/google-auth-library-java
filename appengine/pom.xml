@@ -36,14 +36,14 @@
         <artifactId>maven-javadoc-plugin</artifactId>
       </plugin>
       <plugin>
-      	<groupId>org.apache.maven.plugins</groupId>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-	<configuration>
-	  <archive>  
-	    <manifestEntries>
-	      <Automatic-Module-Name>com.google.auth.appengine</Automatic-Module-Name>
-	    </manifestEntries>
-	  </archive> 
+        <configuration>
+          <archive>  
+            <manifestEntries>
+              <Automatic-Module-Name>com.google.auth.appengine</Automatic-Module-Name>
+            </manifestEntries>
+          </archive> 
         </configuration>
       </plugin>
     </plugins>
