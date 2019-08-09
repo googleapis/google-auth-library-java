@@ -127,7 +127,7 @@ public class IdTokenCredentials extends OAuth2Credentials {
 
   @Override
   public int hashCode() {
-    return Objects.hash(idTokenProvider, targetAudience);
+    return Objects.hash(options, targetAudience);
   }
 
   @Override

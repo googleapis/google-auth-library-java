@@ -36,6 +36,8 @@ import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.common.annotations.Beta;
 import com.google.common.base.MoreObjects;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
@@ -46,7 +48,7 @@ public class IdToken extends AccessToken implements Serializable {
 
   private static final long serialVersionUID = -8514239465808977353L;
 
-  private final JsonWebSignature jsonWebSignature;
+  private transient JsonWebSignature jsonWebSignature;
 
   /**
    * @param tokenValue String representation of the Id token.
@@ -76,7 +78,8 @@ public class IdToken extends AccessToken implements Serializable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.getTokenValue(), jsonWebSignature);
+    return Objects.hash(
+        super.getTokenValue(), jsonWebSignature.getHeader(), jsonWebSignature.getPayload());
   }
 
   @Override
@@ -94,6 +97,17 @@ public class IdToken extends AccessToken implements Serializable {
     }
     IdToken other = (IdToken) obj;
     return Objects.equals(super.getTokenValue(), other.getTokenValue())
-        && Objects.equals(this.jsonWebSignature, other.jsonWebSignature);
+        && Objects.equals(this.jsonWebSignature.getHeader(), other.jsonWebSignature.getHeader())
+        && Objects.equals(this.jsonWebSignature.getPayload(), other.jsonWebSignature.getPayload());
+  }
+
+  private void writeObject(ObjectOutputStream oos) throws IOException {
+    oos.writeObject(this.getTokenValue());
+  }
+
+  private void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
+    ois.defaultReadObject();
+    String signature = (String) ois.readObject();
+    this.jsonWebSignature = JsonWebSignature.parse(OAuth2Utils.JSON_FACTORY, signature);
   }
 }
