@@ -41,16 +41,19 @@ public interface IdTokenProvider {
 
   /**
    * Enum of various credential-specific options to apply to the token.
-   * 
-   * <b>ComputeEngineCredentials</b>
+   *
+   * <p><b>ComputeEngineCredentials</b>
+   *
    * <ul>
-   * <li>FORMAT_FULL</li>
-   * <li>LICENSES_TRUE</li>
+   *   <li>FORMAT_FULL
+   *   <li>LICENSES_TRUE
    * </ul>
-   * <br/>
+   *
+   * <br>
    * <b>ImpersonatedCredential</b>
+   *
    * <ul>
-   * <li>INCLUDE_EMAIL</li>
+   *   <li>INCLUDE_EMAIL
    * </ul>
    */
   public enum Option {
