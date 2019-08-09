@@ -602,10 +602,11 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
 
     String targetAudience = "https://foo.bar";
-    IdTokenCredentials tokenCredential = IdTokenCredentials.newBuilder()
-        .setIdTokenProvider(credentials)
-        .setTargetAudience(targetAudience)
-        .build();
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(credentials)
+            .setTargetAudience(targetAudience)
+            .build();
     tokenCredential.refresh();
     assertEquals(defaultIDToken, tokenCredential.getAccessToken().getTokenValue());
     assertEquals(defaultIDToken, tokenCredential.getIdToken().getTokenValue());
@@ -633,10 +634,11 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
 
     String targetAudience = "https://bar";
-    IdTokenCredentials tokenCredential = IdTokenCredentials.newBuilder()
-        .setIdTokenProvider(credentials)
-        .setTargetAudience(targetAudience)
-        .build();    
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(credentials)
+            .setTargetAudience(targetAudience)
+            .build();
     tokenCredential.refresh();
     assertNotEquals(
         targetAudience,

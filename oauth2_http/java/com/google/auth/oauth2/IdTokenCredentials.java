@@ -31,7 +31,7 @@
 
 package com.google.auth.oauth2;
 
-
+import com.google.api.client.util.Preconditions;
 import com.google.common.annotations.Beta;
 import com.google.common.base.MoreObjects;
 import java.io.IOException;
@@ -58,18 +58,18 @@ import java.util.Objects;
  * if (!adcCreds instanceof IdTokenProvider) {
  *   // handle error message
  * }
- * 
+ *
  * IdTokenCredentials tokenCredential = IdTokenCredentials.newBuilder()
  *     .setIdTokenProvider(adcCreds)
  *     .setTargetAudience(targetAudience).build();
- * 
+ *
  * // for ServiceAccountCredentials
  * ServiceAccountCredentials saCreds = ServiceAccountCredentials.fromStream(new FileInputStream(credPath));
  * saCreds = (ServiceAccountCredentials) saCreds.createScoped(Arrays.asList("https://www.googleapis.com/auth/iam"));
  * IdTokenCredentials tokenCredential = IdTokenCredentials.newBuilder()
  *     .setIdTokenProvider(saCreds)
  *     .setTargetAudience(targetAudience).build();
- * 
+ *
  * // for ComputeEngineCredentials
  * ComputeEngineCredentials caCreds = ComputeEngineCredentials.create();
  * IdTokenCredentials tokenCredential = IdTokenCredentials.newBuilder()
@@ -77,7 +77,7 @@ import java.util.Objects;
  *     .setTargetAudience(targetAudience)
  *     .setOptions(Arrays.asList(ComputeEngineCredentials.ID_TOKEN_FORMAT_FULL))
  *     .build();
- * 
+ *
  * // for ImpersonatedCredentials
  * ImpersonatedCredentials imCreds = ImpersonatedCredentials.create(saCreds,
  *     "impersonated-account@project.iam.gserviceaccount.com", null,
@@ -110,11 +110,10 @@ public class IdTokenCredentials extends OAuth2Credentials {
   private String targetAudience;
   private List<IdTokenProvider.Option> options;
 
-
   private IdTokenCredentials(Builder builder) {
-    this.idTokenProvider = builder.getIdTokenProvider();
-    this.targetAudience = builder.getTargetAudience();
-    this.options = builder.getOptions();
+    this.idTokenProvider = Preconditions.checkNotNull(builder.getIdTokenProvider());
+    this.targetAudience = Preconditions.checkNotNull(builder.getTargetAudience());
+    this.options = Preconditions.checkNotNull(builder.getOptions());
   }
 
   @Override
@@ -128,7 +127,7 @@ public class IdTokenCredentials extends OAuth2Credentials {
 
   @Override
   public int hashCode() {
-    return Objects.hash(idTokenProvider);
+    return Objects.hash(idTokenProvider, targetAudience);
   }
 
   @Override

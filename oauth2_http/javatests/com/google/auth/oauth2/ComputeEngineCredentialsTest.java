@@ -485,10 +485,11 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
     String targetAudience = "https://foo.bar";
-    IdTokenCredentials tokenCredential = IdTokenCredentials.newBuilder()
-        .setIdTokenProvider(credentials)
-        .setTargetAudience(targetAudience)
-        .build();     
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(credentials)
+            .setTargetAudience(targetAudience)
+            .build();
     tokenCredential.refresh();
     assertEquals(standardIdToken, tokenCredential.getAccessToken().getTokenValue());
     assertEquals(standardIdToken, tokenCredential.getIdToken().getTokenValue());
@@ -504,10 +505,11 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
     String targetAudience = "https://foo.bar";
-    IdTokenCredentials tokenCredential = IdTokenCredentials.newBuilder()
-        .setIdTokenProvider(credentials)
-        .setTargetAudience(targetAudience)
-        .build();     
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(credentials)
+            .setTargetAudience(targetAudience)
+            .build();
     tokenCredential.refresh();
     assertEquals(standardIdToken, tokenCredential.getAccessToken().getTokenValue());
     assertEquals(standardIdToken, tokenCredential.getIdToken().getTokenValue());
@@ -522,11 +524,12 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
     String targetAudience = "https://foo.bar";
-    IdTokenCredentials tokenCredential = IdTokenCredentials.newBuilder()
-        .setIdTokenProvider(credentials)
-        .setTargetAudience(targetAudience)
-        .setOptions(Arrays.asList(IdTokenProvider.Option.FORMAT_FULL))
-        .build();             
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(credentials)
+            .setTargetAudience(targetAudience)
+            .setOptions(Arrays.asList(IdTokenProvider.Option.FORMAT_FULL))
+            .build();
     tokenCredential.refresh();
     Payload p = tokenCredential.getIdToken().getJsonWebSignature().getPayload();
     if (!p.containsKey("google")) {
@@ -544,11 +547,14 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
     String targetAudience = "https://foo.bar";
-    IdTokenCredentials tokenCredential = IdTokenCredentials.newBuilder()
-        .setIdTokenProvider(credentials)
-        .setTargetAudience(targetAudience)
-        .setOptions(Arrays.asList(IdTokenProvider.Option.FORMAT_FULL, IdTokenProvider.Option.LICENSES_TRUE))
-        .build();
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(credentials)
+            .setTargetAudience(targetAudience)
+            .setOptions(
+                Arrays.asList(
+                    IdTokenProvider.Option.FORMAT_FULL, IdTokenProvider.Option.LICENSES_TRUE))
+            .build();
     tokenCredential.refresh();
     Payload p = tokenCredential.getIdToken().getJsonWebSignature().getPayload();
     if (!p.containsKey("google")) {

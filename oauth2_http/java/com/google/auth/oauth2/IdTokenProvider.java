@@ -31,10 +31,12 @@
 
 package com.google.auth.oauth2;
 
+import com.google.common.annotations.Beta;
 import java.io.IOException;
 import java.util.List;
 
-/** Interface for an Google OIDC token Provider. This type represents a google issued OIDC token. */
+/** Interface for an Google OIDC token provider. This type represents a google issued OIDC token. */
+@Beta
 public interface IdTokenProvider {
 
   /**

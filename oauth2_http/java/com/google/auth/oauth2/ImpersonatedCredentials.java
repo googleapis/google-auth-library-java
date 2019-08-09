@@ -280,7 +280,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
   /**
    * Returns an IdToken for the current Credential
    *
-   * @param targetAudience The audience field for the issued ID Token
+   * @param targetAudience the audience field for the issued ID Token
    * @param options List of Credential specific options for for the token. For example, an IDToken
    *     for a ImpersonatedCredentials can return the email address within the token claims if
    *     "ImpersonatedCredentials.INCLUDE_EMAIL" is provided as a list option.<br>

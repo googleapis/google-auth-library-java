@@ -441,7 +441,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   }
 
   /**
-   * Returns a Google Id Token from the metadata server on ComputeEngine.
+   * Returns a Google ID Token from the metadata server on ComputeEngine.
    *
    * @param targetAudience the aud: field the IdToken should include.
    * @param options list of Credential specific options for for the token. Currently unused for
@@ -468,8 +468,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
     request.setParser(new JsonObjectParser(jsonFactory));
-    HttpResponse response;
-    response = request.execute();
+    HttpResponse response = request.execute();
 
     GenericData responseData = response.parseAs(GenericData.class);
     String rawToken = OAuth2Utils.validateString(responseData, "id_token", PARSE_ERROR_PREFIX);
@@ -677,8 +676,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
     try {
       payload.set("target_audience", targetAudience);
 
-      String assertion;      
-      assertion = JsonWebSignature.signUsingRsaSha256(privateKey, jsonFactory, header, payload);
+      String assertion =
+          JsonWebSignature.signUsingRsaSha256(privateKey, jsonFactory, header, payload);
       return assertion;
     } catch (GeneralSecurityException e) {
       throw new IOException(

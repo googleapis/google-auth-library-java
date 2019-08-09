@@ -31,19 +31,16 @@
 
 package com.google.auth.oauth2;
 
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.webtoken.JsonWebSignature;
+import com.google.common.annotations.Beta;
+import com.google.common.base.MoreObjects;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
 
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.webtoken.JsonWebSignature;
-import com.google.common.annotations.Beta;
-import com.google.common.base.MoreObjects;
-
-/**
- * Represents a temporary IdToken and its JsonWebSignature object
- */
+/** Represents a temporary IdToken and its JsonWebSignature object */
 @Beta
 public class IdToken extends AccessToken implements Serializable {
 
@@ -63,10 +60,10 @@ public class IdToken extends AccessToken implements Serializable {
   public static IdToken create(String tokenValue) throws IOException {
     return create(tokenValue, OAuth2Utils.JSON_FACTORY);
   }
-  
+
   public static IdToken create(String tokenValue, JsonFactory jsonFactory) throws IOException {
     return new IdToken(tokenValue, JsonWebSignature.parse(jsonFactory, tokenValue));
-  }  
+  }
 
   /**
    * The JsonWebSignature as object
@@ -84,8 +81,10 @@ public class IdToken extends AccessToken implements Serializable {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this).add("tokenValue", super.getTokenValue())
-        .add("JsonWebSignature", jsonWebSignature).toString();
+    return MoreObjects.toStringHelper(this)
+        .add("tokenValue", super.getTokenValue())
+        .add("JsonWebSignature", jsonWebSignature)
+        .toString();
   }
 
   @Override
