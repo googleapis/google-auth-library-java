@@ -68,6 +68,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
 
+  // Id Token which includes basic default claims
   public static final String STANDARD_ID_TOKEN =
       "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRmMzc1ODkwOGI3OTIyO"
           + "TNhZDk3N2EwYjk5MWQ5OGE3N2Y0ZWVlY2QiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJodHRwczovL2Zvby5iYXIiL"
@@ -75,6 +76,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
           + "aXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwic3ViIjoiMTAyMTAxNTUwODM0MjAwNzA4NTY4In0"
           + ".redacted";
 
+  // Id Token which includes GCE extended claims
   public static final String FULL_ID_TOKEN =
       "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRmMzc1ODkwOGI3OTIyOTNh"
           + "ZDk3N2EwYjk5MWQ5OGE3N2Y0ZWVlY2QiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJodHRwczovL2Zvby5iYXIiLCJhe"
@@ -86,6 +88,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
           + "XMtY2VudHJhbDEtYSJ9fSwiaWF0IjoxNTY0NTE1ODk2LCJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb"
           + "20iLCJzdWIiOiIxMTIxNzkwNjI3MjAzOTEzMDU4ODUifQ.redacted";
 
+  // Id Token which includes GCE extended claims and any VM License data (if applicable)
   public static final String FULL_ID_TOKEN_WITH_LICENSE =
       "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRmMzc1ODkwOG"
           + "I3OTIyOTNhZDk3N2EwYjk5MWQ5OGE3N2Y0ZWVlY2QiLCJ0eXAiOiJKV1QifQ.ew0KICAiYXVkIjogImh0dHBzOi8"

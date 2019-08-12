@@ -64,7 +64,7 @@ public class IdToken extends AccessToken implements Serializable {
    *
    * @param tokenValue String representation of the Id token.
    * @return returns com.google.auth.oauth2.IdToken
-   */  
+   */
   public static IdToken create(String tokenValue) throws IOException {
     return create(tokenValue, OAuth2Utils.JSON_FACTORY);
   }
@@ -75,7 +75,7 @@ public class IdToken extends AccessToken implements Serializable {
    * @param jsonFactory JsonFactory to use for parsing the provided token.
    * @param tokenValue String representation of the Id token.
    * @return returns com.google.auth.oauth2.IdToken
-   */    
+   */
   public static IdToken create(String tokenValue, JsonFactory jsonFactory) throws IOException {
     return new IdToken(tokenValue, JsonWebSignature.parse(jsonFactory, tokenValue));
   }
@@ -119,7 +119,6 @@ public class IdToken extends AccessToken implements Serializable {
   }
 
   private void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
-    ois.defaultReadObject();
     String signature = (String) ois.readObject();
     this.jsonWebSignature = JsonWebSignature.parse(OAuth2Utils.JSON_FACTORY, signature);
   }

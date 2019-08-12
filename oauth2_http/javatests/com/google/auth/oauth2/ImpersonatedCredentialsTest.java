@@ -86,6 +86,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
           + "ADj3e1YhMVdjJW5jqwlD/VNddGjgzyunmiZg0uOXsHXbytYmsA545S8KRQFaJKFXYYFo2kOjqOiC1T2cAzMDjCQ"
           + "==\n-----END PRIVATE KEY-----\n";
 
+  // Id Token provided by the default IAM API that does not include the "email" claim
   public static final String STANDARD_ID_TOKEN =
       "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRmMzc1ODkwOGI3OTIy"
           + "OTNhZDk3N2EwYjk5MWQ5OGE3N2Y0ZWVlY2QiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJodHRwczovL2Zvby5iYXIi"
@@ -93,6 +94,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
           + "iaXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwic3ViIjoiMTAyMTAxNTUwODM0MjAwNzA4NTY4In"
           + "0.redacted";
 
+  // Id Token provided by the default IAM API that includes the "email" claim
   public static final String TOKEN_WITH_EMAIL =
       "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRmMzc1ODkwOGI3OTIy"
           + "OTNhZDk3N2EwYjk5MWQ5OGE3N2Y0ZWVlY2QiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJodHRwczovL2Zvby5iYXIi"
