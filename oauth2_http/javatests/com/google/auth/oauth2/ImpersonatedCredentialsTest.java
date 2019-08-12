@@ -86,14 +86,14 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
           + "ADj3e1YhMVdjJW5jqwlD/VNddGjgzyunmiZg0uOXsHXbytYmsA545S8KRQFaJKFXYYFo2kOjqOiC1T2cAzMDjCQ"
           + "==\n-----END PRIVATE KEY-----\n";
 
-  public static final String standardIdToken =
+  public static final String STANDARD_ID_TOKEN =
       "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRmMzc1ODkwOGI3OTIy"
           + "OTNhZDk3N2EwYjk5MWQ5OGE3N2Y0ZWVlY2QiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJodHRwczovL2Zvby5iYXIi"
           + "LCJhenAiOiIxMDIxMDE1NTA4MzQyMDA3MDg1NjgiLCJleHAiOjE1NjQ1MzI5NzIsImlhdCI6MTU2NDUyOTM3Miw"
           + "iaXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwic3ViIjoiMTAyMTAxNTUwODM0MjAwNzA4NTY4In"
           + "0.redacted";
 
-  public static final String tokenWithEmail =
+  public static final String TOKEN_WITH_EMAIL =
       "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRmMzc1ODkwOGI3OTIy"
           + "OTNhZDk3N2EwYjk5MWQ5OGE3N2Y0ZWVlY2QiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJodHRwczovL2Zvby5iYXIi"
           + "LCJhenAiOiIxMDIxMDE1NTA4MzQyMDA3MDg1NjgiLCJlbWFpbCI6ImltcGVyc29uYXRlZC1hY2NvdW50QGZhYmx"
@@ -505,7 +505,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             VALID_LIFETIME,
             mtransportFactory);
 
-    mtransportFactory.transport.setIdToken(standardIdToken);
+    mtransportFactory.transport.setIdToken(STANDARD_ID_TOKEN);
 
     String targetAudience = "https://foo.bar";
     IdTokenCredentials tokenCredential =
@@ -514,8 +514,8 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             .setTargetAudience(targetAudience)
             .build();
     tokenCredential.refresh();
-    assertEquals(standardIdToken, tokenCredential.getAccessToken().getTokenValue());
-    assertEquals(standardIdToken, tokenCredential.getIdToken().getTokenValue());
+    assertEquals(STANDARD_ID_TOKEN, tokenCredential.getAccessToken().getTokenValue());
+    assertEquals(STANDARD_ID_TOKEN, tokenCredential.getIdToken().getTokenValue());
     assertEquals(
         targetAudience,
         (String) tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
@@ -539,7 +539,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             VALID_LIFETIME,
             mtransportFactory);
 
-    mtransportFactory.transport.setIdToken(tokenWithEmail);
+    mtransportFactory.transport.setIdToken(TOKEN_WITH_EMAIL);
 
     String targetAudience = "https://foo.bar";
     IdTokenCredentials tokenCredential =
@@ -549,7 +549,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             .setOptions(Arrays.asList(IdTokenProvider.Option.INCLUDE_EMAIL))
             .build();
     tokenCredential.refresh();
-    assertEquals(tokenWithEmail, tokenCredential.getAccessToken().getTokenValue());
+    assertEquals(TOKEN_WITH_EMAIL, tokenCredential.getAccessToken().getTokenValue());
     Payload p = tokenCredential.getIdToken().getJsonWebSignature().getPayload();
     assertTrue(p.containsKey("email"));
   }

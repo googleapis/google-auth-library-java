@@ -68,14 +68,14 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
 
-  public static final String standardIdToken =
+  public static final String STANDARD_ID_TOKEN =
       "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRmMzc1ODkwOGI3OTIyO"
           + "TNhZDk3N2EwYjk5MWQ5OGE3N2Y0ZWVlY2QiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJodHRwczovL2Zvby5iYXIiL"
           + "CJhenAiOiIxMDIxMDE1NTA4MzQyMDA3MDg1NjgiLCJleHAiOjE1NjQ0NzUwNTEsImlhdCI6MTU2NDQ3MTQ1MSwi"
           + "aXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwic3ViIjoiMTAyMTAxNTUwODM0MjAwNzA4NTY4In0"
           + ".redacted";
 
-  public static final String fullIdToken =
+  public static final String FULL_ID_TOKEN =
       "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRmMzc1ODkwOGI3OTIyOTNh"
           + "ZDk3N2EwYjk5MWQ5OGE3N2Y0ZWVlY2QiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJodHRwczovL2Zvby5iYXIiLCJhe"
           + "nAiOiIxMTIxNzkwNjI3MjAzOTEzMDU4ODUiLCJlbWFpbCI6IjEwNzEyODQxODQ0MzYtY29tcHV0ZUBkZXZlbG9wZ"
@@ -86,7 +86,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
           + "XMtY2VudHJhbDEtYSJ9fSwiaWF0IjoxNTY0NTE1ODk2LCJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb"
           + "20iLCJzdWIiOiIxMTIxNzkwNjI3MjAzOTEzMDU4ODUifQ.redacted";
 
-  public static final String fullIdTokenWithLicense =
+  public static final String FULL_ID_TOKEN_WITH_LICENSE =
       "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRmMzc1ODkwOG"
           + "I3OTIyOTNhZDk3N2EwYjk5MWQ5OGE3N2Y0ZWVlY2QiLCJ0eXAiOiJKV1QifQ.ew0KICAiYXVkIjogImh0dHBzOi8"
           + "vZm9vLmJhciIsDQogICJhenAiOiAiMTEyMTc5MDYyNzIwMzkxMzA1ODg1IiwNCiAgImVtYWlsIjogIjEyMzQ1Ni1"
@@ -480,7 +480,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   @Test
   public void idTokenWithAudience_sameAs() throws IOException {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-    transportFactory.transport.setIdToken(standardIdToken);
+    transportFactory.transport.setIdToken(STANDARD_ID_TOKEN);
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
@@ -491,8 +491,8 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
             .setTargetAudience(targetAudience)
             .build();
     tokenCredential.refresh();
-    assertEquals(standardIdToken, tokenCredential.getAccessToken().getTokenValue());
-    assertEquals(standardIdToken, tokenCredential.getIdToken().getTokenValue());
+    assertEquals(STANDARD_ID_TOKEN, tokenCredential.getAccessToken().getTokenValue());
+    assertEquals(STANDARD_ID_TOKEN, tokenCredential.getIdToken().getTokenValue());
     assertEquals(
         targetAudience,
         (String) tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
@@ -511,8 +511,8 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
             .setTargetAudience(targetAudience)
             .build();
     tokenCredential.refresh();
-    assertEquals(standardIdToken, tokenCredential.getAccessToken().getTokenValue());
-    assertEquals(standardIdToken, tokenCredential.getIdToken().getTokenValue());
+    assertEquals(STANDARD_ID_TOKEN, tokenCredential.getAccessToken().getTokenValue());
+    assertEquals(STANDARD_ID_TOKEN, tokenCredential.getIdToken().getTokenValue());
     assertNull(tokenCredential.getIdToken().getJsonWebSignature().getPayload().get("google"));
   }
 

@@ -102,7 +102,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
   private static final HttpTransportFactory DUMMY_TRANSPORT_FACTORY =
       new MockTokenServerTransportFactory();
-  public static final String defaultIDToken =
+  public static final String DEFAULT_ID_TOKEN =
       "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRmMzc1ODkwOGI3OTIyO"
           + "TNhZDk3N2EwYjk5MWQ5OGE3N2Y0ZWVlY2QiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJodHRwczovL2Zvby5iYXIiL"
           + "CJhenAiOiIxMDIxMDE1NTA4MzQyMDA3MDg1NjgiLCJleHAiOjE1NjQ0NzUwNTEsImlhdCI6MTU2NDQ3MTQ1MSwi"
@@ -608,8 +608,8 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             .setTargetAudience(targetAudience)
             .build();
     tokenCredential.refresh();
-    assertEquals(defaultIDToken, tokenCredential.getAccessToken().getTokenValue());
-    assertEquals(defaultIDToken, tokenCredential.getIdToken().getTokenValue());
+    assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getAccessToken().getTokenValue());
+    assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getIdToken().getTokenValue());
     assertEquals(
         targetAudience,
         (String) tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());

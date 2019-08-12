@@ -186,7 +186,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
                 @Override
                 public LowLevelHttpResponse execute() throws IOException {
                   return new MockLowLevelHttpResponse()
-                      .setContent(ComputeEngineCredentialsTest.fullIdTokenWithLicense);
+                      .setContent(ComputeEngineCredentialsTest.FULL_ID_TOKEN_WITH_LICENSE);
                 }
               };
             }
@@ -196,7 +196,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
             @Override
             public LowLevelHttpResponse execute() throws IOException {
               return new MockLowLevelHttpResponse()
-                  .setContent(ComputeEngineCredentialsTest.fullIdToken);
+                  .setContent(ComputeEngineCredentialsTest.FULL_ID_TOKEN);
             }
           };
         }
@@ -206,7 +206,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
         @Override
         public LowLevelHttpResponse execute() throws IOException {
           return new MockLowLevelHttpResponse()
-              .setContent(ComputeEngineCredentialsTest.standardIdToken);
+              .setContent(ComputeEngineCredentialsTest.STANDARD_ID_TOKEN);
         }
       };
     }

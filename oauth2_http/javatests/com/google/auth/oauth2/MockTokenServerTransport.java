@@ -209,7 +209,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
               responseContents.put("refresh_token", refreshToken);
             }
           } else {
-            responseContents.put("id_token", ServiceAccountCredentialsTest.defaultIDToken);
+            responseContents.put("id_token", ServiceAccountCredentialsTest.DEFAULT_ID_TOKEN);
           }
           String refreshText = responseContents.toPrettyString();
 

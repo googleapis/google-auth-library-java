@@ -56,6 +56,7 @@ import com.google.api.client.util.SecurityUtils;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.Beta;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -653,6 +654,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     return assertion;
   }
 
+  @VisibleForTesting
   String createAssertionForIdToken(
       JsonFactory jsonFactory, long currentTime, String audience, String targetAudience)
       throws IOException {
