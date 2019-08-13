@@ -92,7 +92,7 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
     this.signedBlob = signedBlob;
   }
 
-  public void setSigningErrorResponseCodeAndMessage(int responseCode, String errorMessage) {
+  public void setErrorResponseCodeAndMessage(int responseCode, String errorMessage) {
     this.responseCode = responseCode;
     this.errorMessage = errorMessage;
   }
@@ -187,6 +187,14 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
           new MockLowLevelHttpRequest(url) {
             @Override
             public LowLevelHttpResponse execute() throws IOException {
+
+              if (responseCode != HttpStatusCodes.STATUS_CODE_OK) {
+                return new MockLowLevelHttpResponse()
+                    .setStatusCode(responseCode)
+                    .setContentType(Json.MEDIA_TYPE)
+                    .setContent(errorMessage);
+              }
+
               GenericJson refreshContents = new GenericJson();
               refreshContents.setFactory(OAuth2Utils.JSON_FACTORY);
               refreshContents.put("token", idToken);
