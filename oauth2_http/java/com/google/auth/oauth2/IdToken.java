@@ -51,7 +51,7 @@ public class IdToken extends AccessToken implements Serializable {
   private transient JsonWebSignature jsonWebSignature;
 
   /**
-   * @param tokenValue String representation of the Id token.
+   * @param tokenValue String representation of the ID token.
    * @param jsonWebSignature JsonWebSignature as object
    */
   private IdToken(String tokenValue, JsonWebSignature jsonWebSignature) {
@@ -62,7 +62,7 @@ public class IdToken extends AccessToken implements Serializable {
   /**
    * Creates an IdToken given the encoded Json Web Signature.
    *
-   * @param tokenValue String representation of the Id token.
+   * @param tokenValue String representation of the ID token.
    * @return returns com.google.auth.oauth2.IdToken
    */
   public static IdToken create(String tokenValue) throws IOException {
@@ -73,7 +73,7 @@ public class IdToken extends AccessToken implements Serializable {
    * Creates an IdToken given the encoded Json Web Signature and JSON Factory
    *
    * @param jsonFactory JsonFactory to use for parsing the provided token.
-   * @param tokenValue String representation of the Id token.
+   * @param tokenValue String representation of the ID token.
    * @return returns com.google.auth.oauth2.IdToken
    */
   public static IdToken create(String tokenValue, JsonFactory jsonFactory) throws IOException {
