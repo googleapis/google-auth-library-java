@@ -33,7 +33,6 @@ package com.google.auth.oauth2;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.Serializable;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -66,13 +65,13 @@ public abstract class JwtClaims implements Serializable {
 
   /**
    * Returns additional claims for this object; <b>do not mutate</b> the returned map.
+   *
    * @return additional claims
    */
   abstract Map<String, String> getAdditionalClaims();
 
   static Builder newBuilder() {
-    return new AutoValue_JwtClaims.Builder()
-        .setAdditionalClaims(ImmutableMap.<String, String>of());
+    return new AutoValue_JwtClaims.Builder().setAdditionalClaims(ImmutableMap.<String, String>of());
   }
 
   /**

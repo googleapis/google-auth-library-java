@@ -239,7 +239,13 @@ public class JwtCredentialsTest extends BaseSerializationTest {
             .build();
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata();
-    verifyJwtAccess(metadata, "some-audience", "some-issuer", "some-subject", PRIVATE_KEY_ID, Collections.singletonMap("foo", "bar"));
+    verifyJwtAccess(
+        metadata,
+        "some-audience",
+        "some-issuer",
+        "some-subject",
+        PRIVATE_KEY_ID,
+        Collections.singletonMap("foo", "bar"));
   }
 
   private void verifyJwtAccess(
@@ -249,7 +255,13 @@ public class JwtCredentialsTest extends BaseSerializationTest {
       String expectedSubject,
       String expectedKeyId)
       throws IOException {
-    verifyJwtAccess(metadata, expectedAudience, expectedIssuer, expectedSubject, expectedKeyId, Collections.<String, String>emptyMap());
+    verifyJwtAccess(
+        metadata,
+        expectedAudience,
+        expectedIssuer,
+        expectedSubject,
+        expectedKeyId,
+        Collections.<String, String>emptyMap());
   }
 
   private void verifyJwtAccess(

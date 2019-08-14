@@ -31,12 +31,11 @@
 
 package com.google.auth.oauth2;
 
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.util.Collections;
 import java.util.Map;
-
-import static org.junit.Assert.*;
+import org.junit.Test;
 
 public class JwtClaimsTest {
 
@@ -117,11 +116,12 @@ public class JwtClaimsTest {
 
   @Test
   public void claims_merge_additionalClaims() {
-    JwtClaims claims1 = JwtClaims.newBuilder()
-        .setAdditionalClaims(Collections.singletonMap("foo", "bar"))
-        .build();
-    JwtClaims claims2 = JwtClaims.newBuilder()
-        .setAdditionalClaims(Collections.singletonMap("asdf", "qwer")).build();
+    JwtClaims claims1 =
+        JwtClaims.newBuilder().setAdditionalClaims(Collections.singletonMap("foo", "bar")).build();
+    JwtClaims claims2 =
+        JwtClaims.newBuilder()
+            .setAdditionalClaims(Collections.singletonMap("asdf", "qwer"))
+            .build();
     JwtClaims merged = claims1.merge(claims2);
 
     assertNull(merged.getAudience());
