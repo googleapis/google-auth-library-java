@@ -89,7 +89,7 @@ public abstract class JwtClaims implements Serializable {
    * ServiceAccountJwtAccessCredentials#jwtWithClaims(JwtClaims)} or {@link
    * JwtCredentials#jwtWithClaims(JwtClaims)}.
    *
-   * @return
+   * @return whether or not all required fields have been set
    */
   public boolean isComplete() {
     return getAudience() != null && getIssuer() != null && getSubject() != null;

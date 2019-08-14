@@ -123,6 +123,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
    * @param lifetime Number of seconds the delegated credential should be valid for (up to 3600).
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *     tokens.
+   * @return new credentials
    */
   public static ImpersonatedCredentials create(
       GoogleCredentials sourceCredentials,
@@ -153,6 +154,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
    *     targetPrincipal.
    * @param scopes Scopes to request during the authorization grant.
    * @param lifetime Number of seconds the delegated credential should be valid for (up to 3600).
+   * @return new credentials
    */
   public static ImpersonatedCredentials create(
       GoogleCredentials sourceCredentials,
