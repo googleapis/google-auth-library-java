@@ -114,6 +114,9 @@ public class JwtCredentials extends Credentials implements JwtProvider {
     payload.setIssuedAtTimeSeconds(currentTime / 1000);
     payload.setExpirationTimeSeconds(currentTime / 1000 + lifeSpanSeconds);
 
+    // Add all additional claims
+    payload.putAll(jwtClaims.getAdditionalClaims());
+
     synchronized (lock) {
       this.expiryInSeconds = payload.getExpirationTimeSeconds();
 

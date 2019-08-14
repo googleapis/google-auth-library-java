@@ -33,8 +33,10 @@ package com.google.auth.oauth2;
 
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import java.util.Collections;
+import java.util.Map;
+
+import static org.junit.Assert.*;
 
 public class JwtClaimsTest {
 
@@ -84,6 +86,8 @@ public class JwtClaimsTest {
     assertNull(merged.getAudience());
     assertNull(merged.getIssuer());
     assertNull(merged.getSubject());
+    assertNotNull(merged.getAdditionalClaims());
+    assertTrue(merged.getAdditionalClaims().isEmpty());
   }
 
   @Test
@@ -102,5 +106,31 @@ public class JwtClaimsTest {
             .build();
 
     assertEquals(claims1, claims2);
+  }
+
+  @Test
+  public void claims_additionalClaims_defaults() {
+    JwtClaims claims = JwtClaims.newBuilder().build();
+    assertNotNull(claims.getAdditionalClaims());
+    assertTrue(claims.getAdditionalClaims().isEmpty());
+  }
+
+  @Test
+  public void claims_merge_additionalClaims() {
+    JwtClaims claims1 = JwtClaims.newBuilder()
+        .setAdditionalClaims(Collections.singletonMap("foo", "bar"))
+        .build();
+    JwtClaims claims2 = JwtClaims.newBuilder()
+        .setAdditionalClaims(Collections.singletonMap("asdf", "qwer")).build();
+    JwtClaims merged = claims1.merge(claims2);
+
+    assertNull(merged.getAudience());
+    assertNull(merged.getIssuer());
+    assertNull(merged.getSubject());
+    Map<String, String> mergedAdditionalClaims = merged.getAdditionalClaims();
+    assertNotNull(mergedAdditionalClaims);
+    assertEquals(2, mergedAdditionalClaims.size());
+    assertEquals("bar", mergedAdditionalClaims.get("foo"));
+    assertEquals("qwer", mergedAdditionalClaims.get("asdf"));
   }
 }

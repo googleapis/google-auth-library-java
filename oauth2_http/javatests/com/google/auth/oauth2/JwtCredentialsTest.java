@@ -44,6 +44,7 @@ import com.google.api.client.util.Clock;
 import com.google.auth.http.AuthHttpConstants;
 import java.io.IOException;
 import java.security.PrivateKey;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
@@ -221,12 +222,43 @@ public class JwtCredentialsTest extends BaseSerializationTest {
     verifyJwtAccess(metadata, "some-audience", "some-issuer", "some-subject", PRIVATE_KEY_ID);
   }
 
+  @Test
+  public void getRequestMetadata_withAdditionalClaims_hasJwtAccess() throws IOException {
+    JwtClaims claims =
+        JwtClaims.newBuilder()
+            .setAudience("some-audience")
+            .setIssuer("some-issuer")
+            .setSubject("some-subject")
+            .setAdditionalClaims(Collections.singletonMap("foo", "bar"))
+            .build();
+    JwtCredentials credentials =
+        JwtCredentials.newBuilder()
+            .setJwtClaims(claims)
+            .setPrivateKey(getPrivateKey())
+            .setPrivateKeyId(PRIVATE_KEY_ID)
+            .build();
+
+    Map<String, List<String>> metadata = credentials.getRequestMetadata();
+    verifyJwtAccess(metadata, "some-audience", "some-issuer", "some-subject", PRIVATE_KEY_ID, Collections.singletonMap("foo", "bar"));
+  }
+
   private void verifyJwtAccess(
       Map<String, List<String>> metadata,
       String expectedAudience,
       String expectedIssuer,
       String expectedSubject,
       String expectedKeyId)
+      throws IOException {
+    verifyJwtAccess(metadata, expectedAudience, expectedIssuer, expectedSubject, expectedKeyId, Collections.<String, String>emptyMap());
+  }
+
+  private void verifyJwtAccess(
+      Map<String, List<String>> metadata,
+      String expectedAudience,
+      String expectedIssuer,
+      String expectedSubject,
+      String expectedKeyId,
+      Map<String, String> expectedAdditionalClaims)
       throws IOException {
     assertNotNull(metadata);
     List<String> authorizations = metadata.get(AuthHttpConstants.AUTHORIZATION);
@@ -244,5 +276,9 @@ public class JwtCredentialsTest extends BaseSerializationTest {
     assertEquals(expectedSubject, signature.getPayload().getSubject());
     assertEquals(expectedAudience, signature.getPayload().getAudience());
     assertEquals(expectedKeyId, signature.getHeader().getKeyId());
+
+    for (Map.Entry<String, String> entry : expectedAdditionalClaims.entrySet()) {
+      assertEquals(entry.getValue(), signature.getPayload().get(entry.getKey()));
+    }
   }
 }

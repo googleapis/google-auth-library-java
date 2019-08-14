@@ -32,7 +32,10 @@
 package com.google.auth.oauth2;
 
 import com.google.auto.value.AutoValue;
+import com.google.common.collect.ImmutableMap;
+
 import java.io.Serializable;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
@@ -61,8 +64,15 @@ public abstract class JwtClaims implements Serializable {
   @Nullable
   abstract String getSubject();
 
+  /**
+   * Returns additional claims for this object; <b>do not mutate</b> the returned map.
+   * @return additional claims
+   */
+  abstract Map<String, String> getAdditionalClaims();
+
   static Builder newBuilder() {
-    return new AutoValue_JwtClaims.Builder();
+    return new AutoValue_JwtClaims.Builder()
+        .setAdditionalClaims(ImmutableMap.<String, String>of());
   }
 
   /**
@@ -74,10 +84,15 @@ public abstract class JwtClaims implements Serializable {
    * @return new claims
    */
   public JwtClaims merge(JwtClaims other) {
+    ImmutableMap.Builder<String, String> newClaimsBuilder = ImmutableMap.builder();
+    newClaimsBuilder.putAll(getAdditionalClaims());
+    newClaimsBuilder.putAll(other.getAdditionalClaims());
+
     return newBuilder()
         .setAudience(other.getAudience() == null ? getAudience() : other.getAudience())
         .setIssuer(other.getIssuer() == null ? getIssuer() : other.getIssuer())
         .setSubject(other.getSubject() == null ? getSubject() : other.getSubject())
+        .setAdditionalClaims(newClaimsBuilder.build())
         .build();
   }
 
@@ -102,6 +117,8 @@ public abstract class JwtClaims implements Serializable {
     abstract Builder setIssuer(String issuer);
 
     abstract Builder setSubject(String subject);
+
+    abstract Builder setAdditionalClaims(Map<String, String> additionalClaims);
 
     abstract JwtClaims build();
   }
