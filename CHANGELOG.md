@@ -5,17 +5,17 @@
 
 ### Bug Fixes
 
-* Add metadata-flavor header to metadata server ping for compute engine ([#283](https://github.com/google/google-auth-library-java/pull/283))
+* Add metadata-flavor header to metadata server ping for compute engine ([#283](https://github.com/googleapis/google-auth-library-java/pull/283))
 
 
 ### Dependencies
 
-* Import http client bom for dependency management ([#268](https://github.com/google/google-auth-library-java/pull/268))
+* Import http client bom for dependency management ([#268](https://github.com/googleapis/google-auth-library-java/pull/268))
 
 
 ### Documentation
 
-* README section for interop with google-http-client ([#275](https://github.com/google/google-auth-library-java/pull/275))
+* README section for interop with google-http-client ([#275](https://github.com/googleapis/google-auth-library-java/pull/275))
 
 
 ## [0.16.1](https://www.github.com/googleapis/google-auth-library-java/compare/v0.16.0...v0.16.1) (2019-06-06)
@@ -23,7 +23,7 @@
 
 ### Dependencies
 
-* Update dependency com.google.http-client:google-http-client to v1.30.1 ([#265](https://github.com/google/google-auth-library-java/pull/265))
+* Update dependency com.google.http-client:google-http-client to v1.30.1 ([#265](https://github.com/googleapis/google-auth-library-java/pull/265))
 
 
 ## [0.16.0](https://www.github.com/googleapis/google-auth-library-java/compare/v0.15.0...v0.16.0) (2019-06-04)
@@ -31,24 +31,24 @@
 
 ### Features
 
-* Add google-auth-library-bom artifact ([#256](https://github.com/google/google-auth-library-java/pull/256))
+* Add google-auth-library-bom artifact ([#256](https://github.com/googleapis/google-auth-library-java/pull/256))
 
 
 ### Dependencies
 
-* Update dependency com.google.http-client:google-http-client to v1.30.0 ([#261](https://github.com/google/google-auth-library-java/pull/261))
-* Update dependency com.google.http-client:google-http-client to v1.29.2 ([#259](https://github.com/google/google-auth-library-java/pull/259))
-* Update dependency org.sonatype.plugins:nexus-staging-maven-plugin to v1.6.8 ([#257](https://github.com/google/google-auth-library-java/pull/257))
-* Update to latest app engine SDK version ([#258](https://github.com/google/google-auth-library-java/pull/258))
-* Update dependency org.apache.maven.plugins:maven-source-plugin to v3.1.0 ([#254](https://github.com/google/google-auth-library-java/pull/254))
-* Update dependency org.jacoco:jacoco-maven-plugin to v0.8.4 ([#255](https://github.com/google/google-auth-library-java/pull/255))
-* Update dependency org.apache.maven.plugins:maven-jar-plugin to v3.1.2 ([#252](https://github.com/google/google-auth-library-java/pull/252))
-* Update dependency org.apache.maven.plugins:maven-source-plugin to v2.4 ([#253](https://github.com/google/google-auth-library-java/pull/253))
+* Update dependency com.google.http-client:google-http-client to v1.30.0 ([#261](https://github.com/googleapis/google-auth-library-java/pull/261))
+* Update dependency com.google.http-client:google-http-client to v1.29.2 ([#259](https://github.com/googleapis/google-auth-library-java/pull/259))
+* Update dependency org.sonatype.plugins:nexus-staging-maven-plugin to v1.6.8 ([#257](https://github.com/googleapis/google-auth-library-java/pull/257))
+* Update to latest app engine SDK version ([#258](https://github.com/googleapis/google-auth-library-java/pull/258))
+* Update dependency org.apache.maven.plugins:maven-source-plugin to v3.1.0 ([#254](https://github.com/googleapis/google-auth-library-java/pull/254))
+* Update dependency org.jacoco:jacoco-maven-plugin to v0.8.4 ([#255](https://github.com/googleapis/google-auth-library-java/pull/255))
+* Update dependency org.apache.maven.plugins:maven-jar-plugin to v3.1.2 ([#252](https://github.com/googleapis/google-auth-library-java/pull/252))
+* Update dependency org.apache.maven.plugins:maven-source-plugin to v2.4 ([#253](https://github.com/googleapis/google-auth-library-java/pull/253))
 
 
 ### Documentation
 
-* Javadoc publish kokoro job uses docpublisher ([#243](https://github.com/google/google-auth-library-java/pull/243))
+* Javadoc publish kokoro job uses docpublisher ([#243](https://github.com/googleapis/google-auth-library-java/pull/243))
 
 
 ## [0.15.0](https://www.github.com/googleapis/google-auth-library-java/compare/v0.14.0...v0.15.0) (2019-03-27)
@@ -85,18 +85,18 @@
 
 ### Bug Fixes
 
-* Use OutputStream directly instead of PrintWriter ([#220](https://github.com/google/google-auth-library-java/pull/220))
-* Improve log output when detecting GCE ([#214](https://github.com/google/google-auth-library-java/pull/214))
+* Use OutputStream directly instead of PrintWriter ([#220](https://github.com/googleapis/google-auth-library-java/pull/220))
+* Improve log output when detecting GCE ([#214](https://github.com/googleapis/google-auth-library-java/pull/214))
 
 
 ### Features
 
-* Overload GoogleCredentials.createScoped with variadic arguments ([#218](https://github.com/google/google-auth-library-java/pull/218))
+* Overload GoogleCredentials.createScoped with variadic arguments ([#218](https://github.com/googleapis/google-auth-library-java/pull/218))
 
 
 ### Dependencies
 
-* Update google-http-client version, guava, and maven surefire plugin ([#221](https://github.com/google/google-auth-library-java/pull/221))
+* Update google-http-client version, guava, and maven surefire plugin ([#221](https://github.com/googleapis/google-auth-library-java/pull/221))
 
 
 ## [0.12.0](https://www.github.com/googleapis/google-auth-library-java/compare/v0.11.0...v0.12.0) (2018-12-19)
@@ -104,26 +104,26 @@
 
 ### Bug Fixes
 
-* Show error message in case of problems with getting access token ([#206](https://github.com/google/google-auth-library-java/pull/206))
-* Add note about `NO_GCE_CHECK` to metadata 404 error message ([#205](https://github.com/google/google-auth-library-java/pull/205))
+* Show error message in case of problems with getting access token ([#206](https://github.com/googleapis/google-auth-library-java/pull/206))
+* Add note about `NO_GCE_CHECK` to metadata 404 error message ([#205](https://github.com/googleapis/google-auth-library-java/pull/205))
 
 
 ### Features
 
-* Add ImpersonatedCredentials ([#211](https://github.com/google/google-auth-library-java/pull/211))
-* Add option to suppress end user credentials warning. ([#207](https://github.com/google/google-auth-library-java/pull/207))
+* Add ImpersonatedCredentials ([#211](https://github.com/googleapis/google-auth-library-java/pull/211))
+* Add option to suppress end user credentials warning. ([#207](https://github.com/googleapis/google-auth-library-java/pull/207))
 
 
 ### Dependencies
 
-* Update google-http-java-client dependency to 1.27.0 ([#208](https://github.com/google/google-auth-library-java/pull/208))
+* Update google-http-java-client dependency to 1.27.0 ([#208](https://github.com/googleapis/google-auth-library-java/pull/208))
 
 
 ### Documentation
 
-* README grammar fix ([#192](https://github.com/google/google-auth-library-java/pull/192))
-* Add unstable badge to README ([#184](https://github.com/google/google-auth-library-java/pull/184))
-* Update README with instructions on installing the App Engine SDK and running the tests ([#209](https://github.com/google/google-auth-library-java/pull/209))
+* README grammar fix ([#192](https://github.com/googleapis/google-auth-library-java/pull/192))
+* Add unstable badge to README ([#184](https://github.com/googleapis/google-auth-library-java/pull/184))
+* Update README with instructions on installing the App Engine SDK and running the tests ([#209](https://github.com/googleapis/google-auth-library-java/pull/209))
 
 
 ## [0.11.0](https://www.github.com/googleapis/google-auth-library-java/compare/v0.10.0...v0.11.0) (2018-08-23)
