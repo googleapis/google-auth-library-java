@@ -55,6 +55,8 @@ import com.google.api.client.util.Preconditions;
 import com.google.api.client.util.SecurityUtils;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.common.annotations.Beta;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -73,8 +75,9 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.sql.Date;
 import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -84,7 +87,7 @@ import java.util.Objects;
  * <p>By default uses a JSON Web Token (JWT) to fetch access tokens.
  */
 public class ServiceAccountCredentials extends GoogleCredentials
-    implements JwtProvider, ServiceAccountSigner {
+    implements ServiceAccountSigner, IdTokenProvider, JwtProvider {
 
   private static final long serialVersionUID = 7807543542681217978L;
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
@@ -438,6 +441,42 @@ public class ServiceAccountCredentials extends GoogleCredentials
     return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
   }
 
+  /**
+   * Returns a Google ID Token from the metadata server on ComputeEngine.
+   *
+   * @param targetAudience the aud: field the IdToken should include.
+   * @param options list of Credential specific options for for the token. Currently unused for
+   *     ServiceAccountCredentials.
+   * @throws IOException if the attempt to get an IdToken failed
+   * @return IdToken object which includes the raw id_token, expiration and audience
+   */
+  @Beta
+  @Override
+  public IdToken idTokenWithAudience(String targetAudience, List<IdTokenProvider.Option> options)
+      throws IOException {
+
+    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
+    long currentTime = clock.currentTimeMillis();
+    String assertion =
+        createAssertionForIdToken(
+            jsonFactory, currentTime, tokenServerUri.toString(), targetAudience);
+
+    GenericData tokenRequest = new GenericData();
+    tokenRequest.set("grant_type", GRANT_TYPE);
+    tokenRequest.set("assertion", assertion);
+    UrlEncodedContent content = new UrlEncodedContent(tokenRequest);
+
+    HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
+    HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
+    request.setParser(new JsonObjectParser(jsonFactory));
+    HttpResponse response = request.execute();
+
+    GenericData responseData = response.parseAs(GenericData.class);
+    String rawToken = OAuth2Utils.validateString(responseData, "id_token", PARSE_ERROR_PREFIX);
+
+    return IdToken.create(rawToken);
+  }
+
   /** Returns whether the scopes are empty, meaning createScoped must be called before use. */
   @Override
   public boolean createScopedRequired() {
@@ -613,6 +652,39 @@ public class ServiceAccountCredentials extends GoogleCredentials
           "Error signing service account access token request with private key.", e);
     }
     return assertion;
+  }
+
+  @VisibleForTesting
+  String createAssertionForIdToken(
+      JsonFactory jsonFactory, long currentTime, String audience, String targetAudience)
+      throws IOException {
+    JsonWebSignature.Header header = new JsonWebSignature.Header();
+    header.setAlgorithm("RS256");
+    header.setType("JWT");
+    header.setKeyId(privateKeyId);
+
+    JsonWebToken.Payload payload = new JsonWebToken.Payload();
+    payload.setIssuer(clientEmail);
+    payload.setIssuedAtTimeSeconds(currentTime / 1000);
+    payload.setExpirationTimeSeconds(currentTime / 1000 + 3600);
+    payload.setSubject(serviceAccountUser);
+
+    if (audience == null) {
+      payload.setAudience(OAuth2Utils.TOKEN_SERVER_URI.toString());
+    } else {
+      payload.setAudience(audience);
+    }
+
+    try {
+      payload.set("target_audience", targetAudience);
+
+      String assertion =
+          JsonWebSignature.signUsingRsaSha256(privateKey, jsonFactory, header, payload);
+      return assertion;
+    } catch (GeneralSecurityException e) {
+      throw new IOException(
+          "Error signing service account access token request with private key.", e);
+    }
   }
 
   @SuppressWarnings("unused")

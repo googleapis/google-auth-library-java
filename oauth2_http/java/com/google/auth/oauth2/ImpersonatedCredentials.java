@@ -45,6 +45,7 @@ import com.google.api.client.util.GenericData;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.common.annotations.Beta;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -84,7 +85,8 @@ import java.util.Objects;
  *     System.out.println(b);
  * </pre>
  */
-public class ImpersonatedCredentials extends GoogleCredentials implements ServiceAccountSigner {
+public class ImpersonatedCredentials extends GoogleCredentials
+    implements ServiceAccountSigner, IdTokenProvider {
 
   private static final long serialVersionUID = -2133257318957488431L;
   private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
@@ -273,6 +275,33 @@ public class ImpersonatedCredentials extends GoogleCredentials implements Servic
       throw new IOException("Error parsing expireTime: " + pe.getMessage());
     }
     return new AccessToken(accessToken, date);
+  }
+
+  /**
+   * Returns an IdToken for the current Credential.
+   *
+   * @param targetAudience the audience field for the issued ID Token
+   * @param options List of Credential specific options for for the token. For example, an IDToken
+   *     for a ImpersonatedCredentials can return the email address within the token claims if
+   *     "ImpersonatedCredentials.INCLUDE_EMAIL" is provided as a list option.<br>
+   *     Only one option value is supported: "ImpersonatedCredentials.INCLUDE_EMAIL" If no options
+   *     are set, the default excludes the "includeEmail" attribute in the API request
+   * @return IdToken object which includes the raw id_token, expiration and audience.
+   * @throws IOException if the attempt to get an IdToken failed
+   */
+  @Beta
+  @Override
+  public IdToken idTokenWithAudience(String targetAudience, List<IdTokenProvider.Option> options)
+      throws IOException {
+    boolean includeEmail =
+        options != null && options.contains(IdTokenProvider.Option.INCLUDE_EMAIL);
+    return IamUtils.getIdToken(
+        getAccount(),
+        sourceCredentials,
+        transportFactory.create(),
+        targetAudience,
+        includeEmail,
+        ImmutableMap.of("delegates", this.delegates));
   }
 
   @Override

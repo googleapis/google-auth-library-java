@@ -42,6 +42,7 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.common.annotations.Beta;
 import com.google.common.base.MoreObjects;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,6 +51,7 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
@@ -62,7 +64,8 @@ import java.util.logging.Logger;
  *
  * <p>These credentials use the IAM API to sign data. See {@link #sign(byte[])} for more details.
  */
-public class ComputeEngineCredentials extends GoogleCredentials implements ServiceAccountSigner {
+public class ComputeEngineCredentials extends GoogleCredentials
+    implements ServiceAccountSigner, IdTokenProvider {
 
   private static final Logger LOGGER = Logger.getLogger(ComputeEngineCredentials.class.getName());
 
@@ -157,6 +160,45 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
     return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
   }
 
+  /**
+   * Returns a Google ID Token from the metadata server on ComputeEngine
+   *
+   * @param targetAudience the aud: field the IdToken should include
+   * @param options list of Credential specific options for the token. For example, an IDToken for a
+   *     ComputeEngineCredential could have the full formatted claims returned if
+   *     IdTokenProvider.Option.FORMAT_FULL) is provided as a list option. Valid option values are:
+   *     <br>
+   *     IdTokenProvider.Option.FORMAT_FULL<br>
+   *     IdTokenProvider.Option.LICENSES_TRUE<br>
+   *     If no options are set, the defaults are "&amp;format=standard&amp;licenses=false"
+   * @throws IOException if the attempt to get an IdToken failed
+   * @return IdToken object which includes the raw id_token, JsonWebSignature
+   */
+  @Beta
+  @Override
+  public IdToken idTokenWithAudience(String targetAudience, List<IdTokenProvider.Option> options)
+      throws IOException {
+    GenericUrl documentUrl = new GenericUrl(getIdentityDocumentUrl());
+    if (options != null) {
+      if (options.contains(IdTokenProvider.Option.FORMAT_FULL)) {
+        documentUrl.set("format", "full");
+      }
+      if (options.contains(IdTokenProvider.Option.LICENSES_TRUE)) {
+        // license will only get returned if format is also full
+        documentUrl.set("format", "full");
+        documentUrl.set("license", "TRUE");
+      }
+    }
+    documentUrl.set("audience", targetAudience);
+    HttpResponse response = getMetadataResponse(documentUrl.toString());
+    InputStream content = response.getContent();
+    if (content == null) {
+      throw new IOException("Empty content from metadata token server request.");
+    }
+    String rawToken = response.parseAsString();
+    return IdToken.create(rawToken);
+  }
+
   private HttpResponse getMetadataResponse(String url) throws IOException {
     GenericUrl genericUrl = new GenericUrl(url);
     HttpRequest request =
@@ -241,6 +283,11 @@ public class ComputeEngineCredentials extends GoogleCredentials implements Servi
   public static String getServiceAccountsUrl() {
     return getMetadataServerUrl(DefaultCredentialsProvider.DEFAULT)
         + "/computeMetadata/v1/instance/service-accounts/?recursive=true";
+  }
+
+  public static String getIdentityDocumentUrl() {
+    return getMetadataServerUrl(DefaultCredentialsProvider.DEFAULT)
+        + "/computeMetadata/v1/instance/service-accounts/default/identity";
   }
 
   @Override

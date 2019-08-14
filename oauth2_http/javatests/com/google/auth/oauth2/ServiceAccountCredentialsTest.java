@@ -34,6 +34,7 @@ package com.google.auth.oauth2;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
@@ -101,6 +102,12 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
   private static final HttpTransportFactory DUMMY_TRANSPORT_FACTORY =
       new MockTokenServerTransportFactory();
+  public static final String DEFAULT_ID_TOKEN =
+      "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRmMzc1ODkwOGI3OTIyO"
+          + "TNhZDk3N2EwYjk5MWQ5OGE3N2Y0ZWVlY2QiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJodHRwczovL2Zvby5iYXIiL"
+          + "CJhenAiOiIxMDIxMDE1NTA4MzQyMDA3MDg1NjgiLCJleHAiOjE1NjQ0NzUwNTEsImlhdCI6MTU2NDQ3MTQ1MSwi"
+          + "aXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwic3ViIjoiMTAyMTAxNTUwODM0MjAwNzA4NTY4In0"
+          + ".redacted";
 
   @Test
   public void createdScoped_clones() throws IOException {
@@ -189,6 +196,65 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(currentTimeMillis / 1000 + 3600, (long) payload.getExpirationTimeSeconds());
     assertEquals(SERVICE_ACCOUNT_USER, payload.getSubject());
     assertEquals(Joiner.on(' ').join(scopes), payload.get("scope"));
+  }
+
+  @Test
+  public void createAssertionForIdToken_correct() throws IOException {
+
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientId(SA_CLIENT_ID)
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(privateKey)
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setServiceAccountUser(SERVICE_ACCOUNT_USER)
+            .setProjectId(PROJECT_ID)
+            .build();
+
+    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
+    long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
+    String assertion =
+        credentials.createAssertionForIdToken(
+            jsonFactory, currentTimeMillis, null, "https://foo.com/bar");
+
+    JsonWebSignature signature = JsonWebSignature.parse(jsonFactory, assertion);
+    JsonWebToken.Payload payload = signature.getPayload();
+    assertEquals(SA_CLIENT_EMAIL, payload.getIssuer());
+    assertEquals("https://foo.com/bar", (String) (payload.getUnknownKeys().get("target_audience")));
+    assertEquals(currentTimeMillis / 1000, (long) payload.getIssuedAtTimeSeconds());
+    assertEquals(currentTimeMillis / 1000 + 3600, (long) payload.getExpirationTimeSeconds());
+    assertEquals(SERVICE_ACCOUNT_USER, payload.getSubject());
+  }
+
+  @Test
+  public void createAssertionForIdToken_incorrect() throws IOException {
+
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientId(SA_CLIENT_ID)
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(privateKey)
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setServiceAccountUser(SERVICE_ACCOUNT_USER)
+            .setProjectId(PROJECT_ID)
+            .build();
+
+    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
+    long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
+    String assertion =
+        credentials.createAssertionForIdToken(
+            jsonFactory, currentTimeMillis, null, "https://foo.com/bar");
+
+    JsonWebSignature signature = JsonWebSignature.parse(jsonFactory, assertion);
+    JsonWebToken.Payload payload = signature.getPayload();
+    assertEquals(SA_CLIENT_EMAIL, payload.getIssuer());
+    assertNotEquals(
+        "https://bar.com/foo", (String) (payload.getUnknownKeys().get("target_audience")));
+    assertEquals(currentTimeMillis / 1000, (long) payload.getIssuedAtTimeSeconds());
+    assertEquals(currentTimeMillis / 1000 + 3600, (long) payload.getExpirationTimeSeconds());
+    assertEquals(SERVICE_ACCOUNT_USER, payload.getSubject());
   }
 
   @Test
@@ -515,6 +581,68 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     } catch (IOException expected) {
       // Expected
     }
+  }
+
+  @Test
+  public void idTokenWithAudience_correct() throws IOException {
+    String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    MockTokenServerTransport transport = transportFactory.transport;
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.fromPkcs8(
+            SA_CLIENT_ID,
+            SA_CLIENT_EMAIL,
+            SA_PRIVATE_KEY_PKCS8,
+            SA_PRIVATE_KEY_ID,
+            SCOPES,
+            transportFactory,
+            null);
+
+    transport.addServiceAccount(SA_CLIENT_EMAIL, accessToken1);
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
+
+    String targetAudience = "https://foo.bar";
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(credentials)
+            .setTargetAudience(targetAudience)
+            .build();
+    tokenCredential.refresh();
+    assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getAccessToken().getTokenValue());
+    assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getIdToken().getTokenValue());
+    assertEquals(
+        targetAudience,
+        (String) tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
+  }
+
+  @Test
+  public void idTokenWithAudience_incorrect() throws IOException {
+    String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    MockTokenServerTransport transport = transportFactory.transport;
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.fromPkcs8(
+            SA_CLIENT_ID,
+            SA_CLIENT_EMAIL,
+            SA_PRIVATE_KEY_PKCS8,
+            SA_PRIVATE_KEY_ID,
+            SCOPES,
+            transportFactory,
+            null);
+
+    transport.addServiceAccount(SA_CLIENT_EMAIL, accessToken1);
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
+
+    String targetAudience = "https://bar";
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(credentials)
+            .setTargetAudience(targetAudience)
+            .build();
+    tokenCredential.refresh();
+    assertNotEquals(
+        targetAudience,
+        (String) tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
   }
 
   @Test

@@ -37,6 +37,7 @@ import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.json.JsonHttpContent;
+import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.auth.Credentials;
@@ -54,6 +55,8 @@ import java.util.Map;
 class IamUtils {
   private static final String SIGN_BLOB_URL_FORMAT =
       "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
+  private static final String ID_TOKEN_URL_FORMAT =
+      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateIdToken";
   private static final String PARSE_ERROR_MESSAGE = "Error parsing error message response. ";
   private static final String PARSE_ERROR_SIGNATURE = "Error parsing signature response. ";
 
@@ -137,5 +140,75 @@ class IamUtils {
 
     GenericData responseData = response.parseAs(GenericData.class);
     return OAuth2Utils.validateString(responseData, "signedBlob", PARSE_ERROR_SIGNATURE);
+  }
+
+  /**
+   * Returns an IdToken issued to the serviceAccount with a specified targetAudience
+   *
+   * @param serviceAccountEmail the email address for the service account to get an ID Token for
+   * @param credentials credentials required for making the IAM call
+   * @param transport transport used for building the HTTP request
+   * @param targetAudience the audience the issued ID token should include
+   * @param additionalFields additional fields to send in the IAM call
+   * @return IdToken issed to the serviceAccount
+   * @throws IOException if the IdToken cannot be issued.
+   * @see
+   *     https://cloud.google.com/iam/credentials/reference/rest/v1/projects.serviceAccounts/generateIdToken
+   */
+  static IdToken getIdToken(
+      String serviceAccountEmail,
+      Credentials credentials,
+      HttpTransport transport,
+      String targetAudience,
+      boolean includeEmail,
+      Map<String, ?> additionalFields)
+      throws IOException {
+
+    String idTokenUrl = String.format(ID_TOKEN_URL_FORMAT, serviceAccountEmail);
+    GenericUrl genericUrl = new GenericUrl(idTokenUrl);
+
+    GenericData idTokenRequest = new GenericData();
+    idTokenRequest.set("audience", targetAudience);
+    idTokenRequest.set("includeEmail", includeEmail);
+    for (Map.Entry<String, ?> entry : additionalFields.entrySet()) {
+      idTokenRequest.set(entry.getKey(), entry.getValue());
+    }
+    JsonHttpContent idTokenContent = new JsonHttpContent(OAuth2Utils.JSON_FACTORY, idTokenRequest);
+
+    HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
+    HttpRequest request =
+        transport.createRequestFactory(adapter).buildPostRequest(genericUrl, idTokenContent);
+
+    JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
+    request.setParser(parser);
+    request.setThrowExceptionOnExecuteError(false);
+
+    HttpResponse response = request.execute();
+    int statusCode = response.getStatusCode();
+    if (statusCode >= 400 && statusCode < HttpStatusCodes.STATUS_CODE_SERVER_ERROR) {
+      GenericData responseError = response.parseAs(GenericData.class);
+      Map<String, Object> error =
+          OAuth2Utils.validateMap(responseError, "error", PARSE_ERROR_MESSAGE);
+      String errorMessage = OAuth2Utils.validateString(error, "message", PARSE_ERROR_MESSAGE);
+      throw new IOException(
+          String.format("Error code %s trying to getIDToken: %s", statusCode, errorMessage));
+    }
+    if (statusCode != HttpStatusCodes.STATUS_CODE_OK) {
+      throw new IOException(
+          String.format(
+              "Unexpected Error code %s trying to getIDToken: %s",
+              statusCode, response.parseAsString()));
+    }
+    InputStream content = response.getContent();
+    if (content == null) {
+      // Throw explicitly here on empty content to avoid NullPointerException from
+      // parseAs call.
+      // Mock transports will have success code with empty content by default.
+      throw new IOException("Empty content from generateIDToken server request.");
+    }
+
+    GenericJson responseData = response.parseAs(GenericJson.class);
+    String rawToken = OAuth2Utils.validateString(responseData, "token", PARSE_ERROR_MESSAGE);
+    return IdToken.create(rawToken);
   }
 }

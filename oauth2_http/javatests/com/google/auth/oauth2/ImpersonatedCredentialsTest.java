@@ -44,6 +44,7 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonGenerator;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.json.webtoken.JsonWebToken.Payload;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.util.Clock;
 import com.google.auth.ServiceAccountSigner.SigningException;
@@ -84,6 +85,23 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
           + "gidhycxS86dxpEljnOMCw8CKoUBd5I880IUahEiUltk7OLJYS/Ts1wbn3kPOVX3wyJs8WBDtBkFrDHW2ezth2QJ"
           + "ADj3e1YhMVdjJW5jqwlD/VNddGjgzyunmiZg0uOXsHXbytYmsA545S8KRQFaJKFXYYFo2kOjqOiC1T2cAzMDjCQ"
           + "==\n-----END PRIVATE KEY-----\n";
+
+  // Id Token provided by the default IAM API that does not include the "email" claim
+  public static final String STANDARD_ID_TOKEN =
+      "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRmMzc1ODkwOGI3OTIy"
+          + "OTNhZDk3N2EwYjk5MWQ5OGE3N2Y0ZWVlY2QiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJodHRwczovL2Zvby5iYXIi"
+          + "LCJhenAiOiIxMDIxMDE1NTA4MzQyMDA3MDg1NjgiLCJleHAiOjE1NjQ1MzI5NzIsImlhdCI6MTU2NDUyOTM3Miw"
+          + "iaXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwic3ViIjoiMTAyMTAxNTUwODM0MjAwNzA4NTY4In"
+          + "0.redacted";
+
+  // Id Token provided by the default IAM API that includes the "email" claim
+  public static final String TOKEN_WITH_EMAIL =
+      "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRmMzc1ODkwOGI3OTIy"
+          + "OTNhZDk3N2EwYjk5MWQ5OGE3N2Y0ZWVlY2QiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJodHRwczovL2Zvby5iYXIi"
+          + "LCJhenAiOiIxMDIxMDE1NTA4MzQyMDA3MDg1NjgiLCJlbWFpbCI6ImltcGVyc29uYXRlZC1hY2NvdW50QGZhYmx"
+          + "lZC1yYXktMTA0MTE3LmlhbS5nc2VydmljZWFjY291bnQuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImV4cC"
+          + "I6MTU2NDUzMzA0MiwiaWF0IjoxNTY0NTI5NDQyLCJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iL"
+          + "CJzdWIiOiIxMDIxMDE1NTA4MzQyMDA3MDg1NjgifQ.redacted";
 
   private static final String PROJECT_ID = "project-id";
   private static final String IMPERSONATED_CLIENT_EMAIL =
@@ -422,7 +440,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
     mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mtransportFactory.transport.setSignedBlob(expectedSignature);
-    mtransportFactory.transport.setSigningErrorResponseCodeAndMessage(
+    mtransportFactory.transport.setErrorResponseCodeAndMessage(
         HttpStatusCodes.STATUS_CODE_FORBIDDEN, "Sign Error");
 
     try {
@@ -457,7 +475,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
     mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mtransportFactory.transport.setSignedBlob(expectedSignature);
-    mtransportFactory.transport.setSigningErrorResponseCodeAndMessage(
+    mtransportFactory.transport.setErrorResponseCodeAndMessage(
         HttpStatusCodes.STATUS_CODE_SERVER_ERROR, "Sign Error");
 
     try {
@@ -472,6 +490,143 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void idTokenWithAudience_sameAs() throws IOException {
+    GoogleCredentials sourceCredentials = getSourceCredentials();
+    MockIAMCredentialsServiceTransportFactory mtransportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mtransportFactory.transport.setExpireTime(getDefaultExpireTime());
+
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            sourceCredentials,
+            IMPERSONATED_CLIENT_EMAIL,
+            null,
+            SCOPES,
+            VALID_LIFETIME,
+            mtransportFactory);
+
+    mtransportFactory.transport.setIdToken(STANDARD_ID_TOKEN);
+
+    String targetAudience = "https://foo.bar";
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(targetCredentials)
+            .setTargetAudience(targetAudience)
+            .build();
+    tokenCredential.refresh();
+    assertEquals(STANDARD_ID_TOKEN, tokenCredential.getAccessToken().getTokenValue());
+    assertEquals(STANDARD_ID_TOKEN, tokenCredential.getIdToken().getTokenValue());
+    assertEquals(
+        targetAudience,
+        (String) tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
+  }
+
+  @Test
+  public void idTokenWithAudience_withEmail() throws IOException {
+    GoogleCredentials sourceCredentials = getSourceCredentials();
+    MockIAMCredentialsServiceTransportFactory mtransportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mtransportFactory.transport.setExpireTime(getDefaultExpireTime());
+
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            sourceCredentials,
+            IMPERSONATED_CLIENT_EMAIL,
+            null,
+            SCOPES,
+            VALID_LIFETIME,
+            mtransportFactory);
+
+    mtransportFactory.transport.setIdToken(TOKEN_WITH_EMAIL);
+
+    String targetAudience = "https://foo.bar";
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(targetCredentials)
+            .setTargetAudience(targetAudience)
+            .setOptions(Arrays.asList(IdTokenProvider.Option.INCLUDE_EMAIL))
+            .build();
+    tokenCredential.refresh();
+    assertEquals(TOKEN_WITH_EMAIL, tokenCredential.getAccessToken().getTokenValue());
+    Payload p = tokenCredential.getIdToken().getJsonWebSignature().getPayload();
+    assertTrue(p.containsKey("email"));
+  }
+
+  @Test
+  public void idToken_withServerError() throws IOException {
+    GoogleCredentials sourceCredentials = getSourceCredentials();
+    MockIAMCredentialsServiceTransportFactory mtransportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mtransportFactory.transport.setExpireTime(getDefaultExpireTime());
+
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            sourceCredentials,
+            IMPERSONATED_CLIENT_EMAIL,
+            null,
+            SCOPES,
+            VALID_LIFETIME,
+            mtransportFactory);
+
+    mtransportFactory.transport.setIdToken(STANDARD_ID_TOKEN);
+    mtransportFactory.transport.setErrorResponseCodeAndMessage(
+        HttpStatusCodes.STATUS_CODE_SERVER_ERROR, "Internal Server Error");
+
+    String targetAudience = "https://foo.bar";
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(targetCredentials)
+            .setTargetAudience(targetAudience)
+            .build();
+    try {
+      tokenCredential.refresh();
+    } catch (IOException e) {
+      assertTrue(e.getMessage().contains("Error code 500 trying to getIDToken"));
+    }
+  }
+
+  @Test
+  public void idToken_withOtherError() throws IOException {
+    GoogleCredentials sourceCredentials = getSourceCredentials();
+    MockIAMCredentialsServiceTransportFactory mtransportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mtransportFactory.transport.setExpireTime(getDefaultExpireTime());
+
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            sourceCredentials,
+            IMPERSONATED_CLIENT_EMAIL,
+            null,
+            SCOPES,
+            VALID_LIFETIME,
+            mtransportFactory);
+
+    mtransportFactory.transport.setIdToken(STANDARD_ID_TOKEN);
+    mtransportFactory.transport.setErrorResponseCodeAndMessage(
+        HttpStatusCodes.STATUS_CODE_MOVED_PERMANENTLY, "Redirect");
+
+    String targetAudience = "https://foo.bar";
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(targetCredentials)
+            .setTargetAudience(targetAudience)
+            .build();
+    try {
+      tokenCredential.refresh();
+    } catch (IOException e) {
+      assertTrue(e.getMessage().contains("Unexpected Error code 301 trying to getIDToken"));
+    }
+  }
+
+  @Test
   public void hashCode_equals() throws IOException {
     GoogleCredentials sourceCredentials = getSourceCredentials();
     MockIAMCredentialsServiceTransportFactory mtransportFactory =
@@ -479,6 +634,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
     mtransportFactory.transport.setExpireTime(getDefaultExpireTime());
+
     ImpersonatedCredentials credentials =
         ImpersonatedCredentials.create(
             sourceCredentials,

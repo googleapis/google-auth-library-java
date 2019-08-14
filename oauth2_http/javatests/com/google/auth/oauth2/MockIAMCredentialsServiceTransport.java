@@ -48,6 +48,8 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
 
   private static final String IAM_ACCESS_TOKEN_ENDPOINT =
       "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken";
+  private static final String IAM_ID_TOKEN_ENDPOINT =
+      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateIdToken";
   private static final String IAM_SIGN_ENDPOINT =
       "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
   private Integer tokenResponseErrorCode;
@@ -59,6 +61,8 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
 
   private String accessToken;
   private String expireTime;
+
+  private String idToken;
 
   private MockLowLevelHttpRequest request;
 
@@ -88,9 +92,13 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
     this.signedBlob = signedBlob;
   }
 
-  public void setSigningErrorResponseCodeAndMessage(int responseCode, String errorMessage) {
+  public void setErrorResponseCodeAndMessage(int responseCode, String errorMessage) {
     this.responseCode = responseCode;
     this.errorMessage = errorMessage;
+  }
+
+  public void setIdToken(String idToken) {
+    this.idToken = idToken;
   }
 
   public MockLowLevelHttpRequest getRequest() {
@@ -103,6 +111,7 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
     String iamAccesssTokenformattedUrl =
         String.format(IAM_ACCESS_TOKEN_ENDPOINT, this.targetPrincipal);
     String iamSignBlobformattedUrl = String.format(IAM_SIGN_ENDPOINT, this.targetPrincipal);
+    String iamIdTokenformattedUrl = String.format(IAM_ID_TOKEN_ENDPOINT, this.targetPrincipal);
     if (url.equals(iamAccesssTokenformattedUrl)) {
       this.request =
           new MockLowLevelHttpRequest(url) {
@@ -171,6 +180,28 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
               return new MockLowLevelHttpResponse()
                   .setContentType(Json.MEDIA_TYPE)
                   .setContent(refreshText);
+            }
+          };
+    } else if (url.equals(iamIdTokenformattedUrl)) {
+      this.request =
+          new MockLowLevelHttpRequest(url) {
+            @Override
+            public LowLevelHttpResponse execute() throws IOException {
+
+              if (responseCode != HttpStatusCodes.STATUS_CODE_OK) {
+                return new MockLowLevelHttpResponse()
+                    .setStatusCode(responseCode)
+                    .setContentType(Json.MEDIA_TYPE)
+                    .setContent(errorMessage);
+              }
+
+              GenericJson refreshContents = new GenericJson();
+              refreshContents.setFactory(OAuth2Utils.JSON_FACTORY);
+              refreshContents.put("token", idToken);
+              String tokenContent = refreshContents.toPrettyString();
+              return new MockLowLevelHttpResponse()
+                  .setContentType(Json.MEDIA_TYPE)
+                  .setContent(tokenContent);
             }
           };
     } else {
