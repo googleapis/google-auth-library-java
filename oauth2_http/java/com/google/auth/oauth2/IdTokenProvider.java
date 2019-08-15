@@ -80,6 +80,7 @@ public interface IdTokenProvider {
    * @param options List of Credential specific options for for the token. For example, an IDToken
    *     for a ComputeEngineCredential can return platform specific claims if
    *     "ComputeEngineCredentials.ID_TOKEN_FORMAT_FULL" is provided as a list option.
+   * @throws IOException if token creation fails
    * @return IdToken object which includes the raw id_token, expiration and audience.
    */
   IdToken idTokenWithAudience(String targetAudience, List<Option> options) throws IOException;
