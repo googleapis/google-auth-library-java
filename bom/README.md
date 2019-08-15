@@ -11,7 +11,7 @@ To use it in Maven, add the following to your `pom.xml`:
   <dependencies>
     <dependency>
       <groupId>com.google.auth</groupId>
-      <artifactId>google-auth-libary-bom</artifactId>
+      <artifactId>google-auth-library-bom</artifactId>
       <version>0.16.2</version>
       <type>pom</type>
       <scope>import</scope>
