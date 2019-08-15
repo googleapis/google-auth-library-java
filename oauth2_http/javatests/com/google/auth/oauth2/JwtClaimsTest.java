@@ -40,7 +40,7 @@ import org.junit.Test;
 public class JwtClaimsTest {
 
   @Test
-  public void claims_merge_overwritesFields() {
+  public void testMergeOverwritesFields() {
     JwtClaims claims1 =
         JwtClaims.newBuilder()
             .setAudience("audience-1")
@@ -61,7 +61,7 @@ public class JwtClaimsTest {
   }
 
   @Test
-  public void claims_merge_defaultValues() {
+  public void testMergeDefaultValues() {
     JwtClaims claims1 =
         JwtClaims.newBuilder()
             .setAudience("audience-1")
@@ -77,7 +77,7 @@ public class JwtClaimsTest {
   }
 
   @Test
-  public void claims_merge_null() {
+  public void testMergeNull() {
     JwtClaims claims1 = JwtClaims.newBuilder().build();
     JwtClaims claims2 = JwtClaims.newBuilder().build();
     JwtClaims merged = claims1.merge(claims2);
@@ -90,7 +90,7 @@ public class JwtClaimsTest {
   }
 
   @Test
-  public void claims_equals() {
+  public void testEquals() {
     JwtClaims claims1 =
         JwtClaims.newBuilder()
             .setAudience("audience-1")
@@ -108,14 +108,14 @@ public class JwtClaimsTest {
   }
 
   @Test
-  public void claims_additionalClaims_defaults() {
+  public void testAdditionalClaimsDefaults() {
     JwtClaims claims = JwtClaims.newBuilder().build();
     assertNotNull(claims.getAdditionalClaims());
     assertTrue(claims.getAdditionalClaims().isEmpty());
   }
 
   @Test
-  public void claims_merge_additionalClaims() {
+  public void testMergeAdditionalClaims() {
     JwtClaims claims1 =
         JwtClaims.newBuilder().setAdditionalClaims(Collections.singletonMap("foo", "bar")).build();
     JwtClaims claims2 =
