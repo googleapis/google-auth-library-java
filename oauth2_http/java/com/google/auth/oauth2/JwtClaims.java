@@ -64,7 +64,7 @@ public abstract class JwtClaims implements Serializable {
   abstract String getSubject();
 
   /**
-   * Returns additional claims for this object; <b>do not mutate</b> the returned map.
+   * Returns additional claims for this object. The returned map is not guaranteed to be mutable.
    *
    * @return additional claims
    */
