@@ -87,7 +87,7 @@ public class IdToken extends AccessToken implements Serializable {
    *
    * @return returns com.google.api.client.json.webtoken.JsonWebSignature
    */
-  public JsonWebSignature getJsonWebSignature() {
+  JsonWebSignature getJsonWebSignature() {
     return jsonWebSignature;
   }
 
