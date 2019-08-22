@@ -248,6 +248,53 @@ public class JwtCredentialsTest extends BaseSerializationTest {
         Collections.singletonMap("foo", "bar"));
   }
 
+  @Test
+  public void privateKeyIdNull() throws IOException {
+    JwtClaims claims =
+        JwtClaims.newBuilder()
+            .setAudience("some-audience")
+            .setIssuer("some-issuer")
+            .setSubject("some-subject")
+            .build();
+    JwtCredentials credentials =
+        JwtCredentials.newBuilder()
+            .setJwtClaims(claims)
+            .setPrivateKey(getPrivateKey())
+            .setPrivateKeyId(null)
+            .build();
+
+    Map<String, List<String>> metadata = credentials.getRequestMetadata();
+    verifyJwtAccess(
+        metadata,
+        "some-audience",
+        "some-issuer",
+        "some-subject",
+        null);
+  }
+
+  @Test
+  public void privateKeyIdNotSpecified() throws IOException {
+    JwtClaims claims =
+        JwtClaims.newBuilder()
+            .setAudience("some-audience")
+            .setIssuer("some-issuer")
+            .setSubject("some-subject")
+            .build();
+    JwtCredentials credentials =
+        JwtCredentials.newBuilder()
+            .setJwtClaims(claims)
+            .setPrivateKey(getPrivateKey())
+            .build();
+
+    Map<String, List<String>> metadata = credentials.getRequestMetadata();
+    verifyJwtAccess(
+        metadata,
+        "some-audience",
+        "some-issuer",
+        "some-subject",
+        null);
+  }
+
   private void verifyJwtAccess(
       Map<String, List<String>> metadata,
       String expectedAudience,
