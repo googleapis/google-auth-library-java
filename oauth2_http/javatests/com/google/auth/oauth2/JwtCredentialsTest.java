@@ -115,22 +115,6 @@ public class JwtCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void builder_requiresPrivateKeyId() {
-    try {
-      JwtClaims claims =
-          JwtClaims.newBuilder()
-              .setAudience("some-audience")
-              .setIssuer("some-issuer")
-              .setSubject("some-subject")
-              .build();
-      JwtCredentials.newBuilder().setJwtClaims(claims).setPrivateKey(getPrivateKey()).build();
-      fail("Should throw exception");
-    } catch (NullPointerException ex) {
-      // expected
-    }
-  }
-
-  @Test
   public void builder_requiresClaims() {
     try {
       JwtCredentials.newBuilder()
@@ -246,6 +230,40 @@ public class JwtCredentialsTest extends BaseSerializationTest {
         "some-subject",
         PRIVATE_KEY_ID,
         Collections.singletonMap("foo", "bar"));
+  }
+
+  @Test
+  public void privateKeyIdNull() throws IOException {
+    JwtClaims claims =
+        JwtClaims.newBuilder()
+            .setAudience("some-audience")
+            .setIssuer("some-issuer")
+            .setSubject("some-subject")
+            .build();
+    JwtCredentials credentials =
+        JwtCredentials.newBuilder()
+            .setJwtClaims(claims)
+            .setPrivateKey(getPrivateKey())
+            .setPrivateKeyId(null)
+            .build();
+
+    Map<String, List<String>> metadata = credentials.getRequestMetadata();
+    verifyJwtAccess(metadata, "some-audience", "some-issuer", "some-subject", null);
+  }
+
+  @Test
+  public void privateKeyIdNotSpecified() throws IOException {
+    JwtClaims claims =
+        JwtClaims.newBuilder()
+            .setAudience("some-audience")
+            .setIssuer("some-issuer")
+            .setSubject("some-subject")
+            .build();
+    JwtCredentials credentials =
+        JwtCredentials.newBuilder().setJwtClaims(claims).setPrivateKey(getPrivateKey()).build();
+
+    Map<String, List<String>> metadata = credentials.getRequestMetadata();
+    verifyJwtAccess(metadata, "some-audience", "some-issuer", "some-subject", null);
   }
 
   private void verifyJwtAccess(

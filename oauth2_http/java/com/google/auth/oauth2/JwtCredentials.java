@@ -86,7 +86,7 @@ public class JwtCredentials extends Credentials implements JwtProvider {
 
   private JwtCredentials(Builder builder) {
     this.privateKey = Preconditions.checkNotNull(builder.getPrivateKey());
-    this.privateKeyId = Preconditions.checkNotNull(builder.getPrivateKeyId());
+    this.privateKeyId = builder.getPrivateKeyId();
     this.jwtClaims = Preconditions.checkNotNull(builder.getJwtClaims());
     Preconditions.checkState(jwtClaims.isComplete(), JWT_INCOMPLETE_ERROR_MESSAGE);
     this.lifeSpanSeconds = Preconditions.checkNotNull(builder.getLifeSpanSeconds());
@@ -220,7 +220,7 @@ public class JwtCredentials extends Credentials implements JwtProvider {
     }
 
     public Builder setPrivateKeyId(String privateKeyId) {
-      this.privateKeyId = Preconditions.checkNotNull(privateKeyId);
+      this.privateKeyId = privateKeyId;
       return this;
     }
 
