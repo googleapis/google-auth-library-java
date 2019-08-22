@@ -264,12 +264,7 @@ public class JwtCredentialsTest extends BaseSerializationTest {
             .build();
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata();
-    verifyJwtAccess(
-        metadata,
-        "some-audience",
-        "some-issuer",
-        "some-subject",
-        null);
+    verifyJwtAccess(metadata, "some-audience", "some-issuer", "some-subject", null);
   }
 
   @Test
@@ -281,18 +276,10 @@ public class JwtCredentialsTest extends BaseSerializationTest {
             .setSubject("some-subject")
             .build();
     JwtCredentials credentials =
-        JwtCredentials.newBuilder()
-            .setJwtClaims(claims)
-            .setPrivateKey(getPrivateKey())
-            .build();
+        JwtCredentials.newBuilder().setJwtClaims(claims).setPrivateKey(getPrivateKey()).build();
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata();
-    verifyJwtAccess(
-        metadata,
-        "some-audience",
-        "some-issuer",
-        "some-subject",
-        null);
+    verifyJwtAccess(metadata, "some-audience", "some-issuer", "some-subject", null);
   }
 
   private void verifyJwtAccess(
