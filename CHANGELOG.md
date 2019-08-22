@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.17.1](https://www.github.com/googleapis/google-auth-library-java/compare/v0.17.0...v0.17.1) (2019-08-22)
+
+
+### Bug Fixes
+
+* allow unset/null privateKeyId for JwtCredentials ([#336](https://www.github.com/googleapis/google-auth-library-java/issues/336)) ([d28a6ed](https://www.github.com/googleapis/google-auth-library-java/commit/d28a6ed))
+
 ## [0.17.0](https://www.github.com/googleapis/google-auth-library-java/compare/v0.16.2...v0.17.0) (2019-08-16)
 
 
