@@ -115,22 +115,6 @@ public class JwtCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void builder_requiresPrivateKeyId() {
-    try {
-      JwtClaims claims =
-          JwtClaims.newBuilder()
-              .setAudience("some-audience")
-              .setIssuer("some-issuer")
-              .setSubject("some-subject")
-              .build();
-      JwtCredentials.newBuilder().setJwtClaims(claims).setPrivateKey(getPrivateKey()).build();
-      fail("Should throw exception");
-    } catch (NullPointerException ex) {
-      // expected
-    }
-  }
-
-  @Test
   public void builder_requiresClaims() {
     try {
       JwtCredentials.newBuilder()
