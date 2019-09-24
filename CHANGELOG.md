@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.17.2](https://www.github.com/googleapis/google-auth-library-java/compare/v0.17.1...v0.17.2) (2019-09-24)
+
+
+### Bug Fixes
+
+* typo in BOM dependency ([#345](https://www.github.com/googleapis/google-auth-library-java/issues/345)) ([a1d63bb](https://www.github.com/googleapis/google-auth-library-java/commit/a1d63bb))
+
 ### [0.17.1](https://www.github.com/googleapis/google-auth-library-java/compare/v0.17.0...v0.17.1) (2019-08-22)
 
 
