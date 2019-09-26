@@ -70,7 +70,7 @@ public abstract class JwtClaims implements Serializable {
    */
   abstract Map<String, String> getAdditionalClaims();
 
-  static Builder newBuilder() {
+  public static Builder newBuilder() {
     return new AutoValue_JwtClaims.Builder().setAdditionalClaims(ImmutableMap.<String, String>of());
   }
 
