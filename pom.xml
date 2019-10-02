@@ -61,7 +61,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.google.http.version>1.32.1</project.google.http.version>
     <project.junit.version>4.12</project.junit.version>
-    <project.guava.version>28.1-android</project.guava.version>
+    <project.guava.version>28.1-jre</project.guava.version>
     <project.appengine.version>1.9.74</project.appengine.version>
     <project.autovalue.version>1.6.6</project.autovalue.version>
     <project.findbugs.version>3.0.2</project.findbugs.version>
