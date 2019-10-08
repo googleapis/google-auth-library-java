@@ -108,12 +108,6 @@
         <version>${project.autovalue.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.google.auto.value</groupId>
-        <artifactId>auto-value</artifactId>
-        <version>${project.autovalue.version}</version>
-        <scope>provided</scope>
-      </dependency>
-      <dependency>
         <groupId>com.google.code.findbugs</groupId>
         <artifactId>jsr305</artifactId>
         <version>${project.findbugs.version}</version>
@@ -225,6 +219,13 @@
           <target>1.7</target>
           <encoding>UTF-8</encoding>
           <compilerArgument>-Xlint:unchecked</compilerArgument>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>com.google.auto.value</groupId>
+              <artifactId>auto-value</artifactId>
+              <version>${project.autovalue.version}</version>
+            </path>
+          </annotationProcessorPaths>
         </configuration>
       </plugin>
       <plugin>
