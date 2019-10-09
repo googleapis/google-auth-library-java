@@ -1,6 +1,6 @@
 # Changelog
 
-### [0.17.3](https://www.github.com/googleapis/google-auth-library-java/compare/v0.17.2...v0.17.3) (2019-10-09)
+### [0.18.0](https://www.github.com/googleapis/google-auth-library-java/compare/v0.17.2...v0.18.0) (2019-10-09)
 
 
 ### Bug Fixes
@@ -18,7 +18,7 @@
 
 * fix include instructions in google-auth-library-bom README ([#352](https://www.github.com/googleapis/google-auth-library-java/issues/352)) ([f649735](https://www.github.com/googleapis/google-auth-library-java/commit/f649735))
 
-### [0.17.4](https://www.github.com/googleapis/google-auth-library-java/compare/v0.17.3...v0.17.4) (2019-10-08)
+### [0.17.4](https://www.github.com/googleapis/google-auth-library-java/compare/v0.18.0...v0.17.4) (2019-10-08)
 
 
 ### Bug Fixes
