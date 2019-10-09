@@ -1,5 +1,23 @@
 # Changelog
 
+### [0.17.3](https://www.github.com/googleapis/google-auth-library-java/compare/v0.17.2...v0.17.3) (2019-10-09)
+
+
+### Bug Fixes
+
+* make JwtClaims.newBuilder() public ([#350](https://www.github.com/googleapis/google-auth-library-java/issues/350)) ([6ab8758](https://www.github.com/googleapis/google-auth-library-java/commit/6ab8758))
+* move autovalue into annotation processor path instead of classpath ([#358](https://www.github.com/googleapis/google-auth-library-java/issues/358)) ([a82d348](https://www.github.com/googleapis/google-auth-library-java/commit/a82d348))
+
+
+### Dependencies
+
+* update Guava to 28.1 ([#353](https://www.github.com/googleapis/google-auth-library-java/issues/353)) ([f4f05be](https://www.github.com/googleapis/google-auth-library-java/commit/f4f05be))
+
+
+### Documentation
+
+* fix include instructions in google-auth-library-bom README ([#352](https://www.github.com/googleapis/google-auth-library-java/issues/352)) ([f649735](https://www.github.com/googleapis/google-auth-library-java/commit/f649735))
+
 ### [0.17.4](https://www.github.com/googleapis/google-auth-library-java/compare/v0.17.3...v0.17.4) (2019-10-08)
 
 
