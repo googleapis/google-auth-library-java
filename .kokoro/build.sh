@@ -21,7 +21,10 @@ cd github/google-auth-library-java/
 java -version
 echo $JOB_TYPE
 
-mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+mvn install -B -V \
+  -DskipTests=true \
+  -Dclirr.skip \
+  -Dmaven.javadoc.skip=true
 
 case ${JOB_TYPE} in
 test)
@@ -36,6 +39,9 @@ javadoc)
     ;;
 integration)
     mvn -B -pl ${INTEGRATION_TEST_ARGS} -DtrimStackTrace=false -fae verify
+    ;;
+clirr)
+    mvn -B clirr:check
     ;;
 *)
     ;;

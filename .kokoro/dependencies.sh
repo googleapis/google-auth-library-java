@@ -23,5 +23,7 @@ echo $JOB_TYPE
 
 export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=128m"
 
-mvn install -DskipTests=true -B -V
+mvn install -B -V \
+  -Dclirr.skip=true \
+  -DskipTests=true
 mvn -B dependency:analyze -DfailOnWarning=true
