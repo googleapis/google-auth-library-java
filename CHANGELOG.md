@@ -1,5 +1,21 @@
 # Changelog
 
+### [0.18.1](https://www.github.com/googleapis/google-auth-library-java/compare/v0.18.0...v0.18.1) (2019-11-18)
+
+
+### Dependencies
+
+* update appengine-sdk to 1.9.76 ([#366](https://www.github.com/googleapis/google-auth-library-java/issues/366)) ([590883d](https://www.github.com/googleapis/google-auth-library-java/commit/590883d57158275b988b5e6c7f6d608eaa3c08ad))
+* update autovalue packages to v1.7 ([#365](https://www.github.com/googleapis/google-auth-library-java/issues/365)) ([42a1694](https://www.github.com/googleapis/google-auth-library-java/commit/42a169463ab3c36552e2eea605571ee9808f346c))
+* update dependency com.google.appengine:appengine to v1.9.77 ([#377](https://www.github.com/googleapis/google-auth-library-java/issues/377)) ([c3c950e](https://www.github.com/googleapis/google-auth-library-java/commit/c3c950e7d906aaa4187305a5fd9b05785e19766a))
+* update dependency com.google.http-client:google-http-client-bom to v1.33.0 ([#374](https://www.github.com/googleapis/google-auth-library-java/issues/374)) ([af0af50](https://www.github.com/googleapis/google-auth-library-java/commit/af0af5061f4544b8b5bb43c82d2ab66c08143b90))
+
+
+### Documentation
+
+* remove outdated comment on explicit IP address ([#370](https://www.github.com/googleapis/google-auth-library-java/issues/370)) ([71faa5f](https://www.github.com/googleapis/google-auth-library-java/commit/71faa5f6f26ef2f267743248b828d636d99a9d50))
+* xml syntax error in bom/README.md ([#372](https://www.github.com/googleapis/google-auth-library-java/issues/372)) ([ff8606a](https://www.github.com/googleapis/google-auth-library-java/commit/ff8606a608f9261a9714ceda823479f156f65643)), closes [#371](https://www.github.com/googleapis/google-auth-library-java/issues/371)
+
 ### [0.18.0](https://www.github.com/googleapis/google-auth-library-java/compare/v0.17.2...v0.18.0) (2019-10-09)
 
 
