@@ -68,6 +68,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
   private static final String CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
   private static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
+  private static final String QUOTA_PROJECT = "sample-quota-project-id";
   private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
 
@@ -114,12 +115,28 @@ public class UserCredentialsTest extends BaseSerializationTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
-    GenericJson json = writeUserJson(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN);
+    GenericJson json = writeUserJson(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, null);
 
     GoogleCredentials credentials = UserCredentials.fromJson(json, transportFactory);
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+  }
+
+  @Test
+  public void fromJson_hasQuotaProjectId() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
+    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
+    GenericJson json = writeUserJson(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
+
+    GoogleCredentials credentials = UserCredentials.fromJson(json, transportFactory);
+
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+    assertTrue(metadata.containsKey(GoogleCredentials.QUOTA_PROJECT_ID_HEADER_KEY));
+    assertEquals(
+        metadata.get(GoogleCredentials.QUOTA_PROJECT_ID_HEADER_KEY),
+        Collections.singletonList(QUOTA_PROJECT));
   }
 
   @Test
@@ -213,6 +230,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
             .setAccessToken(accessToken)
             .setHttpTransportFactory(transportFactory)
             .setTokenServerUri(tokenServer)
+            .setQuotaProjectId(QUOTA_PROJECT)
             .build();
     UserCredentials otherCredentials =
         UserCredentials.newBuilder()
@@ -222,6 +240,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
             .setAccessToken(accessToken)
             .setHttpTransportFactory(transportFactory)
             .setTokenServerUri(tokenServer)
+            .setQuotaProjectId(QUOTA_PROJECT)
             .build();
     assertTrue(credentials.equals(otherCredentials));
     assertTrue(otherCredentials.equals(credentials));
@@ -393,6 +412,34 @@ public class UserCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void equals_false_quotaProjectId() throws IOException {
+    final String quotaProject1 = "sample-id-1";
+    final String quotaProject2 = "sample-id-2";
+    AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
+    MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
+    UserCredentials credentials =
+        UserCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setAccessToken(accessToken)
+            .setHttpTransportFactory(httpTransportFactory)
+            .setQuotaProjectId(quotaProject1)
+            .build();
+    UserCredentials otherCredentials =
+        UserCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setAccessToken(accessToken)
+            .setHttpTransportFactory(httpTransportFactory)
+            .setQuotaProjectId(quotaProject2)
+            .build();
+    assertFalse(credentials.equals(otherCredentials));
+    assertFalse(otherCredentials.equals(credentials));
+  }
+
+  @Test
   public void toString_containsFields() throws IOException {
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
     final URI tokenServer = URI.create("https://foo.com/bar");
@@ -405,12 +452,13 @@ public class UserCredentialsTest extends BaseSerializationTest {
             .setAccessToken(accessToken)
             .setHttpTransportFactory(transportFactory)
             .setTokenServerUri(tokenServer)
+            .setQuotaProjectId(QUOTA_PROJECT)
             .build();
 
     String expectedToString =
         String.format(
             "UserCredentials{requestMetadata=%s, temporaryAccess=%s, clientId=%s, refreshToken=%s, "
-                + "tokenServerUri=%s, transportFactoryClassName=%s}",
+                + "tokenServerUri=%s, transportFactoryClassName=%s, quotaProjectId=%s}",
             ImmutableMap.of(
                 AuthHttpConstants.AUTHORIZATION,
                 ImmutableList.of(OAuth2Utils.BEARER_PREFIX + accessToken.getTokenValue())),
@@ -418,7 +466,8 @@ public class UserCredentialsTest extends BaseSerializationTest {
             CLIENT_ID,
             REFRESH_TOKEN,
             tokenServer,
-            MockTokenServerTransportFactory.class.getName());
+            MockTokenServerTransportFactory.class.getName(),
+            QUOTA_PROJECT);
     assertEquals(expectedToString, credentials.toString());
   }
 
@@ -435,6 +484,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
             .setAccessToken(accessToken)
             .setHttpTransportFactory(transportFactory)
             .setTokenServerUri(tokenServer)
+            .setQuotaProjectId(QUOTA_PROJECT)
             .build();
     UserCredentials otherCredentials =
         UserCredentials.newBuilder()
@@ -444,6 +494,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
             .setAccessToken(accessToken)
             .setHttpTransportFactory(transportFactory)
             .setTokenServerUri(tokenServer)
+            .setQuotaProjectId(QUOTA_PROJECT)
             .build();
     assertEquals(credentials.hashCode(), otherCredentials.hashCode());
   }
@@ -496,7 +547,8 @@ public class UserCredentialsTest extends BaseSerializationTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
-    InputStream userStream = writeUserStream(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN);
+    InputStream userStream =
+        writeUserStream(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
 
     UserCredentials credentials = UserCredentials.fromStream(userStream, transportFactory);
 
@@ -507,21 +559,21 @@ public class UserCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void fromStream_userNoClientId_throws() throws IOException {
-    InputStream userStream = writeUserStream(null, CLIENT_SECRET, REFRESH_TOKEN);
+    InputStream userStream = writeUserStream(null, CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
 
     testFromStreamException(userStream, "client_id");
   }
 
   @Test
   public void fromStream_userNoClientSecret_throws() throws IOException {
-    InputStream userStream = writeUserStream(CLIENT_ID, null, REFRESH_TOKEN);
+    InputStream userStream = writeUserStream(CLIENT_ID, null, REFRESH_TOKEN, QUOTA_PROJECT);
 
     testFromStreamException(userStream, "client_secret");
   }
 
   @Test
   public void fromStream_userNoRefreshToken_throws() throws IOException {
-    InputStream userStream = writeUserStream(CLIENT_ID, CLIENT_SECRET, null);
+    InputStream userStream = writeUserStream(CLIENT_ID, CLIENT_SECRET, null, QUOTA_PROJECT);
 
     testFromStreamException(userStream, "refresh_token");
   }
@@ -566,7 +618,8 @@ public class UserCredentialsTest extends BaseSerializationTest {
     assertEquals(userCredentials.getRefreshToken(), restoredCredentials.getRefreshToken());
   }
 
-  static GenericJson writeUserJson(String clientId, String clientSecret, String refreshToken) {
+  static GenericJson writeUserJson(
+      String clientId, String clientSecret, String refreshToken, String quotaProjectId) {
     GenericJson json = new GenericJson();
     if (clientId != null) {
       json.put("client_id", clientId);
@@ -577,13 +630,17 @@ public class UserCredentialsTest extends BaseSerializationTest {
     if (refreshToken != null) {
       json.put("refresh_token", refreshToken);
     }
+    if (quotaProjectId != null) {
+      json.put("quota_project_id", quotaProjectId);
+    }
     json.put("type", GoogleCredentials.USER_FILE_TYPE);
     return json;
   }
 
-  static InputStream writeUserStream(String clientId, String clientSecret, String refreshToken)
+  static InputStream writeUserStream(
+      String clientId, String clientSecret, String refreshToken, String quotaProjectId)
       throws IOException {
-    GenericJson json = writeUserJson(clientId, clientSecret, refreshToken);
+    GenericJson json = writeUserJson(clientId, clientSecret, refreshToken, quotaProjectId);
     return TestUtils.jsonToInputStream(json);
   }
 

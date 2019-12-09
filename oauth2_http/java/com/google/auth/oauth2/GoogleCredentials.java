@@ -39,12 +39,14 @@ import com.google.auth.http.HttpTransportFactory;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collection;
+import java.util.*;
 
 /** Base type for credentials for authorizing calls to Google APIs using OAuth2. */
 public class GoogleCredentials extends OAuth2Credentials {
 
   private static final long serialVersionUID = -1522852442442473691L;
+  static final String QUOTA_PROJECT_ID_HEADER_KEY = "x-goog-user-project";
+
   static final String USER_FILE_TYPE = "authorized_user";
   static final String SERVICE_ACCOUNT_FILE_TYPE = "service_account";
 
@@ -164,6 +166,24 @@ public class GoogleCredentials extends OAuth2Credentials {
             "Error reading credentials from stream, 'type' value '%s' not recognized."
                 + " Expecting '%s' or '%s'.",
             fileType, USER_FILE_TYPE, SERVICE_ACCOUNT_FILE_TYPE));
+  }
+
+  /**
+   * Adds quota project ID to requestMetadata if present.
+   *
+   * @return a new map with quotaProjectId added if needed, or else returns the original
+   *     requestMetadata
+   */
+  static Map<String, List<String>> addQuotaProjectIdToRequestMetadata(
+      String quotaProjectId, Map<String, List<String>> requestMetadata) {
+    Preconditions.checkNotNull(requestMetadata, "requestMetadata");
+    if (quotaProjectId != null && !requestMetadata.containsKey(QUOTA_PROJECT_ID_HEADER_KEY)) {
+      Map<String, List<String>> newRequestMetadata = new HashMap<>(requestMetadata);
+      newRequestMetadata.put(
+          QUOTA_PROJECT_ID_HEADER_KEY, Collections.singletonList(quotaProjectId));
+      return Collections.unmodifiableMap(newRequestMetadata);
+    }
+    return requestMetadata;
   }
 
   /** Default constructor. */

@@ -52,9 +52,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.URI;
-import java.util.Date;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /** OAuth2 Credentials representing a user's identity and consent. */
 public class UserCredentials extends GoogleCredentials {
@@ -68,6 +66,7 @@ public class UserCredentials extends GoogleCredentials {
   private final String refreshToken;
   private final URI tokenServerUri;
   private final String transportFactoryClassName;
+  private final String quotaProjectId;
 
   private transient HttpTransportFactory transportFactory;
 
@@ -88,7 +87,8 @@ public class UserCredentials extends GoogleCredentials {
       String refreshToken,
       AccessToken accessToken,
       HttpTransportFactory transportFactory,
-      URI tokenServerUri) {
+      URI tokenServerUri,
+      String quotaProjectId) {
     super(accessToken);
     this.clientId = Preconditions.checkNotNull(clientId);
     this.clientSecret = Preconditions.checkNotNull(clientSecret);
@@ -99,6 +99,7 @@ public class UserCredentials extends GoogleCredentials {
             getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     this.tokenServerUri = (tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : tokenServerUri;
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
+    this.quotaProjectId = quotaProjectId;
     Preconditions.checkState(
         accessToken != null || refreshToken != null,
         "Either accessToken or refreshToken must not be null");
@@ -118,6 +119,7 @@ public class UserCredentials extends GoogleCredentials {
     String clientId = (String) json.get("client_id");
     String clientSecret = (String) json.get("client_secret");
     String refreshToken = (String) json.get("refresh_token");
+    String quotaProjectId = (String) json.get("quota_project_id");
     if (clientId == null || clientSecret == null || refreshToken == null) {
       throw new IOException(
           "Error reading user credential from JSON, "
@@ -130,6 +132,7 @@ public class UserCredentials extends GoogleCredentials {
         .setAccessToken(null)
         .setHttpTransportFactory(transportFactory)
         .setTokenServerUri(null)
+        .setQuotaProjectId(quotaProjectId)
         .build();
   }
 
@@ -252,6 +255,9 @@ public class UserCredentials extends GoogleCredentials {
     if (clientSecret != null) {
       json.put("client_secret", clientSecret);
     }
+    if (quotaProjectId != null) {
+      json.put("quota_project", clientSecret);
+    }
     json.setFactory(JSON_FACTORY);
     String text = json.toPrettyString();
     return new ByteArrayInputStream(text.getBytes(UTF_8));
@@ -268,6 +274,12 @@ public class UserCredentials extends GoogleCredentials {
   }
 
   @Override
+  public Map<String, List<String>> getRequestMetadata(URI uri) throws IOException {
+    Map<String, List<String>> requestMetadata = super.getRequestMetadata(uri);
+    return addQuotaProjectIdToRequestMetadata(quotaProjectId, requestMetadata);
+  }
+
+  @Override
   public int hashCode() {
     return Objects.hash(
         super.hashCode(),
@@ -275,7 +287,8 @@ public class UserCredentials extends GoogleCredentials {
         clientSecret,
         refreshToken,
         tokenServerUri,
-        transportFactoryClassName);
+        transportFactoryClassName,
+        quotaProjectId);
   }
 
   @Override
@@ -287,6 +300,7 @@ public class UserCredentials extends GoogleCredentials {
         .add("refreshToken", refreshToken)
         .add("tokenServerUri", tokenServerUri)
         .add("transportFactoryClassName", transportFactoryClassName)
+        .add("quotaProjectId", quotaProjectId)
         .toString();
   }
 
@@ -301,7 +315,8 @@ public class UserCredentials extends GoogleCredentials {
         && Objects.equals(this.clientSecret, other.clientSecret)
         && Objects.equals(this.refreshToken, other.refreshToken)
         && Objects.equals(this.tokenServerUri, other.tokenServerUri)
-        && Objects.equals(this.transportFactoryClassName, other.transportFactoryClassName);
+        && Objects.equals(this.transportFactoryClassName, other.transportFactoryClassName)
+        && Objects.equals(this.quotaProjectId, other.quotaProjectId);
   }
 
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
@@ -324,6 +339,7 @@ public class UserCredentials extends GoogleCredentials {
     private String refreshToken;
     private URI tokenServerUri;
     private HttpTransportFactory transportFactory;
+    private String quotaProjectId;
 
     protected Builder() {}
 
@@ -333,6 +349,7 @@ public class UserCredentials extends GoogleCredentials {
       this.refreshToken = credentials.refreshToken;
       this.transportFactory = credentials.transportFactory;
       this.tokenServerUri = credentials.tokenServerUri;
+      this.quotaProjectId = credentials.quotaProjectId;
     }
 
     public Builder setClientId(String clientId) {
@@ -365,6 +382,11 @@ public class UserCredentials extends GoogleCredentials {
       return this;
     }
 
+    public Builder setQuotaProjectId(String quotaProjectId) {
+      this.quotaProjectId = quotaProjectId;
+      return this;
+    }
+
     public String getClientId() {
       return clientId;
     }
@@ -385,9 +407,19 @@ public class UserCredentials extends GoogleCredentials {
       return transportFactory;
     }
 
+    public String getQuotaProjectId() {
+      return quotaProjectId;
+    }
+
     public UserCredentials build() {
       return new UserCredentials(
-          clientId, clientSecret, refreshToken, getAccessToken(), transportFactory, tokenServerUri);
+          clientId,
+          clientSecret,
+          refreshToken,
+          getAccessToken(),
+          transportFactory,
+          tokenServerUri,
+          quotaProjectId);
     }
   }
 }

@@ -32,6 +32,7 @@
 package com.google.auth.oauth2;
 
 import static com.google.auth.oauth2.GoogleCredentials.SERVICE_ACCOUNT_FILE_TYPE;
+import static com.google.auth.oauth2.GoogleCredentials.addQuotaProjectIdToRequestMetadata;
 
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
@@ -84,6 +85,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   private final PrivateKey privateKey;
   private final String privateKeyId;
   private final URI defaultAudience;
+  private final String quotaProjectId;
 
   private transient LoadingCache<JwtClaims, JwtCredentials> credentialsCache;
 
@@ -103,7 +105,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   @Deprecated
   public ServiceAccountJwtAccessCredentials(
       String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId) {
-    this(clientId, clientEmail, privateKey, privateKeyId, null);
+    this(clientId, clientEmail, privateKey, privateKeyId, null, null);
   }
 
   /**
@@ -120,13 +122,15 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
       String clientEmail,
       PrivateKey privateKey,
       String privateKeyId,
-      URI defaultAudience) {
+      URI defaultAudience,
+      String quotaProjectId) {
     this.clientId = clientId;
     this.clientEmail = Preconditions.checkNotNull(clientEmail);
     this.privateKey = Preconditions.checkNotNull(privateKey);
     this.privateKeyId = privateKeyId;
     this.defaultAudience = defaultAudience;
     this.credentialsCache = createCache();
+    this.quotaProjectId = quotaProjectId;
   }
 
   /**
@@ -156,6 +160,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     String clientEmail = (String) json.get("client_email");
     String privateKeyPkcs8 = (String) json.get("private_key");
     String privateKeyId = (String) json.get("private_key_id");
+    String quoataProjectId = (String) json.get("quota_project_id");
     if (clientId == null
         || clientEmail == null
         || privateKeyPkcs8 == null
@@ -164,7 +169,8 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
           "Error reading service account credential from JSON, "
               + "expecting  'client_id', 'client_email', 'private_key' and 'private_key_id'.");
     }
-    return fromPkcs8(clientId, clientEmail, privateKeyPkcs8, privateKeyId, defaultAudience);
+    return fromPkcs8(
+        clientId, clientEmail, privateKeyPkcs8, privateKeyId, defaultAudience, quoataProjectId);
   }
 
   /**
@@ -180,7 +186,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   public static ServiceAccountJwtAccessCredentials fromPkcs8(
       String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId)
       throws IOException {
-    return fromPkcs8(clientId, clientEmail, privateKeyPkcs8, privateKeyId, null);
+    return fromPkcs8(clientId, clientEmail, privateKeyPkcs8, privateKeyId, null, null);
   }
 
   /**
@@ -203,7 +209,32 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
       throws IOException {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(privateKeyPkcs8);
     return new ServiceAccountJwtAccessCredentials(
-        clientId, clientEmail, privateKey, privateKeyId, defaultAudience);
+        clientId, clientEmail, privateKey, privateKeyId, defaultAudience, null);
+  }
+
+  /**
+   * Factory using PKCS#8 for the private key.
+   *
+   * @param clientId Client ID of the service account from the console. May be null.
+   * @param clientEmail Client email address of the service account from the console.
+   * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
+   * @param privateKeyId Private key identifier for the service account. May be null.
+   * @param defaultAudience Audience to use if not provided by transport. May be null.
+   * @param quotaProjectId The project used for quota and billing purposes. May be null.
+   * @return New ServiceAccountJwtAcceessCredentials created from a private key.
+   * @throws IOException if the credential cannot be created from the private key.
+   */
+  public static ServiceAccountJwtAccessCredentials fromPkcs8(
+      String clientId,
+      String clientEmail,
+      String privateKeyPkcs8,
+      String privateKeyId,
+      URI defaultAudience,
+      String quotaProjectId)
+      throws IOException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(privateKeyPkcs8);
+    return new ServiceAccountJwtAccessCredentials(
+        clientId, clientEmail, privateKey, privateKeyId, defaultAudience, quotaProjectId);
   }
 
   /**
@@ -344,7 +375,8 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
               .setSubject(clientEmail)
               .build();
       JwtCredentials credentials = credentialsCache.get(defaultClaims);
-      return credentials.getRequestMetadata(uri);
+      Map<String, List<String>> requestMetadata = credentials.getRequestMetadata(uri);
+      return addQuotaProjectIdToRequestMetadata(quotaProjectId, requestMetadata);
     } catch (ExecutionException e) {
       Throwables.propagateIfPossible(e.getCause(), IOException.class);
       // Should never happen
@@ -400,7 +432,8 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
 
   @Override
   public int hashCode() {
-    return Objects.hash(clientId, clientEmail, privateKey, privateKeyId, defaultAudience);
+    return Objects.hash(
+        clientId, clientEmail, privateKey, privateKeyId, defaultAudience, quotaProjectId);
   }
 
   @Override
@@ -410,6 +443,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
         .add("clientEmail", clientEmail)
         .add("privateKeyId", privateKeyId)
         .add("defaultAudience", defaultAudience)
+        .add("quotaProjectId", quotaProjectId)
         .toString();
   }
 
@@ -423,7 +457,8 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
         && Objects.equals(this.clientEmail, other.clientEmail)
         && Objects.equals(this.privateKey, other.privateKey)
         && Objects.equals(this.privateKeyId, other.privateKeyId)
-        && Objects.equals(this.defaultAudience, other.defaultAudience);
+        && Objects.equals(this.defaultAudience, other.defaultAudience)
+        && Objects.equals(this.quotaProjectId, other.quotaProjectId);
   }
 
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
@@ -447,6 +482,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     private PrivateKey privateKey;
     private String privateKeyId;
     private URI defaultAudience;
+    private String quotaProjectId;
 
     protected Builder() {}
 
@@ -456,6 +492,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
       this.privateKey = credentials.privateKey;
       this.privateKeyId = credentials.privateKeyId;
       this.defaultAudience = credentials.defaultAudience;
+      this.quotaProjectId = credentials.quotaProjectId;
     }
 
     public Builder setClientId(String clientId) {
@@ -483,6 +520,11 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
       return this;
     }
 
+    public Builder setQuotaProjectId(String quotaProjectId) {
+      this.quotaProjectId = quotaProjectId;
+      return this;
+    }
+
     public String getClientId() {
       return clientId;
     }
@@ -503,9 +545,13 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
       return defaultAudience;
     }
 
+    public String getQuotaProjectId() {
+      return quotaProjectId;
+    }
+
     public ServiceAccountJwtAccessCredentials build() {
       return new ServiceAccountJwtAccessCredentials(
-          clientId, clientEmail, privateKey, privateKeyId, defaultAudience);
+          clientId, clientEmail, privateKey, privateKeyId, defaultAudience, quotaProjectId);
     }
   }
 }

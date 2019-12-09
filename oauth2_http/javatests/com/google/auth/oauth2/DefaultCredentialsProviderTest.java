@@ -88,6 +88,7 @@ public class DefaultCredentialsProviderTest {
       ServiceAccountCredentialsTest.SA_PRIVATE_KEY_PKCS8;
   private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
+  private static final String QUOTA_PROJECT = "sample-quota-project-id";
 
   static class MockRequestCountingTransportFactory implements HttpTransportFactory {
 
@@ -132,7 +133,8 @@ public class DefaultCredentialsProviderTest {
   public void getDefaultCredentials_envValidSandbox_throwsNonSecurity() throws Exception {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     InputStream userStream =
-        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+        UserCredentialsTest.writeUserStream(
+            USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setFileSandbox(true);
     String userPath = tempFilePath("user.json");
@@ -314,7 +316,8 @@ public class DefaultCredentialsProviderTest {
   @Test
   public void getDefaultCredentials_envUser_providesToken() throws IOException {
     InputStream userStream =
-        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+        UserCredentialsTest.writeUserStream(
+            USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     String userPath = tempFilePath("user.json");
     testProvider.addFile(userPath, userStream);
@@ -361,7 +364,8 @@ public class DefaultCredentialsProviderTest {
   public void getDefaultCredentials_wellKnownFileEnv_providesToken() throws IOException {
     File cloudConfigDir = getTempDirectory();
     InputStream userStream =
-        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+        UserCredentialsTest.writeUserStream(
+            USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
     File wellKnownFile =
         new File(cloudConfigDir, DefaultCredentialsProvider.WELL_KNOWN_CREDENTIALS_FILE);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
@@ -377,7 +381,8 @@ public class DefaultCredentialsProviderTest {
     File configDir = new File(homeDir, ".config");
     File cloudConfigDir = new File(configDir, DefaultCredentialsProvider.CLOUDSDK_CONFIG_DIRECTORY);
     InputStream userStream =
-        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+        UserCredentialsTest.writeUserStream(
+            USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
     File wellKnownFile =
         new File(cloudConfigDir, DefaultCredentialsProvider.WELL_KNOWN_CREDENTIALS_FILE);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
@@ -393,7 +398,8 @@ public class DefaultCredentialsProviderTest {
     File homeDir = getTempDirectory();
     File cloudConfigDir = new File(homeDir, DefaultCredentialsProvider.CLOUDSDK_CONFIG_DIRECTORY);
     InputStream userStream =
-        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+        UserCredentialsTest.writeUserStream(
+            USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
     File wellKnownFile =
         new File(cloudConfigDir, DefaultCredentialsProvider.WELL_KNOWN_CREDENTIALS_FILE);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
@@ -413,7 +419,8 @@ public class DefaultCredentialsProviderTest {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
 
     InputStream envStream =
-        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, refreshTokenEnv);
+        UserCredentialsTest.writeUserStream(
+            USER_CLIENT_ID, USER_CLIENT_SECRET, refreshTokenEnv, QUOTA_PROJECT);
     String envPath = tempFilePath("env.json");
     testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, envPath);
     testProvider.addFile(envPath, envStream);
@@ -422,7 +429,8 @@ public class DefaultCredentialsProviderTest {
     File configDir = new File(homeDir, ".config");
     File cloudConfigDir = new File(configDir, DefaultCredentialsProvider.CLOUDSDK_CONFIG_DIRECTORY);
     InputStream wkfStream =
-        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, refreshTokenWkf);
+        UserCredentialsTest.writeUserStream(
+            USER_CLIENT_ID, USER_CLIENT_SECRET, refreshTokenWkf, QUOTA_PROJECT);
     File wellKnownFile =
         new File(cloudConfigDir, DefaultCredentialsProvider.WELL_KNOWN_CREDENTIALS_FILE);
     testProvider.setProperty("os.name", "linux");
@@ -480,7 +488,8 @@ public class DefaultCredentialsProviderTest {
     File configDir = new File(homeDir, ".config");
     File cloudConfigDir = new File(configDir, DefaultCredentialsProvider.CLOUDSDK_CONFIG_DIRECTORY);
     InputStream userStream =
-        UserCredentialsTest.writeUserStream(GCLOUDSDK_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+        UserCredentialsTest.writeUserStream(
+            GCLOUDSDK_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
     File wellKnownFile =
         new File(cloudConfigDir, DefaultCredentialsProvider.WELL_KNOWN_CREDENTIALS_FILE);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();

@@ -108,6 +108,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
           + "CJhenAiOiIxMDIxMDE1NTA4MzQyMDA3MDg1NjgiLCJleHAiOjE1NjQ0NzUwNTEsImlhdCI6MTU2NDQ3MTQ1MSwi"
           + "aXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwic3ViIjoiMTAyMTAxNTUwODM0MjAwNzA4NTY4In0"
           + ".redacted";
+  private static final String QUOTA_PROJECT = "sample-quota-project-id";
 
   @Test
   public void createdScoped_clones() throws IOException {
@@ -338,7 +339,12 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     GenericJson json =
         writeServiceAccountJson(
-            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, PROJECT_ID);
+            SA_CLIENT_ID,
+            SA_CLIENT_EMAIL,
+            SA_PRIVATE_KEY_PKCS8,
+            SA_PRIVATE_KEY_ID,
+            PROJECT_ID,
+            null);
 
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.fromJson(json, transportFactory);
@@ -351,7 +357,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     GenericJson json =
         writeServiceAccountJson(
-            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, null);
+            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, null, null);
 
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.fromJson(json, transportFactory);
@@ -364,7 +370,12 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     GenericJson json =
         writeServiceAccountJson(
-            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, PROJECT_ID);
+            SA_CLIENT_ID,
+            SA_CLIENT_EMAIL,
+            SA_PRIVATE_KEY_PKCS8,
+            SA_PRIVATE_KEY_ID,
+            PROJECT_ID,
+            null);
 
     GoogleCredentials credentials = ServiceAccountCredentials.fromJson(json, transportFactory);
 
@@ -380,11 +391,38 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     GenericJson json =
         writeServiceAccountJson(
-            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, PROJECT_ID);
+            SA_CLIENT_ID,
+            SA_CLIENT_EMAIL,
+            SA_PRIVATE_KEY_PKCS8,
+            SA_PRIVATE_KEY_ID,
+            PROJECT_ID,
+            null);
     json.put("token_uri", tokenServerUri);
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.fromJson(json, transportFactory);
     assertEquals(URI.create(tokenServerUri), credentials.getTokenServerUri());
+  }
+
+  @Test
+  public void fromJson_hasQuotaProjectId() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    GenericJson json =
+        writeServiceAccountJson(
+            SA_CLIENT_ID,
+            SA_CLIENT_EMAIL,
+            SA_PRIVATE_KEY_PKCS8,
+            SA_PRIVATE_KEY_ID,
+            PROJECT_ID,
+            QUOTA_PROJECT);
+    GoogleCredentials credentials = ServiceAccountCredentials.fromJson(json, transportFactory);
+    credentials = credentials.createScoped(SCOPES);
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+
+    assertTrue(metadata.containsKey(GoogleCredentials.QUOTA_PROJECT_ID_HEADER_KEY));
+    assertEquals(
+        metadata.get(GoogleCredentials.QUOTA_PROJECT_ID_HEADER_KEY),
+        Collections.singletonList(QUOTA_PROJECT));
   }
 
   @Test
@@ -876,18 +914,21 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             SCOPES,
             transportFactory,
             tokenServer,
-            SERVICE_ACCOUNT_USER);
+            SERVICE_ACCOUNT_USER,
+            QUOTA_PROJECT);
     String expectedToString =
         String.format(
             "ServiceAccountCredentials{clientId=%s, clientEmail=%s, privateKeyId=%s, "
-                + "transportFactoryClassName=%s, tokenServerUri=%s, scopes=%s, serviceAccountUser=%s}",
+                + "transportFactoryClassName=%s, tokenServerUri=%s, scopes=%s, serviceAccountUser=%s, "
+                + "quotaProjectId=%s}",
             SA_CLIENT_ID,
             SA_CLIENT_EMAIL,
             SA_PRIVATE_KEY_ID,
             MockTokenServerTransportFactory.class.getName(),
             tokenServer,
             SCOPES,
-            SERVICE_ACCOUNT_USER);
+            SERVICE_ACCOUNT_USER,
+            QUOTA_PROJECT);
     assertEquals(expectedToString, credentials.toString());
   }
 
@@ -1015,7 +1056,8 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
       String clientEmail,
       String privateKeyPkcs8,
       String privateKeyId,
-      String projectId) {
+      String projectId,
+      String quotaProjectId) {
     GenericJson json = new GenericJson();
     if (clientId != null) {
       json.put("client_id", clientId);
@@ -1032,6 +1074,9 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     if (projectId != null) {
       json.put("project_id", projectId);
     }
+    if (quotaProjectId != null) {
+      json.put("quota_project_id", quotaProjectId);
+    }
     json.put("type", GoogleCredentials.SERVICE_ACCOUNT_FILE_TYPE);
     return json;
   }
@@ -1040,7 +1085,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
       String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId)
       throws IOException {
     GenericJson json =
-        writeServiceAccountJson(clientId, clientEmail, privateKeyPkcs8, privateKeyId, null);
+        writeServiceAccountJson(clientId, clientEmail, privateKeyPkcs8, privateKeyId, null, null);
     return TestUtils.jsonToInputStream(json);
   }
 
