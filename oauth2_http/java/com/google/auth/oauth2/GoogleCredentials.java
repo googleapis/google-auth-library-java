@@ -39,7 +39,11 @@ import com.google.auth.http.HttpTransportFactory;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /** Base type for credentials for authorizing calls to Google APIs using OAuth2. */
 public class GoogleCredentials extends OAuth2Credentials {
@@ -171,19 +175,17 @@ public class GoogleCredentials extends OAuth2Credentials {
   /**
    * Adds quota project ID to requestMetadata if present.
    *
-   * @return a new map with quotaProjectId added if needed, or else returns the original
-   *     requestMetadata
+   * @return a new map with quotaProjectId added if needed
    */
   static Map<String, List<String>> addQuotaProjectIdToRequestMetadata(
       String quotaProjectId, Map<String, List<String>> requestMetadata) {
     Preconditions.checkNotNull(requestMetadata, "requestMetadata");
+    Map<String, List<String>> newRequestMetadata = new HashMap<>(requestMetadata);
     if (quotaProjectId != null && !requestMetadata.containsKey(QUOTA_PROJECT_ID_HEADER_KEY)) {
-      Map<String, List<String>> newRequestMetadata = new HashMap<>(requestMetadata);
       newRequestMetadata.put(
           QUOTA_PROJECT_ID_HEADER_KEY, Collections.singletonList(quotaProjectId));
-      return Collections.unmodifiableMap(newRequestMetadata);
     }
-    return requestMetadata;
+    return Collections.unmodifiableMap(newRequestMetadata);
   }
 
   /** Default constructor. */

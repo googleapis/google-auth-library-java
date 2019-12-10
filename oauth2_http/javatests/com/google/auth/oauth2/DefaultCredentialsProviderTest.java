@@ -85,7 +85,7 @@ public class DefaultCredentialsProviderTest {
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr.apps.googleusercontent.com";
   private static final String SA_PRIVATE_KEY_ID = "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
   private static final String SA_PRIVATE_KEY_PKCS8 =
-      ServiceAccountCredentialsTest.SA_PRIVATE_KEY_PKCS8;
+      ServiceAccountCredentialsTest.PRIVATE_KEY_PKCS8;
   private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
   private static final String QUOTA_PROJECT = "sample-quota-project-id";

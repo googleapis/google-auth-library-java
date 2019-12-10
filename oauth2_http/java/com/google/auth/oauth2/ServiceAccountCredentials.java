@@ -75,7 +75,11 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * OAuth2 credentials representing a Service Account for calling Google APIs.
@@ -116,7 +120,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
    * @param tokenServerUri URI of the end point that provides tokens.
    * @param serviceAccountUser Email of the user account to impersonate, if delegating domain-wide
    *     authority to the service account.
-   * @param projectId The project used for billing.
+   * @param projectId the project used for billing
    * @param quotaProjectId The project used for quota and billing purposes. May be null.
    */
   ServiceAccountCredentials(
@@ -299,18 +303,18 @@ public class ServiceAccountCredentials extends GoogleCredentials
    * Factory with minimum identifying information and custom transport using PKCS#8 for the private
    * key.
    *
-   * @param clientId Client ID of the service account from the console. May be null.
-   * @param clientEmail Client email address of the service account from the console.
+   * @param clientId client ID of the service account from the console. May be null.
+   * @param clientEmail client email address of the service account from the console.
    * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
-   * @param privateKeyId Private key identifier for the service account. May be null.
-   * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
+   * @param privateKeyId private key identifier for the service account. May be null.
+   * @param scopes scope strings for the APIs to be called. May be null or an empty collection,
    *     which results in a credential that must have createScoped called before use.
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *     tokens.
    * @param tokenServerUri URI of the end point that provides tokens.
-   * @param serviceAccountUser The email of the user account to impersonate, if delegating
+   * @param serviceAccountUser the email of the user account to impersonate, if delegating
    *     domain-wide authority to the service account.
-   * @param quotaProjectId The project used for quota and billing purposes. May be null.
+   * @param quotaProjectId the project used for quota and billing purposes. May be null.
    * @return New ServiceAccountCredentials created from a private key.
    * @throws IOException if the credential cannot be created from the private key.
    */
@@ -501,7 +505,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
    */
   @Beta
   @Override
-  public IdToken idTokenWithAudience(String targetAudience, List<IdTokenProvider.Option> options)
+  public IdToken idTokenWithAudience(String targetAudience, List<Option> options)
       throws IOException {
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
