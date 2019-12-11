@@ -335,7 +335,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     // When the task is run, the cached data is used.
     assertEquals(1, executor.runTasksExhaustively());
     assertEquals(0, transportFactory.transport.buildRequestCount);
-    assertSame(metadata, callback.metadata);
+    assertEquals(metadata, callback.metadata);
   }
 
   @Test

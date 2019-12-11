@@ -58,7 +58,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /** OAuth2 Credentials representing a user's identity and consent. */
-public class UserCredentials extends GoogleCredentials {
+public class UserCredentials extends GoogleCredentials implements QuotaProjectIdProvider {
 
   private static final String GRANT_TYPE = "refresh_token";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
@@ -333,6 +333,11 @@ public class UserCredentials extends GoogleCredentials {
 
   public Builder toBuilder() {
     return new Builder(this);
+  }
+
+  @Override
+  public String getQuotaProjectId() {
+    return quotaProjectId;
   }
 
   public static class Builder extends GoogleCredentials.Builder {

@@ -102,12 +102,14 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
             .setClientEmail(SA_CLIENT_EMAIL)
             .setPrivateKey(privateKey)
             .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setQuotaProjectId(QUOTA_PROJECT)
             .build();
 
     assertEquals(SA_CLIENT_ID, credentials.getClientId());
     assertEquals(SA_CLIENT_EMAIL, credentials.getClientEmail());
     assertEquals(privateKey, credentials.getPrivateKey());
     assertEquals(SA_PRIVATE_KEY_ID, credentials.getPrivateKeyId());
+    assertEquals(QUOTA_PROJECT, credentials.getQuotaProjectId());
   }
 
   @Test

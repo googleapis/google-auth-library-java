@@ -152,6 +152,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             .setScopes(SCOPES)
             .setServiceAccountUser(USER)
             .setProjectId(PROJECT_ID)
+            .setQuotaProjectId(QUOTA_PROJECT)
             .build();
     String newServiceAccountUser = "stranger@other.org";
 
@@ -165,6 +166,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertArrayEquals(SCOPES.toArray(), newCredentials.getScopes().toArray());
     assertEquals(newServiceAccountUser, newCredentials.getServiceAccountUser());
     assertEquals(PROJECT_ID, newCredentials.getProjectId());
+    assertEquals(QUOTA_PROJECT, newCredentials.getQuotaProjectId());
 
     assertEquals(USER, ((ServiceAccountCredentials) credentials).getServiceAccountUser());
   }

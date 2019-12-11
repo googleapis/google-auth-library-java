@@ -72,7 +72,7 @@ import java.util.concurrent.TimeUnit;
  * <p>Uses a JSON Web Token (JWT) directly in the request metadata to provide authorization.
  */
 public class ServiceAccountJwtAccessCredentials extends Credentials
-    implements JwtProvider, ServiceAccountSigner {
+    implements JwtProvider, ServiceAccountSigner, QuotaProjectIdProvider {
 
   private static final long serialVersionUID = -7274955171379494197L;
   static final String JWT_ACCESS_PREFIX = OAuth2Utils.BEARER_PREFIX;
@@ -473,6 +473,11 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
 
   public Builder toBuilder() {
     return new Builder(this);
+  }
+
+  @Override
+  public String getQuotaProjectId() {
+    return quotaProjectId;
   }
 
   public static class Builder {

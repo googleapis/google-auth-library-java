@@ -78,14 +78,18 @@ public class UserCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void constructor_storesRefreshToken() {
+  public void constructor() {
     UserCredentials credentials =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
             .setClientSecret(CLIENT_SECRET)
             .setRefreshToken(REFRESH_TOKEN)
+            .setQuotaProjectId(QUOTA_PROJECT)
             .build();
+    assertEquals(CLIENT_ID, credentials.getClientId());
+    assertEquals(CLIENT_SECRET, credentials.getClientSecret());
     assertEquals(REFRESH_TOKEN, credentials.getRefreshToken());
+    assertEquals(QUOTA_PROJECT, credentials.getQuotaProjectId());
   }
 
   @Test

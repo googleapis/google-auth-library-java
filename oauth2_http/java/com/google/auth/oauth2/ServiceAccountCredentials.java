@@ -87,7 +87,7 @@ import java.util.Objects;
  * <p>By default uses a JSON Web Token (JWT) to fetch access tokens.
  */
 public class ServiceAccountCredentials extends GoogleCredentials
-    implements ServiceAccountSigner, IdTokenProvider, JwtProvider {
+    implements ServiceAccountSigner, IdTokenProvider, JwtProvider, QuotaProjectIdProvider {
 
   private static final long serialVersionUID = 7807543542681217978L;
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
@@ -764,6 +764,11 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   public Builder toBuilder() {
     return new Builder(this);
+  }
+
+  @Override
+  public String getQuotaProjectId() {
+    return quotaProjectId;
   }
 
   public static class Builder extends GoogleCredentials.Builder {
