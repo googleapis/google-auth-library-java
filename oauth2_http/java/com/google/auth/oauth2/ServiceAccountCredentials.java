@@ -168,7 +168,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     String privateKeyId = (String) json.get("private_key_id");
     String projectId = (String) json.get("project_id");
     String tokenServerUriStringFromCreds = (String) json.get("token_uri");
-    String quotaProject = (String) json.get("quota_project_id");
+    String quotaProjectId = (String) json.get("quota_project_id");
     URI tokenServerUriFromCreds = null;
     try {
       if (tokenServerUriStringFromCreds != null) {
@@ -196,7 +196,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         tokenServerUriFromCreds,
         null,
         projectId,
-        quotaProject);
+        quotaProjectId);
   }
 
   /**

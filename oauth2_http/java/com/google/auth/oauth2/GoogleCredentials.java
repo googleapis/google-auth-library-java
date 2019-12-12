@@ -179,7 +179,7 @@ public class GoogleCredentials extends OAuth2Credentials {
    */
   static Map<String, List<String>> addQuotaProjectIdToRequestMetadata(
       String quotaProjectId, Map<String, List<String>> requestMetadata) {
-    Preconditions.checkNotNull(requestMetadata, "requestMetadata");
+    Preconditions.checkNotNull(requestMetadata);
     Map<String, List<String>> newRequestMetadata = new HashMap<>(requestMetadata);
     if (quotaProjectId != null && !requestMetadata.containsKey(QUOTA_PROJECT_ID_HEADER_KEY)) {
       newRequestMetadata.put(
