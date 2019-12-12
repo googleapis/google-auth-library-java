@@ -170,7 +170,12 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
               + "expecting  'client_id', 'client_email', 'private_key' and 'private_key_id'.");
     }
     return new ServiceAccountJwtAccessCredentials(
-        clientId, clientEmail, ServiceAccountCredentials.privateKeyFromPkcs8(privateKeyPkcs8), privateKeyId, defaultAudience, quoataProjectId);
+        clientId,
+        clientEmail,
+        ServiceAccountCredentials.privateKeyFromPkcs8(privateKeyPkcs8),
+        privateKeyId,
+        defaultAudience,
+        quoataProjectId);
   }
 
   /**
