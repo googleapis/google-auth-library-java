@@ -896,6 +896,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             transportFactory,
             tokenServer,
             USER,
+            null,
             QUOTA_PROJECT);
     String expectedToString =
         String.format(

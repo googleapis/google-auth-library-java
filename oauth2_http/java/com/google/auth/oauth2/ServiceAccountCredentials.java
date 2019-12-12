@@ -219,7 +219,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
       Collection<String> scopes)
       throws IOException {
     return fromPkcs8(
-        clientId, clientEmail, privateKeyPkcs8, privateKeyId, scopes, null, null, null, null);
+        clientId, clientEmail, privateKeyPkcs8, privateKeyId, scopes, null, null, null, null, null);
   }
 
   /**
@@ -255,6 +255,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         scopes,
         transportFactory,
         tokenServerUri,
+        null,
         null,
         null);
   }
@@ -296,50 +297,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
         transportFactory,
         tokenServerUri,
         serviceAccountUser,
-        null);
-  }
-
-  /**
-   * Factory with minimum identifying information and custom transport using PKCS#8 for the private
-   * key.
-   *
-   * @param clientId client ID of the service account from the console. May be null.
-   * @param clientEmail client email address of the service account from the console.
-   * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
-   * @param privateKeyId private key identifier for the service account. May be null.
-   * @param scopes scope strings for the APIs to be called. May be null or an empty collection,
-   *     which results in a credential that must have createScoped called before use.
-   * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *     tokens.
-   * @param tokenServerUri URI of the end point that provides tokens.
-   * @param serviceAccountUser the email of the user account to impersonate, if delegating
-   *     domain-wide authority to the service account.
-   * @param quotaProjectId the project used for quota and billing purposes. May be null.
-   * @return New ServiceAccountCredentials created from a private key.
-   * @throws IOException if the credential cannot be created from the private key.
-   */
-  public static ServiceAccountCredentials fromPkcs8(
-      String clientId,
-      String clientEmail,
-      String privateKeyPkcs8,
-      String privateKeyId,
-      Collection<String> scopes,
-      HttpTransportFactory transportFactory,
-      URI tokenServerUri,
-      String serviceAccountUser,
-      String quotaProjectId)
-      throws IOException {
-    return fromPkcs8(
-        clientId,
-        clientEmail,
-        privateKeyPkcs8,
-        privateKeyId,
-        scopes,
-        transportFactory,
-        tokenServerUri,
-        serviceAccountUser,
         null,
-        quotaProjectId);
+        null);
   }
 
   static ServiceAccountCredentials fromPkcs8(

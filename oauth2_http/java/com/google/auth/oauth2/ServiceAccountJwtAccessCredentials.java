@@ -186,7 +186,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   public static ServiceAccountJwtAccessCredentials fromPkcs8(
       String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId)
       throws IOException {
-    return fromPkcs8(clientId, clientEmail, privateKeyPkcs8, privateKeyId, null, null);
+    return fromPkcs8(clientId, clientEmail, privateKeyPkcs8, privateKeyId, null);
   }
 
   /**
