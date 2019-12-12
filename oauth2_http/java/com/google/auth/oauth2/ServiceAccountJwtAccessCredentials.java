@@ -169,13 +169,8 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
           "Error reading service account credential from JSON, "
               + "expecting  'client_id', 'client_email', 'private_key' and 'private_key_id'.");
     }
-    return new ServiceAccountJwtAccessCredentials(
-        clientId,
-        clientEmail,
-        ServiceAccountCredentials.privateKeyFromPkcs8(privateKeyPkcs8),
-        privateKeyId,
-        defaultAudience,
-        quoataProjectId);
+    return ServiceAccountJwtAccessCredentials.fromPkcs8(
+        clientId, clientEmail, privateKeyPkcs8, privateKeyId, defaultAudience, quoataProjectId);
   }
 
   /**
@@ -212,24 +207,11 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
       String privateKeyId,
       URI defaultAudience)
       throws IOException {
-    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(privateKeyPkcs8);
-    return new ServiceAccountJwtAccessCredentials(
-        clientId, clientEmail, privateKey, privateKeyId, defaultAudience, null);
+    return ServiceAccountJwtAccessCredentials.fromPkcs8(
+        clientId, clientEmail, privateKeyPkcs8, privateKeyId, defaultAudience, null);
   }
 
-  /**
-   * Factory using PKCS#8 for the private key.
-   *
-   * @param clientId Client ID of the service account from the console. May be null.
-   * @param clientEmail Client email address of the service account from the console.
-   * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
-   * @param privateKeyId Private key identifier for the service account. May be null.
-   * @param defaultAudience Audience to use if not provided by transport. May be null.
-   * @param quotaProjectId The project used for quota and billing purposes. May be null.
-   * @return New ServiceAccountJwtAcceessCredentials created from a private key.
-   * @throws IOException if the credential cannot be created from the private key.
-   */
-  public static ServiceAccountJwtAccessCredentials fromPkcs8(
+  static ServiceAccountJwtAccessCredentials fromPkcs8(
       String clientId,
       String clientEmail,
       String privateKeyPkcs8,
