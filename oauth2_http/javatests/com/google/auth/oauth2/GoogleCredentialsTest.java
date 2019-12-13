@@ -65,7 +65,7 @@ public class GoogleCredentialsTest {
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr.apps.googleusercontent.com";
   private static final String SA_PRIVATE_KEY_ID = "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
   private static final String SA_PRIVATE_KEY_PKCS8 =
-      ServiceAccountCredentialsTest.SA_PRIVATE_KEY_PKCS8;
+      ServiceAccountCredentialsTest.PRIVATE_KEY_PKCS8;
   private static final String USER_CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
   private static final String USER_CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
   private static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
@@ -73,6 +73,7 @@ public class GoogleCredentialsTest {
   private static final HttpTransportFactory DUMMY_TRANSPORT_FACTORY =
       new MockTokenServerTransportFactory();
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
+  private static final String QUOTA_PROJECT = "sample-quota-project-id";
 
   private static final Collection<String> SCOPES =
       Collections.unmodifiableCollection(Arrays.asList("scope1", "scope2"));
@@ -188,7 +189,8 @@ public class GoogleCredentialsTest {
     transportFactory.transport.addClient(USER_CLIENT_ID, USER_CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
     InputStream userStream =
-        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+        UserCredentialsTest.writeUserStream(
+            USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, null);
 
     GoogleCredentials credentials = GoogleCredentials.fromStream(userStream, transportFactory);
 
@@ -200,7 +202,7 @@ public class GoogleCredentialsTest {
   @Test
   public void fromStream_userNoClientId_throws() throws IOException {
     InputStream userStream =
-        UserCredentialsTest.writeUserStream(null, USER_CLIENT_SECRET, REFRESH_TOKEN);
+        UserCredentialsTest.writeUserStream(null, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
 
     testFromStreamException(userStream, "client_id");
   }
@@ -208,7 +210,7 @@ public class GoogleCredentialsTest {
   @Test
   public void fromStream_userNoClientSecret_throws() throws IOException {
     InputStream userStream =
-        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, null, REFRESH_TOKEN);
+        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, null, REFRESH_TOKEN, QUOTA_PROJECT);
 
     testFromStreamException(userStream, "client_secret");
   }
@@ -216,7 +218,8 @@ public class GoogleCredentialsTest {
   @Test
   public void fromStream_userNoRefreshToken_throws() throws IOException {
     InputStream userStream =
-        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, null);
+        UserCredentialsTest.writeUserStream(
+            USER_CLIENT_ID, USER_CLIENT_SECRET, null, QUOTA_PROJECT);
 
     testFromStreamException(userStream, "refresh_token");
   }

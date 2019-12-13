@@ -57,6 +57,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -90,6 +91,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
       ServiceAccountJwtAccessCredentials.JWT_ACCESS_PREFIX;
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
   private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
+  private static final String QUOTA_PROJECT = "sample-quota-project-id";
 
   @Test
   public void constructor_allParameters_constructs() throws IOException {
@@ -100,12 +102,14 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
             .setClientEmail(SA_CLIENT_EMAIL)
             .setPrivateKey(privateKey)
             .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setQuotaProjectId(QUOTA_PROJECT)
             .build();
 
     assertEquals(SA_CLIENT_ID, credentials.getClientId());
     assertEquals(SA_CLIENT_EMAIL, credentials.getClientEmail());
     assertEquals(privateKey, credentials.getPrivateKey());
     assertEquals(SA_PRIVATE_KEY_ID, credentials.getPrivateKeyId());
+    assertEquals(QUOTA_PROJECT, credentials.getQuotaProjectId());
   }
 
   @Test
@@ -397,6 +401,26 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
   }
 
   @Test
+  public void getRequestMetadata_contains_quotaProjectId() throws IOException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    Credentials credentials =
+        ServiceAccountJwtAccessCredentials.newBuilder()
+            .setClientId(SA_CLIENT_ID)
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(privateKey)
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setDefaultAudience(CALL_URI)
+            .setQuotaProjectId(QUOTA_PROJECT)
+            .build();
+
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+    assertTrue(metadata.containsKey(GoogleCredentials.QUOTA_PROJECT_ID_HEADER_KEY));
+    assertEquals(
+        metadata.get(GoogleCredentials.QUOTA_PROJECT_ID_HEADER_KEY),
+        Collections.singletonList(QUOTA_PROJECT));
+  }
+
+  @Test
   public void getAccount_sameAs() throws IOException {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials =
@@ -554,12 +578,13 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
             .setPrivateKey(privateKey)
             .setPrivateKeyId(SA_PRIVATE_KEY_ID)
             .setDefaultAudience(CALL_URI)
+            .setQuotaProjectId(QUOTA_PROJECT)
             .build();
     String expectedToString =
         String.format(
             "ServiceAccountJwtAccessCredentials{clientId=%s, clientEmail=%s, privateKeyId=%s, "
-                + "defaultAudience=%s}",
-            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_ID, CALL_URI);
+                + "defaultAudience=%s, quotaProjectId=%s}",
+            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_ID, CALL_URI, QUOTA_PROJECT);
     assertEquals(expectedToString, credentials.toString());
   }
 

@@ -87,7 +87,7 @@ import java.util.Objects;
  * <p>By default uses a JSON Web Token (JWT) to fetch access tokens.
  */
 public class ServiceAccountCredentials extends GoogleCredentials
-    implements ServiceAccountSigner, IdTokenProvider, JwtProvider {
+    implements ServiceAccountSigner, IdTokenProvider, JwtProvider, QuotaProjectIdProvider {
 
   private static final long serialVersionUID = 7807543542681217978L;
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
@@ -102,6 +102,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   private final String transportFactoryClassName;
   private final URI tokenServerUri;
   private final Collection<String> scopes;
+  private final String quotaProjectId;
 
   private transient HttpTransportFactory transportFactory;
 
@@ -119,6 +120,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
    * @param tokenServerUri URI of the end point that provides tokens.
    * @param serviceAccountUser Email of the user account to impersonate, if delegating domain-wide
    *     authority to the service account.
+   * @param projectId the project used for billing
+   * @param quotaProjectId The project used for quota and billing purposes. May be null.
    */
   ServiceAccountCredentials(
       String clientId,
@@ -129,7 +132,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
       HttpTransportFactory transportFactory,
       URI tokenServerUri,
       String serviceAccountUser,
-      String projectId) {
+      String projectId,
+      String quotaProjectId) {
     this.clientId = clientId;
     this.clientEmail = Preconditions.checkNotNull(clientEmail);
     this.privateKey = Preconditions.checkNotNull(privateKey);
@@ -143,6 +147,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     this.tokenServerUri = (tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : tokenServerUri;
     this.serviceAccountUser = serviceAccountUser;
     this.projectId = projectId;
+    this.quotaProjectId = quotaProjectId;
   }
 
   /**
@@ -163,6 +168,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     String privateKeyId = (String) json.get("private_key_id");
     String projectId = (String) json.get("project_id");
     String tokenServerUriStringFromCreds = (String) json.get("token_uri");
+    String quotaProjectId = (String) json.get("quota_project_id");
     URI tokenServerUriFromCreds = null;
     try {
       if (tokenServerUriStringFromCreds != null) {
@@ -189,7 +195,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
         transportFactory,
         tokenServerUriFromCreds,
         null,
-        projectId);
+        projectId,
+        quotaProjectId);
   }
 
   /**
@@ -212,7 +219,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
       Collection<String> scopes)
       throws IOException {
     return fromPkcs8(
-        clientId, clientEmail, privateKeyPkcs8, privateKeyId, scopes, null, null, null);
+        clientId, clientEmail, privateKeyPkcs8, privateKeyId, scopes, null, null, null, null, null);
   }
 
   /**
@@ -248,6 +255,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
         scopes,
         transportFactory,
         tokenServerUri,
+        null,
+        null,
         null);
   }
 
@@ -288,6 +297,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         transportFactory,
         tokenServerUri,
         serviceAccountUser,
+        null,
         null);
   }
 
@@ -300,7 +310,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
       HttpTransportFactory transportFactory,
       URI tokenServerUri,
       String serviceAccountUser,
-      String projectId)
+      String projectId,
+      String quotaProject)
       throws IOException {
     PrivateKey privateKey = privateKeyFromPkcs8(privateKeyPkcs8);
     return new ServiceAccountCredentials(
@@ -312,7 +323,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
         transportFactory,
         tokenServerUri,
         serviceAccountUser,
-        projectId);
+        projectId,
+        quotaProject);
   }
 
   /** Helper to convert from a PKCS#8 String to an RSA private key */
@@ -452,7 +464,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
    */
   @Beta
   @Override
-  public IdToken idTokenWithAudience(String targetAudience, List<IdTokenProvider.Option> options)
+  public IdToken idTokenWithAudience(String targetAudience, List<Option> options)
       throws IOException {
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
@@ -499,7 +511,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
         transportFactory,
         tokenServerUri,
         serviceAccountUser,
-        projectId);
+        projectId,
+        quotaProjectId);
   }
 
   @Override
@@ -513,7 +526,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
         transportFactory,
         tokenServerUri,
         user,
-        projectId);
+        projectId,
+        quotaProjectId);
   }
 
   public final String getClientId() {
@@ -585,6 +599,12 @@ public class ServiceAccountCredentials extends GoogleCredentials
   }
 
   @Override
+  public Map<String, List<String>> getRequestMetadata(URI uri) throws IOException {
+    Map<String, List<String>> requestMetadata = super.getRequestMetadata(uri);
+    return addQuotaProjectIdToRequestMetadata(quotaProjectId, requestMetadata);
+  }
+
+  @Override
   public int hashCode() {
     return Objects.hash(
         clientId,
@@ -593,7 +613,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
         privateKeyId,
         transportFactoryClassName,
         tokenServerUri,
-        scopes);
+        scopes,
+        quotaProjectId);
   }
 
   @Override
@@ -606,6 +627,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         .add("tokenServerUri", tokenServerUri)
         .add("scopes", scopes)
         .add("serviceAccountUser", serviceAccountUser)
+        .add("quotaProjectId", quotaProjectId)
         .toString();
   }
 
@@ -621,7 +643,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
         && Objects.equals(this.privateKeyId, other.privateKeyId)
         && Objects.equals(this.transportFactoryClassName, other.transportFactoryClassName)
         && Objects.equals(this.tokenServerUri, other.tokenServerUri)
-        && Objects.equals(this.scopes, other.scopes);
+        && Objects.equals(this.scopes, other.scopes)
+        && Objects.equals(this.quotaProjectId, other.quotaProjectId);
   }
 
   String createAssertion(JsonFactory jsonFactory, long currentTime, String audience)
@@ -702,6 +725,11 @@ public class ServiceAccountCredentials extends GoogleCredentials
     return new Builder(this);
   }
 
+  @Override
+  public String getQuotaProjectId() {
+    return quotaProjectId;
+  }
+
   public static class Builder extends GoogleCredentials.Builder {
 
     private String clientId;
@@ -713,6 +741,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     private URI tokenServerUri;
     private Collection<String> scopes;
     private HttpTransportFactory transportFactory;
+    private String quotaProjectId;
 
     protected Builder() {}
 
@@ -726,6 +755,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
       this.tokenServerUri = credentials.tokenServerUri;
       this.serviceAccountUser = credentials.serviceAccountUser;
       this.projectId = credentials.projectId;
+      this.quotaProjectId = credentials.quotaProjectId;
     }
 
     public Builder setClientId(String clientId) {
@@ -773,6 +803,11 @@ public class ServiceAccountCredentials extends GoogleCredentials
       return this;
     }
 
+    public Builder setQuotaProjectId(String quotaProjectId) {
+      this.quotaProjectId = quotaProjectId;
+      return this;
+    }
+
     public String getClientId() {
       return clientId;
     }
@@ -809,6 +844,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
       return transportFactory;
     }
 
+    public String getQuotaProjectId() {
+      return quotaProjectId;
+    }
+
     public ServiceAccountCredentials build() {
       return new ServiceAccountCredentials(
           clientId,
@@ -819,7 +858,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
           transportFactory,
           tokenServerUri,
           serviceAccountUser,
-          projectId);
+          projectId,
+          quotaProjectId);
     }
   }
 }
