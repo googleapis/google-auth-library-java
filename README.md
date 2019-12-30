@@ -71,12 +71,6 @@ applications running on App Engine environments that use urlfetch. The `AppEngin
 allows you to authorize your App Engine application given an instance of
 [AppIdentityService][appengine-app-identity-service].
 
-You can install the App Engine SDK from Maven Central:
-
-```bash
-$ mvn dependency:get -Dartifact=com.google.appengine:appengine-api-1.0-sdk:1.9.74
-```
-
 Usage:
 
 ```java
@@ -94,10 +88,8 @@ Credentials credentials =
         .build();
 ```
 
-**Important: Note that `com.google.auth.appengine.AppEngineCredentials` is a separate class from
+**Important: `com.google.auth.appengine.AppEngineCredentials` is a separate class from
 `com.google.auth.oauth2.AppEngineCredentials`.**
-
-You can find [all available versions][appengine-sdk-versions] on Maven Central.
 
 ## google-auth-library-oauth2-http
 
@@ -213,10 +205,8 @@ information.
 To run the tests you will need:
 
 * Maven 3+
-* App Engine SDK (see [installation instructions above][appengine-sdk-install])
 
 ```bash
-$ mvn install -DskipTests=true
 $ mvn test
 ```
 
