@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.20.0](https://www.github.com/googleapis/google-auth-library-java/compare/v0.19.0...v0.20.0) (2020-01-15)
+
+
+### Features
+
+* updated `JwtClaims.Builder` methods to `public` ([#396](https://www.github.com/googleapis/google-auth-library-java/issues/396)) ([9e5de14](https://www.github.com/googleapis/google-auth-library-java/commit/9e5de14263a01d746af2fc192cf1b82a2acff35c))
+
+
+### Dependencies
+
+* update guava to 28.2-android ([#389](https://www.github.com/googleapis/google-auth-library-java/issues/389)) ([70bd8ff](https://www.github.com/googleapis/google-auth-library-java/commit/70bd8ff15a9b0cb1dab9f350bd49dd60b2da33c7))
+
 ## [0.19.0](https://www.github.com/googleapis/google-auth-library-java/compare/v0.18.0...v0.19.0) (2019-12-13)
 
 
