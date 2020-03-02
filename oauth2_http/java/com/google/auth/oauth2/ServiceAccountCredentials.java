@@ -46,6 +46,7 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
+import com.google.api.client.util.Base64;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Joiner;
@@ -53,6 +54,7 @@ import com.google.api.client.util.PemReader;
 import com.google.api.client.util.PemReader.Section;
 import com.google.api.client.util.Preconditions;
 import com.google.api.client.util.SecurityUtils;
+import com.google.api.client.util.StringUtils;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.Beta;
@@ -66,11 +68,11 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.Provider;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
@@ -103,6 +105,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   private final URI tokenServerUri;
   private final Collection<String> scopes;
   private final String quotaProjectId;
+  private final Provider signingProvider;
 
   private transient HttpTransportFactory transportFactory;
 
@@ -122,6 +125,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
    *     authority to the service account.
    * @param projectId the project used for billing
    * @param quotaProjectId The project used for quota and billing purposes. May be null.
+   * @param signingProvider The JCA provider to use during request signing. May be null, in which case the default
+   *                        provider will be used.
    */
   ServiceAccountCredentials(
       String clientId,
@@ -133,7 +138,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
       URI tokenServerUri,
       String serviceAccountUser,
       String projectId,
-      String quotaProjectId) {
+      String quotaProjectId,
+      Provider signingProvider) {
     this.clientId = clientId;
     this.clientEmail = Preconditions.checkNotNull(clientEmail);
     this.privateKey = Preconditions.checkNotNull(privateKey);
@@ -143,6 +149,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         firstNonNull(
             transportFactory,
             getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
+    this.signingProvider = signingProvider;
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
     this.tokenServerUri = (tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : tokenServerUri;
     this.serviceAccountUser = serviceAccountUser;
@@ -324,7 +331,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
         tokenServerUri,
         serviceAccountUser,
         projectId,
-        quotaProject);
+        quotaProject,
+        null);
   }
 
   /** Helper to convert from a PKCS#8 String to an RSA private key */
@@ -512,7 +520,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
         tokenServerUri,
         serviceAccountUser,
         projectId,
-        quotaProjectId);
+        quotaProjectId,
+        null);
   }
 
   @Override
@@ -527,7 +536,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
         tokenServerUri,
         user,
         projectId,
-        quotaProjectId);
+        quotaProjectId,
+        null);
   }
 
   public final String getClientId() {
@@ -570,7 +580,9 @@ public class ServiceAccountCredentials extends GoogleCredentials
   @Override
   public byte[] sign(byte[] toSign) {
     try {
-      Signature signer = Signature.getInstance(OAuth2Utils.SIGNATURE_ALGORITHM);
+      Signature signer = signingProvider == null
+          ? Signature.getInstance(OAuth2Utils.SIGNATURE_ALGORITHM)
+          : Signature.getInstance(OAuth2Utils.SIGNATURE_ALGORITHM, signingProvider);
       signer.initSign(getPrivateKey());
       signer.update(toSign);
       return signer.sign();
@@ -647,6 +659,19 @@ public class ServiceAccountCredentials extends GoogleCredentials
         && Objects.equals(this.quotaProjectId, other.quotaProjectId);
   }
 
+  private String signJsonWebSignature(JsonFactory jsonFactory, JsonWebSignature.Header header, JsonWebToken.Payload payload) throws IOException {
+    String signedContentString = Base64.encodeBase64URLSafeString(jsonFactory.toByteArray(header)) + "." + Base64.encodeBase64URLSafeString(jsonFactory.toByteArray(payload));
+    byte[] signedContentBytes = StringUtils.getBytesUtf8(signedContentString);
+    try {
+      byte[] signature = this.sign(signedContentBytes);
+      return signedContentString + "." + Base64.encodeBase64URLSafeString(signature);
+
+    } catch (SigningException e) {
+      throw new IOException(
+          "Error signing service account access token request with private key.", e);
+    }
+  }
+
   String createAssertion(JsonFactory jsonFactory, long currentTime, String audience)
       throws IOException {
     JsonWebSignature.Header header = new JsonWebSignature.Header();
@@ -667,14 +692,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
       payload.setAudience(audience);
     }
 
-    String assertion;
-    try {
-      assertion = JsonWebSignature.signUsingRsaSha256(privateKey, jsonFactory, header, payload);
-    } catch (GeneralSecurityException e) {
-      throw new IOException(
-          "Error signing service account access token request with private key.", e);
-    }
-    return assertion;
+    String jsonWebSignature = signJsonWebSignature(jsonFactory, header, payload);
+    return jsonWebSignature;
   }
 
   @VisibleForTesting
@@ -698,16 +717,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
       payload.setAudience(audience);
     }
 
-    try {
-      payload.set("target_audience", targetAudience);
+    payload.set("target_audience", targetAudience);
 
-      String assertion =
-          JsonWebSignature.signUsingRsaSha256(privateKey, jsonFactory, header, payload);
-      return assertion;
-    } catch (GeneralSecurityException e) {
-      throw new IOException(
-          "Error signing service account access token request with private key.", e);
-    }
+    String assertion = signJsonWebSignature(jsonFactory, header, payload);
+    return assertion;
   }
 
   @SuppressWarnings("unused")
@@ -742,6 +755,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     private Collection<String> scopes;
     private HttpTransportFactory transportFactory;
     private String quotaProjectId;
+    private Provider signatureProvider;
 
     protected Builder() {}
 
@@ -756,6 +770,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
       this.serviceAccountUser = credentials.serviceAccountUser;
       this.projectId = credentials.projectId;
       this.quotaProjectId = credentials.quotaProjectId;
+      this.signatureProvider = credentials.signingProvider;
     }
 
     public Builder setClientId(String clientId) {
@@ -808,6 +823,11 @@ public class ServiceAccountCredentials extends GoogleCredentials
       return this;
     }
 
+    public Builder setSignatureProvider(Provider signatureProvider) {
+      this.signatureProvider = signatureProvider;
+      return this;
+    }
+
     public String getClientId() {
       return clientId;
     }
@@ -848,6 +868,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
       return quotaProjectId;
     }
 
+    public Provider getSignatureProvider() {
+      return signatureProvider;
+    }
+
     public ServiceAccountCredentials build() {
       return new ServiceAccountCredentials(
           clientId,
@@ -859,7 +883,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
           tokenServerUri,
           serviceAccountUser,
           projectId,
-          quotaProjectId);
+          quotaProjectId,
+          signatureProvider);
     }
   }
 }
