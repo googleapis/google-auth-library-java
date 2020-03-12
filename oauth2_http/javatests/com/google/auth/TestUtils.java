@@ -40,10 +40,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.List;
@@ -80,6 +77,18 @@ public class TestUtils {
     }
     return false;
   }
+
+  //  public foo() {
+  //    // for ServiceAccountCredentials
+  //    ServiceAccountCredentials saCreds = ServiceAccountCredentials.fromStream(new
+  // FileInputStream(credPath));
+  //    saCreds = (ServiceAccountCredentials)
+  // saCreds.createScoped(Arrays.asList("https://www.googleapis.com/auth/iam"));
+  //    IdTokenCredentials tokenCredential = IdTokenCredentials.newBuilder()
+  //            .setIdTokenProvider(saCreds)
+  //            .setTargetAudience(targetAudience).build();
+  //    Http
+  //  }
 
   public static InputStream jsonToInputStream(GenericJson json) throws IOException {
     json.setFactory(JSON_FACTORY);
