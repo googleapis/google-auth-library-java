@@ -317,6 +317,33 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void createdScoped_enablesIdTokens() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
+    GoogleCredentials credentials =
+        ServiceAccountCredentials.fromPkcs8(
+            CLIENT_ID,
+            CLIENT_EMAIL,
+            PRIVATE_KEY_PKCS8,
+            PRIVATE_KEY_ID,
+            null,
+            transportFactory,
+            null);
+
+    try {
+      credentials.getRequestMetadata(CALL_URI);
+      fail("Should not be able to get token without scopes");
+    } catch (Exception expected) {
+      // Expected
+    }
+
+    GoogleCredentials scopedCredentials = credentials.createScoped(SCOPES);
+
+    Map<String, List<String>> metadata = scopedCredentials.getRequestMetadata(CALL_URI, true);
+    TestUtils.assertContainsBearerToken(metadata, DEFAULT_ID_TOKEN);
+  }
+
+  @Test
   public void createScopedRequired_emptyScopes_true() throws IOException {
     GoogleCredentials credentials =
         ServiceAccountCredentials.fromPkcs8(
@@ -376,6 +403,21 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void fromJSON_hasIdToken() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
+    GenericJson json =
+        writeServiceAccountJson(
+            CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, PROJECT_ID, null);
+
+    GoogleCredentials credentials = ServiceAccountCredentials.fromJson(json, transportFactory);
+
+    credentials = credentials.createScoped(SCOPES);
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI, true);
+    TestUtils.assertContainsBearerToken(metadata, DEFAULT_ID_TOKEN);
+  }
+
+  @Test
   public void fromJSON_tokenServerUri() throws IOException {
     final String tokenServerUri = "https://foo.com/bar";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -426,6 +468,25 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void getRequestMetadata_hasIdToken() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
+    OAuth2Credentials credentials =
+        ServiceAccountCredentials.fromPkcs8(
+            CLIENT_ID,
+            CLIENT_EMAIL,
+            PRIVATE_KEY_PKCS8,
+            PRIVATE_KEY_ID,
+            SCOPES,
+            transportFactory,
+            null);
+
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI, true);
+
+    TestUtils.assertContainsBearerToken(metadata, DEFAULT_ID_TOKEN);
+  }
+
+  @Test
   public void getRequestMetadata_customTokenServer_hasAccessToken() throws IOException {
     final URI TOKEN_SERVER = URI.create("https://foo.com/bar");
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -444,6 +505,27 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+  }
+
+  @Test
+  public void getRequestMetadata_customTokenServer_hasIdToken() throws IOException {
+    final URI TOKEN_SERVER = URI.create("https://foo.com/bar");
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
+    transportFactory.transport.setTokenServerUri(TOKEN_SERVER);
+    OAuth2Credentials credentials =
+        ServiceAccountCredentials.fromPkcs8(
+            CLIENT_ID,
+            CLIENT_EMAIL,
+            PRIVATE_KEY_PKCS8,
+            PRIVATE_KEY_ID,
+            SCOPES,
+            transportFactory,
+            TOKEN_SERVER);
+
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI, true);
+
+    TestUtils.assertContainsBearerToken(metadata, DEFAULT_ID_TOKEN);
   }
 
   @Test
@@ -985,7 +1067,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_providesToken() throws IOException {
+  public void fromStream_providesAccessToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
     InputStream serviceAccountStream =
@@ -998,6 +1080,22 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     credentials = credentials.createScoped(SCOPES);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+  }
+
+  @Test
+  public void fromStream_providesIdToken() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
+    InputStream serviceAccountStream =
+        writeServiceAccountStream(CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID);
+
+    GoogleCredentials credentials =
+        ServiceAccountCredentials.fromStream(serviceAccountStream, transportFactory);
+
+    assertNotNull(credentials);
+    credentials = credentials.createScoped(SCOPES);
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI, true);
+    TestUtils.assertContainsBearerToken(metadata, DEFAULT_ID_TOKEN);
   }
 
   @Test

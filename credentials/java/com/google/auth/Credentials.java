@@ -37,11 +37,13 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
+import java.util.logging.Logger;
 
 /** Represents an abstract authorized identity instance. */
 public abstract class Credentials implements Serializable {
 
   private static final long serialVersionUID = 808575179767517313L;
+  private static final Logger LOGGER = Logger.getLogger(Credentials.class.getName());
 
   /**
    * A constant string name describing the authentication technology.
@@ -118,7 +120,8 @@ public abstract class Credentials implements Serializable {
   }
 
   /**
-   * Get the current request metadata in a blocking manner, refreshing tokens if required.
+   * Get the current request metadata in a blocking manner, refreshing tokens if required and add
+   * access token to the header.
    *
    * <p>This should be called by the transport layer on each request, and the data should be
    * populated in headers or other context. The operation can block and fail to complete and may do
@@ -132,6 +135,27 @@ public abstract class Credentials implements Serializable {
    * @throws IOException if there was an error getting up-to-date access.
    */
   public abstract Map<String, List<String>> getRequestMetadata(URI uri) throws IOException;
+
+  /**
+   * Get the current request metadata in a blocking manner, refreshing tokens if required and add
+   * signed identity token to the header.
+   *
+   * <p>This should be called by the transport layer on each request, and the data should be
+   * populated in headers or other context. The operation can block and fail to complete and may do
+   * things such as refreshing access tokens.
+   *
+   * <p>The convention for handling binary data is for the key in the returned map to end with
+   * {@code "-bin"} and for the corresponding values to be base64 encoded.
+   *
+   * @param uri URI of the entry point for the request.
+   * @param useSignedIdToken Flag that indicate to generate a signed token or not
+   * @return The request metadata used for populating headers or other context.
+   * @throws IOException if there was an error getting up-to-date access.
+   */
+  public Map<String, List<String>> getRequestMetadata(URI uri, boolean useSignedIdToken) throws IOException{
+    LOGGER.warning("No implementation for signed id_token. Add standard AccessToken in the header");
+    return getRequestMetadata(uri);
+  }
 
   /**
    * Whether the credentials have metadata entries that should be added to each request.
