@@ -53,7 +53,6 @@ public class HttpCredentialsAdapter
     implements HttpRequestInitializer, HttpUnsuccessfulResponseHandler {
 
   private static final Logger LOGGER = Logger.getLogger(HttpCredentialsAdapter.class.getName());
-  private boolean useSignedIdToken;
 
   /**
    * In case an abnormal HTTP response is received with {@code WWW-Authenticate} header, and its
@@ -68,14 +67,6 @@ public class HttpCredentialsAdapter
   public HttpCredentialsAdapter(Credentials credentials) {
     Preconditions.checkNotNull(credentials);
     this.credentials = credentials;
-    this.useSignedIdToken = false;
-  }
-
-  /** @param credentials Credentials instance to adapt for HTTP */
-  public HttpCredentialsAdapter(Credentials credentials, boolean useSignedIdToken) {
-    Preconditions.checkNotNull(credentials);
-    this.credentials = credentials;
-    this.useSignedIdToken = useSignedIdToken;
   }
 
   /**
@@ -97,7 +88,7 @@ public class HttpCredentialsAdapter
     if (request.getUrl() != null) {
       uri = request.getUrl().toURI();
     }
-    Map<String, List<String>> credentialHeaders = credentials.getRequestMetadata(uri, useSignedIdToken);
+    Map<String, List<String>> credentialHeaders = credentials.getRequestMetadata(uri);
     if (credentialHeaders == null) {
       return;
     }

@@ -75,7 +75,11 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * OAuth2 credentials representing a Service Account for calling Google APIs.
@@ -596,16 +600,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   @Override
   public Map<String, List<String>> getRequestMetadata(URI uri) throws IOException {
-    return getRequestMetadata(uri, false);
-  }
-
-  @Override
-  public Map<String, List<String>> getRequestMetadata(URI uri, boolean useSignedIdToken) throws IOException {
     Map<String, List<String>> requestMetadata = super.getRequestMetadata(uri);
-    if (useSignedIdToken && uri != null) {
-      List<String> newAuthorizationHeaders = Collections.singletonList("Bearer " + idTokenWithAudience(uri.toString(), Collections.EMPTY_LIST).getTokenValue());
-      requestMetadata = Collections.singletonMap("Authorization", newAuthorizationHeaders);
-    }
     return addQuotaProjectIdToRequestMetadata(quotaProjectId, requestMetadata);
   }
 
