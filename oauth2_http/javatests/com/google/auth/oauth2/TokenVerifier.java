@@ -34,8 +34,21 @@ import com.google.common.collect.ImmutableMap;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.security.*;
-import java.security.spec.*;
+import java.security.AlgorithmParameters;
+import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.spec.ECGenParameterSpec;
+import java.security.spec.ECParameterSpec;
+import java.security.spec.ECPoint;
+import java.security.spec.ECPublicKeySpec;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.InvalidParameterSpecException;
+import java.security.spec.RSAPublicKeySpec;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -116,18 +129,25 @@ public class TokenVerifier {
     }
   }
 
-  private static PublicKey buildRs256PublicKey(JsonWebKey key) {
+  private static PublicKey buildRs256PublicKey(JsonWebKey key) throws NoSuchAlgorithmException, InvalidKeySpecException {
     Preconditions.checkArgument("RSA".equals(key.kty));
-    // TODO(chingor): implement this
-    return null;
+    Preconditions.checkNotNull(key.e);
+    Preconditions.checkNotNull(key.n);
+
+    BigInteger modulus = new BigInteger(1, Base64.decodeBase64(key.n));
+    BigInteger exponent = new BigInteger(1, Base64.decodeBase64(key.e));
+
+    RSAPublicKeySpec spec = new RSAPublicKeySpec(modulus, exponent);
+    KeyFactory factory = KeyFactory.getInstance("RSA");
+    return factory.generatePublic(spec);
   }
 
   private static PublicKey buildEs256PublicKey(JsonWebKey key) throws NoSuchAlgorithmException, InvalidParameterSpecException, InvalidKeySpecException {
     Preconditions.checkArgument("EC".equals(key.kty));
     Preconditions.checkArgument("P-256".equals(key.crv));
 
-    BigInteger x = new BigInteger(Base64.decodeBase64(key.x));
-    BigInteger y = new BigInteger(Base64.decodeBase64(key.y));
+    BigInteger x = new BigInteger(1, Base64.decodeBase64(key.x));
+    BigInteger y = new BigInteger(1, Base64.decodeBase64(key.y));
     ECPoint pubPoint = new ECPoint(x, y);
     AlgorithmParameters parameters = AlgorithmParameters.getInstance("EC");
     parameters.init(new ECGenParameterSpec("secp256r1"));
@@ -148,6 +168,9 @@ public class TokenVerifier {
     @Nullable
     abstract String getCertificatesLocation();
 
+    @Nullable
+    abstract PublicKey getPublicKey();
+
     static Builder newBuilder() {
       return new AutoValue_TokenVerifier_VerifyOptions.Builder();
     }
@@ -155,8 +178,9 @@ public class TokenVerifier {
     @AutoValue.Builder
     abstract static class Builder {
       abstract Builder setAudience(String audience);
-      abstract Builder setIssuer(String issuer);
       abstract Builder setCertificatesLocation(String certificatesLocation);
+      abstract Builder setIssuer(String issuer);
+      abstract Builder setPublicKey(PublicKey publicKey);
       abstract VerifyOptions build();
     }
   }
@@ -174,6 +198,7 @@ public class TokenVerifier {
     JsonWebSignature jsonWebSignature;
     try {
       jsonWebSignature = JsonWebSignature.parse(OAuth2Utils.JSON_FACTORY, token);
+      System.out.println(jsonWebSignature);
     } catch (IOException e) {
       throw new VerificationException("Error parsing JsonWebSignature token", e);
     }
@@ -184,41 +209,57 @@ public class TokenVerifier {
       throw new VerificationException("Expected issuer does not match");
     }
 
-    String certificatesLocation = verifyOptions.getCertificatesLocation();
     switch(jsonWebSignature.getHeader().getAlgorithm()) {
       case "RS256":
-        return verifyRs256(jsonWebSignature, verifyOptions.getCertificatesLocation());
+        return verifyRs256(jsonWebSignature, verifyOptions);
       case "ES256":
-        return verifyEs256(jsonWebSignature, verifyOptions.getCertificatesLocation());
+        return verifyEs256(jsonWebSignature, verifyOptions);
       default:
         throw new VerificationException("Unexpected signing algorithm: expected either RS256 or ES256");
     }
   }
 
-  private static boolean verifyEs256(JsonWebSignature jsonWebSignature, String certificatesLocation) throws VerificationException {
-    String certsUrl = certificatesLocation == null ?
+  private static boolean verifyEs256(JsonWebSignature jsonWebSignature, VerifyOptions verifyOptions) throws VerificationException {
+    String certsUrl = verifyOptions.getCertificatesLocation() == null ?
       IAP_CERT_URL :
-      certificatesLocation;
+      verifyOptions.getCertificatesLocation();
+    PublicKey publicKey = verifyOptions.getPublicKey();
+    if (publicKey == null) {
+      try {
+        publicKey = PUBLIC_KEY_CACHE.get(certsUrl).get(jsonWebSignature.getHeader().getKeyId());
+      } catch (ExecutionException e) {
+        throw new VerificationException("Error fetching PublicKey for ES256 token", e);
+      }
+    }
     try {
-      PublicKey publicKey = PUBLIC_KEY_CACHE.get(certsUrl).get(jsonWebSignature.getHeader().getKeyId());
       Signature signatureAlgorithm = Signature.getInstance("SHA256withECDSA");
       signatureAlgorithm.initVerify(publicKey);
       signatureAlgorithm.update(jsonWebSignature.getSignedContentBytes());
       byte[] derBytes = convertDerBytes(jsonWebSignature.getSignatureBytes());
       return signatureAlgorithm.verify(derBytes);
-    } catch (ExecutionException | NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+    } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
       throw new VerificationException("Error validating ES256 token", e);
     }
   }
 
-  private static boolean verifyRs256(JsonWebSignature jsonWebSignature, String certificatesLocation) throws VerificationException {
-    String certsUrl = certificatesLocation == null ?
+  private static boolean verifyRs256(JsonWebSignature jsonWebSignature, VerifyOptions verifyOptions) throws VerificationException {
+    String certsUrl = verifyOptions.getCertificatesLocation() == null ?
         FEDERATED_SIGNON_CERT_URL :
-        certificatesLocation;
+        verifyOptions.getCertificatesLocation();
+    PublicKey publicKey = verifyOptions.getPublicKey();
+    if (publicKey == null) {
+      try {
+        publicKey = PUBLIC_KEY_CACHE.get(certsUrl).get(jsonWebSignature.getHeader().getKeyId());
+      } catch (ExecutionException e) {
+        throw new VerificationException("Error fetching PublicKey for ES256 token", e);
+      }
+    }
+    if (publicKey == null) {
+      throw new VerificationException("Could not find publicKey for provided keyId: " + jsonWebSignature.getHeader().getKeyId());
+    }
     try {
-      PublicKey publicKey = PUBLIC_KEY_CACHE.get(certsUrl).get(jsonWebSignature.getHeader().getKeyId());
       return jsonWebSignature.verifySignature(publicKey);
-    } catch (ExecutionException | GeneralSecurityException e) {
+    } catch (GeneralSecurityException e) {
       throw new VerificationException("Error validating RS256 token", e);
     }
   }
