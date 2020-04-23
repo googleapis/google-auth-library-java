@@ -325,7 +325,8 @@ public class TokenVerifier {
    *
    * @param token The JWS token expressed as a string
    * @return true if we can verify the provided token against Google's tokens
-   * @throws VerificationException if the provided token string cannot be parsed as a valid JsonWebSignature
+   * @throws VerificationException if the provided token string cannot be parsed as a valid
+   *     JsonWebSignature
    */
   public static boolean verify(String token) throws VerificationException {
     return verify(token, VerifyOptions.newBuilder().build());

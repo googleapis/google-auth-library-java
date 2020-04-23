@@ -18,10 +18,9 @@ package com.google.auth.oauth2;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import org.junit.Test;
-
 import java.util.Arrays;
 import java.util.List;
+import org.junit.Test;
 
 public class TokenVerifierTest {
   private static final String ES256_TOKEN =
@@ -29,13 +28,16 @@ public class TokenVerifierTest {
 
   private static final String FEDERATED_SIGNON_RS256_TOKEN =
       "eyJhbGciOiJSUzI1NiIsImtpZCI6ImY5ZDk3YjRjYWU5MGJjZDc2YWViMjAwMjZmNmI3NzBjYWMyMjE3ODMiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJodHRwczovL2V4YW1wbGUuY29tL3BhdGgiLCJhenAiOiJpbnRlZ3JhdGlvbi10ZXN0c0BjaGluZ29yLXRlc3QuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLCJlbWFpbCI6ImludGVncmF0aW9uLXRlc3RzQGNoaW5nb3ItdGVzdC5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJleHAiOjE1ODc2Mjk4ODgsImlhdCI6MTU4NzYyNjI4OCwiaXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwic3ViIjoiMTA0MDI5MjkyODUzMDk5OTc4MjkzIn0.Pj4KsJh7riU7ZIbPMcHcHWhasWEcbVjGP4yx_5E0iOpeDalTdri97E-o0dSSkuVX2FeBIgGUg_TNNgJ3YY97T737jT5DUYwdv6M51dDlLmmNqlu_P6toGCSRC8-Beu5gGmqS2Y82TmpHH9Vhoh5PsK7_rVHk8U6VrrVVKKTWm_IzTFhqX1oYKPdvfyaNLsXPbCt_NFE0C3DNmFkgVhRJu7LtzQQN-ghaqd3Ga3i6KH222OEI_PU4BUTvEiNOqRGoMlT_YOsyFN3XwqQ6jQGWhhkArL1z3CG2BVQjHTKpgVsRyy_H6WTZiju2Q-XWobgH-UPSZbyymV8-cFT9XKEtZQ";
-  private static final String LEGACY_FEDERATED_SIGNON_CERT_URL = "https://www.googleapis.com/oauth2/v1/certs";
+  private static final String LEGACY_FEDERATED_SIGNON_CERT_URL =
+      "https://www.googleapis.com/oauth2/v1/certs";
 
   private static final String SERVICE_ACCOUNT_RS256_TOKEN =
       "eyJhbGciOiJSUzI1NiIsImtpZCI6IjJlZjc3YjM4YTFiMDM3MDQ4NzA0MzkxNmFjYmYyN2Q3NGVkZDA4YjEiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJodHRwczovL2V4YW1wbGUuY29tL2F1ZGllbmNlIiwiZXhwIjoxNTg3NjMwNTQzLCJpYXQiOjE1ODc2MjY5NDMsImlzcyI6InNvbWUgaXNzdWVyIiwic3ViIjoic29tZSBzdWJqZWN0In0.gGOQW0qQgs4jGUmCsgRV83RqsJLaEy89-ZOG6p1u0Y26FyY06b6Odgd7xXLsSTiiSnch62dl0Lfi9D0x2ByxvsGOCbovmBl2ZZ0zHr1wpc4N0XS9lMUq5RJQbonDibxXG4nC2zroDfvD0h7i-L8KMXeJb9pYwW7LkmrM_YwYfJnWnZ4bpcsDjojmPeUBlACg7tjjOgBFbyQZvUtaERJwSRlaWibvNjof7eCVfZChE0PwBpZc_cGqSqKXv544L4ttqdCnmONjqrTATXwC4gYxruevkjHfYI5ojcQmXoWDJJ0-_jzfyPE4MFFdCFgzLgnfIOwe5ve0MtquKuv2O0pgvg";
-  private static final String SERVICE_ACCOUNT_CERT_URL = "https://www.googleapis.com/robot/v1/metadata/x509/integration-tests%40chingor-test.iam.gserviceaccount.com";
+  private static final String SERVICE_ACCOUNT_CERT_URL =
+      "https://www.googleapis.com/robot/v1/metadata/x509/integration-tests%40chingor-test.iam.gserviceaccount.com";
 
-  private static final List<String> ALL_TOKENS = Arrays.asList(ES256_TOKEN, FEDERATED_SIGNON_RS256_TOKEN, SERVICE_ACCOUNT_RS256_TOKEN);
+  private static final List<String> ALL_TOKENS =
+      Arrays.asList(ES256_TOKEN, FEDERATED_SIGNON_RS256_TOKEN, SERVICE_ACCOUNT_RS256_TOKEN);
 
   @Test
   public void verifyExpiredToken() {
@@ -53,7 +55,9 @@ public class TokenVerifierTest {
   public void verifyExpectedAudience() {
     for (String token : ALL_TOKENS) {
       try {
-        TokenVerifier.verify(token, TokenVerifier.VerifyOptions.newBuilder().setAudience("expected audience").build());
+        TokenVerifier.verify(
+            token,
+            TokenVerifier.VerifyOptions.newBuilder().setAudience("expected audience").build());
         fail("Should have thrown a VerificationException");
       } catch (TokenVerifier.VerificationException e) {
         assertTrue(e.getMessage().contains("audience does not match"));
@@ -65,7 +69,8 @@ public class TokenVerifierTest {
   public void verifyExpectedIssuer() {
     for (String token : ALL_TOKENS) {
       try {
-        TokenVerifier.verify(token, TokenVerifier.VerifyOptions.newBuilder().setIssuer("expected issuer").build());
+        TokenVerifier.verify(
+            token, TokenVerifier.VerifyOptions.newBuilder().setIssuer("expected issuer").build());
         fail("Should have thrown a VerificationException");
       } catch (TokenVerifier.VerificationException e) {
         assertTrue(e.getMessage().contains("issuer does not match"));
@@ -75,12 +80,18 @@ public class TokenVerifierTest {
 
   @Test
   public void verifyEs256Token() throws TokenVerifier.VerificationException {
-    assertTrue(TokenVerifier.verify(ES256_TOKEN, TokenVerifier.VerifyOptions.newBuilder().setValidateExpiration(false).build()));
+    assertTrue(
+        TokenVerifier.verify(
+            ES256_TOKEN,
+            TokenVerifier.VerifyOptions.newBuilder().setValidateExpiration(false).build()));
   }
 
   @Test
   public void verifyRs256Token() throws TokenVerifier.VerificationException {
-    assertTrue(TokenVerifier.verify(FEDERATED_SIGNON_RS256_TOKEN, TokenVerifier.VerifyOptions.newBuilder().setValidateExpiration(false).build()));
+    assertTrue(
+        TokenVerifier.verify(
+            FEDERATED_SIGNON_RS256_TOKEN,
+            TokenVerifier.VerifyOptions.newBuilder().setValidateExpiration(false).build()));
   }
 
   @Test
