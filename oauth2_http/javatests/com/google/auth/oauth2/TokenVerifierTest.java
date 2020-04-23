@@ -20,6 +20,8 @@ import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.List;
+
+import com.google.api.client.util.Clock;
 import org.junit.Test;
 
 public class TokenVerifierTest {
@@ -38,6 +40,14 @@ public class TokenVerifierTest {
 
   private static final List<String> ALL_TOKENS =
       Arrays.asList(ES256_TOKEN, FEDERATED_SIGNON_RS256_TOKEN, SERVICE_ACCOUNT_RS256_TOKEN);
+
+  // Fixed to 2020-02-26 08:00:00 to allow expiration tests to pass
+  private static final Clock FIXED_CLOCK = new Clock() {
+    @Override
+    public long currentTimeMillis() {
+      return 1582704000000L;
+    }
+  };
 
   @Test
   public void verifyExpiredToken() {
@@ -83,7 +93,7 @@ public class TokenVerifierTest {
     assertTrue(
         TokenVerifier.verify(
             ES256_TOKEN,
-            TokenVerifier.VerifyOptions.newBuilder().setValidateExpiration(false).build()));
+            TokenVerifier.VerifyOptions.newBuilder().setClock(FIXED_CLOCK).build()));
   }
 
   @Test
@@ -91,7 +101,7 @@ public class TokenVerifierTest {
     assertTrue(
         TokenVerifier.verify(
             FEDERATED_SIGNON_RS256_TOKEN,
-            TokenVerifier.VerifyOptions.newBuilder().setValidateExpiration(false).build()));
+            TokenVerifier.VerifyOptions.newBuilder().setClock(FIXED_CLOCK).build()));
   }
 
   @Test
@@ -102,7 +112,7 @@ public class TokenVerifierTest {
             FEDERATED_SIGNON_RS256_TOKEN,
             TokenVerifier.VerifyOptions.newBuilder()
                 .setCertificatesLocation(LEGACY_FEDERATED_SIGNON_CERT_URL)
-                .setValidateExpiration(false)
+                .setClock(FIXED_CLOCK)
                 .build()));
   }
 
@@ -113,7 +123,7 @@ public class TokenVerifierTest {
             SERVICE_ACCOUNT_RS256_TOKEN,
             TokenVerifier.VerifyOptions.newBuilder()
                 .setCertificatesLocation(SERVICE_ACCOUNT_CERT_URL)
-                .setValidateExpiration(false)
+                .setClock(FIXED_CLOCK)
                 .build()));
   }
 }

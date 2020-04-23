@@ -23,6 +23,7 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.util.Base64;
+import com.google.api.client.util.Clock;
 import com.google.api.client.util.Key;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auto.value.AutoValue;
@@ -198,10 +199,10 @@ public class TokenVerifier {
     @Nullable
     abstract PublicKey getPublicKey();
 
-    abstract boolean getValidateExpiration();
+    abstract Clock getClock();
 
     static Builder newBuilder() {
-      return new AutoValue_TokenVerifier_VerifyOptions.Builder().setValidateExpiration(true);
+      return new AutoValue_TokenVerifier_VerifyOptions.Builder().setClock(Clock.SYSTEM);
     }
 
     @AutoValue.Builder
@@ -214,7 +215,7 @@ public class TokenVerifier {
 
       abstract Builder setPublicKey(PublicKey publicKey);
 
-      abstract Builder setValidateExpiration(boolean validateExpiration);
+      abstract Builder setClock(Clock clock);
 
       abstract VerifyOptions build();
     }
@@ -251,11 +252,9 @@ public class TokenVerifier {
       throw new VerificationException("Expected issuer does not match");
     }
 
-    if (verifyOptions.getValidateExpiration()) {
-      Long expiresAt = jsonWebSignature.getPayload().getExpirationTimeSeconds();
-      if (expiresAt != null && expiresAt <= System.currentTimeMillis() / 1000) {
-        throw new VerificationException("Token is expired");
-      }
+    Long expiresAt = jsonWebSignature.getPayload().getExpirationTimeSeconds();
+    if (expiresAt != null && expiresAt <= verifyOptions.getClock().currentTimeMillis() / 1000) {
+      throw new VerificationException("Token is expired");
     }
 
     switch (jsonWebSignature.getHeader().getAlgorithm()) {
