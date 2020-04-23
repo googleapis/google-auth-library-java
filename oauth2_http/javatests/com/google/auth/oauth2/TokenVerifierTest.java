@@ -33,6 +33,12 @@ public class TokenVerifierTest {
 
   @Test
   public void verifyRs256Token() throws TokenVerifier.VerificationException {
+    assertTrue(TokenVerifier.verify(RS256_TOKEN));
+  }
+
+  @Test
+  public void verifyRs256TokenWithLegacyCertificateUrlFormat()
+      throws TokenVerifier.VerificationException {
     assertTrue(
         TokenVerifier.verify(
             RS256_TOKEN,

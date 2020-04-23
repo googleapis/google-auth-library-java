@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.auth.oauth2;
 
 import com.google.api.client.http.GenericUrl;
@@ -42,10 +43,15 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
-import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
-import java.security.spec.*;
+import java.security.spec.ECGenParameterSpec;
+import java.security.spec.ECParameterSpec;
+import java.security.spec.ECPoint;
+import java.security.spec.ECPublicKeySpec;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.InvalidParameterSpecException;
+import java.security.spec.RSAPublicKeySpec;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -107,6 +113,7 @@ public class TokenVerifier {
                   ImmutableMap.Builder<String, PublicKey> keyCacheBuilder =
                       new ImmutableMap.Builder<>();
                   if (jwks.keys == null) {
+                    // Fall back to x509 formatted specification
                     for (String keyId : jwks.keySet()) {
                       String publicKeyPem = (String) jwks.get(keyId);
                       keyCacheBuilder.put(keyId, buildPublicKey(publicKeyPem));
@@ -127,7 +134,8 @@ public class TokenVerifier {
                 }
 
                 private PublicKey buildPublicKey(JsonWebKey key)
-                    throws NoSuchAlgorithmException, InvalidParameterSpecException, InvalidKeySpecException {
+                    throws NoSuchAlgorithmException, InvalidParameterSpecException,
+                        InvalidKeySpecException {
                   if ("ES256".equals(key.alg)) {
                     return buildEs256PublicKey(key);
                   } else if ("RS256".equals((key.alg))) {
@@ -139,10 +147,9 @@ public class TokenVerifier {
 
                 private PublicKey buildPublicKey(String publicPem)
                     throws CertificateException, UnsupportedEncodingException {
-                  CertificateFactory f = CertificateFactory.getInstance("X.509");
-                  Certificate certificate =
-                      f.generateCertificate(new ByteArrayInputStream(publicPem.getBytes("UTF-8")));
-                  return certificate.getPublicKey();
+                  return CertificateFactory.getInstance("X.509")
+                      .generateCertificate(new ByteArrayInputStream(publicPem.getBytes("UTF-8")))
+                      .getPublicKey();
                 }
 
                 private PublicKey buildRs256PublicKey(JsonWebKey key)
@@ -160,7 +167,8 @@ public class TokenVerifier {
                 }
 
                 private PublicKey buildEs256PublicKey(JsonWebKey key)
-                    throws NoSuchAlgorithmException, InvalidParameterSpecException, InvalidKeySpecException {
+                    throws NoSuchAlgorithmException, InvalidParameterSpecException,
+                        InvalidKeySpecException {
                   Preconditions.checkArgument("EC".equals(key.kty));
                   Preconditions.checkArgument("P-256".equals(key.crv));
 
