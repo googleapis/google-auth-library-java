@@ -198,8 +198,10 @@ public class TokenVerifier {
     @Nullable
     abstract PublicKey getPublicKey();
 
+    abstract boolean getValidateExpiration();
+
     static Builder newBuilder() {
-      return new AutoValue_TokenVerifier_VerifyOptions.Builder();
+      return new AutoValue_TokenVerifier_VerifyOptions.Builder().setValidateExpiration(true);
     }
 
     @AutoValue.Builder
@@ -211,6 +213,8 @@ public class TokenVerifier {
       abstract Builder setIssuer(String issuer);
 
       abstract Builder setPublicKey(PublicKey publicKey);
+
+      abstract Builder setValidateExpiration(boolean validateExpiration);
 
       abstract VerifyOptions build();
     }
@@ -234,13 +238,24 @@ public class TokenVerifier {
     } catch (IOException e) {
       throw new VerificationException("Error parsing JsonWebSignature token", e);
     }
+
+    // Verify the expected audience if an audience is provided in the verifyOptions
     if (verifyOptions.getAudience() != null
         && !verifyOptions.getAudience().equals(jsonWebSignature.getPayload().getAudience())) {
       throw new VerificationException("Expected audience does not match");
     }
+
+    // Verify the expected issuer if an issuer is provided in the verifyOptions
     if (verifyOptions.getIssuer() != null
         && !verifyOptions.getIssuer().equals(jsonWebSignature.getPayload().getIssuer())) {
       throw new VerificationException("Expected issuer does not match");
+    }
+
+    if (verifyOptions.getValidateExpiration()) {
+      Long expiresAt = jsonWebSignature.getPayload().getExpirationTimeSeconds();
+      if (expiresAt != null && expiresAt <= System.currentTimeMillis() / 1000) {
+        throw new VerificationException("Token is expired");
+      }
     }
 
     switch (jsonWebSignature.getHeader().getAlgorithm()) {
@@ -310,7 +325,7 @@ public class TokenVerifier {
    *
    * @param token The JWS token expressed as a string
    * @return true if we can verify the provided token against Google's tokens
-   * @throws IOException if the provided token string cannot be parsed as a valid JsonWebSignature
+   * @throws VerificationException if the provided token string cannot be parsed as a valid JsonWebSignature
    */
   public static boolean verify(String token) throws VerificationException {
     return verify(token, VerifyOptions.newBuilder().build());
