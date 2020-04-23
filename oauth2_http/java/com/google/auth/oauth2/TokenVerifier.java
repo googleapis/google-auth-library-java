@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.auth.oauth2;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpTransport;
+import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.util.Base64;
 import com.google.api.client.util.Key;
@@ -30,9 +30,9 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
-
-import javax.annotation.Nullable;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.AlgorithmParameters;
 import java.security.GeneralSecurityException;
@@ -42,26 +42,24 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
-import java.security.spec.ECGenParameterSpec;
-import java.security.spec.ECParameterSpec;
-import java.security.spec.ECPoint;
-import java.security.spec.ECPublicKeySpec;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.InvalidParameterSpecException;
-import java.security.spec.RSAPublicKeySpec;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.spec.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 
 public class TokenVerifier {
   private static final String IAP_CERT_URL = "https://www.gstatic.com/iap/verify/public_key-jwk";
-  private static final String FEDERATED_SIGNON_CERT_URL = "https://www.googleapis.com/oauth2/v3/certs";
+  private static final String FEDERATED_SIGNON_CERT_URL =
+      "https://www.googleapis.com/oauth2/v3/certs";
 
-  public static class JsonWebKeySet {
-    @Key
-    public List<JsonWebKey> keys;
+  public static class JsonWebKeySet extends GenericJson {
+    @Key public List<JsonWebKey> keys;
   }
 
   public static class JsonWebKey {
@@ -87,75 +85,96 @@ public class TokenVerifier {
   private static final LoadingCache<String, Map<String, PublicKey>> PUBLIC_KEY_CACHE =
       CacheBuilder.newBuilder()
           .expireAfterWrite(1, TimeUnit.HOURS)
-          .build(new CacheLoader<String, Map<String, PublicKey>>() {
-            @Override
-            public Map<String, PublicKey> load(String certificateUrl) throws Exception {
-              ImmutableMap.Builder<String, PublicKey> keyCacheBuilder =
-                  new ImmutableMap.Builder<>();
-              HttpTransportFactory httpTransportFactory = OAuth2Utils.HTTP_TRANSPORT_FACTORY;
-              HttpTransport httpTransport = httpTransportFactory.create();
-              JsonWebKeySet jwks;
-              try {
-                HttpRequest request =
-                    httpTransport
-                        .createRequestFactory()
-                        .buildGetRequest(new GenericUrl(certificateUrl))
-                        .setParser(OAuth2Utils.JSON_FACTORY.createJsonObjectParser());
-                HttpResponse response = request.execute();
-                jwks = response.parseAs(JsonWebKeySet.class);
-              } catch (IOException io) {
-                return ImmutableMap.of();
-              }
-              for (JsonWebKey key : jwks.keys) {
-                try {
-                  keyCacheBuilder.put(key.kid, buildPublicKey(key));
-                } catch (NoSuchAlgorithmException|InvalidKeySpecException|InvalidParameterSpecException ignored) {
-                  ignored.printStackTrace();
+          .build(
+              new CacheLoader<String, Map<String, PublicKey>>() {
+                @Override
+                public Map<String, PublicKey> load(String certificateUrl) throws Exception {
+                  HttpTransportFactory httpTransportFactory = OAuth2Utils.HTTP_TRANSPORT_FACTORY;
+                  HttpTransport httpTransport = httpTransportFactory.create();
+                  JsonWebKeySet jwks;
+                  try {
+                    HttpRequest request =
+                        httpTransport
+                            .createRequestFactory()
+                            .buildGetRequest(new GenericUrl(certificateUrl))
+                            .setParser(OAuth2Utils.JSON_FACTORY.createJsonObjectParser());
+                    HttpResponse response = request.execute();
+                    jwks = response.parseAs(JsonWebKeySet.class);
+                  } catch (IOException io) {
+                    return ImmutableMap.of();
+                  }
+
+                  ImmutableMap.Builder<String, PublicKey> keyCacheBuilder =
+                      new ImmutableMap.Builder<>();
+                  if (jwks.keys == null) {
+                    for (String keyId : jwks.keySet()) {
+                      String publicKeyPem = (String) jwks.get(keyId);
+                      keyCacheBuilder.put(keyId, buildPublicKey(publicKeyPem));
+                    }
+                  } else {
+                    for (JsonWebKey key : jwks.keys) {
+                      try {
+                        keyCacheBuilder.put(key.kid, buildPublicKey(key));
+                      } catch (NoSuchAlgorithmException
+                          | InvalidKeySpecException
+                          | InvalidParameterSpecException ignored) {
+                        ignored.printStackTrace();
+                      }
+                    }
+                  }
+
+                  return keyCacheBuilder.build();
                 }
-              }
 
-              return keyCacheBuilder.build();
-            }
-          });
+                private PublicKey buildPublicKey(JsonWebKey key)
+                    throws NoSuchAlgorithmException, InvalidParameterSpecException, InvalidKeySpecException {
+                  if ("ES256".equals(key.alg)) {
+                    return buildEs256PublicKey(key);
+                  } else if ("RS256".equals((key.alg))) {
+                    return buildRs256PublicKey(key);
+                  } else {
+                    return null;
+                  }
+                }
 
-  private static PublicKey buildPublicKey(JsonWebKey key)
-      throws NoSuchAlgorithmException, InvalidParameterSpecException, InvalidKeySpecException {
-    if ("ES256".equals(key.alg)) {
-      return buildEs256PublicKey(key);
-    } else if ("RS256".equals((key.alg))) {
-      return buildRs256PublicKey(key);
-    } else {
-      return null;
-    }
-  }
+                private PublicKey buildPublicKey(String publicPem)
+                    throws CertificateException, UnsupportedEncodingException {
+                  CertificateFactory f = CertificateFactory.getInstance("X.509");
+                  Certificate certificate =
+                      f.generateCertificate(new ByteArrayInputStream(publicPem.getBytes("UTF-8")));
+                  return certificate.getPublicKey();
+                }
 
-  private static PublicKey buildRs256PublicKey(JsonWebKey key) throws NoSuchAlgorithmException, InvalidKeySpecException {
-    Preconditions.checkArgument("RSA".equals(key.kty));
-    Preconditions.checkNotNull(key.e);
-    Preconditions.checkNotNull(key.n);
+                private PublicKey buildRs256PublicKey(JsonWebKey key)
+                    throws NoSuchAlgorithmException, InvalidKeySpecException {
+                  Preconditions.checkArgument("RSA".equals(key.kty));
+                  Preconditions.checkNotNull(key.e);
+                  Preconditions.checkNotNull(key.n);
 
-    BigInteger modulus = new BigInteger(1, Base64.decodeBase64(key.n));
-    BigInteger exponent = new BigInteger(1, Base64.decodeBase64(key.e));
+                  BigInteger modulus = new BigInteger(1, Base64.decodeBase64(key.n));
+                  BigInteger exponent = new BigInteger(1, Base64.decodeBase64(key.e));
 
-    RSAPublicKeySpec spec = new RSAPublicKeySpec(modulus, exponent);
-    KeyFactory factory = KeyFactory.getInstance("RSA");
-    return factory.generatePublic(spec);
-  }
+                  RSAPublicKeySpec spec = new RSAPublicKeySpec(modulus, exponent);
+                  KeyFactory factory = KeyFactory.getInstance("RSA");
+                  return factory.generatePublic(spec);
+                }
 
-  private static PublicKey buildEs256PublicKey(JsonWebKey key) throws NoSuchAlgorithmException, InvalidParameterSpecException, InvalidKeySpecException {
-    Preconditions.checkArgument("EC".equals(key.kty));
-    Preconditions.checkArgument("P-256".equals(key.crv));
+                private PublicKey buildEs256PublicKey(JsonWebKey key)
+                    throws NoSuchAlgorithmException, InvalidParameterSpecException, InvalidKeySpecException {
+                  Preconditions.checkArgument("EC".equals(key.kty));
+                  Preconditions.checkArgument("P-256".equals(key.crv));
 
-    BigInteger x = new BigInteger(1, Base64.decodeBase64(key.x));
-    BigInteger y = new BigInteger(1, Base64.decodeBase64(key.y));
-    ECPoint pubPoint = new ECPoint(x, y);
-    AlgorithmParameters parameters = AlgorithmParameters.getInstance("EC");
-    parameters.init(new ECGenParameterSpec("secp256r1"));
-    ECParameterSpec ecParameters = parameters.getParameterSpec(ECParameterSpec.class);
-    ECPublicKeySpec pubSpec = new ECPublicKeySpec(pubPoint, ecParameters);
-    KeyFactory kf = KeyFactory.getInstance("EC");
-    return kf.generatePublic(pubSpec);
-  }
+                  BigInteger x = new BigInteger(1, Base64.decodeBase64(key.x));
+                  BigInteger y = new BigInteger(1, Base64.decodeBase64(key.y));
+                  ECPoint pubPoint = new ECPoint(x, y);
+                  AlgorithmParameters parameters = AlgorithmParameters.getInstance("EC");
+                  parameters.init(new ECGenParameterSpec("secp256r1"));
+                  ECParameterSpec ecParameters = parameters.getParameterSpec(ECParameterSpec.class);
+                  ECPublicKeySpec pubSpec = new ECPublicKeySpec(pubPoint, ecParameters);
+                  KeyFactory kf = KeyFactory.getInstance("EC");
+                  return kf.generatePublic(pubSpec);
+                }
+              });
 
   @AutoValue
   public abstract static class VerifyOptions {
@@ -178,9 +197,13 @@ public class TokenVerifier {
     @AutoValue.Builder
     abstract static class Builder {
       abstract Builder setAudience(String audience);
+
       abstract Builder setCertificatesLocation(String certificatesLocation);
+
       abstract Builder setIssuer(String issuer);
+
       abstract Builder setPublicKey(PublicKey publicKey);
+
       abstract VerifyOptions build();
     }
   }
@@ -189,40 +212,46 @@ public class TokenVerifier {
     public VerificationException(String message) {
       super(message);
     }
+
     public VerificationException(String message, Throwable cause) {
       super(message, cause);
     }
   }
 
-  public static boolean verify(String token, VerifyOptions verifyOptions) throws VerificationException {
+  public static boolean verify(String token, VerifyOptions verifyOptions)
+      throws VerificationException {
     JsonWebSignature jsonWebSignature;
     try {
       jsonWebSignature = JsonWebSignature.parse(OAuth2Utils.JSON_FACTORY, token);
-      System.out.println(jsonWebSignature);
     } catch (IOException e) {
       throw new VerificationException("Error parsing JsonWebSignature token", e);
     }
-    if (verifyOptions.getAudience() != null && !verifyOptions.getAudience().equals(jsonWebSignature.getPayload().getAudience())) {
+    if (verifyOptions.getAudience() != null
+        && !verifyOptions.getAudience().equals(jsonWebSignature.getPayload().getAudience())) {
       throw new VerificationException("Expected audience does not match");
     }
-    if (verifyOptions.getIssuer() != null && !verifyOptions.getIssuer().equals(jsonWebSignature.getPayload().getIssuer())) {
+    if (verifyOptions.getIssuer() != null
+        && !verifyOptions.getIssuer().equals(jsonWebSignature.getPayload().getIssuer())) {
       throw new VerificationException("Expected issuer does not match");
     }
 
-    switch(jsonWebSignature.getHeader().getAlgorithm()) {
+    switch (jsonWebSignature.getHeader().getAlgorithm()) {
       case "RS256":
         return verifyRs256(jsonWebSignature, verifyOptions);
       case "ES256":
         return verifyEs256(jsonWebSignature, verifyOptions);
       default:
-        throw new VerificationException("Unexpected signing algorithm: expected either RS256 or ES256");
+        throw new VerificationException(
+            "Unexpected signing algorithm: expected either RS256 or ES256");
     }
   }
 
-  private static boolean verifyEs256(JsonWebSignature jsonWebSignature, VerifyOptions verifyOptions) throws VerificationException {
-    String certsUrl = verifyOptions.getCertificatesLocation() == null ?
-      IAP_CERT_URL :
-      verifyOptions.getCertificatesLocation();
+  private static boolean verifyEs256(JsonWebSignature jsonWebSignature, VerifyOptions verifyOptions)
+      throws VerificationException {
+    String certsUrl =
+        verifyOptions.getCertificatesLocation() == null
+            ? IAP_CERT_URL
+            : verifyOptions.getCertificatesLocation();
     PublicKey publicKey = verifyOptions.getPublicKey();
     if (publicKey == null) {
       try {
@@ -242,10 +271,12 @@ public class TokenVerifier {
     }
   }
 
-  private static boolean verifyRs256(JsonWebSignature jsonWebSignature, VerifyOptions verifyOptions) throws VerificationException {
-    String certsUrl = verifyOptions.getCertificatesLocation() == null ?
-        FEDERATED_SIGNON_CERT_URL :
-        verifyOptions.getCertificatesLocation();
+  private static boolean verifyRs256(JsonWebSignature jsonWebSignature, VerifyOptions verifyOptions)
+      throws VerificationException {
+    String certsUrl =
+        verifyOptions.getCertificatesLocation() == null
+            ? FEDERATED_SIGNON_CERT_URL
+            : verifyOptions.getCertificatesLocation();
     PublicKey publicKey = verifyOptions.getPublicKey();
     if (publicKey == null) {
       try {
@@ -255,7 +286,9 @@ public class TokenVerifier {
       }
     }
     if (publicKey == null) {
-      throw new VerificationException("Could not find publicKey for provided keyId: " + jsonWebSignature.getHeader().getKeyId());
+      throw new VerificationException(
+          "Could not find publicKey for provided keyId: "
+              + jsonWebSignature.getHeader().getKeyId());
     }
     try {
       return jsonWebSignature.verifySignature(publicKey);
@@ -277,6 +310,7 @@ public class TokenVerifier {
 
   private static byte DER_TAG_SIGNATURE_OBJECT = 0x30;
   private static byte DER_TAG_ASN1_INTEGER = 0x02;
+
   private static byte[] convertDerBytes(byte[] signature) {
     // expect the signature to be 64 bytes long
     Preconditions.checkState(signature.length == 64);

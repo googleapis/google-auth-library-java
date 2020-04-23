@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.auth.oauth2;
 
 import static org.junit.Assert.assertTrue;
@@ -34,6 +33,11 @@ public class TokenVerifierTest {
 
   @Test
   public void verifyRs256Token() throws TokenVerifier.VerificationException {
-    assertTrue(TokenVerifier.verify(RS256_TOKEN));
+    assertTrue(
+        TokenVerifier.verify(
+            RS256_TOKEN,
+            TokenVerifier.VerifyOptions.newBuilder()
+                .setCertificatesLocation("https://www.googleapis.com/oauth2/v1/certs")
+                .build()));
   }
 }
