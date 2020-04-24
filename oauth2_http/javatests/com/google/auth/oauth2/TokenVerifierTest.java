@@ -18,7 +18,15 @@ package com.google.auth.oauth2;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.LowLevelHttpRequest;
+import com.google.api.client.http.LowLevelHttpResponse;
+import com.google.api.client.testing.http.MockHttpTransport;
+import com.google.api.client.testing.http.MockLowLevelHttpRequest;
+import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
+import com.google.auth.http.HttpTransportFactory;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.Test;
@@ -86,6 +94,80 @@ public class TokenVerifierTest {
       } catch (TokenVerifier.VerificationException e) {
         assertTrue(e.getMessage().contains("issuer does not match"));
       }
+    }
+  }
+
+  @Test
+  public void verifyEs256Token404CertificateUrl() throws TokenVerifier.VerificationException {
+    // Mock HTTP requests
+    HttpTransportFactory httpTransportFactory =
+        new HttpTransportFactory() {
+          @Override
+          public HttpTransport create() {
+            return new MockHttpTransport() {
+              @Override
+              public LowLevelHttpRequest buildRequest(String method, String url)
+                  throws IOException {
+                return new MockLowLevelHttpRequest() {
+                  @Override
+                  public LowLevelHttpResponse execute() throws IOException {
+                    MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+                    response.setStatusCode(404);
+                    response.setContentType("application/json");
+                    response.setContent("");
+                    return response;
+                  }
+                };
+              }
+            };
+          }
+        };
+    TokenVerifier tokenVerifier =
+        TokenVerifier.newBuilder()
+            .setClock(FIXED_CLOCK)
+            .setHttpTransportFactory(httpTransportFactory)
+            .build();
+    try {
+      tokenVerifier.verify(ES256_TOKEN);
+    } catch (TokenVerifier.VerificationException e) {
+      assertTrue(e.getMessage().contains("Could not find publicKey"));
+    }
+  }
+
+  @Test
+  public void verifyEs256TokenPublicKeyMismatch() throws TokenVerifier.VerificationException {
+    // Mock HTTP requests
+    HttpTransportFactory httpTransportFactory =
+        new HttpTransportFactory() {
+          @Override
+          public HttpTransport create() {
+            return new MockHttpTransport() {
+              @Override
+              public LowLevelHttpRequest buildRequest(String method, String url)
+                  throws IOException {
+                return new MockLowLevelHttpRequest() {
+                  @Override
+                  public LowLevelHttpResponse execute() throws IOException {
+                    MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+                    response.setStatusCode(200);
+                    response.setContentType("application/json");
+                    response.setContent("");
+                    return response;
+                  }
+                };
+              }
+            };
+          }
+        };
+    TokenVerifier tokenVerifier =
+        TokenVerifier.newBuilder()
+            .setClock(FIXED_CLOCK)
+            .setHttpTransportFactory(httpTransportFactory)
+            .build();
+    try {
+      tokenVerifier.verify(ES256_TOKEN);
+    } catch (TokenVerifier.VerificationException e) {
+      assertTrue(e.getMessage().contains("Could not find publicKey"));
     }
   }
 

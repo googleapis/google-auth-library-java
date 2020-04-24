@@ -15,14 +15,13 @@
  */
 package com.google.auth.oauth2;
 
-import com.google.api.client.util.Clock;
-import org.junit.Test;
-
-import java.util.Arrays;
-import java.util.List;
-
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import com.google.api.client.util.Clock;
+import java.util.Arrays;
+import java.util.List;
+import org.junit.Test;
 
 public class ITTokenVerifierTest {
   private static final String ES256_TOKEN =

@@ -81,11 +81,15 @@ public class TokenVerifier {
     this.publicKey = builder.publicKey;
     this.clock = builder.clock;
     this.publicKeyCache =
-        CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.HOURS).build(new PublicKeyLoader());
+        CacheBuilder.newBuilder()
+            .expireAfterWrite(1, TimeUnit.HOURS)
+            .build(new PublicKeyLoader(builder.httpTransportFactory));
   }
 
   public static Builder newBuilder() {
-    return new Builder().setClock(Clock.SYSTEM);
+    return new Builder()
+        .setClock(Clock.SYSTEM)
+        .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY);
   }
 
   public boolean verify(String token) throws VerificationException {
@@ -128,6 +132,7 @@ public class TokenVerifier {
     private String issuer;
     private PublicKey publicKey;
     private Clock clock;
+    private HttpTransportFactory httpTransportFactory;
 
     public Builder setAudience(String audience) {
       this.audience = audience;
@@ -154,12 +159,19 @@ public class TokenVerifier {
       return this;
     }
 
+    public Builder setHttpTransportFactory(HttpTransportFactory httpTransportFactory) {
+      this.httpTransportFactory = httpTransportFactory;
+      return this;
+    }
+
     public TokenVerifier build() {
       return new TokenVerifier(this);
     }
   }
 
   static class PublicKeyLoader extends CacheLoader<String, Map<String, PublicKey>> {
+    private final HttpTransportFactory httpTransportFactory;
+
     public static class JsonWebKeySet extends GenericJson {
       @Key public List<JsonWebKey> keys;
     }
@@ -184,9 +196,13 @@ public class TokenVerifier {
       @Key public String n;
     }
 
+    PublicKeyLoader(HttpTransportFactory httpTransportFactory) {
+      super();
+      this.httpTransportFactory = httpTransportFactory;
+    }
+
     @Override
     public Map<String, PublicKey> load(String certificateUrl) throws Exception {
-      HttpTransportFactory httpTransportFactory = OAuth2Utils.HTTP_TRANSPORT_FACTORY;
       HttpTransport httpTransport = httpTransportFactory.create();
       JsonWebKeySet jwks;
       try {
