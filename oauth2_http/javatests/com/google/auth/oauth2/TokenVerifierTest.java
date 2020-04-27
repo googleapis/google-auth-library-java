@@ -15,6 +15,10 @@
  */
 package com.google.auth.oauth2;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.LowLevelHttpRequest;
 import com.google.api.client.http.LowLevelHttpResponse;
@@ -23,20 +27,14 @@ import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.auth.http.HttpTransportFactory;
-
+import com.google.common.io.CharStreams;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Arrays;
 import java.util.List;
-
-import com.google.common.io.CharStreams;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 public class TokenVerifierTest {
   private static final String ES256_TOKEN =
@@ -181,7 +179,10 @@ public class TokenVerifierTest {
 
   @Test
   public void verifyEs256Token() throws TokenVerifier.VerificationException, IOException {
-    HttpTransportFactory httpTransportFactory = mockTransport("https://www.gstatic.com/iap/verify/public_key-jwk", readResourceAsString("iap_keys.json"));
+    HttpTransportFactory httpTransportFactory =
+        mockTransport(
+            "https://www.gstatic.com/iap/verify/public_key-jwk",
+            readResourceAsString("iap_keys.json"));
     TokenVerifier tokenVerifier =
         TokenVerifier.newBuilder()
             .setClock(FIXED_CLOCK)
@@ -192,7 +193,10 @@ public class TokenVerifierTest {
 
   @Test
   public void verifyRs256Token() throws TokenVerifier.VerificationException, IOException {
-    HttpTransportFactory httpTransportFactory = mockTransport("https://www.googleapis.com/oauth2/v3/certs", readResourceAsString("federated_keys.json"));
+    HttpTransportFactory httpTransportFactory =
+        mockTransport(
+            "https://www.googleapis.com/oauth2/v3/certs",
+            readResourceAsString("federated_keys.json"));
     TokenVerifier tokenVerifier =
         TokenVerifier.newBuilder()
             .setClock(FIXED_CLOCK)
@@ -204,7 +208,9 @@ public class TokenVerifierTest {
   @Test
   public void verifyRs256TokenWithLegacyCertificateUrlFormat()
       throws TokenVerifier.VerificationException, IOException {
-    HttpTransportFactory httpTransportFactory = mockTransport(LEGACY_FEDERATED_SIGNON_CERT_URL, readResourceAsString("legacy_federated_keys.json"));
+    HttpTransportFactory httpTransportFactory =
+        mockTransport(
+            LEGACY_FEDERATED_SIGNON_CERT_URL, readResourceAsString("legacy_federated_keys.json"));
     TokenVerifier tokenVerifier =
         TokenVerifier.newBuilder()
             .setCertificatesLocation(LEGACY_FEDERATED_SIGNON_CERT_URL)
@@ -215,8 +221,10 @@ public class TokenVerifierTest {
   }
 
   @Test
-  public void verifyServiceAccountRs256Token() throws TokenVerifier.VerificationException, IOException {
-    HttpTransportFactory httpTransportFactory = mockTransport(SERVICE_ACCOUNT_CERT_URL, readResourceAsString("service_account_keys.json"));
+  public void verifyServiceAccountRs256Token()
+      throws TokenVerifier.VerificationException, IOException {
+    HttpTransportFactory httpTransportFactory =
+        mockTransport(SERVICE_ACCOUNT_CERT_URL, readResourceAsString("service_account_keys.json"));
     TokenVerifier tokenVerifier =
         TokenVerifier.newBuilder()
             .setClock(FIXED_CLOCK)
@@ -226,7 +234,8 @@ public class TokenVerifierTest {
   }
 
   static String readResourceAsString(String resourceName) throws IOException {
-    InputStream inputStream = TokenVerifierTest.class.getClassLoader().getResourceAsStream(resourceName);
+    InputStream inputStream =
+        TokenVerifierTest.class.getClassLoader().getResourceAsStream(resourceName);
     try (final Reader reader = new InputStreamReader(inputStream)) {
       return CharStreams.toString(reader);
     }
@@ -240,8 +249,7 @@ public class TokenVerifierTest {
       public HttpTransport create() {
         return new MockHttpTransport() {
           @Override
-          public LowLevelHttpRequest buildRequest(String method, String url)
-              throws IOException {
+          public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
             assertEquals(certificatesUrl, url);
             return new MockLowLevelHttpRequest() {
               @Override
