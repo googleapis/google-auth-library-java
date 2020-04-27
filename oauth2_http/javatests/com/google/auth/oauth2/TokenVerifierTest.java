@@ -15,9 +15,6 @@
  */
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.LowLevelHttpRequest;
 import com.google.api.client.http.LowLevelHttpResponse;
@@ -26,10 +23,20 @@ import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.auth.http.HttpTransportFactory;
+
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.Arrays;
 import java.util.List;
+
+import com.google.common.io.CharStreams;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class TokenVerifierTest {
   private static final String ES256_TOKEN =
@@ -98,7 +105,7 @@ public class TokenVerifierTest {
   }
 
   @Test
-  public void verifyEs256Token404CertificateUrl() throws TokenVerifier.VerificationException {
+  public void verifyEs256Token404CertificateUrl() {
     // Mock HTTP requests
     HttpTransportFactory httpTransportFactory =
         new HttpTransportFactory() {
@@ -135,7 +142,7 @@ public class TokenVerifierTest {
   }
 
   @Test
-  public void verifyEs256TokenPublicKeyMismatch() throws TokenVerifier.VerificationException {
+  public void verifyEs256TokenPublicKeyMismatch() {
     // Mock HTTP requests
     HttpTransportFactory httpTransportFactory =
         new HttpTransportFactory() {
@@ -173,35 +180,82 @@ public class TokenVerifierTest {
   }
 
   @Test
-  public void verifyEs256Token() throws TokenVerifier.VerificationException {
-    TokenVerifier tokenVerifier = TokenVerifier.newBuilder().setClock(FIXED_CLOCK).build();
+  public void verifyEs256Token() throws TokenVerifier.VerificationException, IOException {
+    HttpTransportFactory httpTransportFactory = mockTransport("https://www.gstatic.com/iap/verify/public_key-jwk", readResourceAsString("iap_keys.json"));
+    TokenVerifier tokenVerifier =
+        TokenVerifier.newBuilder()
+            .setClock(FIXED_CLOCK)
+            .setHttpTransportFactory(httpTransportFactory)
+            .build();
     assertTrue(tokenVerifier.verify(ES256_TOKEN));
   }
 
   @Test
-  public void verifyRs256Token() throws TokenVerifier.VerificationException {
-    TokenVerifier tokenVerifier = TokenVerifier.newBuilder().setClock(FIXED_CLOCK).build();
-    assertTrue(tokenVerifier.verify(FEDERATED_SIGNON_RS256_TOKEN));
-  }
-
-  @Test
-  public void verifyRs256TokenWithLegacyCertificateUrlFormat()
-      throws TokenVerifier.VerificationException {
+  public void verifyRs256Token() throws TokenVerifier.VerificationException, IOException {
+    HttpTransportFactory httpTransportFactory = mockTransport("https://www.googleapis.com/oauth2/v3/certs", readResourceAsString("federated_keys.json"));
     TokenVerifier tokenVerifier =
         TokenVerifier.newBuilder()
-            .setCertificatesLocation(LEGACY_FEDERATED_SIGNON_CERT_URL)
             .setClock(FIXED_CLOCK)
+            .setHttpTransportFactory(httpTransportFactory)
             .build();
     assertTrue(tokenVerifier.verify(FEDERATED_SIGNON_RS256_TOKEN));
   }
 
   @Test
-  public void verifyServiceAccountRs256Token() throws TokenVerifier.VerificationException {
+  public void verifyRs256TokenWithLegacyCertificateUrlFormat()
+      throws TokenVerifier.VerificationException, IOException {
+    HttpTransportFactory httpTransportFactory = mockTransport(LEGACY_FEDERATED_SIGNON_CERT_URL, readResourceAsString("legacy_federated_keys.json"));
+    TokenVerifier tokenVerifier =
+        TokenVerifier.newBuilder()
+            .setCertificatesLocation(LEGACY_FEDERATED_SIGNON_CERT_URL)
+            .setClock(FIXED_CLOCK)
+            .setHttpTransportFactory(httpTransportFactory)
+            .build();
+    assertTrue(tokenVerifier.verify(FEDERATED_SIGNON_RS256_TOKEN));
+  }
+
+  @Test
+  public void verifyServiceAccountRs256Token() throws TokenVerifier.VerificationException, IOException {
+    HttpTransportFactory httpTransportFactory = mockTransport(SERVICE_ACCOUNT_CERT_URL, readResourceAsString("service_account_keys.json"));
     TokenVerifier tokenVerifier =
         TokenVerifier.newBuilder()
             .setClock(FIXED_CLOCK)
             .setCertificatesLocation(SERVICE_ACCOUNT_CERT_URL)
             .build();
     assertTrue(tokenVerifier.verify(SERVICE_ACCOUNT_RS256_TOKEN));
+  }
+
+  static String readResourceAsString(String resourceName) throws IOException {
+    InputStream inputStream = TokenVerifierTest.class.getClassLoader().getResourceAsStream(resourceName);
+    try (final Reader reader = new InputStreamReader(inputStream)) {
+      return CharStreams.toString(reader);
+    }
+  }
+
+  static HttpTransportFactory mockTransport(String url, String certificates) {
+    final String certificatesContent = certificates;
+    final String certificatesUrl = url;
+    return new HttpTransportFactory() {
+      @Override
+      public HttpTransport create() {
+        return new MockHttpTransport() {
+          @Override
+          public LowLevelHttpRequest buildRequest(String method, String url)
+              throws IOException {
+            assertEquals(certificatesUrl, url);
+            return new MockLowLevelHttpRequest() {
+              @Override
+              public LowLevelHttpResponse execute() throws IOException {
+                MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+                response.setStatusCode(200);
+                response.setContentType("application/json");
+                response.setContent(certificatesContent);
+                return response;
+              }
+            };
+          }
+        };
+      }
+    };
   }
 }
