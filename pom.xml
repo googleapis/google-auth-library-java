@@ -61,7 +61,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.google.http.version>1.34.2</project.google.http.version>
     <project.junit.version>4.13</project.junit.version>
-    <project.guava.version>28.2-android</project.guava.version>
+    <project.guava.version>29.0-android</project.guava.version>
     <project.appengine.version>1.9.78</project.appengine.version>
     <project.autovalue.version>1.7</project.autovalue.version>
     <project.findbugs.version>3.0.2</project.findbugs.version>
@@ -164,7 +164,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>3.1.1</version>
+          <version>3.2.0</version>
           <executions>
             <execution>
               <id>attach-javadocs</id>
@@ -197,7 +197,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
-          <version>3.1.1</version>
+          <version>3.1.2</version>
         </plugin>
         <plugin>
           <groupId>com.coveo</groupId>
@@ -321,7 +321,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.1.1</version>
+        <version>3.2.0</version>
         <reportSets>
           <reportSet>
             <id>html</id>
@@ -388,7 +388,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
-            <version>3.1.1</version>
+            <version>3.2.0</version>
             <executions>
               <execution>
                 <id>attach-javadocs</id>
