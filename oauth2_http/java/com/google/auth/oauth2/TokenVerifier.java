@@ -31,18 +31,17 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.AlgorithmParameters;
 import java.security.GeneralSecurityException;
-import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
-import java.security.Signature;
-import java.security.SignatureException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.spec.ECGenParameterSpec;
@@ -52,9 +51,9 @@ import java.security.spec.ECPublicKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.InvalidParameterSpecException;
 import java.security.spec.RSAPublicKeySpec;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -62,6 +61,7 @@ public class TokenVerifier {
   private static final String IAP_CERT_URL = "https://www.gstatic.com/iap/verify/public_key-jwk";
   private static final String FEDERATED_SIGNON_CERT_URL =
       "https://www.googleapis.com/oauth2/v3/certs";
+  private static final Set<String> SUPPORTED_ALGORITMS = ImmutableSet.of("RS256", "ES256");
 
   private final String audience;
   private final String certificatesLocation;
@@ -115,15 +115,45 @@ public class TokenVerifier {
       throw new VerificationException("Token is expired");
     }
 
-    switch (jsonWebSignature.getHeader().getAlgorithm()) {
-      case "RS256":
-        return verifyRs256(jsonWebSignature);
-      case "ES256":
-        return verifyEs256(jsonWebSignature);
-      default:
-        throw new VerificationException(
-            "Unexpected signing algorithm: expected either RS256 or ES256");
+    // Short-circuit signature types
+    if (!SUPPORTED_ALGORITMS.contains(jsonWebSignature.getHeader().getAlgorithm())) {
+      throw new VerificationException(
+          "Unexpected signing algorithm: expected either RS256 or ES256");
     }
+
+    PublicKey publicKeyToUse = publicKey;
+    if (publicKeyToUse == null) {
+      try {
+        String certificateLocation = getCertificateLocation(jsonWebSignature);
+        publicKeyToUse = publicKeyCache.get(certificateLocation).get(jsonWebSignature.getHeader().getKeyId());
+      } catch (ExecutionException | UncheckedExecutionException e) {
+        throw new VerificationException("Error fetching PublicKey from certificate location", e);
+      }
+    }
+
+    if (publicKeyToUse == null) {
+      throw new VerificationException("Could not find PublicKey for provided keyId: "
+          + jsonWebSignature.getHeader().getKeyId());
+    }
+
+    try {
+      return jsonWebSignature.verifySignature(publicKeyToUse);
+    } catch (GeneralSecurityException e) {
+      throw new VerificationException("Error validating token", e);
+    }
+  }
+
+  private String getCertificateLocation(JsonWebSignature jsonWebSignature) throws VerificationException {
+    if (certificatesLocation != null) return certificatesLocation;
+
+    switch(jsonWebSignature.getHeader().getAlgorithm()) {
+      case "RS256":
+        return FEDERATED_SIGNON_CERT_URL;
+      case "ES256":
+        return IAP_CERT_URL;
+    }
+
+    throw new VerificationException("Unknown algorithm");
   }
 
   public static class Builder {
@@ -296,83 +326,5 @@ public class TokenVerifier {
     public VerificationException(String message, Throwable cause) {
       super(message, cause);
     }
-  }
-
-  private boolean verifyEs256(JsonWebSignature jsonWebSignature) throws VerificationException {
-    String certsUrl = certificatesLocation == null ? IAP_CERT_URL : certificatesLocation;
-    PublicKey verifyPublicKey = publicKey;
-    if (verifyPublicKey == null) {
-      try {
-        verifyPublicKey = publicKeyCache.get(certsUrl).get(jsonWebSignature.getHeader().getKeyId());
-      } catch (ExecutionException e) {
-        throw new VerificationException("Error fetching PublicKey for ES256 token", e);
-      }
-    }
-    if (verifyPublicKey == null) {
-      throw new VerificationException(
-          "Could not find publicKey for provided keyId: "
-              + jsonWebSignature.getHeader().getKeyId());
-    }
-    try {
-      Signature signatureAlgorithm = Signature.getInstance("SHA256withECDSA");
-      signatureAlgorithm.initVerify(verifyPublicKey);
-      signatureAlgorithm.update(jsonWebSignature.getSignedContentBytes());
-      byte[] derBytes = convertDerBytes(jsonWebSignature.getSignatureBytes());
-      return signatureAlgorithm.verify(derBytes);
-    } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
-      throw new VerificationException("Error validating ES256 token", e);
-    }
-  }
-
-  private boolean verifyRs256(JsonWebSignature jsonWebSignature) throws VerificationException {
-    String certsUrl =
-        certificatesLocation == null ? FEDERATED_SIGNON_CERT_URL : certificatesLocation;
-    PublicKey verifyPublicKey = publicKey;
-    if (verifyPublicKey == null) {
-      try {
-        verifyPublicKey = publicKeyCache.get(certsUrl).get(jsonWebSignature.getHeader().getKeyId());
-      } catch (ExecutionException e) {
-        throw new VerificationException("Error fetching PublicKey for ES256 token", e);
-      }
-    }
-    if (verifyPublicKey == null) {
-      throw new VerificationException(
-          "Could not find publicKey for provided keyId: "
-              + jsonWebSignature.getHeader().getKeyId());
-    }
-    try {
-      return jsonWebSignature.verifySignature(verifyPublicKey);
-    } catch (GeneralSecurityException e) {
-      throw new VerificationException("Error validating RS256 token", e);
-    }
-  }
-
-  private static byte DER_TAG_SIGNATURE_OBJECT = 0x30;
-  private static byte DER_TAG_ASN1_INTEGER = 0x02;
-
-  private static byte[] convertDerBytes(byte[] signature) {
-    // expect the signature to be 64 bytes long
-    Preconditions.checkState(signature.length == 64);
-
-    byte[] int1 = new BigInteger(1, Arrays.copyOfRange(signature, 0, 32)).toByteArray();
-    byte[] int2 = new BigInteger(1, Arrays.copyOfRange(signature, 32, 64)).toByteArray();
-    byte[] der = new byte[6 + int1.length + int2.length];
-
-    // Mark that this is a signature object
-    der[0] = DER_TAG_SIGNATURE_OBJECT;
-    der[1] = (byte) (der.length - 2);
-
-    // Start ASN1 integer and write the first 32 bits
-    der[2] = DER_TAG_ASN1_INTEGER;
-    der[3] = (byte) int1.length;
-    System.arraycopy(int1, 0, der, 4, int1.length);
-
-    // Start ASN1 integer and write the second 32 bits
-    int offset = int1.length + 4;
-    der[offset] = DER_TAG_ASN1_INTEGER;
-    der[offset + 1] = (byte) int2.length;
-    System.arraycopy(int2, 0, der, offset + 2, int2.length);
-
-    return der;
   }
 }
