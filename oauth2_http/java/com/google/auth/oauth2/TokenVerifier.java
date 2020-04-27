@@ -125,15 +125,17 @@ public class TokenVerifier {
     if (publicKeyToUse == null) {
       try {
         String certificateLocation = getCertificateLocation(jsonWebSignature);
-        publicKeyToUse = publicKeyCache.get(certificateLocation).get(jsonWebSignature.getHeader().getKeyId());
+        publicKeyToUse =
+            publicKeyCache.get(certificateLocation).get(jsonWebSignature.getHeader().getKeyId());
       } catch (ExecutionException | UncheckedExecutionException e) {
         throw new VerificationException("Error fetching PublicKey from certificate location", e);
       }
     }
 
     if (publicKeyToUse == null) {
-      throw new VerificationException("Could not find PublicKey for provided keyId: "
-          + jsonWebSignature.getHeader().getKeyId());
+      throw new VerificationException(
+          "Could not find PublicKey for provided keyId: "
+              + jsonWebSignature.getHeader().getKeyId());
     }
 
     try {
@@ -143,10 +145,11 @@ public class TokenVerifier {
     }
   }
 
-  private String getCertificateLocation(JsonWebSignature jsonWebSignature) throws VerificationException {
+  private String getCertificateLocation(JsonWebSignature jsonWebSignature)
+      throws VerificationException {
     if (certificatesLocation != null) return certificatesLocation;
 
-    switch(jsonWebSignature.getHeader().getAlgorithm()) {
+    switch (jsonWebSignature.getHeader().getAlgorithm()) {
       case "RS256":
         return FEDERATED_SIGNON_CERT_URL;
       case "ES256":
