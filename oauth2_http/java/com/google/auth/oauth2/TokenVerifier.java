@@ -92,7 +92,7 @@ public class TokenVerifier {
         .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY);
   }
 
-  public boolean verify(String token) throws VerificationException {
+  public JsonWebSignature verify(String token) throws VerificationException {
     JsonWebSignature jsonWebSignature;
     try {
       jsonWebSignature = JsonWebSignature.parse(OAuth2Utils.JSON_FACTORY, token);
@@ -139,7 +139,10 @@ public class TokenVerifier {
     }
 
     try {
-      return jsonWebSignature.verifySignature(publicKeyToUse);
+      if (jsonWebSignature.verifySignature(publicKeyToUse)) {
+        return jsonWebSignature;
+      }
+      throw new VerificationException("Invalid signature");
     } catch (GeneralSecurityException e) {
       throw new VerificationException("Error validating token", e);
     }

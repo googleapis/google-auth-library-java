@@ -15,6 +15,7 @@
  */
 package com.google.auth.oauth2;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -92,13 +93,13 @@ public class ITTokenVerifierTest {
   @Test
   public void verifyEs256Token() throws TokenVerifier.VerificationException {
     TokenVerifier tokenVerifier = TokenVerifier.newBuilder().setClock(FIXED_CLOCK).build();
-    assertTrue(tokenVerifier.verify(ES256_TOKEN));
+    assertNotNull(tokenVerifier.verify(ES256_TOKEN));
   }
 
   @Test
   public void verifyRs256Token() throws TokenVerifier.VerificationException {
     TokenVerifier tokenVerifier = TokenVerifier.newBuilder().setClock(FIXED_CLOCK).build();
-    assertTrue(tokenVerifier.verify(FEDERATED_SIGNON_RS256_TOKEN));
+    assertNotNull(tokenVerifier.verify(FEDERATED_SIGNON_RS256_TOKEN));
   }
 
   @Test
@@ -109,7 +110,7 @@ public class ITTokenVerifierTest {
             .setCertificatesLocation(LEGACY_FEDERATED_SIGNON_CERT_URL)
             .setClock(FIXED_CLOCK)
             .build();
-    assertTrue(tokenVerifier.verify(FEDERATED_SIGNON_RS256_TOKEN));
+    assertNotNull(tokenVerifier.verify(FEDERATED_SIGNON_RS256_TOKEN));
   }
 
   @Test
@@ -119,6 +120,6 @@ public class ITTokenVerifierTest {
             .setClock(FIXED_CLOCK)
             .setCertificatesLocation(SERVICE_ACCOUNT_CERT_URL)
             .build();
-    assertTrue(tokenVerifier.verify(SERVICE_ACCOUNT_RS256_TOKEN));
+    assertNotNull(tokenVerifier.verify(SERVICE_ACCOUNT_RS256_TOKEN));
   }
 }
