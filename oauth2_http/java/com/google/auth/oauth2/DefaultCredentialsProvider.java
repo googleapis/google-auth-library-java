@@ -179,7 +179,11 @@ class DefaultCredentialsProvider {
       InputStream credentialsStream = null;
       try {
         if (isFile(wellKnownFileLocation)) {
-          LOGGER.log(Level.FINE, String.format("Loading credentials from well known file: %s", wellKnownFileLocation.getCanonicalPath()));
+          LOGGER.log(
+              Level.FINE,
+              String.format(
+                  "Loading credentials from well known file: %s",
+                  wellKnownFileLocation.getCanonicalPath()));
           credentialsStream = readStream(wellKnownFileLocation);
           credentials = GoogleCredentials.fromStream(credentialsStream, transportFactory);
         }
