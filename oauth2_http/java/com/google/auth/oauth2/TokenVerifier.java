@@ -79,7 +79,7 @@ public class TokenVerifier {
   private final LoadingCache<String, Map<String, PublicKey>> publicKeyCache;
 
   /**
-   * Construct the default TokenVerifier. By default, this verifier will only validate the signature.
+   * Construct the default TokenVerifier. By default, this verifier only validates the signature.
    */
   public TokenVerifier() {
     this(newBuilder());
@@ -106,8 +106,8 @@ public class TokenVerifier {
   /**
    * Verify an encoded JWT token.
    *
-   * @param token Encoded JWT token.
-   * @return The parsed JsonWebSignature instance for additional validation if necessary.
+   * @param token encoded JWT token
+   * @return The parsed JsonWebSignature instance for additional validation if necessary
    * @throws VerificationException Any verification error or failed claim with throw a VerificationException
    *   wrapping the underlying issue.
    */
@@ -192,7 +192,7 @@ public class TokenVerifier {
     /**
      * Set a target audience to verify.
      *
-     * @param audience The audience claim to verify.
+     * @param audience the audience claim to verify
      * @return the builder
      */
     public Builder setAudience(String audience) {
@@ -204,7 +204,7 @@ public class TokenVerifier {
      * Override the location URL that contains published public keys. Defaults to well-known
      * Google locations.
      *
-     * @param certificatesLocation URL to published public keys.
+     * @param certificatesLocation URL to published public keys
      * @return the builder
      */
     public Builder setCertificatesLocation(String certificatesLocation) {
@@ -215,7 +215,7 @@ public class TokenVerifier {
     /**
      * Set the issuer to verify.
      *
-     * @param issuer The issuer claim to verify.
+     * @param issuer the issuer claim to verify
      * @return the builder
      */
     public Builder setIssuer(String issuer) {
@@ -227,7 +227,7 @@ public class TokenVerifier {
      * Set the PublicKey for verifying the signature. This will ignore the key id from the
      * JWT token header.
      *
-     * @param publicKey The public key to validate the signature.
+     * @param publicKey the public key to validate the signature
      * @return the builder
      */
     public Builder setPublicKey(PublicKey publicKey) {
@@ -238,7 +238,7 @@ public class TokenVerifier {
     /**
      * Set the clock for checking token expiry. Used for testing.
      *
-     * @param clock The clock to use. Defaults to the system clock.
+     * @param clock the clock to use. Defaults to the system clock
      * @return the builder
      */
     public Builder setClock(Clock clock) {
@@ -250,7 +250,7 @@ public class TokenVerifier {
      * Set the HttpTransportFactory used for requesting public keys from the
      * certificate URL. Used mostly for testing.
      *
-     * @param httpTransportFactory The HttpTransportFactory used to build certificate URL requests.
+     * @param httpTransportFactory the HttpTransportFactory used to build certificate URL requests
      * @return the builder
      */
     public Builder setHttpTransportFactory(HttpTransportFactory httpTransportFactory) {
