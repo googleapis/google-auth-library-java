@@ -107,9 +107,8 @@ public class TokenVerifier {
    * Verify an encoded JWT token.
    *
    * @param token encoded JWT token
-   * @return The parsed JsonWebSignature instance for additional validation if necessary
-   * @throws VerificationException Any verification error or failed claim with throw a
-   *     VerificationException wrapping the underlying issue.
+   * @return the parsed JsonWebSignature instance for additional validation if necessary
+   * @throws VerificationException thrown if any verification fails
    */
   public JsonWebSignature verify(String token) throws VerificationException {
     JsonWebSignature jsonWebSignature;
