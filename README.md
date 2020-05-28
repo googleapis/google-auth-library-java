@@ -159,6 +159,69 @@ for (Bucket b : storage_service.list().iterateAll())
     System.out.println(b); 
 ```
 
+## Configuring a Proxy
+
+For HTTP clients, a basic proxy can be configured by using `http.proxyHost` and related system properties as documented
+by [Java Networking and Proxies](https://docs.oracle.com/javase/8/docs/technotes/guides/net/proxies.html).
+
+For a more custom proxy (e.g. for an authenticated proxy), provide a custom 
+[`HttpTransportFactory`][http-transport-factory] to [`GoogleCredentials`][google-credentials]:
+
+```java
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.apache.v2.ApacheHttpTransport;
+import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.oauth2.GoogleCredentials;
+import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.HttpClient;
+import org.apache.http.conn.routing.HttpRoutePlanner;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.ProxyAuthenticationStrategy;
+import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
+
+import java.io.IOException;
+
+public class ProxyExample {
+  public GoogleCredentials getCredentials() throws IOException {
+    HttpTransportFactory httpTransportFactory = getHttpTransportFactory(
+        "some-host", 8080, "some-username", "some-password"
+    );
+
+    return GoogleCredentials.getApplicationDefault(httpTransportFactory);
+  }
+
+  public HttpTransportFactory getHttpTransportFactory(String proxyHost, int proxyPort, String proxyUsername, String proxyPassword) {
+    HttpHost proxyHostDetails = new HttpHost(proxyHost, proxyPort);
+    HttpRoutePlanner httpRoutePlanner = new DefaultProxyRoutePlanner(proxyHostDetails);
+
+    CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+    credentialsProvider.setCredentials(
+        new AuthScope(proxyHostDetails.getHostName(), proxyHostDetails.getPort()),
+        new UsernamePasswordCredentials(proxyUsername, proxyPassword)
+    );
+
+    HttpClient httpClient = ApacheHttpTransport.newDefaultHttpClientBuilder()
+        .setRoutePlanner(httpRoutePlanner)
+        .setProxyAuthenticationStrategy(ProxyAuthenticationStrategy.INSTANCE)
+        .setDefaultCredentialsProvider(credentialsProvider)
+        .build();
+
+    final HttpTransport httpTransport = new ApacheHttpTransport(httpClient);
+    return new HttpTransportFactory() {
+      @Override
+      public HttpTransport create() {
+        return httpTransport;
+      }
+    };
+  }
+}
+```
+
+The above example requires `com.google.http-client:google-http-client-apache-v2`.
+
 ## Using Credentials with `google-http-client`
 
 Credentials provided by `google-auth-library` can be used with Google's 
@@ -220,3 +283,5 @@ BSD 3-Clause - See [LICENSE](LICENSE) for more information.
 [apiary-clients]: https://search.maven.org/search?q=g:com.google.apis
 [http-credentials-adapter]: https://googleapis.dev/java/google-auth-library/latest/index.html?com/google/auth/http/HttpCredentialsAdapter.html
 [http-request-initializer]: https://googleapis.dev/java/google-http-client/latest/index.html?com/google/api/client/http/HttpRequestInitializer.html
+[http-transport-factory]: https://googleapis.dev/java/google-auth-library/latest/index.html?com/google/auth/http/HttpTransportFactory.html
+[google-credentials]: https://googleapis.dev/java/google-auth-library/latest/index.html?com/google/auth/oauth2/GoogleCredentials.html
