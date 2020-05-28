@@ -26,6 +26,7 @@ import com.google.api.client.util.Base64;
 import com.google.api.client.util.Clock;
 import com.google.api.client.util.Key;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -57,11 +58,18 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Handle verification of Google-signed JWT tokens.
+ *
+ * @author Jeff Ching
+ * @since 0.21.0
+ */
+@Beta
 public class TokenVerifier {
   private static final String IAP_CERT_URL = "https://www.gstatic.com/iap/verify/public_key-jwk";
   private static final String FEDERATED_SIGNON_CERT_URL =
       "https://www.googleapis.com/oauth2/v3/certs";
-  private static final Set<String> SUPPORTED_ALGORITMS = ImmutableSet.of("RS256", "ES256");
+  private static final Set<String> SUPPORTED_ALGORITHMS = ImmutableSet.of("RS256", "ES256");
 
   private final String audience;
   private final String certificatesLocation;
@@ -70,6 +78,9 @@ public class TokenVerifier {
   private final Clock clock;
   private final LoadingCache<String, Map<String, PublicKey>> publicKeyCache;
 
+  /**
+   * Construct the default TokenVerifier. By default, this verifier will only validate the signature.
+   */
   public TokenVerifier() {
     this(newBuilder());
   }
@@ -92,6 +103,14 @@ public class TokenVerifier {
         .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY);
   }
 
+  /**
+   * Verify an encoded JWT token.
+   *
+   * @param token Encoded JWT token.
+   * @return The parsed JsonWebSignature instance for additional validation if necessary.
+   * @throws VerificationException Any verification error or failed claim with throw a VerificationException
+   *   wrapping the underlying issue.
+   */
   public JsonWebSignature verify(String token) throws VerificationException {
     JsonWebSignature jsonWebSignature;
     try {
@@ -116,7 +135,7 @@ public class TokenVerifier {
     }
 
     // Short-circuit signature types
-    if (!SUPPORTED_ALGORITMS.contains(jsonWebSignature.getHeader().getAlgorithm())) {
+    if (!SUPPORTED_ALGORITHMS.contains(jsonWebSignature.getHeader().getAlgorithm())) {
       throw new VerificationException(
           "Unexpected signing algorithm: expected either RS256 or ES256");
     }
@@ -170,48 +189,101 @@ public class TokenVerifier {
     private Clock clock;
     private HttpTransportFactory httpTransportFactory;
 
+    /**
+     * Set a target audience to verify.
+     *
+     * @param audience The audience claim to verify.
+     * @return the builder
+     */
     public Builder setAudience(String audience) {
       this.audience = audience;
       return this;
     }
 
+    /**
+     * Override the location URL that contains published public keys. Defaults to well-known
+     * Google locations.
+     *
+     * @param certificatesLocation URL to published public keys.
+     * @return the builder
+     */
     public Builder setCertificatesLocation(String certificatesLocation) {
       this.certificatesLocation = certificatesLocation;
       return this;
     }
 
+    /**
+     * Set the issuer to verify.
+     *
+     * @param issuer The issuer claim to verify.
+     * @return the builder
+     */
     public Builder setIssuer(String issuer) {
       this.issuer = issuer;
       return this;
     }
 
+    /**
+     * Set the PublicKey for verifying the signature. This will ignore the key id from the
+     * JWT token header.
+     *
+     * @param publicKey The public key to validate the signature.
+     * @return the builder
+     */
     public Builder setPublicKey(PublicKey publicKey) {
       this.publicKey = publicKey;
       return this;
     }
 
+    /**
+     * Set the clock for checking token expiry. Used for testing.
+     *
+     * @param clock The clock to use. Defaults to the system clock.
+     * @return the builder
+     */
     public Builder setClock(Clock clock) {
       this.clock = clock;
       return this;
     }
 
+    /**
+     * Set the HttpTransportFactory used for requesting public keys from the
+     * certificate URL. Used mostly for testing.
+     *
+     * @param httpTransportFactory The HttpTransportFactory used to build certificate URL requests.
+     * @return the builder
+     */
     public Builder setHttpTransportFactory(HttpTransportFactory httpTransportFactory) {
       this.httpTransportFactory = httpTransportFactory;
       return this;
     }
 
+    /**
+     * Build the custom TokenVerifier for verifying tokens.
+     *
+     * @return the customized TokenVerifier
+     */
     public TokenVerifier build() {
       return new TokenVerifier(this);
     }
   }
 
+  /**
+   * Custom CacheLoader for mapping certificate urls to the contained public keys.
+   */
   static class PublicKeyLoader extends CacheLoader<String, Map<String, PublicKey>> {
     private final HttpTransportFactory httpTransportFactory;
 
+    /**
+     * Data class used for deserializing a JSON Web Key Set (JWKS) from an external HTTP request.
+     */
     public static class JsonWebKeySet extends GenericJson {
       @Key public List<JsonWebKey> keys;
     }
 
+    /**
+     * Data class used for deserializing a single JSON Web Key.
+     */
     public static class JsonWebKey {
       @Key public String alg;
 
@@ -324,6 +396,9 @@ public class TokenVerifier {
     }
   }
 
+  /**
+   * Custom exception for wrapping all verification errors.
+   */
   public static class VerificationException extends Exception {
     public VerificationException(String message) {
       super(message);
