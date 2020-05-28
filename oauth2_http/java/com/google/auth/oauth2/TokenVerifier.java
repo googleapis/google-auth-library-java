@@ -108,8 +108,8 @@ public class TokenVerifier {
    *
    * @param token encoded JWT token
    * @return The parsed JsonWebSignature instance for additional validation if necessary
-   * @throws VerificationException Any verification error or failed claim with throw a VerificationException
-   *   wrapping the underlying issue.
+   * @throws VerificationException Any verification error or failed claim with throw a
+   *     VerificationException wrapping the underlying issue.
    */
   public JsonWebSignature verify(String token) throws VerificationException {
     JsonWebSignature jsonWebSignature;
@@ -201,8 +201,8 @@ public class TokenVerifier {
     }
 
     /**
-     * Override the location URL that contains published public keys. Defaults to well-known
-     * Google locations.
+     * Override the location URL that contains published public keys. Defaults to well-known Google
+     * locations.
      *
      * @param certificatesLocation URL to published public keys
      * @return the builder
@@ -224,8 +224,8 @@ public class TokenVerifier {
     }
 
     /**
-     * Set the PublicKey for verifying the signature. This will ignore the key id from the
-     * JWT token header.
+     * Set the PublicKey for verifying the signature. This will ignore the key id from the JWT token
+     * header.
      *
      * @param publicKey the public key to validate the signature
      * @return the builder
@@ -247,8 +247,8 @@ public class TokenVerifier {
     }
 
     /**
-     * Set the HttpTransportFactory used for requesting public keys from the
-     * certificate URL. Used mostly for testing.
+     * Set the HttpTransportFactory used for requesting public keys from the certificate URL. Used
+     * mostly for testing.
      *
      * @param httpTransportFactory the HttpTransportFactory used to build certificate URL requests
      * @return the builder
@@ -268,9 +268,7 @@ public class TokenVerifier {
     }
   }
 
-  /**
-   * Custom CacheLoader for mapping certificate urls to the contained public keys.
-   */
+  /** Custom CacheLoader for mapping certificate urls to the contained public keys. */
   static class PublicKeyLoader extends CacheLoader<String, Map<String, PublicKey>> {
     private final HttpTransportFactory httpTransportFactory;
 
@@ -281,9 +279,7 @@ public class TokenVerifier {
       @Key public List<JsonWebKey> keys;
     }
 
-    /**
-     * Data class used for deserializing a single JSON Web Key.
-     */
+    /** Data class used for deserializing a single JSON Web Key. */
     public static class JsonWebKey {
       @Key public String alg;
 
@@ -396,9 +392,7 @@ public class TokenVerifier {
     }
   }
 
-  /**
-   * Custom exception for wrapping all verification errors.
-   */
+  /** Custom exception for wrapping all verification errors. */
   public static class VerificationException extends Exception {
     public VerificationException(String message) {
       super(message);
