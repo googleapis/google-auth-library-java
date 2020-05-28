@@ -259,7 +259,6 @@ TokenVerifier tokenVerifier = new TokenVerifier();
 try {
   JsonWebSignature jsonWebSignature = tokenVerifier.verify(tokenString);
   // optionally verify additional claims
-  jsonWebSignature
 } catch (TokenVerifier.VerificationException e) {
   // invalid token
 }
@@ -280,7 +279,6 @@ TokenVerifier tokenVerifier = TokenVerifier.newBuilder()
 try {
   JsonWebSignature jsonWebSignature = tokenVerifier.verify(tokenString);
   // optionally verify additional claims
-  jsonWebSignature
 } catch (TokenVerifier.VerificationException e) {
   // invalid token
 }
