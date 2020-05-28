@@ -180,6 +180,51 @@ Bigquery bq = new Bigquery.Builder(HTTP_TRANSPORT, JSON_FACTORY, requestInitiali
     .build();
 ```
 
+## Verifying JWT Tokens (Beta)
+
+To verify a JWT token, use the [`TokenVerifier`][token-verifier] class.
+
+### Verifying a Signature
+
+To verify a signature, use the default [`TokenVerifier`][token-verifier]:
+
+```java
+import com.google.api.client.json.webtoken.JsonWebSignature;
+import com.google.auth.oauth2.TokenVerifier;
+
+TokenVerifier tokenVerifier = new TokenVerifier();
+try {
+  JsonWebSignature jsonWebSignature = tokenVerifier.verify(tokenString);
+  // optionally verify additional claims
+  jsonWebSignature
+} catch (TokenVerifier.VerificationException e) {
+  // invalid token
+}
+```
+
+### Customizing the TokenVerifier
+
+To customize a [`TokenVerifier`][token-verifier], instantiate it via its builder:
+
+```java
+import com.google.api.client.json.webtoken.JsonWebSignature;
+import com.google.auth.oauth2.TokenVerifier;
+
+TokenVerifier tokenVerifier = TokenVerifier.newBuilder()
+  .setAudience("audience-to-verify")
+  .setIssuer("issuer-to-verify")
+  .build();
+try {
+  JsonWebSignature jsonWebSignature = tokenVerifier.verify(tokenString);
+  // optionally verify additional claims
+  jsonWebSignature
+} catch (TokenVerifier.VerificationException e) {
+  // invalid token
+}
+```
+
+For more options, see the [`TokenVerifier.Builder`][token-verifier-builder] documentation.
+
 ## CI Status
 
 Java Version | Status
@@ -220,3 +265,5 @@ BSD 3-Clause - See [LICENSE](LICENSE) for more information.
 [apiary-clients]: https://search.maven.org/search?q=g:com.google.apis
 [http-credentials-adapter]: https://googleapis.dev/java/google-auth-library/latest/index.html?com/google/auth/http/HttpCredentialsAdapter.html
 [http-request-initializer]: https://googleapis.dev/java/google-http-client/latest/index.html?com/google/api/client/http/HttpRequestInitializer.html
+[token-verifier]: https://googleapis.dev/java/google-auth-library/latest/index.html?com/google/auth/oauth2/TokenVerifier.html
+[token-verifier-builder]: https://googleapis.dev/java/google-auth-library/latest/index.html?com/google/auth/oauth2/TokenVerifier.Builder.html
