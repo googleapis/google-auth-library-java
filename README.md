@@ -259,6 +259,9 @@ TokenVerifier tokenVerifier = new TokenVerifier();
 try {
   JsonWebSignature jsonWebSignature = tokenVerifier.verify(tokenString);
   // optionally verify additional claims
+  if (!"expected-value".equals(jsonWebSignature.getPayload().get("additional-claim"))) {
+    // handle custom verification error
+  }
 } catch (TokenVerifier.VerificationException e) {
   // invalid token
 }
@@ -279,6 +282,9 @@ TokenVerifier tokenVerifier = TokenVerifier.newBuilder()
 try {
   JsonWebSignature jsonWebSignature = tokenVerifier.verify(tokenString);
   // optionally verify additional claims
+  if (!"expected-value".equals(jsonWebSignature.getPayload().get("additional-claim"))) {
+    // handle custom verification error
+  }
 } catch (TokenVerifier.VerificationException e) {
   // invalid token
 }
