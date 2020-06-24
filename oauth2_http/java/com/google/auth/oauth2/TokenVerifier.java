@@ -78,13 +78,6 @@ public class TokenVerifier {
   private final Clock clock;
   private final LoadingCache<String, Map<String, PublicKey>> publicKeyCache;
 
-  /**
-   * Construct the default TokenVerifier. By default, this verifier only validates the signature.
-   */
-  public TokenVerifier() {
-    this(newBuilder());
-  }
-
   private TokenVerifier(Builder builder) {
     this.audience = builder.audience;
     this.certificatesLocation = builder.certificatesLocation;

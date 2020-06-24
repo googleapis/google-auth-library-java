@@ -255,7 +255,7 @@ To verify a signature, use the default [`TokenVerifier`][token-verifier]:
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.auth.oauth2.TokenVerifier;
 
-TokenVerifier tokenVerifier = new TokenVerifier();
+TokenVerifier tokenVerifier = TokenVerifier.newBuilder().build();
 try {
   JsonWebSignature jsonWebSignature = tokenVerifier.verify(tokenString);
   // optionally verify additional claims

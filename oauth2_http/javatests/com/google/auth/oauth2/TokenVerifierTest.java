@@ -66,7 +66,7 @@ public class TokenVerifierTest {
   @Test
   public void verifyExpiredToken() {
     for (String token : ALL_TOKENS) {
-      TokenVerifier tokenVerifier = new TokenVerifier();
+      TokenVerifier tokenVerifier = TokenVerifier.newBuilder().build();
       try {
         tokenVerifier.verify(token);
         fail("Should have thrown a VerificationException");
