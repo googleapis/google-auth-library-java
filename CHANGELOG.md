@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.21.0](https://www.github.com/googleapis/google-auth-library-java/compare/v0.20.0...v0.21.0) (2020-06-24)
+
+
+### Features
+
+* add TokenVerifier class that can verify RS256/ES256 tokens ([#420](https://www.github.com/googleapis/google-auth-library-java/issues/420)) ([5014ac7](https://www.github.com/googleapis/google-auth-library-java/commit/5014ac72a59d877ef95c616d0b33792b9fc70c25))
+
+
+### Dependencies
+
+* update autovalue packages to v1.7.2 ([#429](https://www.github.com/googleapis/google-auth-library-java/issues/429)) ([5758364](https://www.github.com/googleapis/google-auth-library-java/commit/575836405bd5803d6202bd0018609184d6a15831))
+* update dependency com.google.http-client:google-http-client-bom to v1.35.0 ([#427](https://www.github.com/googleapis/google-auth-library-java/issues/427)) ([5494ec0](https://www.github.com/googleapis/google-auth-library-java/commit/5494ec0a73319fb955b3d7ba025aea9607020c4e))
+* update Guava to 29.0-android ([#426](https://www.github.com/googleapis/google-auth-library-java/issues/426)) ([0cd3c2e](https://www.github.com/googleapis/google-auth-library-java/commit/0cd3c2ec0aef3ff0f0379b32f9d05126442219b6))
+
 ## [0.20.0](https://www.github.com/googleapis/google-auth-library-java/compare/v0.19.0...v0.20.0) (2020-01-15)
 
 
