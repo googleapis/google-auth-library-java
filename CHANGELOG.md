@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.21.1](https://www.github.com/googleapis/google-auth-library-java/compare/v0.21.0...v0.21.1) (2020-07-07)
+
+
+### Dependencies
+
+* update google-http-client to 1.36.0 ([#447](https://www.github.com/googleapis/google-auth-library-java/issues/447)) ([b913d19](https://www.github.com/googleapis/google-auth-library-java/commit/b913d194259e4f93bb401a844480f56b48dad3bd)), closes [#446](https://www.github.com/googleapis/google-auth-library-java/issues/446)
+
 ## [0.21.0](https://www.github.com/googleapis/google-auth-library-java/compare/v0.20.0...v0.21.0) (2020-06-24)
 
 
