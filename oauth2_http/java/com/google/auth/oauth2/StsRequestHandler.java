@@ -1,0 +1,208 @@
+package com.google.auth.oauth2;
+
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpHeaders;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestFactory;
+import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.HttpResponseException;
+import com.google.api.client.http.UrlEncodedContent;
+import com.google.api.client.json.GenericJson;
+import com.google.api.client.json.JsonObjectParser;
+import com.google.api.client.json.JsonParser;
+import com.google.api.client.util.GenericData;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import javax.annotation.Nullable;
+
+/**
+ * Implements the OAuth 2.0 token exchange based on https://tools.ietf.org/html/rfc8693.
+ * <p>
+ * TODO(lsirac): Add client auth support.
+ * TODO(lsirac): Ensure request content is formatted correctly.
+ */
+public class StsRequestHandler {
+  private static final String TOKEN_EXCHANGE_GRANT_TYPE =
+      "urn:ietf:params:oauth:grant-type:token-exchange";
+  private static final String REQUESTED_TOKEN_TYPE =
+      "urn:ietf:params:oauth:token-type:access_token";
+  private static final String CLOUD_PLATFORM_SCOPE =
+      "https://www.googleapis.com/auth/cloud-platform";
+  private static final String PARSE_ERROR_PREFIX = "Error parsing token response.";
+
+  private String tokenExchangeEndpoint;
+  private StsTokenExchangeRequest request;
+  private HttpRequestFactory httpRequestFactory;
+
+  @Nullable private HttpHeaders headers;
+  @Nullable private String internalOptions;
+
+  /**
+   * Internal constructor.
+   *
+   * @param tokenExchangeEndpoint The token exchange endpoint.
+   * @param request               The token exchange request.
+   * @param headers               Optional additional headers to pass along the request.
+   * @param internalOptions       Optional GCP specific STS options.
+   * @return An StsTokenExchangeResponse instance if the request was successful.
+   */
+  private StsRequestHandler(String tokenExchangeEndpoint,
+      StsTokenExchangeRequest request,
+      HttpRequestFactory httpRequestFactory,
+      @Nullable HttpHeaders headers,
+      @Nullable String internalOptions) {
+    this.tokenExchangeEndpoint = tokenExchangeEndpoint;
+    this.request = request;
+    this.httpRequestFactory = httpRequestFactory;
+    this.headers = headers;
+    this.internalOptions = internalOptions;
+  }
+
+  public static Builder newBuilder(String tokenExchangeEndpoint,
+      StsTokenExchangeRequest stsTokenExchangeRequest,
+      HttpRequestFactory httpRequestFactory) {
+    return new Builder(tokenExchangeEndpoint, stsTokenExchangeRequest, httpRequestFactory);
+  }
+
+  /**
+   * Exchanges the provided token for another type of token based on the rfc8693 spec.
+   */
+  public StsTokenExchangeResponse exchangeToken() throws IOException {
+    UrlEncodedContent content = new UrlEncodedContent(buildTokenRequest());
+
+    HttpRequest httpRequest = httpRequestFactory
+        .buildPostRequest(new GenericUrl(tokenExchangeEndpoint), content);
+    httpRequest.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
+    if (headers != null) {
+      httpRequest.setHeaders(headers);
+    }
+
+    HttpResponse response;
+    try {
+      response = httpRequest.execute();
+    } catch (IOException e) {
+      if (!(e instanceof HttpResponseException)) {
+        throw e;
+      }
+      GenericJson errorResponse = parseJson(((HttpResponseException) e).getContent());
+      String errorCode = (String) errorResponse.get("error");
+      String errorDescription = null;
+      String errorUri = null;
+      if (errorResponse.containsKey("error_description")) {
+        errorDescription = (String) errorResponse.get("error_description");
+      }
+      if (errorResponse.containsKey("error_uri")) {
+        errorUri = (String) errorResponse.get("error_uri");
+      }
+      throw new OAuthException(errorCode, errorDescription, errorUri);
+    }
+
+    GenericData responseData = response.parseAs(GenericData.class);
+    return buildResponse(responseData);
+  }
+
+  private GenericData buildTokenRequest() {
+    GenericData tokenRequest = new GenericData()
+        .set("grant_type", TOKEN_EXCHANGE_GRANT_TYPE)
+        .set("scope", CLOUD_PLATFORM_SCOPE)
+        .set("subject_token_type", request.getSubjectTokenType())
+        .set("subject_token", request.getSubjectToken());
+
+    // Add scopes as a space-delimited string.
+    List<String> scopes = new ArrayList<>();
+    scopes.add(CLOUD_PLATFORM_SCOPE);
+    if (request.hasScopes()) {
+      scopes.addAll(request.getScopes());
+    }
+    tokenRequest.set("scope", String.join(" ", scopes));
+
+    // Set the requested token type, which defaults to
+    // urn:ietf:params:oauth:token-type:access_token.
+    String requestTokenType =
+        request.hasRequestedTokenType() ? request.getRequestedTokenType() : REQUESTED_TOKEN_TYPE;
+    tokenRequest.set("requested_token_type", requestTokenType);
+
+    // Add other optional params, if possible.
+    if (request.hasResource()) {
+      tokenRequest.set("resource", request.getResource());
+    }
+    if (request.hasAudience()) {
+      tokenRequest.set("audience", request.getAudience());
+    }
+
+    if (request.hasActingParty()) {
+      tokenRequest.set("actor_token", request.getActingParty().getActorToken());
+      tokenRequest.set("actor_token_type", request.getActingParty().getActorTokenType());
+    }
+
+    if (internalOptions != null && !internalOptions.isEmpty()) {
+      tokenRequest.set("options", internalOptions);
+    }
+    return tokenRequest;
+  }
+
+  private StsTokenExchangeResponse buildResponse(GenericData responseData) throws IOException {
+    String accessToken =
+        OAuth2Utils.validateString(responseData, "access_token", PARSE_ERROR_PREFIX);
+    String issuedTokenType =
+        OAuth2Utils.validateString(responseData, "issued_token_type", PARSE_ERROR_PREFIX);
+    String tokenType =
+        OAuth2Utils.validateString(responseData, "token_type", PARSE_ERROR_PREFIX);
+    Long expiresInSeconds =
+        OAuth2Utils.validateLong(responseData, "expires_in", PARSE_ERROR_PREFIX);
+
+    StsTokenExchangeResponse.Builder builder = StsTokenExchangeResponse.newBuilder(
+        accessToken, issuedTokenType, tokenType, expiresInSeconds);
+
+    if (responseData.containsKey("refresh_token")) {
+      builder.setRefreshToken(
+          OAuth2Utils.validateString(responseData, "refresh_token", PARSE_ERROR_PREFIX));
+    }
+    if (responseData.containsKey("scope")) {
+      String scope = OAuth2Utils.validateString(responseData, "scope", PARSE_ERROR_PREFIX);
+      builder.setScopes(Arrays.asList(scope.trim().split("\\s+")));
+    }
+    return builder.build();
+  }
+
+  private GenericJson parseJson(String json) throws IOException {
+    JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser(json);
+    return parser.parseAndClose(GenericJson.class);
+  }
+
+  public static class Builder {
+    private String tokenExchangeEndpoint;
+    private StsTokenExchangeRequest request;
+    private HttpRequestFactory httpRequestFactory;
+
+    @Nullable private HttpHeaders headers;
+    @Nullable private String internalOptions;
+
+    private Builder(String tokenExchangeEndpoint, StsTokenExchangeRequest stsTokenExchangeRequest,
+        HttpRequestFactory httpRequestFactory) {
+      this.tokenExchangeEndpoint = tokenExchangeEndpoint;
+      this.request = stsTokenExchangeRequest;
+      this.httpRequestFactory = httpRequestFactory;
+    }
+
+    public StsRequestHandler.Builder setHeaders(HttpHeaders headers) {
+      this.headers = headers;
+      return this;
+    }
+
+    public StsRequestHandler.Builder setInternalOptions(String internalOptions) {
+      this.internalOptions = internalOptions;
+      return this;
+    }
+
+    public StsRequestHandler build() {
+      return new StsRequestHandler(tokenExchangeEndpoint, request,
+          httpRequestFactory, headers, internalOptions);
+    }
+  }
+}
+
