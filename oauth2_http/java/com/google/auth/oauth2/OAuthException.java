@@ -45,9 +45,8 @@ class OAuthException extends IOException {
   @Nullable private String errorDescription;
   @Nullable private String errorUri;
 
-  public OAuthException(String errorCode,
-      @Nullable String errorDescription,
-      @Nullable String errorUri) {
+  public OAuthException(
+      String errorCode, @Nullable String errorDescription, @Nullable String errorUri) {
     this.errorCode = checkNotNull(errorCode);
     this.errorDescription = errorDescription;
     this.errorUri = errorUri;

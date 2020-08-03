@@ -42,19 +42,17 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.JsonParser;
 import com.google.api.client.util.GenericData;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 import javax.annotation.Nullable;
 
 /**
  * Implements the OAuth 2.0 token exchange based on https://tools.ietf.org/html/rfc8693.
- * <p>
- * TODO(lsirac): Add client auth support.
- * TODO(lsirac): Ensure request content is formatted correctly.
+ *
+ * <p>TODO(lsirac): Add client auth support. TODO(lsirac): Ensure request content is formatted
+ * correctly.
  */
 public class StsRequestHandler {
   private static final String TOKEN_EXCHANGE_GRANT_TYPE =
@@ -76,12 +74,13 @@ public class StsRequestHandler {
    * Internal constructor.
    *
    * @param tokenExchangeEndpoint The token exchange endpoint.
-   * @param request               The token exchange request.
-   * @param headers               Optional additional headers to pass along the request.
-   * @param internalOptions       Optional GCP specific STS options.
+   * @param request The token exchange request.
+   * @param headers Optional additional headers to pass along the request.
+   * @param internalOptions Optional GCP specific STS options.
    * @return An StsTokenExchangeResponse instance if the request was successful.
    */
-  private StsRequestHandler(String tokenExchangeEndpoint,
+  private StsRequestHandler(
+      String tokenExchangeEndpoint,
       StsTokenExchangeRequest request,
       HttpRequestFactory httpRequestFactory,
       @Nullable HttpHeaders headers,
@@ -93,20 +92,19 @@ public class StsRequestHandler {
     this.internalOptions = internalOptions;
   }
 
-  public static Builder newBuilder(String tokenExchangeEndpoint,
+  public static Builder newBuilder(
+      String tokenExchangeEndpoint,
       StsTokenExchangeRequest stsTokenExchangeRequest,
       HttpRequestFactory httpRequestFactory) {
     return new Builder(tokenExchangeEndpoint, stsTokenExchangeRequest, httpRequestFactory);
   }
 
-  /**
-   * Exchanges the provided token for another type of token based on the rfc8693 spec.
-   */
+  /** Exchanges the provided token for another type of token based on the rfc8693 spec. */
   public StsTokenExchangeResponse exchangeToken() throws IOException {
     UrlEncodedContent content = new UrlEncodedContent(buildTokenRequest());
 
-    HttpRequest httpRequest = httpRequestFactory
-        .buildPostRequest(new GenericUrl(tokenExchangeEndpoint), content);
+    HttpRequest httpRequest =
+        httpRequestFactory.buildPostRequest(new GenericUrl(tokenExchangeEndpoint), content);
     httpRequest.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
     if (headers != null) {
       httpRequest.setHeaders(headers);
@@ -135,11 +133,12 @@ public class StsRequestHandler {
   }
 
   private GenericData buildTokenRequest() {
-    GenericData tokenRequest = new GenericData()
-        .set("grant_type", TOKEN_EXCHANGE_GRANT_TYPE)
-        .set("scope", CLOUD_PLATFORM_SCOPE)
-        .set("subject_token_type", request.getSubjectTokenType())
-        .set("subject_token", request.getSubjectToken());
+    GenericData tokenRequest =
+        new GenericData()
+            .set("grant_type", TOKEN_EXCHANGE_GRANT_TYPE)
+            .set("scope", CLOUD_PLATFORM_SCOPE)
+            .set("subject_token_type", request.getSubjectTokenType())
+            .set("subject_token", request.getSubjectToken());
 
     // Add scopes as a space-delimited string.
     List<String> scopes = new ArrayList<>();
@@ -179,13 +178,13 @@ public class StsRequestHandler {
         OAuth2Utils.validateString(responseData, "access_token", PARSE_ERROR_PREFIX);
     String issuedTokenType =
         OAuth2Utils.validateString(responseData, "issued_token_type", PARSE_ERROR_PREFIX);
-    String tokenType =
-        OAuth2Utils.validateString(responseData, "token_type", PARSE_ERROR_PREFIX);
+    String tokenType = OAuth2Utils.validateString(responseData, "token_type", PARSE_ERROR_PREFIX);
     Long expiresInSeconds =
         OAuth2Utils.validateLong(responseData, "expires_in", PARSE_ERROR_PREFIX);
 
-    StsTokenExchangeResponse.Builder builder = StsTokenExchangeResponse.newBuilder(
-        accessToken, issuedTokenType, tokenType, expiresInSeconds);
+    StsTokenExchangeResponse.Builder builder =
+        StsTokenExchangeResponse.newBuilder(
+            accessToken, issuedTokenType, tokenType, expiresInSeconds);
 
     if (responseData.containsKey("refresh_token")) {
       builder.setRefreshToken(
@@ -211,7 +210,9 @@ public class StsRequestHandler {
     @Nullable private HttpHeaders headers;
     @Nullable private String internalOptions;
 
-    private Builder(String tokenExchangeEndpoint, StsTokenExchangeRequest stsTokenExchangeRequest,
+    private Builder(
+        String tokenExchangeEndpoint,
+        StsTokenExchangeRequest stsTokenExchangeRequest,
         HttpRequestFactory httpRequestFactory) {
       this.tokenExchangeEndpoint = tokenExchangeEndpoint;
       this.request = stsTokenExchangeRequest;
@@ -229,9 +230,8 @@ public class StsRequestHandler {
     }
 
     public StsRequestHandler build() {
-      return new StsRequestHandler(tokenExchangeEndpoint, request,
-          httpRequestFactory, headers, internalOptions);
+      return new StsRequestHandler(
+          tokenExchangeEndpoint, request, httpRequestFactory, headers, internalOptions);
     }
   }
 }
-

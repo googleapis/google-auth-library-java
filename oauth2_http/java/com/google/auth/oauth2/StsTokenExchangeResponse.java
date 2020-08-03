@@ -69,10 +69,8 @@ public class StsTokenExchangeResponse {
     this.scopes = scopes;
   }
 
-  public static Builder newBuilder(String accessToken,
-      String issuedTokenType,
-      String tokenType,
-      Long expiresIn) {
+  public static Builder newBuilder(
+      String accessToken, String issuedTokenType, String tokenType, Long expiresIn) {
     return new Builder(accessToken, issuedTokenType, tokenType, expiresIn);
   }
 
@@ -111,10 +109,7 @@ public class StsTokenExchangeResponse {
     @Nullable private String refreshToken;
     @Nullable private List<String> scopes;
 
-    private Builder(String accessToken,
-        String issuedTokenType,
-        String tokenType,
-        Long expiresIn) {
+    private Builder(String accessToken, String issuedTokenType, String tokenType, Long expiresIn) {
       this.accessToken = accessToken;
       this.issuedTokenType = issuedTokenType;
       this.tokenType = tokenType;
@@ -132,9 +127,8 @@ public class StsTokenExchangeResponse {
     }
 
     public StsTokenExchangeResponse build() {
-      return new StsTokenExchangeResponse(accessToken, issuedTokenType, tokenType, expiresIn,
-          refreshToken, scopes);
+      return new StsTokenExchangeResponse(
+          accessToken, issuedTokenType, tokenType, expiresIn, refreshToken, scopes);
     }
   }
 }
-

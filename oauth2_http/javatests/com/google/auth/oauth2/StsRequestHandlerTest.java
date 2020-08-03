@@ -53,17 +53,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link StsRequestHandler}.
- */
+/** Tests for {@link StsRequestHandler}. */
 @RunWith(JUnit4.class)
 public final class StsRequestHandlerTest {
-  private static final String TOKEN_EXCHANGE_GRANT_TYPE
-      = "urn:ietf:params:oauth:grant-type:token-exchange";
-  private static final String CLOUD_PLATFORM_SCOPE
-      = "https://www.googleapis.com/auth/cloud-platform";
-  private static final String DEFAULT_REQUESTED_TOKEN_TYPE
-      = "urn:ietf:params:oauth:token-type:access_token";
+  private static final String TOKEN_EXCHANGE_GRANT_TYPE =
+      "urn:ietf:params:oauth:grant-type:token-exchange";
+  private static final String CLOUD_PLATFORM_SCOPE =
+      "https://www.googleapis.com/auth/cloud-platform";
+  private static final String DEFAULT_REQUESTED_TOKEN_TYPE =
+      "urn:ietf:params:oauth:token-type:access_token";
   private static final String TOKEN_URL = "https://www.sts.google.com";
   private static final String CREDENTIAL = "credential";
   private static final String SUBJECT_TOKEN_TYPE = "subjectTokenType";
@@ -96,12 +94,13 @@ public final class StsRequestHandlerTest {
   @Test
   public void exchangeToken() throws IOException {
     StsTokenExchangeRequest stsTokenExchangeRequest =
-        StsTokenExchangeRequest.newBuilder(CREDENTIAL, SUBJECT_TOKEN_TYPE)
-            .build();
+        StsTokenExchangeRequest.newBuilder(CREDENTIAL, SUBJECT_TOKEN_TYPE).build();
 
     StsRequestHandler requestHandler =
-        StsRequestHandler.newBuilder(TOKEN_URL, stsTokenExchangeRequest,
-            MOCK_HTTP_TRANSPORT_FACTORY.create().createRequestFactory())
+        StsRequestHandler.newBuilder(
+                TOKEN_URL,
+                stsTokenExchangeRequest,
+                MOCK_HTTP_TRANSPORT_FACTORY.create().createRequestFactory())
             .build();
 
     StsTokenExchangeResponse response = requestHandler.exchangeToken();
@@ -114,12 +113,13 @@ public final class StsRequestHandlerTest {
     assertThat(response.getExpiresIn()).isEqualTo(transport.getExpiresIn());
 
     // Validate request content.
-    GenericData expectedRequestContent = new GenericData()
-        .set("grant_type", TOKEN_EXCHANGE_GRANT_TYPE)
-        .set("scope", CLOUD_PLATFORM_SCOPE)
-        .set("requested_token_type", DEFAULT_REQUESTED_TOKEN_TYPE)
-        .set("subject_token_type", stsTokenExchangeRequest.getSubjectTokenType())
-        .set("subject_token", stsTokenExchangeRequest.getSubjectToken());
+    GenericData expectedRequestContent =
+        new GenericData()
+            .set("grant_type", TOKEN_EXCHANGE_GRANT_TYPE)
+            .set("scope", CLOUD_PLATFORM_SCOPE)
+            .set("requested_token_type", DEFAULT_REQUESTED_TOKEN_TYPE)
+            .set("subject_token_type", stsTokenExchangeRequest.getSubjectTokenType())
+            .set("subject_token", stsTokenExchangeRequest.getSubjectToken());
 
     MockLowLevelHttpRequest request = transport.getRequest();
     Map<String, String> actualRequestContent = TestUtils.parseQuery(request.getContentAsString());
@@ -146,14 +146,17 @@ public final class StsRequestHandlerTest {
             .setScopes(SCOPES)
             .build();
 
-    HttpHeaders httpHeaders = new HttpHeaders()
-        .setContentType(CONTENT_TYPE)
-        .setAcceptEncoding(ACCEPT_ENCODING)
-        .set(CUSTOM_HEADER_KEY, CUSTOM_HEADER_VALUE);
+    HttpHeaders httpHeaders =
+        new HttpHeaders()
+            .setContentType(CONTENT_TYPE)
+            .setAcceptEncoding(ACCEPT_ENCODING)
+            .set(CUSTOM_HEADER_KEY, CUSTOM_HEADER_VALUE);
 
     StsRequestHandler requestHandler =
-        StsRequestHandler.newBuilder(TOKEN_URL, stsTokenExchangeRequest,
-            MOCK_HTTP_TRANSPORT_FACTORY.create().createRequestFactory())
+        StsRequestHandler.newBuilder(
+                TOKEN_URL,
+                stsTokenExchangeRequest,
+                MOCK_HTTP_TRANSPORT_FACTORY.create().createRequestFactory())
             .setHeaders(httpHeaders)
             .setInternalOptions(INTERNAL_OPTIONS)
             .build();
@@ -182,17 +185,18 @@ public final class StsRequestHandlerTest {
     assertThat(requestHeaders.get(CUSTOM_HEADER_KEY).get(0)).isEqualTo(CUSTOM_HEADER_VALUE);
 
     // Validate request content.
-    GenericData expectedRequestContent = new GenericData()
-        .set("grant_type", TOKEN_EXCHANGE_GRANT_TYPE)
-        .set("scope", spaceDelimitedScopes)
-        .set("options", INTERNAL_OPTIONS)
-        .set("subject_token_type", stsTokenExchangeRequest.getSubjectTokenType())
-        .set("subject_token", stsTokenExchangeRequest.getSubjectToken())
-        .set("requested_token_type", stsTokenExchangeRequest.getRequestedTokenType())
-        .set("actor_token", stsTokenExchangeRequest.getActingParty().getActorToken())
-        .set("actor_token_type", stsTokenExchangeRequest.getActingParty().getActorTokenType())
-        .set("resource", stsTokenExchangeRequest.getResource())
-        .set("audience", stsTokenExchangeRequest.getAudience());
+    GenericData expectedRequestContent =
+        new GenericData()
+            .set("grant_type", TOKEN_EXCHANGE_GRANT_TYPE)
+            .set("scope", spaceDelimitedScopes)
+            .set("options", INTERNAL_OPTIONS)
+            .set("subject_token_type", stsTokenExchangeRequest.getSubjectTokenType())
+            .set("subject_token", stsTokenExchangeRequest.getSubjectToken())
+            .set("requested_token_type", stsTokenExchangeRequest.getRequestedTokenType())
+            .set("actor_token", stsTokenExchangeRequest.getActingParty().getActorToken())
+            .set("actor_token_type", stsTokenExchangeRequest.getActingParty().getActorTokenType())
+            .set("resource", stsTokenExchangeRequest.getResource())
+            .set("audience", stsTokenExchangeRequest.getAudience());
 
     Map<String, String> actualRequestContent = TestUtils.parseQuery(request.getContentAsString());
     assertThat(actualRequestContent).isEqualTo(expectedRequestContent);
@@ -201,17 +205,18 @@ public final class StsRequestHandlerTest {
   @Test
   public void exchangeToken_throwsException() {
     StsTokenExchangeRequest stsTokenExchangeRequest =
-        StsTokenExchangeRequest.newBuilder(CREDENTIAL, SUBJECT_TOKEN_TYPE)
-            .build();
+        StsTokenExchangeRequest.newBuilder(CREDENTIAL, SUBJECT_TOKEN_TYPE).build();
 
     StsRequestHandler requestHandler =
-        StsRequestHandler.newBuilder(TOKEN_URL, stsTokenExchangeRequest,
-            MOCK_HTTP_TRANSPORT_FACTORY.create().createRequestFactory())
+        StsRequestHandler.newBuilder(
+                TOKEN_URL,
+                stsTokenExchangeRequest,
+                MOCK_HTTP_TRANSPORT_FACTORY.create().createRequestFactory())
             .build();
 
     MOCK_HTTP_TRANSPORT_FACTORY.transport.addResponseErrorSequence(
-        buildHttpResponseException(INVALID_REQUEST, /* errorDescription= */null,
-            /* errorUri= */ null));
+        buildHttpResponseException(
+            INVALID_REQUEST, /* errorDescription= */ null, /* errorUri= */ null));
 
     OAuthException e = assertThrows(OAuthException.class, requestHandler::exchangeToken);
     assertThat(e.getErrorCode()).isEqualTo(INVALID_REQUEST);
@@ -222,12 +227,13 @@ public final class StsRequestHandlerTest {
   @Test
   public void exchangeToken_withOptionalParams_throwsException() {
     StsTokenExchangeRequest stsTokenExchangeRequest =
-        StsTokenExchangeRequest.newBuilder(CREDENTIAL, SUBJECT_TOKEN_TYPE)
-            .build();
+        StsTokenExchangeRequest.newBuilder(CREDENTIAL, SUBJECT_TOKEN_TYPE).build();
 
     StsRequestHandler requestHandler =
-        StsRequestHandler.newBuilder(TOKEN_URL, stsTokenExchangeRequest,
-            MOCK_HTTP_TRANSPORT_FACTORY.create().createRequestFactory())
+        StsRequestHandler.newBuilder(
+                TOKEN_URL,
+                stsTokenExchangeRequest,
+                MOCK_HTTP_TRANSPORT_FACTORY.create().createRequestFactory())
             .build();
 
     MOCK_HTTP_TRANSPORT_FACTORY.transport.addResponseErrorSequence(
@@ -242,12 +248,13 @@ public final class StsRequestHandlerTest {
   @Test
   public void exchangeToken_ioException() {
     StsTokenExchangeRequest stsTokenExchangeRequest =
-        StsTokenExchangeRequest.newBuilder(CREDENTIAL, SUBJECT_TOKEN_TYPE)
-            .build();
+        StsTokenExchangeRequest.newBuilder(CREDENTIAL, SUBJECT_TOKEN_TYPE).build();
 
     StsRequestHandler requestHandler =
-        StsRequestHandler.newBuilder(TOKEN_URL, stsTokenExchangeRequest,
-            MOCK_HTTP_TRANSPORT_FACTORY.create().createRequestFactory())
+        StsRequestHandler.newBuilder(
+                TOKEN_URL,
+                stsTokenExchangeRequest,
+                MOCK_HTTP_TRANSPORT_FACTORY.create().createRequestFactory())
             .build();
 
     IOException e = new IOException();
@@ -257,9 +264,8 @@ public final class StsRequestHandlerTest {
     assertThat(thrownException).isEqualTo(e);
   }
 
-  public HttpResponseException buildHttpResponseException(String error,
-      @Nullable String errorDescription,
-      @Nullable String errorUri) {
+  public HttpResponseException buildHttpResponseException(
+      String error, @Nullable String errorDescription, @Nullable String errorUri) {
     JsonObject content = new JsonObject();
     content.addProperty("error", error);
     if (errorDescription != null) {
@@ -268,13 +274,15 @@ public final class StsRequestHandlerTest {
     if (errorUri != null) {
       content.addProperty("error_uri", errorUri);
     }
-    return new HttpResponseException.Builder(/* statusCode= */400, /* statusMessage= */
-        "statusMessage", new HttpHeaders())
-        .setContent(content.toString()).build();
+    return new HttpResponseException.Builder(
+            /* statusCode= */ 400, /* statusMessage= */ "statusMessage", new HttpHeaders())
+        .setContent(content.toString())
+        .build();
   }
 
   private static class MockStsServiceTransportFactory implements HttpTransportFactory {
     MockStsServiceTransport transport = new MockStsServiceTransport();
+
     @Override
     public HttpTransport create() {
       return transport;

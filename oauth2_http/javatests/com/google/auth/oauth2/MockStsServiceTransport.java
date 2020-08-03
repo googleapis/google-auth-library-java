@@ -44,16 +44,13 @@ import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.auth.TestUtils;
 import java.io.IOException;
-
 import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
-/**
- * Mock transport that simulates STS.
- */
+/** Mock transport that simulates STS. */
 public class MockStsServiceTransport extends MockHttpTransport {
   private static final String EXPECTED_GRANT_TYPE =
       "urn:ietf:params:oauth:grant-type:token-exchange";
@@ -103,36 +100,37 @@ public class MockStsServiceTransport extends MockHttpTransport {
 
   @Override
   public LowLevelHttpRequest buildRequest(String method, String url) {
-    this.request = new MockLowLevelHttpRequest(url) {
-      @Override
-      public LowLevelHttpResponse execute() throws IOException {
-        if (!responseErrorSequence.isEmpty()) {
-          throw responseErrorSequence.poll();
-        }
-        Map<String, String> query = TestUtils.parseQuery(getContentAsString());
-        assertThat(query.get("grant_type")).isEqualTo(EXPECTED_GRANT_TYPE);
-        assertThat(query.get("subject_token_type")).isNotEmpty();
-        assertThat(query.get("subject_token")).isNotEmpty();
+    this.request =
+        new MockLowLevelHttpRequest(url) {
+          @Override
+          public LowLevelHttpResponse execute() throws IOException {
+            if (!responseErrorSequence.isEmpty()) {
+              throw responseErrorSequence.poll();
+            }
+            Map<String, String> query = TestUtils.parseQuery(getContentAsString());
+            assertThat(query.get("grant_type")).isEqualTo(EXPECTED_GRANT_TYPE);
+            assertThat(query.get("subject_token_type")).isNotEmpty();
+            assertThat(query.get("subject_token")).isNotEmpty();
 
-        GenericJson response = new GenericJson();
-        response.setFactory(JSON_FACTORY);
-        response.put("token_type", TOKEN_TYPE);
-        response.put("expires_in", EXPIRES_IN);
-        response.put("access_token", ACCESS_TOKEN);
-        response.put("issued_token_type", ISSUED_TOKEN_TYPE);
+            GenericJson response = new GenericJson();
+            response.setFactory(JSON_FACTORY);
+            response.put("token_type", TOKEN_TYPE);
+            response.put("expires_in", EXPIRES_IN);
+            response.put("access_token", ACCESS_TOKEN);
+            response.put("issued_token_type", ISSUED_TOKEN_TYPE);
 
-        if (!refreshTokenSequence.isEmpty()) {
-          response.put("refresh_token", refreshTokenSequence.poll());
-        }
-        if (!scopeSequence.isEmpty()) {
-          response.put("scope", String.join(" ", scopeSequence.poll()));
-        }
+            if (!refreshTokenSequence.isEmpty()) {
+              response.put("refresh_token", refreshTokenSequence.poll());
+            }
+            if (!scopeSequence.isEmpty()) {
+              response.put("scope", String.join(" ", scopeSequence.poll()));
+            }
 
-        return new MockLowLevelHttpResponse()
-            .setContentType(Json.MEDIA_TYPE)
-            .setContent(response.toPrettyString());
-      }
-    };
+            return new MockLowLevelHttpResponse()
+                .setContentType(Json.MEDIA_TYPE)
+                .setContent(response.toPrettyString());
+          }
+        };
     return this.request;
   }
 }

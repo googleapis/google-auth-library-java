@@ -123,7 +123,7 @@ public class StsTokenExchangeRequest {
   }
 
   public boolean hasScopes() {
-    return  scopes != null && !scopes.isEmpty();
+    return scopes != null && !scopes.isEmpty();
   }
 
   public boolean hasActingParty() {
@@ -139,9 +139,7 @@ public class StsTokenExchangeRequest {
     List<String> scopes;
     ActingParty actingParty;
 
-    private Builder(
-        String subjectToken,
-        String subjectTokenType) {
+    private Builder(String subjectToken, String subjectTokenType) {
       this.subjectToken = subjectToken;
       this.subjectTokenType = subjectTokenType;
     }
@@ -172,8 +170,14 @@ public class StsTokenExchangeRequest {
     }
 
     public StsTokenExchangeRequest build() {
-      return new StsTokenExchangeRequest(subjectToken, subjectTokenType, actingParty, scopes,
-          resource, audience, requestedTokenType);
+      return new StsTokenExchangeRequest(
+          subjectToken,
+          subjectTokenType,
+          actingParty,
+          scopes,
+          resource,
+          audience,
+          requestedTokenType);
     }
   }
 
@@ -195,4 +199,3 @@ public class StsTokenExchangeRequest {
     }
   }
 }
-
