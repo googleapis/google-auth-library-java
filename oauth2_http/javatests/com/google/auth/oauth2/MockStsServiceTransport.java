@@ -42,6 +42,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
+import com.google.api.client.util.Joiner;
 import com.google.auth.TestUtils;
 import java.io.IOException;
 import java.util.ArrayDeque;
@@ -123,9 +124,8 @@ public class MockStsServiceTransport extends MockHttpTransport {
               response.put("refresh_token", refreshTokenSequence.poll());
             }
             if (!scopeSequence.isEmpty()) {
-              response.put("scope", String.join(" ", scopeSequence.poll()));
+              response.put("scope", Joiner.on(' ').join(scopeSequence.poll()));
             }
-
             return new MockLowLevelHttpResponse()
                 .setContentType(Json.MEDIA_TYPE)
                 .setContent(response.toPrettyString());

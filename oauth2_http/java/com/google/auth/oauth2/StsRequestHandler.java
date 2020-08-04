@@ -42,6 +42,7 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.JsonParser;
 import com.google.api.client.util.GenericData;
+import com.google.api.client.util.Joiner;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -146,7 +147,7 @@ public class StsRequestHandler {
     if (request.hasScopes()) {
       scopes.addAll(request.getScopes());
     }
-    tokenRequest.set("scope", String.join(" ", scopes));
+    tokenRequest.set("scope", Joiner.on(' ').join(scopes));
 
     // Set the requested token type, which defaults to
     // urn:ietf:params:oauth:token-type:access_token.

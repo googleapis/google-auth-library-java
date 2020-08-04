@@ -39,6 +39,7 @@ import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.util.GenericData;
+import com.google.api.client.util.Joiner;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.StsTokenExchangeRequest.ActingParty;
@@ -50,6 +51,7 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import org.junit.Test;
+import org.junit.function.ThrowingRunnable;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -167,7 +169,7 @@ public final class StsRequestHandlerTest {
     List<String> expectedScopes = new ArrayList<>();
     expectedScopes.add(CLOUD_PLATFORM_SCOPE);
     expectedScopes.addAll(SCOPES);
-    String spaceDelimitedScopes = String.join(" ", expectedScopes);
+    String spaceDelimitedScopes = Joiner.on(' ').join(expectedScopes);
 
     MockStsServiceTransport transport = MOCK_HTTP_TRANSPORT_FACTORY.transport;
     assertThat(response.getAccessToken().getTokenValue()).isEqualTo(transport.getAccessToken());
@@ -203,11 +205,11 @@ public final class StsRequestHandlerTest {
   }
 
   @Test
-  public void exchangeToken_throwsException() {
+  public void exchangeToken_throwsException() throws IOException {
     StsTokenExchangeRequest stsTokenExchangeRequest =
         StsTokenExchangeRequest.newBuilder(CREDENTIAL, SUBJECT_TOKEN_TYPE).build();
 
-    StsRequestHandler requestHandler =
+    final StsRequestHandler requestHandler =
         StsRequestHandler.newBuilder(
                 TOKEN_URL,
                 stsTokenExchangeRequest,
@@ -218,7 +220,16 @@ public final class StsRequestHandlerTest {
         buildHttpResponseException(
             INVALID_REQUEST, /* errorDescription= */ null, /* errorUri= */ null));
 
-    OAuthException e = assertThrows(OAuthException.class, requestHandler::exchangeToken);
+    OAuthException e =
+        assertThrows(
+            OAuthException.class,
+            new ThrowingRunnable() {
+              @Override
+              public void run() throws Throwable {
+                requestHandler.exchangeToken();
+              }
+            });
+
     assertThat(e.getErrorCode()).isEqualTo(INVALID_REQUEST);
     assertThat(e.getErrorDescription()).isNull();
     assertThat(e.getErrorUri()).isNull();
@@ -229,7 +240,7 @@ public final class StsRequestHandlerTest {
     StsTokenExchangeRequest stsTokenExchangeRequest =
         StsTokenExchangeRequest.newBuilder(CREDENTIAL, SUBJECT_TOKEN_TYPE).build();
 
-    StsRequestHandler requestHandler =
+    final StsRequestHandler requestHandler =
         StsRequestHandler.newBuilder(
                 TOKEN_URL,
                 stsTokenExchangeRequest,
@@ -239,7 +250,16 @@ public final class StsRequestHandlerTest {
     MOCK_HTTP_TRANSPORT_FACTORY.transport.addResponseErrorSequence(
         buildHttpResponseException(INVALID_REQUEST, ERROR_DESCRIPTION, ERROR_URI));
 
-    OAuthException e = assertThrows(OAuthException.class, requestHandler::exchangeToken);
+    OAuthException e =
+        assertThrows(
+            OAuthException.class,
+            new ThrowingRunnable() {
+              @Override
+              public void run() throws Throwable {
+                requestHandler.exchangeToken();
+              }
+            });
+
     assertThat(e.getErrorCode()).isEqualTo(INVALID_REQUEST);
     assertThat(e.getErrorDescription()).isEqualTo(ERROR_DESCRIPTION);
     assertThat(e.getErrorUri()).isEqualTo(ERROR_URI);
@@ -250,7 +270,7 @@ public final class StsRequestHandlerTest {
     StsTokenExchangeRequest stsTokenExchangeRequest =
         StsTokenExchangeRequest.newBuilder(CREDENTIAL, SUBJECT_TOKEN_TYPE).build();
 
-    StsRequestHandler requestHandler =
+    final StsRequestHandler requestHandler =
         StsRequestHandler.newBuilder(
                 TOKEN_URL,
                 stsTokenExchangeRequest,
@@ -260,7 +280,15 @@ public final class StsRequestHandlerTest {
     IOException e = new IOException();
     MOCK_HTTP_TRANSPORT_FACTORY.transport.addResponseErrorSequence(e);
 
-    IOException thrownException = assertThrows(IOException.class, requestHandler::exchangeToken);
+    IOException thrownException =
+        assertThrows(
+            IOException.class,
+            new ThrowingRunnable() {
+              @Override
+              public void run() throws Throwable {
+                requestHandler.exchangeToken();
+              }
+            });
     assertThat(thrownException).isEqualTo(e);
   }
 
