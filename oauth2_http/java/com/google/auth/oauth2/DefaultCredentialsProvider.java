@@ -145,7 +145,9 @@ class DefaultCredentialsProvider {
     GoogleCredentials credentials = null;
     String credentialsPath = getEnv(CREDENTIAL_ENV_VAR);
     if (credentialsPath != null && credentialsPath.length() > 0) {
-      LOGGER.log(Level.FINE, String.format("Loading credentials from file: %s", credentialsPath));
+      LOGGER.log(
+          Level.FINE,
+          String.format("Attempting to load credentials from file: %s", credentialsPath));
       InputStream credentialsStream = null;
       try {
         File credentialsFile = new File(credentialsPath);
@@ -182,7 +184,7 @@ class DefaultCredentialsProvider {
           LOGGER.log(
               Level.FINE,
               String.format(
-                  "Loading credentials from well known file: %s",
+                  "Attempting to load credentials from well known file: %s",
                   wellKnownFileLocation.getCanonicalPath()));
           credentialsStream = readStream(wellKnownFileLocation);
           credentials = GoogleCredentials.fromStream(credentialsStream, transportFactory);
