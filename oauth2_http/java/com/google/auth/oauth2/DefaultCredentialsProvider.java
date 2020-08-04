@@ -145,6 +145,9 @@ class DefaultCredentialsProvider {
     GoogleCredentials credentials = null;
     String credentialsPath = getEnv(CREDENTIAL_ENV_VAR);
     if (credentialsPath != null && credentialsPath.length() > 0) {
+      LOGGER.log(
+          Level.FINE,
+          String.format("Attempting to load credentials from file: %s", credentialsPath));
       InputStream credentialsStream = null;
       try {
         File credentialsFile = new File(credentialsPath);
@@ -178,6 +181,11 @@ class DefaultCredentialsProvider {
       InputStream credentialsStream = null;
       try {
         if (isFile(wellKnownFileLocation)) {
+          LOGGER.log(
+              Level.FINE,
+              String.format(
+                  "Attempting to load credentials from well known file: %s",
+                  wellKnownFileLocation.getCanonicalPath()));
           credentialsStream = readStream(wellKnownFileLocation);
           credentials = GoogleCredentials.fromStream(credentialsStream, transportFactory);
         }
@@ -198,17 +206,20 @@ class DefaultCredentialsProvider {
 
     // Then try GAE 7 standard environment
     if (credentials == null && isOnGAEStandard7() && !skipAppEngineCredentialsCheck()) {
+      LOGGER.log(Level.FINE, "Attempting to load credentials from GAE 7 Standard");
       credentials = tryGetAppEngineCredential();
     }
 
     // Then try Cloud Shell.  This must be done BEFORE checking
     // Compute Engine, as Cloud Shell runs on GCE VMs.
     if (credentials == null) {
+      LOGGER.log(Level.FINE, "Attempting to load credentials from Cloud Shell");
       credentials = tryGetCloudShellCredentials();
     }
 
     // Then try Compute Engine and GAE 8 standard environment
     if (credentials == null) {
+      LOGGER.log(Level.FINE, "Attempting to load credentials from GCE");
       credentials = tryGetComputeCredentials(transportFactory);
     }
 
