@@ -36,20 +36,19 @@ import static org.junit.Assert.assertThrows;
 
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpResponseException;
-import com.google.api.client.json.JsonGenerator;
+import com.google.api.client.json.GenericJson;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Joiner;
 import com.google.auth.TestUtils;
 import com.google.auth.oauth2.StsTokenExchangeRequest.ActingParty;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
 import org.junit.runner.RunWith;
@@ -91,7 +90,12 @@ public final class StsRequestHandlerTest {
   private static final String ERROR_DESCRIPTION = "errorDescription";
   private static final String ERROR_URI = "errorUri";
 
-  private MockStsServiceTransport transport = new MockStsServiceTransport();
+  private MockStsServiceTransport transport;
+
+  @Before
+  public void setup() {
+    transport = new MockStsServiceTransport();
+  }
 
   @Test
   public void exchangeToken() throws IOException {
@@ -283,29 +287,18 @@ public final class StsRequestHandlerTest {
   public HttpResponseException buildHttpResponseException(
       String error, @Nullable String errorDescription, @Nullable String errorUri)
       throws IOException {
-    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
-    JsonGenerator jsonGenerator =
-        OAuth2Utils.JSON_FACTORY.createJsonGenerator(
-            byteArrayOutputStream, Charset.defaultCharset());
-
-    jsonGenerator.writeStartObject();
-    jsonGenerator.writeFieldName("error");
-    jsonGenerator.writeString(error);
-
+    GenericJson json = new GenericJson();
+    json.setFactory(OAuth2Utils.JSON_FACTORY);
+    json.set("error", error);
     if (errorDescription != null) {
-      jsonGenerator.writeFieldName("error_description");
-      jsonGenerator.writeString(errorDescription);
+      json.set("error_description", errorDescription);
     }
     if (errorUri != null) {
-      jsonGenerator.writeFieldName("error_uri");
-      jsonGenerator.writeString(errorUri);
+      json.set("error_uri", errorUri);
     }
-    jsonGenerator.writeEndObject();
-    jsonGenerator.close();
     return new HttpResponseException.Builder(
             /* statusCode= */ 400, /* statusMessage= */ "statusMessage", new HttpHeaders())
-        .setContent(byteArrayOutputStream.toString())
+        .setContent(json.toPrettyString())
         .build();
   }
 }
