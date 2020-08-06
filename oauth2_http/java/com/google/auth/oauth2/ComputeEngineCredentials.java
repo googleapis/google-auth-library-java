@@ -49,6 +49,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -94,16 +95,23 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
   private final String transportFactoryClassName;
 
+  private final Collection<String> scopes;
+
   private transient HttpTransportFactory transportFactory;
   private transient String serviceAccountEmail;
 
   /**
-   * Constructor with overridden transport.
+   * Constructor with overridden scopes and transport.
+   *
+   * @param scopes Access scopes to request.  If null, the returned access token will have the
+   *     default scopes for the environment.  On GCE, these are the scopes assigned to the VM.  On
+   *     GKE Workload Identity, this will be cloud-platform and userinfo.email.
    *
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *     tokens.
    */
-  private ComputeEngineCredentials(HttpTransportFactory transportFactory) {
+  private ComputeEngineCredentials(Collection<String> scopes, HttpTransportFactory transportFactory) {
+    this.scopes = scopes;
     this.transportFactory =
         firstNonNull(
             transportFactory,
@@ -117,13 +125,27 @@ public class ComputeEngineCredentials extends GoogleCredentials
    * @return new ComputeEngineCredentials
    */
   public static ComputeEngineCredentials create() {
-    return new ComputeEngineCredentials(null);
+    return new ComputeEngineCredentials(null, null);
+  }
+
+  /**
+   * Create a new ComputeEngineCredentials instance based on this one, but with scopes explicitly
+   * specified.
+   */
+  @Override
+  public ComputeEngineCredentials createScoped(Collection<String> scopes) {
+    return new ComputeEngineCredentials(scopes, this.transportFactory);
   }
 
   /** Refresh the access token by getting it from the GCE metadata server */
   @Override
   public AccessToken refreshAccessToken() throws IOException {
-    HttpResponse response = getMetadataResponse(getTokenServerEncodedUrl());
+    GenericUrl url = new GenericUrl(getTokenServerEncodedUrl());
+    if (scopes != null) {
+      url.set("scopes", String.join(",", scopes));
+    }
+
+    HttpResponse response = getMetadataResponse(url.toString());
     int statusCode = response.getStatusCode();
     if (statusCode == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
       throw new IOException(
@@ -291,12 +313,13 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
   @Override
   public int hashCode() {
-    return Objects.hash(transportFactoryClassName);
+    return Objects.hash(scopes, transportFactoryClassName);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
+        .add("scopes", scopes)
         .add("transportFactoryClassName", transportFactoryClassName)
         .toString();
   }
@@ -307,7 +330,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
       return false;
     }
     ComputeEngineCredentials other = (ComputeEngineCredentials) obj;
-    return Objects.equals(this.transportFactoryClassName, other.transportFactoryClassName);
+    return Objects.equals(this.scopes, other.scopes)
+        && Objects.equals(this.transportFactoryClassName, other.transportFactoryClassName);
   }
 
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
@@ -398,11 +422,13 @@ public class ComputeEngineCredentials extends GoogleCredentials
   }
 
   public static class Builder extends GoogleCredentials.Builder {
+    private Collection<String> scopes;
     private HttpTransportFactory transportFactory;
 
     protected Builder() {}
 
     protected Builder(ComputeEngineCredentials credentials) {
+      this.scopes = credentials.scopes;
       this.transportFactory = credentials.transportFactory;
     }
 
@@ -411,12 +437,21 @@ public class ComputeEngineCredentials extends GoogleCredentials
       return this;
     }
 
+    public Builder setScopes(Collection<String> scopes) {
+      this.scopes = scopes;
+      return this;
+    }
+
     public HttpTransportFactory getHttpTransportFactory() {
       return transportFactory;
     }
 
+    public Collection<String> getScopes() {
+      return scopes;
+    }
+
     public ComputeEngineCredentials build() {
-      return new ComputeEngineCredentials(transportFactory);
+      return new ComputeEngineCredentials(scopes, transportFactory);
     }
   }
 }

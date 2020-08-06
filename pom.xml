@@ -193,6 +193,7 @@
           <version>3.0.0-M5</version>
           <configuration>
             <reportNameSuffix>sponge_log</reportNameSuffix>
+            <trimStackTrace>false</trimStackTrace>
           </configuration>
         </plugin>
         <plugin>

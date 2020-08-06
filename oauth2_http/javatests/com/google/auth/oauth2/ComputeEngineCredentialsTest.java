@@ -53,11 +53,13 @@ import com.google.auth.ServiceAccountSigner.SigningException;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -123,6 +125,22 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
     TestUtils.assertContainsBearerToken(metadata, accessToken);
+  }
+
+  @Test
+  public void getRequestMetadata_hasAccessTokenWithScopes() throws IOException {
+    String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    transportFactory.transport.setAccessToken(accessToken);
+    Set<String> requestedScopes = ImmutableSet.of("scope-1", "scope-2");
+    ComputeEngineCredentials credentials = ComputeEngineCredentials.newBuilder()
+                                           .setScopes(requestedScopes)
+        .setHttpTransportFactory(transportFactory)
+        .build();
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+
+    TestUtils.assertContainsBearerToken(metadata, accessToken);
+    assertEquals(requestedScopes, transportFactory.transport.getReceivedScopes());
   }
 
   @Test
@@ -194,7 +212,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
         new MockMetadataServerTransportFactory();
     String expectedToString =
         String.format(
-            "ComputeEngineCredentials{transportFactoryClassName=%s}",
+            "ComputeEngineCredentials{scopes=null, transportFactoryClassName=%s}",
             MockMetadataServerTransportFactory.class.getName());
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder()

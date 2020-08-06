@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.LowLevelHttpRequest;
 import com.google.api.client.http.LowLevelHttpResponse;
 import com.google.api.client.json.GenericJson;
@@ -38,12 +39,14 @@ import com.google.api.client.json.Json;
 import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.BaseEncoding;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /** Transport that simulates the GCE metadata server for access tokens. */
 public class MockMetadataServerTransport extends MockHttpTransport {
@@ -57,6 +60,9 @@ public class MockMetadataServerTransport extends MockHttpTransport {
   private String idToken;
 
   private byte[] signature;
+
+  // The scopes received on the most recent request.
+  private Set<String> receivedScopes;
 
   public MockMetadataServerTransport() {}
 
@@ -80,14 +86,25 @@ public class MockMetadataServerTransport extends MockHttpTransport {
     this.idToken = idToken;
   }
 
+  public Set<String> getReceivedScopes() {
+    return this.receivedScopes;
+  }
+
   @Override
   public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
-    if (url.equals(ComputeEngineCredentials.getTokenServerEncodedUrl())) {
+    GenericUrl parsedURL = new GenericUrl(url);
+
+    if ("/computeMetadata/v1/instance/service-accounts/default/token".equals(parsedURL.getRawPath())) {
+      String scopes = (String)parsedURL.getFirst("scopes");
+      if (scopes == null) {
+        this.receivedScopes = ImmutableSet.<String>of();
+      } else {
+        this.receivedScopes = ImmutableSet.copyOf(scopes.split(","));
+      }
 
       return new MockLowLevelHttpRequest(url) {
         @Override
         public LowLevelHttpResponse execute() throws IOException {
-
           if (tokenRequestStatusCode != null) {
             return new MockLowLevelHttpResponse()
                 .setStatusCode(tokenRequestStatusCode)
