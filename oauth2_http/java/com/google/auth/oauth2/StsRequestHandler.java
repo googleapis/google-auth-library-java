@@ -137,17 +137,15 @@ public class StsRequestHandler {
     GenericData tokenRequest =
         new GenericData()
             .set("grant_type", TOKEN_EXCHANGE_GRANT_TYPE)
-            .set("scope", CLOUD_PLATFORM_SCOPE)
             .set("subject_token_type", request.getSubjectTokenType())
             .set("subject_token", request.getSubjectToken());
 
     // Add scopes as a space-delimited string.
     List<String> scopes = new ArrayList<>();
-    scopes.add(CLOUD_PLATFORM_SCOPE);
     if (request.hasScopes()) {
       scopes.addAll(request.getScopes());
+      tokenRequest.set("scope", Joiner.on(' ').join(scopes));
     }
-    tokenRequest.set("scope", Joiner.on(' ').join(scopes));
 
     // Set the requested token type, which defaults to
     // urn:ietf:params:oauth:token-type:access_token.
