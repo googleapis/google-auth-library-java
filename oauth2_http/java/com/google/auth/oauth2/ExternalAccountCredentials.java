@@ -190,7 +190,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *     tokens.
    * @return the credentials defined by the JSON.
-   * @throws IOException if the credential cannot be created from the JSON.
    */
   public static ExternalAccountCredentials fromJson(
       Map<String, Object> json, HttpTransportFactory transportFactory) {
@@ -259,7 +258,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
    *
    * @param accessToken the access token to be included in the request.
    * @return the access token returned by the generateAccessToken call.
-   * @throws OAuthException if the service account impersonation call fails.
+   * @throws IOException if the service account impersonation call fails.
    */
   protected AccessToken attemptServiceAccountImpersonation(AccessToken accessToken)
       throws IOException {
