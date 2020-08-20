@@ -48,7 +48,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class AppEngineCredentialsTest extends BaseSerializationTest {
 
   private static final String EXPECTED_ACCESS_TOKEN = "ExpectedAccessToken";

@@ -36,7 +36,10 @@ import static org.junit.Assert.*;
 import java.util.Collections;
 import java.util.Map;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class JwtClaimsTest {
 
   @Test
