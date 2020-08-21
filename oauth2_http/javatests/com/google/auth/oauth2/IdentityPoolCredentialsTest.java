@@ -156,7 +156,8 @@ public class IdentityPoolCredentialsTest {
   @Test
   public void retrieveSubjectToken_noFile_throws() {
     Map<String, Object> credentialSourceMap = new HashMap<>();
-    credentialSourceMap.put(FILE, "badPath");
+    String path = "badPath";
+    credentialSourceMap.put(FILE, path);
     IdentityPoolCredentialSource credentialSource =
         new IdentityPoolCredentialSource(credentialSourceMap);
 
@@ -176,7 +177,8 @@ public class IdentityPoolCredentialsTest {
               }
             });
 
-    assertThat(e.getMessage()).isEqualTo("Invalid credential location. The file does not exist.");
+    assertThat(e.getMessage()).isEqualTo(String.format(
+        "Invalid credential location. The file at %s does not exist.", path));
   }
 
   @Test
