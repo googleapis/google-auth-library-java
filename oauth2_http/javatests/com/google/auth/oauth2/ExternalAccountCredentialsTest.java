@@ -1,5 +1,5 @@
 /*
- * Copyright 2015, Google Inc. All rights reserved.
+ * Copyright 2020, Google LLC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -31,7 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.auth.TestUtils.buildHttpResponseException;
 import static com.google.auth.TestUtils.getDefaultExpireTime;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
@@ -59,42 +58,29 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class ExternalAccountCredentialsTest {
 
-  private static final String FILE = "file";
   private static final String AUDIENCE = "audience";
   private static final String SUBJECT_TOKEN_TYPE = "subjectTokenType";
   private static final String TOKEN_INFO_URL = "tokenInfoUrl";
   private static final String STS_URL = "https://www.sts.google.com";
   private static final String CREDENTIAL = "credential";
   private static final String ACCESS_TOKEN = "eya23tfgdfga2123as";
-  private static final String CONTENT_TYPE_KEY = "content-type";
-  private static final String CONTENT_TYPE = "application/x-www-form-urlencoded";
   private static final String CLOUD_PLATFORM_SCOPE =
       "https://www.googleapis.com/auth/cloud-platform";
 
   static class MockExternalAccountCredentialsTransportFactory implements HttpTransportFactory {
+
     MockExternalAccountCredentialsTransport transport =
         new MockExternalAccountCredentialsTransport();
 
     private static final Map<String, Object> FILE_CREDENTIAL_SOURCE_MAP =
         new HashMap<String, Object>() {
           {
-            put(FILE, FILE);
+            put("file", "file");
           }
         };
 
     private static final IdentityPoolCredentialSource FILE_CREDENTIAL_SOURCE =
         new IdentityPoolCredentialSource(FILE_CREDENTIAL_SOURCE_MAP);
-
-    private static final IdentityPoolCredentials EXTERNAL_ACCOUNT_CREDENTIALS =
-        (IdentityPoolCredentials)
-            IdentityPoolCredentials.newBuilder()
-                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-                .setAudience(AUDIENCE)
-                .setSubjectTokenType(SUBJECT_TOKEN_TYPE)
-                .setTokenUrl(STS_URL)
-                .setTokenInfoUrl(TOKEN_INFO_URL)
-                .setCredentialSource(FILE_CREDENTIAL_SOURCE)
-                .build();
 
     @Override
     public HttpTransport create() {
@@ -201,8 +187,8 @@ public class ExternalAccountCredentialsTest {
 
     Map<String, List<String>> headers = transportFactory.transport.getRequest().getHeaders();
 
-    assertThat(headers.containsKey(CONTENT_TYPE_KEY)).isTrue();
-    assertThat(headers.get(CONTENT_TYPE_KEY).get(0)).isEqualTo(CONTENT_TYPE);
+    assertThat(headers.containsKey("content-type")).isTrue();
+    assertThat(headers.get("content-type").get(0)).isEqualTo("application/x-www-form-urlencoded");
   }
 
   @Test
@@ -214,7 +200,7 @@ public class ExternalAccountCredentialsTest {
     String errorDescription = "errorDescription";
     String errorUri = "errorUri";
     transportFactory.transport.addResponseErrorSequence(
-        buildHttpResponseException(errorCode, errorDescription, errorUri));
+        TestUtils.buildHttpResponseException(errorCode, errorDescription, errorUri));
 
     final StsTokenExchangeRequest stsTokenExchangeRequest =
         StsTokenExchangeRequest.newBuilder(CREDENTIAL, SUBJECT_TOKEN_TYPE).build();

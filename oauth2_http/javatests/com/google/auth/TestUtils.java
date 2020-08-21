@@ -58,9 +58,6 @@ import javax.annotation.Nullable;
 /** Utilities for test code under com.google.auth. */
 public class TestUtils {
 
-  private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-  private static final int VALID_LIFETIME = 300;
-
   private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
 
   public static final String UTF_8 = "UTF-8";
@@ -150,8 +147,8 @@ public class TestUtils {
     Date currentDate = new Date();
     Calendar c = Calendar.getInstance();
     c.setTime(currentDate);
-    c.add(Calendar.SECOND, VALID_LIFETIME);
-    return new SimpleDateFormat(RFC3339).format(c.getTime());
+    c.add(Calendar.SECOND, 300);
+    return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(c.getTime());
   }
 
   private TestUtils() {}

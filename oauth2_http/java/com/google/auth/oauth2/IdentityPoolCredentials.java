@@ -38,9 +38,9 @@ import com.google.api.client.http.HttpResponse;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -72,6 +72,17 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
     @Nullable private Map<String, String> headers;
 
+    /**
+     * The source of the 3P credential.
+     *
+     * <p>If the this a file based 3P credential, the credentials file can be retrieved using the
+     * `file` key.
+     *
+     * <p>If this is url-based 3p credential, the metadata server URL can be retrieved using the
+     * `url` key.
+     *
+     * <p>Optional headers can be present, and should be keyed by `headers`.
+     */
     public IdentityPoolCredentialSource(Map<String, Object> credentialSourceMap) {
       super(credentialSourceMap);
 
@@ -155,14 +166,14 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
     IdentityPoolCredentialSource identityPoolCredentialSource =
         (IdentityPoolCredentialSource) credentialSource;
     String credentialFilePath = identityPoolCredentialSource.credentialLocation;
-    if (!new File(credentialFilePath).isFile()) {
+    if (!Files.exists(Paths.get(credentialFilePath), LinkOption.NOFOLLOW_LINKS)) {
       throw new IOException("Invalid credential location. The file does not exist.");
     }
     try {
       return new String(Files.readAllBytes(Paths.get(credentialFilePath)));
     } catch (IOException e) {
       throw new IOException(
-          "Error when attempting to read the subject token from the credential file. " + e);
+          "Error when attempting to read the subject token from the credential file.", e);
     }
   }
 

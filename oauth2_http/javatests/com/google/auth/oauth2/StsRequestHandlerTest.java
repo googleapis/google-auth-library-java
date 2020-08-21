@@ -31,7 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.auth.TestUtils.buildHttpResponseException;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
@@ -203,7 +202,7 @@ public final class StsRequestHandlerTest {
             .build();
 
     transport.addResponseErrorSequence(
-        buildHttpResponseException(
+        TestUtils.buildHttpResponseException(
             INVALID_REQUEST, /* errorDescription= */ null, /* errorUri= */ null));
 
     OAuthException e =
@@ -232,7 +231,7 @@ public final class StsRequestHandlerTest {
             .build();
 
     transport.addResponseErrorSequence(
-        buildHttpResponseException(INVALID_REQUEST, ERROR_DESCRIPTION, ERROR_URI));
+        TestUtils.buildHttpResponseException(INVALID_REQUEST, ERROR_DESCRIPTION, ERROR_URI));
 
     OAuthException e =
         assertThrows(

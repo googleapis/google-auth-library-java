@@ -57,16 +57,17 @@ import java.util.Queue;
  */
 public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
 
+  private static final String EXPECTED_GRANT_TYPE =
+      "urn:ietf:params:oauth:grant-type:token-exchange";
+  private static final String CLOUD_PLATFORM_SCOPE =
+      "https://www.googleapis.com/auth/cloud-platform";
+
   private static final String METADATA_SERVER_URL = "https://www.metadata.google.com";
   private static final String STS_URL = "https://www.sts.google.com";
   private static final String SERVICE_ACCOUNT_IMPERSONATION_URL =
       "https://iamcredentials.googleapis.com";
-  private static final String CLOUD_PLATFORM_SCOPE =
-      "https://www.googleapis.com/auth/cloud-platform";
+
   private static final String SUBJECT_TOKEN = "subjectToken";
-  private static final String CONTENT_TYPE_TEXT = "text/html";
-  private static final String EXPECTED_GRANT_TYPE =
-      "urn:ietf:params:oauth:grant-type:token-exchange";
   private static final String ISSUED_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:access_token";
   private static final String TOKEN_TYPE = "Bearer";
   private static final String ACCESS_TOKEN = "accessToken";
@@ -108,7 +109,7 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
                 throw new IOException("Metadata request header not found.");
               }
               return new MockLowLevelHttpResponse()
-                  .setContentType(CONTENT_TYPE_TEXT)
+                  .setContentType("text/html")
                   .setContent(SUBJECT_TOKEN);
             }
             if (STS_URL.equals(url)) {
