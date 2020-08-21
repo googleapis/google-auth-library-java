@@ -78,7 +78,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
      * <p>If the this a file based 3P credential, the credentials file can be retrieved using the
      * `file` key.
      *
-     * <p>If this is url-based 3p credential, the metadata server URL can be retrieved using the
+     * <p>If this is URL-based 3p credential, the metadata server URL can be retrieved using the
      * `url` key.
      *
      * <p>Optional headers can be present, and should be keyed by `headers`.
@@ -167,7 +167,9 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
         (IdentityPoolCredentialSource) credentialSource;
     String credentialFilePath = identityPoolCredentialSource.credentialLocation;
     if (!Files.exists(Paths.get(credentialFilePath), LinkOption.NOFOLLOW_LINKS)) {
-      throw new IOException("Invalid credential location. The file does not exist.");
+      throw new IOException(
+          String.format(
+              "Invalid credential location. The file at %s does not exist.", credentialFilePath));
     }
     try {
       return new String(Files.readAllBytes(Paths.get(credentialFilePath)));
