@@ -177,8 +177,9 @@ public class IdentityPoolCredentialsTest {
               }
             });
 
-    assertThat(e.getMessage()).isEqualTo(String.format(
-        "Invalid credential location. The file at %s does not exist.", path));
+    assertThat(e.getMessage())
+        .isEqualTo(
+            String.format("Invalid credential location. The file at %s does not exist.", path));
   }
 
   @Test
