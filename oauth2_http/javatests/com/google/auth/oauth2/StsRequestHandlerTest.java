@@ -35,19 +35,15 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import com.google.api.client.http.HttpHeaders;
-import com.google.api.client.http.HttpResponseException;
-import com.google.api.client.json.GenericJson;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Joiner;
 import com.google.auth.TestUtils;
 import com.google.auth.oauth2.StsTokenExchangeRequest.ActingParty;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
@@ -90,17 +86,19 @@ public final class StsRequestHandlerTest {
   private static final String ERROR_DESCRIPTION = "errorDescription";
   private static final String ERROR_URI = "errorUri";
 
-  private MockStsServiceTransport transport;
+  private MockExternalAccountCredentialsTransport transport;
 
   @Before
   public void setup() {
-    transport = new MockStsServiceTransport();
+    transport = new MockExternalAccountCredentialsTransport();
   }
 
   @Test
   public void exchangeToken() throws IOException {
     StsTokenExchangeRequest stsTokenExchangeRequest =
-        StsTokenExchangeRequest.newBuilder(CREDENTIAL, SUBJECT_TOKEN_TYPE).build();
+        StsTokenExchangeRequest.newBuilder(CREDENTIAL, SUBJECT_TOKEN_TYPE)
+            .setScopes(Arrays.asList(CLOUD_PLATFORM_SCOPE))
+            .build();
 
     StsRequestHandler requestHandler =
         StsRequestHandler.newBuilder(
@@ -132,11 +130,7 @@ public final class StsRequestHandlerTest {
   @Test
   public void exchangeToken_withOptionalParams() throws IOException {
     // Return optional params scope and the refresh_token.
-    List<String> scopesToReturn = new ArrayList<>();
-    scopesToReturn.add(CLOUD_PLATFORM_SCOPE);
-    scopesToReturn.addAll(SCOPES);
-
-    transport.addScopeSequence(scopesToReturn);
+    transport.addScopeSequence(SCOPES);
     transport.addRefreshTokenSequence(REFRESH_TOKEN);
 
     // Build the token exchange request.
@@ -165,16 +159,11 @@ public final class StsRequestHandlerTest {
     StsTokenExchangeResponse response = requestHandler.exchangeToken();
 
     // Validate response.
-    List<String> expectedScopes = new ArrayList<>();
-    expectedScopes.add(CLOUD_PLATFORM_SCOPE);
-    expectedScopes.addAll(SCOPES);
-    String spaceDelimitedScopes = Joiner.on(' ').join(expectedScopes);
-
     assertThat(response.getAccessToken().getTokenValue()).isEqualTo(transport.getAccessToken());
     assertThat(response.getTokenType()).isEqualTo(transport.getTokenType());
     assertThat(response.getIssuedTokenType()).isEqualTo(transport.getIssuedTokenType());
     assertThat(response.getExpiresIn()).isEqualTo(transport.getExpiresIn());
-    assertThat(response.getScopes()).isEqualTo(scopesToReturn);
+    assertThat(response.getScopes()).isEqualTo(SCOPES);
     assertThat(response.getRefreshToken()).isEqualTo(REFRESH_TOKEN);
 
     // Validate headers.
@@ -188,7 +177,7 @@ public final class StsRequestHandlerTest {
     GenericData expectedRequestContent =
         new GenericData()
             .set("grant_type", TOKEN_EXCHANGE_GRANT_TYPE)
-            .set("scope", spaceDelimitedScopes)
+            .set("scope", Joiner.on(' ').join(SCOPES))
             .set("options", INTERNAL_OPTIONS)
             .set("subject_token_type", stsTokenExchangeRequest.getSubjectTokenType())
             .set("subject_token", stsTokenExchangeRequest.getSubjectToken())
@@ -213,7 +202,7 @@ public final class StsRequestHandlerTest {
             .build();
 
     transport.addResponseErrorSequence(
-        buildHttpResponseException(
+        TestUtils.buildHttpResponseException(
             INVALID_REQUEST, /* errorDescription= */ null, /* errorUri= */ null));
 
     OAuthException e =
@@ -242,7 +231,7 @@ public final class StsRequestHandlerTest {
             .build();
 
     transport.addResponseErrorSequence(
-        buildHttpResponseException(INVALID_REQUEST, ERROR_DESCRIPTION, ERROR_URI));
+        TestUtils.buildHttpResponseException(INVALID_REQUEST, ERROR_DESCRIPTION, ERROR_URI));
 
     OAuthException e =
         assertThrows(
@@ -282,23 +271,5 @@ public final class StsRequestHandlerTest {
               }
             });
     assertThat(thrownException).isEqualTo(e);
-  }
-
-  public HttpResponseException buildHttpResponseException(
-      String error, @Nullable String errorDescription, @Nullable String errorUri)
-      throws IOException {
-    GenericJson json = new GenericJson();
-    json.setFactory(OAuth2Utils.JSON_FACTORY);
-    json.set("error", error);
-    if (errorDescription != null) {
-      json.set("error_description", errorDescription);
-    }
-    if (errorUri != null) {
-      json.set("error_uri", errorUri);
-    }
-    return new HttpResponseException.Builder(
-            /* statusCode= */ 400, /* statusMessage= */ "statusMessage", new HttpHeaders())
-        .setContent(json.toPrettyString())
-        .build();
   }
 }

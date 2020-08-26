@@ -34,6 +34,8 @@ package com.google.auth;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.google.api.client.http.HttpHeaders;
+import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
@@ -45,16 +47,23 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /** Utilities for test code under com.google.auth. */
 public class TestUtils {
 
-  public static final String UTF_8 = "UTF-8";
-
   private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
+
+  private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+  private static final int VALID_LIFETIME = 300;
+
+  public static final String UTF_8 = "UTF-8";
 
   public static void assertContainsBearerToken(Map<String, List<String>> metadata, String token) {
     assertNotNull(metadata);
@@ -117,6 +126,32 @@ public class TestUtils {
     errorObject.put("message", message);
     errorResponse.put("error", errorObject);
     return errorResponse.toPrettyString();
+  }
+
+  public static HttpResponseException buildHttpResponseException(
+      String error, @Nullable String errorDescription, @Nullable String errorUri)
+      throws IOException {
+    GenericJson json = new GenericJson();
+    json.setFactory(JacksonFactory.getDefaultInstance());
+    json.set("error", error);
+    if (errorDescription != null) {
+      json.set("error_description", errorDescription);
+    }
+    if (errorUri != null) {
+      json.set("error_uri", errorUri);
+    }
+    return new HttpResponseException.Builder(
+            /* statusCode= */ 400, /* statusMessage= */ "statusMessage", new HttpHeaders())
+        .setContent(json.toPrettyString())
+        .build();
+  }
+
+  public static String getDefaultExpireTime() {
+    Date currentDate = new Date();
+    Calendar c = Calendar.getInstance();
+    c.setTime(currentDate);
+    c.add(Calendar.SECOND, VALID_LIFETIME);
+    return new SimpleDateFormat(RFC3339).format(c.getTime());
   }
 
   private TestUtils() {}
