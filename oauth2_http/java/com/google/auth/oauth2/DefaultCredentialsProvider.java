@@ -143,7 +143,7 @@ class DefaultCredentialsProvider {
 
     // First try the environment variable
     GoogleCredentials credentials = null;
-    String credentialsPath = getEnv(CREDENTIAL_ENV_VAR);
+    String credentialsPath = this.getProperty(CREDENTIAL_ENV_VAR, this.getEnv(CREDENTIAL_ENV_VAR));
     if (credentialsPath != null && credentialsPath.length() > 0) {
       LOGGER.log(
           Level.FINE,
