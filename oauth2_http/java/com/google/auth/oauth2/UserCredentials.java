@@ -35,7 +35,11 @@ import static com.google.auth.oauth2.OAuth2Utils.JSON_FACTORY;
 import static com.google.auth.oauth2.OAuth2Utils.UTF_8;
 import static com.google.common.base.MoreObjects.firstNonNull;
 
-import com.google.api.client.http.*;
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestFactory;
+import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.UrlEncodedContent;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
@@ -50,7 +54,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.URI;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.ArrayList;
 
 /** OAuth2 Credentials representing a user's identity and consent. */
 public class UserCredentials extends GoogleCredentials
