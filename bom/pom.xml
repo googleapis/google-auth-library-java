@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.auth</groupId>
   <artifactId>google-auth-library-bom</artifactId>
-  <version>0.20.1-SNAPSHOT</version><!-- {x-version-update:google-auth-library-bom:current} -->
+  <version>0.21.2-SNAPSHOT</version><!-- {x-version-update:google-auth-library-bom:current} -->
   <packaging>pom</packaging>
   <name>Google Auth Library for Java BOM</name>
   <description>
@@ -83,7 +83,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.1.1</version>
+        <version>3.2.0</version>
         <configuration>
           <skip>true</skip>
         </configuration>
@@ -91,10 +91,27 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-site-plugin</artifactId>
-        <version>3.9.0</version>
+        <version>3.9.1</version>
         <configuration>
           <skip>true</skip>
         </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>com.coveo</groupId>
+        <artifactId>fmt-maven-plugin</artifactId>
+        <version>2.9</version>
+        <configuration>
+          <style>google</style>
+          <verbose>true</verbose>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>com.google.googlejavaformat</groupId>
+            <artifactId>google-java-format</artifactId>
+            <version>1.7</version>
+          </dependency>
+        </dependencies>
       </plugin>
     </plugins>
   </build>
