@@ -35,34 +35,36 @@ import static com.google.auth.oauth2.OAuth2Utils.JSON_FACTORY;
 import static com.google.auth.oauth2.OAuth2Utils.UTF_8;
 import static com.google.common.base.MoreObjects.firstNonNull;
 
-import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpRequestFactory;
-import com.google.api.client.http.HttpResponse;
-import com.google.api.client.http.UrlEncodedContent;
+import com.google.api.client.http.*;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.common.annotations.Beta;
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableSet;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.URI;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /** OAuth2 Credentials representing a user's identity and consent. */
-public class UserCredentials extends GoogleCredentials implements QuotaProjectIdProvider {
+public class UserCredentials extends GoogleCredentials
+    implements QuotaProjectIdProvider, IdTokenProvider {
 
   private static final String GRANT_TYPE = "refresh_token";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final long serialVersionUID = -4800758775038679176L;
+  public static final String GOOGLE_CLIENT_ID = "32555940559.apps.googleusercontent.com";
+  public static final String GOOGLE_CLIENT_SECRET = "ZmssLNjJy2998hD4CTg2ejr2";
+  public static final Collection<String> GOOGLE_DEFAULT_SCOPES =
+      ImmutableSet.<String>of(
+          "https://www.googleapis.com/auth/userinfo.email",
+          "https://www.googleapis.com/auth/accounts.reauth");
 
   private final String clientId;
   private final String clientSecret;
@@ -70,6 +72,7 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
   private final URI tokenServerUri;
   private final String transportFactoryClassName;
   private final String quotaProjectId;
+  private final Collection<String> scopes;
 
   private transient HttpTransportFactory transportFactory;
 
@@ -89,6 +92,7 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
       String clientSecret,
       String refreshToken,
       AccessToken accessToken,
+      Collection<String> scopes,
       HttpTransportFactory transportFactory,
       URI tokenServerUri,
       String quotaProjectId) {
@@ -96,6 +100,13 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
     this.clientId = Preconditions.checkNotNull(clientId);
     this.clientSecret = Preconditions.checkNotNull(clientSecret);
     this.refreshToken = refreshToken;
+    // Merge the scope with the default and mandatory ones.
+    Collection<String> mergedScopes = new ArrayList<>();
+    mergedScopes.addAll(GOOGLE_DEFAULT_SCOPES);
+    if (scopes != null) {
+      mergedScopes.addAll(scopes);
+    }
+    this.scopes = ImmutableSet.copyOf(mergedScopes);
     this.transportFactory =
         firstNonNull(
             transportFactory,
@@ -261,6 +272,7 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
     if (quotaProjectId != null) {
       json.put("quota_project", clientSecret);
     }
+    json.put("scopes", scopes);
     json.setFactory(JSON_FACTORY);
     String text = json.toPrettyString();
     return new ByteArrayInputStream(text.getBytes(UTF_8));
@@ -290,6 +302,7 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
         clientSecret,
         refreshToken,
         tokenServerUri,
+        scopes,
         transportFactoryClassName,
         quotaProjectId);
   }
@@ -304,6 +317,7 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
         .add("tokenServerUri", tokenServerUri)
         .add("transportFactoryClassName", transportFactoryClassName)
         .add("quotaProjectId", quotaProjectId)
+        .add("scopes", scopes)
         .toString();
   }
 
@@ -319,6 +333,7 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
         && Objects.equals(this.refreshToken, other.refreshToken)
         && Objects.equals(this.tokenServerUri, other.tokenServerUri)
         && Objects.equals(this.transportFactoryClassName, other.transportFactoryClassName)
+        && Objects.equals(this.scopes, other.scopes)
         && Objects.equals(this.quotaProjectId, other.quotaProjectId);
   }
 
@@ -340,6 +355,71 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
     return quotaProjectId;
   }
 
+  /**
+   * Clone the UserCredential with the specified scopes.
+   *
+   * <p>Should be called before use for instances with empty scopes.
+   */
+  @Override
+  /*  public GoogleCredentials createScoped(Collection<String> newScopes) {
+
+    this.scopes = scopes;
+    return this;
+  }*/
+
+  public GoogleCredentials createScoped(Collection<String> newScopes) {
+    return new UserCredentials(
+        clientId,
+        clientSecret,
+        refreshToken,
+        getAccessToken(),
+        newScopes,
+        transportFactory,
+        tokenServerUri,
+        quotaProjectId);
+  }
+
+  /**
+   * Returns a Google ID Token from the user credential
+   *
+   * @param targetAudience currently unused for UserCredential.
+   * @param options list of Credential specific options for for the token. Currently unused for
+   *     UserCredentials.
+   * @throws IOException if the attempt to get an IdToken failed
+   * @return IdToken object which includes the raw id_token and expiration
+   */
+  @Beta
+  @Override
+  public IdToken idTokenWithAudience(String targetAudience, List<Option> options)
+      throws IOException {
+    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
+
+    GenericData tokenRequest = new GenericData();
+    tokenRequest.set("grant_type", GRANT_TYPE);
+    tokenRequest.set("client_id", GOOGLE_CLIENT_ID);
+    tokenRequest.set("client_secret", GOOGLE_CLIENT_SECRET);
+    tokenRequest.set("refresh_token", this.refreshToken);
+    // build scope value
+    Iterator<String> it = this.scopes.iterator();
+    String customScopes = it.next();
+    while (it.hasNext()) {
+      customScopes += "+" + it.next();
+    }
+    tokenRequest.set("scope", customScopes);
+
+    UrlEncodedContent content = new UrlEncodedContent(tokenRequest, true);
+
+    HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
+    HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
+    request.setParser(new JsonObjectParser(jsonFactory));
+    request.setCurlLoggingEnabled(true);
+    HttpResponse response = request.execute();
+
+    GenericData responseData = response.parseAs(GenericData.class);
+    String rawToken = OAuth2Utils.validateString(responseData, "id_token", PARSE_ERROR_PREFIX);
+    return IdToken.create(rawToken);
+  }
+
   public static class Builder extends GoogleCredentials.Builder {
 
     private String clientId;
@@ -348,6 +428,7 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
     private URI tokenServerUri;
     private HttpTransportFactory transportFactory;
     private String quotaProjectId;
+    private Collection<String> scopes;
 
     protected Builder() {}
 
@@ -358,6 +439,7 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
       this.transportFactory = credentials.transportFactory;
       this.tokenServerUri = credentials.tokenServerUri;
       this.quotaProjectId = credentials.quotaProjectId;
+      this.scopes = credentials.scopes;
     }
 
     public Builder setClientId(String clientId) {
@@ -395,6 +477,11 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
       return this;
     }
 
+    public Builder setScopes(Collection<String> scopes) {
+      this.scopes = scopes;
+      return this;
+    }
+
     public String getClientId() {
       return clientId;
     }
@@ -419,12 +506,17 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
       return quotaProjectId;
     }
 
+    public Collection<String> getScopes() {
+      return scopes;
+    }
+
     public UserCredentials build() {
       return new UserCredentials(
           clientId,
           clientSecret,
           refreshToken,
           getAccessToken(),
+          scopes,
           transportFactory,
           tokenServerUri,
           quotaProjectId);
