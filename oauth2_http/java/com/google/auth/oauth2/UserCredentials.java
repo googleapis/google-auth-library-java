@@ -93,6 +93,8 @@ public class UserCredentials extends GoogleCredentials
    * @param clientSecret Client ID of the credential from the console.
    * @param refreshToken A refresh token resulting from a OAuth2 consent flow.
    * @param accessToken Initial or temporary access token.
+   * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
+   *    which results in a credential that must have createScoped called before use.
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *     tokens.
    * @param tokenServerUri URI of the end point that provides tokens
@@ -371,12 +373,6 @@ public class UserCredentials extends GoogleCredentials
    * <p>Should be called before use for instances with empty scopes.
    */
   @Override
-  /*  public GoogleCredentials createScoped(Collection<String> newScopes) {
-
-    this.scopes = scopes;
-    return this;
-  }*/
-
   public GoogleCredentials createScoped(Collection<String> newScopes) {
     return new UserCredentials(
         clientId,
