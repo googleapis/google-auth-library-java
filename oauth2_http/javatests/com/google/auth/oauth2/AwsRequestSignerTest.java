@@ -52,12 +52,6 @@ import org.junit.Test;
  */
 public class AwsRequestSignerTest {
 
-  private static final String US_EAST_1 = "us-east-1";
-  private static final String US_EAST_2 = "us-east-2";
-
-  private static final String GET = "GET";
-  private static final String POST = "POST";
-
   private static final String DATE = "Mon, 09 Sep 2011 23:36:00 GMT";
   private static final String X_AMZ_DATE = "20200811T065522Z";
 
@@ -82,7 +76,7 @@ public class AwsRequestSignerTest {
     headers.put("date", DATE);
 
     AwsRequestSigner signer =
-        AwsRequestSigner.newBuilder(BOTOCORE_CREDENTIALS, GET, url, US_EAST_1)
+        AwsRequestSigner.newBuilder(BOTOCORE_CREDENTIALS, "GET", url, "us-east-1")
             .setAdditionalHeaders(headers)
             .build();
 
@@ -93,8 +87,8 @@ public class AwsRequestSignerTest {
 
     assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
     assertThat(signature.getDate()).isEqualTo(DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo(GET);
-    assertThat(signature.getRegion()).isEqualTo(US_EAST_1);
+    assertThat(signature.getHttpMethod()).isEqualTo("GET");
+    assertThat(signature.getRegion()).isEqualTo("us-east-1");
     assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
   }
 
@@ -108,7 +102,7 @@ public class AwsRequestSignerTest {
     headers.put("date", DATE);
 
     AwsRequestSigner signer =
-        AwsRequestSigner.newBuilder(BOTOCORE_CREDENTIALS, GET, url, US_EAST_1)
+        AwsRequestSigner.newBuilder(BOTOCORE_CREDENTIALS, "GET", url, "us-east-1")
             .setAdditionalHeaders(headers)
             .build();
 
@@ -119,8 +113,8 @@ public class AwsRequestSignerTest {
 
     assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
     assertThat(signature.getDate()).isEqualTo(DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo(GET);
-    assertThat(signature.getRegion()).isEqualTo(US_EAST_1);
+    assertThat(signature.getHttpMethod()).isEqualTo("GET");
+    assertThat(signature.getRegion()).isEqualTo("us-east-1");
     assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
   }
 
@@ -134,7 +128,7 @@ public class AwsRequestSignerTest {
     headers.put("date", DATE);
 
     AwsRequestSigner signer =
-        AwsRequestSigner.newBuilder(BOTOCORE_CREDENTIALS, GET, url, "us-east-1")
+        AwsRequestSigner.newBuilder(BOTOCORE_CREDENTIALS, "GET", url, "us-east-1")
             .setAdditionalHeaders(headers)
             .build();
 
@@ -144,8 +138,8 @@ public class AwsRequestSignerTest {
         .isEqualTo("b27ccfbfa7df52a200ff74193ca6e32d4b48b8856fab7ebf1c595d0670a7e470");
     assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
     assertThat(signature.getDate()).isEqualTo(DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo(GET);
-    assertThat(signature.getRegion()).isEqualTo(US_EAST_1);
+    assertThat(signature.getHttpMethod()).isEqualTo("GET");
+    assertThat(signature.getRegion()).isEqualTo("us-east-1");
     assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
   }
 
@@ -159,7 +153,7 @@ public class AwsRequestSignerTest {
     headers.put("date", DATE);
 
     AwsRequestSigner signer =
-        AwsRequestSigner.newBuilder(BOTOCORE_CREDENTIALS, GET, url, US_EAST_1)
+        AwsRequestSigner.newBuilder(BOTOCORE_CREDENTIALS, "GET", url, "us-east-1")
             .setAdditionalHeaders(headers)
             .build();
 
@@ -169,8 +163,8 @@ public class AwsRequestSignerTest {
         .isEqualTo("910e4d6c9abafaf87898e1eb4c929135782ea25bb0279703146455745391e63a");
     assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
     assertThat(signature.getDate()).isEqualTo(DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo(GET);
-    assertThat(signature.getRegion()).isEqualTo(US_EAST_1);
+    assertThat(signature.getHttpMethod()).isEqualTo("GET");
+    assertThat(signature.getRegion()).isEqualTo("us-east-1");
     assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
   }
 
@@ -184,7 +178,7 @@ public class AwsRequestSignerTest {
     headers.put("date", DATE);
 
     AwsRequestSigner signer =
-        AwsRequestSigner.newBuilder(BOTOCORE_CREDENTIALS, GET, url, US_EAST_1)
+        AwsRequestSigner.newBuilder(BOTOCORE_CREDENTIALS, "GET", url, "us-east-1")
             .setAdditionalHeaders(headers)
             .build();
 
@@ -194,8 +188,8 @@ public class AwsRequestSignerTest {
         .isEqualTo("8d6634c189aa8c75c2e51e106b6b5121bed103fdb351f7d7d4381c738823af74");
     assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
     assertThat(signature.getDate()).isEqualTo(DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo(GET);
-    assertThat(signature.getRegion()).isEqualTo(US_EAST_1);
+    assertThat(signature.getHttpMethod()).isEqualTo("GET");
+    assertThat(signature.getRegion()).isEqualTo("us-east-1");
     assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
   }
 
@@ -209,7 +203,7 @@ public class AwsRequestSignerTest {
     headers.put("date", DATE);
 
     AwsRequestSigner signer =
-        AwsRequestSigner.newBuilder(BOTOCORE_CREDENTIALS, GET, url, US_EAST_1)
+        AwsRequestSigner.newBuilder(BOTOCORE_CREDENTIALS, "GET", url, "us-east-1")
             .setAdditionalHeaders(headers)
             .build();
 
@@ -219,8 +213,8 @@ public class AwsRequestSignerTest {
         .isEqualTo("be7148d34ebccdc6423b19085378aa0bee970bdc61d144bd1a8c48c33079ab09");
     assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
     assertThat(signature.getDate()).isEqualTo(DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo(GET);
-    assertThat(signature.getRegion()).isEqualTo(US_EAST_1);
+    assertThat(signature.getHttpMethod()).isEqualTo("GET");
+    assertThat(signature.getRegion()).isEqualTo("us-east-1");
     assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
   }
 
@@ -237,7 +231,7 @@ public class AwsRequestSignerTest {
     headers.put(headerKey, headerValue);
 
     AwsRequestSigner signer =
-        AwsRequestSigner.newBuilder(BOTOCORE_CREDENTIALS, POST, url, US_EAST_1)
+        AwsRequestSigner.newBuilder(BOTOCORE_CREDENTIALS, "POST", url, "us-east-1")
             .setAdditionalHeaders(headers)
             .build();
 
@@ -247,8 +241,8 @@ public class AwsRequestSignerTest {
         .isEqualTo("b7a95a52518abbca0964a999a880429ab734f35ebbf1235bd79a5de87756dc4a");
     assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
     assertThat(signature.getDate()).isEqualTo(DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo(POST);
-    assertThat(signature.getRegion()).isEqualTo(US_EAST_1);
+    assertThat(signature.getHttpMethod()).isEqualTo("POST");
+    assertThat(signature.getRegion()).isEqualTo("us-east-1");
     assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
     assertThat(signature.getCanonicalHeaders().get(headerKey.toLowerCase())).isEqualTo(headerValue);
   }
@@ -266,7 +260,7 @@ public class AwsRequestSignerTest {
     headers.put("zoo", "ZOOBAR");
 
     AwsRequestSigner signer =
-        AwsRequestSigner.newBuilder(BOTOCORE_CREDENTIALS, POST, url, US_EAST_1)
+        AwsRequestSigner.newBuilder(BOTOCORE_CREDENTIALS, "POST", url, "us-east-1")
             .setAdditionalHeaders(headers)
             .build();
 
@@ -276,8 +270,8 @@ public class AwsRequestSignerTest {
         .isEqualTo("273313af9d0c265c531e11db70bbd653f3ba074c1009239e8559d3987039cad7");
     assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
     assertThat(signature.getDate()).isEqualTo(DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo(POST);
-    assertThat(signature.getRegion()).isEqualTo(US_EAST_1);
+    assertThat(signature.getHttpMethod()).isEqualTo("POST");
+    assertThat(signature.getRegion()).isEqualTo("us-east-1");
     assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
     assertThat(signature.getCanonicalHeaders().get(headerKey)).isEqualTo(headerValue);
   }
@@ -295,7 +289,7 @@ public class AwsRequestSignerTest {
     headers.put(headerKey, headerValue);
 
     AwsRequestSigner signer =
-        AwsRequestSigner.newBuilder(BOTOCORE_CREDENTIALS, POST, url, US_EAST_1)
+        AwsRequestSigner.newBuilder(BOTOCORE_CREDENTIALS, "POST", url, "us-east-1")
             .setAdditionalHeaders(headers)
             .build();
 
@@ -305,8 +299,8 @@ public class AwsRequestSignerTest {
         .isEqualTo("debf546796015d6f6ded8626f5ce98597c33b47b9164cf6b17b4642036fcb592");
     assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
     assertThat(signature.getDate()).isEqualTo(DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo(POST);
-    assertThat(signature.getRegion()).isEqualTo(US_EAST_1);
+    assertThat(signature.getHttpMethod()).isEqualTo("POST");
+    assertThat(signature.getRegion()).isEqualTo("us-east-1");
     assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
     assertThat(signature.getCanonicalHeaders().get(headerKey)).isEqualTo(headerValue);
   }
@@ -324,7 +318,7 @@ public class AwsRequestSignerTest {
     headers.put(headerKey, headerValue);
 
     AwsRequestSigner signer =
-        AwsRequestSigner.newBuilder(BOTOCORE_CREDENTIALS, POST, url, US_EAST_1)
+        AwsRequestSigner.newBuilder(BOTOCORE_CREDENTIALS, "POST", url, "us-east-1")
             .setAdditionalHeaders(headers)
             .setRequestPayload("foo=bar")
             .build();
@@ -335,8 +329,8 @@ public class AwsRequestSignerTest {
         .isEqualTo("5a15b22cf462f047318703b92e6f4f38884e4a7ab7b1d6426ca46a8bd1c26cbc");
     assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
     assertThat(signature.getDate()).isEqualTo(DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo(POST);
-    assertThat(signature.getRegion()).isEqualTo(US_EAST_1);
+    assertThat(signature.getHttpMethod()).isEqualTo("POST");
+    assertThat(signature.getRegion()).isEqualTo("us-east-1");
     assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
     assertThat(signature.getCanonicalHeaders().get(headerKey.toLowerCase())).isEqualTo(headerValue);
   }
@@ -351,7 +345,7 @@ public class AwsRequestSignerTest {
     headers.put("date", DATE);
 
     AwsRequestSigner signer =
-        AwsRequestSigner.newBuilder(BOTOCORE_CREDENTIALS, POST, url, US_EAST_1)
+        AwsRequestSigner.newBuilder(BOTOCORE_CREDENTIALS, "POST", url, "us-east-1")
             .setAdditionalHeaders(headers)
             .build();
 
@@ -361,8 +355,8 @@ public class AwsRequestSignerTest {
         .isEqualTo("b6e3b79003ce0743a491606ba1035a804593b0efb1e20a11cba83f8c25a57a92");
     assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
     assertThat(signature.getDate()).isEqualTo(DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo(POST);
-    assertThat(signature.getRegion()).isEqualTo(US_EAST_1);
+    assertThat(signature.getHttpMethod()).isEqualTo("POST");
+    assertThat(signature.getRegion()).isEqualTo("us-east-1");
     assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
   }
 
@@ -374,7 +368,7 @@ public class AwsRequestSignerTest {
     additionalHeaders.put("x-amz-date", X_AMZ_DATE);
 
     AwsRequestSigner signer =
-        AwsRequestSigner.newBuilder(awsSecurityCredentials, GET, url, US_EAST_2)
+        AwsRequestSigner.newBuilder(awsSecurityCredentials, "GET", url, "us-east-2")
             .setAdditionalHeaders(additionalHeaders)
             .build();
 
@@ -384,8 +378,8 @@ public class AwsRequestSignerTest {
         .isEqualTo("631ea80cddfaa545fdadb120dc92c9f18166e38a5c47b50fab9fce476e022855");
     assertThat(signature.getSecurityCredentials()).isEqualTo(awsSecurityCredentials);
     assertThat(signature.getDate()).isEqualTo(X_AMZ_DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo(GET);
-    assertThat(signature.getRegion()).isEqualTo(US_EAST_2);
+    assertThat(signature.getHttpMethod()).isEqualTo("GET");
+    assertThat(signature.getRegion()).isEqualTo("us-east-2");
     assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
   }
 
@@ -397,7 +391,7 @@ public class AwsRequestSignerTest {
     additionalHeaders.put("x-amz-date", X_AMZ_DATE);
 
     AwsRequestSigner signer =
-        AwsRequestSigner.newBuilder(awsSecurityCredentials, POST, url, US_EAST_2)
+        AwsRequestSigner.newBuilder(awsSecurityCredentials, "POST", url, "us-east-2")
             .setAdditionalHeaders(additionalHeaders)
             .build();
 
@@ -407,8 +401,8 @@ public class AwsRequestSignerTest {
         .isEqualTo("73452984e4a880ffdc5c392355733ec3f5ba310d5e0609a89244440cadfe7a7a");
     assertThat(signature.getSecurityCredentials()).isEqualTo(awsSecurityCredentials);
     assertThat(signature.getDate()).isEqualTo(X_AMZ_DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo(POST);
-    assertThat(signature.getRegion()).isEqualTo(US_EAST_2);
+    assertThat(signature.getHttpMethod()).isEqualTo("POST");
+    assertThat(signature.getRegion()).isEqualTo("us-east-2");
     assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
   }
 
@@ -426,7 +420,7 @@ public class AwsRequestSignerTest {
     additionalHeaders.put("x-amz-date", X_AMZ_DATE);
 
     AwsRequestSigner signer =
-        AwsRequestSigner.newBuilder(awsSecurityCredentialsWithoutToken, POST, url, "us-east-2")
+        AwsRequestSigner.newBuilder(awsSecurityCredentialsWithoutToken, "POST", url, "us-east-2")
             .setAdditionalHeaders(additionalHeaders)
             .build();
 
@@ -436,8 +430,8 @@ public class AwsRequestSignerTest {
         .isEqualTo("d095ba304919cd0d5570ba8a3787884ee78b860f268ed040ba23831d55536d56");
     assertThat(signature.getSecurityCredentials()).isEqualTo(awsSecurityCredentialsWithoutToken);
     assertThat(signature.getDate()).isEqualTo(X_AMZ_DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo(POST);
-    assertThat(signature.getRegion()).isEqualTo(US_EAST_2);
+    assertThat(signature.getHttpMethod()).isEqualTo("POST");
+    assertThat(signature.getRegion()).isEqualTo("us-east-2");
     assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
   }
 

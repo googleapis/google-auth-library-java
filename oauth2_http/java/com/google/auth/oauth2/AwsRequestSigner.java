@@ -74,8 +74,6 @@ public class AwsRequestSigner {
   // https://docs.aws.amazon.com/general/latest/gr/sigv4-create-string-to-sign.html
   private static final String AWS_REQUEST_TYPE = "aws4_request";
 
-  private static final String NEW_LINE = "\n";
-
   private AwsSecurityCredentials awsSecurityCredentials;
   private Map<String, String> additionalHeaders;
   private String httpMethod;
@@ -108,7 +106,9 @@ public class AwsRequestSigner {
     this.region = checkNotNull(region);
     this.requestPayload = requestPayload == null ? "" : requestPayload;
     this.additionalHeaders =
-        (additionalHeaders != null) ? additionalHeaders : new HashMap<String, String>();
+        (additionalHeaders != null)
+            ? new HashMap<>(additionalHeaders)
+            : new HashMap<String, String>();
   }
 
   /**
@@ -126,8 +126,8 @@ public class AwsRequestSigner {
     Map<String, String> canonicalHeaders = getCanonicalHeaders(dates.getOriginalDate());
     // Headers must be sorted.
     List<String> sortedHeaders = new ArrayList<>();
-    for (String k : canonicalHeaders.keySet()) {
-      sortedHeaders.add(k.toLowerCase());
+    for (String headerName : canonicalHeaders.keySet()) {
+      sortedHeaders.add(headerName.toLowerCase());
     }
     Collections.sort(sortedHeaders);
 
@@ -161,42 +161,42 @@ public class AwsRequestSigner {
   private String createCanonicalRequestHash(
       Map<String, String> headers, List<String> sortedHeaderNames) {
     // Append the HTTP request method.
-    StringBuilder sb = new StringBuilder(httpMethod).append(NEW_LINE);
+    StringBuilder canonicalRequest = new StringBuilder(httpMethod).append("\n");
 
     // Append the path.
     String urlPath = uri.getRawPath().isEmpty() ? "/" : uri.getRawPath();
-    sb.append(urlPath).append(NEW_LINE);
+    canonicalRequest.append(urlPath).append("\n");
 
     // Append the canonical query string.
     String actionQueryString = uri.getRawQuery() != null ? uri.getRawQuery() : "";
-    sb.append(actionQueryString).append(NEW_LINE);
+    canonicalRequest.append(actionQueryString).append("\n");
 
     // Append the canonical headers.
     StringBuilder canonicalHeaders = new StringBuilder();
     for (String headerName : sortedHeaderNames) {
-      canonicalHeaders.append(headerName + ":" + headers.get(headerName)).append(NEW_LINE);
+      canonicalHeaders.append(headerName).append(":").append(headers.get(headerName)).append("\n");
     }
-    sb.append(canonicalHeaders).append(NEW_LINE);
+    canonicalRequest.append(canonicalHeaders).append("\n");
 
     // Append the signed headers.
-    sb.append(Joiner.on(';').join(sortedHeaderNames)).append(NEW_LINE);
+    canonicalRequest.append(Joiner.on(';').join(sortedHeaderNames)).append("\n");
 
     // Append the hashed request payload.
-    sb.append(DigestUtils.sha256Hex(requestPayload));
+    canonicalRequest.append(DigestUtils.sha256Hex(requestPayload));
 
     // Return the hashed canonical request.
-    return DigestUtils.sha256Hex(sb.toString());
+    return DigestUtils.sha256Hex(canonicalRequest.toString());
   }
 
   /** Task 2: Create a string to sign for Signature Version 4. */
   private String createStringToSign(
       String canonicalRequestHash, String xAmzDate, String credentialScope) {
     return HASHING_ALGORITHM
-        + NEW_LINE
+        + "\n"
         + xAmzDate
-        + NEW_LINE
+        + "\n"
         + credentialScope
-        + NEW_LINE
+        + "\n"
         + canonicalRequestHash;
   }
 
@@ -246,14 +246,13 @@ public class AwsRequestSigner {
 
     if (additionalHeaders.containsKey("date")) {
       String date = additionalHeaders.get("date");
-      Date inputDate;
       try {
-        inputDate = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss z").parse(date);
+        Date inputDate = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss z").parse(date);
+        xAmzDate = dateFormat.format(inputDate);
+        return new AwsDates(date, xAmzDate, xAmzDate.substring(0, 8));
       } catch (ParseException e) {
         throw new IllegalArgumentException("Invalid date provided: " + date, e);
       }
-      xAmzDate = dateFormat.format(inputDate);
-      return new AwsDates(date, xAmzDate, xAmzDate.substring(0, 8));
     }
 
     if (xAmzDate == null) {

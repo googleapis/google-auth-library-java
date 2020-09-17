@@ -31,6 +31,8 @@
 
 package com.google.auth.oauth2;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -99,7 +101,7 @@ class AwsRequestSignature {
 
   /** Returns the HTTP request canonical headers. */
   Map<String, String> getCanonicalHeaders() {
-    return canonicalHeaders;
+    return new HashMap<>(canonicalHeaders);
   }
 
   /** Returns the request date. */
@@ -107,9 +109,9 @@ class AwsRequestSignature {
     return date;
   }
 
-  /** Returns a list of sorted headers (in lexicographical order). */
+  /** Returns a list of headers sorted in lexicographical order. */
   List<String> getSortedHeaderNames() {
-    return sortedHeaderNames;
+    return new ArrayList<>(sortedHeaderNames);
   }
 
   /** Returns the targeted region. */
@@ -156,7 +158,7 @@ class AwsRequestSignature {
     }
 
     Builder setCanonicalHeaders(Map<String, String> canonicalHeaders) {
-      this.canonicalHeaders = canonicalHeaders;
+      this.canonicalHeaders = new HashMap<>(canonicalHeaders);
       return this;
     }
 
@@ -166,7 +168,7 @@ class AwsRequestSignature {
     }
 
     Builder setSortedHeaderNames(List<String> sortedHeaderNames) {
-      this.sortedHeaderNames = sortedHeaderNames;
+      this.sortedHeaderNames = new ArrayList<>(sortedHeaderNames);
       return this;
     }
 
