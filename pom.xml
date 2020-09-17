@@ -305,7 +305,6 @@
         <configuration>
           <ignoredDifferencesFile>clirr-ignored-differences.xml</ignoredDifferencesFile>
           <logResults>true</logResults>
-          <failOnError>false</failOnError>
         </configuration>
         <executions>
           <execution>
