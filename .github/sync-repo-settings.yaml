@@ -1,0 +1,29 @@
+rebaseMergeAllowed: true
+squashMergeAllowed: true
+mergeCommitAllowed: false
+branchProtectionRules:
+- pattern: master
+  isAdminEnforced: true
+  requiredStatusCheckContexts:
+    - 'Kokoro - Test: Binary Compatibility'
+    - 'Kokoro - Test: Code Format'
+    - 'Kokoro - Test: Dependencies'
+    - 'Kokoro - Test: Java 11'
+    - 'Kokoro - Test: Java 7'
+    - 'Kokoro - Test: Java 8'
+    - 'Kokoro - Test: Linkage Monitor'
+    - 'cla/google'
+  requiredApprovingReviewCount: 1
+  requiresCodeOwnerReviews: true
+  requiresStrictStatusChecks: true
+permissionRules:
+  - team: Googlers
+    permission: pull
+  - team: yoshi-java
+    permission: push
+  - team: java-samples-reviewers
+    permission: push
+  - team: yoshi-java-admins
+    permission: admin
+  - team: yoshi-admins
+    permission: admin
