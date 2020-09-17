@@ -94,7 +94,6 @@ public class AwsRequestSigner {
    * @param requestPayload The request payload.
    * @param additionalHeaders A map of additional HTTP headers to be included with the signed
    *     request.
-   * @return An StsTokenExchangeResponse instance if the request was successful.
    */
   public AwsRequestSigner(
       AwsSecurityCredentials awsSecurityCredentials,
@@ -112,7 +111,11 @@ public class AwsRequestSigner {
         (additionalHeaders != null) ? additionalHeaders : new HashMap<String, String>();
   }
 
-  /** Signs the specified AWS API request. */
+  /**
+   * Signs the specified AWS API request.
+   *
+   * @return the {@link AwsRequestSignature}.
+   */
   public AwsRequestSignature sign() {
     // Get the dates to be used to sign the request.
     AwsDates dates = getDates();
