@@ -58,7 +58,8 @@ import javax.crypto.spec.SecretKeySpec;
 import org.apache.commons.codec.digest.DigestUtils;
 
 /**
- * Signs AWS API requests based on the AWS Signature Version 4 signing process.
+ * Internal utility that signs AWS API requests based on the AWS Signature Version 4 signing
+ * process.
  *
  * <p>https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html
  */
@@ -93,7 +94,7 @@ public class AwsRequestSigner {
    * @param additionalHeaders A map of additional HTTP headers to be included with the signed
    *     request.
    */
-  public AwsRequestSigner(
+  private AwsRequestSigner(
       AwsSecurityCredentials awsSecurityCredentials,
       String httpMethod,
       String url,
@@ -116,7 +117,7 @@ public class AwsRequestSigner {
    *
    * @return the {@link AwsRequestSignature}.
    */
-  public AwsRequestSignature sign() {
+  AwsRequestSignature sign() {
     // Get the dates to be used to sign the request.
     AwsDates dates = getDates();
 
@@ -236,29 +237,13 @@ public class AwsRequestSigner {
   }
 
   private AwsDates getDates() {
-    DateFormat dateFormat = new SimpleDateFormat(AWS_DATE_FORMAT);
-    dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-
-    String xAmzDate = null;
-    if (additionalHeaders.containsKey("x-amz-date")) {
-      xAmzDate = additionalHeaders.get("x-amz-date");
-    }
-
     if (additionalHeaders.containsKey("date")) {
-      String date = additionalHeaders.get("date");
-      try {
-        Date inputDate = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss z").parse(date);
-        xAmzDate = dateFormat.format(inputDate);
-        return new AwsDates(date, xAmzDate, xAmzDate.substring(0, 8));
-      } catch (ParseException e) {
-        throw new IllegalArgumentException("Invalid date provided: " + date, e);
-      }
+      return AwsDates.fromDateHeader(additionalHeaders.get("date"));
     }
-
-    if (xAmzDate == null) {
-      xAmzDate = dateFormat.format(new Date(Clock.SYSTEM.currentTimeMillis()));
+    if (additionalHeaders.containsKey("x-amz-date")) {
+      return AwsDates.fromXAmzDate(additionalHeaders.get("x-amz-date"));
     }
-    return new AwsDates(xAmzDate, xAmzDate, xAmzDate.substring(0, 8));
+    return AwsDates.generateXAmzDate();
   }
 
   private byte[] sign(byte[] key, byte[] value) {
@@ -272,12 +257,12 @@ public class AwsRequestSigner {
     }
   }
 
-  public static Builder newBuilder(
+  static Builder newBuilder(
       AwsSecurityCredentials awsSecurityCredentials, String httpMethod, String url, String region) {
     return new Builder(awsSecurityCredentials, httpMethod, url, region);
   }
 
-  public static class Builder {
+  static class Builder {
 
     private AwsSecurityCredentials awsSecurityCredentials;
     private String httpMethod;
@@ -298,48 +283,75 @@ public class AwsRequestSigner {
       this.region = region;
     }
 
-    public Builder setRequestPayload(String requestPayload) {
+    Builder setRequestPayload(String requestPayload) {
       this.requestPayload = requestPayload;
       return this;
     }
 
-    public Builder setAdditionalHeaders(Map<String, String> additionalHeaders) {
+    Builder setAdditionalHeaders(Map<String, String> additionalHeaders) {
       this.additionalHeaders = additionalHeaders;
       return this;
     }
 
-    public AwsRequestSigner build() {
+    AwsRequestSigner build() {
       return new AwsRequestSigner(
           awsSecurityCredentials, httpMethod, url, region, requestPayload, additionalHeaders);
     }
   }
 
-  private static final class AwsDates {
+  static final class AwsDates {
+
+    private static final String X_AMZ_DATE_FORMAT = "yyyyMMdd'T'HHmmss'Z'";
+    private static final String CUSTOM_DATE_FORMAT = "E, dd MMM yyyy HH:mm:ss z";
+
     private String originalDate;
     private String amzDate;
     private String formattedDate;
 
-    public AwsDates(String originalDate, String amzDate, String formattedDate) {
+    private AwsDates(String originalDate, String amzDate, String formattedDate) {
       this.originalDate = checkNotNull(originalDate);
       this.amzDate = checkNotNull(amzDate);
       this.formattedDate = checkNotNull(formattedDate);
+    }
+
+    static AwsDates fromXAmzDate(String xAmzDate) {
+      return new AwsDates(xAmzDate, xAmzDate, xAmzDate.substring(0, 8));
+    }
+
+    static AwsDates fromDateHeader(String date) {
+      DateFormat dateFormat = new SimpleDateFormat(X_AMZ_DATE_FORMAT);
+      dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+      try {
+        Date inputDate = new SimpleDateFormat(CUSTOM_DATE_FORMAT).parse(date);
+        String xAmzDate = dateFormat.format(inputDate);
+        return new AwsDates(date, xAmzDate, xAmzDate.substring(0, 8));
+      } catch (ParseException e) {
+        throw new IllegalArgumentException("Invalid date provided: " + date, e);
+      }
+    }
+
+    static AwsDates generateXAmzDate() {
+      DateFormat dateFormat = new SimpleDateFormat(X_AMZ_DATE_FORMAT);
+      dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+      String xAmzDate = dateFormat.format(new Date(Clock.SYSTEM.currentTimeMillis()));
+      return fromXAmzDate(xAmzDate);
     }
 
     /**
      * Returns the original date. This can either be the x-amz-date or a specified date in the
      * format of E, dd MMM yyyy HH:mm:ss z.
      */
-    public String getOriginalDate() {
+    String getOriginalDate() {
       return originalDate;
     }
 
     /** Returns the x-amz-date in yyyyMMdd'T'HHmmss'Z' format. */
-    public String getAmzDate() {
+    String getAmzDate() {
       return amzDate;
     }
 
     /** Returns the x-amz-date in YYYYMMDD format. */
-    public String getFormattedDate() {
+    String getFormattedDate() {
       return formattedDate;
     }
   }

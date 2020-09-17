@@ -119,7 +119,7 @@ class AwsRequestSignature {
     return region;
   }
 
-  public static class Builder {
+  static class Builder {
 
     private AwsSecurityCredentials awsSecurityCredentials;
     private Map<String, String> canonicalHeaders;
@@ -177,7 +177,7 @@ class AwsRequestSignature {
       return this;
     }
 
-    public AwsRequestSignature build() {
+    AwsRequestSignature build() {
       return new AwsRequestSignature(
           awsSecurityCredentials,
           canonicalHeaders,

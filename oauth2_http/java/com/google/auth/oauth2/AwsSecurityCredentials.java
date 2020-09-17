@@ -44,8 +44,7 @@ class AwsSecurityCredentials {
 
   @Nullable private String token;
 
-  public AwsSecurityCredentials(
-      String accessKeyId, String secretAccessKey, @Nullable String token) {
+  AwsSecurityCredentials(String accessKeyId, String secretAccessKey, @Nullable String token) {
     this.accessKeyId = accessKeyId;
     this.secretAccessKey = secretAccessKey;
     this.token = token;
