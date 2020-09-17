@@ -4,9 +4,6 @@
   <difference>
     <differenceType>7009</differenceType>
     <className>com/google/auth/oauth2/ServiceAccountJwtAccessCredentials</className>
-    
-    com.google.auth.oauth2.ServiceAccountJwtAccessCredentials <<<<
-    
     <method>ServiceAccountJwtAccessCredentials(java.lang.String, java.lang.String, java.security.PrivateKey, java.lang.String)</method>
   </difference>
 </differences>
