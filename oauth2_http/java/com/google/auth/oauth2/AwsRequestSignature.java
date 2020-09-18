@@ -31,9 +31,7 @@
 
 package com.google.auth.oauth2;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -44,7 +42,6 @@ class AwsRequestSignature {
 
   private AwsSecurityCredentials awsSecurityCredentials;
   private Map<String, String> canonicalHeaders;
-  private List<String> sortedHeaderNames;
 
   private String signature;
   private String credentialScope;
@@ -56,7 +53,6 @@ class AwsRequestSignature {
   private AwsRequestSignature(
       AwsSecurityCredentials awsSecurityCredentials,
       Map<String, String> canonicalHeaders,
-      List<String> sortedHeaderNames,
       String signature,
       String credentialScope,
       String url,
@@ -65,7 +61,6 @@ class AwsRequestSignature {
       String region) {
     this.awsSecurityCredentials = awsSecurityCredentials;
     this.canonicalHeaders = canonicalHeaders;
-    this.sortedHeaderNames = sortedHeaderNames;
     this.signature = signature;
     this.credentialScope = credentialScope;
     this.url = url;
@@ -109,11 +104,6 @@ class AwsRequestSignature {
     return date;
   }
 
-  /** Returns a list of headers sorted in lexicographical order. */
-  List<String> getSortedHeaderNames() {
-    return new ArrayList<>(sortedHeaderNames);
-  }
-
   /** Returns the targeted region. */
   String getRegion() {
     return region;
@@ -123,7 +113,6 @@ class AwsRequestSignature {
 
     private AwsSecurityCredentials awsSecurityCredentials;
     private Map<String, String> canonicalHeaders;
-    private List<String> sortedHeaderNames;
 
     private String signature;
     private String credentialScope;
@@ -167,11 +156,6 @@ class AwsRequestSignature {
       return this;
     }
 
-    Builder setSortedHeaderNames(List<String> sortedHeaderNames) {
-      this.sortedHeaderNames = new ArrayList<>(sortedHeaderNames);
-      return this;
-    }
-
     Builder setRegion(String region) {
       this.region = region;
       return this;
@@ -181,7 +165,6 @@ class AwsRequestSignature {
       return new AwsRequestSignature(
           awsSecurityCredentials,
           canonicalHeaders,
-          sortedHeaderNames,
           signature,
           credentialScope,
           url,

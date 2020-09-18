@@ -36,11 +36,11 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.api.client.util.Clock;
 import com.google.api.client.util.Joiner;
-import com.google.auth.ServiceAccountSigner.SigningException;
 import com.google.common.base.Splitter;
 import com.google.common.io.BaseEncoding;
 import java.net.URI;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -50,12 +50,12 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 import javax.annotation.Nullable;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import org.apache.commons.codec.digest.DigestUtils;
 
 /**
  * Internal utility that signs AWS API requests based on the AWS Signature Version 4 signing
@@ -64,9 +64,6 @@ import org.apache.commons.codec.digest.DigestUtils;
  * <p>https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html
  */
 public class AwsRequestSigner {
-
-  // The format of the x-amz-date header.
-  private static final String AWS_DATE_FORMAT = "yyyyMMdd'T'HHmmss'Z'";
 
   // AWS Signature Version 4 signing algorithm identifier.
   private static final String HASHING_ALGORITHM = "AWS4-HMAC-SHA256";
@@ -79,9 +76,8 @@ public class AwsRequestSigner {
   private Map<String, String> additionalHeaders;
   private String httpMethod;
   private String region;
+  private String requestPayload;
   private URI uri;
-
-  @Nullable private String requestPayload;
 
   /**
    * Internal constructor.
@@ -121,14 +117,14 @@ public class AwsRequestSigner {
     // Get the dates to be used to sign the request.
     AwsDates dates = getDates();
 
-    // Retrieve the service name. e.g. iam.amazonaws.com host => iam service.
+    // Retrieve the service name. For example: iam.amazonaws.com host => iam service.
     String serviceName = Splitter.on(".").split(uri.getHost()).iterator().next();
 
     Map<String, String> canonicalHeaders = getCanonicalHeaders(dates.getOriginalDate());
     // Headers must be sorted.
     List<String> sortedHeaders = new ArrayList<>();
     for (String headerName : canonicalHeaders.keySet()) {
-      sortedHeaders.add(headerName.toLowerCase());
+      sortedHeaders.add(headerName.toLowerCase(Locale.US));
     }
     Collections.sort(sortedHeaders);
 
@@ -153,7 +149,6 @@ public class AwsRequestSigner {
         .setCredentialScope(credentialScope)
         .setUrl(uri.toString())
         .setDate(dates.getOriginalDate())
-        .setSortedHeaderNames(sortedHeaders)
         .setRegion(region)
         .build();
   }
@@ -183,10 +178,10 @@ public class AwsRequestSigner {
     canonicalRequest.append(Joiner.on(';').join(sortedHeaderNames)).append("\n");
 
     // Append the hashed request payload.
-    canonicalRequest.append(DigestUtils.sha256Hex(requestPayload));
+    canonicalRequest.append(getHexEncodedSha256Hash(requestPayload.getBytes()));
 
     // Return the hashed canonical request.
-    return DigestUtils.sha256Hex(canonicalRequest.toString());
+    return getHexEncodedSha256Hash(canonicalRequest.toString().getBytes());
   }
 
   /** Task 2: Create a string to sign for Signature Version 4. */
@@ -204,7 +199,7 @@ public class AwsRequestSigner {
   /**
    * Task 3: Calculate the signature for AWS Signature Version 4.
    *
-   * @param date The date used in the hashing process in YYYYMMDD format.
+   * @param date the date used in the hashing process in YYYYMMDD format
    */
   private String calculateAwsV4Signature(
       String serviceName, String secret, String date, String region, String stringToSign) {
@@ -212,7 +207,7 @@ public class AwsRequestSigner {
     byte[] kRegion = sign(kDate, region.getBytes(UTF_8));
     byte[] kService = sign(kRegion, serviceName.getBytes(UTF_8));
     byte[] kSigning = sign(kService, AWS_REQUEST_TYPE.getBytes(UTF_8));
-    return BaseEncoding.base16().encode(sign(kSigning, stringToSign.getBytes(UTF_8))).toLowerCase();
+    return BaseEncoding.base16().lowerCase().encode(sign(kSigning, stringToSign.getBytes(UTF_8)));
   }
 
   private Map<String, String> getCanonicalHeaders(String date) {
@@ -246,14 +241,23 @@ public class AwsRequestSigner {
     return AwsDates.generateXAmzDate();
   }
 
-  private byte[] sign(byte[] key, byte[] value) {
+  private static byte[] sign(byte[] key, byte[] value) {
     try {
       String algorithm = "HmacSHA256";
       Mac mac = Mac.getInstance(algorithm);
       mac.init(new SecretKeySpec(key, algorithm));
       return mac.doFinal(value);
     } catch (NoSuchAlgorithmException | InvalidKeyException ex) {
-      throw new SigningException("Failed to calculate the AWS V4 Signature.", ex);
+      throw new IllegalStateException("Failed to calculate the AWS V4 Signature.", ex);
+    }
+  }
+
+  private static String getHexEncodedSha256Hash(byte[] bytes) {
+    try {
+      MessageDigest digest = MessageDigest.getInstance("SHA-256");
+      return BaseEncoding.base16().lowerCase().encode(digest.digest(bytes));
+    } catch (NoSuchAlgorithmException e) {
+      throw new IllegalStateException("Failed to compute SHA-256 hash.", e);
     }
   }
 
