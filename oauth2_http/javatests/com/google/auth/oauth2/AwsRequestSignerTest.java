@@ -82,9 +82,14 @@ public class AwsRequestSignerTest {
 
     AwsRequestSignature signature = signer.sign();
 
-    assertThat(signature.getSignature())
-        .isEqualTo("b27ccfbfa7df52a200ff74193ca6e32d4b48b8856fab7ebf1c595d0670a7e470");
+    String expectedSignature = "b27ccfbfa7df52a200ff74193ca6e32d4b48b8856fab7ebf1c595d0670a7e470";
+    String expectedAuthHeader =
+        "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/"
+            + "aws4_request, SignedHeaders=date;host, Signature="
+            + expectedSignature;
 
+    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
+    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
     assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
     assertThat(signature.getDate()).isEqualTo(DATE);
     assertThat(signature.getHttpMethod()).isEqualTo("GET");
@@ -108,9 +113,14 @@ public class AwsRequestSignerTest {
 
     AwsRequestSignature signature = signer.sign();
 
-    assertThat(signature.getSignature())
-        .isEqualTo("b27ccfbfa7df52a200ff74193ca6e32d4b48b8856fab7ebf1c595d0670a7e470");
+    String expectedSignature = "b27ccfbfa7df52a200ff74193ca6e32d4b48b8856fab7ebf1c595d0670a7e470";
+    String expectedAuthHeader =
+        "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/"
+            + "aws4_request, SignedHeaders=date;host, Signature="
+            + expectedSignature;
 
+    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
+    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
     assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
     assertThat(signature.getDate()).isEqualTo(DATE);
     assertThat(signature.getHttpMethod()).isEqualTo("GET");
@@ -134,8 +144,14 @@ public class AwsRequestSignerTest {
 
     AwsRequestSignature signature = signer.sign();
 
-    assertThat(signature.getSignature())
-        .isEqualTo("b27ccfbfa7df52a200ff74193ca6e32d4b48b8856fab7ebf1c595d0670a7e470");
+    String expectedSignature = "b27ccfbfa7df52a200ff74193ca6e32d4b48b8856fab7ebf1c595d0670a7e470";
+    String expectedAuthHeader =
+        "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/"
+            + "aws4_request, SignedHeaders=date;host, Signature="
+            + expectedSignature;
+
+    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
+    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
     assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
     assertThat(signature.getDate()).isEqualTo(DATE);
     assertThat(signature.getHttpMethod()).isEqualTo("GET");
@@ -159,8 +175,14 @@ public class AwsRequestSignerTest {
 
     AwsRequestSignature signature = signer.sign();
 
-    assertThat(signature.getSignature())
-        .isEqualTo("910e4d6c9abafaf87898e1eb4c929135782ea25bb0279703146455745391e63a");
+    String expectedSignature = "910e4d6c9abafaf87898e1eb4c929135782ea25bb0279703146455745391e63a";
+    String expectedAuthHeader =
+        "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/"
+            + "aws4_request, SignedHeaders=date;host, Signature="
+            + expectedSignature;
+
+    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
+    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
     assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
     assertThat(signature.getDate()).isEqualTo(DATE);
     assertThat(signature.getHttpMethod()).isEqualTo("GET");
@@ -184,8 +206,14 @@ public class AwsRequestSignerTest {
 
     AwsRequestSignature signature = signer.sign();
 
-    assertThat(signature.getSignature())
-        .isEqualTo("8d6634c189aa8c75c2e51e106b6b5121bed103fdb351f7d7d4381c738823af74");
+    String expectedSignature = "8d6634c189aa8c75c2e51e106b6b5121bed103fdb351f7d7d4381c738823af74";
+    String expectedAuthHeader =
+        "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/"
+            + "aws4_request, SignedHeaders=date;host, Signature="
+            + expectedSignature;
+
+    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
+    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
     assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
     assertThat(signature.getDate()).isEqualTo(DATE);
     assertThat(signature.getHttpMethod()).isEqualTo("GET");
@@ -209,8 +237,14 @@ public class AwsRequestSignerTest {
 
     AwsRequestSignature signature = signer.sign();
 
-    assertThat(signature.getSignature())
-        .isEqualTo("be7148d34ebccdc6423b19085378aa0bee970bdc61d144bd1a8c48c33079ab09");
+    String expectedSignature = "be7148d34ebccdc6423b19085378aa0bee970bdc61d144bd1a8c48c33079ab09";
+    String expectedAuthHeader =
+        "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/"
+            + "aws4_request, SignedHeaders=date;host, Signature="
+            + expectedSignature;
+
+    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
+    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
     assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
     assertThat(signature.getDate()).isEqualTo(DATE);
     assertThat(signature.getHttpMethod()).isEqualTo("GET");
@@ -237,8 +271,14 @@ public class AwsRequestSignerTest {
 
     AwsRequestSignature signature = signer.sign();
 
-    assertThat(signature.getSignature())
-        .isEqualTo("b7a95a52518abbca0964a999a880429ab734f35ebbf1235bd79a5de87756dc4a");
+    String expectedSignature = "b7a95a52518abbca0964a999a880429ab734f35ebbf1235bd79a5de87756dc4a";
+    String expectedAuthHeader =
+        "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/"
+            + "aws4_request, SignedHeaders=date;host;zoo, Signature="
+            + expectedSignature;
+
+    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
+    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
     assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
     assertThat(signature.getDate()).isEqualTo(DATE);
     assertThat(signature.getHttpMethod()).isEqualTo("POST");
@@ -266,8 +306,14 @@ public class AwsRequestSignerTest {
 
     AwsRequestSignature signature = signer.sign();
 
-    assertThat(signature.getSignature())
-        .isEqualTo("273313af9d0c265c531e11db70bbd653f3ba074c1009239e8559d3987039cad7");
+    String expectedSignature = "273313af9d0c265c531e11db70bbd653f3ba074c1009239e8559d3987039cad7";
+    String expectedAuthHeader =
+        "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/"
+            + "aws4_request, SignedHeaders=date;host;zoo, Signature="
+            + expectedSignature;
+
+    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
+    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
     assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
     assertThat(signature.getDate()).isEqualTo(DATE);
     assertThat(signature.getHttpMethod()).isEqualTo("POST");
@@ -295,8 +341,14 @@ public class AwsRequestSignerTest {
 
     AwsRequestSignature signature = signer.sign();
 
-    assertThat(signature.getSignature())
-        .isEqualTo("debf546796015d6f6ded8626f5ce98597c33b47b9164cf6b17b4642036fcb592");
+    String expectedSignature = "debf546796015d6f6ded8626f5ce98597c33b47b9164cf6b17b4642036fcb592";
+    String expectedAuthHeader =
+        "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/"
+            + "aws4_request, SignedHeaders=date;host;p, Signature="
+            + expectedSignature;
+
+    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
+    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
     assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
     assertThat(signature.getDate()).isEqualTo(DATE);
     assertThat(signature.getHttpMethod()).isEqualTo("POST");
@@ -325,8 +377,14 @@ public class AwsRequestSignerTest {
 
     AwsRequestSignature signature = signer.sign();
 
-    assertThat(signature.getSignature())
-        .isEqualTo("5a15b22cf462f047318703b92e6f4f38884e4a7ab7b1d6426ca46a8bd1c26cbc");
+    String expectedSignature = "5a15b22cf462f047318703b92e6f4f38884e4a7ab7b1d6426ca46a8bd1c26cbc";
+    String expectedAuthHeader =
+        "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/"
+            + "aws4_request, SignedHeaders=content-type;date;host, Signature="
+            + expectedSignature;
+
+    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
+    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
     assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
     assertThat(signature.getDate()).isEqualTo(DATE);
     assertThat(signature.getHttpMethod()).isEqualTo("POST");
@@ -351,8 +409,14 @@ public class AwsRequestSignerTest {
 
     AwsRequestSignature signature = signer.sign();
 
-    assertThat(signature.getSignature())
-        .isEqualTo("b6e3b79003ce0743a491606ba1035a804593b0efb1e20a11cba83f8c25a57a92");
+    String expectedSignature = "b6e3b79003ce0743a491606ba1035a804593b0efb1e20a11cba83f8c25a57a92";
+    String expectedAuthHeader =
+        "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/"
+            + "aws4_request, SignedHeaders=date;host, Signature="
+            + expectedSignature;
+
+    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
+    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
     assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
     assertThat(signature.getDate()).isEqualTo(DATE);
     assertThat(signature.getHttpMethod()).isEqualTo("POST");
@@ -374,8 +438,16 @@ public class AwsRequestSignerTest {
 
     AwsRequestSignature signature = signer.sign();
 
-    assertThat(signature.getSignature())
-        .isEqualTo("631ea80cddfaa545fdadb120dc92c9f18166e38a5c47b50fab9fce476e022855");
+    String expectedSignature = "631ea80cddfaa545fdadb120dc92c9f18166e38a5c47b50fab9fce476e022855";
+    String expectedAuthHeader =
+        "AWS4-HMAC-SHA256 Credential="
+            + awsSecurityCredentials.getAccessKeyId()
+            + "/20200811/us-east-2/ec2/"
+            + "aws4_request, SignedHeaders=host;x-amz-date;x-amz-security-token, Signature="
+            + expectedSignature;
+
+    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
+    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
     assertThat(signature.getSecurityCredentials()).isEqualTo(awsSecurityCredentials);
     assertThat(signature.getDate()).isEqualTo(X_AMZ_DATE);
     assertThat(signature.getHttpMethod()).isEqualTo("GET");
@@ -397,8 +469,16 @@ public class AwsRequestSignerTest {
 
     AwsRequestSignature signature = signer.sign();
 
-    assertThat(signature.getSignature())
-        .isEqualTo("73452984e4a880ffdc5c392355733ec3f5ba310d5e0609a89244440cadfe7a7a");
+    String expectedSignature = "73452984e4a880ffdc5c392355733ec3f5ba310d5e0609a89244440cadfe7a7a";
+    String expectedAuthHeader =
+        "AWS4-HMAC-SHA256 Credential="
+            + awsSecurityCredentials.getAccessKeyId()
+            + "/20200811/us-east-2/sts/"
+            + "aws4_request, SignedHeaders=host;x-amz-date;x-amz-security-token, Signature="
+            + expectedSignature;
+
+    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
+    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
     assertThat(signature.getSecurityCredentials()).isEqualTo(awsSecurityCredentials);
     assertThat(signature.getDate()).isEqualTo(X_AMZ_DATE);
     assertThat(signature.getHttpMethod()).isEqualTo("POST");
@@ -426,8 +506,16 @@ public class AwsRequestSignerTest {
 
     AwsRequestSignature signature = signer.sign();
 
-    assertThat(signature.getSignature())
-        .isEqualTo("d095ba304919cd0d5570ba8a3787884ee78b860f268ed040ba23831d55536d56");
+    String expectedSignature = "d095ba304919cd0d5570ba8a3787884ee78b860f268ed040ba23831d55536d56";
+    String expectedAuthHeader =
+        "AWS4-HMAC-SHA256 Credential="
+            + awsSecurityCredentials.getAccessKeyId()
+            + "/20200811/us-east-2/sts/"
+            + "aws4_request, SignedHeaders=host;x-amz-date, Signature="
+            + expectedSignature;
+
+    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
+    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
     assertThat(signature.getSecurityCredentials()).isEqualTo(awsSecurityCredentialsWithoutToken);
     assertThat(signature.getDate()).isEqualTo(X_AMZ_DATE);
     assertThat(signature.getHttpMethod()).isEqualTo("POST");

@@ -49,6 +49,7 @@ class AwsRequestSignature {
   private String httpMethod;
   private String date;
   private String region;
+  private String authorizationHeader;
 
   private AwsRequestSignature(
       AwsSecurityCredentials awsSecurityCredentials,
@@ -58,7 +59,8 @@ class AwsRequestSignature {
       String url,
       String httpMethod,
       String date,
-      String region) {
+      String region,
+      String authorizationHeader) {
     this.awsSecurityCredentials = awsSecurityCredentials;
     this.canonicalHeaders = canonicalHeaders;
     this.signature = signature;
@@ -67,6 +69,7 @@ class AwsRequestSignature {
     this.httpMethod = httpMethod;
     this.date = date;
     this.region = region;
+    this.authorizationHeader = authorizationHeader;
   }
 
   /** Returns the request signature based on the AWS Signature Version 4 signing process. */
@@ -109,6 +112,11 @@ class AwsRequestSignature {
     return region;
   }
 
+  /** Returns the authorization header. */
+  String getAuthorizationHeader() {
+    return authorizationHeader;
+  }
+
   static class Builder {
 
     private AwsSecurityCredentials awsSecurityCredentials;
@@ -120,6 +128,7 @@ class AwsRequestSignature {
     private String httpMethod;
     private String date;
     private String region;
+    private String authorizationHeader;
 
     Builder setSignature(String signature) {
       this.signature = signature;
@@ -161,6 +170,11 @@ class AwsRequestSignature {
       return this;
     }
 
+    Builder setAuthorizationHeader(String authorizationHeader) {
+      this.authorizationHeader = authorizationHeader;
+      return this;
+    }
+
     AwsRequestSignature build() {
       return new AwsRequestSignature(
           awsSecurityCredentials,
@@ -170,7 +184,8 @@ class AwsRequestSignature {
           url,
           httpMethod,
           date,
-          region);
+          region,
+          authorizationHeader);
     }
   }
 }

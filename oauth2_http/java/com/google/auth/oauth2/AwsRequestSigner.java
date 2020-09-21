@@ -63,7 +63,7 @@ import javax.crypto.spec.SecretKeySpec;
  *
  * <p>https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html
  */
-public class AwsRequestSigner {
+class AwsRequestSigner {
 
   // AWS Signature Version 4 signing algorithm identifier.
   private static final String HASHING_ALGORITHM = "AWS4-HMAC-SHA256";
@@ -141,6 +141,10 @@ public class AwsRequestSigner {
             region,
             stringToSign);
 
+    String authorizationHeader =
+        generateAuthorizationHeader(
+            sortedHeaders, awsSecurityCredentials.getAccessKeyId(), credentialScope, signature);
+
     return new AwsRequestSignature.Builder()
         .setSignature(signature)
         .setCanonicalHeaders(canonicalHeaders)
@@ -150,6 +154,7 @@ public class AwsRequestSigner {
         .setUrl(uri.toString())
         .setDate(dates.getOriginalDate())
         .setRegion(region)
+        .setAuthorizationHeader(authorizationHeader)
         .build();
   }
 
@@ -208,6 +213,21 @@ public class AwsRequestSigner {
     byte[] kService = sign(kRegion, serviceName.getBytes(UTF_8));
     byte[] kSigning = sign(kService, AWS_REQUEST_TYPE.getBytes(UTF_8));
     return BaseEncoding.base16().lowerCase().encode(sign(kSigning, stringToSign.getBytes(UTF_8)));
+  }
+
+  /** Task 4: Format the signature to be added to the HTTP request. */
+  private String generateAuthorizationHeader(
+      List<String> sortedHeaderNames,
+      String accessKeyId,
+      String credentialScope,
+      String signature) {
+    return String.format(
+        "%s Credential=%s/%s, SignedHeaders=%s, Signature=%s",
+        HASHING_ALGORITHM,
+        accessKeyId,
+        credentialScope,
+        Joiner.on(';').join(sortedHeaderNames),
+        signature);
   }
 
   private Map<String, String> getCanonicalHeaders(String date) {
