@@ -34,7 +34,6 @@ package com.google.auth.oauth2;
 import static com.google.api.client.util.Preconditions.checkNotNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.api.client.util.Clock;
 import com.google.api.client.util.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.io.BaseEncoding;
@@ -246,7 +245,7 @@ class AwsRequestSigner {
     // Add all additional headers.
     for (String key : additionalHeaders.keySet()) {
       // Header keys need to be lowercase.
-      headers.put(key.toLowerCase(), additionalHeaders.get(key));
+      headers.put(key.toLowerCase(Locale.US), additionalHeaders.get(key));
     }
     return headers;
   }
@@ -357,7 +356,7 @@ class AwsRequestSigner {
     static AwsDates generateXAmzDate() {
       DateFormat dateFormat = new SimpleDateFormat(X_AMZ_DATE_FORMAT);
       dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-      String xAmzDate = dateFormat.format(new Date(Clock.SYSTEM.currentTimeMillis()));
+      String xAmzDate = dateFormat.format(new Date(System.currentTimeMillis()));
       return fromXAmzDate(xAmzDate);
     }
 
