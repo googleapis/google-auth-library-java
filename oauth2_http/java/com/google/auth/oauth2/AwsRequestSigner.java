@@ -266,8 +266,8 @@ class AwsRequestSigner {
       Mac mac = Mac.getInstance(algorithm);
       mac.init(new SecretKeySpec(key, algorithm));
       return mac.doFinal(value);
-    } catch (NoSuchAlgorithmException | InvalidKeyException ex) {
-      throw new IllegalStateException("Failed to calculate the AWS V4 Signature.", ex);
+    } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+      throw new RuntimeException("Failed to calculate the AWS V4 Signature.", e);
     }
   }
 
@@ -276,7 +276,7 @@ class AwsRequestSigner {
       MessageDigest digest = MessageDigest.getInstance("SHA-256");
       return BaseEncoding.base16().lowerCase().encode(digest.digest(bytes));
     } catch (NoSuchAlgorithmException e) {
-      throw new IllegalStateException("Failed to compute SHA-256 hash.", e);
+      throw new RuntimeException("Failed to compute SHA-256 hash.", e);
     }
   }
 
@@ -349,7 +349,7 @@ class AwsRequestSigner {
         String xAmzDate = dateFormat.format(inputDate);
         return new AwsDates(date, xAmzDate, xAmzDate.substring(0, 8));
       } catch (ParseException e) {
-        throw new IllegalArgumentException("Invalid date provided: " + date, e);
+        throw new RuntimeException("Invalid date provided: " + date, e);
       }
     }
 
