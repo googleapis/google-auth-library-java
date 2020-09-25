@@ -35,6 +35,7 @@ import static com.google.api.client.util.Preconditions.checkNotNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.api.client.util.Joiner;
+import com.google.auth.ServiceAccountSigner.SigningException;
 import com.google.common.base.Splitter;
 import com.google.common.io.BaseEncoding;
 import java.net.URI;
@@ -182,10 +183,10 @@ class AwsRequestSigner {
     canonicalRequest.append(Joiner.on(';').join(sortedHeaderNames)).append("\n");
 
     // Append the hashed request payload.
-    canonicalRequest.append(getHexEncodedSha256Hash(requestPayload.getBytes()));
+    canonicalRequest.append(getHexEncodedSha256Hash(requestPayload.getBytes(UTF_8)));
 
     // Return the hashed canonical request.
-    return getHexEncodedSha256Hash(canonicalRequest.toString().getBytes());
+    return getHexEncodedSha256Hash(canonicalRequest.toString().getBytes(UTF_8));
   }
 
   /** Task 2: Create a string to sign for Signature Version 4. */
@@ -266,8 +267,12 @@ class AwsRequestSigner {
       Mac mac = Mac.getInstance(algorithm);
       mac.init(new SecretKeySpec(key, algorithm));
       return mac.doFinal(value);
-    } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-      throw new RuntimeException("Failed to calculate the AWS V4 Signature.", e);
+    } catch (NoSuchAlgorithmException e) {
+      // Will not occur as HmacSHA256 is supported. We may allow other algorithms in the future.
+      throw new RuntimeException(
+          "Invalid algorithm used when calculating the AWS V4 Signature.", e);
+    } catch (InvalidKeyException e) {
+      throw new SigningException("Invalid key used when calculating the AWS V4 Signature", e);
     }
   }
 
@@ -312,6 +317,24 @@ class AwsRequestSigner {
     }
 
     Builder setAdditionalHeaders(Map<String, String> additionalHeaders) {
+      if (additionalHeaders.containsKey("x-amz-date")) {
+        try {
+          String xAmzDate = additionalHeaders.get("x-amz-date");
+          new SimpleDateFormat(AwsDates.X_AMZ_DATE_FORMAT).parse(xAmzDate);
+        } catch (ParseException e) {
+          throw new IllegalArgumentException("The provided x-amz-date header value is invalid.", e);
+        }
+      }
+
+      if (additionalHeaders.containsKey("date")) {
+        try {
+          String customDate = additionalHeaders.get("date");
+          new SimpleDateFormat(AwsDates.CUSTOM_DATE_FORMAT).parse(customDate);
+        } catch (ParseException e) {
+          throw new IllegalArgumentException("The provided date header value is invalid.", e);
+        }
+      }
+
       this.additionalHeaders = additionalHeaders;
       return this;
     }
@@ -344,13 +367,15 @@ class AwsRequestSigner {
     static AwsDates fromDateHeader(String date) {
       DateFormat dateFormat = new SimpleDateFormat(X_AMZ_DATE_FORMAT);
       dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+      String xAmzDate = null;
       try {
         Date inputDate = new SimpleDateFormat(CUSTOM_DATE_FORMAT).parse(date);
-        String xAmzDate = dateFormat.format(inputDate);
-        return new AwsDates(date, xAmzDate, xAmzDate.substring(0, 8));
+        xAmzDate = dateFormat.format(inputDate);
       } catch (ParseException e) {
-        throw new RuntimeException("Invalid date provided: " + date, e);
+        // Date is validated at construction.
       }
+      return new AwsDates(date, xAmzDate, xAmzDate.substring(0, 8));
     }
 
     static AwsDates generateXAmzDate() {
