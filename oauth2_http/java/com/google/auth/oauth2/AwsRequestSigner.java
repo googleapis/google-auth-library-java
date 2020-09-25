@@ -81,12 +81,12 @@ class AwsRequestSigner {
   /**
    * Internal constructor.
    *
-   * @param awsSecurityCredentials AWS security credentials.
-   * @param httpMethod The HTTP request method.
-   * @param url The request URL.
-   * @param region The targeted region.
-   * @param requestPayload The request payload.
-   * @param additionalHeaders A map of additional HTTP headers to be included with the signed
+   * @param awsSecurityCredentials AWS security credentials
+   * @param httpMethod the HTTP request method
+   * @param url the request URL
+   * @param region the targeted region
+   * @param requestPayload the request payload
+   * @param additionalHeaders a map of additional HTTP headers to be included with the signed
    *     request.
    */
   private AwsRequestSigner(
@@ -110,7 +110,7 @@ class AwsRequestSigner {
   /**
    * Signs the specified AWS API request.
    *
-   * @return the {@link AwsRequestSignature}.
+   * @return the {@link AwsRequestSignature}
    */
   AwsRequestSignature sign() {
     // Get the dates to be used to sign the request.
