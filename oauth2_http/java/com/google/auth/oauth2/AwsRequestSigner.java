@@ -132,7 +132,7 @@ class AwsRequestSigner {
     String credentialScope =
         dates.getFormattedDate() + "/" + region + "/" + serviceName + "/" + AWS_REQUEST_TYPE;
     String stringToSign =
-        createStringToSign(canonicalRequestHash, dates.getAmzDate(), credentialScope);
+        createStringToSign(canonicalRequestHash, dates.getXAmzDate(), credentialScope);
     String signature =
         calculateAwsV4Signature(
             serviceName,
@@ -344,20 +344,22 @@ class AwsRequestSigner {
     private static final String CUSTOM_DATE_FORMAT = "E, dd MMM yyyy HH:mm:ss z";
 
     private String originalDate;
-    private String amzDate;
-    private String formattedDate;
+    private String xAmzDate;
 
-    private AwsDates(String originalDate, String amzDate, String formattedDate) {
+    private AwsDates(String amzDate) {
+      this.xAmzDate = checkNotNull(amzDate);
+      this.originalDate = amzDate;
+    }
+
+    private AwsDates(String xAmzDate, String originalDate) {
+      this.xAmzDate = checkNotNull(xAmzDate);
       this.originalDate = checkNotNull(originalDate);
-      this.amzDate = checkNotNull(amzDate);
-      this.formattedDate = checkNotNull(formattedDate);
     }
 
     static AwsDates fromXAmzDate(String xAmzDate) throws ParseException {
       // Validate format.
       new SimpleDateFormat(AwsDates.X_AMZ_DATE_FORMAT).parse(xAmzDate);
-
-      return new AwsDates(xAmzDate, xAmzDate, xAmzDate.substring(0, 8));
+      return new AwsDates(xAmzDate);
     }
 
     static AwsDates fromDateHeader(String date) throws ParseException {
@@ -366,14 +368,14 @@ class AwsRequestSigner {
 
       Date inputDate = new SimpleDateFormat(CUSTOM_DATE_FORMAT).parse(date);
       String xAmzDate = dateFormat.format(inputDate);
-      return new AwsDates(date, xAmzDate, xAmzDate.substring(0, 8));
+      return new AwsDates(xAmzDate, date);
     }
 
     static AwsDates generateXAmzDate() {
       DateFormat dateFormat = new SimpleDateFormat(X_AMZ_DATE_FORMAT);
       dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
       String xAmzDate = dateFormat.format(new Date(System.currentTimeMillis()));
-      return new AwsDates(xAmzDate, xAmzDate, xAmzDate.substring(0, 8));
+      return new AwsDates(xAmzDate);
     }
 
     /**
@@ -385,13 +387,13 @@ class AwsRequestSigner {
     }
 
     /** Returns the x-amz-date in yyyyMMdd'T'HHmmss'Z' format. */
-    String getAmzDate() {
-      return amzDate;
+    String getXAmzDate() {
+      return xAmzDate;
     }
 
     /** Returns the x-amz-date in YYYYMMDD format. */
     String getFormattedDate() {
-      return formattedDate;
+      return xAmzDate.substring(0, 8);
     }
   }
 }
