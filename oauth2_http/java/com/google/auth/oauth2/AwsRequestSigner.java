@@ -72,12 +72,13 @@ class AwsRequestSigner {
   // https://docs.aws.amazon.com/general/latest/gr/sigv4-create-string-to-sign.html
   private static final String AWS_REQUEST_TYPE = "aws4_request";
 
-  private AwsSecurityCredentials awsSecurityCredentials;
-  private Map<String, String> additionalHeaders;
-  private String httpMethod;
-  private String region;
-  private String requestPayload;
-  private URI uri;
+  private final AwsSecurityCredentials awsSecurityCredentials;
+  private final Map<String, String> additionalHeaders;
+  private final String httpMethod;
+  private final String region;
+  private final String requestPayload;
+  private final URI uri;
+  private final AwsDates dates;
 
   /**
    * Internal constructor.
@@ -96,7 +97,8 @@ class AwsRequestSigner {
       String url,
       String region,
       @Nullable String requestPayload,
-      @Nullable Map<String, String> additionalHeaders) {
+      @Nullable Map<String, String> additionalHeaders,
+      @Nullable AwsDates awsDates) {
     this.awsSecurityCredentials = checkNotNull(awsSecurityCredentials);
     this.httpMethod = checkNotNull(httpMethod);
     this.uri = URI.create(url).normalize();
@@ -106,6 +108,7 @@ class AwsRequestSigner {
         (additionalHeaders != null)
             ? new HashMap<>(additionalHeaders)
             : new HashMap<String, String>();
+    this.dates = awsDates == null ? AwsDates.generateXAmzDate() : awsDates;
   }
 
   /**
@@ -114,21 +117,18 @@ class AwsRequestSigner {
    * @return the {@link AwsRequestSignature}
    */
   AwsRequestSignature sign() {
-    // Get the dates to be used to sign the request.
-    AwsDates dates = getDates();
-
     // Retrieve the service name. For example: iam.amazonaws.com host => iam service.
     String serviceName = Splitter.on(".").split(uri.getHost()).iterator().next();
 
     Map<String, String> canonicalHeaders = getCanonicalHeaders(dates.getOriginalDate());
     // Headers must be sorted.
-    List<String> sortedHeaders = new ArrayList<>();
+    List<String> sortedHeaderNames = new ArrayList<>();
     for (String headerName : canonicalHeaders.keySet()) {
-      sortedHeaders.add(headerName.toLowerCase(Locale.US));
+      sortedHeaderNames.add(headerName.toLowerCase(Locale.US));
     }
-    Collections.sort(sortedHeaders);
+    Collections.sort(sortedHeaderNames);
 
-    String canonicalRequestHash = createCanonicalRequestHash(canonicalHeaders, sortedHeaders);
+    String canonicalRequestHash = createCanonicalRequestHash(canonicalHeaders, sortedHeaderNames);
     String credentialScope =
         dates.getFormattedDate() + "/" + region + "/" + serviceName + "/" + AWS_REQUEST_TYPE;
     String stringToSign =
@@ -143,7 +143,7 @@ class AwsRequestSigner {
 
     String authorizationHeader =
         generateAuthorizationHeader(
-            sortedHeaders, awsSecurityCredentials.getAccessKeyId(), credentialScope, signature);
+            sortedHeaderNames, awsSecurityCredentials.getAccessKeyId(), credentialScope, signature);
 
     return new AwsRequestSignature.Builder()
         .setSignature(signature)
@@ -230,13 +230,13 @@ class AwsRequestSigner {
         signature);
   }
 
-  private Map<String, String> getCanonicalHeaders(String date) {
+  private Map<String, String> getCanonicalHeaders(String defaultDate) {
     Map<String, String> headers = new HashMap<>();
     headers.put("host", uri.getHost());
 
     // Only add the date if it hasn't been specified through the "date" header.
     if (!additionalHeaders.containsKey("date")) {
-      headers.put("x-amz-date", date);
+      headers.put("x-amz-date", defaultDate);
     }
 
     if (awsSecurityCredentials.getToken() != null && !awsSecurityCredentials.getToken().isEmpty()) {
@@ -249,16 +249,6 @@ class AwsRequestSigner {
       headers.put(key.toLowerCase(Locale.US), additionalHeaders.get(key));
     }
     return headers;
-  }
-
-  private AwsDates getDates() {
-    if (additionalHeaders.containsKey("date")) {
-      return AwsDates.fromDateHeader(additionalHeaders.get("date"));
-    }
-    if (additionalHeaders.containsKey("x-amz-date")) {
-      return AwsDates.fromXAmzDate(additionalHeaders.get("x-amz-date"));
-    }
-    return AwsDates.generateXAmzDate();
   }
 
   private static byte[] sign(byte[] key, byte[] value) {
@@ -299,6 +289,7 @@ class AwsRequestSigner {
 
     @Nullable private String requestPayload;
     @Nullable private Map<String, String> additionalHeaders;
+    @Nullable private AwsDates dates;
 
     private Builder(
         AwsSecurityCredentials awsSecurityCredentials,
@@ -317,22 +308,18 @@ class AwsRequestSigner {
     }
 
     Builder setAdditionalHeaders(Map<String, String> additionalHeaders) {
-      if (additionalHeaders.containsKey("x-amz-date")) {
-        try {
-          String xAmzDate = additionalHeaders.get("x-amz-date");
-          new SimpleDateFormat(AwsDates.X_AMZ_DATE_FORMAT).parse(xAmzDate);
-        } catch (ParseException e) {
-          throw new IllegalArgumentException("The provided x-amz-date header value is invalid.", e);
-        }
+      if (additionalHeaders.containsKey("date") && additionalHeaders.containsKey("x-amz-date")) {
+        throw new IllegalArgumentException("One of {date, x-amz-date} can be specified, not both.");
       }
-
-      if (additionalHeaders.containsKey("date")) {
-        try {
-          String customDate = additionalHeaders.get("date");
-          new SimpleDateFormat(AwsDates.CUSTOM_DATE_FORMAT).parse(customDate);
-        } catch (ParseException e) {
-          throw new IllegalArgumentException("The provided date header value is invalid.", e);
+      try {
+        if (additionalHeaders.containsKey("date")) {
+          this.dates = AwsDates.fromDateHeader(additionalHeaders.get("date"));
         }
+        if (additionalHeaders.containsKey("x-amz-date")) {
+          this.dates = AwsDates.fromXAmzDate(additionalHeaders.get("x-amz-date"));
+        }
+      } catch (ParseException e) {
+        throw new IllegalArgumentException("The provided date header value is invalid.", e);
       }
 
       this.additionalHeaders = additionalHeaders;
@@ -341,7 +328,13 @@ class AwsRequestSigner {
 
     AwsRequestSigner build() {
       return new AwsRequestSigner(
-          awsSecurityCredentials, httpMethod, url, region, requestPayload, additionalHeaders);
+          awsSecurityCredentials,
+          httpMethod,
+          url,
+          region,
+          requestPayload,
+          additionalHeaders,
+          dates);
     }
   }
 
@@ -360,21 +353,19 @@ class AwsRequestSigner {
       this.formattedDate = checkNotNull(formattedDate);
     }
 
-    static AwsDates fromXAmzDate(String xAmzDate) {
+    static AwsDates fromXAmzDate(String xAmzDate) throws ParseException {
+      // Validate format.
+      new SimpleDateFormat(AwsDates.X_AMZ_DATE_FORMAT).parse(xAmzDate);
+
       return new AwsDates(xAmzDate, xAmzDate, xAmzDate.substring(0, 8));
     }
 
-    static AwsDates fromDateHeader(String date) {
+    static AwsDates fromDateHeader(String date) throws ParseException {
       DateFormat dateFormat = new SimpleDateFormat(X_AMZ_DATE_FORMAT);
       dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-      String xAmzDate = null;
-      try {
-        Date inputDate = new SimpleDateFormat(CUSTOM_DATE_FORMAT).parse(date);
-        xAmzDate = dateFormat.format(inputDate);
-      } catch (ParseException e) {
-        // Date is validated at construction.
-      }
+      Date inputDate = new SimpleDateFormat(CUSTOM_DATE_FORMAT).parse(date);
+      String xAmzDate = dateFormat.format(inputDate);
       return new AwsDates(date, xAmzDate, xAmzDate.substring(0, 8));
     }
 
@@ -382,7 +373,7 @@ class AwsRequestSigner {
       DateFormat dateFormat = new SimpleDateFormat(X_AMZ_DATE_FORMAT);
       dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
       String xAmzDate = dateFormat.format(new Date(System.currentTimeMillis()));
-      return fromXAmzDate(xAmzDate);
+      return new AwsDates(xAmzDate, xAmzDate, xAmzDate.substring(0, 8));
     }
 
     /**
