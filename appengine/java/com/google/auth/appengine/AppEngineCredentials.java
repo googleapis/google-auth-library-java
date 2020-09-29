@@ -70,8 +70,6 @@ public class AppEngineCredentials extends GoogleCredentials implements ServiceAc
   private transient AppIdentityService appIdentityService;
 
   /**
-   * {@inheritDoc}
-   *
    * @deprecated AppEngineCredentials should be instantiated via its Builder. See
    *     https://github.com/googleapis/google-auth-library-java#google-auth-library-appengine
    */
@@ -82,8 +80,6 @@ public class AppEngineCredentials extends GoogleCredentials implements ServiceAc
   }
 
   /**
-   * {@inheritDoc}
-   *
    * @deprecated AppEngineCredentials should be instantiated via its Builder. See
    *     https://github.com/googleapis/google-auth-library-java#google-auth-library-appengine
    */
