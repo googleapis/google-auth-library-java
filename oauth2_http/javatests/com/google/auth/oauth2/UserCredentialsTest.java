@@ -70,12 +70,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
   private static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
   private static final String QUOTA_PROJECT = "sample-quota-project-id";
-  private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
-  public static final Collection<String> DEFAULT_SCOPES =
-      ImmutableSet.<String>of(
-          "https://www.googleapis.com/auth/userinfo.email",
-          "https://www.googleapis.com/auth/accounts.reauth");
 
   @Test(expected = IllegalStateException.class)
   public void constructor_accessAndRefreshTokenNull_throws() {
@@ -95,29 +90,6 @@ public class UserCredentialsTest extends BaseSerializationTest {
     assertEquals(CLIENT_SECRET, credentials.getClientSecret());
     assertEquals(REFRESH_TOKEN, credentials.getRefreshToken());
     assertEquals(QUOTA_PROJECT, credentials.getQuotaProjectId());
-  }
-
-  @Test
-  public void createScoped_same() {
-    UserCredentials userCredentials =
-        UserCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientSecret(CLIENT_SECRET)
-            .setRefreshToken(REFRESH_TOKEN)
-            .setScopes(SCOPES)
-            .build();
-    assertEquals(userCredentials, userCredentials.createScoped(SCOPES));
-  }
-
-  @Test
-  public void createScopedRequired_false() {
-    UserCredentials userCredentials =
-        UserCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientSecret(CLIENT_SECRET)
-            .setRefreshToken(REFRESH_TOKEN)
-            .build();
-    assertFalse(userCredentials.createScopedRequired());
   }
 
   @Test
@@ -238,7 +210,6 @@ public class UserCredentialsTest extends BaseSerializationTest {
             .setClientSecret(CLIENT_SECRET)
             .setRefreshToken(REFRESH_TOKEN)
             .setAccessToken(accessToken)
-            .setScopes(SCOPES)
             .setHttpTransportFactory(transportFactory)
             .setTokenServerUri(tokenServer)
             .setQuotaProjectId(QUOTA_PROJECT)
@@ -249,7 +220,6 @@ public class UserCredentialsTest extends BaseSerializationTest {
             .setClientSecret(CLIENT_SECRET)
             .setRefreshToken(REFRESH_TOKEN)
             .setAccessToken(accessToken)
-            .setScopes(SCOPES)
             .setHttpTransportFactory(transportFactory)
             .setTokenServerUri(tokenServer)
             .setQuotaProjectId(QUOTA_PROJECT)
@@ -323,34 +293,6 @@ public class UserCredentialsTest extends BaseSerializationTest {
             .setClientSecret(CLIENT_SECRET)
             .setRefreshToken(REFRESH_TOKEN)
             .setAccessToken(accessToken)
-            .setHttpTransportFactory(httpTransportFactory)
-            .setTokenServerUri(tokenServer1)
-            .build();
-    OAuth2Credentials otherCredentials =
-        UserCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientSecret(CLIENT_SECRET)
-            .setRefreshToken("otherRefreshToken")
-            .setAccessToken(accessToken)
-            .setHttpTransportFactory(httpTransportFactory)
-            .setTokenServerUri(tokenServer1)
-            .build();
-    assertFalse(credentials.equals(otherCredentials));
-    assertFalse(otherCredentials.equals(credentials));
-  }
-
-  @Test
-  public void equals_false_scopes() throws IOException {
-    final URI tokenServer1 = URI.create("https://foo1.com/bar");
-    AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
-    MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
-    OAuth2Credentials credentials =
-        UserCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientSecret(CLIENT_SECRET)
-            .setRefreshToken(REFRESH_TOKEN)
-            .setAccessToken(accessToken)
-            .setScopes(SCOPES)
             .setHttpTransportFactory(httpTransportFactory)
             .setTokenServerUri(tokenServer1)
             .build();
@@ -498,7 +440,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     String expectedToString =
         String.format(
             "UserCredentials{requestMetadata=%s, temporaryAccess=%s, clientId=%s, refreshToken=%s, "
-                + "tokenServerUri=%s, transportFactoryClassName=%s, quotaProjectId=%s, scopes=%s}",
+                + "tokenServerUri=%s, transportFactoryClassName=%s, quotaProjectId=%s}",
             ImmutableMap.of(
                 AuthHttpConstants.AUTHORIZATION,
                 ImmutableList.of(OAuth2Utils.BEARER_PREFIX + accessToken.getTokenValue())),
@@ -507,8 +449,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
             REFRESH_TOKEN,
             tokenServer,
             MockTokenServerTransportFactory.class.getName(),
-            QUOTA_PROJECT,
-            DEFAULT_SCOPES);
+            QUOTA_PROJECT);
     assertEquals(expectedToString, credentials.toString());
   }
 
@@ -523,7 +464,6 @@ public class UserCredentialsTest extends BaseSerializationTest {
             .setClientSecret(CLIENT_SECRET)
             .setRefreshToken(REFRESH_TOKEN)
             .setAccessToken(accessToken)
-            .setScopes(SCOPES)
             .setHttpTransportFactory(transportFactory)
             .setTokenServerUri(tokenServer)
             .setQuotaProjectId(QUOTA_PROJECT)
@@ -534,7 +474,6 @@ public class UserCredentialsTest extends BaseSerializationTest {
             .setClientSecret(CLIENT_SECRET)
             .setRefreshToken(REFRESH_TOKEN)
             .setAccessToken(accessToken)
-            .setScopes(SCOPES)
             .setHttpTransportFactory(transportFactory)
             .setTokenServerUri(tokenServer)
             .setQuotaProjectId(QUOTA_PROJECT)
@@ -553,7 +492,6 @@ public class UserCredentialsTest extends BaseSerializationTest {
             .setClientSecret(CLIENT_SECRET)
             .setRefreshToken(REFRESH_TOKEN)
             .setAccessToken(accessToken)
-            .setScopes(SCOPES)
             .setHttpTransportFactory(transportFactory)
             .setTokenServerUri(tokenServer)
             .build();
