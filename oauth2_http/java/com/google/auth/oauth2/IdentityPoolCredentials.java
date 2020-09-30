@@ -234,7 +234,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
     protected Builder() {}
 
-    protected Builder(ExternalAccountCredentials credentials) {
+    protected Builder(IdentityPoolCredentials credentials) {
       super(credentials);
     }
 

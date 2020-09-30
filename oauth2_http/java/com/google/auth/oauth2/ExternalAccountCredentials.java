@@ -44,6 +44,7 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.oauth2.AwsCredentials.AwsCredentialSource;
 import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSource;
 import java.io.IOException;
 import java.io.InputStream;
@@ -87,8 +88,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   protected final String tokenInfoUrl;
   protected final String serviceAccountImpersonationUrl;
   protected final CredentialSource credentialSource;
+  protected final Collection<String> scopes;
 
-  @Nullable protected final Collection<String> scopes;
   @Nullable protected final String quotaProjectId;
   @Nullable protected final String clientId;
   @Nullable protected final String clientSecret;
@@ -212,7 +213,18 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
         json.containsKey("quota_project_id") ? (String) json.get("quota_project_id") : null;
 
     if (isAwsCredential(credentialSourceMap)) {
-      // TODO(lsirac) return AWS credential here.
+      return new AwsCredentials(
+          transportFactory,
+          audience,
+          subjectTokenType,
+          tokenUrl,
+          tokenInfoUrl,
+          new AwsCredentialSource(credentialSourceMap),
+          serviceAccountImpersonationUrl,
+          quotaProjectId,
+          clientId,
+          clientSecret,
+          /* scopes= */ null);
     }
     return new IdentityPoolCredentials(
         transportFactory,
@@ -312,6 +324,10 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
    */
   public abstract String retrieveSubjectToken() throws IOException;
 
+  public HttpTransportFactory getTransportFactory() {
+    return transportFactory;
+  }
+
   public String getAudience() {
     return audience;
   }
@@ -377,6 +393,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     protected Builder() {}
 
     protected Builder(ExternalAccountCredentials credentials) {
+      this.transportFactory = credentials.transportFactory;
       this.audience = credentials.audience;
       this.subjectTokenType = credentials.subjectTokenType;
       this.tokenUrl = credentials.tokenUrl;
