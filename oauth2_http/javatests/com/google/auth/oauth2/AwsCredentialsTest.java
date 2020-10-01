@@ -88,7 +88,7 @@ public class AwsCredentialsTest {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
-    final AwsCredentials awsCredential =
+    AwsCredentials awsCredential =
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setTokenUrl(transportFactory.transport.getStsUrl())
@@ -107,7 +107,7 @@ public class AwsCredentialsTest {
 
     transportFactory.transport.setExpireTime(getDefaultExpireTime());
 
-    final AwsCredentials awsCredential =
+    AwsCredentials awsCredential =
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setTokenUrl(transportFactory.transport.getStsUrl())

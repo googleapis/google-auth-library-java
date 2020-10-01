@@ -63,7 +63,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
     private String regionUrl;
     private String url;
-    private String regionalCredVerificationUrl;
+    private String regionalCredentialVerificationUrl;
 
     /**
      * The source of the 3P credential. The credential source map must contain the `region_url`,
@@ -74,13 +74,13 @@ public class AwsCredentials extends ExternalAccountCredentials {
      * <p>The `url` is the metadata server URL which is used to retrieve the AWS credentials.
      *
      * <p>The `regional_cred_verification_url` is the regional GetCallerIdentity action URL, used to
-     * determine the account ID and it's roles.
+     * determine the account ID and its roles.
      */
     AwsCredentialSource(Map<String, Object> credentialSourceMap) {
       super(credentialSourceMap);
       this.regionUrl = (String) checkNotNull(credentialSourceMap.get("region_url"));
       this.url = (String) checkNotNull(credentialSourceMap.get("url"));
-      this.regionalCredVerificationUrl =
+      this.regionalCredentialVerificationUrl =
           (String) checkNotNull(credentialSourceMap.get("regional_cred_verification_url"));
     }
   }
@@ -152,7 +152,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
                 credentials,
                 "POST",
                 ((AwsCredentialSource) credentialSource)
-                    .regionalCredVerificationUrl.replace("{region}", region),
+                    .regionalCredentialVerificationUrl.replace("{region}", region),
                 region)
             .setAdditionalHeaders(headers)
             .build();
@@ -209,7 +209,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
     token.put(
         "url",
         ((AwsCredentialSource) credentialSource)
-            .regionalCredVerificationUrl.replace("{region}", signature.getRegion()));
+            .regionalCredentialVerificationUrl.replace("{region}", signature.getRegion()));
     return token.toString();
   }
 

@@ -324,10 +324,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
    */
   public abstract String retrieveSubjectToken() throws IOException;
 
-  public HttpTransportFactory getTransportFactory() {
-    return transportFactory;
-  }
-
   public String getAudience() {
     return audience;
   }
