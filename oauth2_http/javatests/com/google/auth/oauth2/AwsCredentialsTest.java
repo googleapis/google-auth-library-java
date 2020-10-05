@@ -32,8 +32,11 @@
 package com.google.auth.oauth2;
 
 import static com.google.auth.TestUtils.getDefaultExpireTime;
-import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonParser;
@@ -97,7 +100,7 @@ public class AwsCredentialsTest {
                 .build();
 
     AccessToken accessToken = awsCredential.refreshAccessToken();
-    assertThat(accessToken.getTokenValue()).isEqualTo(transportFactory.transport.getAccessToken());
+    assertEquals(accessToken.getTokenValue(), transportFactory.transport.getAccessToken());
   }
 
   @Test
@@ -118,7 +121,7 @@ public class AwsCredentialsTest {
                 .build();
 
     AccessToken accessToken = awsCredential.refreshAccessToken();
-    assertThat(accessToken.getTokenValue()).isEqualTo(transportFactory.transport.getAccessToken());
+    assertEquals(accessToken.getTokenValue(), transportFactory.transport.getAccessToken());
   }
 
   @Test
@@ -140,13 +143,13 @@ public class AwsCredentialsTest {
 
     Map<String, String> headers = (Map<String, String>) json.get("headers");
 
-    assertThat(json.get("method")).isEqualTo("POST");
-    assertThat(json.get("url")).isEqualTo(GET_CALLER_IDENTITY_URL);
-    assertThat(headers.get("host")).isEqualTo(URI.create(GET_CALLER_IDENTITY_URL).getHost());
-    assertThat(headers.containsKey("x-amz-date")).isTrue();
-    assertThat(headers.get("x-amz-security-token")).isEqualTo("token");
-    assertThat(headers.get("x-goog-cloud-target-resource")).isEqualTo(awsCredential.getAudience());
-    assertThat(headers.get("Authorization")).isNotNull();
+    assertEquals(json.get("method"), "POST");
+    assertEquals(json.get("url"), GET_CALLER_IDENTITY_URL);
+    assertEquals(headers.get("host"), URI.create(GET_CALLER_IDENTITY_URL).getHost());
+    assertEquals(headers.get("x-amz-security-token"), "token");
+    assertEquals(headers.get("x-goog-cloud-target-resource"), awsCredential.getAudience());
+    assertTrue(headers.containsKey("x-amz-date"));
+    assertNotNull(headers.get("Authorization"));
   }
 
   @Test
@@ -174,7 +177,7 @@ public class AwsCredentialsTest {
               }
             });
 
-    assertThat(e.getMessage()).isEqualTo("Failed to retrieve AWS region.");
+    assertEquals(e.getMessage(), "Failed to retrieve AWS region.");
   }
 
   @Test
@@ -203,7 +206,7 @@ public class AwsCredentialsTest {
               }
             });
 
-    assertThat(e.getMessage()).isEqualTo("Failed to retrieve AWS IAM role.");
+    assertEquals(e.getMessage(), "Failed to retrieve AWS IAM role.");
   }
 
   @Test
@@ -232,7 +235,7 @@ public class AwsCredentialsTest {
               }
             });
 
-    assertThat(e.getMessage()).isEqualTo("Failed to retrieve AWS credentials.");
+    assertEquals(e.getMessage(), "Failed to retrieve AWS credentials.");
   }
 
   @Test
@@ -243,9 +246,9 @@ public class AwsCredentialsTest {
 
     AwsSecurityCredentials credentials = testAwsCredentials.getAwsSecurityCredentials();
 
-    assertThat(credentials.getAccessKeyId()).isEqualTo("awsAccessKeyId");
-    assertThat(credentials.getSecretAccessKey()).isEqualTo("awsSecretAccessKey");
-    assertThat(credentials.getToken()).isNull();
+    assertEquals(credentials.getAccessKeyId(), "awsAccessKeyId");
+    assertEquals(credentials.getSecretAccessKey(), "awsSecretAccessKey");
+    assertNull(credentials.getToken());
   }
 
   @Test
@@ -257,9 +260,9 @@ public class AwsCredentialsTest {
 
     AwsSecurityCredentials credentials = testAwsCredentials.getAwsSecurityCredentials();
 
-    assertThat(credentials.getAccessKeyId()).isEqualTo("awsAccessKeyId");
-    assertThat(credentials.getSecretAccessKey()).isEqualTo("awsSecretAccessKey");
-    assertThat(credentials.getToken()).isEqualTo("token");
+    assertEquals(credentials.getAccessKeyId(), "awsAccessKeyId");
+    assertEquals(credentials.getSecretAccessKey(), "awsSecretAccessKey");
+    assertEquals(credentials.getToken(), "token");
   }
 
   @Test
@@ -276,9 +279,9 @@ public class AwsCredentialsTest {
 
     AwsSecurityCredentials credentials = awsCredential.getAwsSecurityCredentials();
 
-    assertThat(credentials.getAccessKeyId()).isEqualTo("accessKeyId");
-    assertThat(credentials.getSecretAccessKey()).isEqualTo("secretAccessKey");
-    assertThat(credentials.getToken()).isEqualTo("token");
+    assertEquals(credentials.getAccessKeyId(), "accessKeyId");
+    assertEquals(credentials.getSecretAccessKey(), "secretAccessKey");
+    assertEquals(credentials.getToken(), "token");
   }
 
   @Test
@@ -296,17 +299,18 @@ public class AwsCredentialsTest {
 
     AwsCredentials newCredentials = (AwsCredentials) credentials.createScoped(newScopes);
 
-    assertThat(newCredentials.getAudience()).isEqualTo(credentials.getAudience());
-    assertThat(newCredentials.getSubjectTokenType()).isEqualTo(credentials.getSubjectTokenType());
-    assertThat(newCredentials.getTokenUrl()).isEqualTo(credentials.getTokenUrl());
-    assertThat(newCredentials.getTokenInfoUrl()).isEqualTo(credentials.getTokenInfoUrl());
-    assertThat(newCredentials.getServiceAccountImpersonationUrl())
-        .isEqualTo(credentials.getServiceAccountImpersonationUrl());
-    assertThat(newCredentials.getCredentialSource()).isEqualTo(credentials.getCredentialSource());
-    assertThat(newCredentials.getQuotaProjectId()).isEqualTo(credentials.getQuotaProjectId());
-    assertThat(newCredentials.getClientId()).isEqualTo(credentials.getClientId());
-    assertThat(newCredentials.getClientSecret()).isEqualTo(credentials.getClientSecret());
-    assertThat(newCredentials.getScopes()).isEqualTo(newScopes);
+    assertEquals(newCredentials.getAudience(), credentials.getAudience());
+    assertEquals(newCredentials.getSubjectTokenType(), credentials.getSubjectTokenType());
+    assertEquals(newCredentials.getTokenUrl(), credentials.getTokenUrl());
+    assertEquals(newCredentials.getTokenInfoUrl(), credentials.getTokenInfoUrl());
+    assertEquals(
+        newCredentials.getServiceAccountImpersonationUrl(),
+        credentials.getServiceAccountImpersonationUrl());
+    assertEquals(newCredentials.getCredentialSource(), credentials.getCredentialSource());
+    assertEquals(newCredentials.getQuotaProjectId(), credentials.getQuotaProjectId());
+    assertEquals(newCredentials.getClientId(), credentials.getClientId());
+    assertEquals(newCredentials.getClientSecret(), credentials.getClientSecret());
+    assertEquals(newCredentials.getScopes(), newScopes);
   }
 
   private AwsCredentialSource buildAwsCredentialSource(
