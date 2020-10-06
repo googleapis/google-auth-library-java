@@ -100,7 +100,8 @@ public class AwsCredentialsTest {
                 .build();
 
     AccessToken accessToken = awsCredential.refreshAccessToken();
-    assertEquals(accessToken.getTokenValue(), transportFactory.transport.getAccessToken());
+
+    assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
   }
 
   @Test
@@ -121,7 +122,8 @@ public class AwsCredentialsTest {
                 .build();
 
     AccessToken accessToken = awsCredential.refreshAccessToken();
-    assertEquals(accessToken.getTokenValue(), transportFactory.transport.getAccessToken());
+
+    assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
   }
 
   @Test
