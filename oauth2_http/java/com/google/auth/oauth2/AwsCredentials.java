@@ -31,8 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
@@ -49,7 +47,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
- * AWS credentials representing a 3PI for calling Google APIs.
+ * AWS credentials representing a third-party identity for calling Google APIs.
  *
  * <p>By default, attempts to exchange the 3PI credential for a GCP access token.
  */
@@ -66,7 +64,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
     private String regionalCredentialVerificationUrl;
 
     /**
-     * The source of the 3P credential. The credential source map must contain the `region_url`,
+     * The source of the AWS credential. The credential source map must contain the `region_url`,
      * `url, and `regional_cred_verification_url` entries.
      *
      * <p>The `region_url` is used to retrieve to targeted region.
@@ -78,10 +76,23 @@ public class AwsCredentials extends ExternalAccountCredentials {
      */
     AwsCredentialSource(Map<String, Object> credentialSourceMap) {
       super(credentialSourceMap);
-      this.regionUrl = (String) checkNotNull(credentialSourceMap.get("region_url"));
-      this.url = (String) checkNotNull(credentialSourceMap.get("url"));
+      if (!credentialSourceMap.containsKey("region_url")) {
+        throw new IllegalArgumentException(
+            "A region_url representing the targeted region must be specified.");
+      }
+      if (!credentialSourceMap.containsKey("url")) {
+        throw new IllegalArgumentException(
+            "A url representing the metadata server endpoint must be specified.");
+      }
+      if (!credentialSourceMap.containsKey("regional_cred_verification_url")) {
+        throw new IllegalArgumentException(
+            "A regional_cred_verification_url representing the"
+                + " GetCallerIdentity action URL must be specified.");
+      }
+      this.regionUrl = (String) credentialSourceMap.get("region_url");
+      this.url = (String) credentialSourceMap.get("url");
       this.regionalCredentialVerificationUrl =
-          (String) checkNotNull(credentialSourceMap.get("regional_cred_verification_url"));
+          (String) credentialSourceMap.get("regional_cred_verification_url");
     }
   }
 
