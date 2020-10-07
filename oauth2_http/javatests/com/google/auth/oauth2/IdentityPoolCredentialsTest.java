@@ -108,7 +108,8 @@ public class IdentityPoolCredentialsTest {
     assertEquals("subjectTokenType", newCredentials.getSubjectTokenType());
     assertEquals("tokenUrl", newCredentials.getTokenUrl());
     assertEquals("tokenInfoUrl", newCredentials.getTokenInfoUrl());
-    assertEquals("serviceAccountImpersonationUrl", newCredentials.getServiceAccountImpersonationUrl());
+    assertEquals(
+        "serviceAccountImpersonationUrl", newCredentials.getServiceAccountImpersonationUrl());
     assertEquals(FILE_CREDENTIAL_SOURCE, newCredentials.getCredentialSource());
     assertEquals(newScopes, newCredentials.getScopes());
     assertEquals("quotaProjectId", newCredentials.getQuotaProjectId());
@@ -207,7 +208,9 @@ public class IdentityPoolCredentialsTest {
               }
             });
 
-    assertEquals(String.format("Invalid credential location. The file at %s does not exist.", path), e.getMessage());
+    assertEquals(
+        String.format("Invalid credential location. The file at %s does not exist.", path),
+        e.getMessage());
   }
 
   @Test
@@ -280,8 +283,9 @@ public class IdentityPoolCredentialsTest {
               }
             });
 
-    assertEquals(String.format(
-        "Error getting subject token from metadata server: %s", response.getMessage()),
+    assertEquals(
+        String.format(
+            "Error getting subject token from metadata server: %s", response.getMessage()),
         e.getMessage());
   }
 
@@ -338,7 +342,8 @@ public class IdentityPoolCredentialsTest {
               }
             });
 
-    assertEquals("Missing credential source file location or URL. At least one must be specified.",
+    assertEquals(
+        "Missing credential source file location or URL. At least one must be specified.",
         e.getMessage());
   }
 
@@ -383,7 +388,8 @@ public class IdentityPoolCredentialsTest {
               }
             });
 
-    assertEquals("When specifying a JSON credential type, the subject_token_field_name must be set.",
+    assertEquals(
+        "When specifying a JSON credential type, the subject_token_field_name must be set.",
         e.getMessage());
   }
 
