@@ -32,11 +32,13 @@
 package com.google.auth.oauth2;
 
 import static com.google.auth.TestUtils.getDefaultExpireTime;
+import static com.google.auth.oauth2.OAuth2Utils.JSON_FACTORY;
 import static com.google.auth.oauth2.OAuth2Utils.UTF_8;
-import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import com.google.api.client.http.HttpTransport;
+import com.google.api.client.json.GenericJson;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSource;
 import java.io.ByteArrayInputStream;
@@ -55,23 +57,10 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class IdentityPoolCredentialsTest {
 
-  private static final String AUDIENCE = "audience";
-  private static final String SUBJECT_TOKEN_TYPE = "subjectTokenType";
-  private static final String TOKEN_URL = "tokenUrl";
-  private static final String TOKEN_INFO_URL = "tokenInfoUrl";
-  private static final String SERVICE_ACCOUNT_IMPERSONATION_URL = "tokenInfoUrl";
-  private static final String QUOTA_PROJECT_ID = "quotaProjectId";
-  private static final String CLIENT_ID = "clientId";
-  private static final String CLIENT_SECRET = "clientSecret";
-
-  private static final String FILE = "file";
-  private static final String URL = "url";
-  private static final String HEADERS = "headers";
-
   private static final Map<String, Object> FILE_CREDENTIAL_SOURCE_MAP =
       new HashMap<String, Object>() {
         {
-          put(FILE, FILE);
+          put("file", "file");
         }
       };
 
@@ -82,10 +71,10 @@ public class IdentityPoolCredentialsTest {
       (IdentityPoolCredentials)
           IdentityPoolCredentials.newBuilder()
               .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-              .setAudience(AUDIENCE)
-              .setSubjectTokenType(SUBJECT_TOKEN_TYPE)
-              .setTokenUrl(TOKEN_URL)
-              .setTokenInfoUrl(TOKEN_INFO_URL)
+              .setAudience("audience")
+              .setSubjectTokenType("subjectTokenType")
+              .setTokenUrl("tokenUrl")
+              .setTokenInfoUrl("tokenInfoUrl")
               .setCredentialSource(FILE_CREDENTIAL_SOURCE)
               .build();
 
@@ -104,10 +93,10 @@ public class IdentityPoolCredentialsTest {
   public void createdScoped_clonedCredentialWithAddedScopes() {
     GoogleCredentials credentials =
         IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
-            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-            .setQuotaProjectId(QUOTA_PROJECT_ID)
-            .setClientId(CLIENT_ID)
-            .setClientSecret(CLIENT_SECRET)
+            .setServiceAccountImpersonationUrl("serviceAccountImpersonationUrl")
+            .setQuotaProjectId("quotaProjectId")
+            .setClientId("clientId")
+            .setClientSecret("clientSecret")
             .build();
 
     List<String> newScopes = Arrays.asList("scope1", "scope2");
@@ -115,17 +104,16 @@ public class IdentityPoolCredentialsTest {
     IdentityPoolCredentials newCredentials =
         (IdentityPoolCredentials) credentials.createScoped(newScopes);
 
-    assertThat(newCredentials.getAudience()).isEqualTo(AUDIENCE);
-    assertThat(newCredentials.getSubjectTokenType()).isEqualTo(SUBJECT_TOKEN_TYPE);
-    assertThat(newCredentials.getTokenUrl()).isEqualTo(TOKEN_URL);
-    assertThat(newCredentials.getTokenInfoUrl()).isEqualTo(TOKEN_INFO_URL);
-    assertThat(newCredentials.getServiceAccountImpersonationUrl())
-        .isEqualTo(SERVICE_ACCOUNT_IMPERSONATION_URL);
-    assertThat(newCredentials.getCredentialSource()).isEqualTo(FILE_CREDENTIAL_SOURCE);
-    assertThat(newCredentials.getScopes()).isEqualTo(newScopes);
-    assertThat(newCredentials.getQuotaProjectId()).isEqualTo(QUOTA_PROJECT_ID);
-    assertThat(newCredentials.getClientId()).isEqualTo(CLIENT_ID);
-    assertThat(newCredentials.getClientSecret()).isEqualTo(CLIENT_SECRET);
+    assertEquals("audience", newCredentials.getAudience());
+    assertEquals("subjectTokenType", newCredentials.getSubjectTokenType());
+    assertEquals("tokenUrl", newCredentials.getTokenUrl());
+    assertEquals("tokenInfoUrl", newCredentials.getTokenInfoUrl());
+    assertEquals("serviceAccountImpersonationUrl", newCredentials.getServiceAccountImpersonationUrl());
+    assertEquals(FILE_CREDENTIAL_SOURCE, newCredentials.getCredentialSource());
+    assertEquals(newScopes, newCredentials.getScopes());
+    assertEquals("quotaProjectId", newCredentials.getQuotaProjectId());
+    assertEquals("clientId", newCredentials.getClientId());
+    assertEquals("clientSecret", newCredentials.getClientSecret());
   }
 
   @Test
@@ -139,7 +127,7 @@ public class IdentityPoolCredentialsTest {
         new ByteArrayInputStream(credential.getBytes(UTF_8)), file.getAbsolutePath());
 
     Map<String, Object> credentialSourceMap = new HashMap<>();
-    credentialSourceMap.put(FILE, file.getAbsolutePath());
+    credentialSourceMap.put("file", file.getAbsolutePath());
     IdentityPoolCredentialSource credentialSource =
         new IdentityPoolCredentialSource(credentialSourceMap);
 
@@ -150,14 +138,56 @@ public class IdentityPoolCredentialsTest {
                 .build();
 
     String subjectToken = credentials.retrieveSubjectToken();
-    assertThat(subjectToken).isEqualTo(credential);
+
+    assertEquals(credential, subjectToken);
+  }
+
+  @Test
+  public void retrieveSubjectToken_fileSourcedWithJsonFormat() throws IOException {
+    File file =
+        File.createTempFile("RETRIEVE_SUBJECT_TOKEN", /* suffix= */ null, /* directory= */ null);
+    file.deleteOnExit();
+
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    transportFactory.transport.setMetadataServerContentType("json");
+
+    Map<String, Object> credentialSourceMap = new HashMap<>();
+    Map<String, String> formatMap = new HashMap<>();
+    formatMap.put("type", "json");
+    formatMap.put("subject_token_field_name", "subjectToken");
+
+    credentialSourceMap.put("file", file.getAbsolutePath());
+    credentialSourceMap.put("format", formatMap);
+
+    IdentityPoolCredentialSource credentialSource =
+        new IdentityPoolCredentialSource(credentialSourceMap);
+
+    GenericJson response = new GenericJson();
+    response.setFactory(JSON_FACTORY);
+    response.put("subjectToken", "subjectToken");
+
+    OAuth2Utils.writeInputStreamToFile(
+        new ByteArrayInputStream(response.toString().getBytes(UTF_8)), file.getAbsolutePath());
+
+    IdentityPoolCredentials credential =
+        (IdentityPoolCredentials)
+            IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+                .setHttpTransportFactory(transportFactory)
+                .setCredentialSource(credentialSource)
+                .build();
+
+    String subjectToken = credential.retrieveSubjectToken();
+
+    assertEquals("subjectToken", subjectToken);
   }
 
   @Test
   public void retrieveSubjectToken_noFile_throws() {
     Map<String, Object> credentialSourceMap = new HashMap<>();
     String path = "badPath";
-    credentialSourceMap.put(FILE, path);
+    credentialSourceMap.put("file", path);
     IdentityPoolCredentialSource credentialSource =
         new IdentityPoolCredentialSource(credentialSourceMap);
 
@@ -177,9 +207,7 @@ public class IdentityPoolCredentialsTest {
               }
             });
 
-    assertThat(e.getMessage())
-        .isEqualTo(
-            String.format("Invalid credential location. The file at %s does not exist.", path));
+    assertEquals(String.format("Invalid credential location. The file at %s does not exist.", path), e.getMessage());
   }
 
   @Test
@@ -196,7 +224,34 @@ public class IdentityPoolCredentialsTest {
                 .build();
 
     String subjectToken = credential.retrieveSubjectToken();
-    assertThat(subjectToken).isEqualTo(transportFactory.transport.getSubjectToken());
+
+    assertEquals(transportFactory.transport.getSubjectToken(), subjectToken);
+  }
+
+  @Test
+  public void retrieveSubjectToken_urlSourcedWithJsonFormat() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    transportFactory.transport.setMetadataServerContentType("json");
+
+    Map<String, String> formatMap = new HashMap<>();
+    formatMap.put("type", "json");
+    formatMap.put("subject_token_field_name", "subjectToken");
+
+    IdentityPoolCredentialSource credentialSource =
+        buildUrlBasedCredentialSource(transportFactory.transport.getMetadataUrl(), formatMap);
+
+    IdentityPoolCredentials credential =
+        (IdentityPoolCredentials)
+            IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+                .setHttpTransportFactory(transportFactory)
+                .setCredentialSource(credentialSource)
+                .build();
+
+    String subjectToken = credential.retrieveSubjectToken();
+
+    assertEquals(transportFactory.transport.getSubjectToken(), subjectToken);
   }
 
   @Test
@@ -225,10 +280,9 @@ public class IdentityPoolCredentialsTest {
               }
             });
 
-    assertThat(e.getMessage())
-        .isEqualTo(
-            String.format(
-                "Error getting subject token from metadata server: %s", response.getMessage()));
+    assertEquals(String.format(
+        "Error getting subject token from metadata server: %s", response.getMessage()),
+        e.getMessage());
   }
 
   @Test
@@ -246,7 +300,8 @@ public class IdentityPoolCredentialsTest {
                 .build();
 
     AccessToken accessToken = credential.refreshAccessToken();
-    assertThat(accessToken.getTokenValue()).isEqualTo(transportFactory.transport.getAccessToken());
+
+    assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
   }
 
   @Test
@@ -267,15 +322,86 @@ public class IdentityPoolCredentialsTest {
                 .build();
 
     AccessToken accessToken = credential.refreshAccessToken();
-    assertThat(accessToken.getTokenValue()).isEqualTo(transportFactory.transport.getAccessToken());
+
+    assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
   }
 
+  @Test
+  public void identityPoolCredentialSource_invalidSourceType() {
+    IllegalArgumentException e =
+        assertThrows(
+            IllegalArgumentException.class,
+            new ThrowingRunnable() {
+              @Override
+              public void run() {
+                new IdentityPoolCredentialSource(new HashMap<String, Object>());
+              }
+            });
+
+    assertEquals("Missing credential source file location or URL. At least one must be specified.",
+        e.getMessage());
+  }
+
+  @Test
+  public void identityPoolCredentialSource_invalidFormatType() {
+    final Map<String, Object> credentialSourceMap = new HashMap<>();
+    credentialSourceMap.put("url", "url");
+
+    Map<String, String> format = new HashMap<>();
+    format.put("type", "unsupportedType");
+    credentialSourceMap.put("format", format);
+
+    IllegalArgumentException e =
+        assertThrows(
+            IllegalArgumentException.class,
+            new ThrowingRunnable() {
+              @Override
+              public void run() {
+                new IdentityPoolCredentialSource(credentialSourceMap);
+              }
+            });
+
+    assertEquals("Invalid credential source format type: unsupportedType.", e.getMessage());
+  }
+
+  @Test
+  public void identityPoolCredentialSource_subjectTokenFieldNameUnset() {
+    final Map<String, Object> credentialSourceMap = new HashMap<>();
+    credentialSourceMap.put("url", "url");
+
+    Map<String, String> format = new HashMap<>();
+    format.put("type", "json");
+    credentialSourceMap.put("format", format);
+
+    IllegalArgumentException e =
+        assertThrows(
+            IllegalArgumentException.class,
+            new ThrowingRunnable() {
+              @Override
+              public void run() {
+                new IdentityPoolCredentialSource(credentialSourceMap);
+              }
+            });
+
+    assertEquals("When specifying a JSON credential type, the subject_token_field_name must be set.",
+        e.getMessage());
+  }
+
+  @Test
+  public void identityPoolCredentialSource_jsonFormatTypeWithoutSubjectTokenFieldName() {}
+
   private IdentityPoolCredentialSource buildUrlBasedCredentialSource(String url) {
+    return buildUrlBasedCredentialSource(url, /* formatMap= */ null);
+  }
+
+  private IdentityPoolCredentialSource buildUrlBasedCredentialSource(
+      String url, Map<String, String> formatMap) {
     Map<String, Object> credentialSourceMap = new HashMap<>();
     Map<String, String> headers = new HashMap<>();
     headers.put("Metadata-Flavor", "Google");
-    credentialSourceMap.put(URL, url);
-    credentialSourceMap.put(HEADERS, headers);
+    credentialSourceMap.put("url", url);
+    credentialSourceMap.put("headers", headers);
+    credentialSourceMap.put("format", formatMap);
 
     return new IdentityPoolCredentialSource(credentialSourceMap);
   }
