@@ -111,7 +111,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
         credentialSourceType = IdentityPoolCredentialSourceType.URL;
       } else {
         throw new IllegalArgumentException(
-            "Missing credential source file location or URL. At " + "least one must be specified.");
+            "Missing credential source file location or URL. At least one must be specified.");
       }
 
       Map<String, String> headersMap = (Map<String, String>) credentialSourceMap.get("headers");
