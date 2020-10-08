@@ -41,9 +41,12 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSource.CredentialFormatType;
 import com.google.common.annotations.VisibleForTesting;
-import java.io.ByteArrayInputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Paths;
@@ -211,22 +214,28 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
               "Invalid credential location. The file at %s does not exist.", credentialFilePath));
     }
     try {
-      return parseToken(Files.readAllBytes(Paths.get(credentialFilePath)));
+      return parseToken(new FileInputStream(new File(credentialFilePath)));
     } catch (IOException e) {
       throw new IOException(
           "Error when attempting to read the subject token from the credential file.", e);
     }
   }
 
-  private String parseToken(byte[] token) throws IOException {
+  private String parseToken(InputStream inputStream) throws IOException {
     if (identityPoolCredentialSource.credentialFormatType == CredentialFormatType.TEXT) {
-      return new String(token);
+      BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+      StringBuilder token = new StringBuilder();
+      String line;
+      while ((line = reader.readLine()) != null) {
+        token.append(line);
+      }
+      return token.toString();
     }
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     JsonObjectParser parser = new JsonObjectParser(jsonFactory);
     GenericJson fileContents =
-        parser.parseAndClose(new ByteArrayInputStream(token), OAuth2Utils.UTF_8, GenericJson.class);
+        parser.parseAndClose(inputStream, OAuth2Utils.UTF_8, GenericJson.class);
 
     if (!fileContents.containsKey(identityPoolCredentialSource.subjectTokenFieldName)) {
       throw new IOException("Invalid subject token field name. No subject token was found.");
@@ -250,7 +259,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
     try {
       HttpResponse response = request.execute();
-      return parseToken(response.parseAsString().getBytes(StandardCharsets.UTF_8));
+      return parseToken(response.getContent());
     } catch (IOException e) {
       throw new IOException(
           String.format("Error getting subject token from metadata server: %s", e.getMessage()), e);
