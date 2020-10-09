@@ -146,11 +146,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
   public String retrieveSubjectToken() throws IOException {
     // The targeted region is required to generate the signed request. The regional
     // endpoint must also be used.
-    String region = retrieveResource(((AwsCredentialSource) credentialSource).regionUrl, "region");
-
-    // There is an extra appended character that must be removed. If `us-east-1b` is returned,
-    // we want `us-east-1`.
-    region = region.substring(0, region.length() - 1);
+    String region = getAwsRegion();
 
     AwsSecurityCredentials credentials = getAwsSecurityCredentials();
 
@@ -222,6 +218,19 @@ public class AwsCredentials extends ExternalAccountCredentials {
         ((AwsCredentialSource) credentialSource)
             .regionalCredentialVerificationUrl.replace("{region}", signature.getRegion()));
     return token.toString();
+  }
+
+  private String getAwsRegion() throws IOException {
+    // For AWS Lambda, the region is retrieved through the AWS_REGION environment variable.
+    String region = getEnv("AWS_REGION");
+    if (region != null) {
+      return region;
+    }
+    region = retrieveResource(((AwsCredentialSource) credentialSource).regionUrl, "region");
+
+    // There is an extra appended character that must be removed. If `us-east-1b` is returned,
+    // we want `us-east-1`.
+    return region.substring(0, region.length() - 1);
   }
 
   @VisibleForTesting
