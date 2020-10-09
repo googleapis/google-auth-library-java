@@ -41,12 +41,14 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSource.CredentialFormatType;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.io.CharStreams;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Paths;
@@ -223,19 +225,15 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   private String parseToken(InputStream inputStream) throws IOException {
     if (identityPoolCredentialSource.credentialFormatType == CredentialFormatType.TEXT) {
-      BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-      StringBuilder token = new StringBuilder();
-      String line;
-      while ((line = reader.readLine()) != null) {
-        token.append(line);
-      }
-      return token.toString();
+      BufferedReader reader =
+          new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+      return CharStreams.toString(reader);
     }
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     JsonObjectParser parser = new JsonObjectParser(jsonFactory);
     GenericJson fileContents =
-        parser.parseAndClose(inputStream, OAuth2Utils.UTF_8, GenericJson.class);
+        parser.parseAndClose(inputStream, StandardCharsets.UTF_8, GenericJson.class);
 
     if (!fileContents.containsKey(identityPoolCredentialSource.subjectTokenFieldName)) {
       throw new IOException("Invalid subject token field name. No subject token was found.");
