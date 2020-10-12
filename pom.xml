@@ -60,7 +60,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.google.http.version>1.36.0</project.google.http.version>
-    <project.junit.version>4.13</project.junit.version>
+    <project.junit.version>4.13.1</project.junit.version>
     <project.guava.version>29.0-android</project.guava.version>
     <project.appengine.version>1.9.78</project.appengine.version>
     <project.autovalue.version>1.7.4</project.autovalue.version>
