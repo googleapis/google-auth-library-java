@@ -48,7 +48,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class JwtCredentialsTest extends BaseSerializationTest {
   private static final String PRIVATE_KEY_ID = "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
   private static final String PRIVATE_KEY =
