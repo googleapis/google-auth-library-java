@@ -40,11 +40,13 @@ import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.UrlEncodedContent;
+import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Preconditions;
+import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
 import java.io.ByteArrayInputStream;
@@ -56,12 +58,21 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.logging.Logger;
+import com.google.api.client.http.javanet.NetHttpTransport;
+
 
 /** OAuth2 Credentials representing a user's identity and consent. */
-public class UserCredentials extends GoogleCredentials implements QuotaProjectIdProvider {
+public class UserCredentials extends GoogleCredentials implements QuotaProjectIdProvider, IdTokenProvider {
+
+  private static final Logger LOGGER = Logger.getLogger(HttpCredentialsAdapter.class.getName());
 
   private static final String GRANT_TYPE = "refresh_token";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
+  private static final String RESOURCE_MANAGER_API = "https://cloudresourcemanager.googleapis.com/v1/";
+  private static final String SERVICE_ACCOUNT_CREDENTIALS_API = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/";
+  private static final String SERVICE_ACCOUNT_CREDENTIAL_ENV_VAR = "SERVICE_ACCOUNT_APPLICATION_CREDENTIALS";
+  private static final String DEFAULT_COMPUTE_ENGINE_SERVICE_ACCOUNT_SUFFIX = "-compute@developer.gserviceaccount.com";
   private static final long serialVersionUID = -4800758775038679176L;
 
   private final String clientId;
@@ -70,6 +81,7 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
   private final URI tokenServerUri;
   private final String transportFactoryClassName;
   private final String quotaProjectId;
+  private String serviceAccountCredentialEmail;
 
   private transient HttpTransportFactory transportFactory;
 
@@ -338,6 +350,67 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
   @Override
   public String getQuotaProjectId() {
     return quotaProjectId;
+  }
+
+  @Override
+  public IdToken idTokenWithAudience(String targetAudience, List<Option> options) throws IOException {
+
+    if (targetAudience == null || targetAudience.equals("")) {
+      throw new IOException("TargetAudience can't be null or empty");
+    }
+
+    HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory(new HttpCredentialsAdapter(this));
+
+    //First time, check if the instance attribute has been initialized or not
+    if (serviceAccountCredentialEmail == null){
+      LOGGER.warning("ID Token generation with audience and based on user credential is not possible. \n" +
+              "A service account must be used. You can define it in the environment variable\n" +
+              SERVICE_ACCOUNT_CREDENTIAL_ENV_VAR + "\nIf not set, default Compute Engine default " +
+              "service account will be used\nYou need to have the role 'Service Account Token Creator' " +
+              "on the service account.");
+
+      // Get the service account in the Environment Variables
+      serviceAccountCredentialEmail = System.getenv(SERVICE_ACCOUNT_CREDENTIAL_ENV_VAR);
+
+      // If missing, use the compute engine default service account by default
+      if (serviceAccountCredentialEmail == null || serviceAccountCredentialEmail.equals("")){
+        // If quotaProjectId is null, you can't determine the current project
+        if (quotaProjectId == null){
+          throw new IOException(
+                  "QuotaProjectId can't be null to determine the default service account to use\n" +
+                          "Use 'gcloud auth application-default set-quota-project' to set it");
+        }
+
+        // Inform the user that no defined service account is found. Use the Compute Engine Default service account
+        serviceAccountCredentialEmail = getComputeEngineDefaultServiceAccountEmail(getQuotaProjectId(),requestFactory);
+      }
+      LOGGER.info("The service account with email '" + serviceAccountCredentialEmail + "' is used");
+    }
+
+    GenericData requestBody = new GenericData();
+    requestBody.put("audience",targetAudience);
+    requestBody.put("includeEmail", true);
+    JsonHttpContent jsonRequestBody = new JsonHttpContent(JSON_FACTORY,requestBody);
+
+    HttpRequest request = requestFactory.buildPostRequest(
+            new GenericUrl(SERVICE_ACCOUNT_CREDENTIALS_API +
+                    serviceAccountCredentialEmail+":generateIdToken"),jsonRequestBody);
+    request.setParser(new JsonObjectParser(JSON_FACTORY));
+    HttpResponse httpResponse = request.execute();
+    GenericData responseData = httpResponse.parseAs(GenericData.class);
+
+    return IdToken.create(responseData.get("token").toString());
+  }
+
+  private String getComputeEngineDefaultServiceAccountEmail(String projectId, HttpRequestFactory requestFactory) throws IOException {
+    String url = RESOURCE_MANAGER_API + "projects/" + projectId;
+
+    HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(url));
+    request.setParser(new JsonObjectParser(JSON_FACTORY));
+    HttpResponse httpResponse = request.execute();
+    GenericData responseData = httpResponse.parseAs(GenericData.class);
+
+    return responseData.get("projectNumber").toString() + DEFAULT_COMPUTE_ENGINE_SERVICE_ACCOUNT_SUFFIX;
   }
 
   public static class Builder extends GoogleCredentials.Builder {
