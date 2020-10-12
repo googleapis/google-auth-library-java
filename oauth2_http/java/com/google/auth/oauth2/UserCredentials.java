@@ -48,7 +48,6 @@ import com.google.api.client.util.Preconditions;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.Beta;
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableSet;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,9 +57,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.ArrayList;
 
 /** OAuth2 Credentials representing a user's identity and consent. */
 public class UserCredentials extends GoogleCredentials
