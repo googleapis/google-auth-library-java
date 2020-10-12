@@ -253,7 +253,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
             e);
       }
     }
-    LOGGER.log(Level.INFO, "Failed to detect whether we are running on Google Compute Engine.");
+    LOGGER.log(Level.FINE, "Failed to detect whether we are running on Google Compute Engine.");
     return false;
   }
 
