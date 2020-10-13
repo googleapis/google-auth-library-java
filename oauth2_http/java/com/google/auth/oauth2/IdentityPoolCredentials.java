@@ -96,9 +96,9 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
      * <p>If this is URL-based 3p credential, the metadata server URL can be retrieved using the
      * `url` key.
      *
-     * <p>The 3P credential can be provided in different formats, such as text or JSON. The format
-     * can be specified using the `format` header, which will return a map with keys `type` and
-     * `subject_token_field_name`. If the `type` is json, the `subject_token_field_name` must be
+     * <p>The third party credential can be provided in different formats, such as text or JSON. The
+     * format can be specified using the `format` header, which will return a map with keys `type`
+     * and `subject_token_field_name`. If the `type` is json, the `subject_token_field_name` must be
      * provided. If no format is provided, we expect the token to be in the raw text format.
      *
      * <p>Optional headers can be present, and should be keyed by `headers`.
@@ -129,7 +129,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       Map<String, String> formatMap = (Map<String, String>) credentialSourceMap.get("format");
       if (formatMap != null && formatMap.containsKey("type")) {
         String type = formatMap.get("type");
-        if (!type.equals("text") && !type.equals("json")) {
+        if (type == null || (!type.equals("text") && !type.equals("json"))) {
           throw new IllegalArgumentException(
               String.format("Invalid credential source format type: %s.", type));
         }

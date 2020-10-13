@@ -370,6 +370,28 @@ public class IdentityPoolCredentialsTest {
   }
 
   @Test
+  public void identityPoolCredentialSource_nullFormatType() {
+    final Map<String, Object> credentialSourceMap = new HashMap<>();
+    credentialSourceMap.put("url", "url");
+
+    Map<String, String> format = new HashMap<>();
+    format.put("type", null);
+    credentialSourceMap.put("format", format);
+
+    IllegalArgumentException e =
+        assertThrows(
+            IllegalArgumentException.class,
+            new ThrowingRunnable() {
+              @Override
+              public void run() {
+                new IdentityPoolCredentialSource(credentialSourceMap);
+              }
+            });
+
+    assertEquals("Invalid credential source format type: null.", e.getMessage());
+  }
+
+  @Test
   public void identityPoolCredentialSource_subjectTokenFieldNameUnset() {
     final Map<String, Object> credentialSourceMap = new HashMap<>();
     credentialSourceMap.put("url", "url");
