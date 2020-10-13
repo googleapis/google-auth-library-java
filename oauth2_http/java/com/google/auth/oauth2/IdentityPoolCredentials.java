@@ -40,7 +40,6 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSource.CredentialFormatType;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.CharStreams;
 import java.io.BufferedReader;
 import java.io.File;
@@ -69,8 +68,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
    * The IdentityPool credential source. Dictates the retrieval method of the 3PI credential, which
    * can either be through a metadata server or a local file.
    */
-  @VisibleForTesting
-  static class IdentityPoolCredentialSource extends CredentialSource {
+  static class IdentityPoolCredentialSource extends ExternalAccountCredentials.CredentialSource {
 
     enum IdentityPoolCredentialSourceType {
       FILE,
