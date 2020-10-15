@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.auth</groupId>
   <artifactId>google-auth-library-parent</artifactId>
-  <version>0.21.2-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
+  <version>0.22.1-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
   <packaging>pom</packaging>
   <name>Google Auth Library for Java</name>
   <description>Client libraries providing authentication and
@@ -59,7 +59,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.google.http.version>1.36.0</project.google.http.version>
+    <project.google.http.version>1.37.0</project.google.http.version>
     <project.junit.version>4.13.1</project.junit.version>
     <project.guava.version>29.0-android</project.guava.version>
     <project.appengine.version>1.9.78</project.appengine.version>
