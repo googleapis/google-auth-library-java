@@ -61,20 +61,23 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
       "urn:ietf:params:oauth:grant-type:token-exchange";
   private static final String CLOUD_PLATFORM_SCOPE =
       "https://www.googleapis.com/auth/cloud-platform";
+  private static final String ISSUED_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:access_token";
 
+  private static final String AWS_CREDENTIALS_URL = "https://www.aws-credentials.com";
+  private static final String AWS_REGION_URL = "https://www.aws-region.com";
   private static final String METADATA_SERVER_URL = "https://www.metadata.google.com";
   private static final String STS_URL = "https://www.sts.google.com";
   private static final String SERVICE_ACCOUNT_IMPERSONATION_URL =
       "https://iamcredentials.googleapis.com";
 
   private static final String SUBJECT_TOKEN = "subjectToken";
-  private static final String ISSUED_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:access_token";
   private static final String TOKEN_TYPE = "Bearer";
   private static final String ACCESS_TOKEN = "accessToken";
   private static final int EXPIRES_IN = 3600;
 
   private static final JsonFactory JSON_FACTORY = new JacksonFactory();
 
+  private Queue<Boolean> responseSequence = new ArrayDeque<>();
   private Queue<IOException> responseErrorSequence = new ArrayDeque<>();
   private Queue<String> refreshTokenSequence = new ArrayDeque<>();
   private Queue<List<String>> scopeSequence = new ArrayDeque<>();
@@ -84,6 +87,10 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
 
   public void addResponseErrorSequence(IOException... errors) {
     Collections.addAll(responseErrorSequence, errors);
+  }
+
+  public void addResponseSequence(Boolean... responses) {
+    Collections.addAll(responseSequence, responses);
   }
 
   public void addRefreshTokenSequence(String... refreshTokens) {
@@ -100,11 +107,35 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
         new MockLowLevelHttpRequest(url) {
           @Override
           public LowLevelHttpResponse execute() throws IOException {
-            if (METADATA_SERVER_URL.equals(url)) {
-              if (!responseErrorSequence.isEmpty()) {
-                throw responseErrorSequence.poll();
-              }
+            boolean successfulResponse = !responseSequence.isEmpty() && responseSequence.poll();
 
+            if (!responseErrorSequence.isEmpty() && !successfulResponse) {
+              throw responseErrorSequence.poll();
+            }
+
+            if (AWS_REGION_URL.equals(url)) {
+              return new MockLowLevelHttpResponse()
+                  .setContentType("text/html")
+                  .setContent("us-east-1b");
+            }
+            if (AWS_CREDENTIALS_URL.equals(url)) {
+              return new MockLowLevelHttpResponse()
+                  .setContentType("text/html")
+                  .setContent("roleName");
+            }
+            if ((AWS_CREDENTIALS_URL + "/" + "roleName").equals(url)) {
+              GenericJson response = new GenericJson();
+              response.setFactory(JSON_FACTORY);
+              response.put("AccessKeyId", "accessKeyId");
+              response.put("SecretAccessKey", "secretAccessKey");
+              response.put("Token", "token");
+
+              return new MockLowLevelHttpResponse()
+                  .setContentType(Json.MEDIA_TYPE)
+                  .setContent(response.toString());
+            }
+
+            if (METADATA_SERVER_URL.equals(url)) {
               String metadataRequestHeader = getFirstHeaderValue("Metadata-Flavor");
               if (!"Google".equals(metadataRequestHeader)) {
                 throw new IOException("Metadata request header not found.");
@@ -123,9 +154,6 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
                   .setContent(SUBJECT_TOKEN);
             }
             if (STS_URL.equals(url)) {
-              if (!responseErrorSequence.isEmpty()) {
-                throw responseErrorSequence.poll();
-              }
               Map<String, String> query = TestUtils.parseQuery(getContentAsString());
               assertThat(query.get("grant_type")).isEqualTo(EXPECTED_GRANT_TYPE);
               assertThat(query.get("subject_token_type")).isNotEmpty();
@@ -197,6 +225,14 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
 
   public String getMetadataUrl() {
     return METADATA_SERVER_URL;
+  }
+
+  public String getAwsCredentialsEndpoint() {
+    return AWS_CREDENTIALS_URL;
+  }
+
+  public String getAwsRegionEndpoint() {
+    return AWS_REGION_URL;
   }
 
   public String getStsUrl() {
