@@ -48,19 +48,21 @@ import com.google.auth.oauth2.AwsCredentials.AwsCredentialSource;
 import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSource;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
  * Base external account credentials class.
  *
- * <p>Handles initializing 3PI credentials, calls to STS and service account impersonation.
+ * <p>Handles initializing third-party credentials, calls to STS and service account impersonation.
  */
 public abstract class ExternalAccountCredentials extends GoogleCredentials
     implements QuotaProjectIdProvider {
@@ -146,6 +148,12 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     this.clientSecret = clientSecret;
     this.scopes =
         (scopes == null || scopes.isEmpty()) ? Arrays.asList(CLOUD_PLATFORM_SCOPE) : scopes;
+  }
+
+  @Override
+  public Map<String, List<String>> getRequestMetadata(URI uri) throws IOException {
+    Map<String, List<String>> requestMetadata = super.getRequestMetadata(uri);
+    return addQuotaProjectIdToRequestMetadata(quotaProjectId, requestMetadata);
   }
 
   /**
