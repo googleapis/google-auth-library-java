@@ -80,6 +80,7 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
   private Queue<List<String>> scopeSequence = new ArrayDeque<>();
   private MockLowLevelHttpRequest request;
   private String expireTime;
+  private String metadataServerContentType;
 
   public void addResponseErrorSequence(IOException... errors) {
     Collections.addAll(responseErrorSequence, errors);
@@ -107,6 +108,15 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
               String metadataRequestHeader = getFirstHeaderValue("Metadata-Flavor");
               if (!"Google".equals(metadataRequestHeader)) {
                 throw new IOException("Metadata request header not found.");
+              }
+
+              if (metadataServerContentType != null && metadataServerContentType.equals("json")) {
+                GenericJson response = new GenericJson();
+                response.setFactory(JSON_FACTORY);
+                response.put("subjectToken", SUBJECT_TOKEN);
+                return new MockLowLevelHttpResponse()
+                    .setContentType(Json.MEDIA_TYPE)
+                    .setContent(response.toString());
               }
               return new MockLowLevelHttpResponse()
                   .setContentType("text/html")
@@ -199,5 +209,9 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
 
   public void setExpireTime(String expireTime) {
     this.expireTime = expireTime;
+  }
+
+  public void setMetadataServerContentType(String contentType) {
+    this.metadataServerContentType = contentType;
   }
 }
