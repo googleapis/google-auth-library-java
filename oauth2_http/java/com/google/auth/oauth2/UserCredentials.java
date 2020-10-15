@@ -419,7 +419,8 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
   }
 
 
-    protected String getComputeEngineDefaultServiceAccountEmail(String projectId, HttpRequestFactory requestFactory) throws IOException {
+  protected String getComputeEngineDefaultServiceAccountEmail(String projectId, HttpRequestFactory requestFactory)
+            throws IOException {
     String url = RESOURCE_MANAGER_API + "projects/" + projectId;
 
     HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(url));
