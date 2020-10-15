@@ -15,7 +15,10 @@
 
 set -eo pipefail
 
-cd github/google-auth-library-java/
+## Get the directory of the build script
+scriptDir=$(realpath $(dirname "${BASH_SOURCE[0]}"))
+## cd to the parent directory, i.e. the root of the git repo
+cd ${scriptDir}/..
 
 # Print out Java
 java -version
