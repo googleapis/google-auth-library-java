@@ -31,7 +31,8 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,49 +41,47 @@ import org.junit.runners.JUnit4;
 /** Tests for {@link OAuthException}. */
 @RunWith(JUnit4.class)
 public final class OAuthExceptionTest {
+
   private static final String FULL_MESSAGE_FORMAT = "Error code %s: %s - %s";
   private static final String ERROR_DESCRIPTION_FORMAT = "Error code %s: %s";
   private static final String BASE_MESSAGE_FORMAT = "Error code %s";
 
-  private static final String ERROR_CODE = "errorCode";
-  private static final String ERROR_DESCRIPTION = "errorDescription";
-  private static final String ERROR_URI = "errorUri";
-
   @Test
   public void getMessage_fullFormat() {
-    OAuthException e = new OAuthException(ERROR_CODE, ERROR_DESCRIPTION, ERROR_URI);
+    OAuthException e = new OAuthException("errorCode", "errorDescription", "errorUri");
 
-    assertThat(e.getErrorCode()).isEqualTo(ERROR_CODE);
-    assertThat(e.getErrorDescription()).isEqualTo(ERROR_DESCRIPTION);
-    assertThat(e.getErrorUri()).isEqualTo(ERROR_URI);
+    assertEquals("errorCode", e.getErrorCode());
+    assertEquals("errorDescription", e.getErrorDescription());
+    assertEquals("errorUri", e.getErrorUri());
 
     String expectedMessage =
-        String.format(FULL_MESSAGE_FORMAT, ERROR_CODE, ERROR_DESCRIPTION, ERROR_URI);
-    assertThat(e.getMessage()).isEqualTo(expectedMessage);
+        String.format(FULL_MESSAGE_FORMAT, "errorCode", "errorDescription", "errorUri");
+    assertEquals(expectedMessage, e.getMessage());
   }
 
   @Test
   public void getMessage_descriptionFormat() {
-    OAuthException e = new OAuthException(ERROR_CODE, ERROR_DESCRIPTION, /* errorUri= */ null);
+    OAuthException e = new OAuthException("errorCode", "errorDescription", /* errorUri= */ null);
 
-    assertThat(e.getErrorCode()).isEqualTo(ERROR_CODE);
-    assertThat(e.getErrorDescription()).isEqualTo(ERROR_DESCRIPTION);
-    assertThat(e.getErrorUri()).isNull();
+    assertEquals("errorCode", e.getErrorCode());
+    assertEquals("errorDescription", e.getErrorDescription());
+    assertNull(e.getErrorUri());
 
-    String expectedMessage = String.format(ERROR_DESCRIPTION_FORMAT, ERROR_CODE, ERROR_DESCRIPTION);
-    assertThat(e.getMessage()).isEqualTo(expectedMessage);
+    String expectedMessage =
+        String.format(ERROR_DESCRIPTION_FORMAT, "errorCode", "errorDescription");
+    assertEquals(expectedMessage, e.getMessage());
   }
 
   @Test
   public void getMessage_baseFormat() {
     OAuthException e =
-        new OAuthException(ERROR_CODE, /* errorDescription= */ null, /* errorUri= */ null);
+        new OAuthException("errorCode", /* errorDescription= */ null, /* errorUri= */ null);
 
-    assertThat(e.getErrorCode()).isEqualTo(ERROR_CODE);
-    assertThat(e.getErrorDescription()).isNull();
-    assertThat(e.getErrorUri()).isNull();
+    assertEquals("errorCode", e.getErrorCode());
+    assertNull(e.getErrorDescription());
+    assertNull(e.getErrorUri());
 
-    String expectedMessage = String.format(BASE_MESSAGE_FORMAT, ERROR_CODE);
-    assertThat(e.getMessage()).isEqualTo(expectedMessage);
+    String expectedMessage = String.format(BASE_MESSAGE_FORMAT, "errorCode");
+    assertEquals(expectedMessage, e.getMessage());
   }
 }
