@@ -31,7 +31,9 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import com.google.api.client.http.LowLevelHttpRequest;
 import com.google.api.client.http.LowLevelHttpResponse;
@@ -73,7 +75,7 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
   private static final String SUBJECT_TOKEN = "subjectToken";
   private static final String TOKEN_TYPE = "Bearer";
   private static final String ACCESS_TOKEN = "accessToken";
-  private static final int EXPIRES_IN = 3600;
+  private static final Long EXPIRES_IN = 3600L;
 
   private static final JsonFactory JSON_FACTORY = new JacksonFactory();
 
@@ -155,9 +157,9 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
             }
             if (STS_URL.equals(url)) {
               Map<String, String> query = TestUtils.parseQuery(getContentAsString());
-              assertThat(query.get("grant_type")).isEqualTo(EXPECTED_GRANT_TYPE);
-              assertThat(query.get("subject_token_type")).isNotEmpty();
-              assertThat(query.get("subject_token")).isNotEmpty();
+              assertEquals(EXPECTED_GRANT_TYPE, query.get("grant_type"));
+              assertNotNull(query.get("subject_token_type"));
+              assertNotNull(query.get("subject_token"));
 
               GenericJson response = new GenericJson();
               response.setFactory(JSON_FACTORY);
@@ -178,11 +180,10 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
             }
             if (SERVICE_ACCOUNT_IMPERSONATION_URL.equals(url)) {
               Map<String, String> query = TestUtils.parseQuery(getContentAsString());
-              assertThat(query.get("scope")).isEqualTo(CLOUD_PLATFORM_SCOPE);
-              assertThat(getHeaders().containsKey("authorization")).isTrue();
-              assertThat(getHeaders().get("authorization")).hasSize(1);
-              assertThat(getHeaders().get("authorization")).hasSize(1);
-              assertThat(getHeaders().get("authorization").get(0)).isNotEmpty();
+              assertEquals(CLOUD_PLATFORM_SCOPE, query.get("scope"));
+              assertEquals(1, getHeaders().get("authorization").size());
+              assertTrue(getHeaders().containsKey("authorization"));
+              assertNotNull(getHeaders().get("authorization").get(0));
 
               GenericJson response = new GenericJson();
               response.setFactory(JSON_FACTORY);
@@ -215,7 +216,7 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
     return ISSUED_TOKEN_TYPE;
   }
 
-  public int getExpiresIn() {
+  public Long getExpiresIn() {
     return EXPIRES_IN;
   }
 

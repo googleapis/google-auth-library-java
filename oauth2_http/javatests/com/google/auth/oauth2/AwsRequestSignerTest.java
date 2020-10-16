@@ -31,7 +31,7 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
 
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
@@ -88,13 +88,13 @@ public class AwsRequestSignerTest {
             + "aws4_request, SignedHeaders=date;host, Signature="
             + expectedSignature;
 
-    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
-    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
-    assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
-    assertThat(signature.getDate()).isEqualTo(DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo("GET");
-    assertThat(signature.getRegion()).isEqualTo("us-east-1");
-    assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
+    assertEquals(expectedSignature, signature.getSignature());
+    assertEquals(expectedAuthHeader, signature.getAuthorizationHeader());
+    assertEquals(BOTOCORE_CREDENTIALS, signature.getSecurityCredentials());
+    assertEquals(DATE, signature.getDate());
+    assertEquals("GET", signature.getHttpMethod());
+    assertEquals("us-east-1", signature.getRegion());
+    assertEquals(URI.create(url).normalize().toString(), signature.getUrl());
   }
 
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/get-relative-relative.req
@@ -119,13 +119,13 @@ public class AwsRequestSignerTest {
             + "aws4_request, SignedHeaders=date;host, Signature="
             + expectedSignature;
 
-    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
-    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
-    assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
-    assertThat(signature.getDate()).isEqualTo(DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo("GET");
-    assertThat(signature.getRegion()).isEqualTo("us-east-1");
-    assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
+    assertEquals(expectedSignature, signature.getSignature());
+    assertEquals(expectedAuthHeader, signature.getAuthorizationHeader());
+    assertEquals(BOTOCORE_CREDENTIALS, signature.getSecurityCredentials());
+    assertEquals(DATE, signature.getDate());
+    assertEquals("GET", signature.getHttpMethod());
+    assertEquals("us-east-1", signature.getRegion());
+    assertEquals(URI.create(url).normalize().toString(), signature.getUrl());
   }
 
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/get-slash-dot-slash.req
@@ -150,13 +150,13 @@ public class AwsRequestSignerTest {
             + "aws4_request, SignedHeaders=date;host, Signature="
             + expectedSignature;
 
-    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
-    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
-    assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
-    assertThat(signature.getDate()).isEqualTo(DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo("GET");
-    assertThat(signature.getRegion()).isEqualTo("us-east-1");
-    assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
+    assertEquals(expectedSignature, signature.getSignature());
+    assertEquals(expectedAuthHeader, signature.getAuthorizationHeader());
+    assertEquals(BOTOCORE_CREDENTIALS, signature.getSecurityCredentials());
+    assertEquals(DATE, signature.getDate());
+    assertEquals("GET", signature.getHttpMethod());
+    assertEquals("us-east-1", signature.getRegion());
+    assertEquals(URI.create(url).normalize().toString(), signature.getUrl());
   }
 
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/get-slash-pointless-dot.req
@@ -181,13 +181,13 @@ public class AwsRequestSignerTest {
             + "aws4_request, SignedHeaders=date;host, Signature="
             + expectedSignature;
 
-    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
-    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
-    assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
-    assertThat(signature.getDate()).isEqualTo(DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo("GET");
-    assertThat(signature.getRegion()).isEqualTo("us-east-1");
-    assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
+    assertEquals(expectedSignature, signature.getSignature());
+    assertEquals(expectedAuthHeader, signature.getAuthorizationHeader());
+    assertEquals(BOTOCORE_CREDENTIALS, signature.getSecurityCredentials());
+    assertEquals(DATE, signature.getDate());
+    assertEquals("GET", signature.getHttpMethod());
+    assertEquals("us-east-1", signature.getRegion());
+    assertEquals(URI.create(url).normalize().toString(), signature.getUrl());
   }
 
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/get-utf8.req
@@ -212,13 +212,13 @@ public class AwsRequestSignerTest {
             + "aws4_request, SignedHeaders=date;host, Signature="
             + expectedSignature;
 
-    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
-    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
-    assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
-    assertThat(signature.getDate()).isEqualTo(DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo("GET");
-    assertThat(signature.getRegion()).isEqualTo("us-east-1");
-    assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
+    assertEquals(expectedSignature, signature.getSignature());
+    assertEquals(expectedAuthHeader, signature.getAuthorizationHeader());
+    assertEquals(BOTOCORE_CREDENTIALS, signature.getSecurityCredentials());
+    assertEquals(DATE, signature.getDate());
+    assertEquals("GET", signature.getHttpMethod());
+    assertEquals("us-east-1", signature.getRegion());
+    assertEquals(URI.create(url).normalize().toString(), signature.getUrl());
   }
 
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/get-vanilla-query-order-key-case.req
@@ -243,13 +243,13 @@ public class AwsRequestSignerTest {
             + "aws4_request, SignedHeaders=date;host, Signature="
             + expectedSignature;
 
-    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
-    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
-    assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
-    assertThat(signature.getDate()).isEqualTo(DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo("GET");
-    assertThat(signature.getRegion()).isEqualTo("us-east-1");
-    assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
+    assertEquals(expectedSignature, signature.getSignature());
+    assertEquals(expectedAuthHeader, signature.getAuthorizationHeader());
+    assertEquals(BOTOCORE_CREDENTIALS, signature.getSecurityCredentials());
+    assertEquals(DATE, signature.getDate());
+    assertEquals("GET", signature.getHttpMethod());
+    assertEquals("us-east-1", signature.getRegion());
+    assertEquals(URI.create(url).normalize().toString(), signature.getUrl());
   }
 
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/post-header-key-sort.req
@@ -277,14 +277,14 @@ public class AwsRequestSignerTest {
             + "aws4_request, SignedHeaders=date;host;zoo, Signature="
             + expectedSignature;
 
-    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
-    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
-    assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
-    assertThat(signature.getDate()).isEqualTo(DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo("POST");
-    assertThat(signature.getRegion()).isEqualTo("us-east-1");
-    assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
-    assertThat(signature.getCanonicalHeaders().get(headerKey.toLowerCase())).isEqualTo(headerValue);
+    assertEquals(expectedSignature, signature.getSignature());
+    assertEquals(expectedAuthHeader, signature.getAuthorizationHeader());
+    assertEquals(BOTOCORE_CREDENTIALS, signature.getSecurityCredentials());
+    assertEquals(DATE, signature.getDate());
+    assertEquals("POST", signature.getHttpMethod());
+    assertEquals("us-east-1", signature.getRegion());
+    assertEquals(URI.create(url).normalize().toString(), signature.getUrl());
+    assertEquals(headerValue, signature.getCanonicalHeaders().get(headerKey.toLowerCase()));
   }
 
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/post-header-value-case.req
@@ -312,14 +312,14 @@ public class AwsRequestSignerTest {
             + "aws4_request, SignedHeaders=date;host;zoo, Signature="
             + expectedSignature;
 
-    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
-    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
-    assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
-    assertThat(signature.getDate()).isEqualTo(DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo("POST");
-    assertThat(signature.getRegion()).isEqualTo("us-east-1");
-    assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
-    assertThat(signature.getCanonicalHeaders().get(headerKey)).isEqualTo(headerValue);
+    assertEquals(expectedSignature, signature.getSignature());
+    assertEquals(expectedAuthHeader, signature.getAuthorizationHeader());
+    assertEquals(BOTOCORE_CREDENTIALS, signature.getSecurityCredentials());
+    assertEquals(DATE, signature.getDate());
+    assertEquals("POST", signature.getHttpMethod());
+    assertEquals("us-east-1", signature.getRegion());
+    assertEquals(URI.create(url).normalize().toString(), signature.getUrl());
+    assertEquals(headerValue, signature.getCanonicalHeaders().get(headerKey.toLowerCase()));
   }
 
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/get-header-value-trim.req
@@ -347,14 +347,14 @@ public class AwsRequestSignerTest {
             + "aws4_request, SignedHeaders=date;host;p, Signature="
             + expectedSignature;
 
-    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
-    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
-    assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
-    assertThat(signature.getDate()).isEqualTo(DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo("POST");
-    assertThat(signature.getRegion()).isEqualTo("us-east-1");
-    assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
-    assertThat(signature.getCanonicalHeaders().get(headerKey)).isEqualTo(headerValue);
+    assertEquals(expectedSignature, signature.getSignature());
+    assertEquals(expectedAuthHeader, signature.getAuthorizationHeader());
+    assertEquals(BOTOCORE_CREDENTIALS, signature.getSecurityCredentials());
+    assertEquals(DATE, signature.getDate());
+    assertEquals("POST", signature.getHttpMethod());
+    assertEquals("us-east-1", signature.getRegion());
+    assertEquals(URI.create(url).normalize().toString(), signature.getUrl());
+    assertEquals(headerValue, signature.getCanonicalHeaders().get(headerKey.toLowerCase()));
   }
 
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/post-x-www-form-urlencoded.req
@@ -383,14 +383,14 @@ public class AwsRequestSignerTest {
             + "aws4_request, SignedHeaders=content-type;date;host, Signature="
             + expectedSignature;
 
-    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
-    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
-    assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
-    assertThat(signature.getDate()).isEqualTo(DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo("POST");
-    assertThat(signature.getRegion()).isEqualTo("us-east-1");
-    assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
-    assertThat(signature.getCanonicalHeaders().get(headerKey.toLowerCase())).isEqualTo(headerValue);
+    assertEquals(expectedSignature, signature.getSignature());
+    assertEquals(expectedAuthHeader, signature.getAuthorizationHeader());
+    assertEquals(BOTOCORE_CREDENTIALS, signature.getSecurityCredentials());
+    assertEquals(DATE, signature.getDate());
+    assertEquals("POST", signature.getHttpMethod());
+    assertEquals("us-east-1", signature.getRegion());
+    assertEquals(URI.create(url).normalize().toString(), signature.getUrl());
+    assertEquals(headerValue, signature.getCanonicalHeaders().get(headerKey.toLowerCase()));
   }
 
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/post-vanilla-query.req
@@ -415,13 +415,13 @@ public class AwsRequestSignerTest {
             + "aws4_request, SignedHeaders=date;host, Signature="
             + expectedSignature;
 
-    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
-    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
-    assertThat(signature.getSecurityCredentials()).isEqualTo(BOTOCORE_CREDENTIALS);
-    assertThat(signature.getDate()).isEqualTo(DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo("POST");
-    assertThat(signature.getRegion()).isEqualTo("us-east-1");
-    assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
+    assertEquals(expectedSignature, signature.getSignature());
+    assertEquals(expectedAuthHeader, signature.getAuthorizationHeader());
+    assertEquals(BOTOCORE_CREDENTIALS, signature.getSecurityCredentials());
+    assertEquals(DATE, signature.getDate());
+    assertEquals("POST", signature.getHttpMethod());
+    assertEquals("us-east-1", signature.getRegion());
+    assertEquals(URI.create(url).normalize().toString(), signature.getUrl());
   }
 
   @Test
@@ -446,13 +446,13 @@ public class AwsRequestSignerTest {
             + "aws4_request, SignedHeaders=host;x-amz-date;x-amz-security-token, Signature="
             + expectedSignature;
 
-    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
-    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
-    assertThat(signature.getSecurityCredentials()).isEqualTo(awsSecurityCredentials);
-    assertThat(signature.getDate()).isEqualTo(X_AMZ_DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo("GET");
-    assertThat(signature.getRegion()).isEqualTo("us-east-2");
-    assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
+    assertEquals(expectedSignature, signature.getSignature());
+    assertEquals(expectedAuthHeader, signature.getAuthorizationHeader());
+    assertEquals(awsSecurityCredentials, signature.getSecurityCredentials());
+    assertEquals(X_AMZ_DATE, signature.getDate());
+    assertEquals("GET", signature.getHttpMethod());
+    assertEquals("us-east-2", signature.getRegion());
+    assertEquals(URI.create(url).normalize().toString(), signature.getUrl());
   }
 
   @Test
@@ -477,13 +477,13 @@ public class AwsRequestSignerTest {
             + "aws4_request, SignedHeaders=host;x-amz-date;x-amz-security-token, Signature="
             + expectedSignature;
 
-    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
-    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
-    assertThat(signature.getSecurityCredentials()).isEqualTo(awsSecurityCredentials);
-    assertThat(signature.getDate()).isEqualTo(X_AMZ_DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo("POST");
-    assertThat(signature.getRegion()).isEqualTo("us-east-2");
-    assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
+    assertEquals(expectedSignature, signature.getSignature());
+    assertEquals(expectedAuthHeader, signature.getAuthorizationHeader());
+    assertEquals(awsSecurityCredentials, signature.getSecurityCredentials());
+    assertEquals(X_AMZ_DATE, signature.getDate());
+    assertEquals("POST", signature.getHttpMethod());
+    assertEquals("us-east-2", signature.getRegion());
+    assertEquals(URI.create(url).normalize().toString(), signature.getUrl());
   }
 
   @Test
@@ -514,13 +514,13 @@ public class AwsRequestSignerTest {
             + "aws4_request, SignedHeaders=host;x-amz-date, Signature="
             + expectedSignature;
 
-    assertThat(signature.getSignature()).isEqualTo(expectedSignature);
-    assertThat(signature.getAuthorizationHeader()).isEqualTo(expectedAuthHeader);
-    assertThat(signature.getSecurityCredentials()).isEqualTo(awsSecurityCredentialsWithoutToken);
-    assertThat(signature.getDate()).isEqualTo(X_AMZ_DATE);
-    assertThat(signature.getHttpMethod()).isEqualTo("POST");
-    assertThat(signature.getRegion()).isEqualTo("us-east-2");
-    assertThat(signature.getUrl()).isEqualTo(URI.create(url).normalize().toString());
+    assertEquals(expectedSignature, signature.getSignature());
+    assertEquals(expectedAuthHeader, signature.getAuthorizationHeader());
+    assertEquals(awsSecurityCredentialsWithoutToken, signature.getSecurityCredentials());
+    assertEquals(X_AMZ_DATE, signature.getDate());
+    assertEquals("POST", signature.getHttpMethod());
+    assertEquals("us-east-2", signature.getRegion());
+    assertEquals(URI.create(url).normalize().toString(), signature.getUrl());
   }
 
   public AwsSecurityCredentials retrieveAwsSecurityCredentials() throws IOException {
