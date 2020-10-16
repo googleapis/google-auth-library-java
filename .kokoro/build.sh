@@ -15,7 +15,10 @@
 
 set -eo pipefail
 
-cd github/google-auth-library-java/
+## Get the directory of the build script
+scriptDir=$(realpath $(dirname "${BASH_SOURCE[0]}"))
+## cd to the parent directory, i.e. the root of the git repo
+cd ${scriptDir}/..
 
 # Print out Java version
 java -version
@@ -29,7 +32,6 @@ mvn install -B -V \
 case ${JOB_TYPE} in
 test)
     mvn test -B
-    bash ${KOKORO_GFILE_DIR}/codecov.sh
     ;;
 lint)
     mvn com.coveo:fmt-maven-plugin:check
