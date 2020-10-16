@@ -5,13 +5,14 @@ branchProtectionRules:
 - pattern: master
   isAdminEnforced: true
   requiredStatusCheckContexts:
-    - 'Kokoro - Test: Binary Compatibility'
-    - 'Kokoro - Test: Code Format'
-    - 'Kokoro - Test: Dependencies'
-    - 'Kokoro - Test: Java 11'
-    - 'Kokoro - Test: Java 7'
-    - 'Kokoro - Test: Java 8'
-    - 'Kokoro - Test: Linkage Monitor'
+    - "dependencies (8)"
+    - "dependencies (11)"
+    - "linkage-monitor"
+    - "lint"
+    - "clirr"
+    - "units (7)"
+    - "units (8)"
+    - "units (11)"
     - 'cla/google'
   requiredApprovingReviewCount: 1
   requiresCodeOwnerReviews: true
