@@ -40,10 +40,12 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonParser;
+import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.AwsCredentials.AwsCredentialSource;
 import com.google.auth.oauth2.ExternalAccountCredentialsTest.MockExternalAccountCredentialsTransportFactory;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
@@ -315,13 +317,32 @@ public class AwsCredentialsTest {
     assertEquals(newScopes, newCredentials.getScopes());
   }
 
-  private AwsCredentialSource buildAwsCredentialSource(
+  private static AwsCredentialSource buildAwsCredentialSource(
       MockExternalAccountCredentialsTransportFactory transportFactory) {
     Map<String, Object> credentialSourceMap = new HashMap<>();
-    credentialSourceMap.put("region_url", transportFactory.transport.getAwsRegionEndpoint());
-    credentialSourceMap.put("url", transportFactory.transport.getAwsCredentialsEndpoint());
+    credentialSourceMap.put("region_url", transportFactory.transport.getAwsRegionUrl());
+    credentialSourceMap.put("url", transportFactory.transport.getAwsCredentialsUrl());
     credentialSourceMap.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
     return new AwsCredentialSource(credentialSourceMap);
+  }
+
+  static InputStream writeAwsCredentialsStream(String stsUrl, String regionUrl, String metadataUrl)
+      throws IOException {
+    GenericJson json = new GenericJson();
+    json.put("audience", "audience");
+    json.put("subject_token_type", "subjectTokenType");
+    json.put("token_url", stsUrl);
+    json.put("token_info_url", "tokenInfoUrl");
+    json.put("type", ExternalAccountCredentials.EXTERNAL_ACCOUNT_FILE_TYPE);
+
+    GenericJson credentialSource = new GenericJson();
+    credentialSource.put("environment_id", "aws1");
+    credentialSource.put("region_url", regionUrl);
+    credentialSource.put("url", metadataUrl);
+    credentialSource.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
+    json.put("credential_source", credentialSource);
+
+    return TestUtils.jsonToInputStream(json);
   }
 
   /** Used to test the retrieval of AWS credentials from environment variables. */
