@@ -39,11 +39,13 @@ import static org.junit.Assert.assertThrows;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
+import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSource;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -415,14 +417,30 @@ public class IdentityPoolCredentialsTest {
         e.getMessage());
   }
 
-  @Test
-  public void identityPoolCredentialSource_jsonFormatTypeWithoutSubjectTokenFieldName() {}
+  static InputStream writeIdentityPoolCredentialsStream(String tokenUrl, String url)
+      throws IOException {
+    GenericJson json = new GenericJson();
+    json.put("audience", "audience");
+    json.put("subject_token_type", "subjectTokenType");
+    json.put("token_url", tokenUrl);
+    json.put("token_info_url", "tokenInfoUrl");
+    json.put("type", ExternalAccountCredentials.EXTERNAL_ACCOUNT_FILE_TYPE);
 
-  private IdentityPoolCredentialSource buildUrlBasedCredentialSource(String url) {
+    GenericJson credentialSource = new GenericJson();
+    GenericJson headers = new GenericJson();
+    headers.put("Metadata-Flavor", "Google");
+    credentialSource.put("url", url);
+    credentialSource.put("headers", headers);
+
+    json.put("credential_source", credentialSource);
+    return TestUtils.jsonToInputStream(json);
+  }
+
+  private static IdentityPoolCredentialSource buildUrlBasedCredentialSource(String url) {
     return buildUrlBasedCredentialSource(url, /* formatMap= */ null);
   }
 
-  private IdentityPoolCredentialSource buildUrlBasedCredentialSource(
+  private static IdentityPoolCredentialSource buildUrlBasedCredentialSource(
       String url, Map<String, String> formatMap) {
     Map<String, Object> credentialSourceMap = new HashMap<>();
     Map<String, String> headers = new HashMap<>();

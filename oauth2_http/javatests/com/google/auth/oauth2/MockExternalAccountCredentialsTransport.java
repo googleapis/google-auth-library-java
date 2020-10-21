@@ -228,11 +228,11 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
     return METADATA_SERVER_URL;
   }
 
-  public String getAwsCredentialsEndpoint() {
+  public String getAwsCredentialsUrl() {
     return AWS_CREDENTIALS_URL;
   }
 
-  public String getAwsRegionEndpoint() {
+  public String getAwsRegionUrl() {
     return AWS_REGION_URL;
   }
 
