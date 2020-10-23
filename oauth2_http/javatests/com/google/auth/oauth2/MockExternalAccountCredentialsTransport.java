@@ -48,6 +48,7 @@ import com.google.api.client.util.Joiner;
 import com.google.auth.TestUtils;
 import java.io.IOException;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -64,20 +65,21 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
   private static final String CLOUD_PLATFORM_SCOPE =
       "https://www.googleapis.com/auth/cloud-platform";
   private static final String ISSUED_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:access_token";
-
   private static final String AWS_CREDENTIALS_URL = "https://www.aws-credentials.com";
   private static final String AWS_REGION_URL = "https://www.aws-region.com";
   private static final String METADATA_SERVER_URL = "https://www.metadata.google.com";
   private static final String STS_URL = "https://www.sts.google.com";
-  private static final String SERVICE_ACCOUNT_IMPERSONATION_URL =
-      "https://iamcredentials.googleapis.com";
 
   private static final String SUBJECT_TOKEN = "subjectToken";
   private static final String TOKEN_TYPE = "Bearer";
   private static final String ACCESS_TOKEN = "accessToken";
+  private static final String SERVICE_ACCOUNT_ACCESS_TOKEN = "serviceAccountAccessToken";
   private static final Long EXPIRES_IN = 3600L;
 
   private static final JsonFactory JSON_FACTORY = new JacksonFactory();
+
+  static final String SERVICE_ACCOUNT_IMPERSONATION_URL =
+      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/testn@test.iam.gserviceaccount.com:generateAccessToken";
 
   private Queue<Boolean> responseSequence = new ArrayDeque<>();
   private Queue<IOException> responseErrorSequence = new ArrayDeque<>();
@@ -179,15 +181,18 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
                   .setContent(response.toPrettyString());
             }
             if (SERVICE_ACCOUNT_IMPERSONATION_URL.equals(url)) {
-              Map<String, String> query = TestUtils.parseQuery(getContentAsString());
-              assertEquals(CLOUD_PLATFORM_SCOPE, query.get("scope"));
+              GenericJson query =
+                  OAuth2Utils.JSON_FACTORY
+                      .createJsonParser(getContentAsString())
+                      .parseAndClose(GenericJson.class);
+              assertEquals(CLOUD_PLATFORM_SCOPE, ((ArrayList<String>) query.get("scope")).get(0));
               assertEquals(1, getHeaders().get("authorization").size());
               assertTrue(getHeaders().containsKey("authorization"));
               assertNotNull(getHeaders().get("authorization").get(0));
 
               GenericJson response = new GenericJson();
               response.setFactory(JSON_FACTORY);
-              response.put("accessToken", ACCESS_TOKEN);
+              response.put("accessToken", SERVICE_ACCOUNT_ACCESS_TOKEN);
               response.put("expireTime", expireTime);
 
               return new MockLowLevelHttpResponse()
@@ -210,6 +215,10 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
 
   public String getAccessToken() {
     return ACCESS_TOKEN;
+  }
+
+  public String getServiceAccountAccessToken() {
+    return SERVICE_ACCOUNT_ACCESS_TOKEN;
   }
 
   public String getIssuedTokenType() {

@@ -34,27 +34,18 @@ package com.google.auth.oauth2;
 import static com.google.api.client.util.Preconditions.checkNotNull;
 import static com.google.common.base.MoreObjects.firstNonNull;
 
-import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpHeaders;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpResponse;
-import com.google.api.client.http.UrlEncodedContent;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
-import com.google.api.client.util.GenericData;
-import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.AwsCredentials.AwsCredentialSource;
 import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -77,7 +68,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     }
   }
 
-  private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
   private static final String CLOUD_PLATFORM_SCOPE =
       "https://www.googleapis.com/auth/cloud-platform";
 
@@ -88,15 +78,17 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   protected final String subjectTokenType;
   protected final String tokenUrl;
   protected final String tokenInfoUrl;
-  protected final String serviceAccountImpersonationUrl;
   protected final CredentialSource credentialSource;
   protected final Collection<String> scopes;
 
+  @Nullable protected final String serviceAccountImpersonationUrl;
   @Nullable protected final String quotaProjectId;
   @Nullable protected final String clientId;
   @Nullable protected final String clientSecret;
 
   protected transient HttpTransportFactory transportFactory;
+
+  @Nullable protected final ImpersonatedCredentials impersonatedCredentials;
 
   /**
    * Constructor with minimum identifying information and custom HTTP transport.
@@ -148,6 +140,35 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     this.clientSecret = clientSecret;
     this.scopes =
         (scopes == null || scopes.isEmpty()) ? Arrays.asList(CLOUD_PLATFORM_SCOPE) : scopes;
+    this.impersonatedCredentials = initializeImpersonatedCredentials();
+  }
+
+  private ImpersonatedCredentials initializeImpersonatedCredentials() {
+    if (serviceAccountImpersonationUrl == null) {
+      return null;
+    }
+    // Create a copy of this instance without service account impersonation.
+    ExternalAccountCredentials sourceCredentials;
+    if (this instanceof AwsCredentials) {
+      sourceCredentials =
+          AwsCredentials.newBuilder((AwsCredentials) this)
+              .setServiceAccountImpersonationUrl(null)
+              .build();
+    } else {
+      sourceCredentials =
+          IdentityPoolCredentials.newBuilder((IdentityPoolCredentials) this)
+              .setServiceAccountImpersonationUrl(null)
+              .build();
+    }
+
+    String targetPrincipal = extractTargetPrincipal(serviceAccountImpersonationUrl);
+    return ImpersonatedCredentials.newBuilder()
+        .setSourceCredentials(sourceCredentials)
+        .setHttpTransportFactory(transportFactory)
+        .setTargetPrincipal(targetPrincipal)
+        .setScopes(new ArrayList<>(scopes))
+        .setLifetime(3600) // 1 hour in seconds
+        .build();
   }
 
   @Override
@@ -262,6 +283,10 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
    */
   protected AccessToken exchange3PICredentialForAccessToken(
       StsTokenExchangeRequest stsTokenExchangeRequest) throws IOException {
+    // Handle service account impersonation if necessary.
+    if (impersonatedCredentials != null) {
+      return impersonatedCredentials.refreshAccessToken();
+    }
 
     StsRequestHandler requestHandler =
         StsRequestHandler.newBuilder(
@@ -273,52 +298,16 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     return response.getAccessToken();
   }
 
-  /**
-   * Attempts service account impersonation.
-   *
-   * @param accessToken the access token to be included in the request.
-   * @return the access token returned by the generateAccessToken call.
-   * @throws IOException if the service account impersonation call fails.
-   */
-  protected AccessToken attemptServiceAccountImpersonation(AccessToken accessToken)
-      throws IOException {
-    if (serviceAccountImpersonationUrl == null) {
-      return accessToken;
-    }
+  private static String extractTargetPrincipal(String serviceAccountImpersonationUrl) {
+    // Extract the target principle.
+    int startIndex = serviceAccountImpersonationUrl.lastIndexOf('/');
+    int endIndex = serviceAccountImpersonationUrl.indexOf(":generateAccessToken");
 
-    HttpRequest request =
-        transportFactory
-            .create()
-            .createRequestFactory()
-            .buildPostRequest(
-                new GenericUrl(serviceAccountImpersonationUrl),
-                new UrlEncodedContent(new GenericData().set("scope", scopes.toArray())));
-    request.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
-    request.setHeaders(
-        new HttpHeaders()
-            .setAuthorization(
-                String.format("%s %s", AuthHttpConstants.BEARER, accessToken.getTokenValue())));
-
-    HttpResponse response;
-    try {
-      response = request.execute();
-    } catch (IOException e) {
-      throw new IOException(
-          String.format("Error getting access token for service account: %s", e.getMessage()), e);
-    }
-
-    GenericData responseData = response.parseAs(GenericData.class);
-    String token =
-        OAuth2Utils.validateString(responseData, "accessToken", "Expected to find an accessToken");
-
-    DateFormat format = new SimpleDateFormat(RFC3339);
-    String expireTime =
-        OAuth2Utils.validateString(responseData, "expireTime", "Expected to find an expireTime");
-    try {
-      Date date = format.parse(expireTime);
-      return new AccessToken(token, date);
-    } catch (ParseException e) {
-      throw new IOException("Error parsing expireTime: " + e.getMessage());
+    if (startIndex != -1 && endIndex != -1 && startIndex < endIndex) {
+      return serviceAccountImpersonationUrl.substring(startIndex + 1, endIndex);
+    } else {
+      throw new IllegalArgumentException(
+          "Unable to determine target principal from service account impersonation URL.");
     }
   }
 

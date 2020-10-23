@@ -231,7 +231,9 @@ public class GoogleCredentialsTest {
         new MockExternalAccountCredentialsTransportFactory();
     InputStream identityPoolCredentialStream =
         IdentityPoolCredentialsTest.writeIdentityPoolCredentialsStream(
-            transportFactory.transport.getStsUrl(), transportFactory.transport.getMetadataUrl());
+            transportFactory.transport.getStsUrl(),
+            transportFactory.transport.getMetadataUrl(),
+            /* serviceAccountImpersonationUrl= */ null);
 
     GoogleCredentials credentials =
         GoogleCredentials.fromStream(identityPoolCredentialStream, transportFactory);
