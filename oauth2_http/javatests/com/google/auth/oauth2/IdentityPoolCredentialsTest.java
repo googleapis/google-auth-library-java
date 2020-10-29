@@ -32,6 +32,7 @@
 package com.google.auth.oauth2;
 
 import static com.google.auth.TestUtils.getDefaultExpireTime;
+import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
 import static com.google.auth.oauth2.OAuth2Utils.JSON_FACTORY;
 import static com.google.auth.oauth2.OAuth2Utils.UTF_8;
 import static org.junit.Assert.assertEquals;
@@ -50,6 +51,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
 import org.junit.runner.RunWith;
@@ -93,30 +95,32 @@ public class IdentityPoolCredentialsTest {
 
   @Test
   public void createdScoped_clonedCredentialWithAddedScopes() {
-    GoogleCredentials credentials =
-        IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
-            .setServiceAccountImpersonationUrl("serviceAccountImpersonationUrl")
-            .setQuotaProjectId("quotaProjectId")
-            .setClientId("clientId")
-            .setClientSecret("clientSecret")
-            .build();
+    IdentityPoolCredentials credentials =
+        (IdentityPoolCredentials)
+            IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+                .setQuotaProjectId("quotaProjectId")
+                .setClientId("clientId")
+                .setClientSecret("clientSecret")
+                .build();
 
     List<String> newScopes = Arrays.asList("scope1", "scope2");
 
     IdentityPoolCredentials newCredentials =
         (IdentityPoolCredentials) credentials.createScoped(newScopes);
 
-    assertEquals("audience", newCredentials.getAudience());
-    assertEquals("subjectTokenType", newCredentials.getSubjectTokenType());
-    assertEquals("tokenUrl", newCredentials.getTokenUrl());
-    assertEquals("tokenInfoUrl", newCredentials.getTokenInfoUrl());
+    assertEquals(credentials.getAudience(), newCredentials.getAudience());
+    assertEquals(credentials.getSubjectTokenType(), newCredentials.getSubjectTokenType());
+    assertEquals(credentials.getTokenUrl(), newCredentials.getTokenUrl());
+    assertEquals(credentials.getTokenInfoUrl(), newCredentials.getTokenInfoUrl());
     assertEquals(
-        "serviceAccountImpersonationUrl", newCredentials.getServiceAccountImpersonationUrl());
-    assertEquals(FILE_CREDENTIAL_SOURCE, newCredentials.getCredentialSource());
+        credentials.getServiceAccountImpersonationUrl(),
+        newCredentials.getServiceAccountImpersonationUrl());
+    assertEquals(credentials.getCredentialSource(), newCredentials.getCredentialSource());
     assertEquals(newScopes, newCredentials.getScopes());
-    assertEquals("quotaProjectId", newCredentials.getQuotaProjectId());
-    assertEquals("clientId", newCredentials.getClientId());
-    assertEquals("clientSecret", newCredentials.getClientSecret());
+    assertEquals(credentials.getQuotaProjectId(), newCredentials.getQuotaProjectId());
+    assertEquals(credentials.getClientId(), newCredentials.getClientId());
+    assertEquals(credentials.getClientSecret(), newCredentials.getClientSecret());
   }
 
   @Test
@@ -329,7 +333,8 @@ public class IdentityPoolCredentialsTest {
 
     AccessToken accessToken = credential.refreshAccessToken();
 
-    assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
+    assertEquals(
+        transportFactory.transport.getServiceAccountAccessToken(), accessToken.getTokenValue());
   }
 
   @Test
@@ -417,7 +422,8 @@ public class IdentityPoolCredentialsTest {
         e.getMessage());
   }
 
-  static InputStream writeIdentityPoolCredentialsStream(String tokenUrl, String url)
+  static InputStream writeIdentityPoolCredentialsStream(
+      String tokenUrl, String url, @Nullable String serviceAccountImpersonationUrl)
       throws IOException {
     GenericJson json = new GenericJson();
     json.put("audience", "audience");
@@ -425,6 +431,10 @@ public class IdentityPoolCredentialsTest {
     json.put("token_url", tokenUrl);
     json.put("token_info_url", "tokenInfoUrl");
     json.put("type", ExternalAccountCredentials.EXTERNAL_ACCOUNT_FILE_TYPE);
+
+    if (serviceAccountImpersonationUrl != null) {
+      json.put("service_account_impersonation_url", serviceAccountImpersonationUrl);
+    }
 
     GenericJson credentialSource = new GenericJson();
     GenericJson headers = new GenericJson();

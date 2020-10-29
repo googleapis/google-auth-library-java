@@ -138,8 +138,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
       stsTokenExchangeRequest.setScopes(new ArrayList<>(scopes));
     }
 
-    AccessToken accessToken = exchange3PICredentialForAccessToken(stsTokenExchangeRequest.build());
-    return attemptServiceAccountImpersonation(accessToken);
+    return exchange3PICredentialForAccessToken(stsTokenExchangeRequest.build());
   }
 
   @Override

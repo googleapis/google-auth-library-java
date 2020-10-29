@@ -65,6 +65,9 @@ public class AwsCredentialsTest {
   private static final String GET_CALLER_IDENTITY_URL =
       "https://sts.amazonaws.com?Action=GetCallerIdentity&Version=2011-06-15";
 
+  private static final String SERVICE_ACCOUNT_IMPERSONATION_URL =
+      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/testn@test.iam.gserviceaccount.com:generateAccessToken";
+
   private static final Map<String, Object> AWS_CREDENTIAL_SOURCE_MAP =
       new HashMap<String, Object>() {
         {
@@ -125,7 +128,8 @@ public class AwsCredentialsTest {
 
     AccessToken accessToken = awsCredential.refreshAccessToken();
 
-    assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
+    assertEquals(
+        transportFactory.transport.getServiceAccountAccessToken(), accessToken.getTokenValue());
   }
 
   @Test
@@ -293,7 +297,7 @@ public class AwsCredentialsTest {
     AwsCredentials credentials =
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
-                .setServiceAccountImpersonationUrl("tokenInfoUrl")
+                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
                 .setQuotaProjectId("quotaProjectId")
                 .setClientId("clientId")
                 .setClientSecret("clientSecret")

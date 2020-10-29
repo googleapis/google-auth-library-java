@@ -33,14 +33,12 @@ package com.google.auth.oauth2;
 
 import static com.google.auth.TestUtils.getDefaultExpireTime;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
-import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.ExternalAccountCredentialsTest.TestExternalAccountCredentials.TestCredentialSource;
@@ -64,9 +62,6 @@ import org.junit.runners.JUnit4;
 public class ExternalAccountCredentialsTest {
 
   private static final String STS_URL = "https://www.sts.google.com";
-  private static final String ACCESS_TOKEN = "eya23tfgdfga2123as";
-  private static final String CLOUD_PLATFORM_SCOPE =
-      "https://www.googleapis.com/auth/cloud-platform";
 
   static class MockExternalAccountCredentialsTransportFactory implements HttpTransportFactory {
 
@@ -176,6 +171,25 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
+  public void fromJson_invalidServiceAccountImpersonationUrl_throws() {
+    final GenericJson json = buildJsonIdentityPoolCredential();
+    json.put("service_account_impersonation_url", "invalid_url");
+
+    IllegalArgumentException e =
+        assertThrows(
+            IllegalArgumentException.class,
+            new ThrowingRunnable() {
+              @Override
+              public void run() {
+                ExternalAccountCredentials.fromJson(json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+              }
+            });
+    assertEquals(
+        "Unable to determine target principal from service account impersonation URL.",
+        e.getMessage());
+  }
+
+  @Test
   public void fromJson_nullTransport_throws() {
     assertThrows(
         NullPointerException.class,
@@ -208,6 +222,29 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
+  public void exchange3PICredentialForAccessToken_withServiceAccountImpersonation()
+      throws IOException {
+    transportFactory.transport.setExpireTime(getDefaultExpireTime());
+
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromStream(
+            IdentityPoolCredentialsTest.writeIdentityPoolCredentialsStream(
+                transportFactory.transport.getStsUrl(),
+                transportFactory.transport.getMetadataUrl(),
+                transportFactory.transport.getServiceAccountImpersonationUrl()),
+            transportFactory);
+
+    StsTokenExchangeRequest stsTokenExchangeRequest =
+        StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
+
+    AccessToken returnedToken =
+        credential.exchange3PICredentialForAccessToken(stsTokenExchangeRequest);
+
+    assertEquals(
+        transportFactory.transport.getServiceAccountAccessToken(), returnedToken.getTokenValue());
+  }
+
+  @Test
   public void exchange3PICredentialForAccessToken_throws() throws IOException {
     final ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(buildJsonIdentityPoolCredential(), transportFactory);
@@ -234,44 +271,6 @@ public class ExternalAccountCredentialsTest {
     assertEquals(errorCode, e.getErrorCode());
     assertEquals(errorDescription, e.getErrorDescription());
     assertEquals(errorUri, e.getErrorUri());
-  }
-
-  @Test
-  public void attemptServiceAccountImpersonation() throws IOException {
-    GenericJson defaultCredential = buildJsonIdentityPoolCredential();
-    defaultCredential.put(
-        "service_account_impersonation_url",
-        transportFactory.transport.getServiceAccountImpersonationUrl());
-
-    ExternalAccountCredentials credential =
-        ExternalAccountCredentials.fromJson(defaultCredential, transportFactory);
-
-    transportFactory.transport.setExpireTime(getDefaultExpireTime());
-    AccessToken accessToken = new AccessToken(ACCESS_TOKEN, new Date());
-
-    AccessToken returnedToken = credential.attemptServiceAccountImpersonation(accessToken);
-
-    assertEquals(transportFactory.transport.getAccessToken(), returnedToken.getTokenValue());
-    assertNotEquals(accessToken.getTokenValue(), returnedToken.getTokenValue());
-
-    // Validate request content.
-    MockLowLevelHttpRequest request = transportFactory.transport.getRequest();
-    Map<String, String> actualRequestContent = TestUtils.parseQuery(request.getContentAsString());
-
-    Map<String, String> expectedRequestContent = new HashMap<>();
-    expectedRequestContent.put("scope", CLOUD_PLATFORM_SCOPE);
-    assertEquals(expectedRequestContent, actualRequestContent);
-  }
-
-  @Test
-  public void attemptServiceAccountImpersonation_noUrl() throws IOException {
-    ExternalAccountCredentials credential =
-        ExternalAccountCredentials.fromJson(buildJsonIdentityPoolCredential(), transportFactory);
-
-    AccessToken accessToken = new AccessToken(ACCESS_TOKEN, new Date());
-    AccessToken returnedToken = credential.attemptServiceAccountImpersonation(accessToken);
-
-    assertEquals(accessToken, returnedToken);
   }
 
   @Test
