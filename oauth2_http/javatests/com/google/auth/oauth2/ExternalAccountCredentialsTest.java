@@ -62,9 +62,6 @@ import org.junit.runners.JUnit4;
 public class ExternalAccountCredentialsTest {
 
   private static final String STS_URL = "https://www.sts.google.com";
-  private static final String ACCESS_TOKEN = "eya23tfgdfga2123as";
-  private static final String CLOUD_PLATFORM_SCOPE =
-      "https://www.googleapis.com/auth/cloud-platform";
 
   static class MockExternalAccountCredentialsTransportFactory implements HttpTransportFactory {
 
@@ -171,6 +168,25 @@ public class ExternalAccountCredentialsTest {
                 /* json= */ null, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
           }
         });
+  }
+
+  @Test
+  public void fromJson_invalidServiceAccountImpersonationUrl_throws() {
+    final GenericJson json = buildJsonIdentityPoolCredential();
+    json.put("service_account_impersonation_url", "invalid_url");
+
+    IllegalArgumentException e =
+        assertThrows(
+            IllegalArgumentException.class,
+            new ThrowingRunnable() {
+              @Override
+              public void run() {
+                ExternalAccountCredentials.fromJson(json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+              }
+            });
+    assertEquals(
+        "Unable to determine target principal from service account impersonation URL.",
+        e.getMessage());
   }
 
   @Test
