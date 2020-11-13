@@ -49,6 +49,7 @@ import com.google.api.client.testing.http.FixedClock;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.api.client.util.Joiner;
+import com.google.api.client.util.SecurityUtils;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
@@ -61,6 +62,7 @@ import java.net.URI;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.Provider;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.util.Arrays;
@@ -109,6 +111,15 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
           + "aXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwic3ViIjoiMTAyMTAxNTUwODM0MjAwNzA4NTY4In0"
           + ".redacted";
   private static final String QUOTA_PROJECT = "sample-quota-project-id";
+  private static Provider defaultRsaSignatureProvider;
+
+  static {
+    try {
+      defaultRsaSignatureProvider = SecurityUtils.getRsaKeyFactory().getProvider();
+    } catch (NoSuchAlgorithmException e) {
+      throw new RuntimeException("RSA keys not supported on this JVM", e);
+    }
+  }
 
   @Test
   public void createdScoped_clones() throws IOException {
@@ -191,6 +202,35 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     String assertion = credentials.createAssertion(jsonFactory, currentTimeMillis, null);
 
     JsonWebSignature signature = JsonWebSignature.parse(jsonFactory, assertion);
+    JsonWebToken.Payload payload = signature.getPayload();
+    assertEquals(CLIENT_EMAIL, payload.getIssuer());
+    assertEquals(OAuth2Utils.TOKEN_SERVER_URI.toString(), payload.getAudience());
+    assertEquals(currentTimeMillis / 1000, (long) payload.getIssuedAtTimeSeconds());
+    assertEquals(currentTimeMillis / 1000 + 3600, (long) payload.getExpirationTimeSeconds());
+    assertEquals(USER, payload.getSubject());
+    assertEquals(Joiner.on(' ').join(scopes), payload.get("scope"));
+  }
+
+  @Test
+  public void createAssertionWithExplicitProvider_correct() throws IOException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    List<String> scopes = Arrays.asList("scope1", "scope2");
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientEmail(CLIENT_EMAIL)
+            .setPrivateKey(privateKey)
+            .setPrivateKeyId(PRIVATE_KEY_ID)
+            .setScopes(scopes)
+            .setServiceAccountUser(USER)
+            .setProjectId(PROJECT_ID)
+            .setSignatureProvider(defaultRsaSignatureProvider)
+            .build();
+
+    long currentTimeMillis = FixedClock.SYSTEM.currentTimeMillis();
+    String assertion = credentials.createAssertion(OAuth2Utils.JSON_FACTORY, currentTimeMillis, null);
+
+    JsonWebSignature signature = JsonWebSignature.parse(OAuth2Utils.JSON_FACTORY, assertion);
     JsonWebToken.Payload payload = signature.getPayload();
     assertEquals(CLIENT_EMAIL, payload.getIssuer());
     assertEquals(OAuth2Utils.TOKEN_SERVER_URI.toString(), payload.getAudience());
