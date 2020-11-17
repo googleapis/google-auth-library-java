@@ -47,6 +47,7 @@ import com.google.auth.oauth2.ExternalAccountCredentialsTest.MockExternalAccount
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -144,12 +145,16 @@ public class AwsCredentialsTest {
                 .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .build();
 
-    String subjectToken = awsCredential.retrieveSubjectToken();
+    String subjectToken = URLDecoder.decode(awsCredential.retrieveSubjectToken(), "UTF-8");
 
     JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser(subjectToken);
     GenericJson json = parser.parseAndClose(GenericJson.class);
 
-    Map<String, String> headers = (Map<String, String>) json.get("headers");
+    List<Map<String, String>> headersList = (List<Map<String, String>>) json.get("headers");
+    Map<String, String> headers = new HashMap<>();
+    for (Map<String, String> header : headersList) {
+      headers.put(header.get("key"), header.get("value"));
+    }
 
     assertEquals("POST", json.get("method"));
     assertEquals(GET_CALLER_IDENTITY_URL, json.get("url"));
@@ -371,8 +376,8 @@ public class AwsCredentialsTest {
           audience,
           subjectTokenType,
           tokenUrl,
-          tokenInfoUrl,
           credentialSource,
+          tokenInfoUrl,
           serviceAccountImpersonationUrl,
           quotaProjectId,
           clientId,

@@ -40,9 +40,12 @@ import com.google.api.client.json.JsonParser;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -59,9 +62,9 @@ public class AwsCredentials extends ExternalAccountCredentials {
    */
   static class AwsCredentialSource extends CredentialSource {
 
-    private String regionUrl;
-    private String url;
-    private String regionalCredentialVerificationUrl;
+    private final String regionUrl;
+    private final String url;
+    private final String regionalCredentialVerificationUrl;
 
     /**
      * The source of the AWS credential. The credential source map must contain the `region_url`,
@@ -99,15 +102,15 @@ public class AwsCredentials extends ExternalAccountCredentials {
   /**
    * Internal constructor. See {@link
    * ExternalAccountCredentials#ExternalAccountCredentials(HttpTransportFactory, String, String,
-   * String, String, CredentialSource, String, String, String, String, Collection)}
+   * String, CredentialSource, String, String, String, String, String, Collection)}
    */
   AwsCredentials(
       HttpTransportFactory transportFactory,
       String audience,
       String subjectTokenType,
       String tokenUrl,
-      String tokenInfoUrl,
       AwsCredentialSource credentialSource,
+      @Nullable String tokenInfoUrl,
       @Nullable String serviceAccountImpersonationUrl,
       @Nullable String quotaProjectId,
       @Nullable String clientId,
@@ -118,8 +121,8 @@ public class AwsCredentials extends ExternalAccountCredentials {
         audience,
         subjectTokenType,
         tokenUrl,
-        tokenInfoUrl,
         credentialSource,
+        tokenInfoUrl,
         serviceAccountImpersonationUrl,
         quotaProjectId,
         clientId,
@@ -175,8 +178,8 @@ public class AwsCredentials extends ExternalAccountCredentials {
         audience,
         subjectTokenType,
         tokenUrl,
-        tokenInfoUrl,
         (AwsCredentialSource) credentialSource,
+        tokenInfoUrl,
         serviceAccountImpersonationUrl,
         quotaProjectId,
         clientId,
@@ -195,28 +198,29 @@ public class AwsCredentials extends ExternalAccountCredentials {
     }
   }
 
-  private String buildSubjectToken(AwsRequestSignature signature) {
-    GenericJson headers = new GenericJson();
-    headers.setFactory(OAuth2Utils.JSON_FACTORY);
-
+  private String buildSubjectToken(AwsRequestSignature signature)
+      throws UnsupportedEncodingException {
     Map<String, String> canonicalHeaders = signature.getCanonicalHeaders();
+    List<GenericJson> headerList = new ArrayList<>();
     for (String headerName : canonicalHeaders.keySet()) {
-      headers.put(headerName, canonicalHeaders.get(headerName));
+      headerList.add(formatTokenHeaderForSts(headerName, canonicalHeaders.get(headerName)));
     }
 
-    headers.put("Authorization", signature.getAuthorizationHeader());
-    headers.put("x-goog-cloud-target-resource", audience);
+    headerList.add(formatTokenHeaderForSts("Authorization", signature.getAuthorizationHeader()));
+
+    // The canonical resource name of the workload identity pool provider.
+    headerList.add(formatTokenHeaderForSts("x-goog-cloud-target-resource", audience));
 
     GenericJson token = new GenericJson();
     token.setFactory(OAuth2Utils.JSON_FACTORY);
 
-    token.put("headers", headers);
+    token.put("headers", headerList);
     token.put("method", signature.getHttpMethod());
     token.put(
         "url",
         ((AwsCredentialSource) credentialSource)
             .regionalCredentialVerificationUrl.replace("{region}", signature.getRegion()));
-    return token.toString();
+    return URLEncoder.encode(token.toString(), "UTF-8");
   }
 
   private String getAwsRegion() throws IOException {
@@ -270,6 +274,20 @@ public class AwsCredentials extends ExternalAccountCredentials {
     return System.getenv(name);
   }
 
+  private static GenericJson formatTokenHeaderForSts(String key, String value) {
+    // The GCP STS endpoint expects the headers to be formatted as:
+    // [
+    //  {key: 'x-amz-date', value: '...'},
+    //  {key: 'Authorization', value: '...'},
+    //  ...
+    // ]
+    GenericJson header = new GenericJson();
+    header.setFactory(OAuth2Utils.JSON_FACTORY);
+    header.put("key", key);
+    header.put("value", value);
+    return header;
+  }
+
   public static AwsCredentials.Builder newBuilder() {
     return new AwsCredentials.Builder();
   }
@@ -293,8 +311,8 @@ public class AwsCredentials extends ExternalAccountCredentials {
           audience,
           subjectTokenType,
           tokenUrl,
-          tokenInfoUrl,
           (AwsCredentialSource) credentialSource,
+          tokenInfoUrl,
           serviceAccountImpersonationUrl,
           quotaProjectId,
           clientId,

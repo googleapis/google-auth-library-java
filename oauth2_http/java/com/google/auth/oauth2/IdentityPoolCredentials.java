@@ -154,15 +154,15 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
   /**
    * Internal constructor. See {@link
    * ExternalAccountCredentials#ExternalAccountCredentials(HttpTransportFactory, String, String,
-   * String, String, CredentialSource, String, String, String, String, Collection)}
+   * String, CredentialSource, String, String, String, String, String, Collection)}
    */
   IdentityPoolCredentials(
       HttpTransportFactory transportFactory,
       String audience,
       String subjectTokenType,
       String tokenUrl,
-      String tokenInfoUrl,
       IdentityPoolCredentialSource credentialSource,
+      @Nullable String tokenInfoUrl,
       @Nullable String serviceAccountImpersonationUrl,
       @Nullable String quotaProjectId,
       @Nullable String clientId,
@@ -173,8 +173,8 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
         audience,
         subjectTokenType,
         tokenUrl,
-        tokenInfoUrl,
         credentialSource,
+        tokenInfoUrl,
         serviceAccountImpersonationUrl,
         quotaProjectId,
         clientId,
@@ -269,8 +269,8 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
         audience,
         subjectTokenType,
         tokenUrl,
-        tokenInfoUrl,
         (IdentityPoolCredentialSource) credentialSource,
+        tokenInfoUrl,
         serviceAccountImpersonationUrl,
         quotaProjectId,
         clientId,
@@ -301,8 +301,8 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
           audience,
           subjectTokenType,
           tokenUrl,
-          tokenInfoUrl,
           (IdentityPoolCredentialSource) credentialSource,
+          tokenInfoUrl,
           serviceAccountImpersonationUrl,
           quotaProjectId,
           clientId,

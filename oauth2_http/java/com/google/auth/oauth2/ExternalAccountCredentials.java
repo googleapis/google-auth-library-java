@@ -77,10 +77,10 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   protected final String audience;
   protected final String subjectTokenType;
   protected final String tokenUrl;
-  protected final String tokenInfoUrl;
   protected final CredentialSource credentialSource;
   protected final Collection<String> scopes;
 
+  @Nullable protected final String tokenInfoUrl;
   @Nullable protected final String serviceAccountImpersonationUrl;
   @Nullable protected final String quotaProjectId;
   @Nullable protected final String clientId;
@@ -117,8 +117,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       String audience,
       String subjectTokenType,
       String tokenUrl,
-      String tokenInfoUrl,
       CredentialSource credentialSource,
+      @Nullable String tokenInfoUrl,
       @Nullable String serviceAccountImpersonationUrl,
       @Nullable String quotaProjectId,
       @Nullable String clientId,
@@ -132,8 +132,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     this.audience = checkNotNull(audience);
     this.subjectTokenType = checkNotNull(subjectTokenType);
     this.tokenUrl = checkNotNull(tokenUrl);
-    this.tokenInfoUrl = checkNotNull(tokenInfoUrl);
     this.credentialSource = checkNotNull(credentialSource);
+    this.tokenInfoUrl = tokenInfoUrl;
     this.serviceAccountImpersonationUrl = serviceAccountImpersonationUrl;
     this.quotaProjectId = quotaProjectId;
     this.clientId = clientId;
@@ -229,12 +229,13 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     String audience = (String) json.get("audience");
     String subjectTokenType = (String) json.get("subject_token_type");
     String tokenUrl = (String) json.get("token_url");
-    String tokenInfoUrl = (String) json.get("token_info_url");
     String serviceAccountImpersonationUrl = (String) json.get("service_account_impersonation_url");
 
     Map<String, Object> credentialSourceMap = (Map<String, Object>) json.get("credential_source");
 
     // Optional params.
+    String tokenInfoUrl =
+        json.containsKey("token_info_url") ? (String) json.get("token_info_url") : null;
     String clientId = json.containsKey("client_id") ? (String) json.get("client_id") : null;
     String clientSecret =
         json.containsKey("client_secret") ? (String) json.get("client_secret") : null;
@@ -247,8 +248,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
           audience,
           subjectTokenType,
           tokenUrl,
-          tokenInfoUrl,
           new AwsCredentialSource(credentialSourceMap),
+          tokenInfoUrl,
           serviceAccountImpersonationUrl,
           quotaProjectId,
           clientId,
@@ -260,8 +261,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
         audience,
         subjectTokenType,
         tokenUrl,
-        tokenInfoUrl,
         new IdentityPoolCredentialSource(credentialSourceMap),
+        tokenInfoUrl,
         serviceAccountImpersonationUrl,
         quotaProjectId,
         clientId,
