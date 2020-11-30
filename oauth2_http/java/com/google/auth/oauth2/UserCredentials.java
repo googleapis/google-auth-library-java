@@ -52,7 +52,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.URI;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -279,8 +278,11 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
 
   @Override
   protected Map<String, List<String>> getAdditionalHeaders() {
-    return Collections.singletonMap(
-        QUOTA_PROJECT_ID_HEADER_KEY, Collections.singletonList(quotaProjectId));
+    Map<String, List<String>> headers = super.getAdditionalHeaders();
+    if (quotaProjectId != null) {
+      return addQuotaProjectIdToRequestMetadata(quotaProjectId, headers);
+    }
+    return headers;
   }
 
   @Override

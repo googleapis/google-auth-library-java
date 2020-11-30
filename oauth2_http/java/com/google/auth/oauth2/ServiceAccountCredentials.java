@@ -76,7 +76,6 @@ import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -601,8 +600,11 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   @Override
   protected Map<String, List<String>> getAdditionalHeaders() {
-    return Collections.singletonMap(
-        QUOTA_PROJECT_ID_HEADER_KEY, Collections.singletonList(quotaProjectId));
+    Map<String, List<String>> headers = super.getAdditionalHeaders();
+    if (quotaProjectId != null) {
+      return addQuotaProjectIdToRequestMetadata(quotaProjectId, headers);
+    }
+    return headers;
   }
 
   @Override
