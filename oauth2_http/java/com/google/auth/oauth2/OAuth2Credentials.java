@@ -167,6 +167,11 @@ public class OAuth2Credentials extends Credentials {
     }
   }
 
+  /**
+   * Provide additional headers to return as request metadata.
+   *
+   * @return Map of additional headers.
+   */
   protected Map<String, List<String>> getAdditionalHeaders() {
     return EMPTY_EXTRA_HEADERS;
   }
