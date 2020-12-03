@@ -49,6 +49,7 @@ import com.google.api.client.testing.http.FixedClock;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.api.client.util.Joiner;
+import com.google.auth.RequestMetadataCallback;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
@@ -68,6 +69,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -1030,6 +1032,97 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
         writeServiceAccountStream(CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, null);
 
     testFromStreamException(serviceAccountStream, "private_key_id");
+  }
+
+  @Test
+  public void getRequestMetadataSetsQuotaProjectId() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID, "unused-client-secret");
+    transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
+
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    GoogleCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientEmail(CLIENT_EMAIL)
+            .setPrivateKey(privateKey)
+            .setPrivateKeyId(PRIVATE_KEY_ID)
+            .setScopes(SCOPES)
+            .setServiceAccountUser(USER)
+            .setProjectId(PROJECT_ID)
+            .setQuotaProjectId("my-quota-project-id")
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    Map<String, List<String>> metadata = credentials.getRequestMetadata();
+    assertTrue(metadata.containsKey("x-goog-user-project"));
+    List<String> headerValues = metadata.get("x-goog-user-project");
+    assertEquals(1, headerValues.size());
+    assertEquals("my-quota-project-id", headerValues.get(0));
+  }
+
+  @Test
+  public void getRequestMetadataNoQuotaProjectId() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID, "unused-client-secret");
+    transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
+
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    GoogleCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientEmail(CLIENT_EMAIL)
+            .setPrivateKey(privateKey)
+            .setPrivateKeyId(PRIVATE_KEY_ID)
+            .setScopes(SCOPES)
+            .setServiceAccountUser(USER)
+            .setProjectId(PROJECT_ID)
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    Map<String, List<String>> metadata = credentials.getRequestMetadata();
+    assertFalse(metadata.containsKey("x-goog-user-project"));
+  }
+
+  @Test
+  public void getRequestMetadataWithCallback() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID, "unused-client-secret");
+    transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
+
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    GoogleCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientEmail(CLIENT_EMAIL)
+            .setPrivateKey(privateKey)
+            .setPrivateKeyId(PRIVATE_KEY_ID)
+            .setScopes(SCOPES)
+            .setServiceAccountUser(USER)
+            .setProjectId(PROJECT_ID)
+            .setQuotaProjectId("my-quota-project-id")
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    final Map<String, List<String>> plainMetadata = credentials.getRequestMetadata();
+    final AtomicBoolean success = new AtomicBoolean(false);
+    credentials.getRequestMetadata(
+        null,
+        null,
+        new RequestMetadataCallback() {
+          @Override
+          public void onSuccess(Map<String, List<String>> metadata) {
+            assertEquals(plainMetadata, metadata);
+            success.set(true);
+          }
+
+          @Override
+          public void onFailure(Throwable exception) {
+            fail("Should not throw a failure.");
+          }
+        });
+
+    assertTrue("Should have run onSuccess() callback", success.get());
   }
 
   static GenericJson writeServiceAccountJson(
