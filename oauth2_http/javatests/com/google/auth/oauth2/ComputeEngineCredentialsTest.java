@@ -56,6 +56,8 @@ import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
@@ -67,6 +69,9 @@ import org.junit.runners.JUnit4;
 public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
+
+  private static final String TOKEN_URL =
+      "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token";
 
   // Id Token which includes basic default claims
   public static final String STANDARD_ID_TOKEN =
@@ -111,6 +116,67 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     public HttpTransport create() {
       return transport;
     }
+  }
+
+  @Test
+  public void createTokenUrlWithScopes_null_scopes() {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setScopes(null).build();
+    Collection<String> scopes = credentials.getScopes();
+    String tokenUrlWithScopes = credentials.createTokenUrlWithScopes();
+
+    assertEquals(TOKEN_URL, tokenUrlWithScopes);
+    assertTrue(scopes.isEmpty());
+  }
+
+  @Test
+  public void createTokenUrlWithScopes_empty_scopes() {
+    ComputeEngineCredentials.Builder builder =
+        ComputeEngineCredentials.newBuilder().setScopes(Collections.<String>emptyList());
+    ComputeEngineCredentials credentials = builder.build();
+    Collection<String> scopes = credentials.getScopes();
+    String tokenUrlWithScopes = credentials.createTokenUrlWithScopes();
+
+    assertEquals(TOKEN_URL, tokenUrlWithScopes);
+    assertTrue(scopes.isEmpty());
+    assertTrue(builder.getScopes().isEmpty());
+  }
+
+  @Test
+  public void createTokenUrlWithScopes_single_scope() {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setScopes(Arrays.asList("foo")).build();
+    String tokenUrlWithScopes = credentials.createTokenUrlWithScopes();
+    Collection<String> scopes = credentials.getScopes();
+
+    assertEquals(TOKEN_URL + "?scopes=foo", tokenUrlWithScopes);
+    assertEquals(1, scopes.size());
+    assertEquals("foo", scopes.toArray()[0]);
+  }
+
+  @Test
+  public void createTokenUrlWithScopes_multiple_scopes() {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setScopes(Arrays.asList("foo", "bar")).build();
+    Collection<String> scopes = credentials.getScopes();
+    String tokenUrlWithScopes = credentials.createTokenUrlWithScopes();
+
+    assertEquals(TOKEN_URL + "?scopes=foo,bar", tokenUrlWithScopes);
+    assertEquals(2, scopes.size());
+    assertEquals("foo", scopes.toArray()[0]);
+    assertEquals("bar", scopes.toArray()[1]);
+  }
+
+  @Test
+  public void createScoped() {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setScopes(null).build();
+    ComputeEngineCredentials credentialsWithScopes =
+        (ComputeEngineCredentials) credentials.createScoped(Arrays.asList("foo"));
+    Collection<String> scopes = credentialsWithScopes.getScopes();
+
+    assertEquals(1, scopes.size());
+    assertEquals("foo", scopes.toArray()[0]);
   }
 
   @Test
