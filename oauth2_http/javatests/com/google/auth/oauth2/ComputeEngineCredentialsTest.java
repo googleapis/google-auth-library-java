@@ -157,7 +157,9 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   @Test
   public void createTokenUrlWithScopes_multiple_scopes() {
     ComputeEngineCredentials credentials =
-        ComputeEngineCredentials.newBuilder().setScopes(Arrays.asList("foo", "bar")).build();
+        ComputeEngineCredentials.newBuilder()
+            .setScopes(Arrays.asList(null, "foo", "", "bar"))
+            .build();
     Collection<String> scopes = credentials.getScopes();
     String tokenUrlWithScopes = credentials.createTokenUrlWithScopes();
 

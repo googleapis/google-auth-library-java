@@ -40,10 +40,10 @@ import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
-import com.google.api.client.util.Joiner;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.Beta;
+import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -51,6 +51,8 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -107,7 +109,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
    *
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *     tokens.
-   * @param scopes Scope strings for the APIs to be called. May be null or an empty collection.
+   * @param scopes scope strings for the APIs to be called. May be null or an empty collection.
    */
   private ComputeEngineCredentials(
       HttpTransportFactory transportFactory, Collection<String> scopes) {
@@ -116,7 +118,13 @@ public class ComputeEngineCredentials extends GoogleCredentials
             transportFactory,
             getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
-    this.scopes = (scopes == null) ? ImmutableSet.<String>of() : ImmutableSet.copyOf(scopes);
+    if (scopes == null) {
+      this.scopes = ImmutableSet.<String>of();
+    } else {
+      List<String> scopeList = new ArrayList<String>(scopes);
+      scopeList.removeAll(Arrays.asList("", null));
+      this.scopes = ImmutableSet.<String>copyOf(scopeList);
+    }
   }
 
   /** Clones the compute engine account with the specified scopes. */
