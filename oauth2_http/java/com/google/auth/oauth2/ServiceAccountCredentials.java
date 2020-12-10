@@ -127,8 +127,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
    *     authority to the service account.
    * @param projectId the project used for billing
    * @param quotaProjectId The project used for quota and billing purposes. May be null.
-   * @param lifetime Number of seconds the access token should be valid for. The value should be at
-   *     most 43200 (12 hours). If the token is used for calling Google API, then the value should
+   * @param lifetime number of seconds the access token should be valid for. The value should be at
+   *     most 43200 (12 hours). If the token is used for calling a Google API, then the value should
    *     be at most 3600 (1 hour).
    */
   ServiceAccountCredentials(
