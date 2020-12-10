@@ -110,6 +110,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
       Arrays.asList("https://www.googleapis.com/auth/devstorage.read_only");
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
   private static final int VALID_LIFETIME = 300;
+  private static final int INVALID_LIFETIME = 43210;
   private static JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
 
   private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
@@ -194,6 +195,24 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     } catch (IOException expected) {
       assertEquals("Error requesting access token", expected.getMessage());
       assertTrue(expected.getCause().getMessage().contains(expectedMessage));
+    }
+  }
+
+  @Test()
+  public void credential_with_invalid_lifetime() throws IOException, IllegalStateException {
+
+    GoogleCredentials sourceCredentials = getSourceCredentials();
+    try {
+      ImpersonatedCredentials targetCredentials =
+          ImpersonatedCredentials.create(
+              sourceCredentials, IMPERSONATED_CLIENT_EMAIL, null, SCOPES, INVALID_LIFETIME);
+      targetCredentials.refreshAccessToken().getTokenValue();
+      fail(
+          String.format(
+              "Should throw exception with message containing '%s'",
+              "lifetime must be less than or equal to 43200"));
+    } catch (IllegalStateException expected) {
+      assertTrue(expected.getMessage().contains("lifetime must be less than or equal to 43200"));
     }
   }
 
