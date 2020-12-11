@@ -47,6 +47,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -67,31 +69,44 @@ public class AwsCredentials extends ExternalAccountCredentials {
     private final String regionalCredentialVerificationUrl;
 
     /**
-     * The source of the AWS credential. The credential source map must contain the `region_url`,
-     * `url, and `regional_cred_verification_url` entries.
-     *
-     * <p>The `region_url` is used to retrieve to targeted region.
-     *
-     * <p>The `url` is the metadata server URL which is used to retrieve the AWS credentials.
+     * The source of the AWS credential. The credential source map must contain the
+     * `regional_cred_verification_url` field.
      *
      * <p>The `regional_cred_verification_url` is the regional GetCallerIdentity action URL, used to
      * determine the account ID and its roles.
+     *
+     * <p>The `environment_id` is the environment identifier, of format “aws${version}”. This is
+     * used to indicate to the library whether breaking changes were introduced to the underlying
+     * AWS implementation.
+     *
+     * <p>The `region_url` is used to retrieve to targeted region. Optional.
+     *
+     * <p>The `url` is the metadata server URL which is used to retrieve the AWS credentials.
+     * Optional.
      */
     AwsCredentialSource(Map<String, Object> credentialSourceMap) {
       super(credentialSourceMap);
-      if (!credentialSourceMap.containsKey("region_url")) {
-        throw new IllegalArgumentException(
-            "A region_url representing the targeted region must be specified.");
-      }
-      if (!credentialSourceMap.containsKey("url")) {
-        throw new IllegalArgumentException(
-            "A url representing the metadata server endpoint must be specified.");
-      }
       if (!credentialSourceMap.containsKey("regional_cred_verification_url")) {
         throw new IllegalArgumentException(
             "A regional_cred_verification_url representing the"
                 + " GetCallerIdentity action URL must be specified.");
       }
+
+      String environmentId = (String) credentialSourceMap.get("environment_id");
+
+      // Environment version is prefixed by "aws". e.g. "aws1".
+      Matcher matcher = Pattern.compile("^(aws)([\\d]+)$").matcher(environmentId);
+      if (!matcher.find()) {
+        throw new IllegalArgumentException("Invalid AWS environment ID.");
+      }
+      int environmentVersion = Integer.parseInt(matcher.group(2));
+
+      if (environmentVersion != 1) {
+        throw new IllegalArgumentException(
+            String.format(
+                "AWS version %s is not supported in the current build.", environmentVersion));
+      }
+
       this.regionUrl = (String) credentialSourceMap.get("region_url");
       this.url = (String) credentialSourceMap.get("url");
       this.regionalCredentialVerificationUrl =
@@ -229,7 +244,14 @@ public class AwsCredentials extends ExternalAccountCredentials {
     if (region != null) {
       return region;
     }
-    region = retrieveResource(((AwsCredentialSource) credentialSource).regionUrl, "region");
+
+    AwsCredentialSource awsCredentialSource = (AwsCredentialSource) this.credentialSource;
+    if (awsCredentialSource.regionUrl == null || awsCredentialSource.regionUrl.isEmpty()) {
+      throw new IOException(
+          "Unable to determine the AWS region. The credential source does not contain the region url.");
+    }
+
+    region = retrieveResource(awsCredentialSource.regionUrl, "region");
 
     // There is an extra appended character that must be removed. If `us-east-1b` is returned,
     // we want `us-east-1`.
@@ -250,6 +272,11 @@ public class AwsCredentials extends ExternalAccountCredentials {
     AwsCredentialSource awsCredentialSource = (AwsCredentialSource) credentialSource;
     // Retrieve the IAM role that is attached to the VM. This is required to retrieve the AWS
     // security credentials.
+    if (awsCredentialSource.url == null || awsCredentialSource.url.isEmpty()) {
+      throw new IOException(
+          "Unable to determine the AWS IAM role name. The credential source does not contain the"
+              + " url field.");
+    }
     String roleName = retrieveResource(awsCredentialSource.url, "IAM role");
 
     // Retrieve the AWS security credentials by calling the endpoint specified by the credential
