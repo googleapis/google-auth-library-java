@@ -76,6 +76,9 @@ class DefaultCredentialsProvider {
   static final String RUNTIME_JETTY_LOGGER = System.getProperty("org.eclipse.jetty.util.log.class");
   static final Logger LOGGER = Logger.getLogger(DefaultCredentialsProvider.class.getName());
 
+  /** Timeout in seconds to wait for the GCE metadata server when detecting the GCE environment. */
+  static final String GCE_METADATA_TIMEOUT_SECONDS_ENV_VAR = "GCE_METADATA_TIMEOUT";
+
   static final String NO_GCE_CHECK_ENV_VAR = "NO_GCE_CHECK";
   static final String GCE_METADATA_HOST_ENV_VAR = "GCE_METADATA_HOST";
   static final String CLOUDSDK_CLIENT_ID =

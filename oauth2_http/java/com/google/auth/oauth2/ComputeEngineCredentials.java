@@ -82,6 +82,10 @@ public class ComputeEngineCredentials extends GoogleCredentials
   // "unlikely" since the expected 4-nines time is about 0.5 seconds.
   // This allows us to limit the total ping maximum timeout to 1.5 seconds
   // for developer desktop scenarios.
+  // However, this workaround doesn't work for GKE because GKE metadata resolution takes
+  // much longer time than 1.5 seconds. We won't have a timeout that works for all scenarios,
+  // so GKE users should use the `GCE_METADATA_TIMEOUT` environment variable to explicitly set the
+  // timeout in seconds.
   static final int MAX_COMPUTE_PING_TRIES = 3;
   static final int COMPUTE_PING_CONNECTION_TIMEOUT_MS = 500;
 
@@ -218,6 +222,19 @@ public class ComputeEngineCredentials extends GoogleCredentials
     return response;
   }
 
+  /**
+   * Return the timeout set by `GCE_METADATA_TIMEOUT` environment variable or the default timeout.
+   */
+  static int getMetadataTimeoutMilliseconds(DefaultCredentialsProvider provider) {
+    String timeout =
+        provider.getEnv(DefaultCredentialsProvider.GCE_METADATA_TIMEOUT_SECONDS_ENV_VAR);
+    if (timeout == null) {
+      return COMPUTE_PING_CONNECTION_TIMEOUT_MS;
+    } else {
+      return Integer.parseInt(timeout) * 1000;
+    }
+  }
+
   /** Return whether code is running on Google Compute Engine. */
   static boolean runningOnComputeEngine(
       HttpTransportFactory transportFactory, DefaultCredentialsProvider provider) {
@@ -231,7 +248,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
       try {
         HttpRequest request =
             transportFactory.create().createRequestFactory().buildGetRequest(tokenUrl);
-        request.setConnectTimeout(COMPUTE_PING_CONNECTION_TIMEOUT_MS);
+        request.setConnectTimeout(getMetadataTimeoutMilliseconds(provider));
         request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
 
         HttpResponse response = request.execute();

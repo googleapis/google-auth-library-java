@@ -56,6 +56,7 @@ import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
@@ -111,6 +112,41 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     public HttpTransport create() {
       return transport;
     }
+  }
+
+  static class MockDefaultCredentialsProvider extends DefaultCredentialsProvider {
+    private Hashtable<String, String> environmentVariables;
+
+    MockDefaultCredentialsProvider(Hashtable<String, String> environmentVariables) {
+      this.environmentVariables = environmentVariables;
+    }
+
+    @Override
+    String getEnv(String name) {
+      if (environmentVariables.containsKey(name)) {
+        return environmentVariables.get(name);
+      }
+      return null;
+    }
+  }
+
+  @Test
+  public void getMetadataTimeout_default_timeout() {
+    MockDefaultCredentialsProvider provider =
+        new MockDefaultCredentialsProvider(new Hashtable<String, String>());
+    assertEquals(500, ComputeEngineCredentials.getMetadataTimeoutMilliseconds(provider));
+  }
+
+  @Test
+  public void getMetadataTimeout_from_env_variable() {
+    MockDefaultCredentialsProvider provider =
+        new MockDefaultCredentialsProvider(
+            new Hashtable<String, String>() {
+              {
+                put(DefaultCredentialsProvider.GCE_METADATA_TIMEOUT_SECONDS_ENV_VAR, "10");
+              }
+            });
+    assertEquals(10000, ComputeEngineCredentials.getMetadataTimeoutMilliseconds(provider));
   }
 
   @Test
