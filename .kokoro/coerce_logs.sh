@@ -13,34 +13,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This script finds and moves sponge logs so that they can be found by placer
+# and are not flagged as flaky by sponge.
+
 set -eo pipefail
-# Display commands being run.
-set -x
 
 ## Get the directory of the build script
 scriptDir=$(realpath $(dirname "${BASH_SOURCE[0]}"))
 ## cd to the parent directory, i.e. the root of the git repo
 cd ${scriptDir}/..
 
-# include common functions
-source ${scriptDir}/common.sh
+job=$(basename ${KOKORO_JOB_NAME})
 
-# Print out Java version
-java -version
-echo ${JOB_TYPE}
-
-# attempt to install 3 times with exponential backoff (starting with 10 seconds)
-retry_with_backoff 3 10 \
-  mvn install -B -V \
-    -DskipTests=true \
-    -Dclirr.skip=true \
-    -Denforcer.skip=true \
-    -Dmaven.javadoc.skip=true \
-    -Dgcloud.download.skip=true
-
-# Kokoro job cloud-opensource-java/ubuntu/linkage-monitor-gcs creates this JAR
-JAR=linkage-monitor-latest-all-deps.jar
-curl -v -O "https://storage.googleapis.com/cloud-opensource-java-linkage-monitor/${JAR}"
-
-# Fails if there's new linkage errors compared with baseline
-java -jar ${JAR} com.google.cloud:libraries-bom
+echo "coercing sponge logs..."
+for xml in `find . -name *-sponge_log.xml`
+do
+  echo "processing ${xml}"
+  class=$(basename ${xml} | cut -d- -f2)
+  dir=$(dirname ${xml})/${job}/${class}
+  text=$(dirname ${xml})/${class}-sponge_log.txt
+  mkdir -p ${dir}
+  mv ${xml} ${dir}/sponge_log.xml
+  mv ${text} ${dir}/sponge_log.txt
+done
