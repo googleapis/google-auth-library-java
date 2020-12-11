@@ -23,4 +23,5 @@ java.common_templates(excludes=[
     "license-checks.xml",
     "samples/**",
     ".github/workflows/approve-readme.yaml",
+    ".github/workflows/samples.yaml",
 ])
