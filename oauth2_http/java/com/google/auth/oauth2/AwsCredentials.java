@@ -99,8 +99,8 @@ public class AwsCredentials extends ExternalAccountCredentials {
       if (!matcher.find()) {
         throw new IllegalArgumentException("Invalid AWS environment ID.");
       }
-      int environmentVersion = Integer.parseInt(matcher.group(2));
 
+      int environmentVersion = Integer.parseInt(matcher.group(2));
       if (environmentVersion != 1) {
         throw new IllegalArgumentException(
             String.format(
