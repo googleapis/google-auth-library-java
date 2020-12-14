@@ -531,7 +531,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   }
 
   /** Clones the service account with a new lifetime value * */
-  public ServiceAccountCredentials createWithNewLifetime(int lifetime) {
+  public ServiceAccountCredentials createWithCustomLifetime(int lifetime) {
     return this.toBuilder().setLifetime(lifetime).build();
   }
 

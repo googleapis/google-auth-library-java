@@ -151,9 +151,9 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void createWithNewLifetime() throws IOException {
+  public void createWithCustomLifetime() throws IOException {
     ServiceAccountCredentials credentials = createDefaultBuilder().build();
-    credentials = credentials.createWithNewLifetime(4000);
+    credentials = credentials.createWithCustomLifetime(4000);
     assertEquals(4000, credentials.getLifetime());
   }
 
