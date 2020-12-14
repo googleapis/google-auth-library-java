@@ -75,14 +75,12 @@ public class AwsCredentials extends ExternalAccountCredentials {
      * <p>The `regional_cred_verification_url` is the regional GetCallerIdentity action URL, used to
      * determine the account ID and its roles.
      *
-     * <p>The `environment_id` is the environment identifier, of format “aws${version}”. This is
-     * used to indicate to the library whether breaking changes were introduced to the underlying
-     * AWS implementation.
+     * <p>The `environment_id` is the environment identifier, in the format “aws${version}”. This
+     * indicates whether breaking changes were introduced to the underlying AWS implementation.
      *
-     * <p>The `region_url` is used to retrieve to targeted region. Optional.
+     * <p>The `region_url` identifies the targeted region. Optional.
      *
-     * <p>The `url` is the metadata server URL which is used to retrieve the AWS credentials.
-     * Optional.
+     * <p>The `url` locates the metadata server used to retrieve the AWS credentials. Optional.
      */
     AwsCredentialSource(Map<String, Object> credentialSourceMap) {
       super(credentialSourceMap);
@@ -248,7 +246,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
     AwsCredentialSource awsCredentialSource = (AwsCredentialSource) this.credentialSource;
     if (awsCredentialSource.regionUrl == null || awsCredentialSource.regionUrl.isEmpty()) {
       throw new IOException(
-          "Unable to determine the AWS region. The credential source does not contain the region url.");
+          "Unable to determine the AWS region. The credential source does not contain the region URL.");
     }
 
     region = retrieveResource(awsCredentialSource.regionUrl, "region");
