@@ -87,7 +87,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
   // so GKE users should use the `GCE_METADATA_TIMEOUT` environment variable to explicitly set the
   // timeout in seconds.
   static final int MAX_COMPUTE_PING_TRIES = 3;
-  static final int COMPUTE_PING_CONNECTION_TIMEOUT_MS = 500;
+  static final int DEFAULT_COMPUTE_PING_CONNECTION_TIMEOUT_MS = 500;
 
   private static final String METADATA_FLAVOR = "Metadata-Flavor";
   private static final String GOOGLE = "Google";
@@ -229,7 +229,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
     String timeout =
         provider.getEnv(DefaultCredentialsProvider.GCE_METADATA_TIMEOUT_SECONDS_ENV_VAR);
     if (timeout == null) {
-      return COMPUTE_PING_CONNECTION_TIMEOUT_MS;
+      return DEFAULT_COMPUTE_PING_CONNECTION_TIMEOUT_MS;
     } else {
       return Integer.parseInt(timeout) * 1000;
     }
