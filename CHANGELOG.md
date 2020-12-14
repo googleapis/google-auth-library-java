@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.22.2](https://www.github.com/googleapis/google-auth-library-java/compare/v0.22.1...v0.22.2) (2020-12-11)
+
+
+### Bug Fixes
+
+* quotaProjectId should be applied for cached `getRequestMetadata(URI, Executor, RequestMetadataCallback)` ([#509](https://www.github.com/googleapis/google-auth-library-java/issues/509)) ([0a8412f](https://www.github.com/googleapis/google-auth-library-java/commit/0a8412fcf9de4ac568b9f88618e44087dd31b144))
+
 ### [0.22.1](https://www.github.com/googleapis/google-auth-library-java/compare/v0.22.0...v0.22.1) (2020-11-05)
 
 
