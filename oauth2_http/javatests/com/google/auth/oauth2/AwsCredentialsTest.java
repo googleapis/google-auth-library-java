@@ -280,7 +280,7 @@ public class AwsCredentialsTest {
 
     assertEquals(
         "Unable to determine the AWS region. The credential source does not "
-            + "contain the region url.",
+            + "contain the region URL.",
         e.getMessage());
   }
 
