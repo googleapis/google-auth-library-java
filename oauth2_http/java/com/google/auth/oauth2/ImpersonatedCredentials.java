@@ -218,9 +218,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
     if (this.scopes == null) {
       throw new IllegalStateException(SCOPE_EMPTY_ERROR);
     }
-    if (this.lifetime > ONE_HOUR_IN_SECONDS) {
-      throw new IllegalStateException(LIFETIME_EXCEEDED_ERROR);
-    }
   }
 
   @Override

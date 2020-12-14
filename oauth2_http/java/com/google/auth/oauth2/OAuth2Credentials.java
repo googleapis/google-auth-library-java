@@ -38,6 +38,7 @@ import com.google.auth.http.AuthHttpConstants;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -56,6 +57,7 @@ public class OAuth2Credentials extends Credentials {
 
   private static final long serialVersionUID = 4556936364828217687L;
   private static final long MINIMUM_TOKEN_MILLISECONDS = 60000L * 5L;
+  private static final Map<String, List<String>> EMPTY_EXTRA_HEADERS = Collections.emptyMap();
 
   // byte[] is serializable, so the lock variable can be final
   private final Object lock = new byte[0];
@@ -89,7 +91,7 @@ public class OAuth2Credentials extends Credentials {
    */
   protected OAuth2Credentials(AccessToken accessToken) {
     if (accessToken != null) {
-      useAccessToken(accessToken);
+      useAccessToken(accessToken, EMPTY_EXTRA_HEADERS);
     }
   }
 
@@ -154,13 +156,24 @@ public class OAuth2Credentials extends Credentials {
     synchronized (lock) {
       requestMetadata = null;
       temporaryAccess = null;
-      useAccessToken(Preconditions.checkNotNull(refreshAccessToken(), "new access token"));
+      useAccessToken(
+          Preconditions.checkNotNull(refreshAccessToken(), "new access token"),
+          getAdditionalHeaders());
       if (changeListeners != null) {
         for (CredentialsChangedListener listener : changeListeners) {
           listener.onChanged(this);
         }
       }
     }
+  }
+
+  /**
+   * Provide additional headers to return as request metadata.
+   *
+   * @return additional headers
+   */
+  protected Map<String, List<String>> getAdditionalHeaders() {
+    return EMPTY_EXTRA_HEADERS;
   }
 
   /**
@@ -177,12 +190,15 @@ public class OAuth2Credentials extends Credentials {
   }
 
   // Must be called under lock
-  private void useAccessToken(AccessToken token) {
+  private void useAccessToken(AccessToken token, Map<String, List<String>> additionalHeaders) {
     this.temporaryAccess = token;
     this.requestMetadata =
-        Collections.singletonMap(
-            AuthHttpConstants.AUTHORIZATION,
-            Collections.singletonList(OAuth2Utils.BEARER_PREFIX + token.getTokenValue()));
+        ImmutableMap.<String, List<String>>builder()
+            .put(
+                AuthHttpConstants.AUTHORIZATION,
+                Collections.singletonList(OAuth2Utils.BEARER_PREFIX + token.getTokenValue()))
+            .putAll(additionalHeaders)
+            .build();
   }
 
   // Must be called under lock
