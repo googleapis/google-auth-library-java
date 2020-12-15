@@ -49,9 +49,7 @@ import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nullable;
 
-/**
- * Implements the OAuth 2.0 token exchange based on https://tools.ietf.org/html/rfc8693.
- */
+/** Implements the OAuth 2.0 token exchange based on https://tools.ietf.org/html/rfc8693. */
 public class StsRequestHandler {
   private static final String TOKEN_EXCHANGE_GRANT_TYPE =
       "urn:ietf:params:oauth:grant-type:token-exchange";
