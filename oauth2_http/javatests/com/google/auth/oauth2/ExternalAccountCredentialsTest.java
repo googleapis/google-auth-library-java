@@ -214,11 +214,6 @@ public class ExternalAccountCredentialsTest {
         credential.exchange3PICredentialForAccessToken(stsTokenExchangeRequest);
 
     assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
-
-    Map<String, List<String>> headers = transportFactory.transport.getRequest().getHeaders();
-
-    assertTrue(headers.containsKey("content-type"));
-    assertEquals("application/x-www-form-urlencoded", headers.get("content-type").get(0));
   }
 
   @Test

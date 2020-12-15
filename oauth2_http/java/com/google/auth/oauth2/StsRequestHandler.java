@@ -49,19 +49,12 @@ import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nullable;
 
-/**
- * Implements the OAuth 2.0 token exchange based on https://tools.ietf.org/html/rfc8693.
- *
- * <p>TODO(lsirac): Add client auth support. TODO(lsirac): Ensure request content is formatted
- * correctly.
- */
+/** Implements the OAuth 2.0 token exchange based on https://tools.ietf.org/html/rfc8693. */
 public class StsRequestHandler {
   private static final String TOKEN_EXCHANGE_GRANT_TYPE =
       "urn:ietf:params:oauth:grant-type:token-exchange";
   private static final String REQUESTED_TOKEN_TYPE =
       "urn:ietf:params:oauth:token-type:access_token";
-  private static final String CLOUD_PLATFORM_SCOPE =
-      "https://www.googleapis.com/auth/cloud-platform";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token response.";
 
   private String tokenExchangeEndpoint;

@@ -34,7 +34,6 @@ package com.google.auth.oauth2;
 import static com.google.api.client.util.Preconditions.checkNotNull;
 import static com.google.common.base.MoreObjects.firstNonNull;
 
-import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.auth.http.HttpTransportFactory;
@@ -292,7 +291,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     StsRequestHandler requestHandler =
         StsRequestHandler.newBuilder(
                 tokenUrl, stsTokenExchangeRequest, transportFactory.create().createRequestFactory())
-            .setHeaders(new HttpHeaders().setContentType("application/x-www-form-urlencoded"))
             .build();
 
     StsTokenExchangeResponse response = requestHandler.exchangeToken();

@@ -72,6 +72,7 @@ public class AwsCredentialsTest {
   private static final Map<String, Object> AWS_CREDENTIAL_SOURCE_MAP =
       new HashMap<String, Object>() {
         {
+          put("environment_id", "aws1");
           put("region_url", "regionUrl");
           put("url", "url");
           put("regional_cred_verification_url", "regionalCredVerificationUrl");
@@ -252,6 +253,38 @@ public class AwsCredentialsTest {
   }
 
   @Test
+  public void retrieveSubjectToken_noRegionUrlProvided() {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    Map<String, Object> credentialSource = new HashMap<>();
+    credentialSource.put("environment_id", "aws1");
+    credentialSource.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
+
+    final AwsCredentials awsCredential =
+        (AwsCredentials)
+            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+                .setHttpTransportFactory(transportFactory)
+                .setCredentialSource(new AwsCredentialSource(credentialSource))
+                .build();
+
+    IOException e =
+        assertThrows(
+            IOException.class,
+            new ThrowingRunnable() {
+              @Override
+              public void run() throws IOException {
+                awsCredential.retrieveSubjectToken();
+              }
+            });
+
+    assertEquals(
+        "Unable to determine the AWS region. The credential source does not "
+            + "contain the region URL.",
+        e.getMessage());
+  }
+
+  @Test
   public void getAwsSecurityCredentials_fromEnvironmentVariablesNoToken() throws IOException {
     TestAwsCredentials testAwsCredentials = TestAwsCredentials.newBuilder(AWS_CREDENTIAL).build();
     testAwsCredentials.setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId");
@@ -298,6 +331,37 @@ public class AwsCredentialsTest {
   }
 
   @Test
+  public void getAwsSecurityCredentials_fromMetadataServer_noUrlProvided() {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    Map<String, Object> credentialSource = new HashMap<>();
+    credentialSource.put("environment_id", "aws1");
+    credentialSource.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
+
+    final AwsCredentials awsCredential =
+        (AwsCredentials)
+            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+                .setHttpTransportFactory(transportFactory)
+                .setCredentialSource(new AwsCredentialSource(credentialSource))
+                .build();
+
+    IOException e =
+        assertThrows(
+            IOException.class,
+            new ThrowingRunnable() {
+              @Override
+              public void run() throws IOException {
+                awsCredential.getAwsSecurityCredentials();
+              }
+            });
+
+    assertEquals(
+        "Unable to determine the AWS IAM role name. The credential source does not contain the url field.",
+        e.getMessage());
+  }
+
+  @Test
   public void createdScoped_clonedCredentialWithAddedScopes() {
     AwsCredentials credentials =
         (AwsCredentials)
@@ -326,9 +390,68 @@ public class AwsCredentialsTest {
     assertEquals(newScopes, newCredentials.getScopes());
   }
 
+  @Test
+  public void credentialSource_invalidAwsEnvironmentId() {
+    final Map<String, Object> credentialSource = new HashMap<>();
+    credentialSource.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
+    credentialSource.put("environment_id", "azure1");
+
+    IllegalArgumentException e =
+        assertThrows(
+            IllegalArgumentException.class,
+            new ThrowingRunnable() {
+              @Override
+              public void run() {
+                new AwsCredentialSource(credentialSource);
+              }
+            });
+
+    assertEquals("Invalid AWS environment ID.", e.getMessage());
+  }
+
+  @Test
+  public void credentialSource_invalidAwsEnvironmentVersion() {
+    final Map<String, Object> credentialSource = new HashMap<>();
+    int environmentVersion = 2;
+    credentialSource.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
+    credentialSource.put("environment_id", "aws" + environmentVersion);
+
+    IllegalArgumentException e =
+        assertThrows(
+            IllegalArgumentException.class,
+            new ThrowingRunnable() {
+              @Override
+              public void run() {
+                new AwsCredentialSource(credentialSource);
+              }
+            });
+
+    assertEquals(
+        String.format("AWS version %s is not supported in the current build.", environmentVersion),
+        e.getMessage());
+  }
+
+  @Test
+  public void credentialSource_missingRegionalCredVerificationUrl() {
+    IllegalArgumentException e =
+        assertThrows(
+            IllegalArgumentException.class,
+            new ThrowingRunnable() {
+              @Override
+              public void run() {
+                new AwsCredentialSource(new HashMap<String, Object>());
+              }
+            });
+
+    assertEquals(
+        "A regional_cred_verification_url representing the GetCallerIdentity action URL must be specified.",
+        e.getMessage());
+  }
+
   private static AwsCredentialSource buildAwsCredentialSource(
       MockExternalAccountCredentialsTransportFactory transportFactory) {
     Map<String, Object> credentialSourceMap = new HashMap<>();
+    credentialSourceMap.put("environment_id", "aws1");
     credentialSourceMap.put("region_url", transportFactory.transport.getAwsRegionUrl());
     credentialSourceMap.put("url", transportFactory.transport.getAwsCredentialsUrl());
     credentialSourceMap.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
