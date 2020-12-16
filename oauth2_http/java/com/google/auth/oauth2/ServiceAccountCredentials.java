@@ -530,7 +530,12 @@ public class ServiceAccountCredentials extends GoogleCredentials
         lifetime);
   }
 
-  /** Clones the service account with a new lifetime value * */
+  /**
+   * Clones the service account with a new lifetime value.
+   *
+   * @param lifetime life time value in seconds
+   * @return the cloned service account credentials with the given custom life time
+   */
   public ServiceAccountCredentials createWithCustomLifetime(int lifetime) {
     return this.toBuilder().setLifetime(lifetime).build();
   }
@@ -583,7 +588,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     return tokenServerUri;
   }
 
-  public final int getLifetime() {
+  int getLifetime() {
     return lifetime;
   }
 
