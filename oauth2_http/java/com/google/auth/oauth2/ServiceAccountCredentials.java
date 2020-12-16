@@ -93,7 +93,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final int TWELVE_HOURS_IN_SECONDS = 43200;
-  private static final int ONE_HOUR_IN_SECONDS = 3600;
+  private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
   private static final String LIFETIME_EXCEEDED_ERROR =
       "lifetime must be less than or equal to 43200";
 
@@ -129,7 +129,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
    * @param quotaProjectId The project used for quota and billing purposes. May be null.
    * @param lifetime number of seconds the access token should be valid for. The value should be at
    *     most 43200 (12 hours). If the token is used for calling a Google API, then the value should
-   *     be at most 3600 (1 hour).
+   *     be at most 3600 (1 hour). If the given value is 0, then the default value 3600 will be used
+   *     when creating the credentials.
    */
   ServiceAccountCredentials(
       String clientId,
@@ -160,7 +161,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     if (lifetime > TWELVE_HOURS_IN_SECONDS) {
       throw new IllegalStateException(LIFETIME_EXCEEDED_ERROR);
     }
-    this.lifetime = lifetime;
+    this.lifetime = lifetime == 0 ? DEFAULT_LIFETIME_IN_SECONDS : lifetime;
   }
 
   /**
@@ -338,7 +339,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         serviceAccountUser,
         projectId,
         quotaProject,
-        ONE_HOUR_IN_SECONDS);
+        DEFAULT_LIFETIME_IN_SECONDS);
   }
 
   /** Helper to convert from a PKCS#8 String to an RSA private key */
@@ -533,7 +534,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
   /**
    * Clones the service account with a new lifetime value.
    *
-   * @param lifetime life time value in seconds
+   * @param lifetime life time value in seconds. The value should be at most 43200 (12 hours). If
+   *     the token is used for calling a Google API, then the value should be at most 3600 (1 hour).
+   *     If the given value is 0, then the default value 3600 will be used when creating the
+   *     credentials.
    * @return the cloned service account credentials with the given custom life time
    */
   public ServiceAccountCredentials createWithCustomLifetime(int lifetime) {
@@ -778,7 +782,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     private Collection<String> scopes;
     private HttpTransportFactory transportFactory;
     private String quotaProjectId;
-    private int lifetime = ONE_HOUR_IN_SECONDS;
+    private int lifetime = DEFAULT_LIFETIME_IN_SECONDS;
 
     protected Builder() {}
 

@@ -111,7 +111,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
           + "aXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwic3ViIjoiMTAyMTAxNTUwODM0MjAwNzA4NTY4In0"
           + ".redacted";
   private static final String QUOTA_PROJECT = "sample-quota-project-id";
-  private static final int ONE_HOUR_IN_SECONDS = 3600;
+  private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
   private static final int INVALID_LIFETIME = 43210;
 
   private ServiceAccountCredentials.Builder createDefaultBuilder() throws IOException {
@@ -129,12 +129,15 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void setLifetime() throws IOException {
     ServiceAccountCredentials.Builder builder = createDefaultBuilder();
-    assertEquals(ONE_HOUR_IN_SECONDS, builder.getLifetime());
-    assertEquals(ONE_HOUR_IN_SECONDS, builder.build().getLifetime());
+    assertEquals(DEFAULT_LIFETIME_IN_SECONDS, builder.getLifetime());
+    assertEquals(DEFAULT_LIFETIME_IN_SECONDS, builder.build().getLifetime());
 
     builder.setLifetime(4000);
     assertEquals(4000, builder.getLifetime());
     assertEquals(4000, builder.build().getLifetime());
+
+    builder.setLifetime(0);
+    assertEquals(DEFAULT_LIFETIME_IN_SECONDS, builder.build().getLifetime());
   }
 
   @Test
