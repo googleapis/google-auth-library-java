@@ -62,7 +62,7 @@
     <project.google.http.version>1.38.0</project.google.http.version>
     <project.junit.version>4.13.1</project.junit.version>
     <project.guava.version>30.0-android</project.guava.version>
-    <project.appengine.version>1.9.78</project.appengine.version>
+    <project.appengine.version>1.9.84</project.appengine.version>
     <project.autovalue.version>1.7.4</project.autovalue.version>
     <project.findbugs.version>3.0.2</project.findbugs.version>
     <deploy.autorelease>false</deploy.autorelease>
