@@ -891,7 +891,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
       return quotaProjectId;
     }
 
-    public int getLifetime() {
+    int getLifetime() {
       return lifetime;
     }
 
