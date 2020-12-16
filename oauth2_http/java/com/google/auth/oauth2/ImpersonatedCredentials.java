@@ -90,7 +90,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
   private static final long serialVersionUID = -2133257318957488431L;
   private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-  private static final int ONE_HOUR_IN_SECONDS = 3600;
+  private static final int TWELVE_HOURS_IN_SECONDS = 43200;
   private static final String CLOUD_PLATFORM_SCOPE =
       "https://www.googleapis.com/auth/cloud-platform";
   private static final String IAM_ACCESS_TOKEN_ENDPOINT =
@@ -98,7 +98,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
   private static final String SCOPE_EMPTY_ERROR = "Scopes cannot be null";
   private static final String LIFETIME_EXCEEDED_ERROR =
-      "lifetime must be less than or equal to 3600";
+      "lifetime must be less than or equal to 43200";
 
   private GoogleCredentials sourceCredentials;
   private String targetPrincipal;
@@ -120,7 +120,11 @@ public class ImpersonatedCredentials extends GoogleCredentials
    *     Creator on target_principal. If left unset, sourceCredential must have that role on
    *     targetPrincipal.
    * @param scopes Scopes to request during the authorization grant.
-   * @param lifetime Number of seconds the delegated credential should be valid for (up to 3600).
+   * @param lifetime Number of seconds the delegated credential should be valid for. By default this
+   *     value should be at most 3600. However, you can follow the instructions described in the
+   *     following link to set up the service account, and extend the maximum lifetime to 43200 (12
+   *     hours).
+   *     https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oauth
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *     tokens.
    * @return new credentials
@@ -153,7 +157,11 @@ public class ImpersonatedCredentials extends GoogleCredentials
    *     Creator on target_principal. If left unset, sourceCredential must have that role on
    *     targetPrincipal.
    * @param scopes Scopes to request during the authorization grant.
-   * @param lifetime Number of seconds the delegated credential should be valid for (up to 3600).
+   * @param lifetime Number of seconds the delegated credential should be valid for. By default this
+   *     value should be at most 3600. However, you can follow the instructions described in the
+   *     following link to set up the service account, and extend the maximum lifetime to 43200 (12
+   *     hours).
+   *     https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oauth
    * @return new credentials
    */
   public static ImpersonatedCredentials create(
@@ -217,6 +225,9 @@ public class ImpersonatedCredentials extends GoogleCredentials
     }
     if (this.scopes == null) {
       throw new IllegalStateException(SCOPE_EMPTY_ERROR);
+    }
+    if (this.lifetime > TWELVE_HOURS_IN_SECONDS) {
+      throw new IllegalStateException(LIFETIME_EXCEEDED_ERROR);
     }
   }
 
