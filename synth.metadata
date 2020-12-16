@@ -3,15 +3,15 @@
     {
       "git": {
         "name": ".",
-        "remote": "git@github.com:googleapis/google-auth-library-java.git",
-        "sha": "0a8412fcf9de4ac568b9f88618e44087dd31b144"
+        "remote": "https://github.com/googleapis/google-auth-library-java.git",
+        "sha": "5a1d5c0f56c62311b646ffbdc2e39affa55d5c0c"
       }
     },
     {
       "git": {
         "name": "synthtool",
         "remote": "https://github.com/googleapis/synthtool.git",
-        "sha": "996775eca5fd934edac3c2ae34b80ff0395b1717"
+        "sha": "3f67ceece7e797a5736a25488aae35405649b90b"
       }
     }
   ],
