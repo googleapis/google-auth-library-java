@@ -1,5 +1,42 @@
 # Changelog
 
+### [0.22.2](https://www.github.com/googleapis/google-auth-library-java/compare/v0.22.1...v0.22.2) (2020-12-11)
+
+
+### Bug Fixes
+
+* quotaProjectId should be applied for cached `getRequestMetadata(URI, Executor, RequestMetadataCallback)` ([#509](https://www.github.com/googleapis/google-auth-library-java/issues/509)) ([0a8412f](https://www.github.com/googleapis/google-auth-library-java/commit/0a8412fcf9de4ac568b9f88618e44087dd31b144))
+
+### [0.22.1](https://www.github.com/googleapis/google-auth-library-java/compare/v0.22.0...v0.22.1) (2020-11-05)
+
+
+### Bug Fixes
+
+* remove 1 hour limit for impersonated token ([#490](https://www.github.com/googleapis/google-auth-library-java/issues/490)) ([927e3d5](https://www.github.com/googleapis/google-auth-library-java/commit/927e3d5598e2d2b06512b27f4210994c65b26f59))
+
+
+### Dependencies
+
+* update dependency com.google.guava:guava to v30 ([#497](https://www.github.com/googleapis/google-auth-library-java/issues/497)) ([0551649](https://www.github.com/googleapis/google-auth-library-java/commit/055164969d175718ee8f2c0369b84bcddc1d7134))
+* update dependency com.google.http-client:google-http-client-bom to v1.38.0 ([#503](https://www.github.com/googleapis/google-auth-library-java/issues/503)) ([46f20bc](https://www.github.com/googleapis/google-auth-library-java/commit/46f20bca8b5951ebea6a963b3affde2b92d403c7))
+
+## [0.22.0](https://www.github.com/googleapis/google-auth-library-java/compare/v0.21.1...v0.22.0) (2020-10-13)
+
+
+### Features
+
+* add logging at FINE level for each step of ADC ([#435](https://www.github.com/googleapis/google-auth-library-java/issues/435)) ([7d145b2](https://www.github.com/googleapis/google-auth-library-java/commit/7d145b2371033093ea13fd05520c90970a5ef363))
+
+
+### Documentation
+
+* remove bad javadoc tags ([#478](https://www.github.com/googleapis/google-auth-library-java/issues/478)) ([a329c41](https://www.github.com/googleapis/google-auth-library-java/commit/a329c4171735c3d4ee574978e6c3742b96c01f74))
+
+
+### Dependencies
+
+* update dependency com.google.http-client:google-http-client-bom to v1.37.0 ([#486](https://www.github.com/googleapis/google-auth-library-java/issues/486)) ([3027fbf](https://www.github.com/googleapis/google-auth-library-java/commit/3027fbfaf017f5aa5a22cc51cd38a522597729c0))
+
 ### [0.21.1](https://www.github.com/googleapis/google-auth-library-java/compare/v0.21.0...v0.21.1) (2020-07-07)
 
 

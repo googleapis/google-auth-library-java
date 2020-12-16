@@ -599,9 +599,12 @@ public class ServiceAccountCredentials extends GoogleCredentials
   }
 
   @Override
-  public Map<String, List<String>> getRequestMetadata(URI uri) throws IOException {
-    Map<String, List<String>> requestMetadata = super.getRequestMetadata(uri);
-    return addQuotaProjectIdToRequestMetadata(quotaProjectId, requestMetadata);
+  protected Map<String, List<String>> getAdditionalHeaders() {
+    Map<String, List<String>> headers = super.getAdditionalHeaders();
+    if (quotaProjectId != null) {
+      return addQuotaProjectIdToRequestMetadata(quotaProjectId, headers);
+    }
+    return headers;
   }
 
   @Override

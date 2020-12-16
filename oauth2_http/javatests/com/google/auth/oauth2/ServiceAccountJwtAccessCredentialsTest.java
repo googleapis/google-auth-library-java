@@ -46,6 +46,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.util.Clock;
 import com.google.auth.Credentials;
+import com.google.auth.RequestMetadataCallback;
 import com.google.auth.TestClock;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
@@ -61,6 +62,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -756,6 +758,76 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
 
     Map<String, List<String>> metadata = withAudience.getRequestMetadata(CALL_URI);
     verifyJwtAccess(metadata, SA_CLIENT_EMAIL, URI.create("default-audience"), SA_PRIVATE_KEY_ID);
+  }
+
+  @Test
+  public void getRequestMetadataSetsQuotaProjectId() throws IOException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    ServiceAccountJwtAccessCredentials credentials =
+        ServiceAccountJwtAccessCredentials.newBuilder()
+            .setClientId(SA_CLIENT_ID)
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(privateKey)
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setQuotaProjectId("my-quota-project-id")
+            .setDefaultAudience(URI.create("default-audience"))
+            .build();
+
+    Map<String, List<String>> metadata = credentials.getRequestMetadata();
+    assertTrue(metadata.containsKey("x-goog-user-project"));
+    List<String> headerValues = metadata.get("x-goog-user-project");
+    assertEquals(1, headerValues.size());
+    assertEquals("my-quota-project-id", headerValues.get(0));
+  }
+
+  @Test
+  public void getRequestMetadataNoQuotaProjectId() throws IOException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    ServiceAccountJwtAccessCredentials credentials =
+        ServiceAccountJwtAccessCredentials.newBuilder()
+            .setClientId(SA_CLIENT_ID)
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(privateKey)
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setDefaultAudience(URI.create("default-audience"))
+            .build();
+
+    Map<String, List<String>> metadata = credentials.getRequestMetadata();
+    assertFalse(metadata.containsKey("x-goog-user-project"));
+  }
+
+  @Test
+  public void getRequestMetadataWithCallback() throws IOException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    ServiceAccountJwtAccessCredentials credentials =
+        ServiceAccountJwtAccessCredentials.newBuilder()
+            .setClientId(SA_CLIENT_ID)
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(privateKey)
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setQuotaProjectId("my-quota-project-id")
+            .setDefaultAudience(URI.create("default-audience"))
+            .build();
+
+    final Map<String, List<String>> plainMetadata = credentials.getRequestMetadata();
+    final AtomicBoolean success = new AtomicBoolean(false);
+    credentials.getRequestMetadata(
+        null,
+        null,
+        new RequestMetadataCallback() {
+          @Override
+          public void onSuccess(Map<String, List<String>> metadata) {
+            assertEquals(plainMetadata, metadata);
+            success.set(true);
+          }
+
+          @Override
+          public void onFailure(Throwable exception) {
+            fail("Should not throw a failure.");
+          }
+        });
+
+    assertTrue("Should have run onSuccess() callback", success.get());
   }
 
   private void verifyJwtAccess(
