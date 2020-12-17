@@ -94,8 +94,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final int TWELVE_HOURS_IN_SECONDS = 43200;
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
-  private static final String LIFETIME_EXCEEDED_ERROR =
-      "lifetime must be less than or equal to 43200";
 
   private final String clientId;
   private final String clientEmail;
@@ -159,7 +157,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     this.projectId = projectId;
     this.quotaProjectId = quotaProjectId;
     if (lifetime > TWELVE_HOURS_IN_SECONDS) {
-      throw new IllegalStateException(LIFETIME_EXCEEDED_ERROR);
+      throw new IllegalStateException("lifetime must be less than or equal to 43200");
     }
     this.lifetime = lifetime == 0 ? DEFAULT_LIFETIME_IN_SECONDS : lifetime;
   }
@@ -592,6 +590,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     return tokenServerUri;
   }
 
+  @VisibleForTesting
   int getLifetime() {
     return lifetime;
   }
@@ -895,7 +894,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
       return quotaProjectId;
     }
 
-    int getLifetime() {
+    public int getLifetime() {
       return lifetime;
     }
 
