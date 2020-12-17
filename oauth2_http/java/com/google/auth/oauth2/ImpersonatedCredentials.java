@@ -121,8 +121,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
    *     value should be at most 3600. However, you can follow <a
    *     href='https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oauth'>these
    *     instructions</a> to set up the service account and extend the maximum lifetime to 43200 (12
-   *     hours). If the given lifetime is 0, default value 3600 will be used instead when creating the
-   *    credentials.
+   *     hours). If the given lifetime is 0, default value 3600 will be used instead when creating
+   *     the credentials.
    * @param transportFactory HTTP transport factory that creates the transport used to get access
    *     tokens
    * @return new credentials
@@ -233,9 +233,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
     }
     if (this.lifetime > TWELVE_HOURS_IN_SECONDS) {
       throw new IllegalStateException("lifetime must be less than or equal to 43200");
-    }
-    if (this.lifetime == 0) {
-      this.lifetime = DEFAULT_LIFETIME_IN_SECONDS;
     }
   }
 
@@ -366,7 +363,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     private String targetPrincipal;
     private List<String> delegates;
     private List<String> scopes;
-    private int lifetime;
+    private int lifetime = DEFAULT_LIFETIME_IN_SECONDS;
     private HttpTransportFactory transportFactory;
 
     protected Builder() {}
@@ -413,7 +410,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     }
 
     public Builder setLifetime(int lifetime) {
-      this.lifetime = lifetime;
+      this.lifetime = lifetime == 0 ? DEFAULT_LIFETIME_IN_SECONDS : lifetime;
       return this;
     }
 
