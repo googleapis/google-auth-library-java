@@ -159,7 +159,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     if (lifetime > TWELVE_HOURS_IN_SECONDS) {
       throw new IllegalStateException("lifetime must be less than or equal to 43200");
     }
-    this.lifetime = lifetime == 0 ? DEFAULT_LIFETIME_IN_SECONDS : lifetime;
+    this.lifetime = lifetime;
   }
 
   /**
@@ -850,7 +850,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     }
 
     public Builder setLifetime(int lifetime) {
-      this.lifetime = lifetime;
+      this.lifetime = lifetime == 0 ? DEFAULT_LIFETIME_IN_SECONDS : lifetime;
       return this;
     }
 
