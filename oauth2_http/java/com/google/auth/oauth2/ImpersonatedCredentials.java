@@ -61,11 +61,11 @@ import java.util.Objects;
 
 /**
  * ImpersonatedCredentials allowing credentials issued to a user or service account to impersonate
- * another. <br>
- * The source project using ImpersonatedCredentials must enable the "IAMCredentials" API.<br>
- * Also, the target service account must grant the orginating principal the "Service Account Token
- * Creator" IAM role. <br>
- * Usage:<br>
+ * another.
+ * The source project using ImpersonatedCredentials must enable the "IAMCredentials" API.
+ * Also, the target service account must grant the originating principal the "Service Account Token
+ * Creator" IAM role.<p>
+ * Usage:
  *
  * <pre>
  * String credPath = "/path/to/svc_account.json";
@@ -96,10 +96,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
   private static final String IAM_ACCESS_TOKEN_ENDPOINT =
       "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken";
 
-  private static final String SCOPE_EMPTY_ERROR = "Scopes cannot be null";
-  private static final String LIFETIME_EXCEEDED_ERROR =
-      "lifetime must be less than or equal to 43200";
-
   private GoogleCredentials sourceCredentials;
   private String targetPrincipal;
   private List<String> delegates;
@@ -110,23 +106,23 @@ public class ImpersonatedCredentials extends GoogleCredentials
   private transient HttpTransportFactory transportFactory;
 
   /**
-   * @param sourceCredentials The source credential used as to acquire the impersonated credentials
-   * @param targetPrincipal The service account to impersonate.
-   * @param delegates The chained list of delegates required to grant the final access_token. If
+   * @param sourceCredentials the source credential used as to acquire the impersonated credentials
+   * @param targetPrincipal the service account to impersonate
+   * @param delegates the chained list of delegates required to grant the final access_token. If
    *     set, the sequence of identities must have "Service Account Token Creator" capability
    *     granted to the preceding identity. For example, if set to [serviceAccountB,
    *     serviceAccountC], the sourceCredential must have the Token Creator role on serviceAccountB.
    *     serviceAccountB must have the Token Creator on serviceAccountC. Finally, C must have Token
-   *     Creator on target_principal. If left unset, sourceCredential must have that role on
+   *     Creator on target_principal. If unset, sourceCredential must have that role on
    *     targetPrincipal.
-   * @param scopes Scopes to request during the authorization grant.
-   * @param lifetime Number of seconds the delegated credential should be valid for. By default this
-   *     value should be at most 3600. However, you can follow the instructions described in the
-   *     following link to set up the service account, and extend the maximum lifetime to 43200 (12
-   *     hours).
-   *     https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oauth
-   * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *     tokens.
+   * @param scopes scopes to request during the authorization grant
+   * @param lifetime number of seconds the delegated credential should be valid. By default this
+   *     value should be at most 3600. However, you can follow 
+   *     <a href='https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oauth'>these
+   *     instructions</a> to set up the service account and extend the maximum lifetime
+   *     to 43200 (12 hours).
+   * @param transportFactory HTTP transport factory that creates the transport used to get access
+   *     tokens
    * @return new credentials
    */
   public static ImpersonatedCredentials create(
@@ -147,20 +143,21 @@ public class ImpersonatedCredentials extends GoogleCredentials
   }
 
   /**
-   * @param sourceCredentials The source credential used as to acquire the impersonated credentials
-   * @param targetPrincipal The service account to impersonate.
-   * @param delegates The chained list of delegates required to grant the final access_token. If
+   * @param sourceCredentials the source credential used as to acquire the impersonated credentials
+   * @param targetPrincipal the service account to impersonate
+   * @param delegates the chained list of delegates required to grant the final access_token. If
    *     set, the sequence of identities must have "Service Account Token Creator" capability
    *     granted to the preceding identity. For example, if set to [serviceAccountB,
    *     serviceAccountC], the sourceCredential must have the Token Creator role on serviceAccountB.
    *     serviceAccountB must have the Token Creator on serviceAccountC. Finally, C must have Token
    *     Creator on target_principal. If left unset, sourceCredential must have that role on
    *     targetPrincipal.
-   * @param scopes Scopes to request during the authorization grant.
-   * @param lifetime Number of seconds the delegated credential should be valid for. By default this
-   *     value should be at most 3600. However, you can follow the instructions described in the
-   *     following link to set up the service account, and extend the maximum lifetime to 43200 (12
-   *     hours).
+   * @param scopes scopes to request during the authorization grant
+   * @param lifetime number of seconds the delegated credential should be valid. By default this
+   *     value should be at most 3600. However, you can follow 
+   *     <a href='https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oauth'>these
+   *     instructions</a> to set up the service account and extend the maximum lifetime
+   *     to 43200 (12 hours).
    *     https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oauth
    * @return new credentials
    */
@@ -182,7 +179,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
   /**
    * Returns the email field of the serviceAccount that is being impersonated.
    *
-   * @return email address of the impersonated service account.
+   * @return email address of the impersonated service account
    */
   @Override
   public String getAccount() {
@@ -224,10 +221,10 @@ public class ImpersonatedCredentials extends GoogleCredentials
       this.delegates = new ArrayList<String>();
     }
     if (this.scopes == null) {
-      throw new IllegalStateException(SCOPE_EMPTY_ERROR);
+      throw new IllegalStateException("Scopes cannot be null");
     }
     if (this.lifetime > TWELVE_HOURS_IN_SECONDS) {
-      throw new IllegalStateException(LIFETIME_EXCEEDED_ERROR);
+      throw new IllegalStateException("lifetime must be less than or equal to 43200");
     }
   }
 
@@ -278,26 +275,25 @@ public class ImpersonatedCredentials extends GoogleCredentials
         OAuth2Utils.validateString(responseData, "expireTime", "Expected to find an expireTime");
 
     DateFormat format = new SimpleDateFormat(RFC3339);
-    Date date;
     try {
-      date = format.parse(expireTime);
+      Date date = format.parse(expireTime);
+      return new AccessToken(accessToken, date);
     } catch (ParseException pe) {
       throw new IOException("Error parsing expireTime: " + pe.getMessage());
     }
-    return new AccessToken(accessToken, date);
   }
 
   /**
    * Returns an IdToken for the current Credential.
    *
-   * @param targetAudience the audience field for the issued ID Token
-   * @param options List of Credential specific options for for the token. For example, an IDToken
-   *     for a ImpersonatedCredentials can return the email address within the token claims if
+   * @param targetAudience the audience field for the issued ID token
+   * @param options credential specific options for for the token. For example, an ID token
+   *     for an ImpersonatedCredentials can return the email address within the token claims if
    *     "ImpersonatedCredentials.INCLUDE_EMAIL" is provided as a list option.<br>
    *     Only one option value is supported: "ImpersonatedCredentials.INCLUDE_EMAIL" If no options
-   *     are set, the default excludes the "includeEmail" attribute in the API request
-   * @return IdToken object which includes the raw id_token, expiration and audience.
-   * @throws IOException if the attempt to get an IdToken failed
+   *     are set, the default excludes the "includeEmail" attribute in the API request.
+   * @return IdToken object which includes the raw id_token, expiration, and audience
+   * @throws IOException if the attempt to get an ID token failed
    */
   @Beta
   @Override
