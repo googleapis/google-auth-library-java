@@ -61,11 +61,11 @@ import java.util.Objects;
 
 /**
  * ImpersonatedCredentials allowing credentials issued to a user or service account to impersonate
- * another.
- * The source project using ImpersonatedCredentials must enable the "IAMCredentials" API.
+ * another. The source project using ImpersonatedCredentials must enable the "IAMCredentials" API.
  * Also, the target service account must grant the originating principal the "Service Account Token
- * Creator" IAM role.<p>
- * Usage:
+ * Creator" IAM role.
+ *
+ * <p>Usage:
  *
  * <pre>
  * String credPath = "/path/to/svc_account.json";
@@ -117,10 +117,10 @@ public class ImpersonatedCredentials extends GoogleCredentials
    *     targetPrincipal.
    * @param scopes scopes to request during the authorization grant
    * @param lifetime number of seconds the delegated credential should be valid. By default this
-   *     value should be at most 3600. However, you can follow 
-   *     <a href='https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oauth'>these
-   *     instructions</a> to set up the service account and extend the maximum lifetime
-   *     to 43200 (12 hours).
+   *     value should be at most 3600. However, you can follow <a
+   *     href='https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oauth'>these
+   *     instructions</a> to set up the service account and extend the maximum lifetime to 43200 (12
+   *     hours).
    * @param transportFactory HTTP transport factory that creates the transport used to get access
    *     tokens
    * @return new credentials
@@ -154,10 +154,10 @@ public class ImpersonatedCredentials extends GoogleCredentials
    *     targetPrincipal.
    * @param scopes scopes to request during the authorization grant
    * @param lifetime number of seconds the delegated credential should be valid. By default this
-   *     value should be at most 3600. However, you can follow 
-   *     <a href='https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oauth'>these
-   *     instructions</a> to set up the service account and extend the maximum lifetime
-   *     to 43200 (12 hours).
+   *     value should be at most 3600. However, you can follow <a
+   *     href='https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oauth'>these
+   *     instructions</a> to set up the service account and extend the maximum lifetime to 43200 (12
+   *     hours).
    *     https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oauth
    * @return new credentials
    */
@@ -287,8 +287,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
    * Returns an IdToken for the current Credential.
    *
    * @param targetAudience the audience field for the issued ID token
-   * @param options credential specific options for for the token. For example, an ID token
-   *     for an ImpersonatedCredentials can return the email address within the token claims if
+   * @param options credential specific options for for the token. For example, an ID token for an
+   *     ImpersonatedCredentials can return the email address within the token claims if
    *     "ImpersonatedCredentials.INCLUDE_EMAIL" is provided as a list option.<br>
    *     Only one option value is supported: "ImpersonatedCredentials.INCLUDE_EMAIL" If no options
    *     are set, the default excludes the "includeEmail" attribute in the API request.
