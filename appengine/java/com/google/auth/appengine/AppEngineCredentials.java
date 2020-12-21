@@ -71,9 +71,10 @@ public class AppEngineCredentials extends GoogleCredentials implements ServiceAc
    */
   @Deprecated
   public static GoogleCredentials getApplicationDefault() throws IOException {
-    logger.warning("You are attempting to "
-        + "fetch Application Default Credentials from com.google.auth.appengine.AppEngineCredentials."
-        + " This method will not return a com.google.auth.appengine.AppEngineCredentials instance.");
+    logger.warning(
+        "You are attempting to "
+            + "fetch Application Default Credentials from com.google.auth.appengine.AppEngineCredentials."
+            + " This method will not return a com.google.auth.appengine.AppEngineCredentials instance.");
     return GoogleCredentials.getApplicationDefault();
   }
 
@@ -84,9 +85,10 @@ public class AppEngineCredentials extends GoogleCredentials implements ServiceAc
   @Deprecated
   public static GoogleCredentials getApplicationDefault(HttpTransportFactory transportFactory)
       throws IOException {
-    logger.warning("You are attempting to fetch "
-        + "Application Default Credentials from com.google.auth.appengine.AppEngineCredentials. "
-        + "This method does not return a com.google.auth.appengine.AppEngineCredentials instance.");
+    logger.warning(
+        "You are attempting to fetch "
+            + "Application Default Credentials from com.google.auth.appengine.AppEngineCredentials. "
+            + "This method does not return a com.google.auth.appengine.AppEngineCredentials instance.");
     return GoogleCredentials.getApplicationDefault(transportFactory);
   }
 
