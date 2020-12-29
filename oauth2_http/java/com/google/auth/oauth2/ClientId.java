@@ -72,9 +72,9 @@ public class ClientId {
   /**
    * Constructs a Client ID from JSON from a downloaded file.
    *
-   * @param json The JSON from the downloaded file.
-   * @return the ClientId instance based on the JSON.
-   * @throws IOException The JSON could not be parsed.
+   * @param json the JSON from the downloaded file
+   * @return the ClientId instance based on the JSON
+   * @throws IOException the JSON could not be parsed
    */
   public static ClientId fromJson(Map<String, Object> json) throws IOException {
     Object rawDetail = null;
@@ -105,9 +105,9 @@ public class ClientId {
   /**
    * Constructs a Client ID from JSON file stored as a resource.
    *
-   * @param relativeClass A class in the same namespace as the resource.
-   * @param resourceName The name of the resource
-   * @return The constructed ClientID instance based on the JSON in the resource.
+   * @param relativeClass a class in the same namespace as the resource
+   * @param resourceName the name of the resource
+   * @return the constructed ClientID instance based on the JSON in the resource
    * @throws IOException The JSON could not be loaded or parsed.
    */
   public static ClientId fromResource(Class<?> relativeClass, String resourceName)
@@ -119,9 +119,9 @@ public class ClientId {
   /**
    * Constructs a Client ID from JSON file stream.
    *
-   * @param stream Stream of the downloaded JSON file.
-   * @return The constructed ClientID instance based on the JSON in the stream.
-   * @throws IOException The JSON could not be read or parsed.
+   * @param stream the downloaded JSON file
+   * @return the constructed ClientID instance based on the JSON in the stream
+   * @throws IOException the JSON could not be read or parsed
    */
   public static ClientId fromStream(InputStream stream) throws IOException {
     Preconditions.checkNotNull(stream);

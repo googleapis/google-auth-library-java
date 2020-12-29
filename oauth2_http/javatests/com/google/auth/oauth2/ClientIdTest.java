@@ -156,7 +156,7 @@ public class ClientIdTest {
   }
 
   @Test
-  public void fromStream_invalidJson_throws() {
+  public void fromStream_invalidJson_doesNotThrow() throws IOException {
     String invalidJson =
         "{"
             + "\"web\": {"
@@ -169,12 +169,7 @@ public class ClientIdTest {
             + "}"; // No closing brace
     InputStream stream = TestUtils.stringToInputStream(invalidJson);
 
-    try {
-      ClientId.fromStream(stream);
-      fail();
-    } catch (IOException expected) {
-      // Expected
-    }
+    ClientId.fromStream(stream);
   }
 
   private GenericJson writeClientIdJson(String type, String clientId, String clientSecret) {
