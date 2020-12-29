@@ -49,7 +49,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.net.URI;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Map;
@@ -67,8 +66,6 @@ class OAuth2Utils {
   static final HttpTransportFactory HTTP_TRANSPORT_FACTORY = new DefaultHttpTransportFactory();
 
   static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
-
-  static final Charset UTF_8 = Charset.forName("UTF-8");
 
   private static String VALUE_NOT_FOUND_MESSAGE = "%sExpected value %s not found.";
   private static String VALUE_WRONG_TYPE_MESSAGE = "%sExpected %s value %s of wrong type.";
