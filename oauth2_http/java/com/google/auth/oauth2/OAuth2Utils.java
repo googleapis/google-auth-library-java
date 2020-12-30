@@ -37,7 +37,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
-import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.io.ByteStreams;
@@ -65,7 +65,7 @@ class OAuth2Utils {
 
   static final HttpTransportFactory HTTP_TRANSPORT_FACTORY = new DefaultHttpTransportFactory();
 
-  static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
+  static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
   private static String VALUE_NOT_FOUND_MESSAGE = "%sExpected value %s not found.";
   private static String VALUE_WRONG_TYPE_MESSAGE = "%sExpected %s value %s of wrong type.";
