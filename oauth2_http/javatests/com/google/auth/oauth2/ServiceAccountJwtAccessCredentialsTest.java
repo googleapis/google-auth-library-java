@@ -42,7 +42,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.util.Clock;
 import com.google.auth.Credentials;
@@ -92,7 +92,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
   private static final String JWT_ACCESS_PREFIX =
       ServiceAccountJwtAccessCredentials.JWT_ACCESS_PREFIX;
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
-  private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
+  private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
   private static final String QUOTA_PROJECT = "sample-quota-project-id";
 
   @Test
