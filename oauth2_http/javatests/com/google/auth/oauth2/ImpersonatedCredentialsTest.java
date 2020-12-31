@@ -199,6 +199,15 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   @Test()
+  public void credential_with_zero_lifetime() throws IOException, IllegalStateException {
+    GoogleCredentials sourceCredentials = getSourceCredentials();
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            sourceCredentials, IMPERSONATED_CLIENT_EMAIL, null, SCOPES, 0);
+    assertEquals(3600, targetCredentials.getLifetime());
+  }
+
+  @Test()
   public void credential_with_invalid_lifetime() throws IOException, IllegalStateException {
 
     GoogleCredentials sourceCredentials = getSourceCredentials();

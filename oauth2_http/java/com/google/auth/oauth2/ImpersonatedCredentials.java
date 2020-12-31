@@ -91,6 +91,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
   private static final long serialVersionUID = -2133257318957488431L;
   private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
   private static final int TWELVE_HOURS_IN_SECONDS = 43200;
+  private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
   private static final String CLOUD_PLATFORM_SCOPE =
       "https://www.googleapis.com/auth/cloud-platform";
   private static final String IAM_ACCESS_TOKEN_ENDPOINT =
@@ -120,7 +121,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
    *     value should be at most 3600. However, you can follow <a
    *     href='https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oauth'>these
    *     instructions</a> to set up the service account and extend the maximum lifetime to 43200 (12
-   *     hours).
+   *     hours). If the given lifetime is 0, default value 3600 will be used instead when creating
+   *     the credentials.
    * @param transportFactory HTTP transport factory that creates the transport used to get access
    *     tokens
    * @return new credentials
@@ -159,6 +161,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
    *     instructions</a> to set up the service account and extend the maximum lifetime to 43200 (12
    *     hours).
    *     https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oauth
+   *     If the given lifetime is 0, default value 3600 will be used instead when creating the
+   *     credentials.
    * @return new credentials
    */
   public static ImpersonatedCredentials create(
@@ -184,6 +188,10 @@ public class ImpersonatedCredentials extends GoogleCredentials
   @Override
   public String getAccount() {
     return this.targetPrincipal;
+  }
+
+  int getLifetime() {
+    return this.lifetime;
   }
 
   /**
@@ -355,7 +363,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     private String targetPrincipal;
     private List<String> delegates;
     private List<String> scopes;
-    private int lifetime;
+    private int lifetime = DEFAULT_LIFETIME_IN_SECONDS;
     private HttpTransportFactory transportFactory;
 
     protected Builder() {}
@@ -402,7 +410,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     }
 
     public Builder setLifetime(int lifetime) {
-      this.lifetime = lifetime;
+      this.lifetime = lifetime == 0 ? DEFAULT_LIFETIME_IN_SECONDS : lifetime;
       return this;
     }
 
