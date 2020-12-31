@@ -38,7 +38,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
 import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.util.Clock;
 import com.google.auth.http.AuthHttpConstants;
@@ -69,7 +69,7 @@ public class JwtCredentialsTest extends BaseSerializationTest {
           + "==\n-----END PRIVATE KEY-----\n";
   private static final String JWT_ACCESS_PREFIX =
       ServiceAccountJwtAccessCredentials.JWT_ACCESS_PREFIX;
-  private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
+  private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
   static PrivateKey getPrivateKey() {
     try {
