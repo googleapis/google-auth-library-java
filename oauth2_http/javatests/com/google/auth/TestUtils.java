@@ -36,7 +36,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
@@ -54,7 +54,7 @@ public class TestUtils {
 
   public static final String UTF_8 = "UTF-8";
 
-  private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
+  private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
   public static void assertContainsBearerToken(Map<String, List<String>> metadata, String token) {
     assertNotNull(metadata);

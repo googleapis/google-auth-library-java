@@ -99,11 +99,8 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    * @param clientEmail Client email address of the service account from the console.
    * @param privateKey RSA private key object for the service account.
    * @param privateKeyId Private key identifier for the service account. May be null.
-   * @deprecated Use {@link #newBuilder()} instead. This constructor will either be deleted or made
-   *     private in a later version.
    */
-  @Deprecated
-  public ServiceAccountJwtAccessCredentials(
+  private ServiceAccountJwtAccessCredentials(
       String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId) {
     this(clientId, clientEmail, privateKey, privateKeyId, null, null);
   }

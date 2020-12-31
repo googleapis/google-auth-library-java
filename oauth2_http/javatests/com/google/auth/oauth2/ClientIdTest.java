@@ -33,7 +33,6 @@ package com.google.auth.oauth2;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
 
 import com.google.api.client.json.GenericJson;
 import com.google.auth.TestUtils;
@@ -156,7 +155,7 @@ public class ClientIdTest {
   }
 
   @Test
-  public void fromStream_invalidJson_throws() {
+  public void fromStream_invalidJson_doesNotThrow() throws IOException {
     String invalidJson =
         "{"
             + "\"web\": {"
@@ -169,12 +168,7 @@ public class ClientIdTest {
             + "}"; // No closing brace
     InputStream stream = TestUtils.stringToInputStream(invalidJson);
 
-    try {
-      ClientId.fromStream(stream);
-      fail();
-    } catch (IOException expected) {
-      // Expected
-    }
+    ClientId.fromStream(stream);
   }
 
   private GenericJson writeClientIdJson(String type, String clientId, String clientSecret) {
