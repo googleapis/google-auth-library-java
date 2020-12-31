@@ -56,11 +56,7 @@ import java.util.logging.Logger;
  */
 public class AppEngineCredentials extends GoogleCredentials implements ServiceAccountSigner {
 
-  private static final Logger LOGGER = Logger.getLogger(AppEngineCredentials.class.getName());
-  private static final String APPLICATION_DEFAULT_CREDENTIALS_WARNING =
-      "You are attempting to "
-          + "fetch Application Default Credentials from com.google.auth.appengine.AppEngineCredentials."
-          + " This method will not return a com.google.auth.appengine.AppEngineCredentials instance.";
+  private static final Logger logger = Logger.getLogger(AppEngineCredentials.class.getName());
   private static final long serialVersionUID = -2627708355455064660L;
 
   private final String appIdentityServiceClassName;
@@ -75,7 +71,10 @@ public class AppEngineCredentials extends GoogleCredentials implements ServiceAc
    */
   @Deprecated
   public static GoogleCredentials getApplicationDefault() throws IOException {
-    LOGGER.warning(APPLICATION_DEFAULT_CREDENTIALS_WARNING);
+    logger.warning(
+        "You are attempting to "
+            + "fetch Application Default Credentials from com.google.auth.appengine.AppEngineCredentials."
+            + " This method will not return a com.google.auth.appengine.AppEngineCredentials instance.");
     return GoogleCredentials.getApplicationDefault();
   }
 
@@ -86,7 +85,10 @@ public class AppEngineCredentials extends GoogleCredentials implements ServiceAc
   @Deprecated
   public static GoogleCredentials getApplicationDefault(HttpTransportFactory transportFactory)
       throws IOException {
-    LOGGER.warning(APPLICATION_DEFAULT_CREDENTIALS_WARNING);
+    logger.warning(
+        "You are attempting to fetch "
+            + "Application Default Credentials from com.google.auth.appengine.AppEngineCredentials. "
+            + "This method does not return a com.google.auth.appengine.AppEngineCredentials instance.");
     return GoogleCredentials.getApplicationDefault(transportFactory);
   }
 
