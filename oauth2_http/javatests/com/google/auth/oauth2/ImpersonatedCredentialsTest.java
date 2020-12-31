@@ -43,7 +43,7 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonGenerator;
-import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.json.webtoken.JsonWebToken.Payload;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.util.Clock;
@@ -111,7 +111,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
   private static final int VALID_LIFETIME = 300;
   private static final int INVALID_LIFETIME = 43210;
-  private static JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
+  private static JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
   private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
 
@@ -702,7 +702,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
       int errorCode, String errorMessage, String errorDomain, String errorReason)
       throws IOException {
 
-    JsonFactory factory = new JacksonFactory();
+    JsonFactory factory = new GsonFactory();
     ByteArrayOutputStream bout = new ByteArrayOutputStream();
     JsonGenerator generator = factory.createJsonGenerator(bout, Charset.defaultCharset());
     generator.enablePrettyPrint();
