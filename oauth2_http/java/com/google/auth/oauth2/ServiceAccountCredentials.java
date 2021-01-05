@@ -66,6 +66,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
@@ -377,7 +378,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     JsonObjectParser parser = new JsonObjectParser(jsonFactory);
     GenericJson fileContents =
-        parser.parseAndClose(credentialsStream, OAuth2Utils.UTF_8, GenericJson.class);
+        parser.parseAndClose(credentialsStream, StandardCharsets.UTF_8, GenericJson.class);
 
     String fileType = (String) fileContents.get("type");
     if (fileType == null) {

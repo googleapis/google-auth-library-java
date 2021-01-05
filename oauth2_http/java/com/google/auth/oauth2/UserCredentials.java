@@ -32,7 +32,6 @@
 package com.google.auth.oauth2;
 
 import static com.google.auth.oauth2.OAuth2Utils.JSON_FACTORY;
-import static com.google.auth.oauth2.OAuth2Utils.UTF_8;
 import static com.google.common.base.MoreObjects.firstNonNull;
 
 import com.google.api.client.http.GenericUrl;
@@ -52,6 +51,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -167,7 +167,7 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
     JsonFactory jsonFactory = JSON_FACTORY;
     JsonObjectParser parser = new JsonObjectParser(jsonFactory);
     GenericJson fileContents =
-        parser.parseAndClose(credentialsStream, OAuth2Utils.UTF_8, GenericJson.class);
+        parser.parseAndClose(credentialsStream, StandardCharsets.UTF_8, GenericJson.class);
 
     String fileType = (String) fileContents.get("type");
     if (fileType == null) {
@@ -263,7 +263,7 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
     }
     json.setFactory(JSON_FACTORY);
     String text = json.toPrettyString();
-    return new ByteArrayInputStream(text.getBytes(UTF_8));
+    return new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8));
   }
 
   /**
