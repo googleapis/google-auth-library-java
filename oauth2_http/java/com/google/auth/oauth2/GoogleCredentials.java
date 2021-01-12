@@ -39,6 +39,7 @@ import com.google.auth.http.HttpTransportFactory;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -153,7 +154,7 @@ public class GoogleCredentials extends OAuth2Credentials {
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     JsonObjectParser parser = new JsonObjectParser(jsonFactory);
     GenericJson fileContents =
-        parser.parseAndClose(credentialsStream, OAuth2Utils.UTF_8, GenericJson.class);
+        parser.parseAndClose(credentialsStream, StandardCharsets.UTF_8, GenericJson.class);
 
     String fileType = (String) fileContents.get("type");
     if (fileType == null) {

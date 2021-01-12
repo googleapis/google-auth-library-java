@@ -54,6 +54,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
@@ -250,7 +251,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     JsonObjectParser parser = new JsonObjectParser(jsonFactory);
     GenericJson fileContents =
-        parser.parseAndClose(credentialsStream, OAuth2Utils.UTF_8, GenericJson.class);
+        parser.parseAndClose(credentialsStream, StandardCharsets.UTF_8, GenericJson.class);
 
     String fileType = (String) fileContents.get("type");
     if (fileType == null) {
