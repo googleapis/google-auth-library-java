@@ -45,7 +45,6 @@ import com.google.api.client.util.GenericData;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.http.HttpTransportFactory;
-import com.google.common.annotations.Beta;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -303,7 +302,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
    * @return IdToken object which includes the raw id_token, expiration, and audience
    * @throws IOException if the attempt to get an ID token failed
    */
-  @Beta
   @Override
   public IdToken idTokenWithAudience(String targetAudience, List<IdTokenProvider.Option> options)
       throws IOException {

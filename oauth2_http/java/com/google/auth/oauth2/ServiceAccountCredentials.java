@@ -55,7 +55,6 @@ import com.google.api.client.util.Preconditions;
 import com.google.api.client.util.SecurityUtils;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
-import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
@@ -463,7 +462,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
    * @throws IOException if the attempt to get an IdToken failed
    * @return IdToken object which includes the raw id_token, expiration and audience
    */
-  @Beta
   @Override
   public IdToken idTokenWithAudience(String targetAudience, List<Option> options)
       throws IOException {

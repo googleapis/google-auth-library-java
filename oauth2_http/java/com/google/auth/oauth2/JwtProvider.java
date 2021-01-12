@@ -31,10 +31,7 @@
 
 package com.google.auth.oauth2;
 
-import com.google.common.annotations.Beta;
-
 /** Interface for creating custom JWT tokens */
-@Beta
 public interface JwtProvider {
 
   /**
