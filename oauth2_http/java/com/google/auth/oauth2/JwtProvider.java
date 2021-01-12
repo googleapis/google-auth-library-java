@@ -40,8 +40,7 @@ public interface JwtProvider {
   /**
    * Returns a new JwtCredentials instance with modified claims.
    *
-   * @param newClaims new claims. Any unspecified claim fields default to the current
-   *     values.
+   * @param newClaims new claims. Any unspecified claim fields default to the current values.
    * @return new credentials
    */
   JwtCredentials jwtWithClaims(JwtClaims newClaims);
