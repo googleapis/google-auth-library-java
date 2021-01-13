@@ -222,9 +222,9 @@ public class OAuth2Credentials extends Credentials {
    * for temporary or non-refreshing access tokens.
    *
    * @return never
-   * @throws IllegalStateException always. OAuth2Credentials does not support refreshing the
-   *    access token. An instance with a new access token or a derived type
-        that supports refreshing should be used instead.
+   * @throws IllegalStateException always. OAuth2Credentials does not support refreshing the access
+   *     token. An instance with a new access token or a derived type that supports refreshing
+   *     should be used instead.
    */
   public AccessToken refreshAccessToken() throws IOException {
     throw new IllegalStateException(
