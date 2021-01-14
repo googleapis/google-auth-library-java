@@ -37,7 +37,6 @@ import com.google.auth.RequestMetadataCallback;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
@@ -131,7 +130,10 @@ public class OAuth2Credentials extends Credentials {
         super.getRequestMetadata(uri, executor, callback);
         return;
       }
-      metadata = Preconditions.checkNotNull(requestMetadata, "cached requestMetadata");
+      if (requestMetadata == null) {
+        throw new NullPointerException("cached requestMetadata");
+      }
+      metadata = requestMetadata;
     }
     callback.onSuccess(metadata);
   }
@@ -146,7 +148,10 @@ public class OAuth2Credentials extends Credentials {
       if (shouldRefresh()) {
         refresh();
       }
-      return Preconditions.checkNotNull(requestMetadata, "requestMetadata");
+      if (requestMetadata == null) {
+        throw new NullPointerException("requestMetadata");
+      }
+      return requestMetadata;
     }
   }
 
@@ -156,9 +161,11 @@ public class OAuth2Credentials extends Credentials {
     synchronized (lock) {
       requestMetadata = null;
       temporaryAccess = null;
-      useAccessToken(
-          Preconditions.checkNotNull(refreshAccessToken(), "new access token"),
-          getAdditionalHeaders());
+      AccessToken accessToken = refreshAccessToken();
+      if (accessToken == null) {
+        throw new NullPointerException("new access token");
+      }
+      useAccessToken(accessToken, getAdditionalHeaders());
       if (changeListeners != null) {
         for (CredentialsChangedListener listener : changeListeners) {
           listener.onChanged(this);
@@ -214,8 +221,10 @@ public class OAuth2Credentials extends Credentials {
    * <p>Throws IllegalStateException if not overridden since direct use of OAuth2Credentials is only
    * for temporary or non-refreshing access tokens.
    *
-   * @return Refreshed access token.
-   * @throws IOException from derived implementations
+   * @return never
+   * @throws IllegalStateException always. OAuth2Credentials does not support refreshing the access
+   *     token. An instance with a new access token or a derived type that supports refreshing
+   *     should be used instead.
    */
   public AccessToken refreshAccessToken() throws IOException {
     throw new IllegalStateException(
@@ -230,7 +239,7 @@ public class OAuth2Credentials extends Credentials {
    * <p>This is called when token content changes, such as when the access token is refreshed. This
    * is typically used by code caching the access token.
    *
-   * @param listener The listener to be added.
+   * @param listener the listener to be added
    */
   public final void addChangeListener(CredentialsChangedListener listener) {
     synchronized (lock) {
