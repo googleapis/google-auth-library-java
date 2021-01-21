@@ -24,8 +24,8 @@
 
   <licenses>
     <license>
-      <name>BSD New license</name>
-      <url>http://opensource.org/licenses/BSD-3-Clause</url>
+      <name>Apache License, Version 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
       <distribution>repo</distribution>
     </license>
   </licenses>
@@ -34,7 +34,6 @@
     <name>Google</name>
     <url>http://www.google.com/</url>
   </organization>
-
 
   <developers>
     <developer>
