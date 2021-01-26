@@ -33,7 +33,6 @@ package com.google.auth.oauth2;
 
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
-import com.google.common.annotations.Beta;
 import com.google.common.base.MoreObjects;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -43,7 +42,6 @@ import java.util.Date;
 import java.util.Objects;
 
 /** Represents a temporary IdToken and its JsonWebSignature object */
-@Beta
 public class IdToken extends AccessToken implements Serializable {
 
   private static final long serialVersionUID = -8514239465808977353L;
