@@ -35,7 +35,6 @@ import com.google.appengine.api.appidentity.AppIdentityService;
 import com.google.appengine.api.appidentity.AppIdentityService.GetAccessTokenResult;
 import com.google.appengine.api.appidentity.AppIdentityServiceFactory;
 import com.google.auth.ServiceAccountSigner;
-import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.MoreObjects;
@@ -46,7 +45,6 @@ import java.io.ObjectInputStream;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Objects;
-import java.util.logging.Logger;
 
 /**
  * OAuth2 credentials representing the built-in service account for Google App Engine. You should
@@ -56,11 +54,6 @@ import java.util.logging.Logger;
  */
 public class AppEngineCredentials extends GoogleCredentials implements ServiceAccountSigner {
 
-  private static final Logger LOGGER = Logger.getLogger(AppEngineCredentials.class.getName());
-  private static final String APPLICATION_DEFAULT_CREDENTIALS_WARNING =
-      "You are attempting to "
-          + "fetch Application Default Credentials from com.google.auth.appengine.AppEngineCredentials."
-          + " This method will not return a com.google.auth.appengine.AppEngineCredentials instance.";
   private static final long serialVersionUID = -2627708355455064660L;
 
   private final String appIdentityServiceClassName;
@@ -68,27 +61,6 @@ public class AppEngineCredentials extends GoogleCredentials implements ServiceAc
   private final boolean scopesRequired;
 
   private transient AppIdentityService appIdentityService;
-
-  /**
-   * @deprecated AppEngineCredentials should be instantiated via its Builder. See
-   *     https://github.com/googleapis/google-auth-library-java#google-auth-library-appengine
-   */
-  @Deprecated
-  public static GoogleCredentials getApplicationDefault() throws IOException {
-    LOGGER.warning(APPLICATION_DEFAULT_CREDENTIALS_WARNING);
-    return GoogleCredentials.getApplicationDefault();
-  }
-
-  /**
-   * @deprecated AppEngineCredentials should be instantiated via its Builder. See
-   *     https://github.com/googleapis/google-auth-library-java#google-auth-library-appengine
-   */
-  @Deprecated
-  public static GoogleCredentials getApplicationDefault(HttpTransportFactory transportFactory)
-      throws IOException {
-    LOGGER.warning(APPLICATION_DEFAULT_CREDENTIALS_WARNING);
-    return GoogleCredentials.getApplicationDefault(transportFactory);
-  }
 
   private AppEngineCredentials(Collection<String> scopes, AppIdentityService appIdentityService) {
     this.scopes = scopes == null ? ImmutableSet.<String>of() : ImmutableList.copyOf(scopes);

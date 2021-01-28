@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.23.0](https://www.github.com/googleapis/google-auth-library-java/compare/v0.22.2...v0.23.0) (2021-01-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* privatize deprecated constructor (#473)
+
+### Features
+
+* allow custom lifespan for impersonated creds ([#515](https://www.github.com/googleapis/google-auth-library-java/issues/515)) ([0707ed4](https://www.github.com/googleapis/google-auth-library-java/commit/0707ed4bbb40fb775f196004ee30f8c695fe662b))
+* allow custom scopes for compute engine creds ([#514](https://www.github.com/googleapis/google-auth-library-java/issues/514)) ([edc8d6e](https://www.github.com/googleapis/google-auth-library-java/commit/edc8d6e0e7ca2c6749d026ba42854a09c4879fd6))
+* allow set lifetime for service account creds ([#516](https://www.github.com/googleapis/google-auth-library-java/issues/516)) ([427f2d5](https://www.github.com/googleapis/google-auth-library-java/commit/427f2d5610f0e8184a21b24531d2549a68c0b546))
+* promote IdToken and JWT features ([#538](https://www.github.com/googleapis/google-auth-library-java/issues/538)) ([b514fe0](https://www.github.com/googleapis/google-auth-library-java/commit/b514fe0cebe5a294e0cf97b7b5349e6a523dc7b2))
+
+
+### Bug Fixes
+
+* per google style, logger is lower case ([#529](https://www.github.com/googleapis/google-auth-library-java/issues/529)) ([ecfc6a2](https://www.github.com/googleapis/google-auth-library-java/commit/ecfc6a2ea6060e06629b5d422b23b842b917f55e))
+* privatize deprecated constructor ([#473](https://www.github.com/googleapis/google-auth-library-java/issues/473)) ([5804ff0](https://www.github.com/googleapis/google-auth-library-java/commit/5804ff03a531268831ac797ab262638a3119c14f))
+* remove deprecated methods ([#537](https://www.github.com/googleapis/google-auth-library-java/issues/537)) ([427963e](https://www.github.com/googleapis/google-auth-library-java/commit/427963e04702d8b73eca5ed555539b11bbe97342))
+* replace non-precondition use of Preconditions ([#539](https://www.github.com/googleapis/google-auth-library-java/issues/539)) ([f2ab4f1](https://www.github.com/googleapis/google-auth-library-java/commit/f2ab4f14262d54de0fde85494cfd92cf01a30cbe))
+* switch to GSON ([#531](https://www.github.com/googleapis/google-auth-library-java/issues/531)) ([1b98d5c](https://www.github.com/googleapis/google-auth-library-java/commit/1b98d5c86fc5e56187c977e7f43c39bb62483d40))
+* use default timeout if given 0 for ImpersonatedCredentials ([#527](https://www.github.com/googleapis/google-auth-library-java/issues/527)) ([ec74870](https://www.github.com/googleapis/google-auth-library-java/commit/ec74870c372a33d4157b45bb5d59ad7464fb2238))
+
+
+### Dependencies
+
+* update dependency com.google.appengine:appengine-api-1.0-sdk to v1.9.84 ([#422](https://www.github.com/googleapis/google-auth-library-java/issues/422)) ([b262c45](https://www.github.com/googleapis/google-auth-library-java/commit/b262c4587b058e6837429ee05f1b6a63620ee598))
+* update dependency com.google.guava:guava to v30.1-android ([#522](https://www.github.com/googleapis/google-auth-library-java/issues/522)) ([4090d1c](https://www.github.com/googleapis/google-auth-library-java/commit/4090d1cb50041bceb1cd975d1a9249a412df936f))
+
+
+### Documentation
+
+* fix wording in jwtWithClaims Javadoc ([#536](https://www.github.com/googleapis/google-auth-library-java/issues/536)) ([af21727](https://www.github.com/googleapis/google-auth-library-java/commit/af21727815263fb5ffc07ede953cf042fac3ac2b))
+
 ### [0.22.2](https://www.github.com/googleapis/google-auth-library-java/compare/v0.22.1...v0.22.2) (2020-12-11)
 
 

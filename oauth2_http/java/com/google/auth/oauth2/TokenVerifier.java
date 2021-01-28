@@ -41,7 +41,6 @@ import com.google.api.client.util.Base64;
 import com.google.api.client.util.Clock;
 import com.google.api.client.util.Key;
 import com.google.auth.http.HttpTransportFactory;
-import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -79,7 +78,6 @@ import java.util.concurrent.TimeUnit;
  * @author Jeff Ching
  * @since 0.21.0
  */
-@Beta
 public class TokenVerifier {
   private static final String IAP_CERT_URL = "https://www.gstatic.com/iap/verify/public_key-jwk";
   private static final String FEDERATED_SIGNON_CERT_URL =

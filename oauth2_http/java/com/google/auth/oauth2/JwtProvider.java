@@ -31,17 +31,13 @@
 
 package com.google.auth.oauth2;
 
-import com.google.common.annotations.Beta;
-
 /** Interface for creating custom JWT tokens */
-@Beta
 public interface JwtProvider {
 
   /**
    * Returns a new JwtCredentials instance with modified claims.
    *
-   * @param newClaims new claims. Any unspecified claim fields will default to the the current
-   *     values.
+   * @param newClaims new claims. Any unspecified claim fields default to the current values.
    * @return new credentials
    */
   JwtCredentials jwtWithClaims(JwtClaims newClaims);

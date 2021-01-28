@@ -55,7 +55,6 @@ import com.google.api.client.util.Preconditions;
 import com.google.api.client.util.SecurityUtils;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
-import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
@@ -66,6 +65,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
@@ -92,6 +92,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
   private static final long serialVersionUID = 7807543542681217978L;
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
+  private static final int TWELVE_HOURS_IN_SECONDS = 43200;
+  private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
 
   private final String clientId;
   private final String clientEmail;
@@ -103,6 +105,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   private final URI tokenServerUri;
   private final Collection<String> scopes;
   private final String quotaProjectId;
+  private final int lifetime;
 
   private transient HttpTransportFactory transportFactory;
 
@@ -122,6 +125,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
    *     authority to the service account.
    * @param projectId the project used for billing
    * @param quotaProjectId The project used for quota and billing purposes. May be null.
+   * @param lifetime number of seconds the access token should be valid for. The value should be at
+   *     most 43200 (12 hours). If the token is used for calling a Google API, then the value should
+   *     be at most 3600 (1 hour). If the given value is 0, then the default value 3600 will be used
+   *     when creating the credentials.
    */
   ServiceAccountCredentials(
       String clientId,
@@ -133,7 +140,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
       URI tokenServerUri,
       String serviceAccountUser,
       String projectId,
-      String quotaProjectId) {
+      String quotaProjectId,
+      int lifetime) {
     this.clientId = clientId;
     this.clientEmail = Preconditions.checkNotNull(clientEmail);
     this.privateKey = Preconditions.checkNotNull(privateKey);
@@ -148,6 +156,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
     this.serviceAccountUser = serviceAccountUser;
     this.projectId = projectId;
     this.quotaProjectId = quotaProjectId;
+    if (lifetime > TWELVE_HOURS_IN_SECONDS) {
+      throw new IllegalStateException("lifetime must be less than or equal to 43200");
+    }
+    this.lifetime = lifetime;
   }
 
   /**
@@ -324,7 +336,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
         tokenServerUri,
         serviceAccountUser,
         projectId,
-        quotaProject);
+        quotaProject,
+        DEFAULT_LIFETIME_IN_SECONDS);
   }
 
   /** Helper to convert from a PKCS#8 String to an RSA private key */
@@ -377,7 +390,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     JsonObjectParser parser = new JsonObjectParser(jsonFactory);
     GenericJson fileContents =
-        parser.parseAndClose(credentialsStream, OAuth2Utils.UTF_8, GenericJson.class);
+        parser.parseAndClose(credentialsStream, StandardCharsets.UTF_8, GenericJson.class);
 
     String fileType = (String) fileContents.get("type");
     if (fileType == null) {
@@ -462,7 +475,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
    * @throws IOException if the attempt to get an IdToken failed
    * @return IdToken object which includes the raw id_token, expiration and audience
    */
-  @Beta
   @Override
   public IdToken idTokenWithAudience(String targetAudience, List<Option> options)
       throws IOException {
@@ -512,7 +524,21 @@ public class ServiceAccountCredentials extends GoogleCredentials
         tokenServerUri,
         serviceAccountUser,
         projectId,
-        quotaProjectId);
+        quotaProjectId,
+        lifetime);
+  }
+
+  /**
+   * Clones the service account with a new lifetime value.
+   *
+   * @param lifetime life time value in seconds. The value should be at most 43200 (12 hours). If
+   *     the token is used for calling a Google API, then the value should be at most 3600 (1 hour).
+   *     If the given value is 0, then the default value 3600 will be used when creating the
+   *     credentials.
+   * @return the cloned service account credentials with the given custom life time
+   */
+  public ServiceAccountCredentials createWithCustomLifetime(int lifetime) {
+    return this.toBuilder().setLifetime(lifetime).build();
   }
 
   @Override
@@ -527,7 +553,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
         tokenServerUri,
         user,
         projectId,
-        quotaProjectId);
+        quotaProjectId,
+        lifetime);
   }
 
   public final String getClientId() {
@@ -560,6 +587,11 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   public final URI getTokenServerUri() {
     return tokenServerUri;
+  }
+
+  @VisibleForTesting
+  int getLifetime() {
+    return lifetime;
   }
 
   @Override
@@ -617,7 +649,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
         transportFactoryClassName,
         tokenServerUri,
         scopes,
-        quotaProjectId);
+        quotaProjectId,
+        lifetime);
   }
 
   @Override
@@ -631,6 +664,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         .add("scopes", scopes)
         .add("serviceAccountUser", serviceAccountUser)
         .add("quotaProjectId", quotaProjectId)
+        .add("lifetime", lifetime)
         .toString();
   }
 
@@ -647,7 +681,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
         && Objects.equals(this.transportFactoryClassName, other.transportFactoryClassName)
         && Objects.equals(this.tokenServerUri, other.tokenServerUri)
         && Objects.equals(this.scopes, other.scopes)
-        && Objects.equals(this.quotaProjectId, other.quotaProjectId);
+        && Objects.equals(this.quotaProjectId, other.quotaProjectId)
+        && Objects.equals(this.lifetime, other.lifetime);
   }
 
   String createAssertion(JsonFactory jsonFactory, long currentTime, String audience)
@@ -660,7 +695,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     JsonWebToken.Payload payload = new JsonWebToken.Payload();
     payload.setIssuer(clientEmail);
     payload.setIssuedAtTimeSeconds(currentTime / 1000);
-    payload.setExpirationTimeSeconds(currentTime / 1000 + 3600);
+    payload.setExpirationTimeSeconds(currentTime / 1000 + this.lifetime);
     payload.setSubject(serviceAccountUser);
     payload.put("scope", Joiner.on(' ').join(scopes));
 
@@ -692,7 +727,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     JsonWebToken.Payload payload = new JsonWebToken.Payload();
     payload.setIssuer(clientEmail);
     payload.setIssuedAtTimeSeconds(currentTime / 1000);
-    payload.setExpirationTimeSeconds(currentTime / 1000 + 3600);
+    payload.setExpirationTimeSeconds(currentTime / 1000 + this.lifetime);
     payload.setSubject(serviceAccountUser);
 
     if (audience == null) {
@@ -745,6 +780,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     private Collection<String> scopes;
     private HttpTransportFactory transportFactory;
     private String quotaProjectId;
+    private int lifetime = DEFAULT_LIFETIME_IN_SECONDS;
 
     protected Builder() {}
 
@@ -759,6 +795,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
       this.serviceAccountUser = credentials.serviceAccountUser;
       this.projectId = credentials.projectId;
       this.quotaProjectId = credentials.quotaProjectId;
+      this.lifetime = credentials.lifetime;
     }
 
     public Builder setClientId(String clientId) {
@@ -811,6 +848,11 @@ public class ServiceAccountCredentials extends GoogleCredentials
       return this;
     }
 
+    public Builder setLifetime(int lifetime) {
+      this.lifetime = lifetime == 0 ? DEFAULT_LIFETIME_IN_SECONDS : lifetime;
+      return this;
+    }
+
     public String getClientId() {
       return clientId;
     }
@@ -851,6 +893,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
       return quotaProjectId;
     }
 
+    public int getLifetime() {
+      return lifetime;
+    }
+
     public ServiceAccountCredentials build() {
       return new ServiceAccountCredentials(
           clientId,
@@ -862,7 +908,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
           tokenServerUri,
           serviceAccountUser,
           projectId,
-          quotaProjectId);
+          quotaProjectId,
+          lifetime);
     }
   }
 }

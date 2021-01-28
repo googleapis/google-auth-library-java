@@ -3,15 +3,15 @@
     {
       "git": {
         "name": ".",
-        "remote": "git@github.com:googleapis/google-auth-library-java.git",
-        "sha": "0a8412fcf9de4ac568b9f88618e44087dd31b144"
+        "remote": "https://github.com/googleapis/google-auth-library-java.git",
+        "sha": "427963e04702d8b73eca5ed555539b11bbe97342"
       }
     },
     {
       "git": {
         "name": "synthtool",
         "remote": "https://github.com/googleapis/synthtool.git",
-        "sha": "996775eca5fd934edac3c2ae34b80ff0395b1717"
+        "sha": "3816b080296d4d52975079fd26c110dd26ba25af"
       }
     }
   ],
@@ -29,7 +29,6 @@
     ".github/trusted-contribution.yml",
     ".github/workflows/auto-release.yaml",
     ".github/workflows/ci.yaml",
-    ".github/workflows/formatting.yaml",
     ".kokoro/build.bat",
     ".kokoro/build.sh",
     ".kokoro/coerce_logs.sh",

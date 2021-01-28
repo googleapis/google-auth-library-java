@@ -111,6 +111,54 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
           + "aXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwic3ViIjoiMTAyMTAxNTUwODM0MjAwNzA4NTY4In0"
           + ".redacted";
   private static final String QUOTA_PROJECT = "sample-quota-project-id";
+  private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
+  private static final int INVALID_LIFETIME = 43210;
+
+  private ServiceAccountCredentials.Builder createDefaultBuilder() throws IOException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    return ServiceAccountCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientEmail(CLIENT_EMAIL)
+        .setPrivateKey(privateKey)
+        .setPrivateKeyId(PRIVATE_KEY_ID)
+        .setScopes(SCOPES)
+        .setServiceAccountUser(USER)
+        .setProjectId(PROJECT_ID);
+  }
+
+  @Test
+  public void setLifetime() throws IOException {
+    ServiceAccountCredentials.Builder builder = createDefaultBuilder();
+    assertEquals(DEFAULT_LIFETIME_IN_SECONDS, builder.getLifetime());
+    assertEquals(DEFAULT_LIFETIME_IN_SECONDS, builder.build().getLifetime());
+
+    builder.setLifetime(4000);
+    assertEquals(4000, builder.getLifetime());
+    assertEquals(4000, builder.build().getLifetime());
+
+    builder.setLifetime(0);
+    assertEquals(DEFAULT_LIFETIME_IN_SECONDS, builder.build().getLifetime());
+  }
+
+  @Test
+  public void setLifetime_invalid_lifetime() throws IOException, IllegalStateException {
+    try {
+      createDefaultBuilder().setLifetime(INVALID_LIFETIME).build();
+      fail(
+          String.format(
+              "Should throw exception with message containing '%s'",
+              "lifetime must be less than or equal to 43200"));
+    } catch (IllegalStateException expected) {
+      assertTrue(expected.getMessage().contains("lifetime must be less than or equal to 43200"));
+    }
+  }
+
+  @Test
+  public void createWithCustomLifetime() throws IOException {
+    ServiceAccountCredentials credentials = createDefaultBuilder().build();
+    credentials = credentials.createWithCustomLifetime(4000);
+    assertEquals(4000, credentials.getLifetime());
+  }
 
   @Test
   public void createdScoped_clones() throws IOException {
@@ -203,6 +251,19 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void createAssertion_custom_lifetime() throws IOException {
+    ServiceAccountCredentials credentials = createDefaultBuilder().setLifetime(4000).build();
+
+    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
+    long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
+    String assertion = credentials.createAssertion(jsonFactory, currentTimeMillis, null);
+
+    JsonWebSignature signature = JsonWebSignature.parse(jsonFactory, assertion);
+    JsonWebToken.Payload payload = signature.getPayload();
+    assertEquals(currentTimeMillis / 1000 + 4000, (long) payload.getExpirationTimeSeconds());
+  }
+
+  @Test
   public void createAssertionForIdToken_correct() throws IOException {
 
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
@@ -229,6 +290,22 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(currentTimeMillis / 1000, (long) payload.getIssuedAtTimeSeconds());
     assertEquals(currentTimeMillis / 1000 + 3600, (long) payload.getExpirationTimeSeconds());
     assertEquals(USER, payload.getSubject());
+  }
+
+  @Test
+  public void createAssertionForIdToken_custom_lifetime() throws IOException {
+
+    ServiceAccountCredentials credentials = createDefaultBuilder().setLifetime(4000).build();
+
+    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
+    long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
+    String assertion =
+        credentials.createAssertionForIdToken(
+            jsonFactory, currentTimeMillis, null, "https://foo.com/bar");
+
+    JsonWebSignature signature = JsonWebSignature.parse(jsonFactory, assertion);
+    JsonWebToken.Payload payload = signature.getPayload();
+    assertEquals(currentTimeMillis / 1000 + 4000, (long) payload.getExpirationTimeSeconds());
   }
 
   @Test
@@ -904,7 +981,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
         String.format(
             "ServiceAccountCredentials{clientId=%s, clientEmail=%s, privateKeyId=%s, "
                 + "transportFactoryClassName=%s, tokenServerUri=%s, scopes=%s, serviceAccountUser=%s, "
-                + "quotaProjectId=%s}",
+                + "quotaProjectId=%s, lifetime=3600}",
             CLIENT_ID,
             CLIENT_EMAIL,
             PRIVATE_KEY_ID,
