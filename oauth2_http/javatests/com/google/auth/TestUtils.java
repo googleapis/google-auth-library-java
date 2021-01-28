@@ -132,7 +132,7 @@ public class TestUtils {
       String error, @Nullable String errorDescription, @Nullable String errorUri)
       throws IOException {
     GenericJson json = new GenericJson();
-    json.setFactory(JacksonFactory.getDefaultInstance());
+    json.setFactory(GsonFactory.getDefaultInstance());
     json.set("error", error);
     if (errorDescription != null) {
       json.set("error_description", errorDescription);

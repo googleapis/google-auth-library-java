@@ -39,6 +39,7 @@ import com.google.api.client.json.JsonObjectParser;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Before;
@@ -532,7 +533,7 @@ public class AwsRequestSignerTest {
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     JsonObjectParser parser = new JsonObjectParser(jsonFactory);
 
-    GenericJson json = parser.parseAndClose(stream, OAuth2Utils.UTF_8, GenericJson.class);
+    GenericJson json = parser.parseAndClose(stream, StandardCharsets.UTF_8, GenericJson.class);
 
     String awsToken = (String) json.get("Token");
     String secretAccessKey = (String) json.get("SecretAccessKey");

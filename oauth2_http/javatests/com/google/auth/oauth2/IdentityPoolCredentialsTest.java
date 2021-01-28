@@ -34,7 +34,6 @@ package com.google.auth.oauth2;
 import static com.google.auth.TestUtils.getDefaultExpireTime;
 import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
 import static com.google.auth.oauth2.OAuth2Utils.JSON_FACTORY;
-import static com.google.auth.oauth2.OAuth2Utils.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
@@ -47,6 +46,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -131,7 +131,8 @@ public class IdentityPoolCredentialsTest {
 
     String credential = "credential";
     OAuth2Utils.writeInputStreamToFile(
-        new ByteArrayInputStream(credential.getBytes(UTF_8)), file.getAbsolutePath());
+        new ByteArrayInputStream(credential.getBytes(StandardCharsets.UTF_8)),
+        file.getAbsolutePath());
 
     Map<String, Object> credentialSourceMap = new HashMap<>();
     credentialSourceMap.put("file", file.getAbsolutePath());
@@ -176,7 +177,8 @@ public class IdentityPoolCredentialsTest {
     response.put("subjectToken", "subjectToken");
 
     OAuth2Utils.writeInputStreamToFile(
-        new ByteArrayInputStream(response.toString().getBytes(UTF_8)), file.getAbsolutePath());
+        new ByteArrayInputStream(response.toString().getBytes(StandardCharsets.UTF_8)),
+        file.getAbsolutePath());
 
     IdentityPoolCredentials credential =
         (IdentityPoolCredentials)

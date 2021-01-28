@@ -42,6 +42,7 @@ import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSour
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -208,7 +209,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
 
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     GenericJson fileContents =
-        parser.parseAndClose(credentialsStream, OAuth2Utils.UTF_8, GenericJson.class);
+        parser.parseAndClose(credentialsStream, StandardCharsets.UTF_8, GenericJson.class);
     return fromJson(fileContents, transportFactory);
   }
 

@@ -40,7 +40,7 @@ import com.google.api.client.http.LowLevelHttpResponse;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.Json;
 import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
@@ -76,7 +76,7 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
   private static final String SERVICE_ACCOUNT_ACCESS_TOKEN = "serviceAccountAccessToken";
   private static final Long EXPIRES_IN = 3600L;
 
-  private static final JsonFactory JSON_FACTORY = new JacksonFactory();
+  private static final JsonFactory JSON_FACTORY = new GsonFactory();
 
   static final String SERVICE_ACCOUNT_IMPERSONATION_URL =
       "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/testn@test.iam.gserviceaccount.com:generateAccessToken";
