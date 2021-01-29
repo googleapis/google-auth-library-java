@@ -60,11 +60,6 @@ public class TestUtils {
 
   private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
-  private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-  private static final int VALID_LIFETIME = 300;
-
-  public static final String UTF_8 = "UTF-8";
-
   public static void assertContainsBearerToken(Map<String, List<String>> metadata, String token) {
     assertNotNull(metadata);
     assertNotNull(token);
@@ -93,12 +88,12 @@ public class TestUtils {
   public static InputStream jsonToInputStream(GenericJson json) throws IOException {
     json.setFactory(JSON_FACTORY);
     String text = json.toPrettyString();
-    return new ByteArrayInputStream(text.getBytes(UTF_8));
+    return new ByteArrayInputStream(text.getBytes("UTF-8"));
   }
 
   public static InputStream stringToInputStream(String text) {
     try {
-      return new ByteArrayInputStream(text.getBytes(TestUtils.UTF_8));
+      return new ByteArrayInputStream(text.getBytes("UTF-8"));
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException("Unexpected encoding exception", e);
     }
@@ -112,8 +107,8 @@ public class TestUtils {
       if (sides.size() != 2) {
         throw new IOException("Invalid Query String");
       }
-      String key = URLDecoder.decode(sides.get(0), UTF_8);
-      String value = URLDecoder.decode(sides.get(1), UTF_8);
+      String key = URLDecoder.decode(sides.get(0), "UTF-8");
+      String value = URLDecoder.decode(sides.get(1), "UTF-8");
       map.put(key, value);
     }
     return map;
@@ -147,11 +142,10 @@ public class TestUtils {
   }
 
   public static String getDefaultExpireTime() {
-    Date currentDate = new Date();
-    Calendar c = Calendar.getInstance();
-    c.setTime(currentDate);
-    c.add(Calendar.SECOND, VALID_LIFETIME);
-    return new SimpleDateFormat(RFC3339).format(c.getTime());
+    Calendar calendar = Calendar.getInstance();
+    calendar.setTime(new Date());
+    calendar.add(Calendar.SECOND, 300);
+    return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(calendar.getTime());
   }
 
   private TestUtils() {}

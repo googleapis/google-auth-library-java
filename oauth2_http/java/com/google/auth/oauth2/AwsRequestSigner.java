@@ -89,7 +89,7 @@ class AwsRequestSigner {
    * @param region the targeted region
    * @param requestPayload the request payload
    * @param additionalHeaders a map of additional HTTP headers to be included with the signed
-   *     request.
+   *     request
    */
   private AwsRequestSigner(
       AwsSecurityCredentials awsSecurityCredentials,

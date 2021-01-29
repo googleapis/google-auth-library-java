@@ -123,7 +123,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
         headers.putAll(headersMap);
       }
 
-      // If the format is not provided, we will expect the token to be in the raw text format.
+      // If the format is not provided, we expect the token to be in the raw text format.
       credentialFormatType = CredentialFormatType.TEXT;
 
       Map<String, String> formatMap = (Map<String, String>) credentialSourceMap.get("format");

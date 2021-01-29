@@ -31,7 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.auth.TestUtils.getDefaultExpireTime;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -116,7 +115,7 @@ public class AwsCredentialsTest {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
-    transportFactory.transport.setExpireTime(getDefaultExpireTime());
+    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
 
     AwsCredentials awsCredential =
         (AwsCredentials)

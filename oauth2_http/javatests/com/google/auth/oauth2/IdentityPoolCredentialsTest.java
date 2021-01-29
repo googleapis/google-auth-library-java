@@ -31,7 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.auth.TestUtils.getDefaultExpireTime;
 import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
 import static com.google.auth.oauth2.OAuth2Utils.JSON_FACTORY;
 import static org.junit.Assert.assertEquals;
@@ -321,7 +320,7 @@ public class IdentityPoolCredentialsTest {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
-    transportFactory.transport.setExpireTime(getDefaultExpireTime());
+    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
     final IdentityPoolCredentials credential =
         (IdentityPoolCredentials)
             IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)

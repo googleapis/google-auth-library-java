@@ -67,11 +67,11 @@ public class StsRequestHandler {
   /**
    * Internal constructor.
    *
-   * @param tokenExchangeEndpoint The token exchange endpoint.
-   * @param request The token exchange request.
-   * @param headers Optional additional headers to pass along the request.
-   * @param internalOptions Optional GCP specific STS options.
-   * @return An StsTokenExchangeResponse instance if the request was successful.
+   * @param tokenExchangeEndpoint the token exchange endpoint
+   * @param request the token exchange request
+   * @param headers optional additional headers to pass along the request
+   * @param internalOptions optional GCP specific STS options
+   * @return an StsTokenExchangeResponse instance if the request was successful
    */
   private StsRequestHandler(
       String tokenExchangeEndpoint,

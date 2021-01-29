@@ -31,7 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.auth.TestUtils.getDefaultExpireTime;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
@@ -219,7 +218,7 @@ public class ExternalAccountCredentialsTest {
   @Test
   public void exchange3PICredentialForAccessToken_withServiceAccountImpersonation()
       throws IOException {
-    transportFactory.transport.setExpireTime(getDefaultExpireTime());
+    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
 
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromStream(
