@@ -34,8 +34,8 @@ package com.google.auth.oauth2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonParser;
@@ -54,7 +54,6 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import org.junit.Test;
-import org.junit.function.ThrowingRunnable;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -180,17 +179,12 @@ public class AwsCredentialsTest {
                 .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .build();
 
-    IOException e =
-        assertThrows(
-            IOException.class,
-            new ThrowingRunnable() {
-              @Override
-              public void run() throws Throwable {
-                awsCredential.retrieveSubjectToken();
-              }
-            });
-
-    assertEquals("Failed to retrieve AWS region.", e.getMessage());
+    try {
+      awsCredential.retrieveSubjectToken();
+      fail("Exception should be thrown.");
+    } catch (IOException e) {
+      assertEquals("Failed to retrieve AWS region.", e.getMessage());
+    }
   }
 
   @Test
@@ -209,17 +203,12 @@ public class AwsCredentialsTest {
                 .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .build();
 
-    IOException e =
-        assertThrows(
-            IOException.class,
-            new ThrowingRunnable() {
-              @Override
-              public void run() throws Throwable {
-                awsCredential.retrieveSubjectToken();
-              }
-            });
-
-    assertEquals("Failed to retrieve AWS IAM role.", e.getMessage());
+    try {
+      awsCredential.retrieveSubjectToken();
+      fail("Exception should be thrown.");
+    } catch (IOException e) {
+      assertEquals("Failed to retrieve AWS IAM role.", e.getMessage());
+    }
   }
 
   @Test
@@ -238,17 +227,12 @@ public class AwsCredentialsTest {
                 .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .build();
 
-    IOException e =
-        assertThrows(
-            IOException.class,
-            new ThrowingRunnable() {
-              @Override
-              public void run() throws Throwable {
-                awsCredential.retrieveSubjectToken();
-              }
-            });
-
-    assertEquals("Failed to retrieve AWS credentials.", e.getMessage());
+    try {
+      awsCredential.retrieveSubjectToken();
+      fail("Exception should be thrown.");
+    } catch (IOException e) {
+      assertEquals("Failed to retrieve AWS credentials.", e.getMessage());
+    }
   }
 
   @Test
@@ -267,20 +251,15 @@ public class AwsCredentialsTest {
                 .setCredentialSource(new AwsCredentialSource(credentialSource))
                 .build();
 
-    IOException e =
-        assertThrows(
-            IOException.class,
-            new ThrowingRunnable() {
-              @Override
-              public void run() throws IOException {
-                awsCredential.retrieveSubjectToken();
-              }
-            });
-
-    assertEquals(
-        "Unable to determine the AWS region. The credential source does not "
-            + "contain the region URL.",
-        e.getMessage());
+    try {
+      awsCredential.retrieveSubjectToken();
+      fail("Exception should be thrown.");
+    } catch (IOException e) {
+      assertEquals(
+          "Unable to determine the AWS region. The credential source does not "
+              + "contain the region URL.",
+          e.getMessage());
+    }
   }
 
   @Test
@@ -345,19 +324,14 @@ public class AwsCredentialsTest {
                 .setCredentialSource(new AwsCredentialSource(credentialSource))
                 .build();
 
-    IOException e =
-        assertThrows(
-            IOException.class,
-            new ThrowingRunnable() {
-              @Override
-              public void run() throws IOException {
-                awsCredential.getAwsSecurityCredentials();
-              }
-            });
-
-    assertEquals(
-        "Unable to determine the AWS IAM role name. The credential source does not contain the url field.",
-        e.getMessage());
+    try {
+      awsCredential.getAwsSecurityCredentials();
+      fail("Exception should be thrown.");
+    } catch (IOException e) {
+      assertEquals(
+          "Unable to determine the AWS IAM role name. The credential source does not contain the url field.",
+          e.getMessage());
+    }
   }
 
   @Test
@@ -395,17 +369,12 @@ public class AwsCredentialsTest {
     credentialSource.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
     credentialSource.put("environment_id", "azure1");
 
-    IllegalArgumentException e =
-        assertThrows(
-            IllegalArgumentException.class,
-            new ThrowingRunnable() {
-              @Override
-              public void run() {
-                new AwsCredentialSource(credentialSource);
-              }
-            });
-
-    assertEquals("Invalid AWS environment ID.", e.getMessage());
+    try {
+      new AwsCredentialSource(credentialSource);
+      fail("Exception should be thrown.");
+    } catch (IllegalArgumentException e) {
+      assertEquals("Invalid AWS environment ID.", e.getMessage());
+    }
   }
 
   @Test
@@ -415,36 +384,27 @@ public class AwsCredentialsTest {
     credentialSource.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
     credentialSource.put("environment_id", "aws" + environmentVersion);
 
-    IllegalArgumentException e =
-        assertThrows(
-            IllegalArgumentException.class,
-            new ThrowingRunnable() {
-              @Override
-              public void run() {
-                new AwsCredentialSource(credentialSource);
-              }
-            });
-
-    assertEquals(
-        String.format("AWS version %s is not supported in the current build.", environmentVersion),
-        e.getMessage());
+    try {
+      new AwsCredentialSource(credentialSource);
+      fail("Exception should be thrown.");
+    } catch (IllegalArgumentException e) {
+      assertEquals(
+          String.format(
+              "AWS version %s is not supported in the current build.", environmentVersion),
+          e.getMessage());
+    }
   }
 
   @Test
   public void credentialSource_missingRegionalCredVerificationUrl() {
-    IllegalArgumentException e =
-        assertThrows(
-            IllegalArgumentException.class,
-            new ThrowingRunnable() {
-              @Override
-              public void run() {
-                new AwsCredentialSource(new HashMap<String, Object>());
-              }
-            });
-
-    assertEquals(
-        "A regional_cred_verification_url representing the GetCallerIdentity action URL must be specified.",
-        e.getMessage());
+    try {
+      new AwsCredentialSource(new HashMap<String, Object>());
+      fail("Exception should be thrown.");
+    } catch (IllegalArgumentException e) {
+      assertEquals(
+          "A regional_cred_verification_url representing the GetCallerIdentity action URL must be specified.",
+          e.getMessage());
+    }
   }
 
   private static AwsCredentialSource buildAwsCredentialSource(

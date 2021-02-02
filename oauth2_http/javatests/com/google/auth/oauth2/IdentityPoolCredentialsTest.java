@@ -34,7 +34,7 @@ package com.google.auth.oauth2;
 import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
 import static com.google.auth.oauth2.OAuth2Utils.JSON_FACTORY;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.fail;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
@@ -52,7 +52,6 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import org.junit.Test;
-import org.junit.function.ThrowingRunnable;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -205,19 +204,14 @@ public class IdentityPoolCredentialsTest {
                 .setCredentialSource(credentialSource)
                 .build();
 
-    IOException e =
-        assertThrows(
-            IOException.class,
-            new ThrowingRunnable() {
-              @Override
-              public void run() throws Throwable {
-                credentials.retrieveSubjectToken();
-              }
-            });
-
-    assertEquals(
-        String.format("Invalid credential location. The file at %s does not exist.", path),
-        e.getMessage());
+    try {
+      credentials.retrieveSubjectToken();
+      fail("Exception should be thrown.");
+    } catch (IOException e) {
+      assertEquals(
+          String.format("Invalid credential location. The file at %s does not exist.", path),
+          e.getMessage());
+    }
   }
 
   @Test
@@ -280,20 +274,15 @@ public class IdentityPoolCredentialsTest {
                     buildUrlBasedCredentialSource(transportFactory.transport.getMetadataUrl()))
                 .build();
 
-    IOException e =
-        assertThrows(
-            IOException.class,
-            new ThrowingRunnable() {
-              @Override
-              public void run() throws Throwable {
-                credential.retrieveSubjectToken();
-              }
-            });
-
-    assertEquals(
-        String.format(
-            "Error getting subject token from metadata server: %s", response.getMessage()),
-        e.getMessage());
+    try {
+      credential.retrieveSubjectToken();
+      fail("Exception should be thrown.");
+    } catch (IOException e) {
+      assertEquals(
+          String.format(
+              "Error getting subject token from metadata server: %s", response.getMessage()),
+          e.getMessage());
+    }
   }
 
   @Test
@@ -340,19 +329,14 @@ public class IdentityPoolCredentialsTest {
 
   @Test
   public void identityPoolCredentialSource_invalidSourceType() {
-    IllegalArgumentException e =
-        assertThrows(
-            IllegalArgumentException.class,
-            new ThrowingRunnable() {
-              @Override
-              public void run() {
-                new IdentityPoolCredentialSource(new HashMap<String, Object>());
-              }
-            });
-
-    assertEquals(
-        "Missing credential source file location or URL. At least one must be specified.",
-        e.getMessage());
+    try {
+      new IdentityPoolCredentialSource(new HashMap<String, Object>());
+      fail("Exception should be thrown.");
+    } catch (IllegalArgumentException e) {
+      assertEquals(
+          "Missing credential source file location or URL. At least one must be specified.",
+          e.getMessage());
+    }
   }
 
   @Test
@@ -364,17 +348,12 @@ public class IdentityPoolCredentialsTest {
     format.put("type", "unsupportedType");
     credentialSourceMap.put("format", format);
 
-    IllegalArgumentException e =
-        assertThrows(
-            IllegalArgumentException.class,
-            new ThrowingRunnable() {
-              @Override
-              public void run() {
-                new IdentityPoolCredentialSource(credentialSourceMap);
-              }
-            });
-
-    assertEquals("Invalid credential source format type: unsupportedType.", e.getMessage());
+    try {
+      new IdentityPoolCredentialSource(credentialSourceMap);
+      fail("Exception should be thrown.");
+    } catch (IllegalArgumentException e) {
+      assertEquals("Invalid credential source format type: unsupportedType.", e.getMessage());
+    }
   }
 
   @Test
@@ -386,17 +365,12 @@ public class IdentityPoolCredentialsTest {
     format.put("type", null);
     credentialSourceMap.put("format", format);
 
-    IllegalArgumentException e =
-        assertThrows(
-            IllegalArgumentException.class,
-            new ThrowingRunnable() {
-              @Override
-              public void run() {
-                new IdentityPoolCredentialSource(credentialSourceMap);
-              }
-            });
-
-    assertEquals("Invalid credential source format type: null.", e.getMessage());
+    try {
+      new IdentityPoolCredentialSource(credentialSourceMap);
+      fail("Exception should be thrown.");
+    } catch (IllegalArgumentException e) {
+      assertEquals("Invalid credential source format type: null.", e.getMessage());
+    }
   }
 
   @Test
@@ -408,19 +382,14 @@ public class IdentityPoolCredentialsTest {
     format.put("type", "json");
     credentialSourceMap.put("format", format);
 
-    IllegalArgumentException e =
-        assertThrows(
-            IllegalArgumentException.class,
-            new ThrowingRunnable() {
-              @Override
-              public void run() {
-                new IdentityPoolCredentialSource(credentialSourceMap);
-              }
-            });
-
-    assertEquals(
-        "When specifying a JSON credential type, the subject_token_field_name must be set.",
-        e.getMessage());
+    try {
+      new IdentityPoolCredentialSource(credentialSourceMap);
+      fail("Exception should be thrown.");
+    } catch (IllegalArgumentException e) {
+      assertEquals(
+          "When specifying a JSON credential type, the subject_token_field_name must be set.",
+          e.getMessage());
+    }
   }
 
   static InputStream writeIdentityPoolCredentialsStream(

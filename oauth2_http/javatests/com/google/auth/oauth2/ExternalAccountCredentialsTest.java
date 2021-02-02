@@ -33,8 +33,8 @@ package com.google.auth.oauth2;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
@@ -52,7 +52,6 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.function.ThrowingRunnable;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -104,28 +103,24 @@ public class ExternalAccountCredentialsTest {
 
   @Test
   public void fromStream_nullTransport_throws() {
-    assertThrows(
-        NullPointerException.class,
-        new ThrowingRunnable() {
-          @Override
-          public void run() throws Throwable {
-            ExternalAccountCredentials.fromStream(
-                new ByteArrayInputStream("foo".getBytes()), /* transportFactory= */ null);
-          }
-        });
+    try {
+      ExternalAccountCredentials.fromStream(
+          new ByteArrayInputStream("foo".getBytes()), /* transportFactory= */ null);
+      fail("Exception should be thrown.");
+    } catch (NullPointerException | IOException e) {
+      // Expected.
+    }
   }
 
   @Test
   public void fromStream_nullStream_throws() {
-    assertThrows(
-        NullPointerException.class,
-        new ThrowingRunnable() {
-          @Override
-          public void run() throws Throwable {
-            ExternalAccountCredentials.fromStream(
-                /* credentialsStream= */ null, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
-          }
-        });
+    try {
+      ExternalAccountCredentials.fromStream(
+          /* credentialsStream= */ null, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+      fail("Exception should be thrown.");
+    } catch (NullPointerException | IOException e) {
+      // Expected.
+    }
   }
 
   @Test
@@ -158,15 +153,12 @@ public class ExternalAccountCredentialsTest {
 
   @Test
   public void fromJson_nullJson_throws() {
-    assertThrows(
-        NullPointerException.class,
-        new ThrowingRunnable() {
-          @Override
-          public void run() {
-            ExternalAccountCredentials.fromJson(
-                /* json= */ null, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
-          }
-        });
+    try {
+      ExternalAccountCredentials.fromJson(/* json= */ null, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+      fail("Exception should be thrown.");
+    } catch (NullPointerException e) {
+      // Expected.
+    }
   }
 
   @Test
@@ -174,31 +166,25 @@ public class ExternalAccountCredentialsTest {
     final GenericJson json = buildJsonIdentityPoolCredential();
     json.put("service_account_impersonation_url", "invalid_url");
 
-    IllegalArgumentException e =
-        assertThrows(
-            IllegalArgumentException.class,
-            new ThrowingRunnable() {
-              @Override
-              public void run() {
-                ExternalAccountCredentials.fromJson(json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
-              }
-            });
-    assertEquals(
-        "Unable to determine target principal from service account impersonation URL.",
-        e.getMessage());
+    try {
+      ExternalAccountCredentials.fromJson(json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+      fail("Exception should be thrown.");
+    } catch (IllegalArgumentException e) {
+      assertEquals(
+          "Unable to determine target principal from service account impersonation URL.",
+          e.getMessage());
+    }
   }
 
   @Test
   public void fromJson_nullTransport_throws() {
-    assertThrows(
-        NullPointerException.class,
-        new ThrowingRunnable() {
-          @Override
-          public void run() {
-            ExternalAccountCredentials.fromJson(
-                new HashMap<String, Object>(), /* transportFactory= */ null);
-          }
-        });
+    try {
+      ExternalAccountCredentials.fromJson(
+          new HashMap<String, Object>(), /* transportFactory= */ null);
+      fail("Exception should be thrown.");
+    } catch (NullPointerException e) {
+      // Expected.
+    }
   }
 
   @Test
@@ -252,19 +238,14 @@ public class ExternalAccountCredentialsTest {
     final StsTokenExchangeRequest stsTokenExchangeRequest =
         StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
 
-    OAuthException e =
-        assertThrows(
-            OAuthException.class,
-            new ThrowingRunnable() {
-              @Override
-              public void run() throws Throwable {
-                credential.exchange3PICredentialForAccessToken(stsTokenExchangeRequest);
-              }
-            });
-
-    assertEquals(errorCode, e.getErrorCode());
-    assertEquals(errorDescription, e.getErrorDescription());
-    assertEquals(errorUri, e.getErrorUri());
+    try {
+      credential.exchange3PICredentialForAccessToken(stsTokenExchangeRequest);
+      fail("Exception should be thrown.");
+    } catch (OAuthException e) {
+      assertEquals(errorCode, e.getErrorCode());
+      assertEquals(errorDescription, e.getErrorDescription());
+      assertEquals(errorUri, e.getErrorUri());
+    }
   }
 
   @Test
