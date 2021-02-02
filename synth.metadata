@@ -4,7 +4,7 @@
       "git": {
         "name": ".",
         "remote": "https://github.com/googleapis/google-auth-library-java.git",
-        "sha": "427963e04702d8b73eca5ed555539b11bbe97342"
+        "sha": "1fa9e1cde3ea8cb7ce0e250192dd154c07211997"
       }
     },
     {
@@ -77,7 +77,6 @@
     ".kokoro/trampoline.sh",
     "CODE_OF_CONDUCT.md",
     "CONTRIBUTING.md",
-    "LICENSE",
     "codecov.yaml"
   ]
 }
