@@ -12,7 +12,7 @@
  * in the documentation and/or other materials provided with the
  * distribution.
  *
- *    * Neither the name of Google Inc. nor the names of its
+ *    * Neither the name of Google LLC nor the names of its
  * contributors may be used to endorse or promote products derived from
  * this software without specific prior written permission.
  *
@@ -343,8 +343,8 @@ class AwsRequestSigner {
     private static final String X_AMZ_DATE_FORMAT = "yyyyMMdd'T'HHmmss'Z'";
     private static final String CUSTOM_DATE_FORMAT = "E, dd MMM yyyy HH:mm:ss z";
 
-    private String originalDate;
-    private String xAmzDate;
+    private final String xAmzDate;
+    private final String originalDate;
 
     private AwsDates(String amzDate) {
       this.xAmzDate = checkNotNull(amzDate);

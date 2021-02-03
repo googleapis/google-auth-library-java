@@ -12,7 +12,7 @@
  * in the documentation and/or other materials provided with the
  * distribution.
  *
- *    * Neither the name of Google Inc. nor the names of its
+ *    * Neither the name of Google LLC nor the names of its
  * contributors may be used to endorse or promote products derived from
  * this software without specific prior written permission.
  *
@@ -36,7 +36,6 @@ import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.json.GenericJson;
-import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSource.CredentialFormatType;
@@ -90,15 +89,15 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
     /**
      * The source of the 3P credential.
      *
-     * <p>If the this a file based 3P credential, the credentials file can be retrieved using the
+     * <p>If this is a file based 3P credential, the credentials file can be retrieved using the
      * `file` key.
      *
      * <p>If this is URL-based 3p credential, the metadata server URL can be retrieved using the
      * `url` key.
      *
      * <p>The third party credential can be provided in different formats, such as text or JSON. The
-     * format can be specified using the `format` header, which will return a map with keys `type`
-     * and `subject_token_field_name`. If the `type` is json, the `subject_token_field_name` must be
+     * format can be specified using the `format` header, which returns a map with keys `type` and
+     * `subject_token_field_name`. If the `type` is json, the `subject_token_field_name` must be
      * provided. If no format is provided, we expect the token to be in the raw text format.
      *
      * <p>Optional headers can be present, and should be keyed by `headers`.
@@ -227,8 +226,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       return CharStreams.toString(reader);
     }
 
-    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
-    JsonObjectParser parser = new JsonObjectParser(jsonFactory);
+    JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     GenericJson fileContents =
         parser.parseAndClose(inputStream, StandardCharsets.UTF_8, GenericJson.class);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020, Google LLC
+ * Copyright 2021 Google LLC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -12,7 +12,7 @@
  * in the documentation and/or other materials provided with the
  * distribution.
  *
- *    * Neither the name of Google Inc. nor the names of its
+ *    * Neither the name of Google LLC nor the names of its
  * contributors may be used to endorse or promote products derived from
  * this software without specific prior written permission.
  *
@@ -102,23 +102,23 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  public void fromStream_nullTransport_throws() {
+  public void fromStream_nullTransport_throws() throws IOException {
     try {
       ExternalAccountCredentials.fromStream(
           new ByteArrayInputStream("foo".getBytes()), /* transportFactory= */ null);
-      fail("Exception should be thrown.");
-    } catch (NullPointerException | IOException e) {
+      fail("NullPointerException should be thrown.");
+    } catch (NullPointerException e) {
       // Expected.
     }
   }
 
   @Test
-  public void fromStream_nullStream_throws() {
+  public void fromStream_nullStream_throws() throws IOException {
     try {
       ExternalAccountCredentials.fromStream(
           /* credentialsStream= */ null, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
-      fail("Exception should be thrown.");
-    } catch (NullPointerException | IOException e) {
+      fail("NullPointerException should be thrown.");
+    } catch (NullPointerException e) {
       // Expected.
     }
   }

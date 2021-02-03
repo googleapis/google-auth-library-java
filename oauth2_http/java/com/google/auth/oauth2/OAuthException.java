@@ -12,7 +12,7 @@
  * in the documentation and/or other materials provided with the
  * distribution.
  *
- *    * Neither the name of Google Inc. nor the names of its
+ *    * Neither the name of Google LLC nor the names of its
  * contributors may be used to endorse or promote products derived from
  * this software without specific prior written permission.
  *
@@ -36,14 +36,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.IOException;
 import javax.annotation.Nullable;
 
+/**
+ * Encapsulates the standard OAuth error response. See
+ * https://tools.ietf.org/html/rfc6749#section-5.2.
+ */
 class OAuthException extends IOException {
-  private static final String FULL_MESSAGE_FORMAT = "Error code %s: %s - %s";
-  private static final String ERROR_DESCRIPTION_FORMAT = "Error code %s: %s";
-  private static final String BASE_MESSAGE_FORMAT = "Error code %s";
 
-  private String errorCode;
-  @Nullable private String errorDescription;
-  @Nullable private String errorUri;
+  private final String errorCode;
+  @Nullable private final String errorDescription;
+  @Nullable private final String errorUri;
 
   public OAuthException(
       String errorCode, @Nullable String errorDescription, @Nullable String errorUri) {
@@ -54,13 +55,15 @@ class OAuthException extends IOException {
 
   @Override
   public String getMessage() {
-    if (errorDescription != null && errorUri != null) {
-      return String.format(FULL_MESSAGE_FORMAT, errorCode, errorDescription, errorUri);
-    }
+    // Fully specified message will have the format Error code %s: %s - %s.
+    StringBuilder sb = new StringBuilder("Error code " + errorCode);
     if (errorDescription != null) {
-      return String.format(ERROR_DESCRIPTION_FORMAT, errorCode, errorDescription);
+      sb.append(": ").append(errorDescription);
     }
-    return String.format(BASE_MESSAGE_FORMAT, errorCode);
+    if (errorUri != null) {
+      sb.append(" - ").append(errorUri);
+    }
+    return sb.toString();
   }
 
   public String getErrorCode() {

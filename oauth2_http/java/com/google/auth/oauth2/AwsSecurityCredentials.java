@@ -12,7 +12,7 @@
  * in the documentation and/or other materials provided with the
  * distribution.
  *
- *    * Neither the name of Google Inc. nor the names of its
+ *    * Neither the name of Google LLC nor the names of its
  * contributors may be used to endorse or promote products derived from
  * this software without specific prior written permission.
  *
@@ -39,10 +39,10 @@ import javax.annotation.Nullable;
  */
 class AwsSecurityCredentials {
 
-  private String accessKeyId;
-  private String secretAccessKey;
+  private final String accessKeyId;
+  private final String secretAccessKey;
 
-  @Nullable private String token;
+  @Nullable private final String token;
 
   AwsSecurityCredentials(String accessKeyId, String secretAccessKey, @Nullable String token) {
     this.accessKeyId = accessKeyId;

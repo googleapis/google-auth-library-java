@@ -12,7 +12,7 @@
  * in the documentation and/or other materials provided with the
  * distribution.
  *
- *    * Neither the name of Google Inc. nor the names of its
+ *    * Neither the name of Google LLC nor the names of its
  * contributors may be used to endorse or promote products derived from
  * this software without specific prior written permission.
  *
@@ -93,7 +93,7 @@ public class StsRequestHandler {
     return new Builder(tokenExchangeEndpoint, stsTokenExchangeRequest, httpRequestFactory);
   }
 
-  /** Exchanges the provided token for another type of token based on the rfc8693 spec. */
+  /** Exchanges the provided token for another type of token based on the RFC 8693 spec. */
   public StsTokenExchangeResponse exchangeToken() throws IOException {
     UrlEncodedContent content = new UrlEncodedContent(buildTokenRequest());
 

@@ -31,8 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.auth.oauth2.IdentityPoolCredentials.EXTERNAL_ACCOUNT_FILE_TYPE;
-
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
@@ -168,7 +166,7 @@ public class GoogleCredentials extends OAuth2Credentials {
     if (SERVICE_ACCOUNT_FILE_TYPE.equals(fileType)) {
       return ServiceAccountCredentials.fromJson(fileContents, transportFactory);
     }
-    if (EXTERNAL_ACCOUNT_FILE_TYPE.equals(fileType)) {
+    if (ExternalAccountCredentials.EXTERNAL_ACCOUNT_FILE_TYPE.equals(fileType)) {
       return ExternalAccountCredentials.fromJson(fileContents, transportFactory);
     }
     throw new IOException(

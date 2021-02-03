@@ -12,7 +12,7 @@
  * in the documentation and/or other materials provided with the
  * distribution.
  *
- *    * Neither the name of Google Inc. nor the names of its
+ *    * Neither the name of Google LLC nor the names of its
  * contributors may be used to endorse or promote products derived from
  * this software without specific prior written permission.
  *
@@ -33,7 +33,6 @@ package com.google.auth.oauth2;
 
 import static com.google.api.client.util.Preconditions.checkNotNull;
 
-import com.google.api.client.util.Clock;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -61,7 +60,7 @@ public class StsTokenExchangeResponse {
       @Nullable List<String> scopes) {
     checkNotNull(accessToken);
     this.expiresIn = checkNotNull(expiresIn);
-    long expiresAtMilliseconds = Clock.SYSTEM.currentTimeMillis() + expiresIn * 1000L;
+    long expiresAtMilliseconds = System.currentTimeMillis() + expiresIn * 1000L;
     this.accessToken = new AccessToken(accessToken, new Date(expiresAtMilliseconds));
     this.issuedTokenType = checkNotNull(issuedTokenType);
     this.tokenType = checkNotNull(tokenType);
