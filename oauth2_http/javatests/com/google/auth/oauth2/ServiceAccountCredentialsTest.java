@@ -385,7 +385,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     try {
       credentials.getRequestMetadata(CALL_URI);
       fail("Should not be able to get token without scopes");
-    } catch (Exception expected) {
+    } catch (IOException expected) {
       // Expected
     }
 
