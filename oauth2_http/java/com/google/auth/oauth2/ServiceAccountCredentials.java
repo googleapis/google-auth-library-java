@@ -513,7 +513,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
    * <p>Should be called before use for instances with empty scopes.
    */
   @Override
-  public GoogleCredentials createScoped(Collection<String> newScopes) {
+  public ServiceAccountCredentials createScoped(Collection<String> newScopes) {
     return new ServiceAccountCredentials(
         clientId,
         clientEmail,
