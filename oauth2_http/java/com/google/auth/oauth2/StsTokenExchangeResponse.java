@@ -31,7 +31,7 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.api.client.util.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -43,13 +43,13 @@ import javax.annotation.Nullable;
  * https://tools.ietf.org/html/rfc8693#section-2.2.1.
  */
 public class StsTokenExchangeResponse {
-  private AccessToken accessToken;
-  private String issuedTokenType;
-  private String tokenType;
-  private Long expiresIn;
+  private final AccessToken accessToken;
+  private final String issuedTokenType;
+  private final String tokenType;
+  private final Long expiresIn;
 
-  @Nullable private String refreshToken;
-  @Nullable private List<String> scopes;
+  @Nullable private final String refreshToken;
+  @Nullable private final List<String> scopes;
 
   private StsTokenExchangeResponse(
       String accessToken,
@@ -96,14 +96,17 @@ public class StsTokenExchangeResponse {
 
   @Nullable
   public List<String> getScopes() {
+    if (scopes == null) {
+      return null;
+    }
     return new ArrayList<>(scopes);
   }
 
   public static class Builder {
-    private String accessToken;
-    private String issuedTokenType;
-    private String tokenType;
-    private Long expiresIn;
+    private final String accessToken;
+    private final String issuedTokenType;
+    private final String tokenType;
+    private final Long expiresIn;
 
     @Nullable private String refreshToken;
     @Nullable private List<String> scopes;

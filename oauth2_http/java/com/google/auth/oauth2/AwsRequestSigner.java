@@ -31,7 +31,7 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.api.client.util.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.api.client.util.Joiner;
@@ -61,7 +61,8 @@ import javax.crypto.spec.SecretKeySpec;
  * Internal utility that signs AWS API requests based on the AWS Signature Version 4 signing
  * process.
  *
- * <p>https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html
+ * @see <a href="https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html">AWS
+ *     Signature V4</a>
  */
 class AwsRequestSigner {
 
@@ -259,8 +260,7 @@ class AwsRequestSigner {
       return mac.doFinal(value);
     } catch (NoSuchAlgorithmException e) {
       // Will not occur as HmacSHA256 is supported. We may allow other algorithms in the future.
-      throw new RuntimeException(
-          "Invalid algorithm used when calculating the AWS V4 Signature.", e);
+      throw new RuntimeException("HmacSHA256 must be supported by the JVM.", e);
     } catch (InvalidKeyException e) {
       throw new SigningException("Invalid key used when calculating the AWS V4 Signature", e);
     }
@@ -282,10 +282,10 @@ class AwsRequestSigner {
 
   static class Builder {
 
-    private AwsSecurityCredentials awsSecurityCredentials;
-    private String httpMethod;
-    private String url;
-    private String region;
+    private final AwsSecurityCredentials awsSecurityCredentials;
+    private final String httpMethod;
+    private final String url;
+    private final String region;
 
     @Nullable private String requestPayload;
     @Nullable private Map<String, String> additionalHeaders;

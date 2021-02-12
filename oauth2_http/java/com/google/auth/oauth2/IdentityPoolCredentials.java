@@ -64,8 +64,8 @@ import javax.annotation.Nullable;
 public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   /**
-   * The IdentityPool credential source. Dictates the retrieval method of the 3PI credential, which
-   * can either be through a metadata server or a local file.
+   * The IdentityPool credential source. Dictates the retrieval method of the external credential,
+   * which can either be through a metadata server or a local file.
    */
   static class IdentityPoolCredentialSource extends ExternalAccountCredentials.CredentialSource {
 
@@ -192,7 +192,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       stsTokenExchangeRequest.setScopes(new ArrayList<>(scopes));
     }
 
-    return exchange3PICredentialForAccessToken(stsTokenExchangeRequest.build());
+    return exchangeExternalCredentialForAccessToken(stsTokenExchangeRequest.build());
   }
 
   @Override

@@ -57,12 +57,12 @@ public class StsRequestHandler {
       "urn:ietf:params:oauth:token-type:access_token";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token response.";
 
-  private String tokenExchangeEndpoint;
-  private StsTokenExchangeRequest request;
-  private HttpRequestFactory httpRequestFactory;
+  private final String tokenExchangeEndpoint;
+  private final StsTokenExchangeRequest request;
+  private final HttpRequestFactory httpRequestFactory;
 
-  @Nullable private HttpHeaders headers;
-  @Nullable private String internalOptions;
+  @Nullable private final HttpHeaders headers;
+  @Nullable private final String internalOptions;
 
   /**
    * Internal constructor.
@@ -108,11 +108,8 @@ public class StsRequestHandler {
       HttpResponse response = httpRequest.execute();
       GenericData responseData = response.parseAs(GenericData.class);
       return buildResponse(responseData);
-    } catch (IOException e) {
-      if (!(e instanceof HttpResponseException)) {
-        throw e;
-      }
-      GenericJson errorResponse = parseJson(((HttpResponseException) e).getContent());
+    } catch (HttpResponseException e) {
+      GenericJson errorResponse = parseJson((e).getContent());
       String errorCode = (String) errorResponse.get("error");
       String errorDescription = null;
       String errorUri = null;
@@ -195,9 +192,9 @@ public class StsRequestHandler {
   }
 
   public static class Builder {
-    private String tokenExchangeEndpoint;
-    private StsTokenExchangeRequest request;
-    private HttpRequestFactory httpRequestFactory;
+    private final String tokenExchangeEndpoint;
+    private final StsTokenExchangeRequest request;
+    private final HttpRequestFactory httpRequestFactory;
 
     @Nullable private HttpHeaders headers;
     @Nullable private String internalOptions;

@@ -188,7 +188,7 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  public void exchange3PICredentialForAccessToken() throws IOException {
+  public void exchangeExternalCredentialForAccessToken() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(buildJsonIdentityPoolCredential(), transportFactory);
 
@@ -196,13 +196,13 @@ public class ExternalAccountCredentialsTest {
         StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
 
     AccessToken accessToken =
-        credential.exchange3PICredentialForAccessToken(stsTokenExchangeRequest);
+        credential.exchangeExternalCredentialForAccessToken(stsTokenExchangeRequest);
 
     assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
   }
 
   @Test
-  public void exchange3PICredentialForAccessToken_withServiceAccountImpersonation()
+  public void exchangeExternalCredentialForAccessToken_withServiceAccountImpersonation()
       throws IOException {
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
 
@@ -218,14 +218,14 @@ public class ExternalAccountCredentialsTest {
         StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
 
     AccessToken returnedToken =
-        credential.exchange3PICredentialForAccessToken(stsTokenExchangeRequest);
+        credential.exchangeExternalCredentialForAccessToken(stsTokenExchangeRequest);
 
     assertEquals(
         transportFactory.transport.getServiceAccountAccessToken(), returnedToken.getTokenValue());
   }
 
   @Test
-  public void exchange3PICredentialForAccessToken_throws() throws IOException {
+  public void exchangeExternalCredentialForAccessToken_throws() throws IOException {
     final ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(buildJsonIdentityPoolCredential(), transportFactory);
 
@@ -239,7 +239,7 @@ public class ExternalAccountCredentialsTest {
         StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
 
     try {
-      credential.exchange3PICredentialForAccessToken(stsTokenExchangeRequest);
+      credential.exchangeExternalCredentialForAccessToken(stsTokenExchangeRequest);
       fail("Exception should be thrown.");
     } catch (OAuthException e) {
       assertEquals(errorCode, e.getErrorCode());

@@ -54,7 +54,7 @@ import javax.annotation.Nullable;
 /**
  * AWS credentials representing a third-party identity for calling Google APIs.
  *
- * <p>By default, attempts to exchange the 3PI credential for a GCP access token.
+ * <p>By default, attempts to exchange the external credential for a GCP access token.
  */
 public class AwsCredentials extends ExternalAccountCredentials {
 
@@ -154,7 +154,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
       stsTokenExchangeRequest.setScopes(new ArrayList<>(scopes));
     }
 
-    return exchange3PICredentialForAccessToken(stsTokenExchangeRequest.build());
+    return exchangeExternalCredentialForAccessToken(stsTokenExchangeRequest.build());
   }
 
   @Override

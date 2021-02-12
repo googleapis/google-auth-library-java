@@ -55,7 +55,7 @@ import java.util.Map;
 import java.util.Queue;
 
 /**
- * Mock transport that handles the necessary steps to exchange a 3PI credential for a GCP
+ * Mock transport that handles the necessary steps to exchange an external credential for a GCP
  * access-token.
  */
 public class MockExternalAccountCredentialsTransport extends MockHttpTransport {

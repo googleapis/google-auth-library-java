@@ -31,8 +31,8 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.api.client.util.Preconditions.checkNotNull;
 import static com.google.common.base.MoreObjects.firstNonNull;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
@@ -58,13 +58,11 @@ import javax.annotation.Nullable;
 public abstract class ExternalAccountCredentials extends GoogleCredentials
     implements QuotaProjectIdProvider {
 
-  /** Base credential source class. Dictates the retrieval method of the 3PI credential. */
+  /** Base credential source class. Dictates the retrieval method of the external credential. */
   abstract static class CredentialSource {
 
-    protected Map<String, Object> credentialSourceMap;
-
     protected CredentialSource(Map<String, Object> credentialSourceMap) {
-      this.credentialSourceMap = checkNotNull(credentialSourceMap);
+      checkNotNull(credentialSourceMap);
     }
   }
 
@@ -93,24 +91,23 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   /**
    * Constructor with minimum identifying information and custom HTTP transport.
    *
-   * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *     tokens.
-   * @param audience The STS audience which is usually the fully specified resource name of the
-   *     workload/workforce pool provider.
-   * @param subjectTokenType The STS subject token type based on the OAuth 2.0 token exchange spec.
-   *     Indicates the type of the security token in the credential file.
-   * @param tokenUrl The STS token exchange endpoint.
-   * @param tokenInfoUrl The endpoint used to retrieve account related information. Required for
+   * @param transportFactory HTTP transport factory, creates the transport used to get access tokens
+   * @param audience the STS audience which is usually the fully specified resource name of the
+   *     workload/workforce pool provider
+   * @param subjectTokenType the STS subject token type based on the OAuth 2.0 token exchange spec.
+   *     Indicates the type of the security token in the credential file
+   * @param tokenUrl the STS token exchange endpoint
+   * @param tokenInfoUrl the endpoint used to retrieve account related information. Required for
    *     gCloud session account identification.
-   * @param credentialSource The 3PI credential source.
-   * @param serviceAccountImpersonationUrl The URL for the service account impersonation request.
+   * @param credentialSource the external credential source
+   * @param serviceAccountImpersonationUrl the URL for the service account impersonation request.
    *     This is only required for workload identity pools when APIs to be accessed have not
    *     integrated with UberMint. If this is not available, the STS returned GCP access token is
    *     directly used. May be null.
-   * @param quotaProjectId The project used for quota and billing purposes. May be null.
-   * @param clientId Client ID of the service account from the console. May be null.
-   * @param clientSecret Client secret of the service account from the console. May be null.
-   * @param scopes The scopes to request during the authorization grant. May be null.
+   * @param quotaProjectId the project used for quota and billing purposes. May be null.
+   * @param clientId client ID of the service account from the console. May be null.
+   * @param clientSecret client secret of the service account from the console. May be null.
+   * @param scopes the scopes to request during the authorization grant. May be null.
    */
   protected ExternalAccountCredentials(
       HttpTransportFactory transportFactory,
@@ -182,9 +179,9 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
    *
    * <p>This will either return {@link IdentityPoolCredentials} or AwsCredentials.
    *
-   * @param credentialsStream the stream with the credential definition.
-   * @return the credential defined by the credentialsStream.
-   * @throws IOException if the credential cannot be created from the stream.
+   * @param credentialsStream the stream with the credential definition
+   * @return the credential defined by the credentialsStream
+   * @throws IOException if the credential cannot be created from the stream
    */
   public static ExternalAccountCredentials fromStream(InputStream credentialsStream)
       throws IOException {
@@ -196,11 +193,11 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
    *
    * <p>This will either return a IdentityPoolCredentials or AwsCredentials.
    *
-   * @param credentialsStream the stream with the credential definition.
+   * @param credentialsStream the stream with the credential definition
    * @param transportFactory the HTTP transport factory used to create the transport to get access
-   *     tokens.
-   * @return the credential defined by the credentialsStream.
-   * @throws IOException if the credential cannot be created from the stream.
+   *     tokens
+   * @return the credential defined by the credentialsStream
+   * @throws IOException if the credential cannot be created from the stream
    */
   public static ExternalAccountCredentials fromStream(
       InputStream credentialsStream, HttpTransportFactory transportFactory) throws IOException {
@@ -216,10 +213,9 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   /**
    * Returns external account credentials defined by JSON using the format generated by gCloud.
    *
-   * @param json a map from the JSON representing the credentials.
-   * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *     tokens.
-   * @return the credentials defined by the JSON.
+   * @param json a map from the JSON representing the credentials
+   * @param transportFactory HTTP transport factory, creates the transport used to get access tokens
+   * @return the credentials defined by the JSON
    */
   public static ExternalAccountCredentials fromJson(
       Map<String, Object> json, HttpTransportFactory transportFactory) {
@@ -276,13 +272,13 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   }
 
   /**
-   * Exchanges the 3PI credential for a GCP access token.
+   * Exchanges the external credential for a GCP access token.
    *
-   * @param stsTokenExchangeRequest the STS token exchange request.
-   * @return the access token returned by STS.
-   * @throws OAuthException if the call to STS fails.
+   * @param stsTokenExchangeRequest the STS token exchange request
+   * @return the access token returned by STS
+   * @throws OAuthException if the call to STS fails
    */
-  protected AccessToken exchange3PICredentialForAccessToken(
+  protected AccessToken exchangeExternalCredentialForAccessToken(
       StsTokenExchangeRequest stsTokenExchangeRequest) throws IOException {
     // Handle service account impersonation if necessary.
     if (impersonatedCredentials != null) {
@@ -312,12 +308,12 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   }
 
   /**
-   * Retrieves the 3PI subject token to be exchanged for a GCP access token.
+   * Retrieves the external subject token to be exchanged for a GCP access token.
    *
    * <p>Must be implemented by subclasses as the retrieval method is dependent on the credential
    * source.
    *
-   * @return the 3PI subject token
+   * @return the external subject token
    */
   public abstract String retrieveSubjectToken() throws IOException;
 

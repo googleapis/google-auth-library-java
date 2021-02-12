@@ -43,14 +43,14 @@ import javax.annotation.Nullable;
 public class StsTokenExchangeRequest {
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:token-exchange";
 
-  private String subjectToken;
-  private String subjectTokenType;
+  private final String subjectToken;
+  private final String subjectTokenType;
 
-  @Nullable private ActingParty actingParty;
-  @Nullable private List<String> scopes;
-  @Nullable private String resource;
-  @Nullable private String audience;
-  @Nullable private String requestedTokenType;
+  @Nullable private final ActingParty actingParty;
+  @Nullable private final List<String> scopes;
+  @Nullable private final String resource;
+  @Nullable private final String audience;
+  @Nullable private final String requestedTokenType;
 
   private StsTokenExchangeRequest(
       String subjectToken,
@@ -131,13 +131,14 @@ public class StsTokenExchangeRequest {
   }
 
   public static class Builder {
-    String subjectToken;
-    String subjectTokenType;
-    String resource;
-    String audience;
-    String requestedTokenType;
-    List<String> scopes;
-    ActingParty actingParty;
+    private final String subjectToken;
+    private final String subjectTokenType;
+
+    @Nullable private String resource;
+    @Nullable private String audience;
+    @Nullable private String requestedTokenType;
+    @Nullable private List<String> scopes;
+    @Nullable private ActingParty actingParty;
 
     private Builder(String subjectToken, String subjectTokenType) {
       this.subjectToken = subjectToken;
@@ -182,8 +183,8 @@ public class StsTokenExchangeRequest {
   }
 
   static class ActingParty {
-    private String actorToken;
-    private String actorTokenType;
+    private final String actorToken;
+    private final String actorTokenType;
 
     public ActingParty(String actorToken, String actorTokenType) {
       this.actorToken = checkNotNull(actorToken);
