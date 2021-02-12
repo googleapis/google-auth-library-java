@@ -31,7 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.api.client.json.GenericJson;
@@ -39,6 +38,7 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.AwsCredentials.AwsCredentialSource;
 import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSource;
+import com.google.common.base.MoreObjects;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -53,7 +53,7 @@ import javax.annotation.Nullable;
 /**
  * Base external account credentials class.
  *
- * <p>Handles initializing third-party credentials, calls to STS and service account impersonation.
+ * <p>Handles initializing external credentials, calls to STS, and service account impersonation.
  */
 public abstract class ExternalAccountCredentials extends GoogleCredentials
     implements QuotaProjectIdProvider {
@@ -71,18 +71,18 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
 
   static final String EXTERNAL_ACCOUNT_FILE_TYPE = "external_account";
 
-  protected final String transportFactoryClassName;
-  protected final String audience;
-  protected final String subjectTokenType;
-  protected final String tokenUrl;
-  protected final CredentialSource credentialSource;
-  protected final Collection<String> scopes;
+  private final String transportFactoryClassName;
+  private final String audience;
+  private final String subjectTokenType;
+  private final String tokenUrl;
+  private final CredentialSource credentialSource;
+  private final Collection<String> scopes;
 
-  @Nullable protected final String tokenInfoUrl;
-  @Nullable protected final String serviceAccountImpersonationUrl;
-  @Nullable protected final String quotaProjectId;
-  @Nullable protected final String clientId;
-  @Nullable protected final String clientSecret;
+  @Nullable private final String tokenInfoUrl;
+  @Nullable private final String serviceAccountImpersonationUrl;
+  @Nullable private final String quotaProjectId;
+  @Nullable private final String clientId;
+  @Nullable private final String clientSecret;
 
   protected transient HttpTransportFactory transportFactory;
 
@@ -122,7 +122,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       @Nullable String clientSecret,
       @Nullable Collection<String> scopes) {
     this.transportFactory =
-        firstNonNull(
+        MoreObjects.firstNonNull(
             transportFactory,
             getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     this.transportFactoryClassName = checkNotNull(this.transportFactory.getClass().getName());
@@ -177,7 +177,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   /**
    * Returns credentials defined by a JSON file stream.
    *
-   * <p>This will either return {@link IdentityPoolCredentials} or AwsCredentials.
+   * <p>Returns {@link IdentityPoolCredentials} or {@link AwsCredentials}.
    *
    * @param credentialsStream the stream with the credential definition
    * @return the credential defined by the credentialsStream
@@ -191,7 +191,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   /**
    * Returns credentials defined by a JSON file stream.
    *
-   * <p>This will either return a IdentityPoolCredentials or AwsCredentials.
+   * <p>Returns a {@link IdentityPoolCredentials} or {@link AwsCredentials}.
    *
    * @param credentialsStream the stream with the credential definition
    * @param transportFactory the HTTP transport factory used to create the transport to get access
@@ -217,7 +217,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
    * @param transportFactory HTTP transport factory, creates the transport used to get access tokens
    * @return the credentials defined by the JSON
    */
-  public static ExternalAccountCredentials fromJson(
+  static ExternalAccountCredentials fromJson(
       Map<String, Object> json, HttpTransportFactory transportFactory) {
     checkNotNull(json);
     checkNotNull(transportFactory);

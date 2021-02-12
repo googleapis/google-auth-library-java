@@ -102,8 +102,13 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
      *
      * <p>Optional headers can be present, and should be keyed by `headers`.
      */
-    public IdentityPoolCredentialSource(Map<String, Object> credentialSourceMap) {
+    IdentityPoolCredentialSource(Map<String, Object> credentialSourceMap) {
       super(credentialSourceMap);
+
+      if (credentialSourceMap.containsKey("file") && credentialSourceMap.containsKey("url")) {
+        throw new IllegalArgumentException(
+            "Only one credential source type can be set, either file or url.");
+      }
 
       if (credentialSourceMap.containsKey("file")) {
         credentialLocation = (String) credentialSourceMap.get("file");
@@ -186,8 +191,10 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
   public AccessToken refreshAccessToken() throws IOException {
     String credential = retrieveSubjectToken();
     StsTokenExchangeRequest.Builder stsTokenExchangeRequest =
-        StsTokenExchangeRequest.newBuilder(credential, subjectTokenType).setAudience(audience);
+        StsTokenExchangeRequest.newBuilder(credential, getSubjectTokenType())
+            .setAudience(getAudience());
 
+    Collection<String> scopes = getScopes();
     if (scopes != null && !scopes.isEmpty()) {
       stsTokenExchangeRequest.setScopes(new ArrayList<>(scopes));
     }
@@ -264,15 +271,15 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
   public GoogleCredentials createScoped(Collection<String> newScopes) {
     return new IdentityPoolCredentials(
         transportFactory,
-        audience,
-        subjectTokenType,
-        tokenUrl,
-        (IdentityPoolCredentialSource) credentialSource,
-        tokenInfoUrl,
-        serviceAccountImpersonationUrl,
-        quotaProjectId,
-        clientId,
-        clientSecret,
+        getAudience(),
+        getSubjectTokenType(),
+        getTokenUrl(),
+        identityPoolCredentialSource,
+        getTokenInfoUrl(),
+        getServiceAccountImpersonationUrl(),
+        getQuotaProjectId(),
+        getClientId(),
+        getClientSecret(),
         newScopes);
   }
 

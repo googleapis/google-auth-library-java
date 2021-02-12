@@ -112,6 +112,8 @@ public class AwsCredentials extends ExternalAccountCredentials {
     }
   }
 
+  private final AwsCredentialSource awsCredentialSource;
+
   /**
    * Internal constructor. See {@link
    * ExternalAccountCredentials#ExternalAccountCredentials(HttpTransportFactory, String, String,
@@ -141,15 +143,17 @@ public class AwsCredentials extends ExternalAccountCredentials {
         clientId,
         clientSecret,
         scopes);
+    this.awsCredentialSource = credentialSource;
   }
 
   @Override
   public AccessToken refreshAccessToken() throws IOException {
     StsTokenExchangeRequest.Builder stsTokenExchangeRequest =
-        StsTokenExchangeRequest.newBuilder(retrieveSubjectToken(), subjectTokenType)
-            .setAudience(audience);
+        StsTokenExchangeRequest.newBuilder(retrieveSubjectToken(), getSubjectTokenType())
+            .setAudience(getAudience());
 
     // Add scopes, if possible.
+    Collection<String> scopes = getScopes();
     if (scopes != null && !scopes.isEmpty()) {
       stsTokenExchangeRequest.setScopes(new ArrayList<>(scopes));
     }
@@ -167,14 +171,13 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
     // Generate the signed request to the AWS STS GetCallerIdentity API.
     Map<String, String> headers = new HashMap<>();
-    headers.put("x-goog-cloud-target-resource", audience);
+    headers.put("x-goog-cloud-target-resource", getAudience());
 
     AwsRequestSigner signer =
         AwsRequestSigner.newBuilder(
                 credentials,
                 "POST",
-                ((AwsCredentialSource) credentialSource)
-                    .regionalCredentialVerificationUrl.replace("{region}", region),
+                awsCredentialSource.regionalCredentialVerificationUrl.replace("{region}", region),
                 region)
             .setAdditionalHeaders(headers)
             .build();
@@ -188,15 +191,15 @@ public class AwsCredentials extends ExternalAccountCredentials {
   public GoogleCredentials createScoped(Collection<String> newScopes) {
     return new AwsCredentials(
         transportFactory,
-        audience,
-        subjectTokenType,
-        tokenUrl,
-        (AwsCredentialSource) credentialSource,
-        tokenInfoUrl,
-        serviceAccountImpersonationUrl,
-        quotaProjectId,
-        clientId,
-        clientSecret,
+        getAudience(),
+        getSubjectTokenType(),
+        getTokenUrl(),
+        awsCredentialSource,
+        getTokenInfoUrl(),
+        getServiceAccountImpersonationUrl(),
+        getQuotaProjectId(),
+        getClientId(),
+        getClientSecret(),
         newScopes);
   }
 
@@ -222,7 +225,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
     headerList.add(formatTokenHeaderForSts("Authorization", signature.getAuthorizationHeader()));
 
     // The canonical resource name of the workload identity pool provider.
-    headerList.add(formatTokenHeaderForSts("x-goog-cloud-target-resource", audience));
+    headerList.add(formatTokenHeaderForSts("x-goog-cloud-target-resource", getAudience()));
 
     GenericJson token = new GenericJson();
     token.setFactory(OAuth2Utils.JSON_FACTORY);
@@ -231,8 +234,8 @@ public class AwsCredentials extends ExternalAccountCredentials {
     token.put("method", signature.getHttpMethod());
     token.put(
         "url",
-        ((AwsCredentialSource) credentialSource)
-            .regionalCredentialVerificationUrl.replace("{region}", signature.getRegion()));
+        awsCredentialSource.regionalCredentialVerificationUrl.replace(
+            "{region}", signature.getRegion()));
     return URLEncoder.encode(token.toString(), "UTF-8");
   }
 
@@ -243,7 +246,6 @@ public class AwsCredentials extends ExternalAccountCredentials {
       return region;
     }
 
-    AwsCredentialSource awsCredentialSource = (AwsCredentialSource) this.credentialSource;
     if (awsCredentialSource.regionUrl == null || awsCredentialSource.regionUrl.isEmpty()) {
       throw new IOException(
           "Unable to determine the AWS region. The credential source does not contain the region URL.");
@@ -267,7 +269,6 @@ public class AwsCredentials extends ExternalAccountCredentials {
     }
 
     // Credentials not retrievable from environment variables - call metadata server.
-    AwsCredentialSource awsCredentialSource = (AwsCredentialSource) credentialSource;
     // Retrieve the IAM role that is attached to the VM. This is required to retrieve the AWS
     // security credentials.
     if (awsCredentialSource.url == null || awsCredentialSource.url.isEmpty()) {

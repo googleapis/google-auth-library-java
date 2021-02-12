@@ -392,6 +392,39 @@ public class IdentityPoolCredentialsTest {
     }
   }
 
+  @Test
+  public void builder() {
+    List<String> scopes = Arrays.asList("scope1", "scope2");
+
+    IdentityPoolCredentials credentials =
+        (IdentityPoolCredentials)
+            IdentityPoolCredentials.newBuilder()
+                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+                .setAudience("audience")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenUrl("tokenUrl")
+                .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+                .setQuotaProjectId("quotaProjectId")
+                .setClientId("clientId")
+                .setClientSecret("clientSecret")
+                .setScopes(scopes)
+                .build();
+
+    assertEquals("audience", credentials.getAudience());
+    assertEquals("subjectTokenType", credentials.getSubjectTokenType());
+    assertEquals(credentials.getTokenUrl(), "tokenUrl");
+    assertEquals(credentials.getTokenInfoUrl(), "tokenInfoUrl");
+    assertEquals(
+        credentials.getServiceAccountImpersonationUrl(), SERVICE_ACCOUNT_IMPERSONATION_URL);
+    assertEquals(credentials.getCredentialSource(), FILE_CREDENTIAL_SOURCE);
+    assertEquals(credentials.getQuotaProjectId(), "quotaProjectId");
+    assertEquals(credentials.getClientId(), "clientId");
+    assertEquals(credentials.getClientSecret(), "clientSecret");
+    assertEquals(credentials.getScopes(), scopes);
+  }
+
   static InputStream writeIdentityPoolCredentialsStream(
       String tokenUrl, String url, @Nullable String serviceAccountImpersonationUrl)
       throws IOException {

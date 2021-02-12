@@ -34,8 +34,8 @@ package com.google.auth.oauth2;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.api.client.util.Joiner;
 import com.google.auth.ServiceAccountSigner.SigningException;
+import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.io.BaseEncoding;
 import java.net.URI;
