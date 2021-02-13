@@ -268,7 +268,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   /** Clones the IdentityPoolCredentials with the specified scopes. */
   @Override
-  public GoogleCredentials createScoped(Collection<String> newScopes) {
+  public IdentityPoolCredentials createScoped(Collection<String> newScopes) {
     return new IdentityPoolCredentials(
         transportFactory,
         getAudience(),
@@ -293,9 +293,9 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   public static class Builder extends ExternalAccountCredentials.Builder {
 
-    protected Builder() {}
+    Builder() {}
 
-    protected Builder(IdentityPoolCredentials credentials) {
+    Builder(IdentityPoolCredentials credentials) {
       super(credentials);
     }
 
