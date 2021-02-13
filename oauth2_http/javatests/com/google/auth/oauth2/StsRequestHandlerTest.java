@@ -88,7 +88,7 @@ public final class StsRequestHandlerTest {
     assertEquals(transport.getAccessToken(), response.getAccessToken().getTokenValue());
     assertEquals(transport.getTokenType(), response.getTokenType());
     assertEquals(transport.getIssuedTokenType(), response.getIssuedTokenType());
-    assertEquals(transport.getExpiresIn(), response.getExpiresIn());
+    assertEquals(transport.getExpiresIn(), response.getExpiresInSeconds());
 
     // Validate request content.
     GenericData expectedRequestContent =
@@ -139,7 +139,7 @@ public final class StsRequestHandlerTest {
     assertEquals(transport.getAccessToken(), response.getAccessToken().getTokenValue());
     assertEquals(transport.getTokenType(), response.getTokenType());
     assertEquals(transport.getIssuedTokenType(), response.getIssuedTokenType());
-    assertEquals(transport.getExpiresIn(), response.getExpiresIn());
+    assertEquals(transport.getExpiresIn(), response.getExpiresInSeconds());
     assertEquals(Arrays.asList("scope1", "scope2", "scope3"), response.getScopes());
     assertEquals("refreshToken", response.getRefreshToken());
 

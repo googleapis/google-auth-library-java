@@ -82,7 +82,6 @@ public class ExternalAccountCredentialsTest {
   @Test
   public void fromStream_identityPoolCredentials() throws IOException {
     GenericJson json = buildJsonIdentityPoolCredential();
-    TestUtils.jsonToInputStream(json);
 
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromStream(TestUtils.jsonToInputStream(json));
@@ -163,7 +162,7 @@ public class ExternalAccountCredentialsTest {
 
   @Test
   public void fromJson_invalidServiceAccountImpersonationUrl_throws() {
-    final GenericJson json = buildJsonIdentityPoolCredential();
+    GenericJson json = buildJsonIdentityPoolCredential();
     json.put("service_account_impersonation_url", "invalid_url");
 
     try {
@@ -226,7 +225,7 @@ public class ExternalAccountCredentialsTest {
 
   @Test
   public void exchangeExternalCredentialForAccessToken_throws() throws IOException {
-    final ExternalAccountCredentials credential =
+    ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(buildJsonIdentityPoolCredential(), transportFactory);
 
     String errorCode = "invalidRequest";
@@ -235,7 +234,7 @@ public class ExternalAccountCredentialsTest {
     transportFactory.transport.addResponseErrorSequence(
         TestUtils.buildHttpResponseException(errorCode, errorDescription, errorUri));
 
-    final StsTokenExchangeRequest stsTokenExchangeRequest =
+    StsTokenExchangeRequest stsTokenExchangeRequest =
         StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
 
     try {

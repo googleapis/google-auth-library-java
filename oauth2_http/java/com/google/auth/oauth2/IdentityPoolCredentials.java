@@ -59,7 +59,7 @@ import javax.annotation.Nullable;
 /**
  * Url-sourced and file-sourced external account credentials.
  *
- * <p>By default, attempts to exchange the third-party credential for a GCP access token.
+ * <p>By default, attempts to exchange the external credential for a GCP access token.
  */
 public class IdentityPoolCredentials extends ExternalAccountCredentials {
 

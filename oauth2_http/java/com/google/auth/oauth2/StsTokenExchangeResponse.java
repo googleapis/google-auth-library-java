@@ -42,11 +42,11 @@ import javax.annotation.Nullable;
  * Defines an OAuth 2.0 token exchange successful response. Based on
  * https://tools.ietf.org/html/rfc8693#section-2.2.1.
  */
-public class StsTokenExchangeResponse {
+public final class StsTokenExchangeResponse {
   private final AccessToken accessToken;
   private final String issuedTokenType;
   private final String tokenType;
-  private final Long expiresIn;
+  private final Long expiresInSeconds;
 
   @Nullable private final String refreshToken;
   @Nullable private final List<String> scopes;
@@ -55,12 +55,12 @@ public class StsTokenExchangeResponse {
       String accessToken,
       String issuedTokenType,
       String tokenType,
-      Long expiresIn,
+      Long expiresInSeconds,
       @Nullable String refreshToken,
       @Nullable List<String> scopes) {
     checkNotNull(accessToken);
-    this.expiresIn = checkNotNull(expiresIn);
-    long expiresAtMilliseconds = System.currentTimeMillis() + expiresIn * 1000L;
+    this.expiresInSeconds = checkNotNull(expiresInSeconds);
+    long expiresAtMilliseconds = System.currentTimeMillis() + expiresInSeconds * 1000L;
     this.accessToken = new AccessToken(accessToken, new Date(expiresAtMilliseconds));
     this.issuedTokenType = checkNotNull(issuedTokenType);
     this.tokenType = checkNotNull(tokenType);
@@ -85,8 +85,8 @@ public class StsTokenExchangeResponse {
     return tokenType;
   }
 
-  public Long getExpiresIn() {
-    return expiresIn;
+  public Long getExpiresInSeconds() {
+    return expiresInSeconds;
   }
 
   @Nullable
@@ -106,16 +106,17 @@ public class StsTokenExchangeResponse {
     private final String accessToken;
     private final String issuedTokenType;
     private final String tokenType;
-    private final Long expiresIn;
+    private final Long expiresInSeconds;
 
     @Nullable private String refreshToken;
     @Nullable private List<String> scopes;
 
-    private Builder(String accessToken, String issuedTokenType, String tokenType, Long expiresIn) {
+    private Builder(
+        String accessToken, String issuedTokenType, String tokenType, Long expiresInSeconds) {
       this.accessToken = accessToken;
       this.issuedTokenType = issuedTokenType;
       this.tokenType = tokenType;
-      this.expiresIn = expiresIn;
+      this.expiresInSeconds = expiresInSeconds;
     }
 
     public StsTokenExchangeResponse.Builder setRefreshToken(String refreshToken) {
@@ -124,13 +125,15 @@ public class StsTokenExchangeResponse {
     }
 
     public StsTokenExchangeResponse.Builder setScopes(List<String> scopes) {
-      this.scopes = scopes;
+      if (scopes != null) {
+        this.scopes = new ArrayList<>(scopes);
+      }
       return this;
     }
 
     public StsTokenExchangeResponse build() {
       return new StsTokenExchangeResponse(
-          accessToken, issuedTokenType, tokenType, expiresIn, refreshToken, scopes);
+          accessToken, issuedTokenType, tokenType, expiresInSeconds, refreshToken, scopes);
     }
   }
 }

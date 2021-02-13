@@ -172,7 +172,7 @@ public class AwsCredentialsTest {
     IOException response = new IOException();
     transportFactory.transport.addResponseErrorSequence(response);
 
-    final AwsCredentials awsCredential =
+    AwsCredentials awsCredential =
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
@@ -196,7 +196,7 @@ public class AwsCredentialsTest {
     transportFactory.transport.addResponseErrorSequence(response);
     transportFactory.transport.addResponseSequence(true, false);
 
-    final AwsCredentials awsCredential =
+    AwsCredentials awsCredential =
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
@@ -220,7 +220,7 @@ public class AwsCredentialsTest {
     transportFactory.transport.addResponseErrorSequence(response);
     transportFactory.transport.addResponseSequence(true, true, false);
 
-    final AwsCredentials awsCredential =
+    AwsCredentials awsCredential =
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
@@ -244,7 +244,7 @@ public class AwsCredentialsTest {
     credentialSource.put("environment_id", "aws1");
     credentialSource.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
 
-    final AwsCredentials awsCredential =
+    AwsCredentials awsCredential =
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
@@ -317,7 +317,7 @@ public class AwsCredentialsTest {
     credentialSource.put("environment_id", "aws1");
     credentialSource.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
 
-    final AwsCredentials awsCredential =
+    AwsCredentials awsCredential =
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
@@ -365,7 +365,7 @@ public class AwsCredentialsTest {
 
   @Test
   public void credentialSource_invalidAwsEnvironmentId() {
-    final Map<String, Object> credentialSource = new HashMap<>();
+    Map<String, Object> credentialSource = new HashMap<>();
     credentialSource.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
     credentialSource.put("environment_id", "azure1");
 
@@ -379,7 +379,7 @@ public class AwsCredentialsTest {
 
   @Test
   public void credentialSource_invalidAwsEnvironmentVersion() {
-    final Map<String, Object> credentialSource = new HashMap<>();
+    Map<String, Object> credentialSource = new HashMap<>();
     int environmentVersion = 2;
     credentialSource.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
     credentialSource.put("environment_id", "aws" + environmentVersion);
@@ -506,7 +506,7 @@ public class AwsCredentialsTest {
 
     public static class Builder extends AwsCredentials.Builder {
 
-      protected Builder(AwsCredentials credentials) {
+      private Builder(AwsCredentials credentials) {
         super(credentials);
       }
 

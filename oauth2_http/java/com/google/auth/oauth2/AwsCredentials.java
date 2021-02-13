@@ -324,9 +324,9 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
   public static class Builder extends ExternalAccountCredentials.Builder {
 
-    protected Builder() {}
+    Builder() {}
 
-    protected Builder(AwsCredentials credentials) {
+    Builder(AwsCredentials credentials) {
       super(credentials);
     }
 

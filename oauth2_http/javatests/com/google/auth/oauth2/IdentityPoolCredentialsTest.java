@@ -198,7 +198,7 @@ public class IdentityPoolCredentialsTest {
     IdentityPoolCredentialSource credentialSource =
         new IdentityPoolCredentialSource(credentialSourceMap);
 
-    final IdentityPoolCredentials credentials =
+    IdentityPoolCredentials credentials =
         (IdentityPoolCredentials)
             IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
                 .setCredentialSource(credentialSource)
@@ -266,7 +266,7 @@ public class IdentityPoolCredentialsTest {
     IOException response = new IOException();
     transportFactory.transport.addResponseErrorSequence(response);
 
-    final IdentityPoolCredentials credential =
+    IdentityPoolCredentials credential =
         (IdentityPoolCredentials)
             IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
@@ -290,7 +290,7 @@ public class IdentityPoolCredentialsTest {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
-    final IdentityPoolCredentials credential =
+    IdentityPoolCredentials credential =
         (IdentityPoolCredentials)
             IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
                 .setTokenUrl(transportFactory.transport.getStsUrl())
@@ -310,7 +310,7 @@ public class IdentityPoolCredentialsTest {
         new MockExternalAccountCredentialsTransportFactory();
 
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
-    final IdentityPoolCredentials credential =
+    IdentityPoolCredentials credential =
         (IdentityPoolCredentials)
             IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
                 .setTokenUrl(transportFactory.transport.getStsUrl())
@@ -341,7 +341,7 @@ public class IdentityPoolCredentialsTest {
 
   @Test
   public void identityPoolCredentialSource_invalidFormatType() {
-    final Map<String, Object> credentialSourceMap = new HashMap<>();
+    Map<String, Object> credentialSourceMap = new HashMap<>();
     credentialSourceMap.put("url", "url");
 
     Map<String, String> format = new HashMap<>();
@@ -358,7 +358,7 @@ public class IdentityPoolCredentialsTest {
 
   @Test
   public void identityPoolCredentialSource_nullFormatType() {
-    final Map<String, Object> credentialSourceMap = new HashMap<>();
+    Map<String, Object> credentialSourceMap = new HashMap<>();
     credentialSourceMap.put("url", "url");
 
     Map<String, String> format = new HashMap<>();
@@ -375,7 +375,7 @@ public class IdentityPoolCredentialsTest {
 
   @Test
   public void identityPoolCredentialSource_subjectTokenFieldNameUnset() {
-    final Map<String, Object> credentialSourceMap = new HashMap<>();
+    Map<String, Object> credentialSourceMap = new HashMap<>();
     credentialSourceMap.put("url", "url");
 
     Map<String, String> format = new HashMap<>();
