@@ -131,6 +131,16 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void createScoped_defaultScopes() throws IOException {
+    TestAppEngineCredentials credentials = new TestAppEngineCredentials(null, SCOPES);
+    assertFalse(credentials.createScopedRequired());
+
+    AccessToken accessToken = credentials.refreshAccessToken();
+    assertEquals(EXPECTED_ACCESS_TOKEN, accessToken.getTokenValue());
+    assertEquals(EXPECTED_EXPIRATION_DATE, accessToken.getExpirationTime());
+  }
+
+  @Test
   public void equals_true() throws IOException {
     GoogleCredentials credentials = new TestAppEngineCredentials(SCOPES);
     GoogleCredentials otherCredentials = new TestAppEngineCredentials(SCOPES);
@@ -153,9 +163,11 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
   public void toString_containsFields() throws IOException {
     String expectedToString =
         String.format(
-            "TestAppEngineCredentials{scopes=[%s], scopesRequired=%b}", "SomeScope", false);
+            "TestAppEngineCredentials{scopes=[%s], defaultScopes=[%s], scopesRequired=%b}",
+            "SomeScope", "SomeDefaultScope", false);
     Collection<String> scopes = Collections.singleton("SomeScope");
-    AppEngineCredentials credentials = new TestAppEngineCredentials(scopes);
+    Collection<String> defaultScopes = Collections.singleton("SomeDefaultScope");
+    AppEngineCredentials credentials = new TestAppEngineCredentials(scopes, defaultScopes);
     assertEquals(expectedToString, credentials.toString());
   }
 
@@ -246,7 +258,12 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
     private List<String> forNameArgs;
 
     TestAppEngineCredentials(Collection<String> scopes) throws IOException {
-      super(scopes);
+      super(scopes, null);
+    }
+
+    TestAppEngineCredentials(Collection<String> scopes, Collection<String> defaultScopes)
+        throws IOException {
+      super(scopes, defaultScopes);
     }
 
     @Override
@@ -272,7 +289,7 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
     private static final long serialVersionUID = -8987103249265111274L;
 
     TestAppEngineCredentialsNoSdk() throws IOException {
-      super(null);
+      super(null, null);
     }
 
     @Override

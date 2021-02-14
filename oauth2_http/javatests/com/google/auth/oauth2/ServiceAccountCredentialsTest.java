@@ -43,6 +43,7 @@ import static org.junit.Assert.fail;
 
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.client.testing.http.FixedClock;
@@ -51,6 +52,7 @@ import com.google.api.client.util.Clock;
 import com.google.api.client.util.Joiner;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.TestUtils;
+import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
@@ -98,10 +100,13 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
           + "==\n-----END PRIVATE KEY-----\n";
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
   private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
+  private static final Collection<String> DEFAULT_SCOPES =
+      Collections.singletonList("dummy.default.scope");
   private static final String USER = "user@example.com";
   private static final String PROJECT_ID = "project-id";
   private static final Collection<String> EMPTY_SCOPES = Collections.emptyList();
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
+  private static final String JWT_AUDIENCE = "http://googleapis.com/";
   private static final HttpTransportFactory DUMMY_TRANSPORT_FACTORY =
       new MockTokenServerTransportFactory();
   public static final String DEFAULT_ID_TOKEN =
@@ -113,6 +118,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   private static final String QUOTA_PROJECT = "sample-quota-project-id";
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
   private static final int INVALID_LIFETIME = 43210;
+  private static final String JWT_ACCESS_PREFIX = "Bearer ";
 
   private ServiceAccountCredentials.Builder createDefaultBuilder() throws IOException {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
@@ -383,15 +389,19 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             null);
 
     try {
-      credentials.getRequestMetadata(CALL_URI);
-      fail("Should not be able to get token without scopes");
+      credentials.getRequestMetadata(null);
+      fail("Should not be able to get token without scopes, defaultScopes and uri");
     } catch (Exception expected) {
       // Expected
     }
 
-    GoogleCredentials scopedCredentials = credentials.createScoped(SCOPES);
+    // Since scopes are not provided, self signed JWT will be used.
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+    verifyJwtAccess(metadata);
 
-    Map<String, List<String>> metadata = scopedCredentials.getRequestMetadata(CALL_URI);
+    // Since scopes are provided, self signed JWT will not be used.
+    GoogleCredentials scopedCredentials = credentials.createScoped(SCOPES);
+    metadata = scopedCredentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
@@ -972,6 +982,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_PKCS8,
             PRIVATE_KEY_ID,
             SCOPES,
+            DEFAULT_SCOPES,
             transportFactory,
             tokenServer,
             USER,
@@ -980,7 +991,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     String expectedToString =
         String.format(
             "ServiceAccountCredentials{clientId=%s, clientEmail=%s, privateKeyId=%s, "
-                + "transportFactoryClassName=%s, tokenServerUri=%s, scopes=%s, serviceAccountUser=%s, "
+                + "transportFactoryClassName=%s, tokenServerUri=%s, scopes=%s, defaultScopes=%s, serviceAccountUser=%s, "
                 + "quotaProjectId=%s, lifetime=3600}",
             CLIENT_ID,
             CLIENT_EMAIL,
@@ -988,6 +999,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             MockTokenServerTransportFactory.class.getName(),
             tokenServer,
             SCOPES,
+            DEFAULT_SCOPES,
             USER,
             QUOTA_PROJECT);
     assertEquals(expectedToString, credentials.toString());
@@ -1200,6 +1212,79 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
         });
 
     assertTrue("Should have run onSuccess() callback", success.get());
+  }
+
+  @Test
+  public void getRequestMetadataWithCallback_selfSignedJWT() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID, "unused-client-secret");
+    transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
+
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    GoogleCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientEmail(CLIENT_EMAIL)
+            .setPrivateKey(privateKey)
+            .setPrivateKeyId(PRIVATE_KEY_ID)
+            .setScopes(null, DEFAULT_SCOPES)
+            .setServiceAccountUser(USER)
+            .setProjectId(PROJECT_ID)
+            .setQuotaProjectId("my-quota-project-id")
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    final AtomicBoolean success = new AtomicBoolean(false);
+    credentials.getRequestMetadata(
+        CALL_URI,
+        null,
+        new RequestMetadataCallback() {
+          @Override
+          public void onSuccess(Map<String, List<String>> metadata) {
+            try {
+              verifyJwtAccess(metadata);
+            } catch (IOException e) {
+              fail("Should not throw a failure");
+            }
+            success.set(true);
+          }
+
+          @Override
+          public void onFailure(Throwable exception) {
+            fail("Should not throw a failure.");
+          }
+        });
+
+    assertTrue("Should have run onSuccess() callback", success.get());
+  }
+
+  @Test
+  public void getUriForSelfSignedJWT() {
+    assertNull(ServiceAccountCredentials.getUriForSelfSignedJWT(null));
+
+    URI uri = URI.create("https://compute.googleapis.com/compute/v1/projects/");
+    URI expected = URI.create("https://compute.googleapis.com/");
+    assertEquals(expected, ServiceAccountCredentials.getUriForSelfSignedJWT(uri));
+  }
+
+  private void verifyJwtAccess(Map<String, List<String>> metadata) throws IOException {
+    assertNotNull(metadata);
+    List<String> authorizations = metadata.get(AuthHttpConstants.AUTHORIZATION);
+    assertNotNull("Authorization headers not found", authorizations);
+    String assertion = null;
+    for (String authorization : authorizations) {
+      if (authorization.startsWith(JWT_ACCESS_PREFIX)) {
+        assertNull("Multiple bearer assertions found", assertion);
+        assertion = authorization.substring(JWT_ACCESS_PREFIX.length());
+      }
+    }
+    assertNotNull("Bearer assertion not found", assertion);
+    JsonWebSignature signature =
+        JsonWebSignature.parse(GsonFactory.getDefaultInstance(), assertion);
+    assertEquals(CLIENT_EMAIL, signature.getPayload().getIssuer());
+    assertEquals(CLIENT_EMAIL, signature.getPayload().getSubject());
+    assertEquals(JWT_AUDIENCE, signature.getPayload().getAudience());
+    assertEquals(PRIVATE_KEY_ID, signature.getHeader().getKeyId());
   }
 
   static GenericJson writeServiceAccountJson(

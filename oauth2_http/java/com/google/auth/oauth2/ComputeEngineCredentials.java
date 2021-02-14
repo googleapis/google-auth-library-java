@@ -99,6 +99,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
   private final String transportFactoryClassName;
 
   private final Collection<String> scopes;
+  private final Collection<String> defaultScopes;
 
   private transient HttpTransportFactory transportFactory;
   private transient String serviceAccountEmail;
@@ -109,9 +110,13 @@ public class ComputeEngineCredentials extends GoogleCredentials
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *     tokens.
    * @param scopes scope strings for the APIs to be called. May be null or an empty collection.
+   * @param defaultScopes default scope strings for the APIs to be called. May be null or an empty
+   *     collection.
    */
   private ComputeEngineCredentials(
-      HttpTransportFactory transportFactory, Collection<String> scopes) {
+      HttpTransportFactory transportFactory,
+      Collection<String> scopes,
+      Collection<String> defaultScopes) {
     this.transportFactory =
         firstNonNull(
             transportFactory,
@@ -124,12 +129,26 @@ public class ComputeEngineCredentials extends GoogleCredentials
       scopeList.removeAll(Arrays.asList("", null));
       this.scopes = ImmutableSet.<String>copyOf(scopeList);
     }
+    if (defaultScopes == null) {
+      this.defaultScopes = ImmutableSet.<String>of();
+    } else {
+      List<String> scopeList = new ArrayList<String>(defaultScopes);
+      scopeList.removeAll(Arrays.asList("", null));
+      this.defaultScopes = ImmutableSet.<String>copyOf(scopeList);
+    }
   }
 
   /** Clones the compute engine account with the specified scopes. */
   @Override
   public GoogleCredentials createScoped(Collection<String> newScopes) {
-    return new ComputeEngineCredentials(this.transportFactory, newScopes);
+    return new ComputeEngineCredentials(this.transportFactory, newScopes, null);
+  }
+
+  /** Clones the compute engine account with the specified scopes. */
+  @Override
+  public GoogleCredentials createScoped(
+      Collection<String> newScopes, Collection<String> newDefaultScopes) {
+    return new ComputeEngineCredentials(this.transportFactory, newScopes, newDefaultScopes);
   }
 
   /**
@@ -138,22 +157,30 @@ public class ComputeEngineCredentials extends GoogleCredentials
    * @return new ComputeEngineCredentials
    */
   public static ComputeEngineCredentials create() {
-    return new ComputeEngineCredentials(null, null);
+    return new ComputeEngineCredentials(null, null, null);
   }
 
   public final Collection<String> getScopes() {
     return scopes;
   }
 
+  public final Collection<String> getDefaultScopes() {
+    return defaultScopes;
+  }
+
   /**
-   * If scopes is specified, add "?scopes=comma-separated-list-of-scopes" to the token url.
+   * If scopes or defaultScopes is specified, add "?scopes=comma-separated-list-of-scopes" to the
+   * token url. defaultScopes is not used unless scopes is empty.
    *
-   * @return token url with the given scopes
+   * @return token url with the given scopes or defaultScopes. defaultScopes is not used unless
+   *     scopes is emtpy.
    */
   String createTokenUrlWithScopes() {
     GenericUrl tokenUrl = new GenericUrl(getTokenServerEncodedUrl());
     if (!scopes.isEmpty()) {
       tokenUrl.set("scopes", Joiner.on(',').join(scopes));
+    } else if (!defaultScopes.isEmpty()) {
+      tokenUrl.set("scopes", Joiner.on(',').join(defaultScopes));
     }
     return tokenUrl.toString();
   }
@@ -345,7 +372,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
     }
     ComputeEngineCredentials other = (ComputeEngineCredentials) obj;
     return Objects.equals(this.transportFactoryClassName, other.transportFactoryClassName)
-        && Objects.equals(this.scopes, other.scopes);
+        && Objects.equals(this.scopes, other.scopes)
+        && Objects.equals(this.defaultScopes, other.defaultScopes);
   }
 
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
@@ -438,12 +466,14 @@ public class ComputeEngineCredentials extends GoogleCredentials
   public static class Builder extends GoogleCredentials.Builder {
     private HttpTransportFactory transportFactory;
     private Collection<String> scopes;
+    private Collection<String> defaultScopes;
 
     protected Builder() {}
 
     protected Builder(ComputeEngineCredentials credentials) {
       this.transportFactory = credentials.transportFactory;
       this.scopes = credentials.scopes;
+      this.defaultScopes = credentials.defaultScopes;
     }
 
     public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
@@ -453,6 +483,13 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
     public Builder setScopes(Collection<String> scopes) {
       this.scopes = scopes;
+      this.defaultScopes = null;
+      return this;
+    }
+
+    public Builder setScopes(Collection<String> scopes, Collection<String> defaultScopes) {
+      this.scopes = scopes;
+      this.defaultScopes = defaultScopes;
       return this;
     }
 
@@ -464,8 +501,12 @@ public class ComputeEngineCredentials extends GoogleCredentials
       return scopes;
     }
 
+    public Collection<String> getDefaultScopes() {
+      return defaultScopes;
+    }
+
     public ComputeEngineCredentials build() {
-      return new ComputeEngineCredentials(transportFactory, scopes);
+      return new ComputeEngineCredentials(transportFactory, scopes, defaultScopes);
     }
   }
 }

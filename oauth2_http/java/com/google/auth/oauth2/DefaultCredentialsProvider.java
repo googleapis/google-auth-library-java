@@ -301,7 +301,8 @@ class DefaultCredentialsProvider {
     if (!onAppEngine) {
       return null;
     }
-    return new AppEngineCredentials(Collections.<String>emptyList());
+    return new AppEngineCredentials(
+        Collections.<String>emptyList(), Collections.<String>emptyList());
   }
 
   private final GoogleCredentials tryGetComputeCredentials(HttpTransportFactory transportFactory) {

@@ -69,6 +69,7 @@ class AppEngineCredentials extends GoogleCredentials implements ServiceAccountSi
   private static final String GET_SIGNATURE_METHOD = "getSignature";
 
   private final Collection<String> scopes;
+  private final Collection<String> defaultScopes;
   private final boolean scopesRequired;
 
   private transient Object appIdentityService;
@@ -79,19 +80,25 @@ class AppEngineCredentials extends GoogleCredentials implements ServiceAccountSi
   private transient Method getSignature;
   private transient String account;
 
-  AppEngineCredentials(Collection<String> scopes) throws IOException {
+  AppEngineCredentials(Collection<String> scopes, Collection<String> defaultScopes)
+      throws IOException {
     this.scopes = scopes == null ? ImmutableSet.<String>of() : ImmutableList.copyOf(scopes);
-    this.scopesRequired = this.scopes.isEmpty();
+    this.defaultScopes =
+        defaultScopes == null ? ImmutableSet.<String>of() : ImmutableList.copyOf(defaultScopes);
+    this.scopesRequired = this.scopes.isEmpty() && this.defaultScopes.isEmpty();
     init();
   }
 
-  AppEngineCredentials(Collection<String> scopes, AppEngineCredentials unscoped) {
+  AppEngineCredentials(
+      Collection<String> scopes, Collection<String> defaultScopes, AppEngineCredentials unscoped) {
     this.appIdentityService = unscoped.appIdentityService;
     this.getAccessToken = unscoped.getAccessToken;
     this.getAccessTokenResult = unscoped.getAccessTokenResult;
     this.getExpirationTime = unscoped.getExpirationTime;
     this.scopes = scopes == null ? ImmutableSet.<String>of() : ImmutableList.copyOf(scopes);
-    this.scopesRequired = this.scopes.isEmpty();
+    this.defaultScopes =
+        defaultScopes == null ? ImmutableSet.<String>of() : ImmutableList.copyOf(defaultScopes);
+    this.scopesRequired = this.scopes.isEmpty() && this.defaultScopes.isEmpty();
   }
 
   private void init() throws IOException {
@@ -129,7 +136,11 @@ class AppEngineCredentials extends GoogleCredentials implements ServiceAccountSi
       throw new IOException("AppEngineCredentials requires createScoped call before use.");
     }
     try {
-      Object accessTokenResult = getAccessTokenResult.invoke(appIdentityService, scopes);
+      Collection<String> scopesToUse = scopes;
+      if (scopes.isEmpty()) {
+        scopesToUse = defaultScopes;
+      }
+      Object accessTokenResult = getAccessTokenResult.invoke(appIdentityService, scopesToUse);
       String accessToken = (String) getAccessToken.invoke(accessTokenResult);
       Date expirationTime = (Date) getExpirationTime.invoke(accessTokenResult);
       return new AccessToken(accessToken, expirationTime);
@@ -145,7 +156,13 @@ class AppEngineCredentials extends GoogleCredentials implements ServiceAccountSi
 
   @Override
   public GoogleCredentials createScoped(Collection<String> scopes) {
-    return new AppEngineCredentials(scopes, this);
+    return new AppEngineCredentials(scopes, null, this);
+  }
+
+  @Override
+  public GoogleCredentials createScoped(
+      Collection<String> scopes, Collection<String> defaultScopes) {
+    return new AppEngineCredentials(scopes, defaultScopes, this);
   }
 
   @Override
@@ -165,13 +182,14 @@ class AppEngineCredentials extends GoogleCredentials implements ServiceAccountSi
 
   @Override
   public int hashCode() {
-    return Objects.hash(scopes, scopesRequired);
+    return Objects.hash(scopes, defaultScopes, scopesRequired);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("scopes", scopes)
+        .add("defaultScopes", defaultScopes)
         .add("scopesRequired", scopesRequired)
         .toString();
   }
@@ -182,7 +200,9 @@ class AppEngineCredentials extends GoogleCredentials implements ServiceAccountSi
       return false;
     }
     AppEngineCredentials other = (AppEngineCredentials) obj;
-    return this.scopesRequired == other.scopesRequired && Objects.equals(this.scopes, other.scopes);
+    return this.scopesRequired == other.scopesRequired
+        && Objects.equals(this.scopes, other.scopes)
+        && Objects.equals(this.defaultScopes, other.defaultScopes);
   }
 
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
