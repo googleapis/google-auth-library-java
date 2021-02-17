@@ -61,7 +61,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   /** Base credential source class. Dictates the retrieval method of the external credential. */
   abstract static class CredentialSource {
 
-    protected CredentialSource(Map<String, Object> credentialSourceMap) {
+    CredentialSource(Map<String, Object> credentialSourceMap) {
       checkNotNull(credentialSourceMap);
     }
   }
@@ -295,7 +295,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   }
 
   private static String extractTargetPrincipal(String serviceAccountImpersonationUrl) {
-    // Extract the target principle.
+    // Extract the target principal
     int startIndex = serviceAccountImpersonationUrl.lastIndexOf('/');
     int endIndex = serviceAccountImpersonationUrl.indexOf(":generateAccessToken");
 

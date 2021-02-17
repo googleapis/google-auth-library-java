@@ -40,7 +40,7 @@ import javax.annotation.Nullable;
  * Defines an OAuth 2.0 token exchange request. Based on
  * https://tools.ietf.org/html/rfc8693#section-2.1.
  */
-public final class StsTokenExchangeRequest {
+final class StsTokenExchangeRequest {
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:token-exchange";
 
   private final String subjectToken;
@@ -179,24 +179,6 @@ public final class StsTokenExchangeRequest {
           resource,
           audience,
           requestedTokenType);
-    }
-  }
-
-  static class ActingParty {
-    private final String actorToken;
-    private final String actorTokenType;
-
-    public ActingParty(String actorToken, String actorTokenType) {
-      this.actorToken = checkNotNull(actorToken);
-      this.actorTokenType = checkNotNull(actorTokenType);
-    }
-
-    public String getActorToken() {
-      return actorToken;
-    }
-
-    public String getActorTokenType() {
-      return actorTokenType;
     }
   }
 }

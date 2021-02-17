@@ -42,7 +42,7 @@ import javax.annotation.Nullable;
  * Defines an OAuth 2.0 token exchange successful response. Based on
  * https://tools.ietf.org/html/rfc8693#section-2.2.1.
  */
-public final class StsTokenExchangeResponse {
+final class StsTokenExchangeResponse {
   private final AccessToken accessToken;
   private final String issuedTokenType;
   private final String tokenType;

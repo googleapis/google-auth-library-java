@@ -33,49 +33,24 @@ package com.google.auth.oauth2;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.IOException;
-import javax.annotation.Nullable;
-
 /**
- * Encapsulates the standard OAuth error response. See
- * https://tools.ietf.org/html/rfc6749#section-5.2.
+ * The acting party as defined in <a href="https://tools.ietf.org/html/rfc8693">OAuth 2.0 Token
+ * Exchange</a>.
  */
-class OAuthException extends IOException {
+final class ActingParty {
+  private final String actorToken;
+  private final String actorTokenType;
 
-  private final String errorCode;
-  @Nullable private final String errorDescription;
-  @Nullable private final String errorUri;
-
-  OAuthException(String errorCode, @Nullable String errorDescription, @Nullable String errorUri) {
-    this.errorCode = checkNotNull(errorCode);
-    this.errorDescription = errorDescription;
-    this.errorUri = errorUri;
+  ActingParty(String actorToken, String actorTokenType) {
+    this.actorToken = checkNotNull(actorToken);
+    this.actorTokenType = checkNotNull(actorTokenType);
   }
 
-  @Override
-  public String getMessage() {
-    // Fully specified message will have the format Error code %s: %s - %s.
-    StringBuilder sb = new StringBuilder("Error code " + errorCode);
-    if (errorDescription != null) {
-      sb.append(": ").append(errorDescription);
-    }
-    if (errorUri != null) {
-      sb.append(" - ").append(errorUri);
-    }
-    return sb.toString();
+  String getActorToken() {
+    return actorToken;
   }
 
-  String getErrorCode() {
-    return errorCode;
-  }
-
-  @Nullable
-  String getErrorDescription() {
-    return errorDescription;
-  }
-
-  @Nullable
-  String getErrorUri() {
-    return errorUri;
+  String getActorTokenType() {
+    return actorTokenType;
   }
 }

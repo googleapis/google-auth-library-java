@@ -39,7 +39,6 @@ import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.util.GenericData;
 import com.google.auth.TestUtils;
-import com.google.auth.oauth2.StsTokenExchangeRequest.ActingParty;
 import com.google.common.base.Joiner;
 import java.io.IOException;
 import java.util.Arrays;

@@ -42,17 +42,13 @@ import java.net.URI;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.TimeZone;
 import javax.annotation.Nullable;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -335,65 +331,6 @@ class AwsRequestSigner {
           requestPayload,
           additionalHeaders,
           dates);
-    }
-  }
-
-  static final class AwsDates {
-
-    private static final String X_AMZ_DATE_FORMAT = "yyyyMMdd'T'HHmmss'Z'";
-    private static final String CUSTOM_DATE_FORMAT = "E, dd MMM yyyy HH:mm:ss z";
-
-    private final String xAmzDate;
-    private final String originalDate;
-
-    private AwsDates(String amzDate) {
-      this.xAmzDate = checkNotNull(amzDate);
-      this.originalDate = amzDate;
-    }
-
-    private AwsDates(String xAmzDate, String originalDate) {
-      this.xAmzDate = checkNotNull(xAmzDate);
-      this.originalDate = checkNotNull(originalDate);
-    }
-
-    static AwsDates fromXAmzDate(String xAmzDate) throws ParseException {
-      // Validate format.
-      new SimpleDateFormat(AwsDates.X_AMZ_DATE_FORMAT).parse(xAmzDate);
-      return new AwsDates(xAmzDate);
-    }
-
-    static AwsDates fromDateHeader(String date) throws ParseException {
-      DateFormat dateFormat = new SimpleDateFormat(X_AMZ_DATE_FORMAT);
-      dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-
-      Date inputDate = new SimpleDateFormat(CUSTOM_DATE_FORMAT).parse(date);
-      String xAmzDate = dateFormat.format(inputDate);
-      return new AwsDates(xAmzDate, date);
-    }
-
-    static AwsDates generateXAmzDate() {
-      DateFormat dateFormat = new SimpleDateFormat(X_AMZ_DATE_FORMAT);
-      dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-      String xAmzDate = dateFormat.format(new Date(System.currentTimeMillis()));
-      return new AwsDates(xAmzDate);
-    }
-
-    /**
-     * Returns the original date. This can either be the x-amz-date or a specified date in the
-     * format of E, dd MMM yyyy HH:mm:ss z.
-     */
-    String getOriginalDate() {
-      return originalDate;
-    }
-
-    /** Returns the x-amz-date in yyyyMMdd'T'HHmmss'Z' format. */
-    String getXAmzDate() {
-      return xAmzDate;
-    }
-
-    /** Returns the x-amz-date in YYYYMMDD format. */
-    String getFormattedDate() {
-      return xAmzDate.substring(0, 8);
     }
   }
 }

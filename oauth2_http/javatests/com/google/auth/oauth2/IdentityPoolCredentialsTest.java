@@ -191,6 +191,27 @@ public class IdentityPoolCredentialsTest {
   }
 
   @Test
+  public void retrieveSubjectToken_fileSourcedWithNullFormat_throws() throws IOException {
+    File file =
+        File.createTempFile("RETRIEVE_SUBJECT_TOKEN", /* suffix= */ null, /* directory= */ null);
+    file.deleteOnExit();
+
+    Map<String, Object> credentialSourceMap = new HashMap<>();
+    Map<String, String> formatMap = new HashMap<>();
+    formatMap.put("type", null);
+
+    credentialSourceMap.put("file", file.getAbsolutePath());
+    credentialSourceMap.put("format", formatMap);
+
+    try {
+      new IdentityPoolCredentialSource(credentialSourceMap);
+      fail("Exception should be thrown due to null format.");
+    } catch (IllegalArgumentException e) {
+      assertEquals("Invalid credential source format type: null.", e.getMessage());
+    }
+  }
+
+  @Test
   public void retrieveSubjectToken_noFile_throws() {
     Map<String, Object> credentialSourceMap = new HashMap<>();
     String path = "badPath";

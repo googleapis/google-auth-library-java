@@ -133,7 +133,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       Map<String, String> formatMap = (Map<String, String>) credentialSourceMap.get("format");
       if (formatMap != null && formatMap.containsKey("type")) {
         String type = formatMap.get("type");
-        if (type == null || (!type.equals("text") && !type.equals("json"))) {
+        if (!"text".equals(type) && !"json".equals(type)) {
           throw new IllegalArgumentException(
               String.format("Invalid credential source format type: %s.", type));
         }
