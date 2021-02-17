@@ -16,6 +16,7 @@
 import synthtool.languages.java as java
 
 java.common_templates(excludes=[
+    "LICENSE",
     "README.md",
     "java.header",
     "checkstyle.xml",
