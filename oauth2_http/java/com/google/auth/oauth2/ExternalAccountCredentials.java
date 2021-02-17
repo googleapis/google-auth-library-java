@@ -234,13 +234,10 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     Map<String, Object> credentialSourceMap = (Map<String, Object>) json.get("credential_source");
 
     // Optional params.
-    String tokenInfoUrl =
-        json.containsKey("token_info_url") ? (String) json.get("token_info_url") : null;
-    String clientId = json.containsKey("client_id") ? (String) json.get("client_id") : null;
-    String clientSecret =
-        json.containsKey("client_secret") ? (String) json.get("client_secret") : null;
-    String quotaProjectId =
-        json.containsKey("quota_project_id") ? (String) json.get("quota_project_id") : null;
+    String tokenInfoUrl = (String) json.get("token_info_url");
+    String clientId = (String) json.get("client_id");
+    String clientSecret = (String) json.get("client_secret");
+    String quotaProjectId = (String) json.get("quota_project_id");
 
     if (isAwsCredential(credentialSourceMap)) {
       return new AwsCredentials(

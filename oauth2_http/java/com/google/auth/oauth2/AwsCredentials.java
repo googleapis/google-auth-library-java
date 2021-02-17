@@ -93,8 +93,8 @@ public class AwsCredentials extends ExternalAccountCredentials {
       String environmentId = (String) credentialSourceMap.get("environment_id");
 
       // Environment version is prefixed by "aws". e.g. "aws1".
-      Matcher matcher = Pattern.compile("^(aws)([\\d]+)$").matcher(environmentId);
-      if (!matcher.find()) {
+      Matcher matcher = Pattern.compile("(aws)([\\d]+)").matcher(environmentId);
+      if (!matcher.matches()) {
         throw new IllegalArgumentException("Invalid AWS environment ID.");
       }
 
