@@ -207,7 +207,11 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     GenericJson fileContents =
         parser.parseAndClose(credentialsStream, StandardCharsets.UTF_8, GenericJson.class);
-    return fromJson(fileContents, transportFactory);
+    try {
+      return fromJson(fileContents, transportFactory);
+    } catch (ClassCastException e) {
+      throw new CredentialFormatException("An invalid input stream was provided.", e);
+    }
   }
 
   /**

@@ -92,12 +92,25 @@ public class ExternalAccountCredentialsTest {
   @Test
   public void fromStream_awsCredentials() throws IOException {
     GenericJson json = buildJsonAwsCredential();
-    TestUtils.jsonToInputStream(json);
 
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromStream(TestUtils.jsonToInputStream(json));
 
     assertTrue(credential instanceof AwsCredentials);
+  }
+
+  @Test
+  public void fromStream_invalidStream_throws() throws IOException {
+    GenericJson json = buildJsonAwsCredential();
+
+    json.put("audience", new HashMap<>());
+
+    try {
+      ExternalAccountCredentials.fromStream(TestUtils.jsonToInputStream(json));
+      fail("Should fail.");
+    } catch (CredentialFormatException e) {
+      assertEquals("An invalid input stream was provided.", e.getMessage());
+    }
   }
 
   @Test
