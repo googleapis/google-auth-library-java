@@ -62,6 +62,8 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
 
   private static final Collection<String> SCOPES =
       Collections.unmodifiableCollection(Arrays.asList("scope1", "scope2"));
+  private static final Collection<String> DEFAULT_SCOPES =
+      Collections.unmodifiableCollection(Arrays.asList("scope3"));
 
   @Test
   public void constructor_usesAppIdentityService() throws IOException {
@@ -132,10 +134,13 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void createScoped_defaultScopes() throws IOException {
-    TestAppEngineCredentials credentials = new TestAppEngineCredentials(null, SCOPES);
-    assertFalse(credentials.createScopedRequired());
+    TestAppEngineCredentials credentials = new TestAppEngineCredentials(null);
+    assertTrue(credentials.createScopedRequired());
 
-    AccessToken accessToken = credentials.refreshAccessToken();
+    GoogleCredentials newCredentials = credentials.createScoped(SCOPES, DEFAULT_SCOPES);
+    assertFalse(newCredentials.createScopedRequired());
+
+    AccessToken accessToken = newCredentials.refreshAccessToken();
     assertEquals(EXPECTED_ACCESS_TOKEN, accessToken.getTokenValue());
     assertEquals(EXPECTED_EXPIRATION_DATE, accessToken.getExpirationTime());
   }

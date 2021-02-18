@@ -876,11 +876,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     payload.setIssuedAtTimeSeconds(currentTime / 1000);
     payload.setExpirationTimeSeconds(currentTime / 1000 + this.lifetime);
     payload.setSubject(serviceAccountUser);
-    if (!scopes.isEmpty()) {
-      payload.put("scope", Joiner.on(' ').join(scopes));
-    } else {
-      payload.put("scope", Joiner.on(' ').join(defaultScopes));
-    }
+    payload.put("scope", Joiner.on(' ').join(scopes));
 
     if (audience == null) {
       payload.setAudience(OAuth2Utils.TOKEN_SERVER_URI.toString());

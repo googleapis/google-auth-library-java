@@ -406,6 +406,47 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void createdScoped_defaultScopes() throws IOException {
+    final URI TOKEN_SERVER = URI.create("https://foo.com/bar");
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
+    transportFactory.transport.setTokenServerUri(TOKEN_SERVER);
+
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.fromPkcs8(
+            CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, SCOPES, DEFAULT_SCOPES);
+    assertEquals(1, credentials.getDefaultScopes().size());
+    assertEquals("dummy.default.scope", credentials.getDefaultScopes().toArray()[0]);
+
+    credentials =
+        ServiceAccountCredentials.fromPkcs8(
+            CLIENT_ID,
+            CLIENT_EMAIL,
+            PRIVATE_KEY_PKCS8,
+            PRIVATE_KEY_ID,
+            SCOPES,
+            DEFAULT_SCOPES,
+            transportFactory,
+            TOKEN_SERVER);
+    assertEquals(1, credentials.getDefaultScopes().size());
+    assertEquals("dummy.default.scope", credentials.getDefaultScopes().toArray()[0]);
+
+    credentials =
+        ServiceAccountCredentials.fromPkcs8(
+            CLIENT_ID,
+            CLIENT_EMAIL,
+            PRIVATE_KEY_PKCS8,
+            PRIVATE_KEY_ID,
+            SCOPES,
+            DEFAULT_SCOPES,
+            transportFactory,
+            TOKEN_SERVER,
+            "service_account_user");
+    assertEquals(1, credentials.getDefaultScopes().size());
+    assertEquals("dummy.default.scope", credentials.getDefaultScopes().toArray()[0]);
+  }
+
+  @Test
   public void createScopedRequired_emptyScopes_true() throws IOException {
     GoogleCredentials credentials =
         ServiceAccountCredentials.fromPkcs8(

@@ -199,6 +199,21 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void createScoped_defaultScopes() {
+    ComputeEngineCredentials.Builder builder =
+        ComputeEngineCredentials.newBuilder().setScopes(null, Arrays.asList("foo"));
+    assertEquals(1, builder.getDefaultScopes().size());
+    assertEquals("foo", builder.getDefaultScopes().toArray()[0]);
+
+    GoogleCredentials credentials =
+        ComputeEngineCredentials.create().createScoped(null, Arrays.asList("foo"));
+    Collection<String> defaultScopes = ((ComputeEngineCredentials) credentials).getDefaultScopes();
+
+    assertEquals(1, defaultScopes.size());
+    assertEquals("foo", defaultScopes.toArray()[0]);
+  }
+
+  @Test
   public void getRequestMetadata_hasAccessToken() throws IOException {
     String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
