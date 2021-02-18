@@ -50,8 +50,8 @@ import java.util.Map;
 public class GoogleCredentials extends OAuth2Credentials {
 
   private static final long serialVersionUID = -1522852442442473691L;
-  static final String QUOTA_PROJECT_ID_HEADER_KEY = "x-goog-user-project";
 
+  static final String QUOTA_PROJECT_ID_HEADER_KEY = "x-goog-user-project";
   static final String USER_FILE_TYPE = "authorized_user";
   static final String SERVICE_ACCOUNT_FILE_TYPE = "service_account";
 
@@ -165,6 +165,9 @@ public class GoogleCredentials extends OAuth2Credentials {
     }
     if (SERVICE_ACCOUNT_FILE_TYPE.equals(fileType)) {
       return ServiceAccountCredentials.fromJson(fileContents, transportFactory);
+    }
+    if (ExternalAccountCredentials.EXTERNAL_ACCOUNT_FILE_TYPE.equals(fileType)) {
+      return ExternalAccountCredentials.fromJson(fileContents, transportFactory);
     }
     throw new IOException(
         String.format(
