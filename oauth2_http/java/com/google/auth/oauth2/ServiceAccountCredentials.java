@@ -116,21 +116,21 @@ public class ServiceAccountCredentials extends GoogleCredentials
   /**
    * Constructor with minimum identifying information and custom HTTP transport.
    *
-   * @param clientId Client ID of the service account from the console. May be null.
-   * @param clientEmail Client email address of the service account from the console.
-   * @param privateKey RSA private key object for the service account.
-   * @param privateKeyId Private key identifier for the service account. May be null.
-   * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
+   * @param clientId client ID of the service account from the console. May be null.
+   * @param clientEmail client email address of the service account from the console
+   * @param privateKey RSA private key object for the service account
+   * @param privateKeyId private key identifier for the service account. May be null.
+   * @param scopes scope strings for the APIs to be called. May be null or an empty collection,
    *     which results in a credential that must have createScoped called before use.
-   * @param defaultScopes Default scope strings for the APIs to be called. May be null or an empty
+   * @param defaultScopes default scope strings for the APIs to be called. May be null or an empty
    *     collection, which results in a credential that must have createScoped called before use.
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *     tokens.
    * @param tokenServerUri URI of the end point that provides tokens.
-   * @param serviceAccountUser Email of the user account to impersonate, if delegating domain-wide
+   * @param serviceAccountUser email of the user account to impersonate, if delegating domain-wide
    *     authority to the service account.
    * @param projectId the project used for billing
-   * @param quotaProjectId The project used for quota and billing purposes. May be null.
+   * @param quotaProjectId the project used for quota and billing purposes. May be null.
    * @param lifetime number of seconds the access token should be valid for. The value should be at
    *     most 43200 (12 hours). If the token is used for calling a Google API, then the value should
    *     be at most 3600 (1 hour). If the given value is 0, then the default value 3600 will be used
@@ -269,16 +269,16 @@ public class ServiceAccountCredentials extends GoogleCredentials
   /**
    * Factory with minimum identifying information using PKCS#8 for the private key.
    *
-   * @param clientId Client ID of the service account from the console. May be null.
-   * @param clientEmail Client email address of the service account from the console.
+   * @param clientId client ID of the service account from the console. May be null.
+   * @param clientEmail client email address of the service account from the console
    * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
-   * @param privateKeyId Private key identifier for the service account. May be null.
-   * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
+   * @param privateKeyId private key identifier for the service account. May be null.
+   * @param scopes scope strings for the APIs to be called. May be null or an empty collection,
    *     which results in a credential that must have createScoped called before use.
-   * @param defaultScopes Default scope strings for the APIs to be called. May be null or an empty
+   * @param defaultScopes default scope strings for the APIs to be called. May be null or an empty
    *     collection, which results in a credential that must have createScoped called before use.
-   * @return New ServiceAccountCredentials created from a private key.
-   * @throws IOException if the credential cannot be created from the private key.
+   * @return new ServiceAccountCredentials created from a private key
+   * @throws IOException if the credential cannot be created from the private key
    */
   public static ServiceAccountCredentials fromPkcs8(
       String clientId,
@@ -345,19 +345,19 @@ public class ServiceAccountCredentials extends GoogleCredentials
    * Factory with minimum identifying information and custom transport using PKCS#8 for the private
    * key.
    *
-   * @param clientId Client ID of the service account from the console. May be null.
-   * @param clientEmail Client email address of the service account from the console.
+   * @param clientId client ID of the service account from the console. May be null.
+   * @param clientEmail client email address of the service account from the console
    * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
-   * @param privateKeyId Private key identifier for the service account. May be null.
-   * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
+   * @param privateKeyId private key identifier for the service account. May be null.
+   * @param scopes scope strings for the APIs to be called. May be null or an empty collection,
    *     which results in a credential that must have createScoped called before use.
-   * @param defaultScopes Default scope strings for the APIs to be called. May be null or an empty
+   * @param defaultScopes default scope strings for the APIs to be called. May be null or an empty
    *     collection, which results in a credential that must have createScoped called before use.
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *     tokens.
-   * @param tokenServerUri URI of the end point that provides tokens.
-   * @return New ServiceAccountCredentials created from a private key.
-   * @throws IOException if the credential cannot be created from the private key.
+   * @param tokenServerUri URI of the end point that provides tokens
+   * @return new ServiceAccountCredentials created from a private key
+   * @throws IOException if the credential cannot be created from the private key
    */
   public static ServiceAccountCredentials fromPkcs8(
       String clientId,
@@ -429,21 +429,21 @@ public class ServiceAccountCredentials extends GoogleCredentials
    * Factory with minimum identifying information and custom transport using PKCS#8 for the private
    * key.
    *
-   * @param clientId Client ID of the service account from the console. May be null.
-   * @param clientEmail Client email address of the service account from the console.
+   * @param clientId client ID of the service account from the console. May be null.
+   * @param clientEmail client email address of the service account from the console
    * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
-   * @param privateKeyId Private key identifier for the service account. May be null.
-   * @param scopes Scope strings for the APIs to be called. May be null or an empty collection,
+   * @param privateKeyId private key identifier for the service account. May be null.
+   * @param scopes scope strings for the APIs to be called. May be null or an empty collection,
    *     which results in a credential that must have createScoped called before use.
-   * @param defaultScopes Default scope strings for the APIs to be called. May be null or an empty
+   * @param defaultScopes default scope strings for the APIs to be called. May be null or an empty
    *     collection, which results in a credential that must have createScoped called before use.
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *     tokens.
-   * @param tokenServerUri URI of the end point that provides tokens.
-   * @param serviceAccountUser The email of the user account to impersonate, if delegating
+   * @param tokenServerUri URI of the end point that provides tokens
+   * @param serviceAccountUser the email of the user account to impersonate, if delegating
    *     domain-wide authority to the service account.
-   * @return New ServiceAccountCredentials created from a private key.
-   * @throws IOException if the credential cannot be created from the private key.
+   * @return new ServiceAccountCredentials created from a private key
+   * @throws IOException if the credential cannot be created from the private key
    */
   public static ServiceAccountCredentials fromPkcs8(
       String clientId,
