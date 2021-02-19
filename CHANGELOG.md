@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.24.0](https://www.github.com/googleapis/google-auth-library-java/compare/v0.23.0...v0.24.0) (2021-02-19)
+
+
+### Features
+
+* add workload identity federation support ([#547](https://www.github.com/googleapis/google-auth-library-java/issues/547)) ([b8dde1e](https://www.github.com/googleapis/google-auth-library-java/commit/b8dde1e43f86a0a00741790c12d73f6cbda6251d))
+
+
+### Bug Fixes
+
+* don't log downloads ([#576](https://www.github.com/googleapis/google-auth-library-java/issues/576)) ([6181030](https://www.github.com/googleapis/google-auth-library-java/commit/61810306dc0e18500a4a6b2704e00842fbecd879))
+
+
+### Documentation
+
+* add instructions for using workload identity federation ([#564](https://www.github.com/googleapis/google-auth-library-java/issues/564)) ([2142db3](https://www.github.com/googleapis/google-auth-library-java/commit/2142db314666f298071ae30a7419b00d48d87476))
+
 ## [0.23.0](https://www.github.com/googleapis/google-auth-library-java/compare/v0.22.2...v0.23.0) (2021-01-26)
 
 
