@@ -51,11 +51,11 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <configuration>
-          <archive>  
+          <archive>
             <manifestEntries>
               <Automatic-Module-Name>com.google.auth.oauth2</Automatic-Module-Name>
             </manifestEntries>
-          </archive> 
+          </archive>
         </configuration>
       </plugin>
     </plugins>
@@ -89,6 +89,12 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.github.stefanbirkner</groupId>
+      <artifactId>system-rules</artifactId>
+      <version>1.19.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
