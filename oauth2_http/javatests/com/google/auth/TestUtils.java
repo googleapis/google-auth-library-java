@@ -34,6 +34,8 @@ package com.google.auth;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.google.api.client.http.HttpHeaders;
+import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
@@ -45,14 +47,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /** Utilities for test code under com.google.auth. */
 public class TestUtils {
-
-  public static final String UTF_8 = "UTF-8";
 
   private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
@@ -84,12 +88,12 @@ public class TestUtils {
   public static InputStream jsonToInputStream(GenericJson json) throws IOException {
     json.setFactory(JSON_FACTORY);
     String text = json.toPrettyString();
-    return new ByteArrayInputStream(text.getBytes(UTF_8));
+    return new ByteArrayInputStream(text.getBytes("UTF-8"));
   }
 
   public static InputStream stringToInputStream(String text) {
     try {
-      return new ByteArrayInputStream(text.getBytes(TestUtils.UTF_8));
+      return new ByteArrayInputStream(text.getBytes("UTF-8"));
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException("Unexpected encoding exception", e);
     }
@@ -103,8 +107,8 @@ public class TestUtils {
       if (sides.size() != 2) {
         throw new IOException("Invalid Query String");
       }
-      String key = URLDecoder.decode(sides.get(0), UTF_8);
-      String value = URLDecoder.decode(sides.get(1), UTF_8);
+      String key = URLDecoder.decode(sides.get(0), "UTF-8");
+      String value = URLDecoder.decode(sides.get(1), "UTF-8");
       map.put(key, value);
     }
     return map;
@@ -117,6 +121,31 @@ public class TestUtils {
     errorObject.put("message", message);
     errorResponse.put("error", errorObject);
     return errorResponse.toPrettyString();
+  }
+
+  public static HttpResponseException buildHttpResponseException(
+      String error, @Nullable String errorDescription, @Nullable String errorUri)
+      throws IOException {
+    GenericJson json = new GenericJson();
+    json.setFactory(GsonFactory.getDefaultInstance());
+    json.set("error", error);
+    if (errorDescription != null) {
+      json.set("error_description", errorDescription);
+    }
+    if (errorUri != null) {
+      json.set("error_uri", errorUri);
+    }
+    return new HttpResponseException.Builder(
+            /* statusCode= */ 400, /* statusMessage= */ "statusMessage", new HttpHeaders())
+        .setContent(json.toPrettyString())
+        .build();
+  }
+
+  public static String getDefaultExpireTime() {
+    Calendar calendar = Calendar.getInstance();
+    calendar.setTime(new Date());
+    calendar.add(Calendar.SECOND, 300);
+    return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(calendar.getTime());
   }
 
   private TestUtils() {}
