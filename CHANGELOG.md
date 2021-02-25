@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.24.1](https://www.github.com/googleapis/google-auth-library-java/compare/v0.24.0...v0.24.1) (2021-02-25)
+
+
+### Dependencies
+
+* update dependency com.google.http-client:google-http-client-bom to v1.39.0 ([#580](https://www.github.com/googleapis/google-auth-library-java/issues/580)) ([88718b0](https://www.github.com/googleapis/google-auth-library-java/commit/88718b0185ee6a3ff1168ac68621be0c5ff0efab))
+
 ## [0.24.0](https://www.github.com/googleapis/google-auth-library-java/compare/v0.23.0...v0.24.0) (2021-02-19)
 
 
