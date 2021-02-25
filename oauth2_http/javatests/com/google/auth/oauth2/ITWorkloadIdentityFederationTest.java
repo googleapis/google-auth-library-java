@@ -60,7 +60,7 @@ import org.junit.contrib.java.lang.system.EnvironmentVariables;
  *
  * <p>The only requirement for this test suite to run is to set the environment variable
  * GOOGLE_APPLICATION_CREDENTIALS to point to the same service account keys used in the setup script
- * (externalclient-setup.sh).
+ * (workloadidentityfederation-setup).
  *
  * <p>1. IdentityPoolCredentials (OIDC provider): Uses the service account to generate a Google ID
  * token using the iamcredentials generateIdToken API. This will use the service account client ID
@@ -78,7 +78,7 @@ import org.junit.contrib.java.lang.system.EnvironmentVariables;
  */
 public final class ITWorkloadIdentityFederationTest {
 
-  // Copy output from externalclient-setup.sh.
+  // Copy output from workloadidentityfederation-setup.
   private static final String AUDIENCE_PREFIX =
       "//iam.googleapis.com/projects/1016721519174/locations/global/workloadIdentityPools/pool-1/providers/";
   private static final String AWS_AUDIENCE = AUDIENCE_PREFIX + "aws-1";
