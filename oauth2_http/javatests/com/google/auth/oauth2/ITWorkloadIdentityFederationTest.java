@@ -81,6 +81,9 @@ public final class ITWorkloadIdentityFederationTest {
   // Copy output from workloadidentityfederation-setup.
   private static final String AUDIENCE_PREFIX =
       "//iam.googleapis.com/projects/1016721519174/locations/global/workloadIdentityPools/pool-1/providers/";
+  private static final String AWS_ROLE_NAME = "ci-java-test";
+  private static final String AWS_ROLE_ARN = "arn:aws:iam::027472800722:role/ci-java-test";
+
   private static final String AWS_AUDIENCE = AUDIENCE_PREFIX + "aws-1";
   private static final String OIDC_AUDIENCE = AUDIENCE_PREFIX + "oidc-1";
 
@@ -108,14 +111,12 @@ public final class ITWorkloadIdentityFederationTest {
   public void awsCredentials() throws Exception {
     String idToken = generateGoogleIdToken(AWS_AUDIENCE);
 
-    String awsRoleName = "ci-java-test";
-    String awsRoleArn = "arn:aws:iam::027472800722:role/" + awsRoleName;
     String url =
         String.format(
             "https://sts.amazonaws.com/?Action=AssumeRoleWithWebIdentity"
                 + "&Version=2011-06-15&DurationSeconds=3600&RoleSessionName=%s"
                 + "&RoleArn=%s&WebIdentityToken=%s",
-            awsRoleName, awsRoleArn, idToken);
+            AWS_ROLE_NAME, AWS_ROLE_ARN, idToken);
 
     HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
     HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(url));
