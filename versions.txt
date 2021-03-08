@@ -1,9 +1,9 @@
 # Format:
 # module:released-version:current-version
 
-google-auth-library:0.23.0:0.23.1-SNAPSHOT
-google-auth-library-bom:0.23.0:0.23.1-SNAPSHOT
-google-auth-library-parent:0.23.0:0.23.1-SNAPSHOT
-google-auth-library-appengine:0.23.0:0.23.1-SNAPSHOT
-google-auth-library-credentials:0.23.0:0.23.1-SNAPSHOT
-google-auth-library-oauth2-http:0.23.0:0.23.1-SNAPSHOT
+google-auth-library:0.24.1:0.24.2-SNAPSHOT
+google-auth-library-bom:0.24.1:0.24.2-SNAPSHOT
+google-auth-library-parent:0.24.1:0.24.2-SNAPSHOT
+google-auth-library-appengine:0.24.1:0.24.2-SNAPSHOT
+google-auth-library-credentials:0.24.1:0.24.2-SNAPSHOT
+google-auth-library-oauth2-http:0.24.1:0.24.2-SNAPSHOT

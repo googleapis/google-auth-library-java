@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright 2019 Google Inc.
+# Copyright 2021 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,11 +19,6 @@ if [[ -z "${CREDENTIALS}" ]]; then
   CREDENTIALS=${KOKORO_KEYSTORE_DIR}/73713_docuploader_service_account
 fi
 
-if [[ -z "${STAGING_BUCKET}" ]]; then
-  echo "Need to set STAGING_BUCKET environment variable"
-  exit 1
-fi
-
 if [[ -z "${STAGING_BUCKET_V2}" ]]; then
   echo "Need to set STAGING_BUCKET_V2 environment variable"
   exit 1
@@ -41,18 +36,23 @@ mvn clean install -B -q -DskipTests=true
 export NAME=google-auth-library
 export VERSION=$(grep ${NAME}: versions.txt | cut -d: -f3)
 
-# build the docs
-mvn site -B -q
+# V3 generates docfx yml from javadoc
+# generate yml
+mvn clean site -B -q -P docFX
 
-pushd target/site/apidocs
+# copy README to docfx-yml dir and rename index.md
+cp README.md target/docfx-yml/index.md
+
+pushd target/docfx-yml
 
 # create metadata
 python3 -m docuploader create-metadata \
-  --name ${NAME} \
-  --version ${VERSION} \
-  --language java
+ --name ${NAME} \
+ --version ${VERSION} \
+ --language java
 
-# upload docs
+# upload yml to production bucket
 python3 -m docuploader upload . \
-  --credentials ${CREDENTIALS} \
-  --staging-bucket ${STAGING_BUCKET}
+ --credentials ${CREDENTIALS} \
+ --staging-bucket ${STAGING_BUCKET_V2} \
+ --destination-prefix docfx

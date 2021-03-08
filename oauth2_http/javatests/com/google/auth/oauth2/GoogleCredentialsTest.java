@@ -40,6 +40,7 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.oauth2.IdentityPoolCredentialsTest.MockExternalAccountCredentialsTransportFactory;
 import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -222,6 +223,45 @@ public class GoogleCredentialsTest {
             USER_CLIENT_ID, USER_CLIENT_SECRET, null, QUOTA_PROJECT);
 
     testFromStreamException(userStream, "refresh_token");
+  }
+
+  @Test
+  public void fromStream_identityPoolCredentials_providesToken() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+    InputStream identityPoolCredentialStream =
+        IdentityPoolCredentialsTest.writeIdentityPoolCredentialsStream(
+            transportFactory.transport.getStsUrl(),
+            transportFactory.transport.getMetadataUrl(),
+            /* serviceAccountImpersonationUrl= */ null);
+
+    GoogleCredentials credentials =
+        GoogleCredentials.fromStream(identityPoolCredentialStream, transportFactory);
+
+    assertNotNull(credentials);
+    credentials = credentials.createScoped(SCOPES);
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, transportFactory.transport.getAccessToken());
+  }
+
+  @Test
+  public void fromStream_awsCredentials_providesToken() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    InputStream awsCredentialStream =
+        AwsCredentialsTest.writeAwsCredentialsStream(
+            transportFactory.transport.getStsUrl(),
+            transportFactory.transport.getAwsRegionUrl(),
+            transportFactory.transport.getAwsCredentialsUrl());
+
+    GoogleCredentials credentials =
+        GoogleCredentials.fromStream(awsCredentialStream, transportFactory);
+
+    assertNotNull(credentials);
+    credentials = credentials.createScoped(SCOPES);
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, transportFactory.transport.getAccessToken());
   }
 
   @Test
