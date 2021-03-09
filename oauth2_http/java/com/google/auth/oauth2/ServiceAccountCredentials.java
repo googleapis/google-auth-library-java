@@ -120,10 +120,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
    * @param clientEmail client email address of the service account from the console
    * @param privateKey RSA private key object for the service account
    * @param privateKeyId private key identifier for the service account. May be null.
-   * @param scopes scope strings for the APIs to be called. May be null or an empty collection,
-   *     which results in a credential that must have createScoped called before use.
-   * @param defaultScopes default scope strings for the APIs to be called. May be null or an empty
-   *     collection, which results in a credential that must have createScoped called before use.
+   * @param scopes scope strings for the APIs to be called. May be null or an empty collection.
+   * @param defaultScopes default scope strings for the APIs to be called. May be null or an empty.
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *     tokens.
    * @param tokenServerUri URI of the end point that provides tokens.
@@ -273,10 +271,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
    * @param clientEmail client email address of the service account from the console
    * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
    * @param privateKeyId private key identifier for the service account. May be null.
-   * @param scopes scope strings for the APIs to be called. May be null or an empty collection,
-   *     which results in a credential that must have createScoped called before use.
-   * @param defaultScopes default scope strings for the APIs to be called. May be null or an empty
-   *     collection, which results in a credential that must have createScoped called before use.
+   * @param scopes scope strings for the APIs to be called. May be null or an empty collection.
+   * @param defaultScopes default scope strings for the APIs to be called. May be null or an empty.
    * @return new ServiceAccountCredentials created from a private key
    * @throws IOException if the credential cannot be created from the private key
    */
@@ -570,12 +566,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
    */
   @Override
   public AccessToken refreshAccessToken() throws IOException {
-    if (createScopedRequired()) {
-      throw new IOException(
-          "Scopes not configured for service account. Scoped should be specified"
-              + " by calling createScoped or passing scopes to constructor.");
-    }
-
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     long currentTime = clock.currentTimeMillis();
     String assertion = createAssertion(jsonFactory, currentTime, tokenServerUri.toString());
@@ -658,12 +648,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
     String rawToken = OAuth2Utils.validateString(responseData, "id_token", PARSE_ERROR_PREFIX);
 
     return IdToken.create(rawToken);
-  }
-
-  /** Returns whether the scopes are empty, meaning createScoped must be called before use. */
-  @Override
-  public boolean createScopedRequired() {
-    return scopes.isEmpty() && defaultScopes.isEmpty();
   }
 
   /**
@@ -947,7 +931,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   @Override
   public void getRequestMetadata(
       final URI uri, Executor executor, final RequestMetadataCallback callback) {
-    if (jwtCredentials != null) {
+    if (jwtCredentials != null && uri != null) {
       jwtCredentials.getRequestMetadata(getUriForSelfSignedJWT(uri), executor, callback);
     } else {
       super.getRequestMetadata(uri, executor, callback);
@@ -957,7 +941,13 @@ public class ServiceAccountCredentials extends GoogleCredentials
   /** Provide the request metadata by putting an access JWT directly in the metadata. */
   @Override
   public Map<String, List<String>> getRequestMetadata(URI uri) throws IOException {
-    if (jwtCredentials != null) {
+    if (scopes.isEmpty() && defaultScopes.isEmpty() && uri == null) {
+      throw new IOException(
+          "Scopes and uri are not configured for service account. Either pass uri"
+              + " to getRequestMetadata to use self signed JWT, or specify the scopes"
+              + " by calling createScoped or passing scopes to constructor.");
+    }
+    if (jwtCredentials != null && uri != null) {
       return jwtCredentials.getRequestMetadata(getUriForSelfSignedJWT(uri));
     } else {
       return super.getRequestMetadata(uri);

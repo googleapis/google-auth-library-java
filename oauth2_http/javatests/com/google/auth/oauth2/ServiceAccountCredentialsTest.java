@@ -391,8 +391,10 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     try {
       credentials.getRequestMetadata(null);
       fail("Should not be able to get token without scopes, defaultScopes and uri");
-    } catch (Exception expected) {
-      // Expected
+    } catch (IOException e) {
+      assertTrue(
+          "expected to fail with exception",
+          e.getMessage().contains("Scopes and uri are not configured for service account"));
     }
 
     // Since scopes are not provided, self signed JWT will be used.
@@ -447,12 +449,12 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void createScopedRequired_emptyScopes_true() throws IOException {
+  public void createScopedRequired_emptyScopes_false() throws IOException {
     GoogleCredentials credentials =
         ServiceAccountCredentials.fromPkcs8(
             CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, EMPTY_SCOPES);
 
-    assertTrue(credentials.createScopedRequired());
+    assertFalse(credentials.createScopedRequired());
   }
 
   @Test
