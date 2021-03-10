@@ -69,7 +69,6 @@ class AppEngineCredentials extends GoogleCredentials implements ServiceAccountSi
   private static final String GET_SIGNATURE_METHOD = "getSignature";
 
   private final Collection<String> scopes;
-  private final Collection<String> defaultScopes;
   private final boolean scopesRequired;
 
   private transient Object appIdentityService;
@@ -82,10 +81,14 @@ class AppEngineCredentials extends GoogleCredentials implements ServiceAccountSi
 
   AppEngineCredentials(Collection<String> scopes, Collection<String> defaultScopes)
       throws IOException {
-    this.scopes = scopes == null ? ImmutableSet.<String>of() : ImmutableList.copyOf(scopes);
-    this.defaultScopes =
-        defaultScopes == null ? ImmutableSet.<String>of() : ImmutableList.copyOf(defaultScopes);
-    this.scopesRequired = this.scopes.isEmpty() && this.defaultScopes.isEmpty();
+    // Use defaultScopes only when scopes don't exist.
+    if (scopes == null || scopes.isEmpty()) {
+      this.scopes =
+          defaultScopes == null ? ImmutableList.<String>of() : ImmutableList.copyOf(defaultScopes);
+    } else {
+      this.scopes = ImmutableList.copyOf(scopes);
+    }
+    this.scopesRequired = this.scopes.isEmpty();
     init();
   }
 
@@ -95,10 +98,14 @@ class AppEngineCredentials extends GoogleCredentials implements ServiceAccountSi
     this.getAccessToken = unscoped.getAccessToken;
     this.getAccessTokenResult = unscoped.getAccessTokenResult;
     this.getExpirationTime = unscoped.getExpirationTime;
-    this.scopes = scopes == null ? ImmutableSet.<String>of() : ImmutableList.copyOf(scopes);
-    this.defaultScopes =
-        defaultScopes == null ? ImmutableSet.<String>of() : ImmutableList.copyOf(defaultScopes);
-    this.scopesRequired = this.scopes.isEmpty() && this.defaultScopes.isEmpty();
+    // Use defaultScopes only when scopes don't exist.
+    if (scopes == null || scopes.isEmpty()) {
+      this.scopes =
+          defaultScopes == null ? ImmutableSet.<String>of() : ImmutableList.copyOf(defaultScopes);
+    } else {
+      this.scopes = ImmutableList.copyOf(scopes);
+    }
+    this.scopesRequired = this.scopes.isEmpty();
   }
 
   private void init() throws IOException {
@@ -136,11 +143,7 @@ class AppEngineCredentials extends GoogleCredentials implements ServiceAccountSi
       throw new IOException("AppEngineCredentials requires createScoped call before use.");
     }
     try {
-      Collection<String> scopesToUse = scopes;
-      if (scopes.isEmpty()) {
-        scopesToUse = defaultScopes;
-      }
-      Object accessTokenResult = getAccessTokenResult.invoke(appIdentityService, scopesToUse);
+      Object accessTokenResult = getAccessTokenResult.invoke(appIdentityService, scopes);
       String accessToken = (String) getAccessToken.invoke(accessTokenResult);
       Date expirationTime = (Date) getExpirationTime.invoke(accessTokenResult);
       return new AccessToken(accessToken, expirationTime);
@@ -182,14 +185,13 @@ class AppEngineCredentials extends GoogleCredentials implements ServiceAccountSi
 
   @Override
   public int hashCode() {
-    return Objects.hash(scopes, defaultScopes, scopesRequired);
+    return Objects.hash(scopes, scopesRequired);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("scopes", scopes)
-        .add("defaultScopes", defaultScopes)
         .add("scopesRequired", scopesRequired)
         .toString();
   }
@@ -200,9 +202,7 @@ class AppEngineCredentials extends GoogleCredentials implements ServiceAccountSi
       return false;
     }
     AppEngineCredentials other = (AppEngineCredentials) obj;
-    return this.scopesRequired == other.scopesRequired
-        && Objects.equals(this.scopes, other.scopes)
-        && Objects.equals(this.defaultScopes, other.defaultScopes);
+    return this.scopesRequired == other.scopesRequired && Objects.equals(this.scopes, other.scopes);
   }
 
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {

@@ -99,7 +99,6 @@ public class ComputeEngineCredentials extends GoogleCredentials
   private final String transportFactoryClassName;
 
   private final Collection<String> scopes;
-  private final Collection<String> defaultScopes;
 
   private transient HttpTransportFactory transportFactory;
   private transient String serviceAccountEmail;
@@ -111,7 +110,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
    *     tokens.
    * @param scopes scope strings for the APIs to be called. May be null or an empty collection.
    * @param defaultScopes default scope strings for the APIs to be called. May be null or an empty
-   *     collection.
+   *     collection. Default scopes are ignored if scopes are provided.
    */
   private ComputeEngineCredentials(
       HttpTransportFactory transportFactory,
@@ -122,19 +121,16 @@ public class ComputeEngineCredentials extends GoogleCredentials
             transportFactory,
             getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
+    // Use defaultScopes only when scopes don't exist.
+    if (scopes == null || scopes.isEmpty()) {
+      scopes = defaultScopes;
+    }
     if (scopes == null) {
       this.scopes = ImmutableSet.<String>of();
     } else {
       List<String> scopeList = new ArrayList<String>(scopes);
       scopeList.removeAll(Arrays.asList("", null));
       this.scopes = ImmutableSet.<String>copyOf(scopeList);
-    }
-    if (defaultScopes == null) {
-      this.defaultScopes = ImmutableSet.<String>of();
-    } else {
-      List<String> scopeList = new ArrayList<String>(defaultScopes);
-      scopeList.removeAll(Arrays.asList("", null));
-      this.defaultScopes = ImmutableSet.<String>copyOf(scopeList);
     }
   }
 
@@ -164,23 +160,15 @@ public class ComputeEngineCredentials extends GoogleCredentials
     return scopes;
   }
 
-  public final Collection<String> getDefaultScopes() {
-    return defaultScopes;
-  }
-
   /**
-   * If scopes or defaultScopes is specified, add "?scopes=comma-separated-list-of-scopes" to the
-   * token url. defaultScopes is not used unless scopes is empty.
+   * If scopes is specified, add "?scopes=comma-separated-list-of-scopes" to the token url.
    *
-   * @return token url with the given scopes or defaultScopes. defaultScopes is not used unless
-   *     scopes is emtpy.
+   * @return token url with the given scopes
    */
   String createTokenUrlWithScopes() {
     GenericUrl tokenUrl = new GenericUrl(getTokenServerEncodedUrl());
     if (!scopes.isEmpty()) {
       tokenUrl.set("scopes", Joiner.on(',').join(scopes));
-    } else if (!defaultScopes.isEmpty()) {
-      tokenUrl.set("scopes", Joiner.on(',').join(defaultScopes));
     }
     return tokenUrl.toString();
   }
@@ -372,8 +360,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
     }
     ComputeEngineCredentials other = (ComputeEngineCredentials) obj;
     return Objects.equals(this.transportFactoryClassName, other.transportFactoryClassName)
-        && Objects.equals(this.scopes, other.scopes)
-        && Objects.equals(this.defaultScopes, other.defaultScopes);
+        && Objects.equals(this.scopes, other.scopes);
   }
 
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
@@ -473,7 +460,6 @@ public class ComputeEngineCredentials extends GoogleCredentials
     protected Builder(ComputeEngineCredentials credentials) {
       this.transportFactory = credentials.transportFactory;
       this.scopes = credentials.scopes;
-      this.defaultScopes = credentials.defaultScopes;
     }
 
     public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {

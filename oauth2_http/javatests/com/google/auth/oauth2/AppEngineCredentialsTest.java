@@ -137,7 +137,13 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
     TestAppEngineCredentials credentials = new TestAppEngineCredentials(null);
     assertTrue(credentials.createScopedRequired());
 
-    GoogleCredentials newCredentials = credentials.createScoped(SCOPES, DEFAULT_SCOPES);
+    GoogleCredentials newCredentials = credentials.createScoped(null, DEFAULT_SCOPES);
+    assertFalse(newCredentials.createScopedRequired());
+
+    newCredentials = credentials.createScoped(SCOPES, null);
+    assertFalse(newCredentials.createScopedRequired());
+
+    newCredentials = credentials.createScoped(SCOPES, DEFAULT_SCOPES);
     assertFalse(newCredentials.createScopedRequired());
 
     AccessToken accessToken = newCredentials.refreshAccessToken();
@@ -168,11 +174,9 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
   public void toString_containsFields() throws IOException {
     String expectedToString =
         String.format(
-            "TestAppEngineCredentials{scopes=[%s], defaultScopes=[%s], scopesRequired=%b}",
-            "SomeScope", "SomeDefaultScope", false);
+            "TestAppEngineCredentials{scopes=[%s], scopesRequired=%b}", "SomeScope", false);
     Collection<String> scopes = Collections.singleton("SomeScope");
-    Collection<String> defaultScopes = Collections.singleton("SomeDefaultScope");
-    AppEngineCredentials credentials = new TestAppEngineCredentials(scopes, defaultScopes);
+    AppEngineCredentials credentials = new TestAppEngineCredentials(scopes);
     assertEquals(expectedToString, credentials.toString());
   }
 
