@@ -257,6 +257,35 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void createAssertion_defaultScopes_correct() throws IOException {
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    List<String> scopes = Arrays.asList("scope1", "scope2");
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientEmail(CLIENT_EMAIL)
+            .setPrivateKey(privateKey)
+            .setPrivateKeyId(PRIVATE_KEY_ID)
+            .setScopes(null, scopes)
+            .setServiceAccountUser(USER)
+            .setProjectId(PROJECT_ID)
+            .build();
+
+    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
+    long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
+    String assertion = credentials.createAssertion(jsonFactory, currentTimeMillis, null);
+
+    JsonWebSignature signature = JsonWebSignature.parse(jsonFactory, assertion);
+    JsonWebToken.Payload payload = signature.getPayload();
+    assertEquals(CLIENT_EMAIL, payload.getIssuer());
+    assertEquals(OAuth2Utils.TOKEN_SERVER_URI.toString(), payload.getAudience());
+    assertEquals(currentTimeMillis / 1000, (long) payload.getIssuedAtTimeSeconds());
+    assertEquals(currentTimeMillis / 1000 + 3600, (long) payload.getExpirationTimeSeconds());
+    assertEquals(USER, payload.getSubject());
+    assertEquals(Joiner.on(' ').join(scopes), payload.get("scope"));
+  }
+
+  @Test
   public void createAssertion_custom_lifetime() throws IOException {
     ServiceAccountCredentials credentials = createDefaultBuilder().setLifetime(4000).build();
 
