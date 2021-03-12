@@ -268,7 +268,7 @@ public class ExternalAccountCredentialsTest {
             "audience",
             "subjectTokenType",
             "tokenUrl",
-            new TestCredentialSource(new HashMap<>()),
+            new TestCredentialSource(new HashMap<String, Object>()),
             "tokenInfoUrl",
             /* serviceAccountImpersonationUrl= */ null,
             "quotaProjectId",
