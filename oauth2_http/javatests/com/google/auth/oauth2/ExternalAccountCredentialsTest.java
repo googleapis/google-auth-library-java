@@ -268,13 +268,14 @@ public class ExternalAccountCredentialsTest {
             "audience",
             "subjectTokenType",
             "tokenUrl",
+            new TestCredentialSource(new HashMap<>()),
             "tokenInfoUrl",
-            new TestCredentialSource(new HashMap<String, Object>()),
             /* serviceAccountImpersonationUrl= */ null,
             "quotaProjectId",
             /* clientId= */ null,
             /* clientSecret= */ null,
-            /* scopes= */ null);
+            /* scopes= */ null,
+            /* environmentProvider= */ null);
 
     Map<String, List<String>> requestMetadata =
         testCredentials.getRequestMetadata(URI.create("http://googleapis.com/foo/bar"));
@@ -324,13 +325,14 @@ public class ExternalAccountCredentialsTest {
         String audience,
         String subjectTokenType,
         String tokenUrl,
-        String tokenInfoUrl,
         CredentialSource credentialSource,
+        @Nullable String tokenInfoUrl,
         @Nullable String serviceAccountImpersonationUrl,
         @Nullable String quotaProjectId,
         @Nullable String clientId,
         @Nullable String clientSecret,
-        @Nullable Collection<String> scopes) {
+        @Nullable Collection<String> scopes,
+        @Nullable EnvironmentProvider environmentProvider) {
       super(
           transportFactory,
           audience,
@@ -342,7 +344,8 @@ public class ExternalAccountCredentialsTest {
           quotaProjectId,
           clientId,
           clientSecret,
-          scopes);
+          scopes,
+          environmentProvider);
     }
 
     @Override

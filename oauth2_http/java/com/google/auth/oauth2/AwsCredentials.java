@@ -117,7 +117,8 @@ public class AwsCredentials extends ExternalAccountCredentials {
   /**
    * Internal constructor. See {@link
    * ExternalAccountCredentials#ExternalAccountCredentials(HttpTransportFactory, String, String,
-   * String, CredentialSource, String, String, String, String, String, Collection)}
+   * String, CredentialSource, String, String, String, String, String, Collection,
+   * EnvironmentProvider)}
    */
   AwsCredentials(
       HttpTransportFactory transportFactory,
@@ -130,7 +131,8 @@ public class AwsCredentials extends ExternalAccountCredentials {
       @Nullable String quotaProjectId,
       @Nullable String clientId,
       @Nullable String clientSecret,
-      @Nullable Collection<String> scopes) {
+      @Nullable Collection<String> scopes,
+      @Nullable EnvironmentProvider environmentProvider) {
     super(
         transportFactory,
         audience,
@@ -142,7 +144,8 @@ public class AwsCredentials extends ExternalAccountCredentials {
         quotaProjectId,
         clientId,
         clientSecret,
-        scopes);
+        scopes,
+        environmentProvider);
     this.awsCredentialSource = credentialSource;
   }
 
@@ -200,7 +203,8 @@ public class AwsCredentials extends ExternalAccountCredentials {
         getQuotaProjectId(),
         getClientId(),
         getClientSecret(),
-        newScopes);
+        newScopes,
+        getEnvironmentProvider());
   }
 
   private String retrieveResource(String url, String resourceName) throws IOException {
@@ -241,7 +245,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
   private String getAwsRegion() throws IOException {
     // For AWS Lambda, the region is retrieved through the AWS_REGION environment variable.
-    String region = getEnv("AWS_REGION");
+    String region = getEnvironmentProvider().getEnv("AWS_REGION");
     if (region != null) {
       return region;
     }
@@ -261,9 +265,9 @@ public class AwsCredentials extends ExternalAccountCredentials {
   @VisibleForTesting
   AwsSecurityCredentials getAwsSecurityCredentials() throws IOException {
     // Check environment variables for credentials first.
-    String accessKeyId = getEnv("AWS_ACCESS_KEY_ID");
-    String secretAccessKey = getEnv("AWS_SECRET_ACCESS_KEY");
-    String token = getEnv("Token");
+    String accessKeyId = getEnvironmentProvider().getEnv("AWS_ACCESS_KEY_ID");
+    String secretAccessKey = getEnvironmentProvider().getEnv("AWS_SECRET_ACCESS_KEY");
+    String token = getEnvironmentProvider().getEnv("Token");
     if (accessKeyId != null && secretAccessKey != null) {
       return new AwsSecurityCredentials(accessKeyId, secretAccessKey, token);
     }
@@ -343,7 +347,8 @@ public class AwsCredentials extends ExternalAccountCredentials {
           quotaProjectId,
           clientId,
           clientSecret,
-          scopes);
+          scopes,
+          environmentProvider);
     }
   }
 }

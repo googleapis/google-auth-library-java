@@ -51,9 +51,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.contrib.java.lang.system.EnvironmentVariables;
 
 /**
  * Integration tests for Workload Identity Federation.
@@ -88,8 +86,6 @@ public final class ITWorkloadIdentityFederationTest {
   private static final String OIDC_AUDIENCE = AUDIENCE_PREFIX + "oidc-1";
 
   private String clientEmail;
-
-  @Rule public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
   @Before
   public void setup() throws IOException {
@@ -131,16 +127,23 @@ public final class ITWorkloadIdentityFederationTest {
     String awsSecretAccessKey = getXmlValueByTagName(rawXml, "SecretAccessKey");
     String awsSessionToken = getXmlValueByTagName(rawXml, "SessionToken");
 
-    AwsCredentials awsCredentials =
+    AwsCredentials awsCredentialWithoutEnvProvider =
         (AwsCredentials)
             AwsCredentials.fromJson(buildAwsCredentialConfig(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+    TestEnvironmentProvider testEnvironmentProvider = new TestEnvironmentProvider();
+    testEnvironmentProvider
+        .setEnv("AWS_ACCESS_KEY_ID", awsAccessKeyId)
+        .setEnv("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey)
+        .setEnv("Token", awsSessionToken)
+        .setEnv("AWS_REGION", "us-east-2");
 
-    environmentVariables.set("AWS_ACCESS_KEY_ID", awsAccessKeyId);
-    environmentVariables.set("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey);
-    environmentVariables.set("Token", awsSessionToken);
-    environmentVariables.set("AWS_REGION", "us-east-2");
+    AwsCredentials awsCredential =
+        (AwsCredentials)
+            AwsCredentials.newBuilder(awsCredentialWithoutEnvProvider)
+                .setEnvironmentProvider(testEnvironmentProvider)
+                .build();
 
-    callGcs(awsCredentials);
+    callGcs(awsCredential);
   }
 
   private GenericJson buildIdentityPoolCredentialConfig() throws IOException {

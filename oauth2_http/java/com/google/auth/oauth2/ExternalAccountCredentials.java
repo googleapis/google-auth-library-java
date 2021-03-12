@@ -77,6 +77,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   private final String tokenUrl;
   private final CredentialSource credentialSource;
   private final Collection<String> scopes;
+  private final EnvironmentProvider environmentProvider;
 
   @Nullable private final String tokenInfoUrl;
   @Nullable private final String serviceAccountImpersonationUrl;
@@ -108,6 +109,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
    * @param clientId client ID of the service account from the console. May be null.
    * @param clientSecret client secret of the service account from the console. May be null.
    * @param scopes the scopes to request during the authorization grant. May be null.
+   * @param environmentProvider the environment provider. May be null. Defaults to {@link
+   *     SystemEnvironmentProvider}.
    */
   protected ExternalAccountCredentials(
       HttpTransportFactory transportFactory,
@@ -120,7 +123,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       @Nullable String quotaProjectId,
       @Nullable String clientId,
       @Nullable String clientSecret,
-      @Nullable Collection<String> scopes) {
+      @Nullable Collection<String> scopes,
+      @Nullable EnvironmentProvider environmentProvider) {
     this.transportFactory =
         MoreObjects.firstNonNull(
             transportFactory,
@@ -137,6 +141,9 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     this.clientSecret = clientSecret;
     this.scopes =
         (scopes == null || scopes.isEmpty()) ? Arrays.asList(CLOUD_PLATFORM_SCOPE) : scopes;
+    this.environmentProvider =
+        environmentProvider == null ? SystemEnvironmentProvider.getInstance() : environmentProvider;
+
     this.impersonatedCredentials = initializeImpersonatedCredentials();
   }
 
@@ -251,7 +258,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
           quotaProjectId,
           clientId,
           clientSecret,
-          /* scopes= */ null);
+          /* scopes= */ null,
+          /* environmentProvider= */ null);
     }
     return new IdentityPoolCredentials(
         transportFactory,
@@ -264,7 +272,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
         quotaProjectId,
         clientId,
         clientSecret,
-        /* scopes= */ null);
+        /* scopes= */ null,
+        /* environmentProvider= */ null);
   }
 
   private static boolean isAwsCredential(Map<String, Object> credentialSource) {
@@ -296,7 +305,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   }
 
   private static String extractTargetPrincipal(String serviceAccountImpersonationUrl) {
-    // Extract the target principal
+    // Extract the target principal.
     int startIndex = serviceAccountImpersonationUrl.lastIndexOf('/');
     int endIndex = serviceAccountImpersonationUrl.indexOf(":generateAccessToken");
 
@@ -317,6 +326,10 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
    * @return the external subject token
    */
   public abstract String retrieveSubjectToken() throws IOException;
+
+  EnvironmentProvider getEnvironmentProvider() {
+    return environmentProvider;
+  }
 
   public String getAudience() {
     return audience;
@@ -372,6 +385,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     protected String tokenUrl;
     protected String tokenInfoUrl;
     protected CredentialSource credentialSource;
+    protected EnvironmentProvider environmentProvider;
     protected HttpTransportFactory transportFactory;
 
     @Nullable protected String serviceAccountImpersonationUrl;
@@ -394,6 +408,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       this.clientId = credentials.clientId;
       this.clientSecret = credentials.clientSecret;
       this.scopes = credentials.scopes;
+      this.environmentProvider = credentials.environmentProvider;
     }
 
     public Builder setAudience(String audience) {
@@ -423,6 +438,11 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
 
     public Builder setCredentialSource(CredentialSource credentialSource) {
       this.credentialSource = credentialSource;
+      return this;
+    }
+
+    public Builder setEnvironmentProvider(EnvironmentProvider environmentProvider) {
+      this.environmentProvider = environmentProvider;
       return this;
     }
 

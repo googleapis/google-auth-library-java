@@ -104,8 +104,7 @@ public class IdentityPoolCredentialsTest {
 
     List<String> newScopes = Arrays.asList("scope1", "scope2");
 
-    IdentityPoolCredentials newCredentials =
-        (IdentityPoolCredentials) credentials.createScoped(newScopes);
+    IdentityPoolCredentials newCredentials = credentials.createScoped(newScopes);
 
     assertEquals(credentials.getAudience(), newCredentials.getAudience());
     assertEquals(credentials.getSubjectTokenType(), newCredentials.getSubjectTokenType());
@@ -444,6 +443,7 @@ public class IdentityPoolCredentialsTest {
     assertEquals(credentials.getClientId(), "clientId");
     assertEquals(credentials.getClientSecret(), "clientSecret");
     assertEquals(credentials.getScopes(), scopes);
+    assertEquals(credentials.getEnvironmentProvider(), SystemEnvironmentProvider.getInstance());
   }
 
   static InputStream writeIdentityPoolCredentialsStream(

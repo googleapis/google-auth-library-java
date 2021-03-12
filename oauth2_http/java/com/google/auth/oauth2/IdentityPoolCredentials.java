@@ -158,7 +158,8 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
   /**
    * Internal constructor. See {@link
    * ExternalAccountCredentials#ExternalAccountCredentials(HttpTransportFactory, String, String,
-   * String, CredentialSource, String, String, String, String, String, Collection)}
+   * String, CredentialSource, String, String, String, String, String, Collection,
+   * EnvironmentProvider)}
    */
   IdentityPoolCredentials(
       HttpTransportFactory transportFactory,
@@ -171,7 +172,8 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       @Nullable String quotaProjectId,
       @Nullable String clientId,
       @Nullable String clientSecret,
-      @Nullable Collection<String> scopes) {
+      @Nullable Collection<String> scopes,
+      @Nullable EnvironmentProvider environmentProvider) {
     super(
         transportFactory,
         audience,
@@ -183,7 +185,8 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
         quotaProjectId,
         clientId,
         clientSecret,
-        scopes);
+        scopes,
+        environmentProvider);
     this.identityPoolCredentialSource = credentialSource;
   }
 
@@ -280,7 +283,8 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
         getQuotaProjectId(),
         getClientId(),
         getClientSecret(),
-        newScopes);
+        newScopes,
+        getEnvironmentProvider());
   }
 
   public static Builder newBuilder() {
@@ -312,7 +316,8 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
           quotaProjectId,
           clientId,
           clientSecret,
-          scopes);
+          scopes,
+          environmentProvider);
     }
   }
 }
