@@ -77,7 +77,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   private final String tokenUrl;
   private final CredentialSource credentialSource;
   private final Collection<String> scopes;
-  private final EnvironmentProvider environmentProvider;
 
   @Nullable private final String tokenInfoUrl;
   @Nullable private final String serviceAccountImpersonationUrl;
@@ -88,6 +87,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   protected transient HttpTransportFactory transportFactory;
 
   @Nullable protected final ImpersonatedCredentials impersonatedCredentials;
+
+  private EnvironmentProvider environmentProvider;
 
   /**
    * Constructor with minimum identifying information and custom HTTP transport.
@@ -109,6 +110,44 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
    * @param clientId client ID of the service account from the console. May be null.
    * @param clientSecret client secret of the service account from the console. May be null.
    * @param scopes the scopes to request during the authorization grant. May be null.
+   */
+  protected ExternalAccountCredentials(
+      HttpTransportFactory transportFactory,
+      String audience,
+      String subjectTokenType,
+      String tokenUrl,
+      CredentialSource credentialSource,
+      @Nullable String tokenInfoUrl,
+      @Nullable String serviceAccountImpersonationUrl,
+      @Nullable String quotaProjectId,
+      @Nullable String clientId,
+      @Nullable String clientSecret,
+      @Nullable Collection<String> scopes) {
+    this.transportFactory =
+        MoreObjects.firstNonNull(
+            transportFactory,
+            getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
+    this.transportFactoryClassName = checkNotNull(this.transportFactory.getClass().getName());
+    this.audience = checkNotNull(audience);
+    this.subjectTokenType = checkNotNull(subjectTokenType);
+    this.tokenUrl = checkNotNull(tokenUrl);
+    this.credentialSource = checkNotNull(credentialSource);
+    this.tokenInfoUrl = tokenInfoUrl;
+    this.serviceAccountImpersonationUrl = serviceAccountImpersonationUrl;
+    this.quotaProjectId = quotaProjectId;
+    this.clientId = clientId;
+    this.clientSecret = clientSecret;
+    this.scopes =
+        (scopes == null || scopes.isEmpty()) ? Arrays.asList(CLOUD_PLATFORM_SCOPE) : scopes;
+    this.environmentProvider = SystemEnvironmentProvider.getInstance();
+
+    this.impersonatedCredentials = initializeImpersonatedCredentials();
+  }
+
+  /**
+   * See {@link ExternalAccountCredentials#ExternalAccountCredentials(HttpTransportFactory, String,
+   * String, String, CredentialSource, String, String, String, String, String, Collection)}
+   *
    * @param environmentProvider the environment provider. May be null. Defaults to {@link
    *     SystemEnvironmentProvider}.
    */
@@ -124,7 +163,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       @Nullable String clientId,
       @Nullable String clientSecret,
       @Nullable Collection<String> scopes,
-      @Nullable EnvironmentProvider environmentProvider) {
+      EnvironmentProvider environmentProvider) {
     this.transportFactory =
         MoreObjects.firstNonNull(
             transportFactory,
@@ -327,10 +366,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
    */
   public abstract String retrieveSubjectToken() throws IOException;
 
-  EnvironmentProvider getEnvironmentProvider() {
-    return environmentProvider;
-  }
-
   public String getAudience() {
     return audience;
   }
@@ -375,6 +410,10 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   @Nullable
   public Collection<String> getScopes() {
     return scopes;
+  }
+
+  EnvironmentProvider getEnvironmentProvider() {
+    return environmentProvider;
   }
 
   /** Base builder for external account credentials. */

@@ -274,8 +274,7 @@ public class ExternalAccountCredentialsTest {
             "quotaProjectId",
             /* clientId= */ null,
             /* clientSecret= */ null,
-            /* scopes= */ null,
-            /* environmentProvider= */ null);
+            /* scopes= */ null);
 
     Map<String, List<String>> requestMetadata =
         testCredentials.getRequestMetadata(URI.create("http://googleapis.com/foo/bar"));
@@ -318,6 +317,32 @@ public class ExternalAccountCredentialsTest {
       protected TestCredentialSource(Map<String, Object> credentialSourceMap) {
         super(credentialSourceMap);
       }
+    }
+
+    protected TestExternalAccountCredentials(
+        HttpTransportFactory transportFactory,
+        String audience,
+        String subjectTokenType,
+        String tokenUrl,
+        CredentialSource credentialSource,
+        @Nullable String tokenInfoUrl,
+        @Nullable String serviceAccountImpersonationUrl,
+        @Nullable String quotaProjectId,
+        @Nullable String clientId,
+        @Nullable String clientSecret,
+        @Nullable Collection<String> scopes) {
+      super(
+          transportFactory,
+          audience,
+          subjectTokenType,
+          tokenUrl,
+          credentialSource,
+          tokenInfoUrl,
+          serviceAccountImpersonationUrl,
+          quotaProjectId,
+          clientId,
+          clientSecret,
+          scopes);
     }
 
     protected TestExternalAccountCredentials(
