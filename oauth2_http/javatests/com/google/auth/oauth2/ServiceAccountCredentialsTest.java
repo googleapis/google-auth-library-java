@@ -260,7 +260,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   public void createAssertion_defaultScopes_correct() throws IOException {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     List<String> scopes = Arrays.asList("scope1", "scope2");
-    ServiceAccountCredentials credentials =
+    ServiceAccountCredentials.Builder builder =
         ServiceAccountCredentials.newBuilder()
             .setClientId(CLIENT_ID)
             .setClientEmail(CLIENT_EMAIL)
@@ -268,8 +268,9 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             .setPrivateKeyId(PRIVATE_KEY_ID)
             .setScopes(null, scopes)
             .setServiceAccountUser(USER)
-            .setProjectId(PROJECT_ID)
-            .build();
+            .setProjectId(PROJECT_ID);
+    assertEquals(2, builder.getDefaultScopes().size());
+    ServiceAccountCredentials credentials = builder.build();
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
