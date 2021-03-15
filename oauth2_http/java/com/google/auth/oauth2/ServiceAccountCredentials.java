@@ -915,28 +915,11 @@ public class ServiceAccountCredentials extends GoogleCredentials
     }
   }
 
-  /**
-   * Self signed JWT uses uri as audience, and it should have the "https://{host}/" format. For
-   * instance, if the uri is "https://compute.googleapis.com/compute/v1/projects/", then this
-   * function returns "https://compute.googleapis.com/".
-   */
-  @VisibleForTesting
-  static URI getUriForSelfSignedJWT(URI uri) {
-    if (uri == null) {
-      return uri;
-    }
-    try {
-      return new URI(uri.getScheme(), uri.getHost(), "/", null);
-    } catch (URISyntaxException unused) {
-      return uri;
-    }
-  }
-
   @Override
   public void getRequestMetadata(
       final URI uri, Executor executor, final RequestMetadataCallback callback) {
     if (jwtCredentials != null && uri != null) {
-      jwtCredentials.getRequestMetadata(getUriForSelfSignedJWT(uri), executor, callback);
+      jwtCredentials.getRequestMetadata(uri, executor, callback);
     } else {
       super.getRequestMetadata(uri, executor, callback);
     }
@@ -952,7 +935,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
               + " by calling createScoped or passing scopes to constructor.");
     }
     if (jwtCredentials != null && uri != null) {
-      return jwtCredentials.getRequestMetadata(getUriForSelfSignedJWT(uri));
+      return jwtCredentials.getRequestMetadata(uri);
     } else {
       return super.getRequestMetadata(uri);
     }

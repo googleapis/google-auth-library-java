@@ -54,6 +54,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -331,17 +332,35 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     return true;
   }
 
+  /**
+   * Self signed JWT uses uri as audience, and it should have the "https://{host}/" format. For
+   * instance, if the uri is "https://compute.googleapis.com/compute/v1/projects/", then this
+   * function returns "https://compute.googleapis.com/".
+   */
+  @VisibleForTesting
+  static URI getUriForSelfSignedJWT(URI uri) {
+    if (uri == null) {
+      return uri;
+    }
+    try {
+      return new URI(uri.getScheme(), uri.getHost(), "/", null);
+    } catch (URISyntaxException unused) {
+      return uri;
+    }
+  }
+
   @Override
   public void getRequestMetadata(
       final URI uri, Executor executor, final RequestMetadataCallback callback) {
     // It doesn't use network. Only some CPU work on par with TLS handshake. So it's preferrable
     // to do it in the current thread, which is likely to be the network thread.
-    blockingGetToCallback(uri, callback);
+    blockingGetToCallback(getUriForSelfSignedJWT(uri), callback);
   }
 
   /** Provide the request metadata by putting an access JWT directly in the metadata. */
   @Override
   public Map<String, List<String>> getRequestMetadata(URI uri) throws IOException {
+    uri = getUriForSelfSignedJWT(uri);
     if (uri == null) {
       if (defaultAudience != null) {
         uri = defaultAudience;

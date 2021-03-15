@@ -1330,15 +1330,6 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertTrue("Should have run onSuccess() callback", success.get());
   }
 
-  @Test
-  public void getUriForSelfSignedJWT() {
-    assertNull(ServiceAccountCredentials.getUriForSelfSignedJWT(null));
-
-    URI uri = URI.create("https://compute.googleapis.com/compute/v1/projects/");
-    URI expected = URI.create("https://compute.googleapis.com/");
-    assertEquals(expected, ServiceAccountCredentials.getUriForSelfSignedJWT(uri));
-  }
-
   private void verifyJwtAccess(Map<String, List<String>> metadata) throws IOException {
     assertNotNull(metadata);
     List<String> authorizations = metadata.get(AuthHttpConstants.AUTHORIZATION);
