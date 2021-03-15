@@ -171,10 +171,10 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void createTokenUrlWithScopes_defaultScopes() {
-    ComputeEngineCredentials credentials =
-        ComputeEngineCredentials.newBuilder()
-            .setScopes(null, Arrays.asList(null, "foo", "", "bar"))
-            .build();
+    ComputeEngineCredentials credentials = ComputeEngineCredentials.newBuilder().build();
+    credentials =
+        (ComputeEngineCredentials)
+            credentials.createScoped(null, Arrays.asList(null, "foo", "", "bar"));
     Collection<String> scopes = credentials.getScopes();
     String tokenUrlWithScopes = credentials.createTokenUrlWithScopes();
 
@@ -198,11 +198,6 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void createScoped_defaultScopes() {
-    ComputeEngineCredentials.Builder builder =
-        ComputeEngineCredentials.newBuilder().setScopes(null, Arrays.asList("foo"));
-    assertEquals(1, builder.getDefaultScopes().size());
-    assertEquals("foo", builder.getDefaultScopes().toArray()[0]);
-
     GoogleCredentials credentials =
         ComputeEngineCredentials.create().createScoped(null, Arrays.asList("foo"));
     Collection<String> scopes = ((ComputeEngineCredentials) credentials).getScopes();

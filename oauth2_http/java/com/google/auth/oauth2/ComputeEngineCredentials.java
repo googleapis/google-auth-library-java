@@ -453,7 +453,6 @@ public class ComputeEngineCredentials extends GoogleCredentials
   public static class Builder extends GoogleCredentials.Builder {
     private HttpTransportFactory transportFactory;
     private Collection<String> scopes;
-    private Collection<String> defaultScopes;
 
     protected Builder() {}
 
@@ -469,13 +468,6 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
     public Builder setScopes(Collection<String> scopes) {
       this.scopes = scopes;
-      this.defaultScopes = null;
-      return this;
-    }
-
-    public Builder setScopes(Collection<String> scopes, Collection<String> defaultScopes) {
-      this.scopes = scopes;
-      this.defaultScopes = defaultScopes;
       return this;
     }
 
@@ -487,12 +479,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
       return scopes;
     }
 
-    public Collection<String> getDefaultScopes() {
-      return defaultScopes;
-    }
-
     public ComputeEngineCredentials build() {
-      return new ComputeEngineCredentials(transportFactory, scopes, defaultScopes);
+      return new ComputeEngineCredentials(transportFactory, scopes, null);
     }
   }
 }
