@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.25.0](https://www.github.com/googleapis/google-auth-library-java/compare/v0.24.1...v0.25.0) (2021-03-16)
+
+
+### Features
+
+* add self signed jwt support ([#572](https://www.github.com/googleapis/google-auth-library-java/issues/572)) ([efe103a](https://www.github.com/googleapis/google-auth-library-java/commit/efe103a2e688ca915ec9925a72c49bb2a1b3c3b5))
+
 ### [0.24.1](https://www.github.com/googleapis/google-auth-library-java/compare/v0.24.0...v0.24.1) (2021-02-25)
 
 
