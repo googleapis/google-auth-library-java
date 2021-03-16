@@ -32,6 +32,7 @@
 package com.google.auth.oauth2;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
@@ -56,23 +57,10 @@ import org.junit.Test;
 /**
  * Integration tests for Workload Identity Federation.
  *
- * <p>The only requirement for this test suite to run is to set the environment variable
+ * <p>The only requirements for this test suite to run is to set the environment variable
  * GOOGLE_APPLICATION_CREDENTIALS to point to the same service account keys used in the setup script
- * (workloadidentityfederation-setup).
- *
- * <p>1. IdentityPoolCredentials (OIDC provider): Uses the service account to generate a Google ID
- * token using the iamcredentials generateIdToken API. This will use the service account client ID
- * as the sub field of the token. This OIDC token will be used as the external subject token to be
- * exchanged for a GCP access token via GCP STS endpoint and then to impersonate the original
- * service account key.
- *
- * <p>2. AwsCredentials (AWS provider): Uses the service account keys to generate a Google ID token
- * using the iamcredentials generateIdToken API. Exchanges the OIDC ID token for AWS security keys
- * using AWS STS AssumeRoleWithWebIdentity API. These values will be set as AWS environment
- * variables to simulate an AWS VM. The Auth library can now read these variables and create a
- * signed request to AWS GetCallerIdentity. This will be used as the external subject token to be
- * exchanged for a GCP access token via GCP STS endpoint and then to impersonate the original
- * service account key.
+ * (workloadidentityfederation-setup). These tests call GCS to get bucket information. The bucket
+ * name must be provided through the GCS_BUCKET environment variable.
  */
 public final class ITWorkloadIdentityFederationTest {
 
@@ -93,6 +81,13 @@ public final class ITWorkloadIdentityFederationTest {
     clientEmail = (String) keys.get("client_email");
   }
 
+  /**
+   * IdentityPoolCredentials (OIDC provider): Uses the service account to generate a Google ID token
+   * using the iamcredentials generateIdToken API. This will use the service account client ID as
+   * the sub field of the token. This OIDC token will be used as the external subject token to be
+   * exchanged for a GCP access token via GCP STS endpoint and then to impersonate the original
+   * service account key.
+   */
   @Test
   public void identityPoolCredentials() throws IOException {
     IdentityPoolCredentials identityPoolCredentials =
@@ -103,6 +98,15 @@ public final class ITWorkloadIdentityFederationTest {
     callGcs(identityPoolCredentials);
   }
 
+  /**
+   * AwsCredentials (AWS provider): Uses the service account keys to generate a Google ID token
+   * using the iamcredentials generateIdToken API. Exchanges the OIDC ID token for AWS security keys
+   * using AWS STS AssumeRoleWithWebIdentity API. These values will be set as AWS environment
+   * variables to simulate an AWS VM. The Auth library can now read these variables and create a
+   * signed request to AWS GetCallerIdentity. This will be used as the external subject token to be
+   * exchanged for a GCP access token via GCP STS endpoint and then to impersonate the original
+   * service account key.
+   */
   @Test
   public void awsCredentials() throws Exception {
     String idToken = generateGoogleIdToken(AWS_AUDIENCE);
@@ -197,7 +201,11 @@ public final class ITWorkloadIdentityFederationTest {
   }
 
   private void callGcs(GoogleCredentials credentials) throws IOException {
-    String bucketName = "byoid-it-bucket";
+    String bucketName = System.getenv("GCS_BUCKET");
+    if (bucketName == null) {
+      fail("GCS bucket name not set through GCS_BUCKET env variable.");
+    }
+
     String url = "https://storage.googleapis.com/storage/v1/b/" + bucketName;
 
     HttpCredentialsAdapter credentialsAdapter = new HttpCredentialsAdapter(credentials);

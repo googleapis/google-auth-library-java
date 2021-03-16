@@ -123,25 +123,19 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       @Nullable String clientId,
       @Nullable String clientSecret,
       @Nullable Collection<String> scopes) {
-    this.transportFactory =
-        MoreObjects.firstNonNull(
-            transportFactory,
-            getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
-    this.transportFactoryClassName = checkNotNull(this.transportFactory.getClass().getName());
-    this.audience = checkNotNull(audience);
-    this.subjectTokenType = checkNotNull(subjectTokenType);
-    this.tokenUrl = checkNotNull(tokenUrl);
-    this.credentialSource = checkNotNull(credentialSource);
-    this.tokenInfoUrl = tokenInfoUrl;
-    this.serviceAccountImpersonationUrl = serviceAccountImpersonationUrl;
-    this.quotaProjectId = quotaProjectId;
-    this.clientId = clientId;
-    this.clientSecret = clientSecret;
-    this.scopes =
-        (scopes == null || scopes.isEmpty()) ? Arrays.asList(CLOUD_PLATFORM_SCOPE) : scopes;
-    this.environmentProvider = SystemEnvironmentProvider.getInstance();
-
-    this.impersonatedCredentials = initializeImpersonatedCredentials();
+    this(
+        transportFactory,
+        audience,
+        subjectTokenType,
+        tokenUrl,
+        credentialSource,
+        tokenInfoUrl,
+        serviceAccountImpersonationUrl,
+        quotaProjectId,
+        clientId,
+        clientSecret,
+        scopes,
+        /* environmentProvider= */ null);
   }
 
   /**
@@ -163,7 +157,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       @Nullable String clientId,
       @Nullable String clientSecret,
       @Nullable Collection<String> scopes,
-      EnvironmentProvider environmentProvider) {
+      @Nullable EnvironmentProvider environmentProvider) {
     this.transportFactory =
         MoreObjects.firstNonNull(
             transportFactory,
