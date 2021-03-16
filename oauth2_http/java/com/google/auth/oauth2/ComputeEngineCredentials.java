@@ -109,14 +109,22 @@ public class ComputeEngineCredentials extends GoogleCredentials
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *     tokens.
    * @param scopes scope strings for the APIs to be called. May be null or an empty collection.
+   * @param defaultScopes default scope strings for the APIs to be called. May be null or an empty
+   *     collection. Default scopes are ignored if scopes are provided.
    */
   private ComputeEngineCredentials(
-      HttpTransportFactory transportFactory, Collection<String> scopes) {
+      HttpTransportFactory transportFactory,
+      Collection<String> scopes,
+      Collection<String> defaultScopes) {
     this.transportFactory =
         firstNonNull(
             transportFactory,
             getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
+    // Use defaultScopes only when scopes don't exist.
+    if (scopes == null || scopes.isEmpty()) {
+      scopes = defaultScopes;
+    }
     if (scopes == null) {
       this.scopes = ImmutableSet.<String>of();
     } else {
@@ -129,7 +137,14 @@ public class ComputeEngineCredentials extends GoogleCredentials
   /** Clones the compute engine account with the specified scopes. */
   @Override
   public GoogleCredentials createScoped(Collection<String> newScopes) {
-    return new ComputeEngineCredentials(this.transportFactory, newScopes);
+    return new ComputeEngineCredentials(this.transportFactory, newScopes, null);
+  }
+
+  /** Clones the compute engine account with the specified scopes. */
+  @Override
+  public GoogleCredentials createScoped(
+      Collection<String> newScopes, Collection<String> newDefaultScopes) {
+    return new ComputeEngineCredentials(this.transportFactory, newScopes, newDefaultScopes);
   }
 
   /**
@@ -138,7 +153,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
    * @return new ComputeEngineCredentials
    */
   public static ComputeEngineCredentials create() {
-    return new ComputeEngineCredentials(null, null);
+    return new ComputeEngineCredentials(null, null, null);
   }
 
   public final Collection<String> getScopes() {
@@ -465,7 +480,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
     }
 
     public ComputeEngineCredentials build() {
-      return new ComputeEngineCredentials(transportFactory, scopes);
+      return new ComputeEngineCredentials(transportFactory, scopes, null);
     }
   }
 }

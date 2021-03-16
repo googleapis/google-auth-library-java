@@ -79,18 +79,32 @@ class AppEngineCredentials extends GoogleCredentials implements ServiceAccountSi
   private transient Method getSignature;
   private transient String account;
 
-  AppEngineCredentials(Collection<String> scopes) throws IOException {
-    this.scopes = scopes == null ? ImmutableSet.<String>of() : ImmutableList.copyOf(scopes);
+  AppEngineCredentials(Collection<String> scopes, Collection<String> defaultScopes)
+      throws IOException {
+    // Use defaultScopes only when scopes don't exist.
+    if (scopes == null || scopes.isEmpty()) {
+      this.scopes =
+          defaultScopes == null ? ImmutableList.<String>of() : ImmutableList.copyOf(defaultScopes);
+    } else {
+      this.scopes = ImmutableList.copyOf(scopes);
+    }
     this.scopesRequired = this.scopes.isEmpty();
     init();
   }
 
-  AppEngineCredentials(Collection<String> scopes, AppEngineCredentials unscoped) {
+  AppEngineCredentials(
+      Collection<String> scopes, Collection<String> defaultScopes, AppEngineCredentials unscoped) {
     this.appIdentityService = unscoped.appIdentityService;
     this.getAccessToken = unscoped.getAccessToken;
     this.getAccessTokenResult = unscoped.getAccessTokenResult;
     this.getExpirationTime = unscoped.getExpirationTime;
-    this.scopes = scopes == null ? ImmutableSet.<String>of() : ImmutableList.copyOf(scopes);
+    // Use defaultScopes only when scopes don't exist.
+    if (scopes == null || scopes.isEmpty()) {
+      this.scopes =
+          defaultScopes == null ? ImmutableSet.<String>of() : ImmutableList.copyOf(defaultScopes);
+    } else {
+      this.scopes = ImmutableList.copyOf(scopes);
+    }
     this.scopesRequired = this.scopes.isEmpty();
   }
 
@@ -145,7 +159,13 @@ class AppEngineCredentials extends GoogleCredentials implements ServiceAccountSi
 
   @Override
   public GoogleCredentials createScoped(Collection<String> scopes) {
-    return new AppEngineCredentials(scopes, this);
+    return new AppEngineCredentials(scopes, null, this);
+  }
+
+  @Override
+  public GoogleCredentials createScoped(
+      Collection<String> scopes, Collection<String> defaultScopes) {
+    return new AppEngineCredentials(scopes, defaultScopes, this);
   }
 
   @Override
