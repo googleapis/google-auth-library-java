@@ -62,6 +62,8 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
 
   private static final Collection<String> SCOPES =
       Collections.unmodifiableCollection(Arrays.asList("scope1", "scope2"));
+  private static final Collection<String> DEFAULT_SCOPES =
+      Collections.unmodifiableCollection(Arrays.asList("scope3"));
 
   @Test
   public void constructor_usesAppIdentityService() throws IOException {
@@ -126,6 +128,25 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
     assertNotSame(credentials, scopedCredentials);
 
     AccessToken accessToken = scopedCredentials.refreshAccessToken();
+    assertEquals(EXPECTED_ACCESS_TOKEN, accessToken.getTokenValue());
+    assertEquals(EXPECTED_EXPIRATION_DATE, accessToken.getExpirationTime());
+  }
+
+  @Test
+  public void createScoped_defaultScopes() throws IOException {
+    TestAppEngineCredentials credentials = new TestAppEngineCredentials(null);
+    assertTrue(credentials.createScopedRequired());
+
+    GoogleCredentials newCredentials = credentials.createScoped(null, DEFAULT_SCOPES);
+    assertFalse(newCredentials.createScopedRequired());
+
+    newCredentials = credentials.createScoped(SCOPES, null);
+    assertFalse(newCredentials.createScopedRequired());
+
+    newCredentials = credentials.createScoped(SCOPES, DEFAULT_SCOPES);
+    assertFalse(newCredentials.createScopedRequired());
+
+    AccessToken accessToken = newCredentials.refreshAccessToken();
     assertEquals(EXPECTED_ACCESS_TOKEN, accessToken.getTokenValue());
     assertEquals(EXPECTED_EXPIRATION_DATE, accessToken.getExpirationTime());
   }
@@ -246,7 +267,12 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
     private List<String> forNameArgs;
 
     TestAppEngineCredentials(Collection<String> scopes) throws IOException {
-      super(scopes);
+      super(scopes, null);
+    }
+
+    TestAppEngineCredentials(Collection<String> scopes, Collection<String> defaultScopes)
+        throws IOException {
+      super(scopes, defaultScopes);
     }
 
     @Override
@@ -272,7 +298,7 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
     private static final long serialVersionUID = -8987103249265111274L;
 
     TestAppEngineCredentialsNoSdk() throws IOException {
-      super(null);
+      super(null, null);
     }
 
     @Override

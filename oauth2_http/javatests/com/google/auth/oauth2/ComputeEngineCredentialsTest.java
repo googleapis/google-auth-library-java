@@ -170,12 +170,37 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void createTokenUrlWithScopes_defaultScopes() {
+    ComputeEngineCredentials credentials = ComputeEngineCredentials.newBuilder().build();
+    credentials =
+        (ComputeEngineCredentials)
+            credentials.createScoped(null, Arrays.asList(null, "foo", "", "bar"));
+    Collection<String> scopes = credentials.getScopes();
+    String tokenUrlWithScopes = credentials.createTokenUrlWithScopes();
+
+    assertEquals(TOKEN_URL + "?scopes=foo,bar", tokenUrlWithScopes);
+    assertEquals(2, scopes.size());
+    assertEquals("foo", scopes.toArray()[0]);
+    assertEquals("bar", scopes.toArray()[1]);
+  }
+
+  @Test
   public void createScoped() {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setScopes(null).build();
     ComputeEngineCredentials credentialsWithScopes =
         (ComputeEngineCredentials) credentials.createScoped(Arrays.asList("foo"));
     Collection<String> scopes = credentialsWithScopes.getScopes();
+
+    assertEquals(1, scopes.size());
+    assertEquals("foo", scopes.toArray()[0]);
+  }
+
+  @Test
+  public void createScoped_defaultScopes() {
+    GoogleCredentials credentials =
+        ComputeEngineCredentials.create().createScoped(null, Arrays.asList("foo"));
+    Collection<String> scopes = ((ComputeEngineCredentials) credentials).getScopes();
 
     assertEquals(1, scopes.size());
     assertEquals("foo", scopes.toArray()[0]);
