@@ -474,11 +474,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       return this;
     }
 
-    public Builder setEnvironmentProvider(EnvironmentProvider environmentProvider) {
-      this.environmentProvider = environmentProvider;
-      return this;
-    }
-
     public Builder setScopes(Collection<String> scopes) {
       this.scopes = scopes;
       return this;
@@ -501,6 +496,11 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
 
     public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
       this.transportFactory = transportFactory;
+      return this;
+    }
+
+    Builder setEnvironmentProvider(EnvironmentProvider environmentProvider) {
+      this.environmentProvider = environmentProvider;
       return this;
     }
 
