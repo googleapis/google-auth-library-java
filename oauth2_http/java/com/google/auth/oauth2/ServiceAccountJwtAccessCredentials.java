@@ -333,7 +333,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   }
 
   /**
-   * Self signed JWT uses uri as audience, and it should have the "https://{host}/" format. For
+   * Self signed JWT uses uri as audience, which should have the "https://{host}/" format. For
    * instance, if the uri is "https://compute.googleapis.com/compute/v1/projects/", then this
    * function returns "https://compute.googleapis.com/".
    */
