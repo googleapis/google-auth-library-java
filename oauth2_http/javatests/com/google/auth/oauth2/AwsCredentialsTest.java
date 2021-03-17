@@ -40,7 +40,6 @@ import static org.junit.Assert.fail;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonParser;
 import com.google.auth.TestUtils;
-import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.AwsCredentials.AwsCredentialSource;
 import com.google.auth.oauth2.ExternalAccountCredentialsTest.MockExternalAccountCredentialsTransportFactory;
 import java.io.IOException;
@@ -48,11 +47,9 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -264,9 +261,16 @@ public class AwsCredentialsTest {
 
   @Test
   public void getAwsSecurityCredentials_fromEnvironmentVariablesNoToken() throws IOException {
-    TestAwsCredentials testAwsCredentials = TestAwsCredentials.newBuilder(AWS_CREDENTIAL).build();
-    testAwsCredentials.setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId");
-    testAwsCredentials.setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey");
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    environmentProvider
+        .setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId")
+        .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey");
+
+    AwsCredentials testAwsCredentials =
+        (AwsCredentials)
+            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+                .setEnvironmentProvider(environmentProvider)
+                .build();
 
     AwsSecurityCredentials credentials = testAwsCredentials.getAwsSecurityCredentials();
 
@@ -277,10 +281,17 @@ public class AwsCredentialsTest {
 
   @Test
   public void getAwsSecurityCredentials_fromEnvironmentVariablesWithToken() throws IOException {
-    TestAwsCredentials testAwsCredentials = TestAwsCredentials.newBuilder(AWS_CREDENTIAL).build();
-    testAwsCredentials.setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId");
-    testAwsCredentials.setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey");
-    testAwsCredentials.setEnv("Token", "token");
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    environmentProvider
+        .setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId")
+        .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey")
+        .setEnv("Token", "token");
+
+    AwsCredentials testAwsCredentials =
+        (AwsCredentials)
+            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+                .setEnvironmentProvider(environmentProvider)
+                .build();
 
     AwsSecurityCredentials credentials = testAwsCredentials.getAwsSecurityCredentials();
 
@@ -438,6 +449,7 @@ public class AwsCredentialsTest {
     assertEquals(credentials.getClientId(), "clientId");
     assertEquals(credentials.getClientSecret(), "clientSecret");
     assertEquals(credentials.getScopes(), scopes);
+    assertEquals(credentials.getEnvironmentProvider(), SystemEnvironmentProvider.getInstance());
   }
 
   private static AwsCredentialSource buildAwsCredentialSource(
@@ -467,73 +479,5 @@ public class AwsCredentialsTest {
     json.put("credential_source", credentialSource);
 
     return TestUtils.jsonToInputStream(json);
-  }
-
-  /** Used to test the retrieval of AWS credentials from environment variables. */
-  private static class TestAwsCredentials extends AwsCredentials {
-
-    private final Map<String, String> environmentVariables = new HashMap<>();
-
-    TestAwsCredentials(
-        HttpTransportFactory transportFactory,
-        String audience,
-        String subjectTokenType,
-        String tokenUrl,
-        String tokenInfoUrl,
-        AwsCredentialSource credentialSource,
-        @Nullable String serviceAccountImpersonationUrl,
-        @Nullable String quotaProjectId,
-        @Nullable String clientId,
-        @Nullable String clientSecret,
-        @Nullable Collection<String> scopes) {
-      super(
-          transportFactory,
-          audience,
-          subjectTokenType,
-          tokenUrl,
-          credentialSource,
-          tokenInfoUrl,
-          serviceAccountImpersonationUrl,
-          quotaProjectId,
-          clientId,
-          clientSecret,
-          scopes);
-    }
-
-    public static TestAwsCredentials.Builder newBuilder(AwsCredentials awsCredentials) {
-      return new TestAwsCredentials.Builder(awsCredentials);
-    }
-
-    public static class Builder extends AwsCredentials.Builder {
-
-      private Builder(AwsCredentials credentials) {
-        super(credentials);
-      }
-
-      @Override
-      public TestAwsCredentials build() {
-        return new TestAwsCredentials(
-            transportFactory,
-            audience,
-            subjectTokenType,
-            tokenUrl,
-            tokenInfoUrl,
-            (AwsCredentialSource) credentialSource,
-            serviceAccountImpersonationUrl,
-            quotaProjectId,
-            clientId,
-            clientSecret,
-            scopes);
-      }
-    }
-
-    @Override
-    String getEnv(String name) {
-      return environmentVariables.get(name);
-    }
-
-    void setEnv(String name, String value) {
-      environmentVariables.put(name, value);
-    }
   }
 }

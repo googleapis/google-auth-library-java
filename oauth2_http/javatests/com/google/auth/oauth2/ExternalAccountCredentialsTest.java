@@ -268,8 +268,8 @@ public class ExternalAccountCredentialsTest {
             "audience",
             "subjectTokenType",
             "tokenUrl",
-            "tokenInfoUrl",
             new TestCredentialSource(new HashMap<String, Object>()),
+            "tokenInfoUrl",
             /* serviceAccountImpersonationUrl= */ null,
             "quotaProjectId",
             /* clientId= */ null,
@@ -324,8 +324,8 @@ public class ExternalAccountCredentialsTest {
         String audience,
         String subjectTokenType,
         String tokenUrl,
-        String tokenInfoUrl,
         CredentialSource credentialSource,
+        @Nullable String tokenInfoUrl,
         @Nullable String serviceAccountImpersonationUrl,
         @Nullable String quotaProjectId,
         @Nullable String clientId,
@@ -343,6 +343,34 @@ public class ExternalAccountCredentialsTest {
           clientId,
           clientSecret,
           scopes);
+    }
+
+    protected TestExternalAccountCredentials(
+        HttpTransportFactory transportFactory,
+        String audience,
+        String subjectTokenType,
+        String tokenUrl,
+        CredentialSource credentialSource,
+        @Nullable String tokenInfoUrl,
+        @Nullable String serviceAccountImpersonationUrl,
+        @Nullable String quotaProjectId,
+        @Nullable String clientId,
+        @Nullable String clientSecret,
+        @Nullable Collection<String> scopes,
+        @Nullable EnvironmentProvider environmentProvider) {
+      super(
+          transportFactory,
+          audience,
+          subjectTokenType,
+          tokenUrl,
+          credentialSource,
+          tokenInfoUrl,
+          serviceAccountImpersonationUrl,
+          quotaProjectId,
+          clientId,
+          clientSecret,
+          scopes,
+          environmentProvider);
     }
 
     @Override
