@@ -78,6 +78,8 @@ public class GoogleCredentialsTest {
 
   private static final Collection<String> SCOPES =
       Collections.unmodifiableCollection(Arrays.asList("scope1", "scope2"));
+  private static final Collection<String> DEFAULT_SCOPES =
+      Collections.unmodifiableCollection(Arrays.asList("scope3"));
 
   static class MockHttpTransportFactory implements HttpTransportFactory {
 
@@ -145,6 +147,10 @@ public class GoogleCredentialsTest {
     assertNotNull(credentials);
     credentials = credentials.createScoped(SCOPES);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+
+    credentials = credentials.createScoped(SCOPES, DEFAULT_SCOPES);
+    metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
