@@ -346,6 +346,73 @@ public class AwsCredentialsTest {
   }
 
   @Test
+  public void getAwsRegion_awsRegionEnvironmentVariable() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    environmentProvider.setEnv("AWS_REGION", "region");
+    environmentProvider.setEnv("AWS_DEFAULT_REGION", "defaultRegion");
+
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+    AwsCredentials awsCredentials =
+        (AwsCredentials)
+            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+                .setHttpTransportFactory(transportFactory)
+                .setCredentialSource(buildAwsCredentialSource(transportFactory))
+                .setEnvironmentProvider(environmentProvider)
+                .build();
+
+    String region = awsCredentials.getAwsRegion();
+
+    // Should attempt to retrieve the region from AWS_REGION env var first.
+    // Metadata server would return us-east-1b.
+    assertEquals("region", region);
+  }
+
+  @Test
+  public void getAwsRegion_awsDefaultRegionEnvironmentVariable() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    environmentProvider.setEnv("AWS_DEFAULT_REGION", "defaultRegion");
+
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+    AwsCredentials awsCredentials =
+        (AwsCredentials)
+            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+                .setHttpTransportFactory(transportFactory)
+                .setCredentialSource(buildAwsCredentialSource(transportFactory))
+                .setEnvironmentProvider(environmentProvider)
+                .build();
+
+    String region = awsCredentials.getAwsRegion();
+
+    // Should attempt to retrieve the region from DEFAULT_AWS_REGION before calling the metadata
+    // server. Metadata server would return us-east-1b.
+    assertEquals("defaultRegion", region);
+  }
+
+  @Test
+  public void getAwsRegion_metadataServer() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+    AwsCredentials awsCredentials =
+        (AwsCredentials)
+            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+                .setHttpTransportFactory(transportFactory)
+                .setCredentialSource(buildAwsCredentialSource(transportFactory))
+                .build();
+
+    String region = awsCredentials.getAwsRegion();
+
+    // Should retrieve the region from the Metadata server.
+    String expectedRegion =
+        transportFactory
+            .transport
+            .getAwsRegion()
+            .substring(0, transportFactory.transport.getAwsRegion().length() - 1);
+    assertEquals(expectedRegion, region);
+  }
+
+  @Test
   public void createdScoped_clonedCredentialWithAddedScopes() {
     AwsCredentials credentials =
         (AwsCredentials)

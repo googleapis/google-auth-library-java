@@ -243,11 +243,17 @@ public class AwsCredentials extends ExternalAccountCredentials {
     return URLEncoder.encode(token.toString(), "UTF-8");
   }
 
-  private String getAwsRegion() throws IOException {
+  @VisibleForTesting
+  String getAwsRegion() throws IOException {
     // For AWS Lambda, the region is retrieved through the AWS_REGION environment variable.
     String region = getEnvironmentProvider().getEnv("AWS_REGION");
     if (region != null) {
       return region;
+    }
+
+    String defaultRegion = getEnvironmentProvider().getEnv("AWS_DEFAULT_REGION");
+    if (defaultRegion != null) {
+      return defaultRegion;
     }
 
     if (awsCredentialSource.regionUrl == null || awsCredentialSource.regionUrl.isEmpty()) {
