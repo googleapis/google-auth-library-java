@@ -1,5 +1,13 @@
 # Changelog
 
+### [0.25.2](https://www.github.com/googleapis/google-auth-library-java/compare/v0.25.1...v0.25.2) (2021-03-18)
+
+
+### Bug Fixes
+
+* follow up fix service account credentials createScopedRequired ([#605](https://www.github.com/googleapis/google-auth-library-java/issues/605)) ([7ddac43](https://www.github.com/googleapis/google-auth-library-java/commit/7ddac43c418bb8b0cc3fd8d4f9d8752ad65bd842))
+* support AWS_DEFAULT_REGION env var ([#599](https://www.github.com/googleapis/google-auth-library-java/issues/599)) ([3d066ee](https://www.github.com/googleapis/google-auth-library-java/commit/3d066ee4755c20e2bd44b234dff71df1c4815aec))
+
 ### [0.25.1](https://www.github.com/googleapis/google-auth-library-java/compare/v0.25.0...v0.25.1) (2021-03-18)
 
 
