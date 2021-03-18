@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.25.1](https://www.github.com/googleapis/google-auth-library-java/compare/v0.25.0...v0.25.1) (2021-03-18)
+
+
+### Bug Fixes
+
+* fix service account credentials createScopedRequired ([#601](https://www.github.com/googleapis/google-auth-library-java/issues/601)) ([0614482](https://www.github.com/googleapis/google-auth-library-java/commit/061448209da05ddfc75b40aae495c33d0ee7f1ee))
+
 ## [0.25.0](https://www.github.com/googleapis/google-auth-library-java/compare/v0.24.1...v0.25.0) (2021-03-16)
 
 
