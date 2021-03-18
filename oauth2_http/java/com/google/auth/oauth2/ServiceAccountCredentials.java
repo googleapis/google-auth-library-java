@@ -561,6 +561,12 @@ public class ServiceAccountCredentials extends GoogleCredentials
             fileType, SERVICE_ACCOUNT_FILE_TYPE));
   }
 
+  /** Returns whether the scopes are empty, meaning createScoped must be called before use. */
+  @Override
+  public boolean createScopedRequired() {
+    return scopes.isEmpty();
+  }
+
   /**
    * Refreshes the OAuth2 access token by getting a new access token using a JSON Web Token (JWT).
    */
