@@ -479,12 +479,12 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void createScopedRequired_emptyScopes_false() throws IOException {
+  public void createScopedRequired_emptyScopes() throws IOException {
     GoogleCredentials credentials =
         ServiceAccountCredentials.fromPkcs8(
             CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, EMPTY_SCOPES);
 
-    assertFalse(credentials.createScopedRequired());
+    assertTrue(credentials.createScopedRequired());
   }
 
   @Test
