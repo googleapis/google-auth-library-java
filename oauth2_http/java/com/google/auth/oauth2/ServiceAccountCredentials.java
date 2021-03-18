@@ -564,7 +564,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   /** Returns whether the scopes are empty, meaning createScoped must be called before use. */
   @Override
   public boolean createScopedRequired() {
-    return scopes.isEmpty();
+    return scopes.isEmpty() && defaultScopes.isEmpty();
   }
 
   /**
