@@ -74,6 +74,7 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
   private static final String TOKEN_TYPE = "Bearer";
   private static final String ACCESS_TOKEN = "accessToken";
   private static final String SERVICE_ACCOUNT_ACCESS_TOKEN = "serviceAccountAccessToken";
+  private static final String AWS_REGION = "us-east-1b";
   private static final Long EXPIRES_IN = 3600L;
 
   private static final JsonFactory JSON_FACTORY = new GsonFactory();
@@ -120,7 +121,7 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
             if (AWS_REGION_URL.equals(url)) {
               return new MockLowLevelHttpResponse()
                   .setContentType("text/html")
-                  .setContent("us-east-1b");
+                  .setContent(AWS_REGION);
             }
             if (AWS_CREDENTIALS_URL.equals(url)) {
               return new MockLowLevelHttpResponse()
@@ -243,6 +244,10 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
 
   public String getAwsRegionUrl() {
     return AWS_REGION_URL;
+  }
+
+  public String getAwsRegion() {
+    return AWS_REGION;
   }
 
   public String getStsUrl() {
