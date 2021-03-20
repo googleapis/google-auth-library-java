@@ -105,8 +105,9 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   private static final String USER = "user@example.com";
   private static final String PROJECT_ID = "project-id";
   private static final Collection<String> EMPTY_SCOPES = Collections.emptyList();
-  private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
-  private static final String JWT_AUDIENCE = "http://googleapis.com/";
+  private static final URI CALL_URI = URI.create("http://foo.googleapis.com/testapi/v1/foo");
+  private static final String JWT_AUDIENCE = "http://foo.googleapis.com/";
+  private static final URI CALL_URI_NOT_JWT_ELIGIBLE = URI.create("http://www.googleapis.com/foo");
   private static final HttpTransportFactory DUMMY_TRANSPORT_FACTORY =
       new MockTokenServerTransportFactory();
   public static final String DEFAULT_ID_TOKEN =
@@ -435,6 +436,12 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     GoogleCredentials scopedCredentials = credentials.createScoped(SCOPES);
     metadata = scopedCredentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+
+    // If scopes are not provided, default scopes are provided, but uri is not eligible
+    // for self-signed JWT, then refresh token flow will be used.
+    scopedCredentials = credentials.createScoped(null, SCOPES);
+    metadata = scopedCredentials.getRequestMetadata(CALL_URI_NOT_JWT_ELIGIBLE);
+    TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
   @Test
@@ -575,6 +582,16 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(
         metadata.get(GoogleCredentials.QUOTA_PROJECT_ID_HEADER_KEY),
         Collections.singletonList(QUOTA_PROJECT));
+  }
+
+  @Test
+  public void checkSelfSignedJwtEligible() throws IOException {
+    assertFalse(ServiceAccountCredentials.checkSelfSignedJwtEligible(null));
+    assertFalse(ServiceAccountCredentials.checkSelfSignedJwtEligible(CALL_URI_NOT_JWT_ELIGIBLE));
+    assertFalse(
+        ServiceAccountCredentials.checkSelfSignedJwtEligible(URI.create("https://foo.com")));
+    assertFalse(ServiceAccountCredentials.checkSelfSignedJwtEligible(URI.create("/foo.com")));
+    assertTrue(ServiceAccountCredentials.checkSelfSignedJwtEligible(CALL_URI));
   }
 
   @Test
@@ -1279,6 +1296,49 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     final AtomicBoolean success = new AtomicBoolean(false);
     credentials.getRequestMetadata(
         null,
+        null,
+        new RequestMetadataCallback() {
+          @Override
+          public void onSuccess(Map<String, List<String>> metadata) {
+            assertEquals(plainMetadata, metadata);
+            success.set(true);
+          }
+
+          @Override
+          public void onFailure(Throwable exception) {
+            fail("Should not throw a failure.");
+          }
+        });
+
+    assertTrue("Should have run onSuccess() callback", success.get());
+  }
+
+  @Test
+  public void getRequestMetadataWithCallback_defaultScopes() throws IOException {
+    // Test that if scopes are not provided, default scopes are provided, but the uri
+    // is not self signed JWT eligible, then we still use refresh token flow.
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID, "unused-client-secret");
+    transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
+
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    GoogleCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientEmail(CLIENT_EMAIL)
+            .setPrivateKey(privateKey)
+            .setPrivateKeyId(PRIVATE_KEY_ID)
+            .setScopes(null, SCOPES)
+            .setServiceAccountUser(USER)
+            .setProjectId(PROJECT_ID)
+            .setQuotaProjectId("my-quota-project-id")
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    final Map<String, List<String>> plainMetadata = credentials.getRequestMetadata();
+    final AtomicBoolean success = new AtomicBoolean(false);
+    credentials.getRequestMetadata(
+        CALL_URI_NOT_JWT_ELIGIBLE,
         null,
         new RequestMetadataCallback() {
           @Override

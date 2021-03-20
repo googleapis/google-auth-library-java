@@ -921,10 +921,22 @@ public class ServiceAccountCredentials extends GoogleCredentials
     }
   }
 
+  @VisibleForTesting
+  static boolean checkSelfSignedJwtEligible(final URI uri) {
+    // If the uri host is not the standard {service_name}.googleapis.com format,
+    // it is hard to know what the service name is. In this case we use refresh token
+    // flow instead of self signed JWT flow. This applies to uri such as:
+    // https://www.googleapis.com/upload/bigquery/projects/spring-cloud-gcp-ci/jobs?uploadType=resumable
+    return uri != null
+        && uri.getHost() != null
+        && uri.getHost().endsWith(".googleapis.com")
+        && !uri.getHost().equals("www.googleapis.com");
+  }
+
   @Override
   public void getRequestMetadata(
       final URI uri, Executor executor, final RequestMetadataCallback callback) {
-    if (jwtCredentials != null && uri != null) {
+    if (jwtCredentials != null && checkSelfSignedJwtEligible(uri)) {
       jwtCredentials.getRequestMetadata(uri, executor, callback);
     } else {
       super.getRequestMetadata(uri, executor, callback);
@@ -940,7 +952,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
               + " to getRequestMetadata to use self signed JWT, or specify the scopes"
               + " by calling createScoped or passing scopes to constructor.");
     }
-    if (jwtCredentials != null && uri != null) {
+    if (jwtCredentials != null && checkSelfSignedJwtEligible(uri)) {
       return jwtCredentials.getRequestMetadata(uri);
     } else {
       return super.getRequestMetadata(uri);
