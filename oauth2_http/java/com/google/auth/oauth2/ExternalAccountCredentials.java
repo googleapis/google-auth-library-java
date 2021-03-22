@@ -198,7 +198,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
               .build();
     }
 
-    String targetPrincipal = extractTargetPrincipal(serviceAccountImpersonationUrl);
+    String targetPrincipal = ImpersonatedCredentials.extractTargetPrincipal(serviceAccountImpersonationUrl);
     return ImpersonatedCredentials.newBuilder()
         .setSourceCredentials(sourceCredentials)
         .setHttpTransportFactory(transportFactory)
@@ -335,19 +335,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
 
     StsTokenExchangeResponse response = requestHandler.exchangeToken();
     return response.getAccessToken();
-  }
-
-  private static String extractTargetPrincipal(String serviceAccountImpersonationUrl) {
-    // Extract the target principal.
-    int startIndex = serviceAccountImpersonationUrl.lastIndexOf('/');
-    int endIndex = serviceAccountImpersonationUrl.indexOf(":generateAccessToken");
-
-    if (startIndex != -1 && endIndex != -1 && startIndex < endIndex) {
-      return serviceAccountImpersonationUrl.substring(startIndex + 1, endIndex);
-    } else {
-      throw new IllegalArgumentException(
-          "Unable to determine target principal from service account impersonation URL.");
-    }
   }
 
   /**
