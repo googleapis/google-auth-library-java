@@ -33,7 +33,9 @@ package com.google.auth.oauth2;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -61,6 +63,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -114,6 +117,13 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   private static JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
   private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+  private static final String IMPERSONATION_URL =
+      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/"+ IMPERSONATED_CLIENT_EMAIL + ":generateAccessToken";
+  private static final String USER_ACCOUNT_CLIENT_ID = "76408650-6qr441hur.apps.googleusercontent.com";
+  private static final String USER_ACCOUNT_CLIENT_SECRET = "d-F499q74hFpdHD0T5";
+  private static final String QUOTA_PROJECT_ID = "quota-project-id";
+  private static final String REFRESH_TOKEN = "dasdfasdffa4ffdfadgyjirasdfadsft";
+  private static final List<String> DELEGATES = Arrays.asList("sa1@developer.gserviceaccount.com", "sa2@developer.gserviceaccount.com");
 
   static class MockIAMCredentialsServiceTransportFactory implements HttpTransportFactory {
 
@@ -140,6 +150,111 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
 
     return sourceCredentials;
+  }
+
+  @Test()
+  public void fromJson_userAsSource_WithQuotaProjectId() throws IOException {
+    GenericJson json = buildImpersonationCredentialsJson(IMPERSONATION_URL, DELEGATES,
+        QUOTA_PROJECT_ID, USER_ACCOUNT_CLIENT_ID, USER_ACCOUNT_CLIENT_SECRET, REFRESH_TOKEN);
+    MockIAMCredentialsServiceTransportFactory mtransportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    ImpersonatedCredentials credentials = ImpersonatedCredentials.fromJson(json, mtransportFactory);
+    assertEquals(IMPERSONATED_CLIENT_EMAIL, credentials.getAccount());
+    assertEquals(QUOTA_PROJECT_ID, credentials.getQuotaProjectId());
+    assertEquals(DELEGATES, credentials.getDelegates());
+    assertEquals(new ArrayList<String>(), credentials.getScopes());
+    assertEquals(credentials.getLifetime(), 3600);
+    GoogleCredentials sourceCredentials = credentials.getSourceCredentials();
+    assertTrue(sourceCredentials instanceof UserCredentials);
+  }
+
+  @Test()
+  public void fromJson_userAsSource_WithoutQuotaProjectId() throws IOException {
+    GenericJson json = buildImpersonationCredentialsJson(IMPERSONATION_URL, DELEGATES, null,
+        USER_ACCOUNT_CLIENT_ID, USER_ACCOUNT_CLIENT_SECRET, REFRESH_TOKEN);
+    MockIAMCredentialsServiceTransportFactory mtransportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    ImpersonatedCredentials credentials = ImpersonatedCredentials.fromJson(json, mtransportFactory);
+    assertEquals(IMPERSONATED_CLIENT_EMAIL, credentials.getAccount());
+    assertNull(credentials.getQuotaProjectId());
+    assertEquals(DELEGATES, credentials.getDelegates());
+    assertEquals(new ArrayList<String>(), credentials.getScopes());
+    assertEquals(credentials.getLifetime(), 3600);
+    GoogleCredentials sourceCredentials = credentials.getSourceCredentials();
+    assertTrue(sourceCredentials instanceof UserCredentials);
+  }
+
+  @Test()
+  public void fromJson_ServiceAccountAsSource() throws IOException {
+    GenericJson json = buildImpersonationCredentialsJson(IMPERSONATION_URL, DELEGATES, QUOTA_PROJECT_ID);
+    MockIAMCredentialsServiceTransportFactory mtransportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    ImpersonatedCredentials credentials = ImpersonatedCredentials.fromJson(json, mtransportFactory);
+    assertEquals(IMPERSONATED_CLIENT_EMAIL, credentials.getAccount());
+    assertEquals(QUOTA_PROJECT_ID, credentials.getQuotaProjectId());
+    assertEquals(DELEGATES, credentials.getDelegates());
+    assertEquals(new ArrayList<String>(), credentials.getScopes());
+    assertEquals(credentials.getLifetime(), 3600);
+    GoogleCredentials sourceCredentials = credentials.getSourceCredentials();
+    assertTrue(sourceCredentials instanceof ServiceAccountCredentials);
+  }
+
+  @Test()
+  public void createScopedRequired_True() throws IOException {
+    GoogleCredentials sourceCredentials = getSourceCredentials();
+    MockIAMCredentialsServiceTransportFactory mtransportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            sourceCredentials,
+            IMPERSONATED_CLIENT_EMAIL,
+            null,
+            new ArrayList<String>(),
+            VALID_LIFETIME,
+            mtransportFactory);
+    assertTrue(targetCredentials.createScopedRequired());
+  }
+
+  @Test()
+  public void createScopedRequired_False() throws IOException {
+    GoogleCredentials sourceCredentials = getSourceCredentials();
+    MockIAMCredentialsServiceTransportFactory mtransportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            sourceCredentials,
+            IMPERSONATED_CLIENT_EMAIL,
+            null,
+            SCOPES,
+            VALID_LIFETIME,
+            mtransportFactory);
+    assertFalse(targetCredentials.createScopedRequired());
+  }
+
+  @Test()
+  public void createScoped() throws IOException {
+    GoogleCredentials sourceCredentials = getSourceCredentials();
+    MockIAMCredentialsServiceTransportFactory mtransportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            sourceCredentials,
+            IMPERSONATED_CLIENT_EMAIL,
+            DELEGATES,
+            SCOPES,
+            VALID_LIFETIME,
+            mtransportFactory,
+            QUOTA_PROJECT_ID);
+
+    ImpersonatedCredentials scoped_credentials = (ImpersonatedCredentials) targetCredentials
+        .createScoped(Arrays.asList("scope1", "scope2"));
+    assertEquals(targetCredentials.getAccount(), scoped_credentials.getAccount());
+    assertEquals(targetCredentials.getDelegates(), scoped_credentials.getDelegates());
+    assertEquals(targetCredentials.getLifetime(), scoped_credentials.getLifetime());
+    assertEquals(targetCredentials.getSourceCredentials(),
+        scoped_credentials.getSourceCredentials());
+    assertEquals(targetCredentials.getQuotaProjectId(), scoped_credentials.getQuotaProjectId());
+    assertEquals(Arrays.asList("scope1", "scope2"), scoped_credentials.getScopes());
   }
 
   @Test()
@@ -261,6 +376,54 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             mtransportFactory);
 
     assertEquals(ACCESS_TOKEN, targetCredentials.refreshAccessToken().getTokenValue());
+  }
+
+  @Test()
+  public void getRequestMetadata_withQuotaProjectId() throws IOException, IllegalStateException {
+
+    GoogleCredentials sourceCredentials = getSourceCredentials();
+    MockIAMCredentialsServiceTransportFactory mtransportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mtransportFactory.transport.setExpireTime(getDefaultExpireTime());
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            sourceCredentials,
+            IMPERSONATED_CLIENT_EMAIL,
+            null,
+            SCOPES,
+            VALID_LIFETIME,
+            mtransportFactory,
+            QUOTA_PROJECT_ID);
+
+    Map<String, List<String>> metadata = targetCredentials.getRequestMetadata();
+    assertTrue(metadata.containsKey("x-goog-user-project"));
+    List<String> headerValues = metadata.get("x-goog-user-project");
+    assertEquals(1, headerValues.size());
+    assertEquals(QUOTA_PROJECT_ID, headerValues.get(0));
+  }
+
+  @Test()
+  public void getRequestMetadata_withoutQuotaProjectId() throws IOException, IllegalStateException {
+
+    GoogleCredentials sourceCredentials = getSourceCredentials();
+    MockIAMCredentialsServiceTransportFactory mtransportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mtransportFactory.transport.setExpireTime(getDefaultExpireTime());
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            sourceCredentials,
+            IMPERSONATED_CLIENT_EMAIL,
+            null,
+            SCOPES,
+            VALID_LIFETIME,
+            mtransportFactory);
+
+    Map<String, List<String>> metadata = targetCredentials.getRequestMetadata();
+    assertFalse(metadata.containsKey("x-goog-user-project"));
   }
 
   @Test()
@@ -735,5 +898,52 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     generator.writeEndObject();
     generator.close();
     return bout.toString();
+  }
+
+  static GenericJson buildImpersonationCredentialsJson(
+      String impersonationUrl, List<String> delegates, String quotaProjectId,
+      String sourceClientId, String sourceClientSecret, String sourceRefreshToken) {
+    GenericJson sourceJson = new GenericJson();
+
+    sourceJson.put("client_id", sourceClientId);
+    sourceJson.put("client_secret", sourceClientSecret);
+    sourceJson.put("refresh_token", sourceRefreshToken);
+    sourceJson.put("type", "authorized_user");
+    GenericJson json = new GenericJson();
+
+    json.put("service_account_impersonation_url", impersonationUrl);
+    json.put("delegates", delegates);
+    if (quotaProjectId != null) {
+      json.put("quota_project_id", quotaProjectId);
+    }
+    json.put("source_credentials", sourceJson);
+    json.put("type", "impersonated_service_account");
+    return json;
+  }
+
+  static GenericJson buildImpersonationCredentialsJson(
+      String impersonationUrl, List<String> delegates, String quotaProjectId) {
+    GenericJson sourceJson = new GenericJson();
+    sourceJson.put("type", "service_account");
+    sourceJson.put("project_id", PROJECT_ID);
+    sourceJson.put("private_key_id", SA_PRIVATE_KEY_ID);
+    sourceJson.put("private_key", SA_PRIVATE_KEY_PKCS8);
+    sourceJson.put("client_email", SA_CLIENT_EMAIL);
+    sourceJson.put("client_id", "10848832332323213");
+    sourceJson.put("auth_uri", "https://oauth2.googleapis.com/o/oauth2/auth");
+    sourceJson.put("token_uri", "https://oauth2.googleapis.com/token");
+    sourceJson.put("auth_provider_x509_cert_url", "https://www.googleapis.com/oauth2/v1/certs");
+    sourceJson.put("client_x509_cert_url",
+        "https://www.googleapis.com/robot/v1/metadata/x509/chaoren-test-sc%40cloudsdktest.iam.gserviceaccount.com");
+
+    GenericJson json = new GenericJson();
+    json.put("source_credentials", sourceJson);
+    json.put("service_account_impersonation_url", impersonationUrl);
+    json.put("delegates", delegates);
+    if (quotaProjectId != null) {
+      json.put("quota_project_id", quotaProjectId);
+    }
+    json.put("type", "impersonated_service_account");
+    return json;
   }
 }

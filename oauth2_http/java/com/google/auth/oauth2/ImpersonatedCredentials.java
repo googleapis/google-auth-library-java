@@ -253,6 +253,18 @@ public class ImpersonatedCredentials extends GoogleCredentials
     return this.quotaProjectId;
   }
 
+  public List<String> getDelegates() {
+    return delegates;
+  }
+
+  public List<String> getScopes() {
+    return scopes;
+  }
+
+  public GoogleCredentials getSourceCredentials() {
+    return sourceCredentials;
+  }
+
   int getLifetime() {
     return this.lifetime;
   }
@@ -339,6 +351,15 @@ public class ImpersonatedCredentials extends GoogleCredentials
         .setHttpTransportFactory(this.transportFactory)
         .setQuotaProjectId(this.quotaProjectId)
         .build();
+  }
+
+  @Override
+  protected Map<String, List<String>> getAdditionalHeaders() {
+    Map<String, List<String>> headers = super.getAdditionalHeaders();
+    if (quotaProjectId != null) {
+      return addQuotaProjectIdToRequestMetadata(quotaProjectId, headers);
+    }
+    return headers;
   }
 
   private ImpersonatedCredentials(Builder builder) {
