@@ -269,6 +269,10 @@ public class ImpersonatedCredentials extends GoogleCredentials
     return this.lifetime;
   }
 
+  public void setTransportFactory(HttpTransportFactory httpTransportFactory) {
+    this.transportFactory = httpTransportFactory;
+  }
+
   /**
    * Signs the provided bytes using the private key associated with the impersonated service
    * account

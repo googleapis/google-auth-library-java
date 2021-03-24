@@ -52,9 +52,11 @@ import com.google.api.client.util.Clock;
 import com.google.auth.ServiceAccountSigner.SigningException;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
+import com.google.auth.TestUtils;
 import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.security.PrivateKey;
 import java.text.SimpleDateFormat;
@@ -72,7 +74,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
-  private static final String SA_CLIENT_EMAIL =
+  public static final String SA_CLIENT_EMAIL =
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr@developer.gserviceaccount.com";
   private static final String SA_PRIVATE_KEY_ID = "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
   static final String SA_PRIVATE_KEY_PKCS8 =
@@ -105,25 +107,25 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
           + "lZC1yYXktMTA0MTE3LmlhbS5nc2VydmljZWFjY291bnQuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImV4cC"
           + "I6MTU2NDUzMzA0MiwiaWF0IjoxNTY0NTI5NDQyLCJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iL"
           + "CJzdWIiOiIxMDIxMDE1NTA4MzQyMDA3MDg1NjgifQ.redacted";
+  public static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
 
   private static final String PROJECT_ID = "project-id";
-  private static final String IMPERSONATED_CLIENT_EMAIL =
+  public static final String IMPERSONATED_CLIENT_EMAIL =
       "impersonated-account@iam.gserviceaccount.com";
   private static final List<String> SCOPES =
       Arrays.asList("https://www.googleapis.com/auth/devstorage.read_only");
-  private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
   private static final int VALID_LIFETIME = 300;
   private static final int INVALID_LIFETIME = 43210;
   private static JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
   private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-  private static final String IMPERSONATION_URL =
+  public static final String IMPERSONATION_URL =
       "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/"+ IMPERSONATED_CLIENT_EMAIL + ":generateAccessToken";
   private static final String USER_ACCOUNT_CLIENT_ID = "76408650-6qr441hur.apps.googleusercontent.com";
   private static final String USER_ACCOUNT_CLIENT_SECRET = "d-F499q74hFpdHD0T5";
-  private static final String QUOTA_PROJECT_ID = "quota-project-id";
+  public static final String QUOTA_PROJECT_ID = "quota-project-id";
   private static final String REFRESH_TOKEN = "dasdfasdffa4ffdfadgyjirasdfadsft";
-  private static final List<String> DELEGATES = Arrays.asList("sa1@developer.gserviceaccount.com", "sa2@developer.gserviceaccount.com");
+  public static final List<String> DELEGATES = Arrays.asList("sa1@developer.gserviceaccount.com", "sa2@developer.gserviceaccount.com");
 
   static class MockIAMCredentialsServiceTransportFactory implements HttpTransportFactory {
 
@@ -853,7 +855,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
   }
 
-  private String getDefaultExpireTime() {
+  public static String getDefaultExpireTime() {
     Date currentDate = new Date();
     Calendar c = Calendar.getInstance();
     c.setTime(currentDate);
@@ -945,5 +947,13 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     }
     json.put("type", "impersonated_service_account");
     return json;
+  }
+
+  static InputStream writeImpersonationCredentialsStream(String impersonationUrl,
+      List<String> delegates, String quotaProjectId)
+      throws IOException {
+    GenericJson json = buildImpersonationCredentialsJson(impersonationUrl, delegates,
+        quotaProjectId);
+    return TestUtils.jsonToInputStream(json);
   }
 }

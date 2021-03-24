@@ -41,6 +41,7 @@ import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.IdentityPoolCredentialsTest.MockExternalAccountCredentialsTransportFactory;
+import com.google.auth.oauth2.ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory;
 import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -268,6 +269,41 @@ public class GoogleCredentialsTest {
     credentials = credentials.createScoped(SCOPES);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, transportFactory.transport.getAccessToken());
+  }
+
+  @Test
+  public void fromStream_Impersonation_providesToken() throws IOException {
+    MockTokenServerTransportFactory transportFactoryForSource =
+        new MockTokenServerTransportFactory();
+    transportFactoryForSource.transport.addServiceAccount(
+        ImpersonatedCredentialsTest.SA_CLIENT_EMAIL, ImpersonatedCredentialsTest.ACCESS_TOKEN);
+
+    MockIAMCredentialsServiceTransportFactory transportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    transportFactory.transport.setTargetPrincipal(
+        ImpersonatedCredentialsTest.IMPERSONATED_CLIENT_EMAIL);
+    transportFactory.transport.setAccessToken(ImpersonatedCredentialsTest.ACCESS_TOKEN);
+    transportFactory.transport.setExpireTime(ImpersonatedCredentialsTest.getDefaultExpireTime());
+
+    InputStream impersonationCredentialsStream =
+        ImpersonatedCredentialsTest.writeImpersonationCredentialsStream(
+            ImpersonatedCredentialsTest.IMPERSONATION_URL,
+            ImpersonatedCredentialsTest.DELEGATES,
+            ImpersonatedCredentialsTest.QUOTA_PROJECT_ID);
+
+    ImpersonatedCredentials credentials =
+        (ImpersonatedCredentials)
+            GoogleCredentials.fromStream(impersonationCredentialsStream, transportFactoryForSource);
+    credentials.setTransportFactory(transportFactory);
+
+    assertNotNull(credentials);
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, ImpersonatedCredentialsTest.ACCESS_TOKEN);
+
+    assertTrue(metadata.containsKey("x-goog-user-project"));
+    List<String> headerValues = metadata.get("x-goog-user-project");
+    assertEquals(1, headerValues.size());
+    assertEquals(ImpersonatedCredentialsTest.QUOTA_PROJECT_ID, headerValues.get(0));
   }
 
   @Test
