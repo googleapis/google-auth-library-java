@@ -110,24 +110,23 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
   /**
    * @param sourceCredentials the source credential used as to acquire the impersonated credentials
-   * @param targetPrincipal   the service account to impersonate
-   * @param delegates         the chained list of delegates required to grant the final
-   *                          access_token. If set, the sequence of identities must have "Service
-   *                          Account Token Creator" capability granted to the preceding identity.
-   *                          For example, if set to [serviceAccountB, serviceAccountC], the
-   *                          sourceCredential must have the Token Creator role on serviceAccountB.
-   *                          serviceAccountB must have the Token Creator on serviceAccountC.
-   *                          Finally, C must have Token Creator on target_principal. If unset,
-   *                          sourceCredential must have that role on targetPrincipal.
-   * @param scopes            scopes to request during the authorization grant
-   * @param lifetime          number of seconds the delegated credential should be valid. By default
-   *                          this value should be at most 3600. However, you can follow <a
-   *                          href='https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oauth'>these
-   *                          instructions</a> to set up the service account and extend the maximum
-   *                          lifetime to 43200 (12 hours). If the given lifetime is 0, default
-   *                          value 3600 will be used instead when creating the credentials.
-   * @param transportFactory  HTTP transport factory that creates the transport used to get access
-   *                          tokens
+   * @param targetPrincipal the service account to impersonate
+   * @param delegates the chained list of delegates required to grant the final access_token. If
+   *     set, the sequence of identities must have "Service Account Token Creator" capability
+   *     granted to the preceding identity. For example, if set to [serviceAccountB,
+   *     serviceAccountC], the sourceCredential must have the Token Creator role on serviceAccountB.
+   *     serviceAccountB must have the Token Creator on serviceAccountC. Finally, C must have Token
+   *     Creator on target_principal. If unset, sourceCredential must have that role on
+   *     targetPrincipal.
+   * @param scopes scopes to request during the authorization grant
+   * @param lifetime number of seconds the delegated credential should be valid. By default this
+   *     value should be at most 3600. However, you can follow <a
+   *     href='https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oauth'>these
+   *     instructions</a> to set up the service account and extend the maximum lifetime to 43200 (12
+   *     hours). If the given lifetime is 0, default value 3600 will be used instead when creating
+   *     the credentials.
+   * @param transportFactory HTTP transport factory that creates the transport used to get access
+   *     tokens
    * @return new credentials
    */
   public static ImpersonatedCredentials create(
@@ -149,25 +148,24 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
   /**
    * @param sourceCredentials the source credential used as to acquire the impersonated credentials
-   * @param targetPrincipal   the service account to impersonate
-   * @param delegates         the chained list of delegates required to grant the final
-   *                          access_token. If set, the sequence of identities must have "Service
-   *                          Account Token Creator" capability granted to the preceding identity.
-   *                          For example, if set to [serviceAccountB, serviceAccountC], the
-   *                          sourceCredential must have the Token Creator role on serviceAccountB.
-   *                          serviceAccountB must have the Token Creator on serviceAccountC.
-   *                          Finally, C must have Token Creator on target_principal. If unset,
-   *                          sourceCredential must have that role on targetPrincipal.
-   * @param scopes            scopes to request during the authorization grant
-   * @param lifetime          number of seconds the delegated credential should be valid. By default
-   *                          this value should be at most 3600. However, you can follow <a
-   *                          href='https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oauth'>these
-   *                          instructions</a> to set up the service account and extend the maximum
-   *                          lifetime to 43200 (12 hours). If the given lifetime is 0, default
-   *                          value 3600 will be used instead when creating the credentials.
-   * @param transportFactory  HTTP transport factory that creates the transport used to get access
-   *                          tokens
-   * @param quotaProjectId    the project used for quota and billing purposes. May be null.
+   * @param targetPrincipal the service account to impersonate
+   * @param delegates the chained list of delegates required to grant the final access_token. If
+   *     set, the sequence of identities must have "Service Account Token Creator" capability
+   *     granted to the preceding identity. For example, if set to [serviceAccountB,
+   *     serviceAccountC], the sourceCredential must have the Token Creator role on serviceAccountB.
+   *     serviceAccountB must have the Token Creator on serviceAccountC. Finally, C must have Token
+   *     Creator on target_principal. If unset, sourceCredential must have that role on
+   *     targetPrincipal.
+   * @param scopes scopes to request during the authorization grant
+   * @param lifetime number of seconds the delegated credential should be valid. By default this
+   *     value should be at most 3600. However, you can follow <a
+   *     href='https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oauth'>these
+   *     instructions</a> to set up the service account and extend the maximum lifetime to 43200 (12
+   *     hours). If the given lifetime is 0, default value 3600 will be used instead when creating
+   *     the credentials.
+   * @param transportFactory HTTP transport factory that creates the transport used to get access
+   *     tokens
+   * @param quotaProjectId the project used for quota and billing purposes. May be null.
    * @return new credentials
    */
   public static ImpersonatedCredentials create(
@@ -191,23 +189,23 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
   /**
    * @param sourceCredentials the source credential used as to acquire the impersonated credentials
-   * @param targetPrincipal   the service account to impersonate
-   * @param delegates         the chained list of delegates required to grant the final
-   *                          access_token. If set, the sequence of identities must have "Service
-   *                          Account Token Creator" capability granted to the preceding identity.
-   *                          For example, if set to [serviceAccountB, serviceAccountC], the
-   *                          sourceCredential must have the Token Creator role on serviceAccountB.
-   *                          serviceAccountB must have the Token Creator on serviceAccountC.
-   *                          Finally, C must have Token Creator on target_principal. If left unset,
-   *                          sourceCredential must have that role on targetPrincipal.
-   * @param scopes            scopes to request during the authorization grant
-   * @param lifetime          number of seconds the delegated credential should be valid. By default
-   *                          this value should be at most 3600. However, you can follow <a
-   *                          href='https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oauth'>these
-   *                          instructions</a> to set up the service account and extend the maximum
-   *                          lifetime to 43200 (12 hours). https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oauth
-   *                          If the given lifetime is 0, default value 3600 will be used instead
-   *                          when creating the credentials.
+   * @param targetPrincipal the service account to impersonate
+   * @param delegates the chained list of delegates required to grant the final access_token. If
+   *     set, the sequence of identities must have "Service Account Token Creator" capability
+   *     granted to the preceding identity. For example, if set to [serviceAccountB,
+   *     serviceAccountC], the sourceCredential must have the Token Creator role on serviceAccountB.
+   *     serviceAccountB must have the Token Creator on serviceAccountC. Finally, C must have Token
+   *     Creator on target_principal. If left unset, sourceCredential must have that role on
+   *     targetPrincipal.
+   * @param scopes scopes to request during the authorization grant
+   * @param lifetime number of seconds the delegated credential should be valid. By default this
+   *     value should be at most 3600. However, you can follow <a
+   *     href='https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oauth'>these
+   *     instructions</a> to set up the service account and extend the maximum lifetime to 43200 (12
+   *     hours).
+   *     https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oauth
+   *     If the given lifetime is 0, default value 3600 will be used instead when creating the
+   *     credentials.
    * @return new credentials
    */
   public static ImpersonatedCredentials create(
@@ -274,14 +272,14 @@ public class ImpersonatedCredentials extends GoogleCredentials
   }
 
   /**
-   * Signs the provided bytes using the private key associated with the impersonated service
-   * account
+   * Signs the provided bytes using the private key associated with the impersonated service account
    *
    * @param toSign bytes to sign
    * @return signed bytes
    * @throws SigningException if the attempt to sign the provided bytes failed
-   * @see <a href="https://cloud.google.com/iam/credentials/reference/rest/v1/projects.serviceAccounts/signBlob">Blob
-   * Signing</a>
+   * @see <a
+   *     href="https://cloud.google.com/iam/credentials/reference/rest/v1/projects.serviceAccounts/signBlob">Blob
+   *     Signing</a>
    */
   @Override
   public byte[] sign(byte[] toSign) {
@@ -294,18 +292,15 @@ public class ImpersonatedCredentials extends GoogleCredentials
   }
 
   /**
-   * Returns impersonation account credentials defined by JSON using the format generated by
-   * gCloud.
+   * Returns impersonation account credentials defined by JSON using the format generated by gCloud.
    *
-   * @param json             a map from the JSON representing the credentials
-   * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *                         tokens
+   * @param json a map from the JSON representing the credentials
+   * @param transportFactory HTTP transport factory, creates the transport used to get access tokens
    * @return the credentials defined by the JSON
    * @throws IOException if the credential cannot be created from the JSON.
    */
-  static ImpersonatedCredentials fromJson(Map<String, Object> json,
-      HttpTransportFactory transportFactory)
-      throws IOException {
+  static ImpersonatedCredentials fromJson(
+      Map<String, Object> json, HttpTransportFactory transportFactory) throws IOException {
 
     checkNotNull(json);
     checkNotNull(transportFactory);
@@ -314,19 +309,19 @@ public class ImpersonatedCredentials extends GoogleCredentials
     String targetPrincipal = extractTargetPrincipal(serviceAccountImpersonationUrl);
 
     List<String> delegates = (List<String>) json.get("delegates");
-    Map<String, Object> sourceCredentialsJson = (Map<String, Object>) json
-        .get("source_credentials");
+    Map<String, Object> sourceCredentialsJson =
+        (Map<String, Object>) json.get("source_credentials");
     String sourceCredentialsType = (String) sourceCredentialsJson.get("type");
     GoogleCredentials sourceCredentials = null;
     if (GoogleCredentials.USER_FILE_TYPE.equals(sourceCredentialsType)) {
       sourceCredentials = UserCredentials.fromJson(sourceCredentialsJson, transportFactory);
     } else if (GoogleCredentials.SERVICE_ACCOUNT_FILE_TYPE.equals(sourceCredentialsType)) {
-      sourceCredentials = ServiceAccountCredentials
-          .fromJson(sourceCredentialsJson, transportFactory);
+      sourceCredentials =
+          ServiceAccountCredentials.fromJson(sourceCredentialsJson, transportFactory);
     } else {
-      throw new CredentialTypeException(String
-          .format("The source_credentials of %s type has an unsupported type.",
-              sourceCredentialsType));
+      throw new CredentialTypeException(
+          String.format(
+              "The source_credentials of %s type has an unsupported type.", sourceCredentialsType));
     }
     // optional
     String quotaProjectId = (String) json.get("quota_project_id");
@@ -448,12 +443,11 @@ public class ImpersonatedCredentials extends GoogleCredentials
    * Returns an IdToken for the current Credential.
    *
    * @param targetAudience the audience field for the issued ID token
-   * @param options        credential specific options for for the token. For example, an ID token
-   *                       for an ImpersonatedCredentials can return the email address within the
-   *                       token claims if "ImpersonatedCredentials.INCLUDE_EMAIL" is provided as a
-   *                       list option.<br> Only one option value is supported:
-   *                       "ImpersonatedCredentials.INCLUDE_EMAIL" If no options are set, the
-   *                       default excludes the "includeEmail" attribute in the API request.
+   * @param options credential specific options for for the token. For example, an ID token for an
+   *     ImpersonatedCredentials can return the email address within the token claims if
+   *     "ImpersonatedCredentials.INCLUDE_EMAIL" is provided as a list option.<br>
+   *     Only one option value is supported: "ImpersonatedCredentials.INCLUDE_EMAIL" If no options
+   *     are set, the default excludes the "includeEmail" attribute in the API request.
    * @return IdToken object which includes the raw id_token, expiration, and audience
    * @throws IOException if the attempt to get an ID token failed
    */
@@ -473,8 +467,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
   @Override
   public int hashCode() {
-    return Objects
-        .hash(sourceCredentials, targetPrincipal, delegates, scopes, lifetime, quotaProjectId);
+    return Objects.hash(
+        sourceCredentials, targetPrincipal, delegates, scopes, lifetime, quotaProjectId);
   }
 
   @Override
@@ -523,8 +517,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     private HttpTransportFactory transportFactory;
     private String quotaProjectId;
 
-    protected Builder() {
-    }
+    protected Builder() {}
 
     protected Builder(GoogleCredentials sourceCredentials, String targetPrincipal) {
       this.sourceCredentials = sourceCredentials;

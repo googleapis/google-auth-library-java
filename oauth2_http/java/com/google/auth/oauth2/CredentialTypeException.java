@@ -34,7 +34,7 @@ import java.io.IOException;
 
 /** Indicates that the provided credential has a unsupported type. */
 public class CredentialTypeException extends IOException {
-    CredentialTypeException(String message) {
-        super(message);
-    }
+  CredentialTypeException(String message) {
+    super(message);
+  }
 }

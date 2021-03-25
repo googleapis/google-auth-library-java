@@ -120,12 +120,16 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
   private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
   public static final String IMPERSONATION_URL =
-      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/"+ IMPERSONATED_CLIENT_EMAIL + ":generateAccessToken";
-  private static final String USER_ACCOUNT_CLIENT_ID = "76408650-6qr441hur.apps.googleusercontent.com";
+      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/"
+          + IMPERSONATED_CLIENT_EMAIL
+          + ":generateAccessToken";
+  private static final String USER_ACCOUNT_CLIENT_ID =
+      "76408650-6qr441hur.apps.googleusercontent.com";
   private static final String USER_ACCOUNT_CLIENT_SECRET = "d-F499q74hFpdHD0T5";
   public static final String QUOTA_PROJECT_ID = "quota-project-id";
   private static final String REFRESH_TOKEN = "dasdfasdffa4ffdfadgyjirasdfadsft";
-  public static final List<String> DELEGATES = Arrays.asList("sa1@developer.gserviceaccount.com", "sa2@developer.gserviceaccount.com");
+  public static final List<String> DELEGATES =
+      Arrays.asList("sa1@developer.gserviceaccount.com", "sa2@developer.gserviceaccount.com");
 
   static class MockIAMCredentialsServiceTransportFactory implements HttpTransportFactory {
 
@@ -156,8 +160,14 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
   @Test()
   public void fromJson_userAsSource_WithQuotaProjectId() throws IOException {
-    GenericJson json = buildImpersonationCredentialsJson(IMPERSONATION_URL, DELEGATES,
-        QUOTA_PROJECT_ID, USER_ACCOUNT_CLIENT_ID, USER_ACCOUNT_CLIENT_SECRET, REFRESH_TOKEN);
+    GenericJson json =
+        buildImpersonationCredentialsJson(
+            IMPERSONATION_URL,
+            DELEGATES,
+            QUOTA_PROJECT_ID,
+            USER_ACCOUNT_CLIENT_ID,
+            USER_ACCOUNT_CLIENT_SECRET,
+            REFRESH_TOKEN);
     MockIAMCredentialsServiceTransportFactory mtransportFactory =
         new MockIAMCredentialsServiceTransportFactory();
     ImpersonatedCredentials credentials = ImpersonatedCredentials.fromJson(json, mtransportFactory);
@@ -172,8 +182,14 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
   @Test()
   public void fromJson_userAsSource_WithoutQuotaProjectId() throws IOException {
-    GenericJson json = buildImpersonationCredentialsJson(IMPERSONATION_URL, DELEGATES, null,
-        USER_ACCOUNT_CLIENT_ID, USER_ACCOUNT_CLIENT_SECRET, REFRESH_TOKEN);
+    GenericJson json =
+        buildImpersonationCredentialsJson(
+            IMPERSONATION_URL,
+            DELEGATES,
+            null,
+            USER_ACCOUNT_CLIENT_ID,
+            USER_ACCOUNT_CLIENT_SECRET,
+            REFRESH_TOKEN);
     MockIAMCredentialsServiceTransportFactory mtransportFactory =
         new MockIAMCredentialsServiceTransportFactory();
     ImpersonatedCredentials credentials = ImpersonatedCredentials.fromJson(json, mtransportFactory);
@@ -188,7 +204,8 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
   @Test()
   public void fromJson_ServiceAccountAsSource() throws IOException {
-    GenericJson json = buildImpersonationCredentialsJson(IMPERSONATION_URL, DELEGATES, QUOTA_PROJECT_ID);
+    GenericJson json =
+        buildImpersonationCredentialsJson(IMPERSONATION_URL, DELEGATES, QUOTA_PROJECT_ID);
     MockIAMCredentialsServiceTransportFactory mtransportFactory =
         new MockIAMCredentialsServiceTransportFactory();
     ImpersonatedCredentials credentials = ImpersonatedCredentials.fromJson(json, mtransportFactory);
@@ -248,13 +265,13 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             mtransportFactory,
             QUOTA_PROJECT_ID);
 
-    ImpersonatedCredentials scoped_credentials = (ImpersonatedCredentials) targetCredentials
-        .createScoped(Arrays.asList("scope1", "scope2"));
+    ImpersonatedCredentials scoped_credentials =
+        (ImpersonatedCredentials) targetCredentials.createScoped(Arrays.asList("scope1", "scope2"));
     assertEquals(targetCredentials.getAccount(), scoped_credentials.getAccount());
     assertEquals(targetCredentials.getDelegates(), scoped_credentials.getDelegates());
     assertEquals(targetCredentials.getLifetime(), scoped_credentials.getLifetime());
-    assertEquals(targetCredentials.getSourceCredentials(),
-        scoped_credentials.getSourceCredentials());
+    assertEquals(
+        targetCredentials.getSourceCredentials(), scoped_credentials.getSourceCredentials());
     assertEquals(targetCredentials.getQuotaProjectId(), scoped_credentials.getQuotaProjectId());
     assertEquals(Arrays.asList("scope1", "scope2"), scoped_credentials.getScopes());
   }
@@ -903,8 +920,12 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   static GenericJson buildImpersonationCredentialsJson(
-      String impersonationUrl, List<String> delegates, String quotaProjectId,
-      String sourceClientId, String sourceClientSecret, String sourceRefreshToken) {
+      String impersonationUrl,
+      List<String> delegates,
+      String quotaProjectId,
+      String sourceClientId,
+      String sourceClientSecret,
+      String sourceRefreshToken) {
     GenericJson sourceJson = new GenericJson();
 
     sourceJson.put("client_id", sourceClientId);
@@ -935,7 +956,8 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     sourceJson.put("auth_uri", "https://oauth2.googleapis.com/o/oauth2/auth");
     sourceJson.put("token_uri", "https://oauth2.googleapis.com/token");
     sourceJson.put("auth_provider_x509_cert_url", "https://www.googleapis.com/oauth2/v1/certs");
-    sourceJson.put("client_x509_cert_url",
+    sourceJson.put(
+        "client_x509_cert_url",
         "https://www.googleapis.com/robot/v1/metadata/x509/chaoren-test-sc%40cloudsdktest.iam.gserviceaccount.com");
 
     GenericJson json = new GenericJson();
@@ -949,11 +971,10 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     return json;
   }
 
-  static InputStream writeImpersonationCredentialsStream(String impersonationUrl,
-      List<String> delegates, String quotaProjectId)
-      throws IOException {
-    GenericJson json = buildImpersonationCredentialsJson(impersonationUrl, delegates,
-        quotaProjectId);
+  static InputStream writeImpersonationCredentialsStream(
+      String impersonationUrl, List<String> delegates, String quotaProjectId) throws IOException {
+    GenericJson json =
+        buildImpersonationCredentialsJson(impersonationUrl, delegates, quotaProjectId);
     return TestUtils.jsonToInputStream(json);
   }
 }

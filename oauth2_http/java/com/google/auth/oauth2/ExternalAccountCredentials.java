@@ -198,7 +198,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
               .build();
     }
 
-    String targetPrincipal = ImpersonatedCredentials.extractTargetPrincipal(serviceAccountImpersonationUrl);
+    String targetPrincipal =
+        ImpersonatedCredentials.extractTargetPrincipal(serviceAccountImpersonationUrl);
     return ImpersonatedCredentials.newBuilder()
         .setSourceCredentials(sourceCredentials)
         .setHttpTransportFactory(transportFactory)
