@@ -304,8 +304,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
    * @throws IOException if the credential cannot be created from the JSON.
    */
   static ImpersonatedCredentials fromJson(
-      Map<String, Object> json, HttpTransportFactory transportFactory)
-      throws IOException {
+      Map<String, Object> json, HttpTransportFactory transportFactory) throws IOException {
 
     checkNotNull(json);
     checkNotNull(transportFactory);

@@ -324,7 +324,8 @@ public class GoogleCredentialsTest {
     InputStream impersonationCredentialsStream =
         ImpersonatedCredentialsTest.writeImpersonationCredentialsStream(
             ImpersonatedCredentialsTest.IMPERSONATION_URL,
-            ImpersonatedCredentialsTest.DELEGATES, null);
+            ImpersonatedCredentialsTest.DELEGATES,
+            null);
 
     ImpersonatedCredentials credentials =
         (ImpersonatedCredentials)
