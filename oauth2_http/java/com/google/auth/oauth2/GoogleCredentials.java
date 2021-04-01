@@ -79,8 +79,12 @@ public class GoogleCredentials extends OAuth2Credentials {
    * <ol>
    *   <li>Credentials file pointed to by the {@code GOOGLE_APPLICATION_CREDENTIALS} environment
    *       variable
-   *   <li>Credentials provided by the Google Cloud SDK {@code gcloud auth application-default
-   *       login} command
+   *   <li>Credentials provided by the Google Cloud SDK.
+   *       <ol>
+   *         <li>{@code gcloud auth application-default login} for user account credentials.
+   *         <li>{@code gcloud auth application-default login --impersonate-service-account} for
+   *             impersonated service account credentials.
+   *       </ol>
    *   <li>Google App Engine built-in credentials
    *   <li>Google Cloud Shell built-in credentials
    *   <li>Google Compute Engine built-in credentials
