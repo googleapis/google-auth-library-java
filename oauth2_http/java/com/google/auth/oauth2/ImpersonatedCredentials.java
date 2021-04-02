@@ -316,11 +316,13 @@ public class ImpersonatedCredentials extends GoogleCredentials
     List<String> delegates;
     Map<String, Object> sourceCredentialsJson;
     String sourceCredentialsType;
+    String quotaProjectId;
     try {
       serviceAccountImpersonationUrl = (String) json.get("service_account_impersonation_url");
       delegates = (List<String>) json.get("delegates");
       sourceCredentialsJson = (Map<String, Object>) json.get("source_credentials");
       sourceCredentialsType = (String) sourceCredentialsJson.get("type");
+      quotaProjectId = (String) json.get("quota_project_id");
     } catch (ClassCastException | NullPointerException e) {
       throw new CredentialFormatException("An invalid input stream was provided.", e);
     }
@@ -338,8 +340,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
               "A credential of type %s is not supported as source credential for impersonation.",
               sourceCredentialsType));
     }
-    // optional
-    String quotaProjectId = (String) json.get("quota_project_id");
     return ImpersonatedCredentials.newBuilder()
         .setSourceCredentials(sourceCredentials)
         .setTargetPrincipal(targetPrincipal)
