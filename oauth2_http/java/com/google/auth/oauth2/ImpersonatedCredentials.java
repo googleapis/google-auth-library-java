@@ -109,8 +109,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
   private transient HttpTransportFactory transportFactory;
 
   /**
-   * @param sourceCredentials the source credential used to acquire the impersonated credentials
-   *     It should be either a user account credential or a service account credential.
+   * @param sourceCredentials the source credential used to acquire the impersonated credentials It
+   *     should be either a user account credential or a service account credential.
    * @param targetPrincipal the service account to impersonate
    * @param delegates the chained list of delegates required to grant the final access_token. If
    *     set, the sequence of identities must have "Service Account Token Creator" capability
@@ -148,8 +148,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
   }
 
   /**
-   * @param sourceCredentials the source credential used to acquire the impersonated credentials
-   *     It should be either a user account credential or a service account credential.
+   * @param sourceCredentials the source credential used to acquire the impersonated credentials It
+   *     should be either a user account credential or a service account credential.
    * @param targetPrincipal the service account to impersonate
    * @param delegates the chained list of delegates required to grant the final access_token. If
    *     set, the sequence of identities must have "Service Account Token Creator" capability
@@ -192,8 +192,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
   }
 
   /**
-   * @param sourceCredentials the source credential used to acquire the impersonated credentials
-   *     It should be either a user account credential or a service account credential.
+   * @param sourceCredentials the source credential used to acquire the impersonated credentials It
+   *     should be either a user account credential or a service account credential.
    * @param targetPrincipal the service account to impersonate
    * @param delegates the chained list of delegates required to grant the final access_token. If
    *     set, the sequence of identities must have "Service Account Token Creator" capability
