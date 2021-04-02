@@ -321,7 +321,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
       delegates = (List<String>) json.get("delegates");
       sourceCredentialsJson = (Map<String, Object>) json.get("source_credentials");
       sourceCredentialsType = (String) sourceCredentialsJson.get("type");
-    } catch  (ClassCastException | NullPointerException e) {
+    } catch (ClassCastException | NullPointerException e) {
       throw new CredentialFormatException("An invalid input stream was provided.", e);
     }
     String targetPrincipal = extractTargetPrincipal(serviceAccountImpersonationUrl);

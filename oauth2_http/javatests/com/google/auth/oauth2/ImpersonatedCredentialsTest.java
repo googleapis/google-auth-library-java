@@ -220,8 +220,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
   @Test()
   public void fromJson_InvalidFormat() throws IOException {
-    GenericJson json =
-        buildInvalidCredentialsJson();
+    GenericJson json = buildInvalidCredentialsJson();
     MockIAMCredentialsServiceTransportFactory mtransportFactory =
         new MockIAMCredentialsServiceTransportFactory();
     try {
