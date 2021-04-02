@@ -219,6 +219,20 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   @Test()
+  public void fromJson_InvalidFormat() throws IOException {
+    GenericJson json =
+        buildInvalidCredentialsJson();
+    MockIAMCredentialsServiceTransportFactory mtransportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    try {
+      ImpersonatedCredentials.fromJson(json, mtransportFactory);
+      fail("An exception should be thrown.");
+    } catch (CredentialFormatException e) {
+      assertEquals("An invalid input stream was provided.", e.getMessage());
+    }
+  }
+
+  @Test()
   public void createScopedRequired_True() throws IOException {
     GoogleCredentials sourceCredentials = getSourceCredentials();
     MockIAMCredentialsServiceTransportFactory mtransportFactory =
@@ -968,6 +982,12 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
       json.put("quota_project_id", quotaProjectId);
     }
     json.put("type", "impersonated_service_account");
+    return json;
+  }
+
+  static GenericJson buildInvalidCredentialsJson() {
+    GenericJson json = new GenericJson();
+    json.put("service_account_impersonation_url", "mock_url");
     return json;
   }
 
