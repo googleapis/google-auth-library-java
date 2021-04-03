@@ -202,6 +202,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     assertTrue(sourceCredentials instanceof UserCredentials);
   }
 
+  @Test()
   public void fromJson_userAsSource_MissingDelegatesField() throws IOException {
     GenericJson json =
         buildImpersonationCredentialsJson(
