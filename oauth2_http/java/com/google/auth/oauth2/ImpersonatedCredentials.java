@@ -313,13 +313,15 @@ public class ImpersonatedCredentials extends GoogleCredentials
     checkNotNull(transportFactory);
 
     String serviceAccountImpersonationUrl;
-    List<String> delegates;
+    List<String> delegates = null;
     Map<String, Object> sourceCredentialsJson;
     String sourceCredentialsType;
     String quotaProjectId;
     try {
       serviceAccountImpersonationUrl = (String) json.get("service_account_impersonation_url");
-      delegates = (List<String>) json.get("delegates");
+      if (json.containsKey("delegates")) {
+        delegates = (List<String>) json.get("delegates");
+      }
       sourceCredentialsJson = (Map<String, Object>) json.get("source_credentials");
       sourceCredentialsType = (String) sourceCredentialsJson.get("type");
       quotaProjectId = (String) json.get("quota_project_id");

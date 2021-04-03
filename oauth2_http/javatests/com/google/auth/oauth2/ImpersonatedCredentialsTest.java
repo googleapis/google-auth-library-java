@@ -202,6 +202,28 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     assertTrue(sourceCredentials instanceof UserCredentials);
   }
 
+  public void fromJson_userAsSource_MissingDelegatesField() throws IOException {
+    GenericJson json =
+        buildImpersonationCredentialsJson(
+            IMPERSONATION_URL,
+            DELEGATES,
+            null,
+            USER_ACCOUNT_CLIENT_ID,
+            USER_ACCOUNT_CLIENT_SECRET,
+            REFRESH_TOKEN);
+    json.remove("delegates");
+    MockIAMCredentialsServiceTransportFactory mtransportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    ImpersonatedCredentials credentials = ImpersonatedCredentials.fromJson(json, mtransportFactory);
+    assertEquals(IMPERSONATED_CLIENT_EMAIL, credentials.getAccount());
+    assertNull(credentials.getQuotaProjectId());
+    assertEquals(new ArrayList<String>(), credentials.getDelegates());
+    assertEquals(new ArrayList<String>(), credentials.getScopes());
+    assertEquals(credentials.getLifetime(), 3600);
+    GoogleCredentials sourceCredentials = credentials.getSourceCredentials();
+    assertTrue(sourceCredentials instanceof UserCredentials);
+  }
+
   @Test()
   public void fromJson_ServiceAccountAsSource() throws IOException {
     GenericJson json =
