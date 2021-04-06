@@ -25,4 +25,6 @@ java.common_templates(excludes=[
     "samples/**",
     ".github/workflows/approve-readme.yaml",
     ".github/workflows/samples.yaml",
+    '.kokoro/nightly/integration.cfg',
+    '.kokoro/presubmit/integration.cfg',
 ])
