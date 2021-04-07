@@ -66,7 +66,7 @@
     <project.autovalue.version>1.7.4</project.autovalue.version>
     <project.findbugs.version>3.0.2</project.findbugs.version>
     <deploy.autorelease>false</deploy.autorelease>
-    <auto-value-annotation.version>1.7.5</auto-value-annotation.version>
+    <auto-value-annotation.version>1.8</auto-value-annotation.version>
   </properties>
 
   <dependencyManagement>
