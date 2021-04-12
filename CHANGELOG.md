@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.25.3](https://www.github.com/googleapis/google-auth-library-java/compare/v0.25.2...v0.25.3) (2021-04-12)
+
+
+### Dependencies
+
+* update guava patch ([#628](https://www.github.com/googleapis/google-auth-library-java/issues/628)) ([8ff3207](https://www.github.com/googleapis/google-auth-library-java/commit/8ff320755e44f937590196bcbefa8c9537244af6))
+
 ### [0.25.2](https://www.github.com/googleapis/google-auth-library-java/compare/v0.25.1...v0.25.2) (2021-03-18)
 
 
