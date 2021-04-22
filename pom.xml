@@ -506,5 +506,62 @@
         </plugins>
       </build>
     </profile>
+
+    <profile>
+      <id>docFX</id>
+      <activation>
+        <property>
+          <!-- Activate with -P docFX -->
+          <name>docFX</name>
+        </property>
+      </activation>
+      <reporting>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>3.2.0</version>
+            <reportSets>
+              <reportSet>
+                <id>docFX</id>
+                <reports>
+                  <report>javadoc</report>
+                  <report>aggregate</report>
+                  <report>aggregate-jar</report>
+                </reports>
+              </reportSet>
+            </reportSets>
+            <configuration>
+              <doclet>com.microsoft.doclet.DocFxDoclet</doclet>
+              <useStandardDocletOptions>false</useStandardDocletOptions>
+              <docletPath>${env.KOKORO_GFILE_DIR}/docfx-doclet-1.0-SNAPSHOT-jar-with-dependencies-172556.jar</docletPath>
+              <additionalOptions>-outputpath ${project.build.directory}/docfx-yml</additionalOptions>
+              <doclint>none</doclint>
+              <show>protected</show>
+              <nohelp>true</nohelp>
+              <source>7</source>
+              <groups>
+                <group>
+                  <title>google-auth-library-credentials</title>
+                  <packages>com.google.auth*</packages>
+                </group>
+                <group>
+                  <title>google-auth-library-oauth2-http</title>
+                  <packages>com.google.auth.http*:com.google.auth.oauth2*</packages>
+                </group>
+                <group>
+                  <title>google-auth-library-appengine</title>
+                  <packages>com.google.auth.appengine*</packages>
+                </group>
+              </groups>
+              <links>
+                <link>http://download.oracle.com/javase/7/docs/api/</link>
+                <link>http://cloud.google.com/appengine/docs/java/javadoc</link>
+              </links>
+            </configuration>
+          </plugin>
+        </plugins>
+      </reporting>
+    </profile>
   </profiles>
 </project>
