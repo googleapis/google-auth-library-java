@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.25.5](https://www.github.com/googleapis/google-auth-library-java/compare/v0.25.4...v0.25.5) (2021-04-22)
+
+
+### Dependencies
+
+* update autovalue to 1.8.1 ([#638](https://www.github.com/googleapis/google-auth-library-java/issues/638)) ([62cd356](https://www.github.com/googleapis/google-auth-library-java/commit/62cd3564a93abe3cbbe083ac9b7aaebe4608b4bd))
+
 ### [0.25.4](https://www.github.com/googleapis/google-auth-library-java/compare/v0.25.3...v0.25.4) (2021-04-15)
 
 
