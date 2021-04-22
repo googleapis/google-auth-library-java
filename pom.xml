@@ -63,9 +63,9 @@
     <project.junit.version>4.13.2</project.junit.version>
     <project.guava.version>30.1.1-android</project.guava.version>
     <project.appengine.version>1.9.88</project.appengine.version>
-    <project.autovalue.version>1.7.4</project.autovalue.version>
     <project.findbugs.version>3.0.2</project.findbugs.version>
     <deploy.autorelease>false</deploy.autorelease>
+    <project.autovalue.version>1.8.1</project.autovalue.version>
     <auto-value-annotation.version>1.8.1</auto-value-annotation.version>
   </properties>
 
