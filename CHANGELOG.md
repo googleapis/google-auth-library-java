@@ -1,5 +1,27 @@
 # Changelog
 
+### [0.25.5](https://www.github.com/googleapis/google-auth-library-java/compare/v0.25.4...v0.25.5) (2021-04-22)
+
+
+### Dependencies
+
+* update autovalue to 1.8.1 ([#638](https://www.github.com/googleapis/google-auth-library-java/issues/638)) ([62cd356](https://www.github.com/googleapis/google-auth-library-java/commit/62cd3564a93abe3cbbe083ac9b7aaebe4608b4bd))
+
+### [0.25.4](https://www.github.com/googleapis/google-auth-library-java/compare/v0.25.3...v0.25.4) (2021-04-15)
+
+
+### Bug Fixes
+
+* release scripts from issuing overlapping phases ([#634](https://www.github.com/googleapis/google-auth-library-java/issues/634)) ([b8d851e](https://www.github.com/googleapis/google-auth-library-java/commit/b8d851e1ac97b71e986c9afccca42021be3f9dd1))
+* typo ([#632](https://www.github.com/googleapis/google-auth-library-java/issues/632)) ([d860608](https://www.github.com/googleapis/google-auth-library-java/commit/d8606083b6632e26463aac0a0d1e92835d2fbcd0))
+
+### [0.25.3](https://www.github.com/googleapis/google-auth-library-java/compare/v0.25.2...v0.25.3) (2021-04-12)
+
+
+### Dependencies
+
+* update guava patch ([#628](https://www.github.com/googleapis/google-auth-library-java/issues/628)) ([8ff3207](https://www.github.com/googleapis/google-auth-library-java/commit/8ff320755e44f937590196bcbefa8c9537244af6))
+
 ### [0.25.2](https://www.github.com/googleapis/google-auth-library-java/compare/v0.25.1...v0.25.2) (2021-03-18)
 
 
