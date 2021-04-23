@@ -317,6 +317,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     Map<String, Object> sourceCredentialsJson;
     String sourceCredentialsType;
     String quotaProjectId;
+    String targetPrincipal;
     try {
       serviceAccountImpersonationUrl = (String) json.get("service_account_impersonation_url");
       if (json.containsKey("delegates")) {
@@ -325,10 +326,10 @@ public class ImpersonatedCredentials extends GoogleCredentials
       sourceCredentialsJson = (Map<String, Object>) json.get("source_credentials");
       sourceCredentialsType = (String) sourceCredentialsJson.get("type");
       quotaProjectId = (String) json.get("quota_project_id");
-    } catch (ClassCastException | NullPointerException e) {
+      targetPrincipal = extractTargetPrincipal(serviceAccountImpersonationUrl);
+    } catch (ClassCastException | NullPointerException | IllegalArgumentException e) {
       throw new CredentialFormatException("An invalid input stream was provided.", e);
     }
-    String targetPrincipal = extractTargetPrincipal(serviceAccountImpersonationUrl);
 
     GoogleCredentials sourceCredentials;
     if (GoogleCredentials.USER_FILE_TYPE.equals(sourceCredentialsType)) {
@@ -598,10 +599,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
     public Builder setQuotaProjectId(String quotaProjectId) {
       this.quotaProjectId = quotaProjectId;
       return this;
-    }
-
-    public String getQuotaProjectId() {
-      return quotaProjectId;
     }
 
     public ImpersonatedCredentials build() {

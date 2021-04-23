@@ -175,7 +175,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     assertEquals(QUOTA_PROJECT_ID, credentials.getQuotaProjectId());
     assertEquals(DELEGATES, credentials.getDelegates());
     assertEquals(new ArrayList<String>(), credentials.getScopes());
-    assertEquals(credentials.getLifetime(), 3600);
+    assertEquals(3600, credentials.getLifetime());
     GoogleCredentials sourceCredentials = credentials.getSourceCredentials();
     assertTrue(sourceCredentials instanceof UserCredentials);
   }
@@ -197,7 +197,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     assertNull(credentials.getQuotaProjectId());
     assertEquals(DELEGATES, credentials.getDelegates());
     assertEquals(new ArrayList<String>(), credentials.getScopes());
-    assertEquals(credentials.getLifetime(), 3600);
+    assertEquals(3600, credentials.getLifetime());
     GoogleCredentials sourceCredentials = credentials.getSourceCredentials();
     assertTrue(sourceCredentials instanceof UserCredentials);
   }
@@ -220,7 +220,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     assertNull(credentials.getQuotaProjectId());
     assertEquals(new ArrayList<String>(), credentials.getDelegates());
     assertEquals(new ArrayList<String>(), credentials.getScopes());
-    assertEquals(credentials.getLifetime(), 3600);
+    assertEquals(3600, credentials.getLifetime());
     GoogleCredentials sourceCredentials = credentials.getSourceCredentials();
     assertTrue(sourceCredentials instanceof UserCredentials);
   }
@@ -236,7 +236,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     assertEquals(QUOTA_PROJECT_ID, credentials.getQuotaProjectId());
     assertEquals(DELEGATES, credentials.getDelegates());
     assertEquals(new ArrayList<String>(), credentials.getScopes());
-    assertEquals(credentials.getLifetime(), 3600);
+    assertEquals(3600, credentials.getLifetime());
     GoogleCredentials sourceCredentials = credentials.getSourceCredentials();
     assertTrue(sourceCredentials instanceof ServiceAccountCredentials);
   }
