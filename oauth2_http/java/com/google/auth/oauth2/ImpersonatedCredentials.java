@@ -109,7 +109,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
   private transient HttpTransportFactory transportFactory;
 
   /**
-   * @param sourceCredentials the source credential used to acquire the impersonated credentials It
+   * @param sourceCredentials the source credential used to acquire the impersonated credentials. It
    *     should be either a user account credential or a service account credential.
    * @param targetPrincipal the service account to impersonate
    * @param delegates the chained list of delegates required to grant the final access_token. If
@@ -148,7 +148,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
   }
 
   /**
-   * @param sourceCredentials the source credential used to acquire the impersonated credentials It
+   * @param sourceCredentials the source credential used to acquire the impersonated credentials. It
    *     should be either a user account credential or a service account credential.
    * @param targetPrincipal the service account to impersonate
    * @param delegates the chained list of delegates required to grant the final access_token. If
@@ -192,7 +192,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
   }
 
   /**
-   * @param sourceCredentials the source credential used to acquire the impersonated credentials It
+   * @param sourceCredentials the source credential used to acquire the impersonated credentials. It
    *     should be either a user account credential or a service account credential.
    * @param targetPrincipal the service account to impersonate
    * @param delegates the chained list of delegates required to grant the final access_token. If
@@ -312,14 +312,14 @@ public class ImpersonatedCredentials extends GoogleCredentials
     checkNotNull(json);
     checkNotNull(transportFactory);
 
-    String serviceAccountImpersonationUrl;
     List<String> delegates = null;
     Map<String, Object> sourceCredentialsJson;
     String sourceCredentialsType;
     String quotaProjectId;
     String targetPrincipal;
     try {
-      serviceAccountImpersonationUrl = (String) json.get("service_account_impersonation_url");
+      String serviceAccountImpersonationUrl =
+          (String) json.get("service_account_impersonation_url");
       if (json.containsKey("delegates")) {
         delegates = (List<String>) json.get("delegates");
       }
