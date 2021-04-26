@@ -182,6 +182,13 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
   }
 
   @Test
+  public void getUriForSelfSignedJWT_noHost() {
+    URI uri = URI.create("file:foo");
+    URI expected = URI.create("file:foo");
+    assertEquals(expected, ServiceAccountJwtAccessCredentials.getUriForSelfSignedJWT(uri));
+  }
+
+  @Test
   public void getUriForSelfSignedJWT_forStaticAudience_returnsURI() {
     URI uri = URI.create("compute.googleapis.com");
     URI expected = URI.create("compute.googleapis.com");
