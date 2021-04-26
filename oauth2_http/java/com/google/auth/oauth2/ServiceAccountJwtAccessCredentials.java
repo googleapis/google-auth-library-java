@@ -339,7 +339,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    */
   @VisibleForTesting
   static URI getUriForSelfSignedJWT(URI uri) {
-    if (uri == null|| (uri.getScheme() == null && uri.getHost() == null)) {
+    if (uri == null || (uri.getScheme() == null && uri.getHost() == null)) {
       return uri;
     }
     try {
