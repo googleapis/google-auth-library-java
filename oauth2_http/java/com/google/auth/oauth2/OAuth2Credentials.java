@@ -218,6 +218,15 @@ public class OAuth2Credentials extends Credentials {
     }
   }
 
+  /**
+   * Unwraps the value from the future.
+   *
+   * <p>Under most circumstances, the underlying future will already be resolved by the DirectExecutor.
+   * In those cases, the error stacktraces will be rooted in the caller's call tree. However,
+   * in some cases when async and sync usage is mixed, it's possible that a blocking call will await
+   * an async future. In those cases, the stacktrace will be orphaned and be rooted in a thread of
+   * whatever executor the async call used. This doesn't affect correctness and is extremely unlikely.
+   */
   private static <T> T unwrapDirectFuture(Future<T> future) throws IOException {
     try {
       return future.get();
