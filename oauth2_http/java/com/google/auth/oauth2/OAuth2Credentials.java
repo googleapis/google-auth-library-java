@@ -40,18 +40,27 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
-
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListenableFutureTask;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.ServiceLoader;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 
 /**
  * Base type for Credentials using OAuth2.
@@ -59,12 +68,12 @@ import java.util.concurrent.Executor;
 public class OAuth2Credentials extends Credentials {
 
   private static final long serialVersionUID = 4556936364828217687L;
-  private static final long MINIMUM_TOKEN_MILLISECONDS = 60000L * 5L;
+  private static final long MINIMUM_TOKEN_MILLISECONDS = TimeUnit.MINUTES.toMillis(5);
+  private static final long REFRESH_MARGIN_MILLISECONDS = MINIMUM_TOKEN_MILLISECONDS + TimeUnit.MINUTES.toMillis(1);
 
   // byte[] is serializable, so the lock variable can be final
-  private final Object lock = new byte[0];
-  private Map<String, List<String>> requestMetadata;
-  private AccessToken temporaryAccess;
+  private volatile OAuthValue value = null;
+  private transient ListenableFuture<OAuthValue> refreshTask;
 
   // Change listeners are not serialized
   private transient List<CredentialsChangedListener> changeListeners;
@@ -97,7 +106,7 @@ public class OAuth2Credentials extends Credentials {
   @Deprecated
   public OAuth2Credentials(AccessToken accessToken) {
     if (accessToken != null) {
-      useAccessToken(accessToken);
+      this.value = OAuthValue.create(accessToken);
     }
   }
 
@@ -117,22 +126,19 @@ public class OAuth2Credentials extends Credentials {
   }
 
   public final AccessToken getAccessToken() {
-    return temporaryAccess;
+    OAuthValue localState = value;
+    if (localState != null) {
+      return localState.temporaryAccess;
+    }
+    return null;
   }
 
   @Override
   public void getRequestMetadata(final URI uri, Executor executor,
       final RequestMetadataCallback callback) {
-    Map<String, List<String>> metadata;
-    synchronized(lock) {
-      if (shouldRefresh()) {
-        // The base class implementation will do a blocking get in the executor.
-        super.getRequestMetadata(uri, executor, callback);
-        return;
-      }
-      metadata = Preconditions.checkNotNull(requestMetadata, "cached requestMetadata");
-    }
-    callback.onSuccess(metadata);
+
+    Futures.addCallback(asyncFetch(executor),
+        new FutureCallbackToMetadataCallbackAdapter(callback), MoreExecutors.directExecutor());
   }
 
   /**
@@ -141,12 +147,7 @@ public class OAuth2Credentials extends Credentials {
    */
   @Override
   public Map<String, List<String>> getRequestMetadata(URI uri) throws IOException {
-    synchronized(lock) {
-      if (shouldRefresh()) {
-        refresh();
-      }
-      return Preconditions.checkNotNull(requestMetadata, "requestMetadata");
-    }
+    return unwrapDirectFuture(asyncFetch(MoreExecutors.directExecutor())).requestMetadata;
   }
 
   /**
@@ -154,32 +155,113 @@ public class OAuth2Credentials extends Credentials {
    */
   @Override
   public void refresh() throws IOException {
-    synchronized(lock) {
-      requestMetadata = null;
-      temporaryAccess = null;
-      useAccessToken(Preconditions.checkNotNull(refreshAccessToken(), "new access token"));
-      if (changeListeners != null) {
-        for (CredentialsChangedListener listener : changeListeners) {
-          listener.onChanged(this);
-        }
+    unwrapDirectFuture(refreshAsync(MoreExecutors.directExecutor()));
+  }
+
+  // Async cache impl begin ------
+  private synchronized ListenableFuture<OAuthValue> asyncFetch(Executor executor) {
+    CacheState localState = getState();
+    ListenableFuture<OAuthValue> localTask = refreshTask;
+
+    // When token is no longer fresh, schedule a single flight refresh
+    if (localState != CacheState.Fresh && localTask == null) {
+      localTask = refreshAsync(executor);
+    }
+
+    // the refresh might've been executed using a DirectExecutor, so re-check current state
+    localState = getState();
+
+    // Immediately resolve the token token if its not expired, or wait for the refresh task to complete
+    if (localState != CacheState.Expired) {
+      return Futures.immediateFuture(value);
+    } else {
+      return localTask;
+    }
+  }
+
+
+  private synchronized ListenableFuture<OAuthValue> refreshAsync(Executor executor) {
+    final ListenableFutureTask<OAuthValue> task = ListenableFutureTask.create(new Callable<OAuthValue>() {
+      @Override
+      public OAuthValue call() throws Exception {
+        return OAuthValue.create(refreshAccessToken());
+      }
+    });
+
+    task.addListener(new Runnable() {
+      @Override
+      public void run() {
+        finishRefreshAsync(task);
+      }
+    }, MoreExecutors.directExecutor());
+
+    refreshTask = task;
+    executor.execute(task);
+
+    return task;
+  }
+
+  private synchronized void finishRefreshAsync(ListenableFuture<OAuthValue> finishedTask) {
+    try {
+      this.value = finishedTask.get();
+      for (CredentialsChangedListener listener : changeListeners) {
+        listener.onChanged(this);
+      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    } catch (Exception e) {
+      // noop
+    } finally {
+      if (this.refreshTask == finishedTask) {
+        this.refreshTask = null;
       }
     }
   }
 
-  // Must be called under lock
-  private void useAccessToken(AccessToken token) {
-    this.temporaryAccess = token;
-    this.requestMetadata = Collections.singletonMap(
-        AuthHttpConstants.AUTHORIZATION,
-        Collections.singletonList(OAuth2Utils.BEARER_PREFIX + token.getTokenValue()));
+  private static <T> T unwrapDirectFuture(Future<T> future) throws IOException {
+    try {
+      return future.get();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IOException("Interrupted while asynchronously refreshing the access token", e);
+    } catch (ExecutionException e) {
+      Throwable cause = e.getCause();
+      if (cause instanceof IOException) {
+        throw (IOException) cause;
+      } else if (cause instanceof RuntimeException) {
+        throw (RuntimeException)cause;
+      } else {
+        throw new IOException("Unexpected error refreshing access token", cause);
+      }
+    }
   }
 
-  // Must be called under lock
-  // requestMetadata will never be null if false is returned.
-  private boolean shouldRefresh() {
-    Long expiresIn = getExpiresInMilliseconds();
-    return requestMetadata == null || expiresIn != null && expiresIn <= MINIMUM_TOKEN_MILLISECONDS;
+  private CacheState getState() {
+    OAuthValue localValue = value;
+
+    if (localValue == null) {
+      return CacheState.Expired;
+    }
+
+    Long expiresAtMillis = localValue.temporaryAccess.getExpirationTimeMillis();
+
+    if (expiresAtMillis == null) {
+      return CacheState.Fresh;
+    }
+
+    long remainingMillis = expiresAtMillis - clock.currentTimeMillis();
+
+    if (remainingMillis < MINIMUM_TOKEN_MILLISECONDS) {
+      return CacheState.Expired;
+    }
+
+    if (remainingMillis < REFRESH_MARGIN_MILLISECONDS) {
+      return CacheState.Stale;
+    }
+
+    return CacheState.Fresh;
   }
+  // -- async cache end
 
   /**
    * Method to refresh the access token according to the specific type of credentials.
@@ -203,28 +285,11 @@ public class OAuth2Credentials extends Credentials {
    *
    * @param listener The listener to be added.
    */
-  public final void addChangeListener(CredentialsChangedListener listener) {
-    synchronized(lock) {
-      if (changeListeners == null) {
-        changeListeners = new ArrayList<>();
-      }
-      changeListeners.add(listener);
+  public final synchronized void addChangeListener(CredentialsChangedListener listener) {
+    if (changeListeners == null) {
+      changeListeners = new ArrayList<>();
     }
-  }
-
-  /**
-   * Return the remaining time the current access token will be valid, or null if there is no
-   * token or expiry information. Must be called under lock.
-   */
-  private Long getExpiresInMilliseconds() {
-    if (temporaryAccess == null) {
-      return null;
-    }
-    Date expirationTime = temporaryAccess.getExpirationTime();
-    if (expirationTime == null) {
-      return null;
-    }
-    return (expirationTime.getTime() - clock.currentTimeMillis());
+    changeListeners.add(listener);
   }
 
   /**
@@ -249,10 +314,19 @@ public class OAuth2Credentials extends Credentials {
 
   @Override
   public int hashCode() {
-    return Objects.hash(requestMetadata, temporaryAccess);
+    return Objects.hash(value);
   }
 
   protected ToStringHelper toStringHelper() {
+    OAuthValue localValue = value;
+
+    Map<String, List<String>> requestMetadata = null;
+    AccessToken temporaryAccess = null;
+
+    if (localValue != null) {
+      requestMetadata = localValue.requestMetadata;
+      temporaryAccess = localValue.temporaryAccess;
+    }
     return MoreObjects.toStringHelper(this)
         .add("requestMetadata", requestMetadata)
         .add("temporaryAccess", temporaryAccess);
@@ -269,8 +343,7 @@ public class OAuth2Credentials extends Credentials {
       return false;
     }
     OAuth2Credentials other = (OAuth2Credentials) obj;
-    return Objects.equals(this.requestMetadata, other.requestMetadata)
-        && Objects.equals(this.temporaryAccess, other.temporaryAccess);
+    return Objects.equals(this.value, other.value);
   }
 
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
@@ -297,6 +370,68 @@ public class OAuth2Credentials extends Credentials {
 
   public Builder toBuilder() {
     return new Builder(this);
+  }
+
+
+  /**
+   * Stores an immutable snapshot of the accesstoken owned by {@link OAuth2Credentials}
+   */
+  static class OAuthValue implements Serializable {
+    private final AccessToken temporaryAccess;
+    private final Map<String, List<String>> requestMetadata;
+
+    static OAuthValue create(AccessToken token) {
+      return new OAuthValue(
+          token,
+          Collections.singletonMap(
+              AuthHttpConstants.AUTHORIZATION,
+              Collections.singletonList(OAuth2Utils.BEARER_PREFIX + token.getTokenValue())));
+    }
+
+    private OAuthValue(AccessToken temporaryAccess,
+        Map<String, List<String>> requestMetadata) {
+      this.temporaryAccess = temporaryAccess;
+      this.requestMetadata = requestMetadata;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (!(obj instanceof OAuthValue)) {
+        return false;
+      }
+      OAuthValue other = (OAuthValue) obj;
+      return Objects.equals(this.requestMetadata, other.requestMetadata)
+          && Objects.equals(this.temporaryAccess, other.temporaryAccess);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(temporaryAccess, requestMetadata);
+    }
+  }
+
+  enum CacheState {
+    Fresh,
+    Stale,
+    Expired;
+  }
+
+  static class FutureCallbackToMetadataCallbackAdapter implements FutureCallback<OAuthValue> {
+    private final RequestMetadataCallback callback;
+
+    public FutureCallbackToMetadataCallbackAdapter(RequestMetadataCallback callback) {
+      this.callback = callback;
+    }
+
+    @Override
+    public void onSuccess(@Nullable OAuthValue value) {
+      callback.onSuccess(value.requestMetadata);
+    }
+
+    @Override
+    public void onFailure(Throwable throwable) {
+      callback.onFailure(throwable);
+    }
   }
 
   public static class Builder {
