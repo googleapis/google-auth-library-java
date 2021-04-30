@@ -47,6 +47,11 @@ import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFact
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -266,15 +271,15 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     assertEquals(1, transportFactory.transport.buildRequestCount--);
   }
 
-  @Ignore("Currently broken")
   @Test
-  public void getRequestMetadata_async_refreshRace() throws IOException {
+  public void getRequestMetadata_async_refreshRace()
+      throws ExecutionException, InterruptedException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessToken1);
     TestClock clock = new TestClock();
-    OAuth2Credentials credentials = UserCredentials.newBuilder()
+    final OAuth2Credentials credentials = UserCredentials.newBuilder()
         .setClientId(CLIENT_ID)
         .setClientSecret(CLIENT_SECRET)
         .setRefreshToken(REFRESH_TOKEN)
@@ -289,14 +294,34 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     assertEquals(0, transportFactory.transport.buildRequestCount);
     assertNull(callback.metadata);
 
-    // Asynchronous task is scheduled, but beaten by another blocking get call.
+    // Asynchronous task is scheduled, and a blocking call follows it
     assertEquals(1, executor.numTasks());
-    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
-    assertEquals(1, transportFactory.transport.buildRequestCount--);
-    TestUtils.assertContainsBearerToken(metadata, accessToken1);
 
-    // When the task is run, the cached data is used.
+    ExecutorService testExecutor = Executors.newFixedThreadPool(1);
+
+    FutureTask<Map<String, List<String>>> blockingTask = new FutureTask<>(
+        new Callable<Map<String, List<String>>>() {
+          @Override
+          public Map<String, List<String>> call() throws Exception {
+            return credentials.getRequestMetadata(CALL_URI);
+          }
+        });
+    testExecutor.submit(blockingTask);
+    testExecutor.shutdown();
+
+    // give the blockingTask a chance to run
+    for (int i = 0; i < 10; i++) {
+      Thread.yield();
+    }
+
+    // blocking task is waiting on the async task to finish
+    assertFalse(blockingTask.isDone());
+    assertEquals(0, transportFactory.transport.buildRequestCount);
+
+    // When the task is run, the result is shared
     assertEquals(1, executor.runTasksExhaustively());
+    assertEquals(1, transportFactory.transport.buildRequestCount--);
+    Map<String, List<String>> metadata = blockingTask.get();
     assertEquals(0, transportFactory.transport.buildRequestCount);
     assertSame(metadata, callback.metadata);
   }
