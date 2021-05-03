@@ -1,0 +1,30 @@
+rebaseMergeAllowed: true
+squashMergeAllowed: true
+mergeCommitAllowed: false
+branchProtectionRules:
+- pattern: master
+  isAdminEnforced: true
+  requiredStatusCheckContexts:
+    - "dependencies (8)"
+    - "dependencies (11)"
+    - "linkage-monitor"
+    - "lint"
+    - "clirr"
+    - "units (7)"
+    - "units (8)"
+    - "units (11)"
+    - 'cla/google'
+  requiredApprovingReviewCount: 1
+  requiresCodeOwnerReviews: true
+  requiresStrictStatusChecks: true
+permissionRules:
+  - team: Googlers
+    permission: pull
+  - team: yoshi-java
+    permission: push
+  - team: java-samples-reviewers
+    permission: push
+  - team: yoshi-java-admins
+    permission: admin
+  - team: yoshi-admins
+    permission: admin

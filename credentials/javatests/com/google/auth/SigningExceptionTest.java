@@ -37,10 +37,8 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.google.auth.ServiceAccountSigner.SigningException;
-
-import org.junit.Test;
-
 import java.io.IOException;
+import org.junit.Test;
 
 public class SigningExceptionTest {
 

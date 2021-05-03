@@ -40,7 +40,6 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.Collection;
@@ -48,7 +47,8 @@ import java.util.Date;
 import java.util.Objects;
 
 /**
- * OAuth2 credentials representing the built-in service account for Google App ENgine.
+ * OAuth2 credentials representing the built-in service account for Google App Engine. You should
+ * only use this class if you are running on AppEngine and are using urlfetch.
  *
  * <p>Fetches access tokens from the App Identity service.
  */
@@ -62,23 +62,17 @@ public class AppEngineCredentials extends GoogleCredentials implements ServiceAc
 
   private transient AppIdentityService appIdentityService;
 
-  @Deprecated
-  public AppEngineCredentials(Collection<String> scopes) {
-    this(scopes, null);
-  }
-
-  @Deprecated
-  public AppEngineCredentials(Collection<String> scopes, AppIdentityService appIdentityService) {
+  private AppEngineCredentials(Collection<String> scopes, AppIdentityService appIdentityService) {
     this.scopes = scopes == null ? ImmutableSet.<String>of() : ImmutableList.copyOf(scopes);
-    this.appIdentityService = appIdentityService != null ? appIdentityService 
-        : AppIdentityServiceFactory.getAppIdentityService();
+    this.appIdentityService =
+        appIdentityService != null
+            ? appIdentityService
+            : AppIdentityServiceFactory.getAppIdentityService();
     this.appIdentityServiceClassName = this.appIdentityService.getClass().getName();
     scopesRequired = this.scopes.isEmpty();
   }
 
-  /**
-   * Refresh the access token by getting it from the App Identity service
-   */
+  /** Refresh the access token by getting it from the App Identity service */
   @Override
   public AccessToken refreshAccessToken() throws IOException {
     if (createScopedRequired()) {
@@ -89,7 +83,7 @@ public class AppEngineCredentials extends GoogleCredentials implements ServiceAc
     Date expirationTime = accessTokenResponse.getExpirationTime();
     return new AccessToken(accessToken, expirationTime);
   }
-  
+
   @Override
   public boolean createScopedRequired() {
     return scopesRequired;

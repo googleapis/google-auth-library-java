@@ -43,11 +43,6 @@ import com.google.auth.Credentials;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.BaseSerializationTest;
 import com.google.auth.oauth2.GoogleCredentials;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
@@ -56,25 +51,30 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Unit tests for AppEngineCredentials
- */
+/** Unit tests for AppEngineCredentials */
 @RunWith(JUnit4.class)
 public class AppEngineCredentialsTest extends BaseSerializationTest {
-  
-  private static final Collection<String> SCOPES =
+
+  private static Collection<String> SCOPES =
       Collections.unmodifiableCollection(Arrays.asList("scope1", "scope2"));
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
   private static final String EXPECTED_ACCOUNT = "serviceAccount";
-  
-  @Test  
+
+  @Test
   public void constructor_usesAppIdentityService() throws IOException {
-    final String expectedAccessToken = "ExpectedAccessToken";
+    String expectedAccessToken = "ExpectedAccessToken";
 
     MockAppIdentityService appIdentity = new MockAppIdentityService();
     appIdentity.setAccessTokenText(expectedAccessToken);
-    Credentials credentials = new AppEngineCredentials(SCOPES, appIdentity);
+    Credentials credentials =
+        AppEngineCredentials.newBuilder()
+            .setScopes(SCOPES)
+            .setAppIdentityService(appIdentity)
+            .build();
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
@@ -84,15 +84,16 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void refreshAccessToken_sameAs() throws IOException {
-    final String expectedAccessToken = "ExpectedAccessToken";
+    String expectedAccessToken = "ExpectedAccessToken";
 
     MockAppIdentityService appIdentity = new MockAppIdentityService();
     appIdentity.setAccessTokenText(expectedAccessToken);
     appIdentity.setExpiration(new Date(System.currentTimeMillis() + 60L * 60L * 100L));
-    AppEngineCredentials credentials = AppEngineCredentials.newBuilder()
-        .setScopes(SCOPES)
-        .setAppIdentityService(appIdentity)
-        .build();
+    AppEngineCredentials credentials =
+        AppEngineCredentials.newBuilder()
+            .setScopes(SCOPES)
+            .setAppIdentityService(appIdentity)
+            .build();
     AccessToken accessToken = credentials.refreshAccessToken();
     assertEquals(appIdentity.getAccessTokenText(), accessToken.getTokenValue());
     assertEquals(appIdentity.getExpiration(), accessToken.getExpirationTime());
@@ -102,10 +103,11 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
   public void getAccount_sameAs() throws IOException {
     MockAppIdentityService appIdentity = new MockAppIdentityService();
     appIdentity.setServiceAccountName(EXPECTED_ACCOUNT);
-    AppEngineCredentials credentials = AppEngineCredentials.newBuilder()
-        .setScopes(SCOPES)
-        .setAppIdentityService(appIdentity)
-        .build();
+    AppEngineCredentials credentials =
+        AppEngineCredentials.newBuilder()
+            .setScopes(SCOPES)
+            .setAppIdentityService(appIdentity)
+            .build();
     assertEquals(EXPECTED_ACCOUNT, credentials.getAccount());
   }
 
@@ -114,25 +116,27 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
     MockAppIdentityService appIdentity = new MockAppIdentityService();
     appIdentity.setSignature(expectedSignature);
-    AppEngineCredentials credentials = AppEngineCredentials.newBuilder()
-        .setScopes(SCOPES)
-        .setAppIdentityService(appIdentity)
-        .build();
+    AppEngineCredentials credentials =
+        AppEngineCredentials.newBuilder()
+            .setScopes(SCOPES)
+            .setAppIdentityService(appIdentity)
+            .build();
     assertArrayEquals(expectedSignature, credentials.sign(expectedSignature));
   }
 
   @Test
   public void createScoped_clonesWithScopes() throws IOException {
-    final String expectedAccessToken = "ExpectedAccessToken";
-    final Collection<String> emptyScopes = Collections.emptyList();
+    String expectedAccessToken = "ExpectedAccessToken";
+    Collection<String> emptyScopes = Collections.emptyList();
 
     MockAppIdentityService appIdentity = new MockAppIdentityService();
     appIdentity.setAccessTokenText(expectedAccessToken);
 
-    AppEngineCredentials credentials = AppEngineCredentials.newBuilder()
-        .setScopes(emptyScopes)
-        .setAppIdentityService(appIdentity)
-        .build();
+    AppEngineCredentials credentials =
+        AppEngineCredentials.newBuilder()
+            .setScopes(emptyScopes)
+            .setAppIdentityService(appIdentity)
+            .build();
     assertTrue(credentials.createScopedRequired());
     try {
       credentials.getRequestMetadata(CALL_URI);
@@ -143,7 +147,7 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
 
     GoogleCredentials scopedCredentials = credentials.createScoped(SCOPES);
     assertNotSame(credentials, scopedCredentials);
-    
+
     Map<String, List<String>> metadata = scopedCredentials.getRequestMetadata(CALL_URI);
 
     assertEquals(1, appIdentity.getGetAccessTokenCallCount());
@@ -152,17 +156,19 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void equals_true() throws IOException {
-    final Collection<String> emptyScopes = Collections.emptyList();
+    Collection<String> emptyScopes = Collections.emptyList();
     MockAppIdentityService appIdentity = new MockAppIdentityService();
 
-    AppEngineCredentials credentials = AppEngineCredentials.newBuilder()
-        .setScopes(emptyScopes)
-        .setAppIdentityService(appIdentity)
-        .build();
-    AppEngineCredentials otherCredentials = AppEngineCredentials.newBuilder()
-        .setScopes(emptyScopes)
-        .setAppIdentityService(appIdentity)
-        .build();
+    AppEngineCredentials credentials =
+        AppEngineCredentials.newBuilder()
+            .setScopes(emptyScopes)
+            .setAppIdentityService(appIdentity)
+            .build();
+    AppEngineCredentials otherCredentials =
+        AppEngineCredentials.newBuilder()
+            .setScopes(emptyScopes)
+            .setAppIdentityService(appIdentity)
+            .build();
     assertTrue(credentials.equals(credentials));
     assertTrue(credentials.equals(otherCredentials));
     assertTrue(otherCredentials.equals(credentials));
@@ -170,63 +176,68 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void equals_false_scopes() throws IOException {
-    final Collection<String> emptyScopes = Collections.emptyList();
-    final Collection<String> scopes = Collections.singleton("SomeScope");
+    Collection<String> emptyScopes = Collections.emptyList();
+    Collection<String> scopes = Collections.singleton("SomeScope");
     MockAppIdentityService appIdentity = new MockAppIdentityService();
 
-    AppEngineCredentials credentials = AppEngineCredentials.newBuilder()
-        .setScopes(emptyScopes)
-        .setAppIdentityService(appIdentity)
-        .build();
-    AppEngineCredentials otherCredentials = AppEngineCredentials.newBuilder()
-        .setScopes(scopes)
-        .setAppIdentityService(appIdentity)
-        .build();
+    AppEngineCredentials credentials =
+        AppEngineCredentials.newBuilder()
+            .setScopes(emptyScopes)
+            .setAppIdentityService(appIdentity)
+            .build();
+    AppEngineCredentials otherCredentials =
+        AppEngineCredentials.newBuilder()
+            .setScopes(scopes)
+            .setAppIdentityService(appIdentity)
+            .build();
     assertFalse(credentials.equals(otherCredentials));
     assertFalse(otherCredentials.equals(credentials));
   }
 
   @Test
   public void toString_containsFields() throws IOException {
-    String expectedToString = String.format(
-        "AppEngineCredentials{scopes=[%s], scopesRequired=%b, appIdentityServiceClassName=%s}",
-        "SomeScope",
-        false,
-        MockAppIdentityService.class.getName());
-    final Collection<String> scopes = Collections.singleton("SomeScope");
+    String expectedToString =
+        String.format(
+            "AppEngineCredentials{scopes=[%s], scopesRequired=%b, appIdentityServiceClassName=%s}",
+            "SomeScope", false, MockAppIdentityService.class.getName());
+    Collection<String> scopes = Collections.singleton("SomeScope");
     MockAppIdentityService appIdentity = new MockAppIdentityService();
 
-    AppEngineCredentials credentials = AppEngineCredentials.newBuilder()
-        .setScopes(scopes)
-        .setAppIdentityService(appIdentity)
-        .build();
+    AppEngineCredentials credentials =
+        AppEngineCredentials.newBuilder()
+            .setScopes(scopes)
+            .setAppIdentityService(appIdentity)
+            .build();
 
     assertEquals(expectedToString, credentials.toString());
   }
 
   @Test
   public void hashCode_equals() throws IOException {
-    final Collection<String> emptyScopes = Collections.emptyList();
+    Collection<String> emptyScopes = Collections.emptyList();
     MockAppIdentityService appIdentity = new MockAppIdentityService();
-    AppEngineCredentials credentials = AppEngineCredentials.newBuilder()
-        .setScopes(emptyScopes)
-        .setAppIdentityService(appIdentity)
-        .build();
-    AppEngineCredentials otherCredentials = AppEngineCredentials.newBuilder()
-        .setScopes(emptyScopes)
-        .setAppIdentityService(appIdentity)
-        .build();
+    AppEngineCredentials credentials =
+        AppEngineCredentials.newBuilder()
+            .setScopes(emptyScopes)
+            .setAppIdentityService(appIdentity)
+            .build();
+    AppEngineCredentials otherCredentials =
+        AppEngineCredentials.newBuilder()
+            .setScopes(emptyScopes)
+            .setAppIdentityService(appIdentity)
+            .build();
     assertEquals(credentials.hashCode(), otherCredentials.hashCode());
   }
 
   @Test
   public void serialize() throws IOException, ClassNotFoundException {
-    final Collection<String> scopes = Collections.singleton("SomeScope");
+    Collection<String> scopes = Collections.singleton("SomeScope");
     MockAppIdentityService appIdentity = new MockAppIdentityService();
-    AppEngineCredentials credentials = AppEngineCredentials.newBuilder()
-        .setScopes(scopes)
-        .setAppIdentityService(appIdentity)
-        .build();
+    AppEngineCredentials credentials =
+        AppEngineCredentials.newBuilder()
+            .setScopes(scopes)
+            .setAppIdentityService(appIdentity)
+            .build();
     GoogleCredentials deserializedCredentials = serializeAndDeserialize(credentials);
     assertEquals(credentials, deserializedCredentials);
     assertEquals(credentials.hashCode(), deserializedCredentials.hashCode());

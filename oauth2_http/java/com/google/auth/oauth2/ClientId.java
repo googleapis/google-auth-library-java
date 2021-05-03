@@ -34,7 +34,6 @@ package com.google.auth.oauth2;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.Preconditions;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -57,11 +56,25 @@ public class ClientId {
   private final String clientSecret;
 
   /**
+   * Constructs a client ID from an explicit ID and secret.
+   *
+   * <p>Note: Direct use of this factory method in application code is not recommended to avoid
+   * having secrets or values that need to be updated in source code.
+   *
+   * @param clientId Text identifier of the Client ID.
+   * @param clientSecret Secret to associated with the Client ID.
+   * @return The ClientId instance.
+   */
+  public static ClientId of(String clientId, String clientSecret) {
+    return new ClientId(clientId, clientSecret);
+  }
+
+  /**
    * Constructs a Client ID from JSON from a downloaded file.
    *
-   * @param json The JSON from the downloaded file.
-   * @return the ClientId instance based on the JSON.
-   * @throws IOException The JSON could not be parsed.
+   * @param json the JSON from the downloaded file
+   * @return the ClientId instance based on the JSON
+   * @throws IOException the JSON could not be parsed
    */
   public static ClientId fromJson(Map<String, Object> json) throws IOException {
     Object rawDetail = null;
@@ -69,28 +82,32 @@ public class ClientId {
     if (rawDetail == null) {
       rawDetail = json.get(FIELD_TYPE_WEB);
     }
-    if (rawDetail == null || !(rawDetail instanceof Map<?,?>)) {
-      throw new IOException("Unable to parse Client ID JSON. Expecting top-level field '"
-          + FIELD_TYPE_WEB + "' or '" + FIELD_TYPE_INSTALLED + "' of collection type");
+    if (rawDetail == null || !(rawDetail instanceof Map<?, ?>)) {
+      throw new IOException(
+          "Unable to parse Client ID JSON. Expecting top-level field '"
+              + FIELD_TYPE_WEB
+              + "' or '"
+              + FIELD_TYPE_INSTALLED
+              + "' of collection type");
     }
     @SuppressWarnings("unchecked")
-    Map<String, Object> detail = (Map<String,Object>)rawDetail;
+    Map<String, Object> detail = (Map<String, Object>) rawDetail;
     String clientId = OAuth2Utils.validateString(detail, FIELD_CLIENT_ID, JSON_PARSE_ERROR);
     if (clientId == null || clientId.length() == 0) {
-      throw new IOException("Unable to parse ClientId. Field '"
-          + FIELD_CLIENT_ID + "' is required.");
+      throw new IOException(
+          "Unable to parse ClientId. Field '" + FIELD_CLIENT_ID + "' is required.");
     }
-    String clientSecret = OAuth2Utils.validateOptionalString(
-        detail, FIELD_CLIENT_SECRET, JSON_PARSE_ERROR);
+    String clientSecret =
+        OAuth2Utils.validateOptionalString(detail, FIELD_CLIENT_SECRET, JSON_PARSE_ERROR);
     return new ClientId(clientId, clientSecret);
   }
 
   /**
    * Constructs a Client ID from JSON file stored as a resource.
    *
-   * @param relativeClass A class in the same namespace as the resource.
-   * @param resourceName The name of the resource
-   * @return The constructed ClientID instance based on the JSON in the resource.
+   * @param relativeClass a class in the same namespace as the resource
+   * @param resourceName the name of the resource
+   * @return the constructed ClientID instance based on the JSON in the resource
    * @throws IOException The JSON could not be loaded or parsed.
    */
   public static ClientId fromResource(Class<?> relativeClass, String resourceName)
@@ -102,35 +119,36 @@ public class ClientId {
   /**
    * Constructs a Client ID from JSON file stream.
    *
-   * @param stream Stream of the downloaded JSON file.
-   * @return The constructed ClientID instance based on the JSON in the stream.
-   * @throws IOException The JSON could not be read or parsed.
+   * @param stream the downloaded JSON file
+   * @return the constructed ClientID instance based on the JSON in the stream
+   * @throws IOException the JSON could not be read or parsed
    */
   public static ClientId fromStream(InputStream stream) throws IOException {
     Preconditions.checkNotNull(stream);
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
-    GenericJson parsedJson = parser.parseAndClose(
-        stream, StandardCharsets.UTF_8, GenericJson.class);
+    GenericJson parsedJson =
+        parser.parseAndClose(stream, StandardCharsets.UTF_8, GenericJson.class);
     return fromJson(parsedJson);
   }
 
   /**
    * Constructs a client ID using an explicit ID and secret
    *
-   * <p>Note: Direct use of this constructor in application code is not recommended to avoid
-   * having secrets or values that need to be updated in source code.
+   * <p>Note: Direct use of this constructor in application code is not recommended to avoid having
+   * secrets or values that need to be updated in source code.
    *
    * @param clientId Text identifier of the Client ID.
    * @param clientSecret Secret to associated with the Client ID.
    */
-  @Deprecated
-  public ClientId(String clientId, String clientSecret) {
+  private ClientId(String clientId, String clientSecret) {
     this.clientId = Preconditions.checkNotNull(clientId);
     this.clientSecret = clientSecret;
   }
 
   /**
    * Returns the text identifier of the Client ID.
+   *
+   * @return The text identifier of the Client ID.
    */
   public final String getClientId() {
     return clientId;
@@ -138,6 +156,8 @@ public class ClientId {
 
   /**
    * Returns the secret associated with the Client ID.
+   *
+   * @return The secret associated with the Client ID.
    */
   public final String getClientSecret() {
     return clientSecret;

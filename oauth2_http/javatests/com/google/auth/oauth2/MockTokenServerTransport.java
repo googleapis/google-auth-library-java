@@ -36,7 +36,7 @@ import com.google.api.client.http.LowLevelHttpResponse;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.Json;
 import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
@@ -45,7 +45,6 @@ import com.google.auth.TestUtils;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayDeque;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -55,7 +54,7 @@ import java.util.Queue;
 public class MockTokenServerTransport extends MockHttpTransport {
 
   static final String EXPECTED_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
-  static final JsonFactory JSON_FACTORY = new JacksonFactory();
+  static final JsonFactory JSON_FACTORY = new GsonFactory();
   int buildRequestCount;
   final Map<String, String> clients = new HashMap<String, String>();
   final Map<String, String> refreshTokens = new HashMap<String, String>();
@@ -143,6 +142,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
           Map<String, String> query = TestUtils.parseQuery(content);
           String accessToken;
           String refreshToken = null;
+          boolean generateAccessToken = true;
 
           String foundId = query.get("client_id");
           if (foundId != null) {
@@ -180,24 +180,38 @@ public class MockTokenServerTransport extends MockHttpTransport {
               throw new IOException("Service Account Email not found as issuer.");
             }
             accessToken = serviceAccounts.get(foundEmail);
+            String foundTargetAudience = (String) signature.getPayload().get("target_audience");
             String foundScopes = (String) signature.getPayload().get("scope");
-            if (foundScopes == null || foundScopes.length() == 0) {
-              throw new IOException("Scopes not found.");
+            if ((foundScopes == null || foundScopes.length() == 0)
+                && (foundTargetAudience == null || foundTargetAudience.length() == 0)) {
+              throw new IOException("Either target_audience or scopes must be specified.");
+            }
+
+            if (foundScopes != null && foundTargetAudience != null) {
+              throw new IOException("Only one of target_audience or scopes must be specified.");
+            }
+            if (foundTargetAudience != null) {
+              generateAccessToken = false;
             }
           } else {
             throw new IOException("Unknown token type.");
           }
 
           // Create the JSON response
-          GenericJson refreshContents = new GenericJson();
-          refreshContents.setFactory(JSON_FACTORY);
-          refreshContents.put("access_token", accessToken);
-          refreshContents.put("expires_in", expiresInSeconds);
-          refreshContents.put("token_type", "Bearer");
-          if (refreshToken != null) {
-            refreshContents.put("refresh_token", refreshToken);
+          // https://developers.google.com/identity/protocols/OpenIDConnect#server-flow
+          GenericJson responseContents = new GenericJson();
+          responseContents.setFactory(JSON_FACTORY);
+          responseContents.put("token_type", "Bearer");
+          responseContents.put("expires_in", expiresInSeconds);
+          if (generateAccessToken) {
+            responseContents.put("access_token", accessToken);
+            if (refreshToken != null) {
+              responseContents.put("refresh_token", refreshToken);
+            }
+          } else {
+            responseContents.put("id_token", ServiceAccountCredentialsTest.DEFAULT_ID_TOKEN);
           }
-          String refreshText = refreshContents.toPrettyString();
+          String refreshText = responseContents.toPrettyString();
 
           return new MockLowLevelHttpResponse()
               .setContentType(Json.MEDIA_TYPE)

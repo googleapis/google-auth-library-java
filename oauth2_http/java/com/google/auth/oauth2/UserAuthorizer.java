@@ -43,16 +43,13 @@ import com.google.api.client.util.Joiner;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Date;
 
-/**
- * Handles an interactive 3-Legged-OAuth2 (3LO) user consent authorization.
- */
+/** Handles an interactive 3-Legged-OAuth2 (3LO) user consent authorization. */
 public class UserAuthorizer {
 
   static final URI DEFAULT_CALLBACK_URI = URI.create("/oauth2callback");
@@ -70,45 +67,25 @@ public class UserAuthorizer {
   private final URI userAuthUri;
 
   /**
-   * Constructor with minimal parameters.
-   *
-   * @param clientId Client ID to identify the OAuth2 consent prompt.
-   * @param scopes OAUth2 scopes defining the user consent.
-   * @param tokenStore Implementation of component for long term storage of tokens.
-   */
-  @Deprecated
-  public UserAuthorizer(ClientId clientId, Collection<String> scopes, TokenStore tokenStore) {
-    this(clientId, scopes, tokenStore, null, null, null, null);
-  }
-
-  /**
-   * Constructor with common parameters.
-   *
-   * @param clientId Client ID to identify the OAuth2 consent prompt.
-   * @param scopes OAUth2 scopes defining the user consent.
-   * @param tokenStore Implementation of component for long term storage of tokens.
-   * @param callbackUri URI for implementation of the OAuth2 web callback.
-   */
-  @Deprecated
-  public UserAuthorizer(ClientId clientId, Collection<String> scopes, TokenStore tokenStore, URI callbackUri) {
-    this(clientId, scopes, tokenStore, callbackUri, null, null, null);
-  }
-
-  /**
    * Constructor with all parameters.
    *
-   * @param clientId Client ID to identify the OAuth2 consent prompt.
-   * @param scopes OAUth2 scopes defining the user consent.
-   * @param tokenStore Implementation of a component for long term storage of tokens.
-   * @param callbackUri URI for implementation of the OAuth2 web callback.
+   * @param clientId Client ID to identify the OAuth2 consent prompt
+   * @param scopes OAuth2 scopes defining the user consent
+   * @param tokenStore Implementation of a component for long term storage of tokens
+   * @param callbackUri URI for implementation of the OAuth2 web callback
    * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *        tokens.
-   * @param tokenServerUri URI of the end point that provides tokens.
-   * @param userAuthUri URI of the Web UI for user consent.
+   *     tokens.
+   * @param tokenServerUri URI of the end point that provides tokens
+   * @param userAuthUri URI of the Web UI for user consent
    */
-  @Deprecated
-  public UserAuthorizer(ClientId clientId, Collection<String> scopes, TokenStore tokenStore,
-                        URI callbackUri, HttpTransportFactory transportFactory, URI tokenServerUri, URI userAuthUri) {
+  private UserAuthorizer(
+      ClientId clientId,
+      Collection<String> scopes,
+      TokenStore tokenStore,
+      URI callbackUri,
+      HttpTransportFactory transportFactory,
+      URI tokenServerUri,
+      URI userAuthUri) {
     this.clientId = Preconditions.checkNotNull(clientId);
     this.scopes = ImmutableList.copyOf(Preconditions.checkNotNull(scopes));
     this.callbackUri = (callbackUri == null) ? DEFAULT_CALLBACK_URI : callbackUri;
@@ -116,12 +93,13 @@ public class UserAuthorizer {
         (transportFactory == null) ? OAuth2Utils.HTTP_TRANSPORT_FACTORY : transportFactory;
     this.tokenServerUri = (tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : tokenServerUri;
     this.userAuthUri = (userAuthUri == null) ? OAuth2Utils.USER_AUTH_URI : userAuthUri;
-    this.tokenStore = tokenStore;
+    this.tokenStore = (tokenStore == null) ? new MemoryTokensStorage() : tokenStore;
   }
-
 
   /**
    * Returns the Client ID user to identify the OAuth2 consent prompt.
+   *
+   * @return The Client ID.
    */
   public ClientId getClientId() {
     return clientId;
@@ -129,6 +107,8 @@ public class UserAuthorizer {
 
   /**
    * Returns the scopes defining the user consent.
+   *
+   * @return The collection of scopes defining the user consent.
    */
   public Collection<String> getScopes() {
     return scopes;
@@ -136,6 +116,8 @@ public class UserAuthorizer {
 
   /**
    * Returns the URI for implementation of the OAuth2 web callback.
+   *
+   * @return The URI for the OAuth2 web callback.
    */
   public URI getCallbackUri() {
     return callbackUri;
@@ -145,8 +127,8 @@ public class UserAuthorizer {
    * Returns the URI for implementation of the OAuth2 web callback, optionally relative to the
    * specified URI.
    *
-   * <p>The callback URI is often relative to enable an application to be tested from more than
-   * one place so this can be used to resolve it relative to another URI.
+   * <p>The callback URI is often relative to enable an application to be tested from more than one
+   * place so this can be used to resolve it relative to another URI.
    *
    * @param baseUri The URI to resolve the callback URI relative to.
    * @return The resolved URI.
@@ -156,14 +138,16 @@ public class UserAuthorizer {
       return callbackUri;
     }
     if (baseUri == null || !baseUri.isAbsolute()) {
-      throw new IllegalStateException("If the callback URI is relative, the baseUri passed must"
-          +" be an absolute URI");
+      throw new IllegalStateException(
+          "If the callback URI is relative, the baseUri passed must" + " be an absolute URI");
     }
     return baseUri.resolve(callbackUri);
   }
 
   /**
    * Returns the implementation of a component for long term storage of tokens.
+   *
+   * @return The token storage implementation for long term storage of tokens.
    */
   public TokenStore getTokenStore() {
     return tokenStore;
@@ -215,16 +199,23 @@ public class UserAuthorizer {
       return null;
     }
     GenericJson tokenJson = OAuth2Utils.parseJson(tokenData);
-    String accessTokenValue = OAuth2Utils.validateString(
-        tokenJson, "access_token", TOKEN_STORE_ERROR);
-    Long expirationMillis = OAuth2Utils.validateLong(
-        tokenJson, "expiration_time_millis", TOKEN_STORE_ERROR);
+    String accessTokenValue =
+        OAuth2Utils.validateString(tokenJson, "access_token", TOKEN_STORE_ERROR);
+    Long expirationMillis =
+        OAuth2Utils.validateLong(tokenJson, "expiration_time_millis", TOKEN_STORE_ERROR);
     Date expirationTime = new Date(expirationMillis);
     AccessToken accessToken = new AccessToken(accessTokenValue, expirationTime);
-    String refreshToken = OAuth2Utils.validateOptionalString(
-        tokenJson, "refresh_token", TOKEN_STORE_ERROR);
-    UserCredentials credentials = new UserCredentials(clientId.getClientId(),
-        clientId.getClientSecret(), refreshToken, accessToken, transportFactory, tokenServerUri);
+    String refreshToken =
+        OAuth2Utils.validateOptionalString(tokenJson, "refresh_token", TOKEN_STORE_ERROR);
+    UserCredentials credentials =
+        UserCredentials.newBuilder()
+            .setClientId(clientId.getClientId())
+            .setClientSecret(clientId.getClientSecret())
+            .setRefreshToken(refreshToken)
+            .setAccessToken(accessToken)
+            .setHttpTransportFactory(transportFactory)
+            .setTokenServerUri(tokenServerUri)
+            .build();
     monitorCredentials(userId, credentials);
     return credentials;
   }
@@ -249,23 +240,29 @@ public class UserAuthorizer {
     tokenData.put("grant_type", "authorization_code");
     UrlEncodedContent tokenContent = new UrlEncodedContent(tokenData);
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
-    HttpRequest tokenRequest = requestFactory.buildPostRequest(
-        new GenericUrl(tokenServerUri), tokenContent);
+    HttpRequest tokenRequest =
+        requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), tokenContent);
     tokenRequest.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
 
     HttpResponse tokenResponse = tokenRequest.execute();
 
     GenericJson parsedTokens = tokenResponse.parseAs(GenericJson.class);
-    String accessTokenValue = OAuth2Utils.validateString(
-        parsedTokens, "access_token", FETCH_TOKEN_ERROR);
+    String accessTokenValue =
+        OAuth2Utils.validateString(parsedTokens, "access_token", FETCH_TOKEN_ERROR);
     int expiresInSecs = OAuth2Utils.validateInt32(parsedTokens, "expires_in", FETCH_TOKEN_ERROR);
     Date expirationTime = new Date(new Date().getTime() + expiresInSecs * 1000);
     AccessToken accessToken = new AccessToken(accessTokenValue, expirationTime);
-    String refreshToken = OAuth2Utils.validateOptionalString(
-        parsedTokens, "refresh_token", FETCH_TOKEN_ERROR);
+    String refreshToken =
+        OAuth2Utils.validateOptionalString(parsedTokens, "refresh_token", FETCH_TOKEN_ERROR);
 
-    return new UserCredentials(clientId.getClientId(), clientId.getClientSecret(), refreshToken,
-        accessToken, transportFactory, tokenServerUri);
+    return UserCredentials.newBuilder()
+        .setClientId(clientId.getClientId())
+        .setClientSecret(clientId.getClientSecret())
+        .setRefreshToken(refreshToken)
+        .setAccessToken(accessToken)
+        .setHttpTransportFactory(transportFactory)
+        .setTokenServerUri(tokenServerUri)
+        .build();
   }
 
   /**
@@ -277,8 +274,8 @@ public class UserAuthorizer {
    * @return UserCredentials instance created from the authorization code.
    * @throws IOException An error from the server API call to get the tokens or store the tokens.
    */
-  public UserCredentials getAndStoreCredentialsFromCode(
-      String userId, String code, URI baseUri) throws IOException {
+  public UserCredentials getAndStoreCredentialsFromCode(String userId, String code, URI baseUri)
+      throws IOException {
     Preconditions.checkNotNull(userId);
     Preconditions.checkNotNull(code);
     UserCredentials credentials = getCredentialsFromCode(code, baseUri);
@@ -289,6 +286,7 @@ public class UserAuthorizer {
 
   /**
    * Revokes the authorization for tokens stored for the user.
+   *
    * @param userId Application's identifier for the end user.
    * @throws IOException An error calling the revoke API or deleting the state.
    */
@@ -311,10 +309,10 @@ public class UserAuthorizer {
     }
 
     GenericJson tokenJson = OAuth2Utils.parseJson(tokenData);
-    String accessTokenValue = OAuth2Utils.validateOptionalString(
-        tokenJson, "access_token", TOKEN_STORE_ERROR);
-    String refreshToken = OAuth2Utils.validateOptionalString(
-        tokenJson, "refresh_token", TOKEN_STORE_ERROR);
+    String accessTokenValue =
+        OAuth2Utils.validateOptionalString(tokenJson, "access_token", TOKEN_STORE_ERROR);
+    String refreshToken =
+        OAuth2Utils.validateOptionalString(tokenJson, "refresh_token", TOKEN_STORE_ERROR);
     // If both tokens are present, either can be used
     String revokeToken = (refreshToken != null) ? refreshToken : accessTokenValue;
     GenericUrl revokeUrl = new GenericUrl(OAuth2Utils.TOKEN_REVOKE_URI);
@@ -372,23 +370,18 @@ public class UserAuthorizer {
    * Implementation of listener used by monitorCredentials to rewrite the credentials when the
    * tokens are refreshed.
    */
-  private class UserCredentialsListener
-      implements OAuth2Credentials.CredentialsChangedListener {
+  private class UserCredentialsListener implements OAuth2Credentials.CredentialsChangedListener {
     private final String userId;
 
-    /**
-     * Construct new listener.
-     */
+    /** Construct new listener. */
     public UserCredentialsListener(String userId) {
       this.userId = userId;
     }
 
-    /**
-     * Handle change event by rewriting to token store.
-     */
+    /** Handle change event by rewriting to token store. */
     @Override
     public void onChanged(OAuth2Credentials credentials) throws IOException {
-      UserCredentials userCredentials = (UserCredentials)credentials;
+      UserCredentials userCredentials = (UserCredentials) credentials;
       storeCredentials(userId, userCredentials);
     }
   }
@@ -487,8 +480,8 @@ public class UserAuthorizer {
     }
 
     public UserAuthorizer build() {
-      return new UserAuthorizer(clientId, scopes, tokenStore,
-          callbackUri, transportFactory, tokenServerUri, userAuthUri);
+      return new UserAuthorizer(
+          clientId, scopes, tokenStore, callbackUri, transportFactory, tokenServerUri, userAuthUri);
     }
   }
 }

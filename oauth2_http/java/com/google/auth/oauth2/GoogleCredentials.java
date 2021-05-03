@@ -36,17 +36,22 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.http.HttpTransportFactory;
-
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-/**
- * Base type for credentials for authorizing calls to Google APIs using OAuth2.
- */
+/** Base type for credentials for authorizing calls to Google APIs using OAuth2. */
 public class GoogleCredentials extends OAuth2Credentials {
 
   private static final long serialVersionUID = -1522852442442473691L;
+
+  static final String QUOTA_PROJECT_ID_HEADER_KEY = "x-goog-user-project";
   static final String USER_FILE_TYPE = "authorized_user";
   static final String SERVICE_ACCOUNT_FILE_TYPE = "service_account";
 
@@ -59,7 +64,7 @@ public class GoogleCredentials extends OAuth2Credentials {
    * @param accessToken the access token
    * @return the credentials instance
    */
-  public static GoogleCredentials of(AccessToken accessToken) {
+  public static GoogleCredentials create(AccessToken accessToken) {
     return GoogleCredentials.newBuilder().setAccessToken(accessToken).build();
   }
 
@@ -69,14 +74,15 @@ public class GoogleCredentials extends OAuth2Credentials {
    * <p>Returns the Application Default Credentials which are used to identify and authorize the
    * whole application. The following are searched (in order) to find the Application Default
    * Credentials:
+   *
    * <ol>
    *   <li>Credentials file pointed to by the {@code GOOGLE_APPLICATION_CREDENTIALS} environment
-   *   variable</li>
-   *   <li>Credentials provided by the Google Cloud SDK
-   *   {@code gcloud auth application-default login} command</li>
-   *   <li>Google App Engine built-in credentials</li>
-   *   <li>Google Cloud Shell built-in credentials</li>
-   *   <li>Google Compute Engine built-in credentials</li>
+   *       variable
+   *   <li>Credentials provided by the Google Cloud SDK {@code gcloud auth application-default
+   *       login} command
+   *   <li>Google App Engine built-in credentials
+   *   <li>Google Cloud Shell built-in credentials
+   *   <li>Google Compute Engine built-in credentials
    * </ol>
    *
    * @return the credentials instance.
@@ -92,21 +98,22 @@ public class GoogleCredentials extends OAuth2Credentials {
    * <p>Returns the Application Default Credentials which are used to identify and authorize the
    * whole application. The following are searched (in order) to find the Application Default
    * Credentials:
+   *
    * <ol>
    *   <li>Credentials file pointed to by the {@code GOOGLE_APPLICATION_CREDENTIALS} environment
-   *   variable</li>
-   *   <li>Credentials provided by the Google Cloud SDK
-   *   {@code gcloud auth application-default login} command</li>
-   *   <li>Google App Engine built-in credentials</li>
-   *   <li>Google Cloud Shell built-in credentials</li>
-   *   <li>Google Compute Engine built-in credentials</li>
+   *       variable
+   *   <li>Credentials provided by the Google Cloud SDK {@code gcloud auth application-default
+   *       login} command
+   *   <li>Google App Engine built-in credentials
+   *   <li>Google Cloud Shell built-in credentials
+   *   <li>Google Compute Engine built-in credentials
    * </ol>
    *
    * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *        tokens.
+   *     tokens.
    * @return the credentials instance.
    * @throws IOException if the credentials cannot be created in the current environment.
-   **/
+   */
   public static GoogleCredentials getApplicationDefault(HttpTransportFactory transportFactory)
       throws IOException {
     Preconditions.checkNotNull(transportFactory);
@@ -117,12 +124,12 @@ public class GoogleCredentials extends OAuth2Credentials {
    * Returns credentials defined by a JSON file stream.
    *
    * <p>The stream can contain a Service Account key file in JSON format from the Google Developers
-   * Console or a stored user credential using the format supported by the Cloud SDK.</p>
+   * Console or a stored user credential using the format supported by the Cloud SDK.
    *
    * @param credentialsStream the stream with the credential definition.
    * @return the credential defined by the credentialsStream.
    * @throws IOException if the credential cannot be created from the stream.
-   **/
+   */
   public static GoogleCredentials fromStream(InputStream credentialsStream) throws IOException {
     return fromStream(credentialsStream, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
   }
@@ -131,23 +138,23 @@ public class GoogleCredentials extends OAuth2Credentials {
    * Returns credentials defined by a JSON file stream.
    *
    * <p>The stream can contain a Service Account key file in JSON format from the Google Developers
-   * Console or a stored user credential using the format supported by the Cloud SDK.</p>
+   * Console or a stored user credential using the format supported by the Cloud SDK.
    *
    * @param credentialsStream the stream with the credential definition.
    * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *        tokens.
+   *     tokens.
    * @return the credential defined by the credentialsStream.
    * @throws IOException if the credential cannot be created from the stream.
-   **/
-  public static GoogleCredentials fromStream(InputStream credentialsStream,
-      HttpTransportFactory transportFactory) throws IOException {
+   */
+  public static GoogleCredentials fromStream(
+      InputStream credentialsStream, HttpTransportFactory transportFactory) throws IOException {
     Preconditions.checkNotNull(credentialsStream);
     Preconditions.checkNotNull(transportFactory);
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     JsonObjectParser parser = new JsonObjectParser(jsonFactory);
-    GenericJson fileContents = parser.parseAndClose(
-        credentialsStream, OAuth2Utils.UTF_8, GenericJson.class);
+    GenericJson fileContents =
+        parser.parseAndClose(credentialsStream, StandardCharsets.UTF_8, GenericJson.class);
 
     String fileType = (String) fileContents.get("type");
     if (fileType == null) {
@@ -159,15 +166,33 @@ public class GoogleCredentials extends OAuth2Credentials {
     if (SERVICE_ACCOUNT_FILE_TYPE.equals(fileType)) {
       return ServiceAccountCredentials.fromJson(fileContents, transportFactory);
     }
-    throw new IOException(String.format(
-        "Error reading credentials from stream, 'type' value '%s' not recognized."
-            + " Expecting '%s' or '%s'.",
-        fileType, USER_FILE_TYPE, SERVICE_ACCOUNT_FILE_TYPE));
+    if (ExternalAccountCredentials.EXTERNAL_ACCOUNT_FILE_TYPE.equals(fileType)) {
+      return ExternalAccountCredentials.fromJson(fileContents, transportFactory);
+    }
+    throw new IOException(
+        String.format(
+            "Error reading credentials from stream, 'type' value '%s' not recognized."
+                + " Expecting '%s' or '%s'.",
+            fileType, USER_FILE_TYPE, SERVICE_ACCOUNT_FILE_TYPE));
   }
 
   /**
-   * Default constructor.
-   **/
+   * Adds quota project ID to requestMetadata if present.
+   *
+   * @return a new map with quotaProjectId added if needed
+   */
+  static Map<String, List<String>> addQuotaProjectIdToRequestMetadata(
+      String quotaProjectId, Map<String, List<String>> requestMetadata) {
+    Preconditions.checkNotNull(requestMetadata);
+    Map<String, List<String>> newRequestMetadata = new HashMap<>(requestMetadata);
+    if (quotaProjectId != null && !requestMetadata.containsKey(QUOTA_PROJECT_ID_HEADER_KEY)) {
+      newRequestMetadata.put(
+          QUOTA_PROJECT_ID_HEADER_KEY, Collections.singletonList(quotaProjectId));
+    }
+    return Collections.unmodifiableMap(newRequestMetadata);
+  }
+
+  /** Default constructor. */
   protected GoogleCredentials() {
     this(null);
   }
@@ -175,9 +200,8 @@ public class GoogleCredentials extends OAuth2Credentials {
   /**
    * Constructor with explicit access token.
    *
-   * @param accessToken Initial or temporary access token.
-   **/
-  @Deprecated
+   * @param accessToken initial or temporary access token
+   */
   public GoogleCredentials(AccessToken accessToken) {
     super(accessToken);
   }
@@ -191,8 +215,10 @@ public class GoogleCredentials extends OAuth2Credentials {
   }
 
   /**
-   * Indicates whether the credentials require scopes to be specified via a call to
-   * {link GoogleCredentials#createScoped} before use.
+   * Indicates whether the credentials require scopes to be specified via a call to {@link
+   * GoogleCredentials#createScoped} before use.
+   *
+   * @return Whether the credentials require scopes to be specified.
    */
   public boolean createScopedRequired() {
     return false;
@@ -201,15 +227,45 @@ public class GoogleCredentials extends OAuth2Credentials {
   /**
    * If the credentials support scopes, creates a copy of the the identity with the specified
    * scopes; otherwise, returns the same instance.
+   *
+   * @param scopes Collection of scopes to request.
+   * @return GoogleCredentials with requested scopes.
    */
   public GoogleCredentials createScoped(Collection<String> scopes) {
     return this;
   }
 
   /**
-   * If the credentials support domain-wide delegation, creates a copy
-   * of the identity so that it impersonates the specified user;
-   * otherwise, returns the same instance.
+   * If the credentials support scopes, creates a copy of the the identity with the specified scopes
+   * and default scopes; otherwise, returns the same instance. This is mainly used by client
+   * libraries.
+   *
+   * @param scopes Collection of scopes to request.
+   * @param defaultScopes Collection of default scopes to request.
+   * @return GoogleCredentials with requested scopes.
+   */
+  public GoogleCredentials createScoped(
+      Collection<String> scopes, Collection<String> defaultScopes) {
+    return this;
+  }
+
+  /**
+   * If the credentials support scopes, creates a copy of the the identity with the specified
+   * scopes; otherwise, returns the same instance.
+   *
+   * @param scopes Collection of scopes to request.
+   * @return GoogleCredentials with requested scopes.
+   */
+  public GoogleCredentials createScoped(String... scopes) {
+    return createScoped(ImmutableList.copyOf(scopes));
+  }
+
+  /**
+   * If the credentials support domain-wide delegation, creates a copy of the identity so that it
+   * impersonates the specified user; otherwise, returns the same instance.
+   *
+   * @param user User to impersonate.
+   * @return GoogleCredentials with a delegated user.
    */
   public GoogleCredentials createDelegated(String user) {
     return this;

@@ -77,8 +77,7 @@ public class OAuth2Credentials extends Credentials {
   // Change listeners are not serialized
   private transient List<CredentialsChangedListener> changeListeners;
   // Until we expose this to the users it can remain transient and non-serializable
-  @VisibleForTesting
-  transient Clock clock = Clock.SYSTEM;
+  @VisibleForTesting transient Clock clock = Clock.SYSTEM;
 
   /**
    * Returns the credentials instance from the given access token.
@@ -301,9 +300,10 @@ public class OAuth2Credentials extends Credentials {
    *     should be used instead.
    */
   public AccessToken refreshAccessToken() throws IOException {
-    throw new IllegalStateException("OAuth2Credentials instance does not support refreshing the"
-        + " access token. An instance with a new access token should be used, or a derived type"
-        + " that supports refreshing.");
+    throw new IllegalStateException(
+        "OAuth2Credentials instance does not support refreshing the"
+            + " access token. An instance with a new access token should be used, or a derived type"
+            + " that supports refreshing.");
   }
 
   /**
@@ -366,9 +366,16 @@ public class OAuth2Credentials extends Credentials {
     return Objects.hash(value);
   }
 
+  protected Map<String, List<String>> getRequestMetadataInternal() {
+    OAuthValue localValue = value;
+    if (localValue != null) {
+      return localValue.requestMetadata;
+    }
+    return null;
+  }
+
   @Override
   public String toString() {
-
     OAuthValue localValue = value;
 
     Map<String, List<String>> requestMetadata = null;

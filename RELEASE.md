@@ -30,6 +30,7 @@ Set up PGP keys
   * The ```ABCDEFGH``` is the ID for your public key
 
 * Upload your public key to a public server: ```gpg --send-keys --keyserver hkp://pgp.mit.edu ABCDEFGH```
+  * If you see the error, `gpg: keyserver send failed: No data`, try again in ~5m. The mit server semi-frequently has trouble accepting keys
 
 Create a Maven settings file
 ----------------------------
@@ -68,28 +69,30 @@ a major release. (0.6.0 -> 0.7.0)
 
 Prepare release
 ---------------
-* Update all ```pom.xml``` files in the package to the release version you want.
-* Update version numbers appearing in `README.md`.
-* Submit a pull request, get it reviewed, and submit.
-* ```mvn clean install deploy -DperformRelease=true```
+* Run `releasetool start`. Select "minor" or "patch" for the release type. This will bump the
+  artifact versions, ask you to edit release notes, and create the release pull request.
+* Run `mvn clean install deploy -DperformRelease=true` to stage the release.
 * Verify the result [here](https://oss.sonatype.org/#nexus-search;quick~com.google.auth).
-  * If there is a problem, undo by ```mvn nexus-staging:drop```.
-* ```mvn nexus-staging:release -DperformRelease=true```
-* On the [releases](https://github.com/google/google-auth-library-java/releases) page, create a corresponding Git tag (e.g., "v0.7.0") on the release commit, and summarize the commits since the last release. Follow the style of previous release notes.
-* Update Javadoc on Github using `update_javadoc.sh`.
-* Update all ```pom.xml``` files to the new snapshot version (increment patch version number, e.g., from 0.4.0 to 0.4.1-SNAPSHOT).
+  * If there is a problem, undo by `mvn nexus-staging:drop`.
 
 Publish release
 ---------------
-* Go to [Sonatype](https://oss.sonatype.org/) and log in
-* Click on *Staging Repositories* on the left
-* Filter down to the repository by typing the package's groupId without periods in the search box
-  * In our case, ```comgoogleauth```
-* If the repository does not appear here, the publication process may have started automatically
-* Otherwise, click the *release* button just below the top tabs
-* It will take some time (up to 10 minutes) for the package to transition
+* `mvn nexus-staging:release -DperformRelease=true`
+* It will take some time (10 minutes to 8 hours) for the package to be released
 * Confirm that the release appears in the [parent folder on Maven
 Central](https://repo1.maven.org/maven2/com/google/auth/google-auth-library-parent/)
+* If the release doesn't show up, do the following to check for failures:
+  * Go to [Sonatype](https://oss.sonatype.org/) and log in
+  * Click on *Staging Repositories* on the left
+  * Filter down to the repository by typing the package's groupId in the search box
+    * In our case, `com.google.auth`
+  * Click on the repository and check for errors
+* Submit the pull request to bump the version numbers
+* Update Javadoc on Github using `scripts/update_javadoc.sh`.
+* Run `releasetool tag` to create the GitHub release.
+* Run `releasetool start` to bump the next snapshot version. Select "snapshot" when prompted for
+  the release type. This will bump the artifact versions and create a pull request.
+* Review and submit the PR.
 
 Special cases
 =============

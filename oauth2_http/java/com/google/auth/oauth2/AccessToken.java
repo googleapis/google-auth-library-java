@@ -32,14 +32,11 @@
 package com.google.auth.oauth2;
 
 import com.google.common.base.MoreObjects;
-
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
 
-/**
- * Represents a temporary OAuth2 access token and its expiration information.
- */
+/** Represents a temporary OAuth2 access token and its expiration information. */
 public class AccessToken implements Serializable {
 
   private static final long serialVersionUID = -8514239465808977353L;
@@ -58,6 +55,8 @@ public class AccessToken implements Serializable {
 
   /**
    * String representation of the access token.
+   *
+   * @return The raw access token string value.
    */
   public String getTokenValue() {
     return tokenValue;
@@ -65,6 +64,8 @@ public class AccessToken implements Serializable {
 
   /**
    * Time when access token will expire.
+   *
+   * @return The expiration time as a {@link Date}.
    */
   public Date getExpirationTime() {
     if (expirationTimeMillis == null) {

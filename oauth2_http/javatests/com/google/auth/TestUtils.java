@@ -29,62 +29,71 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 package com.google.auth;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
+import com.google.api.client.http.HttpHeaders;
+import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.io.IOException;
 import java.net.URLDecoder;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 
-/**
- * Utilities for test code under com.google.auth.
- */
+/** Utilities for test code under com.google.auth. */
 public class TestUtils {
 
-  public static final String UTF_8 = "UTF-8";
-
-  private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
+  private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
   public static void assertContainsBearerToken(Map<String, List<String>> metadata, String token) {
     assertNotNull(metadata);
     assertNotNull(token);
+    assertTrue("Bearer token not found", hasBearerToken(metadata, token));
+  }
+
+  public static void assertNotContainsBearerToken(
+      Map<String, List<String>> metadata, String token) {
+    assertNotNull(metadata);
+    assertNotNull(token);
+    assertTrue("Bearer token found", !hasBearerToken(metadata, token));
+  }
+
+  private static boolean hasBearerToken(Map<String, List<String>> metadata, String token) {
     String expectedValue = AuthHttpConstants.BEARER + " " + token;
     List<String> authorizations = metadata.get(AuthHttpConstants.AUTHORIZATION);
     assertNotNull("Authorization headers not found", authorizations);
-    boolean found = false;
     for (String authorization : authorizations) {
       if (expectedValue.equals(authorization)) {
-        found = true;
-        break;
+        return true;
       }
     }
-    assertTrue("Bearer token not found", found);
+    return false;
   }
 
   public static InputStream jsonToInputStream(GenericJson json) throws IOException {
     json.setFactory(JSON_FACTORY);
     String text = json.toPrettyString();
-    return new ByteArrayInputStream(text.getBytes(UTF_8));
+    return new ByteArrayInputStream(text.getBytes("UTF-8"));
   }
 
   public static InputStream stringToInputStream(String text) {
     try {
-      return new ByteArrayInputStream(text.getBytes(TestUtils.UTF_8));
+      return new ByteArrayInputStream(text.getBytes("UTF-8"));
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException("Unexpected encoding exception", e);
     }
@@ -98,13 +107,46 @@ public class TestUtils {
       if (sides.size() != 2) {
         throw new IOException("Invalid Query String");
       }
-      String key = URLDecoder.decode(sides.get(0), UTF_8);
-      String value = URLDecoder.decode(sides.get(1), UTF_8);
+      String key = URLDecoder.decode(sides.get(0), "UTF-8");
+      String value = URLDecoder.decode(sides.get(1), "UTF-8");
       map.put(key, value);
     }
     return map;
   }
 
-  private TestUtils() {
+  public static String errorJson(String message) throws IOException {
+    GenericJson errorResponse = new GenericJson();
+    errorResponse.setFactory(JSON_FACTORY);
+    GenericJson errorObject = new GenericJson();
+    errorObject.put("message", message);
+    errorResponse.put("error", errorObject);
+    return errorResponse.toPrettyString();
   }
+
+  public static HttpResponseException buildHttpResponseException(
+      String error, @Nullable String errorDescription, @Nullable String errorUri)
+      throws IOException {
+    GenericJson json = new GenericJson();
+    json.setFactory(GsonFactory.getDefaultInstance());
+    json.set("error", error);
+    if (errorDescription != null) {
+      json.set("error_description", errorDescription);
+    }
+    if (errorUri != null) {
+      json.set("error_uri", errorUri);
+    }
+    return new HttpResponseException.Builder(
+            /* statusCode= */ 400, /* statusMessage= */ "statusMessage", new HttpHeaders())
+        .setContent(json.toPrettyString())
+        .build();
+  }
+
+  public static String getDefaultExpireTime() {
+    Calendar calendar = Calendar.getInstance();
+    calendar.setTime(new Date());
+    calendar.add(Calendar.SECOND, 300);
+    return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(calendar.getTime());
+  }
+
+  private TestUtils() {}
 }

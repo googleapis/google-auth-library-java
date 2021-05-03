@@ -34,6 +34,7 @@ package com.google.auth.oauth2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -53,36 +54,41 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.file.Paths;
 import java.security.AccessControlException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Test case for {@link DefaultCredentialsProvider}.
- */
+/** Test case for {@link DefaultCredentialsProvider}. */
 @RunWith(JUnit4.class)
 public class DefaultCredentialsProviderTest {
 
   private static final String USER_CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
   private static final String USER_CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
+  private static final String GCLOUDSDK_CLIENT_ID =
+      "764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com";
   private static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
   private static final String SA_CLIENT_EMAIL =
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr@developer.gserviceaccount.com";
   private static final String SA_CLIENT_ID =
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr.apps.googleusercontent.com";
-  private static final String SA_PRIVATE_KEY_ID =
-      "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
-  private static final String SA_PRIVATE_KEY_PKCS8
-      = ServiceAccountCredentialsTest.SA_PRIVATE_KEY_PKCS8;
+  private static final String SA_PRIVATE_KEY_ID = "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
+  private static final String SA_PRIVATE_KEY_PKCS8 =
+      ServiceAccountCredentialsTest.PRIVATE_KEY_PKCS8;
   private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
+  private static final String QUOTA_PROJECT = "sample-quota-project-id";
 
   static class MockRequestCountingTransportFactory implements HttpTransportFactory {
 
@@ -127,10 +133,11 @@ public class DefaultCredentialsProviderTest {
   public void getDefaultCredentials_envValidSandbox_throwsNonSecurity() throws Exception {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     InputStream userStream =
-        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+        UserCredentialsTest.writeUserStream(
+            USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setFileSandbox(true);
-    String userPath = "/user.json";
+    String userPath = tempFilePath("user.json");
     testProvider.addFile(userPath, userStream);
     testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, userPath);
 
@@ -185,8 +192,8 @@ public class DefaultCredentialsProviderTest {
   public void getDefaultCredentials_appEngineClassWithoutRuntime_NotFoundError() {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
-    testProvider.addType(DefaultCredentialsProvider.APP_ENGINE_SIGNAL_CLASS,
-        MockOffAppEngineSystemProperty.class);
+    testProvider.addType(
+        DefaultCredentialsProvider.APP_ENGINE_SIGNAL_CLASS, MockOffAppEngineSystemProperty.class);
     testProvider.setProperty("isOnGAEStandard7", "true");
 
     try {
@@ -202,8 +209,8 @@ public class DefaultCredentialsProviderTest {
   public void getDefaultCredentials_appEngineRuntimeWithoutClass_throwsHelpfulLoadError() {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
-    testProvider.addType(DefaultCredentialsProvider.APP_ENGINE_SIGNAL_CLASS,
-        MockAppEngineSystemProperty.class);
+    testProvider.addType(
+        DefaultCredentialsProvider.APP_ENGINE_SIGNAL_CLASS, MockAppEngineSystemProperty.class);
     testProvider.setProperty("isOnGAEStandard7", "true");
 
     try {
@@ -221,9 +228,9 @@ public class DefaultCredentialsProviderTest {
       throws IOException {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
-    testProvider.addType(DefaultCredentialsProvider.APP_ENGINE_SIGNAL_CLASS,
-        MockOffAppEngineSystemProperty.class);
-    testProvider.setEnv(DefaultCredentialsProvider.CLOUD_SHELL_ENV_VAR,"9090");
+    testProvider.addType(
+        DefaultCredentialsProvider.APP_ENGINE_SIGNAL_CLASS, MockOffAppEngineSystemProperty.class);
+    testProvider.setEnv(DefaultCredentialsProvider.CLOUD_SHELL_ENV_VAR, "9090");
     testProvider.setEnv(DefaultCredentialsProvider.SKIP_APP_ENGINE_ENV_VAR, "true");
     testProvider.setProperty("isOnGAEStanadard7", "true");
     GoogleCredentials credentials = testProvider.getDefaultCredentials(transportFactory);
@@ -290,14 +297,13 @@ public class DefaultCredentialsProviderTest {
   public void getDefaultCredentials_envServiceAccount_providesToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
-    InputStream serviceAccountStream = ServiceAccountCredentialsTest
-        .writeServiceAccountStream(
+    InputStream serviceAccountStream =
+        ServiceAccountCredentialsTest.writeServiceAccountStream(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
-    String serviceAccountPath = "/service_account.json";
+    String serviceAccountPath = tempFilePath("service_account.json");
     testProvider.addFile(serviceAccountPath, serviceAccountStream);
-    testProvider.setEnv(
-        DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, serviceAccountPath);
+    testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, serviceAccountPath);
 
     GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory);
 
@@ -310,14 +316,14 @@ public class DefaultCredentialsProviderTest {
   @Test
   public void getDefaultCredentials_envUser_providesToken() throws IOException {
     InputStream userStream =
-        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+        UserCredentialsTest.writeUserStream(
+            USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
-    String userPath = "/user.json";
+    String userPath = tempFilePath("user.json");
     testProvider.addFile(userPath, userStream);
     testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, userPath);
 
-    testUserProvidesToken(
-        testProvider, USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+    testUserProvidesToken(testProvider, USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
   }
 
   @Test
@@ -358,15 +364,15 @@ public class DefaultCredentialsProviderTest {
   public void getDefaultCredentials_wellKnownFileEnv_providesToken() throws IOException {
     File cloudConfigDir = getTempDirectory();
     InputStream userStream =
-        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+        UserCredentialsTest.writeUserStream(
+            USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
     File wellKnownFile =
         new File(cloudConfigDir, DefaultCredentialsProvider.WELL_KNOWN_CREDENTIALS_FILE);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setEnv("CLOUDSDK_CONFIG", cloudConfigDir.getAbsolutePath());
     testProvider.addFile(wellKnownFile.getAbsolutePath(), userStream);
 
-    testUserProvidesToken(
-        testProvider, USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+    testUserProvidesToken(testProvider, USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
   }
 
   @Test
@@ -375,7 +381,8 @@ public class DefaultCredentialsProviderTest {
     File configDir = new File(homeDir, ".config");
     File cloudConfigDir = new File(configDir, DefaultCredentialsProvider.CLOUDSDK_CONFIG_DIRECTORY);
     InputStream userStream =
-        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+        UserCredentialsTest.writeUserStream(
+            USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
     File wellKnownFile =
         new File(cloudConfigDir, DefaultCredentialsProvider.WELL_KNOWN_CREDENTIALS_FILE);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
@@ -383,8 +390,7 @@ public class DefaultCredentialsProviderTest {
     testProvider.setProperty("user.home", homeDir.getAbsolutePath());
     testProvider.addFile(wellKnownFile.getAbsolutePath(), userStream);
 
-    testUserProvidesToken(
-        testProvider, USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+    testUserProvidesToken(testProvider, USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
   }
 
   @Test
@@ -392,7 +398,8 @@ public class DefaultCredentialsProviderTest {
     File homeDir = getTempDirectory();
     File cloudConfigDir = new File(homeDir, DefaultCredentialsProvider.CLOUDSDK_CONFIG_DIRECTORY);
     InputStream userStream =
-        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+        UserCredentialsTest.writeUserStream(
+            USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
     File wellKnownFile =
         new File(cloudConfigDir, DefaultCredentialsProvider.WELL_KNOWN_CREDENTIALS_FILE);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
@@ -400,8 +407,7 @@ public class DefaultCredentialsProviderTest {
     testProvider.setEnv("APPDATA", homeDir.getAbsolutePath());
     testProvider.addFile(wellKnownFile.getAbsolutePath(), userStream);
 
-    testUserProvidesToken(
-        testProvider, USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+    testUserProvidesToken(testProvider, USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
   }
 
   @Test
@@ -413,8 +419,9 @@ public class DefaultCredentialsProviderTest {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
 
     InputStream envStream =
-        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, refreshTokenEnv);
-    String envPath = "/env.json";
+        UserCredentialsTest.writeUserStream(
+            USER_CLIENT_ID, USER_CLIENT_SECRET, refreshTokenEnv, QUOTA_PROJECT);
+    String envPath = tempFilePath("env.json");
     testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, envPath);
     testProvider.addFile(envPath, envStream);
 
@@ -422,7 +429,8 @@ public class DefaultCredentialsProviderTest {
     File configDir = new File(homeDir, ".config");
     File cloudConfigDir = new File(configDir, DefaultCredentialsProvider.CLOUDSDK_CONFIG_DIRECTORY);
     InputStream wkfStream =
-        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, refreshTokenWkf);
+        UserCredentialsTest.writeUserStream(
+            USER_CLIENT_ID, USER_CLIENT_SECRET, refreshTokenWkf, QUOTA_PROJECT);
     File wellKnownFile =
         new File(cloudConfigDir, DefaultCredentialsProvider.WELL_KNOWN_CREDENTIALS_FILE);
     testProvider.setProperty("os.name", "linux");
@@ -437,20 +445,85 @@ public class DefaultCredentialsProviderTest {
     testUserProvidesToken(testProvider, transportFactory, accessTokenEnv);
   }
 
+  private String tempFilePath(String filename) {
+    return Paths.get(System.getProperty("java.io.tmpdir"), filename).toString();
+  }
+
+  private class LogHandler extends Handler {
+    LogRecord lastRecord;
+
+    public void publish(LogRecord record) {
+      lastRecord = record;
+    }
+
+    public LogRecord getRecord() {
+      return lastRecord;
+    }
+
+    public void close() {}
+
+    public void flush() {}
+  }
+
+  @Test
+  public void getDefaultCredentials_wellKnownFile_logsGcloudWarning() throws IOException {
+    LogRecord message = getCredentialsAndReturnLogMessage(false);
+    assertNotNull(message);
+    assertEquals(Level.WARNING, message.getLevel());
+    assertTrue(message.getMessage().contains("end user credentials from Google Cloud SDK"));
+  }
+
+  @Test
+  public void getDefaultCredentials_wellKnownFile_suppressGcloudWarning() throws IOException {
+    LogRecord message = getCredentialsAndReturnLogMessage(true);
+    assertNull(message);
+  }
+
+  private LogRecord getCredentialsAndReturnLogMessage(boolean suppressWarning) throws IOException {
+    Logger logger = Logger.getLogger(DefaultCredentialsProvider.class.getName());
+    LogHandler handler = new LogHandler();
+    logger.addHandler(handler);
+
+    File homeDir = getTempDirectory();
+    File configDir = new File(homeDir, ".config");
+    File cloudConfigDir = new File(configDir, DefaultCredentialsProvider.CLOUDSDK_CONFIG_DIRECTORY);
+    InputStream userStream =
+        UserCredentialsTest.writeUserStream(
+            GCLOUDSDK_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
+    File wellKnownFile =
+        new File(cloudConfigDir, DefaultCredentialsProvider.WELL_KNOWN_CREDENTIALS_FILE);
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setEnv(
+        DefaultCredentialsProvider.SUPPRESS_GCLOUD_CREDS_WARNING_ENV_VAR,
+        Boolean.toString(suppressWarning));
+    testProvider.setProperty("os.name", "linux");
+    testProvider.setProperty("user.home", homeDir.getAbsolutePath());
+    testProvider.addFile(wellKnownFile.getAbsolutePath(), userStream);
+    testUserProvidesToken(testProvider, GCLOUDSDK_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+    return handler.getRecord();
+  }
+
   private static File getTempDirectory() {
     return new File(System.getProperty("java.io.tmpdir"));
   }
 
-  private void testUserProvidesToken(TestDefaultCredentialsProvider testProvider, String clientId,
-      String clientSecret, String refreshToken) throws IOException {
+  private void testUserProvidesToken(
+      TestDefaultCredentialsProvider testProvider,
+      String clientId,
+      String clientSecret,
+      String refreshToken)
+      throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(clientId, clientSecret);
     transportFactory.transport.addRefreshToken(refreshToken, ACCESS_TOKEN);
     testUserProvidesToken(testProvider, transportFactory, ACCESS_TOKEN);
   }
 
-  private void testUserProvidesToken(TestDefaultCredentialsProvider testProvider,
-      HttpTransportFactory transportFactory, String accessToken) throws IOException {
+  private void testUserProvidesToken(
+      TestDefaultCredentialsProvider testProvider,
+      HttpTransportFactory transportFactory,
+      String accessToken)
+      throws IOException {
     GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory);
 
     assertNotNull(defaultCredentials);
@@ -461,8 +534,7 @@ public class DefaultCredentialsProviderTest {
   public static class MockAppEngineCredentials extends GoogleCredentials {
     private static final long serialVersionUID = 2695173591854484322L;
 
-    public MockAppEngineCredentials(Collection<String> scopes) {
-    }
+    public MockAppEngineCredentials(Collection<String> scopes) {}
 
     @Override
     public AccessToken refreshAccessToken() throws IOException {
@@ -479,7 +551,7 @@ public class DefaultCredentialsProviderTest {
 
     @SuppressWarnings("unused")
     public static final MockEnvironment environment =
-      new MockEnvironment(MockEnvironmentEnum.Production);
+        new MockEnvironment(MockEnvironmentEnum.Production);
   }
 
   private static class MockOffAppEngineSystemProperty {
@@ -513,8 +585,7 @@ public class DefaultCredentialsProviderTest {
   private static class MockRequestCountingTransport extends MockHttpTransport {
     int requestCount = 0;
 
-    MockRequestCountingTransport() {
-    }
+    MockRequestCountingTransport() {}
 
     int getRequestCount() {
       return requestCount;
@@ -539,10 +610,8 @@ public class DefaultCredentialsProviderTest {
     private final Map<String, String> properties = new HashMap<>();
     private final Map<String, InputStream> files = new HashMap<>();
     private boolean fileSandbox = false;
-    private int forNameCallCount = 0;
 
-    TestDefaultCredentialsProvider () {
-    }
+    TestDefaultCredentialsProvider() {}
 
     void addFile(String file, InputStream stream) {
       files.put(file, stream);
@@ -573,7 +642,6 @@ public class DefaultCredentialsProviderTest {
 
     @Override
     Class<?> forName(String className) throws ClassNotFoundException {
-      forNameCallCount++;
       Class<?> lookup = types.get(className);
       if (lookup != null) {
         return lookup;
@@ -584,10 +652,6 @@ public class DefaultCredentialsProviderTest {
     @Override
     protected boolean isOnGAEStandard7() {
       return getProperty("isOnGAEStandard7", "false").equals("true");
-    }
-
-    int getForNameCallCount() {
-      return forNameCallCount;
     }
 
     @Override

@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -39,11 +40,8 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-
+import com.google.auth.oauth2.IdentityPoolCredentialsTest.MockExternalAccountCredentialsTransportFactory;
+import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,10 +51,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/**
- * Test case for {@link GoogleCredentials}.
- */
+/** Test case for {@link GoogleCredentials}. */
 @RunWith(JUnit4.class)
 public class GoogleCredentialsTest {
 
@@ -64,10 +64,9 @@ public class GoogleCredentialsTest {
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr@developer.gserviceaccount.com";
   private static final String SA_CLIENT_ID =
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr.apps.googleusercontent.com";
-  private static final String SA_PRIVATE_KEY_ID =
-      "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
-  private static final String SA_PRIVATE_KEY_PKCS8
-      = ServiceAccountCredentialsTest.SA_PRIVATE_KEY_PKCS8;
+  private static final String SA_PRIVATE_KEY_ID = "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
+  private static final String SA_PRIVATE_KEY_PKCS8 =
+      ServiceAccountCredentialsTest.PRIVATE_KEY_PKCS8;
   private static final String USER_CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
   private static final String USER_CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
   private static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
@@ -75,9 +74,12 @@ public class GoogleCredentialsTest {
   private static final HttpTransportFactory DUMMY_TRANSPORT_FACTORY =
       new MockTokenServerTransportFactory();
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
+  private static final String QUOTA_PROJECT = "sample-quota-project-id";
 
   private static final Collection<String> SCOPES =
-    Collections.unmodifiableCollection(Arrays.asList("scope1", "scope2"));
+      Collections.unmodifiableCollection(Arrays.asList("scope1", "scope2"));
+  private static final Collection<String> DEFAULT_SCOPES =
+      Collections.unmodifiableCollection(Arrays.asList("scope3"));
 
   static class MockHttpTransportFactory implements HttpTransportFactory {
 
@@ -135,8 +137,8 @@ public class GoogleCredentialsTest {
   public void fromStream_serviceAccount_providesToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
-    InputStream serviceAccountStream = ServiceAccountCredentialsTest
-        .writeServiceAccountStream(
+    InputStream serviceAccountStream =
+        ServiceAccountCredentialsTest.writeServiceAccountStream(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
 
     GoogleCredentials credentials =
@@ -146,36 +148,44 @@ public class GoogleCredentialsTest {
     credentials = credentials.createScoped(SCOPES);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+
+    credentials = credentials.createScoped(SCOPES, DEFAULT_SCOPES);
+    metadata = credentials.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
   @Test
   public void fromStream_serviceAccountNoClientId_throws() throws IOException {
-    InputStream serviceAccountStream = ServiceAccountCredentialsTest
-        .writeServiceAccountStream(null, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
+    InputStream serviceAccountStream =
+        ServiceAccountCredentialsTest.writeServiceAccountStream(
+            null, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
 
     testFromStreamException(serviceAccountStream, "client_id");
   }
 
   @Test
   public void fromStream_serviceAccountNoClientEmail_throws() throws IOException {
-    InputStream serviceAccountStream = ServiceAccountCredentialsTest
-        .writeServiceAccountStream(SA_CLIENT_ID, null, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
+    InputStream serviceAccountStream =
+        ServiceAccountCredentialsTest.writeServiceAccountStream(
+            SA_CLIENT_ID, null, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
 
     testFromStreamException(serviceAccountStream, "client_email");
   }
 
   @Test
   public void fromStream_serviceAccountNoPrivateKey_throws() throws IOException {
-    InputStream serviceAccountStream = ServiceAccountCredentialsTest
-        .writeServiceAccountStream(SA_CLIENT_ID, SA_CLIENT_EMAIL, null, SA_PRIVATE_KEY_ID);
+    InputStream serviceAccountStream =
+        ServiceAccountCredentialsTest.writeServiceAccountStream(
+            SA_CLIENT_ID, SA_CLIENT_EMAIL, null, SA_PRIVATE_KEY_ID);
 
     testFromStreamException(serviceAccountStream, "private_key");
   }
 
   @Test
   public void fromStream_serviceAccountNoPrivateKeyId_throws() throws IOException {
-    InputStream serviceAccountStream = ServiceAccountCredentialsTest
-        .writeServiceAccountStream(SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, null);
+    InputStream serviceAccountStream =
+        ServiceAccountCredentialsTest.writeServiceAccountStream(
+            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, null);
 
     testFromStreamException(serviceAccountStream, "private_key_id");
   }
@@ -186,7 +196,8 @@ public class GoogleCredentialsTest {
     transportFactory.transport.addClient(USER_CLIENT_ID, USER_CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
     InputStream userStream =
-        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+        UserCredentialsTest.writeUserStream(
+            USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, null);
 
     GoogleCredentials credentials = GoogleCredentials.fromStream(userStream, transportFactory);
 
@@ -198,7 +209,7 @@ public class GoogleCredentialsTest {
   @Test
   public void fromStream_userNoClientId_throws() throws IOException {
     InputStream userStream =
-        UserCredentialsTest.writeUserStream(null, USER_CLIENT_SECRET, REFRESH_TOKEN);
+        UserCredentialsTest.writeUserStream(null, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
 
     testFromStreamException(userStream, "client_id");
   }
@@ -206,7 +217,7 @@ public class GoogleCredentialsTest {
   @Test
   public void fromStream_userNoClientSecret_throws() throws IOException {
     InputStream userStream =
-        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, null, REFRESH_TOKEN);
+        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, null, REFRESH_TOKEN, QUOTA_PROJECT);
 
     testFromStreamException(userStream, "client_secret");
   }
@@ -214,16 +225,77 @@ public class GoogleCredentialsTest {
   @Test
   public void fromStream_userNoRefreshToken_throws() throws IOException {
     InputStream userStream =
-        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, USER_CLIENT_SECRET, null);
+        UserCredentialsTest.writeUserStream(
+            USER_CLIENT_ID, USER_CLIENT_SECRET, null, QUOTA_PROJECT);
 
     testFromStreamException(userStream, "refresh_token");
+  }
+
+  @Test
+  public void fromStream_identityPoolCredentials_providesToken() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+    InputStream identityPoolCredentialStream =
+        IdentityPoolCredentialsTest.writeIdentityPoolCredentialsStream(
+            transportFactory.transport.getStsUrl(),
+            transportFactory.transport.getMetadataUrl(),
+            /* serviceAccountImpersonationUrl= */ null);
+
+    GoogleCredentials credentials =
+        GoogleCredentials.fromStream(identityPoolCredentialStream, transportFactory);
+
+    assertNotNull(credentials);
+    credentials = credentials.createScoped(SCOPES);
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, transportFactory.transport.getAccessToken());
+  }
+
+  @Test
+  public void fromStream_awsCredentials_providesToken() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    InputStream awsCredentialStream =
+        AwsCredentialsTest.writeAwsCredentialsStream(
+            transportFactory.transport.getStsUrl(),
+            transportFactory.transport.getAwsRegionUrl(),
+            transportFactory.transport.getAwsCredentialsUrl());
+
+    GoogleCredentials credentials =
+        GoogleCredentials.fromStream(awsCredentialStream, transportFactory);
+
+    assertNotNull(credentials);
+    credentials = credentials.createScoped(SCOPES);
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, transportFactory.transport.getAccessToken());
+  }
+
+  @Test
+  public void createScoped_overloadCallsImplementation() {
+    final AtomicReference<Collection<String>> called = new AtomicReference<>();
+    final GoogleCredentials expectedScopedCredentials = new GoogleCredentials();
+
+    GoogleCredentials credentials =
+        new GoogleCredentials() {
+          @Override
+          public GoogleCredentials createScoped(Collection<String> scopes) {
+            called.set(scopes);
+            return expectedScopedCredentials;
+          }
+        };
+
+    GoogleCredentials scopedCredentials = credentials.createScoped("foo", "bar");
+
+    assertEquals(expectedScopedCredentials, scopedCredentials);
+    assertEquals(ImmutableList.of("foo", "bar"), called.get());
   }
 
   private static void testFromStreamException(InputStream stream, String expectedMessageContent) {
     try {
       GoogleCredentials.fromStream(stream, DUMMY_TRANSPORT_FACTORY);
-      fail(String.format("Should throw exception with message containing '%s'",
-          expectedMessageContent));
+      fail(
+          String.format(
+              "Should throw exception with message containing '%s'", expectedMessageContent));
     } catch (IOException expected) {
       assertTrue(expected.getMessage().contains(expectedMessageContent));
     }

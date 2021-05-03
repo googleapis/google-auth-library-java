@@ -31,17 +31,11 @@
 
 package com.google.auth.http;
 
-/**
- * Constants used for auth in http
- */
+/** Constants used for auth in http */
 public class AuthHttpConstants {
-  /**
-   * HTTP "Bearer" authentication scheme
-   */
+  /** HTTP "Bearer" authentication scheme */
   public static final String BEARER = "Bearer";
 
-  /**
-   * HTTP "Authentication" header
-   */
+  /** HTTP "Authentication" header */
   public static final String AUTHORIZATION = "Authorization";
 }

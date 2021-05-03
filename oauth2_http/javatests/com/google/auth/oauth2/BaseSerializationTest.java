@@ -37,9 +37,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-/**
- * Base class for serialization tests.
- */
+/** Base class for serialization tests. */
 public class BaseSerializationTest {
 
   @SuppressWarnings("unchecked")

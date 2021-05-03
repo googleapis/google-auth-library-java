@@ -33,9 +33,7 @@ package com.google.auth.oauth2;
 
 import java.io.IOException;
 
-/**
- * Interface for long term storage of tokens
- */
+/** Interface for long term storage of tokens */
 public interface TokenStore {
 
   /**
