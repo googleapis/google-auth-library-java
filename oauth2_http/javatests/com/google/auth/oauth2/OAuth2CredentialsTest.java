@@ -46,21 +46,15 @@ import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
+import java.io.IOException;
+import java.net.URI;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-
-import java.io.IOException;
-import java.net.URI;
-import java.util.List;
-import java.util.Map;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -343,13 +337,14 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
 
     ExecutorService testExecutor = Executors.newFixedThreadPool(1);
 
-    FutureTask<Map<String, List<String>>> blockingTask = new FutureTask<>(
-        new Callable<Map<String, List<String>>>() {
-          @Override
-          public Map<String, List<String>> call() throws Exception {
-            return credentials.getRequestMetadata(CALL_URI);
-          }
-        });
+    FutureTask<Map<String, List<String>>> blockingTask =
+        new FutureTask<>(
+            new Callable<Map<String, List<String>>>() {
+              @Override
+              public Map<String, List<String>> call() throws Exception {
+                return credentials.getRequestMetadata(CALL_URI);
+              }
+            });
     testExecutor.submit(blockingTask);
     testExecutor.shutdown();
 

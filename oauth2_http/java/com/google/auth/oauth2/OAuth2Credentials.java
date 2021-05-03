@@ -37,7 +37,6 @@ import com.google.auth.RequestMetadataCallback;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.FutureCallback;
@@ -67,12 +66,13 @@ public class OAuth2Credentials extends Credentials {
 
   private static final long serialVersionUID = 4556936364828217687L;
   private static final long MINIMUM_TOKEN_MILLISECONDS = TimeUnit.MINUTES.toMillis(5);
-  private static final long REFRESH_MARGIN_MILLISECONDS = MINIMUM_TOKEN_MILLISECONDS + TimeUnit.MINUTES.toMillis(1);
+  private static final long REFRESH_MARGIN_MILLISECONDS =
+      MINIMUM_TOKEN_MILLISECONDS + TimeUnit.MINUTES.toMillis(1);
   private static final Map<String, List<String>> EMPTY_EXTRA_HEADERS = ImmutableMap.of();
 
   // byte[] is serializable, so the lock variable can be final
   private volatile OAuthValue value = null;
-  private transient ListenableFuture<OAuthValue> refreshTask;
+  private transient ListenableFutureTask<OAuthValue> refreshTask;
 
   // Change listeners are not serialized
   private transient List<CredentialsChangedListener> changeListeners;
@@ -136,11 +136,13 @@ public class OAuth2Credentials extends Credentials {
   }
 
   @Override
-  public void getRequestMetadata(final URI uri, Executor executor,
-      final RequestMetadataCallback callback) {
+  public void getRequestMetadata(
+      final URI uri, Executor executor, final RequestMetadataCallback callback) {
 
-    Futures.addCallback(asyncFetch(executor),
-        new FutureCallbackToMetadataCallbackAdapter(callback), MoreExecutors.directExecutor());
+    Futures.addCallback(
+        asyncFetch(executor),
+        new FutureCallbackToMetadataCallbackAdapter(callback),
+        MoreExecutors.directExecutor());
   }
 
   /**
@@ -155,7 +157,9 @@ public class OAuth2Credentials extends Credentials {
   /** Refresh the token by discarding the cached token and metadata and requesting the new ones. */
   @Override
   public void refresh() throws IOException {
-    unwrapDirectFuture(refreshAsync(MoreExecutors.directExecutor()));
+    AsyncRefreshResult refreshResult = getOrCreateRefreshTask();
+    refreshResult.executeIfNew(MoreExecutors.directExecutor());
+    unwrapDirectFuture(refreshResult.task);
   }
 
   /**
@@ -164,59 +168,90 @@ public class OAuth2Credentials extends Credentials {
    * @throws IOException during token refresh.
    */
   public void refreshIfExpired() throws IOException {
-    final boolean shouldRefresh;
-    synchronized (this) {
-      shouldRefresh = getState() == CacheState.Expired;
-    }
-
-    if (shouldRefresh) {
-      unwrapDirectFuture(refreshAsync(MoreExecutors.directExecutor()));
-    }
+    // asyncFetch will ensure that the token is refreshed
+    unwrapDirectFuture(asyncFetch(MoreExecutors.directExecutor()));
   }
 
   // Async cache impl begin ------
-  private synchronized ListenableFuture<OAuthValue> asyncFetch(Executor executor) {
-    CacheState localState = getState();
-    ListenableFuture<OAuthValue> localTask = refreshTask;
 
-    // When token is no longer fresh, schedule a single flight refresh
-    if (localState != CacheState.Fresh && localTask == null) {
-      localTask = refreshAsync(executor);
+  /**
+   * Attempts to get a fresh token.
+   *
+   * <p>If a fresh token is already available, it will be immediately returned. Otherwise a refresh
+   * will be scheduled using the passed in executor. While a token is being freshed, a stale value
+   * will be returned.
+   */
+  private ListenableFuture<OAuthValue> asyncFetch(Executor executor) {
+    AsyncRefreshResult refreshResult = null;
+
+    // Schedule a refresh as necessary
+    synchronized (this) {
+      if (getState() != CacheState.Fresh) {
+        refreshResult = getOrCreateRefreshTask();
+      }
+    }
+    // Execute the refresh if necessary. This should be done outside of the lock to avoid blocking
+    // metadata requests during a stale refresh.
+    if (refreshResult != null) {
+      refreshResult.executeIfNew(executor);
     }
 
-    // the refresh might've been executed using a DirectExecutor, so re-check current state
-    localState = getState();
-
-    // Immediately resolve the token token if its not expired, or wait for the refresh task to complete
-    if (localState != CacheState.Expired) {
-      return Futures.immediateFuture(value);
-    } else {
-      return localTask;
+    synchronized (this) {
+      // Immediately resolve the token token if its not expired, or wait for the refresh task to
+      // complete
+      if (getState() != CacheState.Expired) {
+        return Futures.immediateFuture(value);
+      } else if (refreshResult != null) {
+        return refreshResult.task;
+      } else {
+        // Should never happen
+        return Futures.immediateFailedFuture(
+            new IllegalStateException("Credentials expired, but there is no task to refresh"));
+      }
     }
   }
 
+  /**
+   * Atomically creates a single flight refresh token task.
+   *
+   * <p>Only a single refresh task can be scheduled at a time. If there is an existing task, it will
+   * be returned for subsequent invocations. However if a new task is created, it is the
+   * responsibility of the caller to execute it. The task will clear the single flight slow upon
+   * completion.
+   */
+  private synchronized AsyncRefreshResult getOrCreateRefreshTask() {
+    if (refreshTask != null) {
+      return new AsyncRefreshResult(refreshTask, false);
+    }
 
-  private synchronized ListenableFuture<OAuthValue> refreshAsync(Executor executor) {
-    final ListenableFutureTask<OAuthValue> task = ListenableFutureTask.create(new Callable<OAuthValue>() {
-      @Override
-      public OAuthValue call() throws Exception {
-        return OAuthValue.create(refreshAccessToken(), getAdditionalHeaders());
-      }
-    });
+    final ListenableFutureTask<OAuthValue> task =
+        ListenableFutureTask.create(
+            new Callable<OAuthValue>() {
+              @Override
+              public OAuthValue call() throws Exception {
+                return OAuthValue.create(refreshAccessToken(), getAdditionalHeaders());
+              }
+            });
 
-    task.addListener(new Runnable() {
-      @Override
-      public void run() {
-        finishRefreshAsync(task);
-      }
-    }, MoreExecutors.directExecutor());
+    task.addListener(
+        new Runnable() {
+          @Override
+          public void run() {
+            finishRefreshAsync(task);
+          }
+        },
+        MoreExecutors.directExecutor());
 
     refreshTask = task;
-    executor.execute(task);
 
-    return task;
+    return new AsyncRefreshResult(refreshTask, true);
   }
 
+  /**
+   * Async callback for committing the result from a token refresh.
+   *
+   * <p>The result will be stored, listeners are invoked and the single flight slot is cleared.
+   */
   private synchronized void finishRefreshAsync(ListenableFuture<OAuthValue> finishedTask) {
     try {
       this.value = finishedTask.get();
@@ -237,11 +272,12 @@ public class OAuth2Credentials extends Credentials {
   /**
    * Unwraps the value from the future.
    *
-   * <p>Under most circumstances, the underlying future will already be resolved by the DirectExecutor.
-   * In those cases, the error stacktraces will be rooted in the caller's call tree. However,
-   * in some cases when async and sync usage is mixed, it's possible that a blocking call will await
-   * an async future. In those cases, the stacktrace will be orphaned and be rooted in a thread of
-   * whatever executor the async call used. This doesn't affect correctness and is extremely unlikely.
+   * <p>Under most circumstances, the underlying future will already be resolved by the
+   * DirectExecutor. In those cases, the error stacktraces will be rooted in the caller's call tree.
+   * However, in some cases when async and sync usage is mixed, it's possible that a blocking call
+   * will await an async future. In those cases, the stacktrace will be orphaned and be rooted in a
+   * thread of whatever executor the async call used. This doesn't affect correctness and is
+   * extremely unlikely.
    */
   private static <T> T unwrapDirectFuture(Future<T> future) throws IOException {
     try {
@@ -254,13 +290,14 @@ public class OAuth2Credentials extends Credentials {
       if (cause instanceof IOException) {
         throw (IOException) cause;
       } else if (cause instanceof RuntimeException) {
-        throw (RuntimeException)cause;
+        throw (RuntimeException) cause;
       } else {
         throw new IOException("Unexpected error refreshing access token", cause);
       }
     }
   }
 
+  /** Computes the effective credential state in relation to the current time. */
   private CacheState getState() {
     OAuthValue localValue = value;
 
@@ -426,10 +463,7 @@ public class OAuth2Credentials extends Credentials {
     return new Builder(this);
   }
 
-
-  /**
-   * Stores an immutable snapshot of the accesstoken owned by {@link OAuth2Credentials}
-   */
+  /** Stores an immutable snapshot of the accesstoken owned by {@link OAuth2Credentials} */
   static class OAuthValue implements Serializable {
     private final AccessToken temporaryAccess;
     private final Map<String, List<String>> requestMetadata;
@@ -445,8 +479,7 @@ public class OAuth2Credentials extends Credentials {
               .build());
     }
 
-    private OAuthValue(AccessToken temporaryAccess,
-        Map<String, List<String>> requestMetadata) {
+    private OAuthValue(AccessToken temporaryAccess, Map<String, List<String>> requestMetadata) {
       this.temporaryAccess = temporaryAccess;
       this.requestMetadata = requestMetadata;
     }
@@ -488,6 +521,28 @@ public class OAuth2Credentials extends Credentials {
     @Override
     public void onFailure(Throwable throwable) {
       callback.onFailure(throwable);
+    }
+  }
+
+  /**
+   * Result from {@link com.google.auth.oauth2.OAuth2Credentials#getOrCreateRefreshTask()}.
+   *
+   * <p>Contains the the refresh task and a flag indicating if the task is newly created. If the
+   * task is newly created, it is the caller's responsibility to execute it.
+   */
+  static class AsyncRefreshResult {
+    private final ListenableFutureTask<OAuthValue> task;
+    private final boolean isNew;
+
+    AsyncRefreshResult(ListenableFutureTask<OAuthValue> task, boolean isNew) {
+      this.task = task;
+      this.isNew = isNew;
+    }
+
+    void executeIfNew(Executor executor) {
+      if (isNew) {
+        executor.execute(task);
+      }
     }
   }
 
