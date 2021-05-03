@@ -71,6 +71,7 @@ public class OAuth2Credentials extends Credentials {
   private static final Map<String, List<String>> EMPTY_EXTRA_HEADERS = ImmutableMap.of();
 
   // byte[] is serializable, so the lock variable can be final
+  private final Object lock = new byte[0];
   private volatile OAuthValue value = null;
   private transient ListenableFutureTask<OAuthValue> refreshTask;
 
@@ -185,7 +186,7 @@ public class OAuth2Credentials extends Credentials {
     AsyncRefreshResult refreshResult = null;
 
     // Schedule a refresh as necessary
-    synchronized (this) {
+    synchronized (lock) {
       if (getState() != CacheState.Fresh) {
         refreshResult = getOrCreateRefreshTask();
       }
@@ -196,7 +197,7 @@ public class OAuth2Credentials extends Credentials {
       refreshResult.executeIfNew(executor);
     }
 
-    synchronized (this) {
+    synchronized (lock) {
       // Immediately resolve the token token if its not expired, or wait for the refresh task to
       // complete
       if (getState() != CacheState.Expired) {
@@ -219,32 +220,34 @@ public class OAuth2Credentials extends Credentials {
    * responsibility of the caller to execute it. The task will clear the single flight slow upon
    * completion.
    */
-  private synchronized AsyncRefreshResult getOrCreateRefreshTask() {
-    if (refreshTask != null) {
-      return new AsyncRefreshResult(refreshTask, false);
+  private AsyncRefreshResult getOrCreateRefreshTask() {
+    synchronized (lock) {
+      if (refreshTask != null) {
+        return new AsyncRefreshResult(refreshTask, false);
+      }
+
+      final ListenableFutureTask<OAuthValue> task =
+          ListenableFutureTask.create(
+              new Callable<OAuthValue>() {
+                @Override
+                public OAuthValue call() throws Exception {
+                  return OAuthValue.create(refreshAccessToken(), getAdditionalHeaders());
+                }
+              });
+
+      task.addListener(
+          new Runnable() {
+            @Override
+            public void run() {
+              finishRefreshAsync(task);
+            }
+          },
+          MoreExecutors.directExecutor());
+
+      refreshTask = task;
+
+      return new AsyncRefreshResult(refreshTask, true);
     }
-
-    final ListenableFutureTask<OAuthValue> task =
-        ListenableFutureTask.create(
-            new Callable<OAuthValue>() {
-              @Override
-              public OAuthValue call() throws Exception {
-                return OAuthValue.create(refreshAccessToken(), getAdditionalHeaders());
-              }
-            });
-
-    task.addListener(
-        new Runnable() {
-          @Override
-          public void run() {
-            finishRefreshAsync(task);
-          }
-        },
-        MoreExecutors.directExecutor());
-
-    refreshTask = task;
-
-    return new AsyncRefreshResult(refreshTask, true);
   }
 
   /**
@@ -252,19 +255,21 @@ public class OAuth2Credentials extends Credentials {
    *
    * <p>The result will be stored, listeners are invoked and the single flight slot is cleared.
    */
-  private synchronized void finishRefreshAsync(ListenableFuture<OAuthValue> finishedTask) {
-    try {
-      this.value = finishedTask.get();
-      for (CredentialsChangedListener listener : changeListeners) {
-        listener.onChanged(this);
-      }
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    } catch (Exception e) {
-      // noop
-    } finally {
-      if (this.refreshTask == finishedTask) {
-        this.refreshTask = null;
+  private void finishRefreshAsync(ListenableFuture<OAuthValue> finishedTask) {
+    synchronized (lock) {
+      try {
+        this.value = finishedTask.get();
+        for (CredentialsChangedListener listener : changeListeners) {
+          listener.onChanged(this);
+        }
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      } catch (Exception e) {
+        // noop
+      } finally {
+        if (this.refreshTask == finishedTask) {
+          this.refreshTask = null;
+        }
       }
     }
   }
@@ -360,11 +365,13 @@ public class OAuth2Credentials extends Credentials {
    *
    * @param listener the listener to be added
    */
-  public final synchronized void addChangeListener(CredentialsChangedListener listener) {
-    if (changeListeners == null) {
-      changeListeners = new ArrayList<>();
+  public final void addChangeListener(CredentialsChangedListener listener) {
+    synchronized (lock) {
+      if (changeListeners == null) {
+        changeListeners = new ArrayList<>();
+      }
+      changeListeners.add(listener);
     }
-    changeListeners.add(listener);
   }
 
   /**
@@ -372,9 +379,11 @@ public class OAuth2Credentials extends Credentials {
    *
    * @param listener The listener to be removed.
    */
-  public final synchronized void removeChangeListener(CredentialsChangedListener listener) {
-    if (changeListeners != null) {
-      changeListeners.remove(listener);
+  public final void removeChangeListener(CredentialsChangedListener listener) {
+    synchronized (lock) {
+      if (changeListeners != null) {
+        changeListeners.remove(listener);
+      }
     }
   }
 
