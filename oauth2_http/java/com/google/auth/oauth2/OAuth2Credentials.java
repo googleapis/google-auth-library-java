@@ -38,6 +38,7 @@ import com.google.auth.http.AuthHttpConstants;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -61,14 +62,13 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
-/**
- * Base type for Credentials using OAuth2.
- */
+/** Base type for Credentials using OAuth2. */
 public class OAuth2Credentials extends Credentials {
 
   private static final long serialVersionUID = 4556936364828217687L;
   private static final long MINIMUM_TOKEN_MILLISECONDS = TimeUnit.MINUTES.toMillis(5);
   private static final long REFRESH_MARGIN_MILLISECONDS = MINIMUM_TOKEN_MILLISECONDS + TimeUnit.MINUTES.toMillis(1);
+  private static final Map<String, List<String>> EMPTY_EXTRA_HEADERS = ImmutableMap.of();
 
   // byte[] is serializable, so the lock variable can be final
   private volatile OAuthValue value = null;
@@ -86,13 +86,11 @@ public class OAuth2Credentials extends Credentials {
    * @param accessToken the access token
    * @return the credentials instance
    */
-  public static OAuth2Credentials of(AccessToken accessToken) {
+  public static OAuth2Credentials create(AccessToken accessToken) {
     return OAuth2Credentials.newBuilder().setAccessToken(accessToken).build();
   }
 
-  /**
-   * Default constructor.
-   **/
+  /** Default constructor. */
   protected OAuth2Credentials() {
     this(null);
   }
@@ -100,12 +98,11 @@ public class OAuth2Credentials extends Credentials {
   /**
    * Constructor with explicit access token.
    *
-   * @param accessToken Initial or temporary access token.
-   **/
-  @Deprecated
-  public OAuth2Credentials(AccessToken accessToken) {
+   * @param accessToken initial or temporary access token
+   */
+  protected OAuth2Credentials(AccessToken accessToken) {
     if (accessToken != null) {
-      this.value = OAuthValue.create(accessToken);
+      this.value = OAuthValue.create(accessToken, EMPTY_EXTRA_HEADERS);
     }
   }
 
@@ -124,6 +121,13 @@ public class OAuth2Credentials extends Credentials {
     return true;
   }
 
+  /**
+   * Returns the cached access token.
+   *
+   * <p>If not set, you should call {@link #refresh()} to fetch and cache an access token.
+   *
+   * @return The cached access token.
+   */
   public final AccessToken getAccessToken() {
     OAuthValue localState = value;
     if (localState != null) {
@@ -141,20 +145,34 @@ public class OAuth2Credentials extends Credentials {
   }
 
   /**
-   * Provide the request metadata by ensuring there is a current access token and providing it
-   * as an authorization bearer token.
+   * Provide the request metadata by ensuring there is a current access token and providing it as an
+   * authorization bearer token.
    */
   @Override
   public Map<String, List<String>> getRequestMetadata(URI uri) throws IOException {
     return unwrapDirectFuture(asyncFetch(MoreExecutors.directExecutor())).requestMetadata;
   }
 
-  /**
-   * Refresh the token by discarding the cached token and metadata and requesting the new ones.
-   */
+  /** Refresh the token by discarding the cached token and metadata and requesting the new ones. */
   @Override
   public void refresh() throws IOException {
     unwrapDirectFuture(refreshAsync(MoreExecutors.directExecutor()));
+  }
+
+  /**
+   * Refresh these credentials only if they have expired or are expiring imminently.
+   *
+   * @throws IOException during token refresh.
+   */
+  public void refreshIfExpired() throws IOException {
+    final boolean shouldRefresh;
+    synchronized (this) {
+      shouldRefresh = getState() == CacheState.Expired;
+    }
+
+    if (shouldRefresh) {
+      unwrapDirectFuture(refreshAsync(MoreExecutors.directExecutor()));
+    }
   }
 
   // Async cache impl begin ------
@@ -183,7 +201,7 @@ public class OAuth2Credentials extends Credentials {
     final ListenableFutureTask<OAuthValue> task = ListenableFutureTask.create(new Callable<OAuthValue>() {
       @Override
       public OAuthValue call() throws Exception {
-        return OAuthValue.create(refreshAccessToken());
+        return OAuthValue.create(refreshAccessToken(), getAdditionalHeaders());
       }
     });
 
@@ -274,10 +292,13 @@ public class OAuth2Credentials extends Credentials {
   /**
    * Method to refresh the access token according to the specific type of credentials.
    *
-   * Throws IllegalStateException if not overridden since direct use of OAuth2Credentials is only
+   * <p>Throws IllegalStateException if not overridden since direct use of OAuth2Credentials is only
    * for temporary or non-refreshing access tokens.
    *
-   * @throws IOException from derived implementations
+   * @return never
+   * @throws IllegalStateException always. OAuth2Credentials does not support refreshing the access
+   *     token. An instance with a new access token or a derived type that supports refreshing
+   *     should be used instead.
    */
   public AccessToken refreshAccessToken() throws IOException {
     throw new IllegalStateException("OAuth2Credentials instance does not support refreshing the"
@@ -286,18 +307,38 @@ public class OAuth2Credentials extends Credentials {
   }
 
   /**
+   * Provide additional headers to return as request metadata.
+   *
+   * @return additional headers
+   */
+  protected Map<String, List<String>> getAdditionalHeaders() {
+    return EMPTY_EXTRA_HEADERS;
+  }
+
+  /**
    * Adds a listener that is notified when the Credentials data changes.
    *
    * <p>This is called when token content changes, such as when the access token is refreshed. This
    * is typically used by code caching the access token.
    *
-   * @param listener The listener to be added.
+   * @param listener the listener to be added
    */
   public final synchronized void addChangeListener(CredentialsChangedListener listener) {
     if (changeListeners == null) {
       changeListeners = new ArrayList<>();
     }
     changeListeners.add(listener);
+  }
+
+  /**
+   * Removes a listener that was added previously.
+   *
+   * @param listener The listener to be removed.
+   */
+  public final synchronized void removeChangeListener(CredentialsChangedListener listener) {
+    if (changeListeners != null) {
+      changeListeners.remove(listener);
+    }
   }
 
   /**
@@ -325,7 +366,9 @@ public class OAuth2Credentials extends Credentials {
     return Objects.hash(value);
   }
 
-  protected ToStringHelper toStringHelper() {
+  @Override
+  public String toString() {
+
     OAuthValue localValue = value;
 
     Map<String, List<String>> requestMetadata = null;
@@ -337,12 +380,8 @@ public class OAuth2Credentials extends Credentials {
     }
     return MoreObjects.toStringHelper(this)
         .add("requestMetadata", requestMetadata)
-        .add("temporaryAccess", temporaryAccess);
-  }
-
-  @Override
-  public String toString() {
-    return toStringHelper().toString();
+        .add("temporaryAccess", temporaryAccess)
+        .toString();
   }
 
   @Override
@@ -388,12 +427,15 @@ public class OAuth2Credentials extends Credentials {
     private final AccessToken temporaryAccess;
     private final Map<String, List<String>> requestMetadata;
 
-    static OAuthValue create(AccessToken token) {
+    static OAuthValue create(AccessToken token, Map<String, List<String>> additionalHeaders) {
       return new OAuthValue(
           token,
-          Collections.singletonMap(
-              AuthHttpConstants.AUTHORIZATION,
-              Collections.singletonList(OAuth2Utils.BEARER_PREFIX + token.getTokenValue())));
+          ImmutableMap.<String, List<String>>builder()
+              .put(
+                  AuthHttpConstants.AUTHORIZATION,
+                  Collections.singletonList(OAuth2Utils.BEARER_PREFIX + token.getTokenValue()))
+              .putAll(additionalHeaders)
+              .build());
     }
 
     private OAuthValue(AccessToken temporaryAccess,
