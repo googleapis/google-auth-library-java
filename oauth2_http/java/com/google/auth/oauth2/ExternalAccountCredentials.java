@@ -35,6 +35,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
+import com.google.auth.RequestMetadataCallback;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.AwsCredentials.AwsCredentialSource;
 import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSource;
@@ -48,6 +49,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
 import javax.annotation.Nullable;
 
 /**
@@ -206,6 +208,27 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
         .setScopes(new ArrayList<>(scopes))
         .setLifetime(3600) // 1 hour in seconds
         .build();
+  }
+
+  @Override
+  public void getRequestMetadata(
+      URI uri, Executor executor, final RequestMetadataCallback callback) {
+    super.getRequestMetadata(
+        uri,
+        executor,
+        new RequestMetadataCallback() {
+          @Override
+          public void onSuccess(Map<String, List<String>> metadata) {
+            metadata = addQuotaProjectIdToRequestMetadata(quotaProjectId, metadata);
+            callback.onSuccess(metadata);
+          }
+
+          @Override
+          public void onFailure(Throwable exception) {
+            callback.onFailure(exception);
+          }
+        });
+    super.getRequestMetadata(uri, executor, callback);
   }
 
   @Override
