@@ -54,14 +54,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
@@ -399,7 +396,9 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
             .setClientSecret(CLIENT_SECRET)
             .setRefreshToken(REFRESH_TOKEN)
             .setHttpTransportFactory(transportFactory)
-            .setAccessToken(new AccessToken(ACCESS_TOKEN, new Date(OAuth2Credentials.REFRESH_MARGIN_MILLISECONDS - 1)))
+            .setAccessToken(
+                new AccessToken(
+                    ACCESS_TOKEN, new Date(OAuth2Credentials.REFRESH_MARGIN_MILLISECONDS - 1)))
             .build();
     userCredentials.clock = clock;
 
@@ -423,9 +422,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     responseContents.put("access_token", accessToken2);
     String refreshText = responseContents.toPrettyString();
     responseFuture.set(
-        new MockLowLevelHttpResponse()
-          .setContentType(Json.MEDIA_TYPE)
-          .setContent(refreshText));
+        new MockLowLevelHttpResponse().setContentType(Json.MEDIA_TYPE).setContent(refreshText));
 
     // The access token should available once the refresh thread completes
     // However it will be populated asynchronously, so we need to wait until it propagates

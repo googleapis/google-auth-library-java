@@ -137,7 +137,6 @@ public class MockTokenServerTransport extends MockHttpTransport {
         @Override
         public LowLevelHttpResponse execute() throws IOException {
 
-
           if (!responseSequence.isEmpty()) {
             try {
               return responseSequence.poll().get();
