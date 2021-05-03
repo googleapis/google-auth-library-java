@@ -65,8 +65,8 @@ import javax.annotation.Nullable;
 public class OAuth2Credentials extends Credentials {
 
   private static final long serialVersionUID = 4556936364828217687L;
-  private static final long MINIMUM_TOKEN_MILLISECONDS = TimeUnit.MINUTES.toMillis(5);
-  private static final long REFRESH_MARGIN_MILLISECONDS =
+  static final long MINIMUM_TOKEN_MILLISECONDS = TimeUnit.MINUTES.toMillis(5);
+  static final long REFRESH_MARGIN_MILLISECONDS =
       MINIMUM_TOKEN_MILLISECONDS + TimeUnit.MINUTES.toMillis(1);
   private static final Map<String, List<String>> EMPTY_EXTRA_HEADERS = ImmutableMap.of();
 
@@ -172,8 +172,6 @@ public class OAuth2Credentials extends Credentials {
     // asyncFetch will ensure that the token is refreshed
     unwrapDirectFuture(asyncFetch(MoreExecutors.directExecutor()));
   }
-
-  // Async cache impl begin ------
 
   /**
    * Attempts to get a fresh token.
@@ -328,7 +326,6 @@ public class OAuth2Credentials extends Credentials {
 
     return CacheState.Fresh;
   }
-  // -- async cache end
 
   /**
    * Method to refresh the access token according to the specific type of credentials.
@@ -449,6 +446,7 @@ public class OAuth2Credentials extends Credentials {
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
     input.defaultReadObject();
     clock = Clock.SYSTEM;
+    refreshTask = null;
   }
 
   @SuppressWarnings("unchecked")

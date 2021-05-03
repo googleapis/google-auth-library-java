@@ -39,6 +39,11 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.google.api.client.http.LowLevelHttpResponse;
+import com.google.api.client.json.GenericJson;
+import com.google.api.client.json.Json;
+import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.auth.TestClock;
 import com.google.auth.TestUtils;
@@ -46,15 +51,21 @@ import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -373,6 +384,68 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     // Verify getting the first token
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+  }
+
+  @Test
+  public void getRequestMetadata_staleTemporaryToken() throws IOException, InterruptedException {
+    TestClock clock = new TestClock();
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    ExecutorService executor = Executors.newCachedThreadPool();
+
+    // Initialize credentials which are initially stale
+    OAuth2Credentials userCredentials =
+        UserCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setHttpTransportFactory(transportFactory)
+            .setAccessToken(new AccessToken(ACCESS_TOKEN, new Date(OAuth2Credentials.REFRESH_MARGIN_MILLISECONDS - 1)))
+            .build();
+    userCredentials.clock = clock;
+
+    // Configure server to hang, return a retriable error and then refreshh
+    transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
+    SettableFuture<LowLevelHttpResponse> responseFuture = SettableFuture.create();
+    transportFactory.transport.addResponseSequence(responseFuture);
+
+    // Calls should return immediately with stale token
+    MockRequestMetadataCallback callback = new MockRequestMetadataCallback();
+    userCredentials.getRequestMetadata(CALL_URI, executor, callback);
+    TestUtils.assertContainsBearerToken(callback.metadata, ACCESS_TOKEN);
+    TestUtils.assertContainsBearerToken(userCredentials.getRequestMetadata(CALL_URI), ACCESS_TOKEN);
+
+    // Once the stale request resolve itself
+    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
+    GenericJson responseContents = new GenericJson();
+    responseContents.setFactory(new GsonFactory());
+    responseContents.put("token_type", "Bearer");
+    responseContents.put("expires_in", TimeUnit.HOURS.toSeconds(1));
+    responseContents.put("access_token", accessToken2);
+    String refreshText = responseContents.toPrettyString();
+    responseFuture.set(
+        new MockLowLevelHttpResponse()
+          .setContentType(Json.MEDIA_TYPE)
+          .setContent(refreshText));
+
+    // The access token should available once the refresh thread completes
+    // However it will be populated asynchronously, so we need to wait until it propagates
+    // Wait at most 1 minute are 100ms intervals. It should never come close to this.
+    for (int i = 0; i < 600; i++) {
+      Map<String, List<String>> requestMetadata = userCredentials.getRequestMetadata(CALL_URI);
+      String s = requestMetadata.get(AuthHttpConstants.AUTHORIZATION).get(0);
+      if (s.contains(accessToken2)) {
+        break;
+      }
+      Thread.sleep(100);
+    }
+
+    // Everything should return the new token
+    callback = new MockRequestMetadataCallback();
+    userCredentials.getRequestMetadata(CALL_URI, executor, callback);
+    TestUtils.assertContainsBearerToken(callback.metadata, accessToken2);
+    TestUtils.assertContainsBearerToken(userCredentials.getRequestMetadata(CALL_URI), accessToken2);
+
+    executor.shutdown();
   }
 
   @Test
