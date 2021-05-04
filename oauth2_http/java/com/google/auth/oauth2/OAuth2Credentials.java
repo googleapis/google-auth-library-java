@@ -316,11 +316,11 @@ public class OAuth2Credentials extends Credentials {
 
     long remainingMillis = expiresAtMillis - clock.currentTimeMillis();
 
-    if (remainingMillis < MINIMUM_TOKEN_MILLISECONDS) {
+    if (remainingMillis <= MINIMUM_TOKEN_MILLISECONDS) {
       return CacheState.Expired;
     }
 
-    if (remainingMillis < REFRESH_MARGIN_MILLISECONDS) {
+    if (remainingMillis <= REFRESH_MARGIN_MILLISECONDS) {
       return CacheState.Stale;
     }
 
@@ -527,6 +527,11 @@ public class OAuth2Credentials extends Credentials {
 
     @Override
     public void onFailure(Throwable throwable) {
+      // refreshAccessToken will be invoked in an executor, so if it fails unwrap the underlying
+      // error
+      if (throwable instanceof ExecutionException) {
+        throwable = throwable.getCause();
+      }
       callback.onFailure(throwable);
     }
   }
