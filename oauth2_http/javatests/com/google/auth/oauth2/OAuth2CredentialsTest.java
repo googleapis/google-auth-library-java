@@ -45,9 +45,11 @@ import com.google.auth.TestClock;
 import com.google.auth.TestUtils;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
+import com.google.auth.oauth2.OAuth2Credentials.OAuthValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Ints;
+import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.net.URI;
@@ -428,12 +430,20 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
           }
         };
     creds.clock = testClock;
+    synchronized (creds.lock) {
+      assertNull(creds.refreshTask);
+    }
 
     // Calls should return immediately with stale token
     MockRequestMetadataCallback callback = new MockRequestMetadataCallback();
     creds.getRequestMetadata(CALL_URI, realExecutor, callback);
     TestUtils.assertContainsBearerToken(callback.metadata, ACCESS_TOKEN);
     TestUtils.assertContainsBearerToken(creds.getRequestMetadata(CALL_URI), ACCESS_TOKEN);
+
+    // But a refresh task should be scheduled
+    synchronized (creds.lock) {
+      assertNotNull(creds.refreshTask);
+    }
 
     // Resolve the outstanding refresh
     AccessToken refreshedToken =
@@ -460,6 +470,11 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     TestUtils.assertContainsBearerToken(callback.metadata, refreshedToken.getTokenValue());
     TestUtils.assertContainsBearerToken(
         creds.getRequestMetadata(CALL_URI), refreshedToken.getTokenValue());
+
+    // And the task slot is reset
+    synchronized (creds.lock) {
+      assertNull(creds.refreshTask);
+    }
   }
 
   @Test
@@ -494,12 +509,17 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
           }
         };
     creds.clock = testClock;
+    synchronized (creds.lock) {
+      assertNull(creds.refreshTask);
+    }
 
     // Calls should return immediately with stale token, but a refresh is scheduled
     testClock.setCurrentTime(clientStale.getTime());
     MockRequestMetadataCallback callback = new MockRequestMetadataCallback();
     creds.getRequestMetadata(CALL_URI, realExecutor, callback);
     TestUtils.assertContainsBearerToken(callback.metadata, ACCESS_TOKEN);
+    assertNotNull(creds.refreshTask);
+    ListenableFutureTask<OAuthValue> refreshTask = creds.refreshTask;
 
     // Fast forward to expiration, which will hang cause the callback to hang
     testClock.setCurrentTime(clientExpired.getTime());
@@ -509,6 +529,10 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
       callback = new MockRequestMetadataCallback();
       creds.getRequestMetadata(CALL_URI, realExecutor, callback);
       assertNull(callback.metadata);
+    }
+    // The original refresh task should still be active
+    synchronized (creds.lock) {
+      assertSame(refreshTask, creds.refreshTask);
     }
 
     // Resolve the outstanding refresh
@@ -524,6 +548,11 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     callback = new MockRequestMetadataCallback();
     creds.getRequestMetadata(CALL_URI, realExecutor, callback);
     TestUtils.assertContainsBearerToken(callback.awaitResult(), refreshedToken.getTokenValue());
+
+    // The refresh slot should be cleared
+    synchronized (creds.lock) {
+      assertNull(creds.refreshTask);
+    }
   }
 
   @Test

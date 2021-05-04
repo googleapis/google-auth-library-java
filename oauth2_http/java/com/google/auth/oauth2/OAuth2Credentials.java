@@ -71,9 +71,9 @@ public class OAuth2Credentials extends Credentials {
   private static final Map<String, List<String>> EMPTY_EXTRA_HEADERS = ImmutableMap.of();
 
   // byte[] is serializable, so the lock variable can be final
-  private final Object lock = new byte[0];
+  @VisibleForTesting final Object lock = new byte[0];
   private volatile OAuthValue value = null;
-  private transient ListenableFutureTask<OAuthValue> refreshTask;
+  @VisibleForTesting transient ListenableFutureTask<OAuthValue> refreshTask;
 
   // Change listeners are not serialized
   private transient List<CredentialsChangedListener> changeListeners;
@@ -155,7 +155,10 @@ public class OAuth2Credentials extends Credentials {
     return unwrapDirectFuture(asyncFetch(MoreExecutors.directExecutor())).requestMetadata;
   }
 
-  /** Refresh the token by discarding the cached token and metadata and requesting the new ones. */
+  /**
+   * Request a new token regardless of the current token state. If the current token is not expired,
+   * it will still be returned during the refresh.
+   */
   @Override
   public void refresh() throws IOException {
     AsyncRefreshResult refreshResult = getOrCreateRefreshTask();
