@@ -51,6 +51,8 @@ import com.google.common.primitives.Ints;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -62,6 +64,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -524,8 +527,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getRequestMetadata_singleFlightErrorSharing()
-      throws IOException, InterruptedException {
+  public void getRequestMetadata_singleFlightErrorSharing() {
     Calendar calendar = Calendar.getInstance();
     Date actualExpiration = calendar.getTime();
 
@@ -600,6 +602,36 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
               }
             });
     assertEquals(error, actualAsyncError);
+  }
+
+  @Test
+  public void getRequestMetadata_syncErrorsIncludeCallingStackframe() {
+    final OAuth2Credentials creds =
+        new OAuth2Credentials() {
+          @Override
+          public AccessToken refreshAccessToken() {
+            throw new RuntimeException("fake error");
+          }
+        };
+
+    List<StackTraceElement> expectedStacktrace =
+        new ArrayList<>(Arrays.asList(new Exception().getStackTrace()));
+    expectedStacktrace = expectedStacktrace.subList(1, expectedStacktrace.size());
+
+    AtomicReference<Exception> actualError = new AtomicReference<>();
+    try {
+      creds.getRequestMetadata(CALL_URI);
+    } catch (Exception refreshError) {
+      actualError.set(refreshError);
+    }
+
+    List<StackTraceElement> actualStacktrace = Arrays.asList(actualError.get().getStackTrace());
+    actualStacktrace =
+        actualStacktrace.subList(
+            actualStacktrace.size() - expectedStacktrace.size(), actualStacktrace.size());
+
+    // ensure the remaining frames are identical
+    assertEquals(expectedStacktrace, actualStacktrace);
   }
 
   @Test
