@@ -186,6 +186,13 @@ public class OAuth2Credentials extends Credentials {
   private ListenableFuture<OAuthValue> asyncFetch(Executor executor) {
     AsyncRefreshResult refreshResult = null;
 
+    // fast and common path: skip the lock if the token is fresh
+    // The inherent race condition here is a non-issue: even if the value gets replaced after the
+    // state check, the new token will still be fresh.
+    if (getState() == CacheState.Fresh) {
+      return Futures.immediateFuture(value);
+    }
+
     // Schedule a refresh as necessary
     synchronized (lock) {
       if (getState() != CacheState.Fresh) {
