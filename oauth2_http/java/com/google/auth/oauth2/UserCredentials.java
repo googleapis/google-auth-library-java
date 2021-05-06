@@ -44,6 +44,7 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Preconditions;
+import com.google.api.client.util.StringUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
 import java.io.ByteArrayInputStream;
@@ -70,6 +71,8 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
   private final URI tokenServerUri;
   private final String transportFactoryClassName;
   private final String quotaProjectId;
+
+  private IdToken idToken;
 
   private transient HttpTransportFactory transportFactory;
 
@@ -202,6 +205,14 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
     request.setParser(new JsonObjectParser(JSON_FACTORY));
     HttpResponse response = request.execute();
     GenericData responseData = response.parseAs(GenericData.class);
+
+    String idTokenKey = "id_token";
+    if (responseData.containsKey(idTokenKey)) {
+      String idTokenString = 
+        OAuth2Utils.validateString(responseData, idTokenKey, PARSE_ERROR_PREFIX);
+        idToken = IdToken.create(idTokenString);
+    }
+    
     String accessToken =
         OAuth2Utils.validateString(responseData, "access_token", PARSE_ERROR_PREFIX);
     int expiresInSeconds =
@@ -235,6 +246,15 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
    */
   public final String getRefreshToken() {
     return refreshToken;
+  }
+
+  /**
+   * Returns the id token resulting from a OAuth2 consent flow.
+   *
+   * @return id token
+   */
+  public final IdToken getIdToken() {
+    return idToken;
   }
 
   /**
