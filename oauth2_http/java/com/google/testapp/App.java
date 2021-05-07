@@ -19,10 +19,6 @@ public class App
 {
     public static void main( String[] args ) throws IOException, GeneralSecurityException
     {
-      // GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream("D:/wrk/google-auth-library-java/oauth2_http/java/com/google/testapp/ugly.json"))
-      // .createScoped(Collections.singleton(SQLAdminScopes.SQLSERVICE_ADMIN));
-      // JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
-      // HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
         GoogleCredential credentials = GoogleCredential.fromStream(new FileInputStream("D:/wrk/google-auth-library-java/oauth2_http/java/com/google/testapp/ugly.json"))
         .createScoped(Collections.singleton(SQLAdminScopes.SQLSERVICE_ADMIN));
         JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
