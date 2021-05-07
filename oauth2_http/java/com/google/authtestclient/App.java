@@ -12,12 +12,14 @@ import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.IdTokenCredentials;
 import com.google.auth.oauth2.IdTokenProvider;
+import com.google.auth.oauth2.ServiceAccountCredentials;
 
 public class App 
 {
     public static void main( String[] args ) throws IOException
     {
-        GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream("ugly.json"));
+        GoogleCredentials credentials = ServiceAccountCredentials.fromStream(new FileInputStream("ugly.json"))
+        .createScoped("foo", "bar");
         String serviceUrl = "https://helloworld-qk56ikjwfq-uw.a.run.app";
         if (!(credentials instanceof IdTokenProvider)) {
             throw new IllegalArgumentException("Credentials are not an instance of IdTokenProvider.");
