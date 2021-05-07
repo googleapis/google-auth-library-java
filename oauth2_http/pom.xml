@@ -112,6 +112,13 @@
   </build>
 
   <dependencies>
+
+    <dependency>
+      <groupId>com.google.apis</groupId>
+      <artifactId>google-api-services-sqladmin</artifactId>
+      <version>v1beta4-rev20210420-1.31.0</version>
+    </dependency>
+
     <dependency>
       <groupId>com.google.auto.value</groupId>
       <artifactId>auto-value-annotations</artifactId>
@@ -141,5 +148,12 @@
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
+    
+    <dependency>
+      <groupId>com.google.apis</groupId>
+      <artifactId>google-api-services-sql</artifactId>
+      <version>v1beta4-rev20201026-1.30.10</version>
+    </dependency>
+  
   </dependencies>
 </project>
