@@ -648,7 +648,13 @@ public class ServiceAccountCredentials extends GoogleCredentials
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
     request.setParser(new JsonObjectParser(jsonFactory));
-    HttpResponse response = request.execute();
+    HttpResponse response;
+    try {
+      response = request.execute();
+    } catch (IOException e) {
+      throw new IOException(
+          String.format("Error getting id token for service account: %s, iss: %s", e.getMessage(), getIssuer()), e);
+    }
 
     GenericData responseData = response.parseAs(GenericData.class);
     String rawToken = OAuth2Utils.validateString(responseData, "id_token", PARSE_ERROR_PREFIX);
@@ -755,6 +761,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
     return tokenServerUri;
   }
 
+  private String getIssuer() {
+    return this.clientEmail; 
+  }
+
   @VisibleForTesting
   int getLifetime() {
     return lifetime;
@@ -787,7 +797,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   @Override
   public JwtCredentials jwtWithClaims(JwtClaims newClaims) {
     JwtClaims.Builder claimsBuilder =
-        JwtClaims.newBuilder().setIssuer(clientEmail).setSubject(clientEmail);
+        JwtClaims.newBuilder().setIssuer(getIssuer()).setSubject(getIssuer());
     return JwtCredentials.newBuilder()
         .setPrivateKey(privateKey)
         .setPrivateKeyId(privateKeyId)
@@ -862,7 +872,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     header.setKeyId(privateKeyId);
 
     JsonWebToken.Payload payload = new JsonWebToken.Payload();
-    payload.setIssuer(clientEmail);
+    payload.setIssuer(getIssuer());
     payload.setIssuedAtTimeSeconds(currentTime / 1000);
     payload.setExpirationTimeSeconds(currentTime / 1000 + this.lifetime);
     payload.setSubject(serviceAccountUser);
@@ -898,7 +908,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     header.setKeyId(privateKeyId);
 
     JsonWebToken.Payload payload = new JsonWebToken.Payload();
-    payload.setIssuer(clientEmail);
+    payload.setIssuer(getIssuer());
     payload.setIssuedAtTimeSeconds(currentTime / 1000);
     payload.setExpirationTimeSeconds(currentTime / 1000 + this.lifetime);
     payload.setSubject(serviceAccountUser);
