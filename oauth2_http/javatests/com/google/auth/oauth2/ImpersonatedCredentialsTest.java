@@ -66,6 +66,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -141,6 +142,15 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     }
   }
 
+  private GoogleCredentials sourceCredentials;
+  private MockIAMCredentialsServiceTransportFactory mockTransportFactory;
+
+  @Before
+  public void setup() throws IOException {
+    sourceCredentials = getSourceCredentials();
+    mockTransportFactory = new MockIAMCredentialsServiceTransportFactory();
+  }
+
   private GoogleCredentials getSourceCredentials() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
@@ -168,9 +178,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             USER_ACCOUNT_CLIENT_ID,
             USER_ACCOUNT_CLIENT_SECRET,
             REFRESH_TOKEN);
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
-    ImpersonatedCredentials credentials = ImpersonatedCredentials.fromJson(json, mtransportFactory);
+    ImpersonatedCredentials credentials = ImpersonatedCredentials.fromJson(json, mockTransportFactory);
     assertEquals(IMPERSONATED_CLIENT_EMAIL, credentials.getAccount());
     assertEquals(QUOTA_PROJECT_ID, credentials.getQuotaProjectId());
     assertEquals(DELEGATES, credentials.getDelegates());
@@ -190,9 +198,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             USER_ACCOUNT_CLIENT_ID,
             USER_ACCOUNT_CLIENT_SECRET,
             REFRESH_TOKEN);
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
-    ImpersonatedCredentials credentials = ImpersonatedCredentials.fromJson(json, mtransportFactory);
+    ImpersonatedCredentials credentials = ImpersonatedCredentials.fromJson(json, mockTransportFactory);
     assertEquals(IMPERSONATED_CLIENT_EMAIL, credentials.getAccount());
     assertNull(credentials.getQuotaProjectId());
     assertEquals(DELEGATES, credentials.getDelegates());
@@ -213,9 +219,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             USER_ACCOUNT_CLIENT_SECRET,
             REFRESH_TOKEN);
     json.remove("delegates");
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
-    ImpersonatedCredentials credentials = ImpersonatedCredentials.fromJson(json, mtransportFactory);
+    ImpersonatedCredentials credentials = ImpersonatedCredentials.fromJson(json, mockTransportFactory);
     assertEquals(IMPERSONATED_CLIENT_EMAIL, credentials.getAccount());
     assertNull(credentials.getQuotaProjectId());
     assertEquals(new ArrayList<String>(), credentials.getDelegates());
@@ -229,9 +233,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   public void fromJson_ServiceAccountAsSource() throws IOException {
     GenericJson json =
         buildImpersonationCredentialsJson(IMPERSONATION_URL, DELEGATES, QUOTA_PROJECT_ID);
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
-    ImpersonatedCredentials credentials = ImpersonatedCredentials.fromJson(json, mtransportFactory);
+    ImpersonatedCredentials credentials = ImpersonatedCredentials.fromJson(json, mockTransportFactory);
     assertEquals(IMPERSONATED_CLIENT_EMAIL, credentials.getAccount());
     assertEquals(QUOTA_PROJECT_ID, credentials.getQuotaProjectId());
     assertEquals(DELEGATES, credentials.getDelegates());
@@ -244,10 +246,8 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   @Test()
   public void fromJson_InvalidFormat() throws IOException {
     GenericJson json = buildInvalidCredentialsJson();
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
     try {
-      ImpersonatedCredentials.fromJson(json, mtransportFactory);
+      ImpersonatedCredentials.fromJson(json, mockTransportFactory);
       fail("An exception should be thrown.");
     } catch (CredentialFormatException e) {
       assertEquals("An invalid input stream was provided.", e.getMessage());
@@ -255,10 +255,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   @Test()
-  public void createScopedRequired_True() throws IOException {
-    GoogleCredentials sourceCredentials = getSourceCredentials();
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
+  public void createScopedRequired_True() {
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
             sourceCredentials,
@@ -266,15 +263,12 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             null,
             new ArrayList<String>(),
             VALID_LIFETIME,
-            mtransportFactory);
+            mockTransportFactory);
     assertTrue(targetCredentials.createScopedRequired());
   }
 
   @Test()
-  public void createScopedRequired_False() throws IOException {
-    GoogleCredentials sourceCredentials = getSourceCredentials();
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
+  public void createScopedRequired_False() {
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
             sourceCredentials,
@@ -282,15 +276,12 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             null,
             SCOPES,
             VALID_LIFETIME,
-            mtransportFactory);
+            mockTransportFactory);
     assertFalse(targetCredentials.createScopedRequired());
   }
 
   @Test()
-  public void createScoped() throws IOException {
-    GoogleCredentials sourceCredentials = getSourceCredentials();
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
+  public void createScoped() {
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
             sourceCredentials,
@@ -298,7 +289,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             DELEGATES,
             SCOPES,
             VALID_LIFETIME,
-            mtransportFactory,
+            mockTransportFactory,
             QUOTA_PROJECT_ID);
 
     ImpersonatedCredentials scoped_credentials =
@@ -315,13 +306,10 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   @Test()
   public void refreshAccessToken_unauthorized() throws IOException {
 
-    GoogleCredentials sourceCredentials = getSourceCredentials();
     String expectedMessage = "The caller does not have permission";
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
-    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mtransportFactory.transport.setTokenResponseErrorCode(HttpStatusCodes.STATUS_CODE_UNAUTHORIZED);
-    mtransportFactory.transport.setTokenResponseErrorContent(
+    mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.transport.setTokenResponseErrorCode(HttpStatusCodes.STATUS_CODE_UNAUTHORIZED);
+    mockTransportFactory.transport.setTokenResponseErrorContent(
         generateErrorJson(
             HttpStatusCodes.STATUS_CODE_UNAUTHORIZED, expectedMessage, "global", "forbidden"));
     ImpersonatedCredentials targetCredentials =
@@ -331,7 +319,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             null,
             SCOPES,
             VALID_LIFETIME,
-            mtransportFactory);
+            mockTransportFactory);
 
     try {
       targetCredentials.refreshAccessToken().getTokenValue();
@@ -345,19 +333,16 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   @Test()
   public void refreshAccessToken_malformedTarget() throws IOException {
 
-    GoogleCredentials sourceCredentials = getSourceCredentials();
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
     String invalidTargetEmail = "foo";
     String expectedMessage = "Request contains an invalid argument";
-    mtransportFactory.transport.setTargetPrincipal(invalidTargetEmail);
-    mtransportFactory.transport.setTokenResponseErrorCode(HttpStatusCodes.STATUS_CODE_BAD_REQUEST);
-    mtransportFactory.transport.setTokenResponseErrorContent(
+    mockTransportFactory.transport.setTargetPrincipal(invalidTargetEmail);
+    mockTransportFactory.transport.setTokenResponseErrorCode(HttpStatusCodes.STATUS_CODE_BAD_REQUEST);
+    mockTransportFactory.transport.setTokenResponseErrorContent(
         generateErrorJson(
             HttpStatusCodes.STATUS_CODE_BAD_REQUEST, expectedMessage, "global", "badRequest"));
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
-            sourceCredentials, invalidTargetEmail, null, SCOPES, VALID_LIFETIME, mtransportFactory);
+            sourceCredentials, invalidTargetEmail, null, SCOPES, VALID_LIFETIME, mockTransportFactory);
 
     try {
       targetCredentials.refreshAccessToken().getTokenValue();
@@ -369,8 +354,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   @Test()
-  public void credential_with_zero_lifetime() throws IOException, IllegalStateException {
-    GoogleCredentials sourceCredentials = getSourceCredentials();
+  public void credential_with_zero_lifetime() throws IllegalStateException {
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
             sourceCredentials, IMPERSONATED_CLIENT_EMAIL, null, SCOPES, 0);
@@ -380,7 +364,6 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   @Test()
   public void credential_with_invalid_lifetime() throws IOException, IllegalStateException {
 
-    GoogleCredentials sourceCredentials = getSourceCredentials();
     try {
       ImpersonatedCredentials targetCredentials =
           ImpersonatedCredentials.create(
@@ -398,7 +381,6 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   @Test()
   public void credential_with_invalid_scope() throws IOException, IllegalStateException {
 
-    GoogleCredentials sourceCredentials = getSourceCredentials();
     try {
       ImpersonatedCredentials targetCredentials =
           ImpersonatedCredentials.create(
@@ -415,12 +397,9 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   @Test()
   public void refreshAccessToken_success() throws IOException, IllegalStateException {
 
-    GoogleCredentials sourceCredentials = getSourceCredentials();
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
-    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
-    mtransportFactory.transport.setExpireTime(getDefaultExpireTime());
+    mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
             sourceCredentials,
@@ -428,7 +407,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             null,
             SCOPES,
             VALID_LIFETIME,
-            mtransportFactory);
+            mockTransportFactory);
 
     assertEquals(ACCESS_TOKEN, targetCredentials.refreshAccessToken().getTokenValue());
   }
@@ -436,12 +415,9 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   @Test()
   public void getRequestMetadata_withQuotaProjectId() throws IOException, IllegalStateException {
 
-    GoogleCredentials sourceCredentials = getSourceCredentials();
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
-    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
-    mtransportFactory.transport.setExpireTime(getDefaultExpireTime());
+    mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
             sourceCredentials,
@@ -449,7 +425,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             null,
             SCOPES,
             VALID_LIFETIME,
-            mtransportFactory,
+            mockTransportFactory,
             QUOTA_PROJECT_ID);
 
     Map<String, List<String>> metadata = targetCredentials.getRequestMetadata();
@@ -462,12 +438,9 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   @Test()
   public void getRequestMetadata_withoutQuotaProjectId() throws IOException, IllegalStateException {
 
-    GoogleCredentials sourceCredentials = getSourceCredentials();
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
-    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
-    mtransportFactory.transport.setExpireTime(getDefaultExpireTime());
+    mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
             sourceCredentials,
@@ -475,7 +448,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             null,
             SCOPES,
             VALID_LIFETIME,
-            mtransportFactory);
+            mockTransportFactory);
 
     Map<String, List<String>> metadata = targetCredentials.getRequestMetadata();
     assertFalse(metadata.containsKey("x-goog-user-project"));
@@ -484,12 +457,9 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   @Test()
   public void refreshAccessToken_delegates_success() throws IOException, IllegalStateException {
 
-    GoogleCredentials sourceCredentials = getSourceCredentials();
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
-    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
-    mtransportFactory.transport.setExpireTime(getDefaultExpireTime());
+    mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
     List<String> delegates = Arrays.asList("delegate-account@iam.gserviceaccount.com");
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
@@ -498,21 +468,18 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             delegates,
             SCOPES,
             VALID_LIFETIME,
-            mtransportFactory);
+            mockTransportFactory);
 
     assertEquals(ACCESS_TOKEN, targetCredentials.refreshAccessToken().getTokenValue());
   }
 
   @Test()
-  public void refreshAccessToken_invalidDate() throws IOException, IllegalStateException {
+  public void refreshAccessToken_invalidDate() throws IllegalStateException {
 
-    GoogleCredentials sourceCredentials = getSourceCredentials();
     String expectedMessage = "Unparseable date";
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
-    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mtransportFactory.transport.setAccessToken("foo");
-    mtransportFactory.transport.setExpireTime("1973-09-29T15:01:23");
+    mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.transport.setAccessToken("foo");
+    mockTransportFactory.transport.setExpireTime("1973-09-29T15:01:23");
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
             sourceCredentials,
@@ -520,7 +487,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             null,
             SCOPES,
             VALID_LIFETIME,
-            mtransportFactory);
+            mockTransportFactory);
 
     try {
       targetCredentials.refreshAccessToken().getTokenValue();
@@ -531,13 +498,10 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getAccount_sameAs() throws IOException {
-    GoogleCredentials sourceCredentials = getSourceCredentials();
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
-    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
-    mtransportFactory.transport.setExpireTime(getDefaultExpireTime());
+  public void getAccount_sameAs() {
+    mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
             sourceCredentials,
@@ -545,19 +509,16 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             null,
             SCOPES,
             VALID_LIFETIME,
-            mtransportFactory);
+            mockTransportFactory);
 
     assertEquals(IMPERSONATED_CLIENT_EMAIL, targetCredentials.getAccount());
   }
 
   @Test
-  public void sign_sameAs() throws IOException {
-    GoogleCredentials sourceCredentials = getSourceCredentials();
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
-    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
-    mtransportFactory.transport.setExpireTime(getDefaultExpireTime());
+  public void sign_sameAs() {
+    mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
             sourceCredentials,
@@ -565,24 +526,21 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             null,
             SCOPES,
             VALID_LIFETIME,
-            mtransportFactory);
+            mockTransportFactory);
 
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
-    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mtransportFactory.transport.setSignedBlob(expectedSignature);
+    mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.transport.setSignedBlob(expectedSignature);
 
     assertArrayEquals(expectedSignature, targetCredentials.sign(expectedSignature));
   }
 
   @Test
   public void sign_requestIncludesDelegates() throws IOException {
-    GoogleCredentials sourceCredentials = getSourceCredentials();
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
-    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
-    mtransportFactory.transport.setExpireTime(getDefaultExpireTime());
+    mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
             sourceCredentials,
@@ -590,16 +548,16 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             ImmutableList.of("delegate@example.com"),
             SCOPES,
             VALID_LIFETIME,
-            mtransportFactory);
+            mockTransportFactory);
 
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
-    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mtransportFactory.transport.setSignedBlob(expectedSignature);
+    mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.transport.setSignedBlob(expectedSignature);
 
     assertArrayEquals(expectedSignature, targetCredentials.sign(expectedSignature));
 
-    MockLowLevelHttpRequest request = mtransportFactory.transport.getRequest();
+    MockLowLevelHttpRequest request = mockTransportFactory.transport.getRequest();
     GenericJson body =
         JSON_FACTORY
             .createJsonParser(request.getContentAsString())
@@ -610,22 +568,18 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void sign_usesSourceCredentials() throws IOException {
-    Date expiry = new Date();
+  public void sign_usesSourceCredentials() {
     Calendar c = Calendar.getInstance();
-    c.setTime(expiry);
     c.add(Calendar.DATE, 1);
-    expiry = c.getTime();
+    Date expiry = c.getTime();
     GoogleCredentials sourceCredentials =
         new GoogleCredentials.Builder()
             .setAccessToken(new AccessToken("source-token", expiry))
             .build();
 
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
-    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
-    mtransportFactory.transport.setExpireTime(getDefaultExpireTime());
+    mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
             sourceCredentials,
@@ -633,27 +587,24 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             ImmutableList.of("delegate@example.com"),
             SCOPES,
             VALID_LIFETIME,
-            mtransportFactory);
+            mockTransportFactory);
 
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
-    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mtransportFactory.transport.setSignedBlob(expectedSignature);
+    mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.transport.setSignedBlob(expectedSignature);
 
     assertArrayEquals(expectedSignature, targetCredentials.sign(expectedSignature));
 
-    MockLowLevelHttpRequest request = mtransportFactory.transport.getRequest();
+    MockLowLevelHttpRequest request = mockTransportFactory.transport.getRequest();
     assertEquals("Bearer source-token", request.getFirstHeaderValue("Authorization"));
   }
 
   @Test
-  public void sign_accessDenied_throws() throws IOException {
-    GoogleCredentials sourceCredentials = getSourceCredentials();
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
-    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
-    mtransportFactory.transport.setExpireTime(getDefaultExpireTime());
+  public void sign_accessDenied_throws() {
+    mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
             sourceCredentials,
@@ -661,13 +612,13 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             null,
             SCOPES,
             VALID_LIFETIME,
-            mtransportFactory);
+            mockTransportFactory);
 
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
-    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mtransportFactory.transport.setSignedBlob(expectedSignature);
-    mtransportFactory.transport.setErrorResponseCodeAndMessage(
+    mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.transport.setSignedBlob(expectedSignature);
+    mockTransportFactory.transport.setErrorResponseCodeAndMessage(
         HttpStatusCodes.STATUS_CODE_FORBIDDEN, "Sign Error");
 
     try {
@@ -682,13 +633,10 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void sign_serverError_throws() throws IOException {
-    GoogleCredentials sourceCredentials = getSourceCredentials();
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
-    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
-    mtransportFactory.transport.setExpireTime(getDefaultExpireTime());
+  public void sign_serverError_throws() {
+    mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
             sourceCredentials,
@@ -696,13 +644,13 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             null,
             SCOPES,
             VALID_LIFETIME,
-            mtransportFactory);
+            mockTransportFactory);
 
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
-    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mtransportFactory.transport.setSignedBlob(expectedSignature);
-    mtransportFactory.transport.setErrorResponseCodeAndMessage(
+    mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.transport.setSignedBlob(expectedSignature);
+    mockTransportFactory.transport.setErrorResponseCodeAndMessage(
         HttpStatusCodes.STATUS_CODE_SERVER_ERROR, "Sign Error");
 
     try {
@@ -718,12 +666,9 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void idTokenWithAudience_sameAs() throws IOException {
-    GoogleCredentials sourceCredentials = getSourceCredentials();
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
-    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
-    mtransportFactory.transport.setExpireTime(getDefaultExpireTime());
+    mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
 
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
@@ -732,9 +677,9 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             null,
             SCOPES,
             VALID_LIFETIME,
-            mtransportFactory);
+            mockTransportFactory);
 
-    mtransportFactory.transport.setIdToken(STANDARD_ID_TOKEN);
+    mockTransportFactory.transport.setIdToken(STANDARD_ID_TOKEN);
 
     String targetAudience = "https://foo.bar";
     IdTokenCredentials tokenCredential =
@@ -752,12 +697,9 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void idTokenWithAudience_withEmail() throws IOException {
-    GoogleCredentials sourceCredentials = getSourceCredentials();
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
-    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
-    mtransportFactory.transport.setExpireTime(getDefaultExpireTime());
+    mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
 
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
@@ -766,9 +708,9 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             null,
             SCOPES,
             VALID_LIFETIME,
-            mtransportFactory);
+            mockTransportFactory);
 
-    mtransportFactory.transport.setIdToken(TOKEN_WITH_EMAIL);
+    mockTransportFactory.transport.setIdToken(TOKEN_WITH_EMAIL);
 
     String targetAudience = "https://foo.bar";
     IdTokenCredentials tokenCredential =
@@ -784,13 +726,10 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void idToken_withServerError() throws IOException {
-    GoogleCredentials sourceCredentials = getSourceCredentials();
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
-    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
-    mtransportFactory.transport.setExpireTime(getDefaultExpireTime());
+  public void idToken_withServerError() {
+    mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
 
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
@@ -799,10 +738,10 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             null,
             SCOPES,
             VALID_LIFETIME,
-            mtransportFactory);
+            mockTransportFactory);
 
-    mtransportFactory.transport.setIdToken(STANDARD_ID_TOKEN);
-    mtransportFactory.transport.setErrorResponseCodeAndMessage(
+    mockTransportFactory.transport.setIdToken(STANDARD_ID_TOKEN);
+    mockTransportFactory.transport.setErrorResponseCodeAndMessage(
         HttpStatusCodes.STATUS_CODE_SERVER_ERROR, "Internal Server Error");
 
     String targetAudience = "https://foo.bar";
@@ -819,13 +758,10 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void idToken_withOtherError() throws IOException {
-    GoogleCredentials sourceCredentials = getSourceCredentials();
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
-    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
-    mtransportFactory.transport.setExpireTime(getDefaultExpireTime());
+  public void idToken_withOtherError() {
+    mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
 
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
@@ -834,10 +770,10 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             null,
             SCOPES,
             VALID_LIFETIME,
-            mtransportFactory);
+            mockTransportFactory);
 
-    mtransportFactory.transport.setIdToken(STANDARD_ID_TOKEN);
-    mtransportFactory.transport.setErrorResponseCodeAndMessage(
+    mockTransportFactory.transport.setIdToken(STANDARD_ID_TOKEN);
+    mockTransportFactory.transport.setErrorResponseCodeAndMessage(
         HttpStatusCodes.STATUS_CODE_MOVED_PERMANENTLY, "Redirect");
 
     String targetAudience = "https://foo.bar";
@@ -855,12 +791,9 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void hashCode_equals() throws IOException {
-    GoogleCredentials sourceCredentials = getSourceCredentials();
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
-    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
-    mtransportFactory.transport.setExpireTime(getDefaultExpireTime());
+    mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
 
     ImpersonatedCredentials credentials =
         ImpersonatedCredentials.create(
@@ -869,7 +802,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             null,
             SCOPES,
             VALID_LIFETIME,
-            mtransportFactory);
+            mockTransportFactory);
 
     ImpersonatedCredentials otherCredentials =
         ImpersonatedCredentials.create(
@@ -878,7 +811,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             null,
             SCOPES,
             VALID_LIFETIME,
-            mtransportFactory);
+            mockTransportFactory);
 
     assertEquals(credentials.hashCode(), otherCredentials.hashCode());
   }
@@ -886,12 +819,9 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   @Test
   public void serialize() throws IOException, ClassNotFoundException {
 
-    GoogleCredentials sourceCredentials = getSourceCredentials();
-    MockIAMCredentialsServiceTransportFactory mtransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
-    mtransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mtransportFactory.transport.setAccessToken(ACCESS_TOKEN);
-    mtransportFactory.transport.setExpireTime(getDefaultExpireTime());
+    mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
 
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
@@ -900,7 +830,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             null,
             SCOPES,
             VALID_LIFETIME,
-            mtransportFactory);
+            mockTransportFactory);
     GoogleCredentials deserializedCredentials = serializeAndDeserialize(targetCredentials);
     assertEquals(targetCredentials, deserializedCredentials);
     assertEquals(targetCredentials.hashCode(), deserializedCredentials.hashCode());
@@ -909,9 +839,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   public static String getDefaultExpireTime() {
-    Date currentDate = new Date();
     Calendar c = Calendar.getInstance();
-    c.setTime(currentDate);
     c.add(Calendar.SECOND, VALID_LIFETIME);
     return new SimpleDateFormat(RFC3339).format(c.getTime());
   }
