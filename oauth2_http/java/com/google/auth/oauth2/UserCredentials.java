@@ -246,15 +246,6 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
   }
 
   /**
-   * Returns the id token resulting from a OAuth2 consent flow.
-   *
-   * @return id token
-   */
-  public final IdToken getIdToken() {
-    return idToken;
-  }
-
-  /**
    *  Does refresh access token request 
    * 
    * @return Refresh token response data
