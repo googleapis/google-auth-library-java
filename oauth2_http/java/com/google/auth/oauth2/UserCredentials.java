@@ -249,8 +249,8 @@ public class UserCredentials extends GoogleCredentials
   }
 
   /**
-   * Does refresh access token request
-   *
+   *  Does refresh access token request 
+   * 
    * @return Refresh token response data
    */
   private GenericData doRefreshAccessToken() throws IOException {
