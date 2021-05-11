@@ -178,7 +178,8 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             USER_ACCOUNT_CLIENT_ID,
             USER_ACCOUNT_CLIENT_SECRET,
             REFRESH_TOKEN);
-    ImpersonatedCredentials credentials = ImpersonatedCredentials.fromJson(json, mockTransportFactory);
+    ImpersonatedCredentials credentials =
+        ImpersonatedCredentials.fromJson(json, mockTransportFactory);
     assertEquals(IMPERSONATED_CLIENT_EMAIL, credentials.getAccount());
     assertEquals(QUOTA_PROJECT_ID, credentials.getQuotaProjectId());
     assertEquals(DELEGATES, credentials.getDelegates());
@@ -198,7 +199,8 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             USER_ACCOUNT_CLIENT_ID,
             USER_ACCOUNT_CLIENT_SECRET,
             REFRESH_TOKEN);
-    ImpersonatedCredentials credentials = ImpersonatedCredentials.fromJson(json, mockTransportFactory);
+    ImpersonatedCredentials credentials =
+        ImpersonatedCredentials.fromJson(json, mockTransportFactory);
     assertEquals(IMPERSONATED_CLIENT_EMAIL, credentials.getAccount());
     assertNull(credentials.getQuotaProjectId());
     assertEquals(DELEGATES, credentials.getDelegates());
@@ -219,7 +221,8 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             USER_ACCOUNT_CLIENT_SECRET,
             REFRESH_TOKEN);
     json.remove("delegates");
-    ImpersonatedCredentials credentials = ImpersonatedCredentials.fromJson(json, mockTransportFactory);
+    ImpersonatedCredentials credentials =
+        ImpersonatedCredentials.fromJson(json, mockTransportFactory);
     assertEquals(IMPERSONATED_CLIENT_EMAIL, credentials.getAccount());
     assertNull(credentials.getQuotaProjectId());
     assertEquals(new ArrayList<String>(), credentials.getDelegates());
@@ -233,7 +236,8 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   public void fromJson_ServiceAccountAsSource() throws IOException {
     GenericJson json =
         buildImpersonationCredentialsJson(IMPERSONATION_URL, DELEGATES, QUOTA_PROJECT_ID);
-    ImpersonatedCredentials credentials = ImpersonatedCredentials.fromJson(json, mockTransportFactory);
+    ImpersonatedCredentials credentials =
+        ImpersonatedCredentials.fromJson(json, mockTransportFactory);
     assertEquals(IMPERSONATED_CLIENT_EMAIL, credentials.getAccount());
     assertEquals(QUOTA_PROJECT_ID, credentials.getQuotaProjectId());
     assertEquals(DELEGATES, credentials.getDelegates());
@@ -308,7 +312,8 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
     String expectedMessage = "The caller does not have permission";
     mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mockTransportFactory.transport.setTokenResponseErrorCode(HttpStatusCodes.STATUS_CODE_UNAUTHORIZED);
+    mockTransportFactory.transport.setTokenResponseErrorCode(
+        HttpStatusCodes.STATUS_CODE_UNAUTHORIZED);
     mockTransportFactory.transport.setTokenResponseErrorContent(
         generateErrorJson(
             HttpStatusCodes.STATUS_CODE_UNAUTHORIZED, expectedMessage, "global", "forbidden"));
@@ -336,13 +341,19 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     String invalidTargetEmail = "foo";
     String expectedMessage = "Request contains an invalid argument";
     mockTransportFactory.transport.setTargetPrincipal(invalidTargetEmail);
-    mockTransportFactory.transport.setTokenResponseErrorCode(HttpStatusCodes.STATUS_CODE_BAD_REQUEST);
+    mockTransportFactory.transport.setTokenResponseErrorCode(
+        HttpStatusCodes.STATUS_CODE_BAD_REQUEST);
     mockTransportFactory.transport.setTokenResponseErrorContent(
         generateErrorJson(
             HttpStatusCodes.STATUS_CODE_BAD_REQUEST, expectedMessage, "global", "badRequest"));
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
-            sourceCredentials, invalidTargetEmail, null, SCOPES, VALID_LIFETIME, mockTransportFactory);
+            sourceCredentials,
+            invalidTargetEmail,
+            null,
+            SCOPES,
+            VALID_LIFETIME,
+            mockTransportFactory);
 
     try {
       targetCredentials.refreshAccessToken().getTokenValue();
