@@ -609,7 +609,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
       response = request.execute();
     } catch (IOException e) {
       throw new IOException(
-          String.format("Error getting access token for service account: %s, iss: %s", e.getMessage(), getIssuer()), e);
+          String.format(
+              "Error getting access token for service account: %s, iss: %s",
+              e.getMessage(), getIssuer()),
+          e);
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
@@ -653,7 +656,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
       response = request.execute();
     } catch (IOException e) {
       throw new IOException(
-          String.format("Error getting id token for service account: %s, iss: %s", e.getMessage(), getIssuer()), e);
+          String.format(
+              "Error getting id token for service account: %s, iss: %s",
+              e.getMessage(), getIssuer()),
+          e);
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
@@ -762,7 +768,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   }
 
   private String getIssuer() {
-    return this.clientEmail; 
+    return this.clientEmail;
   }
 
   @VisibleForTesting
