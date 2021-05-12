@@ -46,6 +46,7 @@ import com.google.api.client.util.GenericData;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -256,11 +257,13 @@ public class ImpersonatedCredentials extends GoogleCredentials
     return this.quotaProjectId;
   }
 
-  public List<String> getDelegates() {
+  @VisibleForTesting
+  List<String> getDelegates() {
     return delegates;
   }
 
-  public List<String> getScopes() {
+  @VisibleForTesting
+  List<String> getScopes() {
     return scopes;
   }
 
