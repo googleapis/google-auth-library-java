@@ -70,7 +70,7 @@ public class HttpCredentialsAdapter
   }
 
   /** A getter for the credentials instance being used */
-  public Credentials getCredentials(){
+  public Credentials getCredentials() {
     return credentials;
   }
 

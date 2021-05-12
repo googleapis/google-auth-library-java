@@ -31,6 +31,7 @@
 
 package com.google.auth.http;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -40,6 +41,7 @@ import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpTransport;
+import com.google.auth.Credentials;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
 import com.google.auth.oauth2.MockTokenCheckingTransport;
 import com.google.auth.oauth2.OAuth2Credentials;
@@ -150,12 +152,10 @@ public class HttpCredentialsAdapterTest {
     String authorizationHeader = requestHeaders.getAuthorization();
     assertEquals(authorizationHeader, expectedAuthorization);
   }
-}
 
   @Test
-  public void getCredentials() throws IOException {
+  public void getCredentials() {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
-    final String expectedAuthorization = InternalAuthHttpConstants.BEARER_PREFIX + accessToken;
     MockTokenServerTransportFactory tokenServerTransportFactory =
         new MockTokenServerTransportFactory();
     tokenServerTransportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
@@ -170,7 +170,7 @@ public class HttpCredentialsAdapterTest {
             .build();
 
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
-    OAuth2Credentials returnedCredentials = adapter.getCredentials();
-    assertThat(returnedCredentials, instanceOf(OAuth2Credentials.class));
+    Credentials returnedCredentials = adapter.getCredentials();
+    assertThat(returnedCredentials, instanceOf(Credentials.class));
   }
 }
