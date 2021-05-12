@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import static java.util.concurrent.TimeUnit.HOURS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -65,7 +66,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.After;
 import org.junit.Before;
@@ -372,7 +372,9 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
                 return credentials.getRequestMetadata(CALL_URI);
               }
             });
-    testExecutor.submit(blockingTask);
+
+    @SuppressWarnings("FutureReturnValueIgnored")
+    Future<?> ignored = testExecutor.submit(blockingTask);
     testExecutor.shutdown();
 
     // give the blockingTask a chance to run
@@ -449,7 +451,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     AccessToken refreshedToken =
         new AccessToken(
             "2/MkSJoj1xsli0AccessToken_NKPY2",
-            new Date(testClock.currentTimeMillis() + TimeUnit.HOURS.toMillis(1)));
+            new Date(testClock.currentTimeMillis() + HOURS.toMillis(1)));
     refreshedTokenFuture.set(refreshedToken);
 
     // The access token should available once the refresh thread completes
@@ -539,7 +541,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     AccessToken refreshedToken =
         new AccessToken(
             "2/MkSJoj1xsli0AccessToken_NKPY2",
-            new Date(testClock.currentTimeMillis() + TimeUnit.HOURS.toMillis(1)));
+            new Date(testClock.currentTimeMillis() + HOURS.toMillis(1)));
     refreshedTokenFuture.set(refreshedToken);
 
     // The access token should available once the refresh thread completes

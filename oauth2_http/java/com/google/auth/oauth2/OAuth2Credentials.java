@@ -31,12 +31,15 @@
 
 package com.google.auth.oauth2;
 
+import static java.util.concurrent.TimeUnit.MINUTES;
+
 import com.google.api.client.util.Clock;
 import com.google.auth.Credentials;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.FutureCallback;
@@ -49,7 +52,6 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -58,17 +60,15 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
 /** Base type for Credentials using OAuth2. */
 public class OAuth2Credentials extends Credentials {
 
   private static final long serialVersionUID = 4556936364828217687L;
-  static final long MINIMUM_TOKEN_MILLISECONDS = TimeUnit.MINUTES.toMillis(5);
-  static final long REFRESH_MARGIN_MILLISECONDS =
-      MINIMUM_TOKEN_MILLISECONDS + TimeUnit.MINUTES.toMillis(1);
-  private static final Map<String, List<String>> EMPTY_EXTRA_HEADERS = ImmutableMap.of();
+  static final long MINIMUM_TOKEN_MILLISECONDS = MINUTES.toMillis(5);
+  static final long REFRESH_MARGIN_MILLISECONDS = MINIMUM_TOKEN_MILLISECONDS + MINUTES.toMillis(1);
+  private static final ImmutableMap<String, List<String>> EMPTY_EXTRA_HEADERS = ImmutableMap.of();
 
   // byte[] is serializable, so the lock variable can be final
   @VisibleForTesting final Object lock = new byte[0];
@@ -189,13 +189,13 @@ public class OAuth2Credentials extends Credentials {
     // fast and common path: skip the lock if the token is fresh
     // The inherent race condition here is a non-issue: even if the value gets replaced after the
     // state check, the new token will still be fresh.
-    if (getState() == CacheState.Fresh) {
+    if (getState() == CacheState.FRESH) {
       return Futures.immediateFuture(value);
     }
 
     // Schedule a refresh as necessary
     synchronized (lock) {
-      if (getState() != CacheState.Fresh) {
+      if (getState() != CacheState.FRESH) {
         refreshResult = getOrCreateRefreshTask();
       }
     }
@@ -208,7 +208,7 @@ public class OAuth2Credentials extends Credentials {
     synchronized (lock) {
       // Immediately resolve the token token if its not expired, or wait for the refresh task to
       // complete
-      if (getState() != CacheState.Expired) {
+      if (getState() != CacheState.EXPIRED) {
         return Futures.immediateFuture(value);
       } else if (refreshResult != null) {
         return refreshResult.task;
@@ -315,26 +315,26 @@ public class OAuth2Credentials extends Credentials {
     OAuthValue localValue = value;
 
     if (localValue == null) {
-      return CacheState.Expired;
+      return CacheState.EXPIRED;
     }
 
     Long expiresAtMillis = localValue.temporaryAccess.getExpirationTimeMillis();
 
     if (expiresAtMillis == null) {
-      return CacheState.Fresh;
+      return CacheState.FRESH;
     }
 
     long remainingMillis = expiresAtMillis - clock.currentTimeMillis();
 
     if (remainingMillis <= MINIMUM_TOKEN_MILLISECONDS) {
-      return CacheState.Expired;
+      return CacheState.EXPIRED;
     }
 
     if (remainingMillis <= REFRESH_MARGIN_MILLISECONDS) {
-      return CacheState.Stale;
+      return CacheState.STALE;
     }
 
-    return CacheState.Fresh;
+    return CacheState.FRESH;
   }
 
   /**
@@ -416,9 +416,10 @@ public class OAuth2Credentials extends Credentials {
 
   @Override
   public int hashCode() {
-    return Objects.hash(value);
+    return Objects.hashCode(value);
   }
 
+  @Nullable
   protected Map<String, List<String>> getRequestMetadataInternal() {
     OAuthValue localValue = value;
     if (localValue != null) {
@@ -491,7 +492,7 @@ public class OAuth2Credentials extends Credentials {
           ImmutableMap.<String, List<String>>builder()
               .put(
                   AuthHttpConstants.AUTHORIZATION,
-                  Collections.singletonList(OAuth2Utils.BEARER_PREFIX + token.getTokenValue()))
+                  ImmutableList.of(OAuth2Utils.BEARER_PREFIX + token.getTokenValue()))
               .putAll(additionalHeaders)
               .build());
     }
@@ -518,9 +519,9 @@ public class OAuth2Credentials extends Credentials {
   }
 
   enum CacheState {
-    Fresh,
-    Stale,
-    Expired;
+    FRESH,
+    STALE,
+    EXPIRED;
   }
 
   static class FutureCallbackToMetadataCallbackAdapter implements FutureCallback<OAuthValue> {

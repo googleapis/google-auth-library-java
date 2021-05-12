@@ -65,7 +65,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
   final Map<String, String> codes = new HashMap<String, String>();
   URI tokenServerUri = OAuth2Utils.TOKEN_SERVER_URI;
   private IOException error;
-  private Queue<Future<LowLevelHttpResponse>> responseSequence = new ArrayDeque<>();
+  private final Queue<Future<LowLevelHttpResponse>> responseSequence = new ArrayDeque<>();
   private int expiresInSeconds = 3600;
 
   public MockTokenServerTransport() {}
