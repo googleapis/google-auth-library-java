@@ -32,6 +32,7 @@
 package com.google.auth.http;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpHeaders;
@@ -148,5 +149,28 @@ public class HttpCredentialsAdapterTest {
     HttpHeaders requestHeaders = request.getHeaders();
     String authorizationHeader = requestHeaders.getAuthorization();
     assertEquals(authorizationHeader, expectedAuthorization);
+  }
+}
+
+  @Test
+  public void getCredentials() throws IOException {
+    final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    final String expectedAuthorization = InternalAuthHttpConstants.BEARER_PREFIX + accessToken;
+    MockTokenServerTransportFactory tokenServerTransportFactory =
+        new MockTokenServerTransportFactory();
+    tokenServerTransportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
+    tokenServerTransportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessToken);
+
+    OAuth2Credentials credentials =
+        UserCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setHttpTransportFactory(tokenServerTransportFactory)
+            .build();
+
+    HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
+    OAuth2Credentials returnedCredentials = adapter.getCredentials();
+    assertThat(returnedCredentials, instanceOf(OAuth2Credentials.class));
   }
 }
