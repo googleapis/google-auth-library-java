@@ -297,7 +297,6 @@ public class GoogleCredentialsTest {
             GoogleCredentials.fromStream(impersonationCredentialsStream, transportFactoryForSource);
     credentials.setTransportFactory(transportFactory);
 
-    assertNotNull(credentials);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ImpersonatedCredentialsTest.ACCESS_TOKEN);
 
@@ -332,7 +331,6 @@ public class GoogleCredentialsTest {
             GoogleCredentials.fromStream(impersonationCredentialsStream, transportFactoryForSource);
     credentials.setTransportFactory(transportFactory);
 
-    assertNotNull(credentials);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ImpersonatedCredentialsTest.ACCESS_TOKEN);
 
