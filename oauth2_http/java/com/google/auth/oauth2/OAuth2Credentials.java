@@ -52,6 +52,7 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -317,14 +318,13 @@ public class OAuth2Credentials extends Credentials {
     if (localValue == null) {
       return CacheState.EXPIRED;
     }
+    Date expirationTime = localValue.temporaryAccess.getExpirationTime();
 
-    Long expiresAtMillis = localValue.temporaryAccess.getExpirationTimeMillis();
-
-    if (expiresAtMillis == null) {
+    if (expirationTime == null) {
       return CacheState.FRESH;
     }
 
-    long remainingMillis = expiresAtMillis - clock.currentTimeMillis();
+    long remainingMillis = expirationTime.getTime() - clock.currentTimeMillis();
 
     if (remainingMillis <= MINIMUM_TOKEN_MILLISECONDS) {
       return CacheState.EXPIRED;
