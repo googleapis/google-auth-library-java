@@ -76,7 +76,6 @@
     ".kokoro/release/stage.sh",
     ".kokoro/trampoline.sh",
     "CODE_OF_CONDUCT.md",
-    "CONTRIBUTING.md",
-    "codecov.yaml"
+    "CONTRIBUTING.md"
   ]
 }
