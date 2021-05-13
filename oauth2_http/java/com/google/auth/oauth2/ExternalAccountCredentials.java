@@ -228,7 +228,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
             callback.onFailure(exception);
           }
         });
-    super.getRequestMetadata(uri, executor, callback);
   }
 
   @Override
