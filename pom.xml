@@ -13,7 +13,7 @@
   <distributionManagement>
     <snapshotRepository>
       <id>sonatype-nexus-snapshots</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      <url>https://google.oss.sonatype.org/content/repositories/snapshots</url>
     </snapshotRepository>
     <site>
       <id>googleapis.dev</id>
@@ -145,7 +145,7 @@
           <extensions>true</extensions>
           <configuration>
             <serverId>ossrh</serverId>
-            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+            <nexusUrl>https://google.oss.sonatype.org/</nexusUrl>
             <autoReleaseAfterClose>${deploy.autorelease}</autoReleaseAfterClose>
           </configuration>
         </plugin>
