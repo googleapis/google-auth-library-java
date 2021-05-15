@@ -198,7 +198,7 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
   /**
    * Returns a Google ID Token from the refresh token response.
    *
-   * @param targetAudience the aud: field the IdToken should include. Currently unused for
+   * @param targetAudience the aud: field the IdToken should include. This is not unused for
    *     UserCredentials.
    * @param options list of Credential specific options for for the token. Currently unused for
    *     UserCredentials.
@@ -215,7 +215,9 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
         return IdToken.create(idTokenString);
     }
 
-    throw new IOException("UserCredentials instance cannot refresh id token because there is no id token in refresh response.");
+    throw new IOException("UserCredentials instance cannot refresh id token unless you are logged" +
+    " into gcloud. Please see https://cloud.google.com/run/docs/authenticating/developers" + 
+    " for more info.");
   }
 
   /**

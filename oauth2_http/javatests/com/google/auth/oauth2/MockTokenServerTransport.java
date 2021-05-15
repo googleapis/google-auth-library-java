@@ -53,6 +53,7 @@ import java.util.Queue;
 /** Mock transport to simulate providing Google OAuth2 access tokens */
 public class MockTokenServerTransport extends MockHttpTransport {
 
+  public static final String SDK_CLIENT_ID = "sdk_client_id";
   static final String EXPECTED_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
   static final JsonFactory JSON_FACTORY = new GsonFactory();
   int buildRequestCount;
@@ -124,9 +125,9 @@ public class MockTokenServerTransport extends MockHttpTransport {
       throw error;
     }
     int questionMarkPos = url.indexOf('?');
-    final String urlWithoutQUery = (questionMarkPos > 0) ? url.substring(0, questionMarkPos) : url;
+    final String urlWithoutQuery = (questionMarkPos > 0) ? url.substring(0, questionMarkPos) : url;
     final String query = (questionMarkPos > 0) ? url.substring(questionMarkPos + 1) : "";
-    if (urlWithoutQUery.equals(tokenServerUri.toString())) {
+    if (urlWithoutQuery.equals(tokenServerUri.toString())) {
       return new MockLowLevelHttpRequest(url) {
         @Override
         public LowLevelHttpResponse execute() throws IOException {
@@ -145,9 +146,13 @@ public class MockTokenServerTransport extends MockHttpTransport {
           boolean generateAccessToken = true;
 
           String foundId = query.get("client_id");
+          boolean isSdkClientId = false;
           if (foundId != null) {
             if (!clients.containsKey(foundId)) {
               throw new IOException("Client ID not found.");
+            }
+            if (foundId.equals(SDK_CLIENT_ID)) {
+              isSdkClientId = true;
             }
             String foundSecret = query.get("client_secret");
             String expectedSecret = clients.get(foundId);
@@ -207,8 +212,9 @@ public class MockTokenServerTransport extends MockHttpTransport {
             responseContents.put("access_token", accessToken);
             if (refreshToken != null) {
               responseContents.put("refresh_token", refreshToken);
-            }
-          } else {
+            }            
+          } 
+          if (isSdkClientId || !generateAccessToken) {
             responseContents.put("id_token", ServiceAccountCredentialsTest.DEFAULT_ID_TOKEN);
           }
           String refreshText = responseContents.toPrettyString();
@@ -218,7 +224,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
               .setContent(refreshText);
         }
       };
-    } else if (urlWithoutQUery.equals(OAuth2Utils.TOKEN_REVOKE_URI.toString())) {
+    } else if (urlWithoutQuery.equals(OAuth2Utils.TOKEN_REVOKE_URI.toString())) {
       return new MockLowLevelHttpRequest(url) {
         @Override
         public LowLevelHttpResponse execute() throws IOException {

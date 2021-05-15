@@ -72,7 +72,13 @@ public class UserCredentialsTest extends BaseSerializationTest {
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
   private static final String QUOTA_PROJECT = "sample-quota-project-id";
   private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
-  private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
+  private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");  
+  public static final String DEFAULT_ID_TOKEN =
+  "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRmMzc1ODkwOGI3OTIyO"
+      + "TNhZDk3N2EwYjk5MWQ5OGE3N2Y0ZWVlY2QiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJodHRwczovL2Zvby5iYXIiL"
+      + "CJhenAiOiIxMDIxMDE1NTA4MzQyMDA3MDg1NjgiLCJleHAiOjE1NjQ0NzUwNTEsImlhdCI6MTU2NDQ3MTQ1MSwi"
+      + "aXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwic3ViIjoiMTAyMTAxNTUwODM0MjAwNzA4NTY4In0"
+      + ".redacted";
 
   @Test(expected = IllegalStateException.class)
   public void constructor_accessAndRefreshTokenNull_throws() {
@@ -697,6 +703,56 @@ public class UserCredentialsTest extends BaseSerializationTest {
         });
 
     assertTrue("Should have run onSuccess() callback", success.get());
+  }
+
+  @Test
+  public void IdTokenCredentials_SdkClientId_correct() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(MockTokenServerTransport.SDK_CLIENT_ID, CLIENT_SECRET);
+    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
+    InputStream userStream =
+        writeUserStream(MockTokenServerTransport.SDK_CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
+
+    UserCredentials credentials = UserCredentials.fromStream(userStream, transportFactory);
+    credentials.refresh();
+
+    assertEquals(ACCESS_TOKEN, credentials.getAccessToken().getTokenValue());
+
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(credentials)
+            .build();
+    
+    // UserCredential returns access token until refresh, 
+    // IDTokenCredential does refresh during instantiation
+    assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getAccessToken().getTokenValue());
+    assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getIdToken().getTokenValue());
+  }
+
+  @Test
+  public void IdTokenCredentials_notSdkClientId_throws() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
+    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
+    InputStream userStream =
+        writeUserStream(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
+
+    UserCredentials credentials = UserCredentials.fromStream(userStream, transportFactory);
+
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(credentials)
+            .build();
+
+    String expectedMessageContent = "UserCredentials instance cannot refresh id token unless" +
+    " you are logged into gcloud. Please see" +
+    " https://cloud.google.com/run/docs/authenticating/developers for more info.";
+
+    try {
+      tokenCredential.refresh();
+    } catch (IOException expected) {
+      assertTrue(expected.getMessage().contains(expectedMessageContent));
+    }
   }
 
   static GenericJson writeUserJson(
