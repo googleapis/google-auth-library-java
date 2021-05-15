@@ -58,7 +58,8 @@ import java.util.Map;
 import java.util.Objects;
 
 /** OAuth2 Credentials representing a user's identity and consent. */
-public class UserCredentials extends GoogleCredentials implements QuotaProjectIdProvider, IdTokenProvider {
+public class UserCredentials extends GoogleCredentials
+    implements QuotaProjectIdProvider, IdTokenProvider {
 
   private static final String GRANT_TYPE = "refresh_token";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
@@ -206,13 +207,14 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
    * @return IdToken object which includes the raw id_token, expiration and audience
    */
   @Override
-  public IdToken idTokenWithAudience(String targetAudience, List<Option> options) throws IOException {
+  public IdToken idTokenWithAudience(String targetAudience, List<Option> options)
+      throws IOException {
     GenericData responseData = doRefreshAccessToken();
     String idTokenKey = "id_token";
     if (responseData.containsKey(idTokenKey)) {
-      String idTokenString = 
-        OAuth2Utils.validateString(responseData, idTokenKey, PARSE_ERROR_PREFIX);
-        return IdToken.create(idTokenString);
+      String idTokenString =
+          OAuth2Utils.validateString(responseData, idTokenKey, PARSE_ERROR_PREFIX);
+      return IdToken.create(idTokenString);
     }
 
     throw new IOException("UserCredentials instance cannot refresh id token unless you are logged" +
@@ -248,8 +250,8 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
   }
 
   /**
-   *  Does refresh access token request 
-   * 
+   * Does refresh access token request
+   *
    * @return Refresh token response data
    */
   private GenericData doRefreshAccessToken() throws IOException {
