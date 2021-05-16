@@ -118,8 +118,7 @@ public class IdTokenCredentials extends OAuth2Credentials {
       } catch (IOException ignored) {
         // ignore because all we need here is to reset the metadata
       }
-    }
-    else {
+    } else {
       // target audience is not used for UserCredentials
       this.targetAudience = Preconditions.checkNotNull(builder.getTargetAudience());
     }

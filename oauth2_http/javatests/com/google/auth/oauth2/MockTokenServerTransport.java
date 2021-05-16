@@ -212,8 +212,8 @@ public class MockTokenServerTransport extends MockHttpTransport {
             responseContents.put("access_token", accessToken);
             if (refreshToken != null) {
               responseContents.put("refresh_token", refreshToken);
-            }            
-          } 
+            }
+          }
           if (isSdkClientId || !generateAccessToken) {
             responseContents.put("id_token", ServiceAccountCredentialsTest.DEFAULT_ID_TOKEN);
           }

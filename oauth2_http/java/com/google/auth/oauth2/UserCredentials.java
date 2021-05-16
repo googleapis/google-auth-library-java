@@ -217,9 +217,10 @@ public class UserCredentials extends GoogleCredentials
       return IdToken.create(idTokenString);
     }
 
-    throw new IOException("UserCredentials instance cannot refresh id token unless you are logged" +
-    " into gcloud. Please see https://cloud.google.com/run/docs/authenticating/developers" + 
-    " for more info.");
+    throw new IOException(
+        "UserCredentials instance cannot refresh id token unless you are logged"
+            + " into gcloud. Please see https://cloud.google.com/run/docs/authenticating/developers"
+            + " for more info.");
   }
 
   /**
