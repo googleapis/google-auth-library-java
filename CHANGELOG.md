@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.25.2-sp.1](https://www.github.com/googleapis/google-auth-library-java/compare/0.25.2...v0.25.2-sp.1) (2021-05-17)
+
+
+### Features
+
+* configure initial sp version ([#666](https://www.github.com/googleapis/google-auth-library-java/issues/666)) ([50ffd14](https://www.github.com/googleapis/google-auth-library-java/commit/50ffd1489ecc0099309e85fea0266852f4bacb13))
+
 ### [0.25.2](https://www.github.com/googleapis/google-auth-library-java/compare/v0.25.1...v0.25.2) (2021-03-18)
 
 
