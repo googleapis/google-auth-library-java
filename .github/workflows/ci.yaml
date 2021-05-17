@@ -63,8 +63,8 @@ jobs:
         run: .kokoro/build.sh
         shell: bash
       - name: >- 
-        Validate any conflicts with regard to com.google.cloud:libraries-bom 
-        (latest release)
+          Validate any conflicts with regard to com.google.cloud:libraries-bom 
+          (latest release)
         uses: >- 
           GoogleCloudPlatform/cloud-opensource-java/linkage-monitor@v1-linkagemonitor
   lint:
