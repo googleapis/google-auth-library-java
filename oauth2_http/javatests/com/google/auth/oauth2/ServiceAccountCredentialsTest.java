@@ -1190,10 +1190,10 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getIdTokenWithAudience_noClientEmail_throws() throws IOException {
-    String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+  public void getIdTokenWithAudience_badEmailError_issClaimTraced() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
+    transport.setError(new IOException("Invalid grant: Account not found"));
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.fromPkcs8(
             CLIENT_ID,
@@ -1204,20 +1204,20 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             transportFactory,
             null);
 
-    transport.addServiceAccount("sdfgkjl", accessToken1);
-    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
-
     String targetAudience = "https://bar";
     IdTokenCredentials tokenCredential =
         IdTokenCredentials.newBuilder()
             .setIdTokenProvider(credentials)
             .setTargetAudience(targetAudience)
             .build();
-    tokenCredential.refresh();
-    assertNotEquals(
-        targetAudience,
-        (String) tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
-  
+            
+    String expectedErrorMessage = String.format("iss: %s", CLIENT_EMAIL);
+
+    try {
+      tokenCredential.refresh();
+    } catch (IOException expected) {
+      assertTrue(expected.getMessage().contains(expectedErrorMessage));
+    }
   }
 
   @Test
