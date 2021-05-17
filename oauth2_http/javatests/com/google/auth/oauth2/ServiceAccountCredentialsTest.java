@@ -1210,7 +1210,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             .setIdTokenProvider(credentials)
             .setTargetAudience(targetAudience)
             .build();
-            
+
     String expectedErrorMessage = String.format("iss: %s", CLIENT_EMAIL);
 
     try {
