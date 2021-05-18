@@ -706,13 +706,13 @@ public class UserCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void IdTokenCredentials_SdkClientId_correct() throws IOException {
+  public void IdTokenCredentials_WithUserEmailScope_success() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    transportFactory.transport.addClient(MockTokenServerTransport.SDK_CLIENT_ID, CLIENT_SECRET);
-    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
-    InputStream userStream =
-        writeUserStream(
-            MockTokenServerTransport.SDK_CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
+    String refreshToken = MockTokenServerTransport.REFRESH_TOKEN_WITH_USER_SCOPE;
+
+    transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
+    transportFactory.transport.addRefreshToken(refreshToken, ACCESS_TOKEN);
+    InputStream userStream = writeUserStream(CLIENT_ID, CLIENT_SECRET, refreshToken, QUOTA_PROJECT);
 
     UserCredentials credentials = UserCredentials.fromStream(userStream, transportFactory);
     credentials.refresh();
@@ -729,7 +729,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void IdTokenCredentials_notSdkClientId_throws() throws IOException {
+  public void IdTokenCredentials_NoUserEmailScope_throws() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
@@ -742,14 +742,15 @@ public class UserCredentialsTest extends BaseSerializationTest {
         IdTokenCredentials.newBuilder().setIdTokenProvider(credentials).build();
 
     String expectedMessageContent =
-        "UserCredentials instance cannot refresh id token unless"
-            + " you are logged into gcloud. Please see"
-            + " https://cloud.google.com/run/docs/authenticating/developers for more info.";
+        "UserCredentials can obtain an id token only when authenticated through"
+            + " gcloud running 'gcloud auth login --update-adc' or 'gcloud auth application-default"
+            + " login'. The latter form would not work for Cloud Run, but would still generate an"
+            + " id token.";
 
     try {
       tokenCredential.refresh();
     } catch (IOException expected) {
-      assertTrue(expected.getMessage().contains(expectedMessageContent));
+      assertTrue(expected.getMessage().equals(expectedMessageContent));
     }
   }
 

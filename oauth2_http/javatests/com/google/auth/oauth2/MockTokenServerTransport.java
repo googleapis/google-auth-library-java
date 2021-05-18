@@ -53,7 +53,7 @@ import java.util.Queue;
 /** Mock transport to simulate providing Google OAuth2 access tokens */
 public class MockTokenServerTransport extends MockHttpTransport {
 
-  public static final String SDK_CLIENT_ID = "sdk_client_id";
+  public static final String REFRESH_TOKEN_WITH_USER_SCOPE = "refresh_token_with_user.email_scope";
   static final String EXPECTED_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
   static final JsonFactory JSON_FACTORY = new GsonFactory();
   int buildRequestCount;
@@ -146,13 +146,10 @@ public class MockTokenServerTransport extends MockHttpTransport {
           boolean generateAccessToken = true;
 
           String foundId = query.get("client_id");
-          boolean isSdkClientId = false;
+          boolean isUserEmailScope = false;
           if (foundId != null) {
             if (!clients.containsKey(foundId)) {
               throw new IOException("Client ID not found.");
-            }
-            if (foundId.equals(SDK_CLIENT_ID)) {
-              isSdkClientId = true;
             }
             String foundSecret = query.get("client_secret");
             String expectedSecret = clients.get(foundId);
@@ -171,6 +168,9 @@ public class MockTokenServerTransport extends MockHttpTransport {
             }
             if (!refreshTokens.containsKey(refreshToken)) {
               throw new IOException("Refresh Token not found.");
+            }
+            if (refreshToken.equals(REFRESH_TOKEN_WITH_USER_SCOPE)) {
+              isUserEmailScope = true;
             }
             accessToken = refreshTokens.get(refreshToken);
           } else if (query.containsKey("grant_type")) {
@@ -214,7 +214,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
               responseContents.put("refresh_token", refreshToken);
             }
           }
-          if (isSdkClientId || !generateAccessToken) {
+          if (isUserEmailScope || !generateAccessToken) {
             responseContents.put("id_token", ServiceAccountCredentialsTest.DEFAULT_ID_TOKEN);
           }
           String refreshText = responseContents.toPrettyString();

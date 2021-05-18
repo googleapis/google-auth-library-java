@@ -199,9 +199,8 @@ public class UserCredentials extends GoogleCredentials
   /**
    * Returns a Google ID Token from the refresh token response.
    *
-   * @param targetAudience the aud: field the IdToken should include. This is not unused for
-   *     UserCredentials.
-   * @param options list of Credential specific options for for the token. Currently unused for
+   * @param targetAudience This can't be used for UserCredentials.
+   * @param options list of Credential specific options for the token. Currently unused for
    *     UserCredentials.
    * @throws IOException if the attempt to get an IdToken failed
    * @return IdToken object which includes the raw id_token, expiration and audience
@@ -218,9 +217,10 @@ public class UserCredentials extends GoogleCredentials
     }
 
     throw new IOException(
-        "UserCredentials instance cannot refresh id token unless you are logged"
-            + " into gcloud. Please see https://cloud.google.com/run/docs/authenticating/developers"
-            + " for more info.");
+        "UserCredentials can obtain an id token only when authenticated through"
+            + " gcloud running 'gcloud auth login --update-adc' or 'gcloud auth application-default"
+            + " login'. The latter form would not work for Cloud Run, but would still generate an"
+            + " id token.");
   }
 
   /**
