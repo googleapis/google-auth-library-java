@@ -69,6 +69,11 @@ public class HttpCredentialsAdapter
     this.credentials = credentials;
   }
 
+  /** A getter for the credentials instance being used */
+  public Credentials getCredentials() {
+    return credentials;
+  }
+
   /**
    * {@inheritDoc}
    *
