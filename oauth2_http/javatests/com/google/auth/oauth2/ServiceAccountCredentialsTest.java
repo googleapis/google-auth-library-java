@@ -1190,6 +1190,37 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void getIdTokenWithAudience_badEmailError_issClaimTraced() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    MockTokenServerTransport transport = transportFactory.transport;
+    transport.setError(new IOException("Invalid grant: Account not found"));
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.fromPkcs8(
+            CLIENT_ID,
+            CLIENT_EMAIL,
+            PRIVATE_KEY_PKCS8,
+            PRIVATE_KEY_ID,
+            SCOPES,
+            transportFactory,
+            null);
+
+    String targetAudience = "https://bar";
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(credentials)
+            .setTargetAudience(targetAudience)
+            .build();
+
+    String expectedErrorMessage = String.format("iss: %s", CLIENT_EMAIL);
+
+    try {
+      tokenCredential.refresh();
+    } catch (IOException expected) {
+      assertTrue(expected.getMessage().contains(expectedErrorMessage));
+    }
+  }
+
+  @Test
   public void fromStream_noPrivateKey_throws() throws IOException {
     InputStream serviceAccountStream =
         writeServiceAccountStream(CLIENT_ID, CLIENT_EMAIL, null, PRIVATE_KEY_ID);

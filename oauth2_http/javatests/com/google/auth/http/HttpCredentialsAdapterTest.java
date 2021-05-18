@@ -31,7 +31,9 @@
 
 package com.google.auth.http;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpHeaders;
@@ -39,6 +41,7 @@ import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpTransport;
+import com.google.auth.Credentials;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
 import com.google.auth.oauth2.MockTokenCheckingTransport;
 import com.google.auth.oauth2.OAuth2Credentials;
@@ -148,5 +151,26 @@ public class HttpCredentialsAdapterTest {
     HttpHeaders requestHeaders = request.getHeaders();
     String authorizationHeader = requestHeaders.getAuthorization();
     assertEquals(authorizationHeader, expectedAuthorization);
+  }
+
+  @Test
+  public void getCredentials() {
+    final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransportFactory tokenServerTransportFactory =
+        new MockTokenServerTransportFactory();
+    tokenServerTransportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
+    tokenServerTransportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessToken);
+
+    OAuth2Credentials credentials =
+        UserCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setHttpTransportFactory(tokenServerTransportFactory)
+            .build();
+
+    HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
+    Credentials returnedCredentials = adapter.getCredentials();
+    assertThat(returnedCredentials, instanceOf(Credentials.class));
   }
 }
