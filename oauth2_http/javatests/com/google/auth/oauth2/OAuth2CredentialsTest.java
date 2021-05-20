@@ -31,11 +31,13 @@
 
 package com.google.auth.oauth2;
 
+import static java.util.concurrent.TimeUnit.HOURS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -44,13 +46,31 @@ import com.google.auth.TestClock;
 import com.google.auth.TestUtils;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
+import com.google.auth.oauth2.OAuth2Credentials.OAuthValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.primitives.Ints;
+import com.google.common.util.concurrent.ListenableFutureTask;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.atomic.AtomicReference;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.function.ThrowingRunnable;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -63,6 +83,18 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   private static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
   private static final String ACCESS_TOKEN = "aashpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
+
+  private ExecutorService realExecutor;
+
+  @Before
+  public void setUp() {
+    realExecutor = Executors.newCachedThreadPool();
+  }
+
+  @After
+  public void tearDown() {
+    realExecutor.shutdown();
+  }
 
   @Test
   public void constructor_storesAccessToken() {
@@ -304,13 +336,14 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getRequestMetadata_async_refreshRace() throws IOException {
+  public void getRequestMetadata_async_refreshRace()
+      throws ExecutionException, InterruptedException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessToken1);
     TestClock clock = new TestClock();
-    OAuth2Credentials credentials =
+    final OAuth2Credentials credentials =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
             .setClientSecret(CLIENT_SECRET)
@@ -326,14 +359,37 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     assertEquals(0, transportFactory.transport.buildRequestCount);
     assertNull(callback.metadata);
 
-    // Asynchronous task is scheduled, but beaten by another blocking get call.
+    // Asynchronous task is scheduled, and a blocking call follows it
     assertEquals(1, executor.numTasks());
-    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
-    assertEquals(1, transportFactory.transport.buildRequestCount--);
-    TestUtils.assertContainsBearerToken(metadata, accessToken1);
 
-    // When the task is run, the cached data is used.
+    ExecutorService testExecutor = Executors.newFixedThreadPool(1);
+
+    FutureTask<Map<String, List<String>>> blockingTask =
+        new FutureTask<>(
+            new Callable<Map<String, List<String>>>() {
+              @Override
+              public Map<String, List<String>> call() throws Exception {
+                return credentials.getRequestMetadata(CALL_URI);
+              }
+            });
+
+    @SuppressWarnings("FutureReturnValueIgnored")
+    Future<?> ignored = testExecutor.submit(blockingTask);
+    testExecutor.shutdown();
+
+    // give the blockingTask a chance to run
+    for (int i = 0; i < 10; i++) {
+      Thread.yield();
+    }
+
+    // blocking task is waiting on the async task to finish
+    assertFalse(blockingTask.isDone());
+    assertEquals(0, transportFactory.transport.buildRequestCount);
+
+    // When the task is run, the result is shared
     assertEquals(1, executor.runTasksExhaustively());
+    assertEquals(1, transportFactory.transport.buildRequestCount--);
+    Map<String, List<String>> metadata = blockingTask.get();
     assertEquals(0, transportFactory.transport.buildRequestCount);
     assertEquals(metadata, callback.metadata);
   }
@@ -346,6 +402,267 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     // Verify getting the first token
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+  }
+
+  @Test
+  public void getRequestMetadata_staleTemporaryToken() throws IOException, InterruptedException {
+    Calendar calendar = Calendar.getInstance();
+    Date actualExpiration = calendar.getTime();
+
+    calendar.setTime(actualExpiration);
+    calendar.add(
+        Calendar.MILLISECOND, -1 * Ints.checkedCast(OAuth2Credentials.REFRESH_MARGIN_MILLISECONDS));
+    Date clientStale = calendar.getTime();
+
+    TestClock testClock = new TestClock();
+    testClock.setCurrentTime(clientStale.getTime());
+
+    // Initialize credentials which are initially stale and set to refresh
+    final SettableFuture<AccessToken> refreshedTokenFuture = SettableFuture.create();
+    OAuth2Credentials creds =
+        new OAuth2Credentials(new AccessToken(ACCESS_TOKEN, actualExpiration)) {
+          @Override
+          public AccessToken refreshAccessToken() {
+
+            try {
+              return refreshedTokenFuture.get();
+            } catch (Exception e) {
+              throw new RuntimeException(e);
+            }
+          }
+        };
+    creds.clock = testClock;
+    synchronized (creds.lock) {
+      assertNull(creds.refreshTask);
+    }
+
+    // Calls should return immediately with stale token
+    MockRequestMetadataCallback callback = new MockRequestMetadataCallback();
+    creds.getRequestMetadata(CALL_URI, realExecutor, callback);
+    TestUtils.assertContainsBearerToken(callback.metadata, ACCESS_TOKEN);
+    TestUtils.assertContainsBearerToken(creds.getRequestMetadata(CALL_URI), ACCESS_TOKEN);
+
+    // But a refresh task should be scheduled
+    synchronized (creds.lock) {
+      assertNotNull(creds.refreshTask);
+    }
+
+    // Resolve the outstanding refresh
+    AccessToken refreshedToken =
+        new AccessToken(
+            "2/MkSJoj1xsli0AccessToken_NKPY2",
+            new Date(testClock.currentTimeMillis() + HOURS.toMillis(1)));
+    refreshedTokenFuture.set(refreshedToken);
+
+    // The access token should available once the refresh thread completes
+    // However it will be populated asynchronously, so we need to wait until it propagates
+    // Wait at most 1 minute are 100ms intervals. It should never come close to this.
+    for (int i = 0; i < 600; i++) {
+      Map<String, List<String>> requestMetadata = creds.getRequestMetadata(CALL_URI);
+      String s = requestMetadata.get(AuthHttpConstants.AUTHORIZATION).get(0);
+      if (s.contains(refreshedToken.getTokenValue())) {
+        break;
+      }
+      Thread.sleep(100);
+    }
+
+    // Everything should return the new token
+    callback = new MockRequestMetadataCallback();
+    creds.getRequestMetadata(CALL_URI, realExecutor, callback);
+    TestUtils.assertContainsBearerToken(callback.metadata, refreshedToken.getTokenValue());
+    TestUtils.assertContainsBearerToken(
+        creds.getRequestMetadata(CALL_URI), refreshedToken.getTokenValue());
+
+    // And the task slot is reset
+    synchronized (creds.lock) {
+      assertNull(creds.refreshTask);
+    }
+  }
+
+  @Test
+  public void getRequestMetadata_staleTemporaryToken_expirationWaits() throws Throwable {
+    Calendar calendar = Calendar.getInstance();
+    Date actualExpiration = calendar.getTime();
+
+    calendar.setTime(actualExpiration);
+    calendar.add(
+        Calendar.MILLISECOND, -1 * Ints.checkedCast(OAuth2Credentials.REFRESH_MARGIN_MILLISECONDS));
+    Date clientStale = calendar.getTime();
+
+    calendar.setTime(actualExpiration);
+    calendar.add(
+        Calendar.MILLISECOND, -1 * Ints.checkedCast(OAuth2Credentials.MINIMUM_TOKEN_MILLISECONDS));
+    Date clientExpired = calendar.getTime();
+
+    TestClock testClock = new TestClock();
+
+    // Initialize credentials which are initially stale and set to refresh
+    final SettableFuture<AccessToken> refreshedTokenFuture = SettableFuture.create();
+    OAuth2Credentials creds =
+        new OAuth2Credentials(new AccessToken(ACCESS_TOKEN, actualExpiration)) {
+          @Override
+          public AccessToken refreshAccessToken() {
+
+            try {
+              return refreshedTokenFuture.get();
+            } catch (Exception e) {
+              throw new RuntimeException(e);
+            }
+          }
+        };
+    creds.clock = testClock;
+    synchronized (creds.lock) {
+      assertNull(creds.refreshTask);
+    }
+
+    // Calls should return immediately with stale token, but a refresh is scheduled
+    testClock.setCurrentTime(clientStale.getTime());
+    MockRequestMetadataCallback callback = new MockRequestMetadataCallback();
+    creds.getRequestMetadata(CALL_URI, realExecutor, callback);
+    TestUtils.assertContainsBearerToken(callback.metadata, ACCESS_TOKEN);
+    assertNotNull(creds.refreshTask);
+    ListenableFutureTask<OAuthValue> refreshTask = creds.refreshTask;
+
+    // Fast forward to expiration, which will hang cause the callback to hang
+    testClock.setCurrentTime(clientExpired.getTime());
+    // Make sure that the callback is hung (while giving it a chance to run)
+    for (int i = 0; i < 10; i++) {
+      Thread.sleep(10);
+      callback = new MockRequestMetadataCallback();
+      creds.getRequestMetadata(CALL_URI, realExecutor, callback);
+      assertNull(callback.metadata);
+    }
+    // The original refresh task should still be active
+    synchronized (creds.lock) {
+      assertSame(refreshTask, creds.refreshTask);
+    }
+
+    // Resolve the outstanding refresh
+    AccessToken refreshedToken =
+        new AccessToken(
+            "2/MkSJoj1xsli0AccessToken_NKPY2",
+            new Date(testClock.currentTimeMillis() + HOURS.toMillis(1)));
+    refreshedTokenFuture.set(refreshedToken);
+
+    // The access token should available once the refresh thread completes
+    TestUtils.assertContainsBearerToken(
+        creds.getRequestMetadata(CALL_URI), refreshedToken.getTokenValue());
+    callback = new MockRequestMetadataCallback();
+    creds.getRequestMetadata(CALL_URI, realExecutor, callback);
+    TestUtils.assertContainsBearerToken(callback.awaitResult(), refreshedToken.getTokenValue());
+
+    // The refresh slot should be cleared
+    synchronized (creds.lock) {
+      assertNull(creds.refreshTask);
+    }
+  }
+
+  @Test
+  public void getRequestMetadata_singleFlightErrorSharing() {
+    Calendar calendar = Calendar.getInstance();
+    Date actualExpiration = calendar.getTime();
+
+    calendar.setTime(actualExpiration);
+    calendar.add(
+        Calendar.MILLISECOND, -1 * Ints.checkedCast(OAuth2Credentials.REFRESH_MARGIN_MILLISECONDS));
+    Date clientStale = calendar.getTime();
+
+    calendar.setTime(actualExpiration);
+    calendar.add(
+        Calendar.MILLISECOND, -1 * Ints.checkedCast(OAuth2Credentials.MINIMUM_TOKEN_MILLISECONDS));
+    Date clientExpired = calendar.getTime();
+
+    TestClock testClock = new TestClock();
+    testClock.setCurrentTime(clientStale.getTime());
+
+    // Initialize credentials which are initially expired
+    final SettableFuture<RuntimeException> refreshErrorFuture = SettableFuture.create();
+    final OAuth2Credentials creds =
+        new OAuth2Credentials(new AccessToken(ACCESS_TOKEN, clientExpired)) {
+          @Override
+          public AccessToken refreshAccessToken() {
+            RuntimeException injectedError;
+
+            try {
+              injectedError = refreshErrorFuture.get();
+            } catch (Exception e) {
+              throw new IllegalStateException("Unexpected error fetching injected error");
+            }
+            throw injectedError;
+          }
+        };
+    creds.clock = testClock;
+
+    // Calls will hang waiting for the refresh
+    final MockRequestMetadataCallback callback1 = new MockRequestMetadataCallback();
+    creds.getRequestMetadata(CALL_URI, realExecutor, callback1);
+
+    final Future<Map<String, List<String>>> blockingCall =
+        realExecutor.submit(
+            new Callable<Map<String, List<String>>>() {
+              @Override
+              public Map<String, List<String>> call() throws Exception {
+                return creds.getRequestMetadata(CALL_URI);
+              }
+            });
+
+    RuntimeException error = new RuntimeException("fake error");
+    refreshErrorFuture.set(error);
+
+    // Get the error that getRequestMetadata(uri) created
+    Throwable actualBlockingError =
+        assertThrows(
+                ExecutionException.class,
+                new ThrowingRunnable() {
+                  @Override
+                  public void run() throws Throwable {
+                    blockingCall.get();
+                  }
+                })
+            .getCause();
+
+    assertEquals(error, actualBlockingError);
+
+    RuntimeException actualAsyncError =
+        assertThrows(
+            RuntimeException.class,
+            new ThrowingRunnable() {
+              @Override
+              public void run() throws Throwable {
+                callback1.awaitResult();
+              }
+            });
+    assertEquals(error, actualAsyncError);
+  }
+
+  @Test
+  public void getRequestMetadata_syncErrorsIncludeCallingStackframe() {
+    final OAuth2Credentials creds =
+        new OAuth2Credentials() {
+          @Override
+          public AccessToken refreshAccessToken() {
+            throw new RuntimeException("fake error");
+          }
+        };
+
+    List<StackTraceElement> expectedStacktrace =
+        new ArrayList<>(Arrays.asList(new Exception().getStackTrace()));
+    expectedStacktrace = expectedStacktrace.subList(1, expectedStacktrace.size());
+
+    AtomicReference<Exception> actualError = new AtomicReference<>();
+    try {
+      creds.getRequestMetadata(CALL_URI);
+    } catch (Exception refreshError) {
+      actualError.set(refreshError);
+    }
+
+    List<StackTraceElement> actualStacktrace = Arrays.asList(actualError.get().getStackTrace());
+    actualStacktrace =
+        actualStacktrace.subList(
+            actualStacktrace.size() - expectedStacktrace.size(), actualStacktrace.size());
+
+    // ensure the remaining frames are identical
+    assertEquals(expectedStacktrace, actualStacktrace);
   }
 
   @Test

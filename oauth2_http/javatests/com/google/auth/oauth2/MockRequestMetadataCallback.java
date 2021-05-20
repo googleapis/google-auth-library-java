@@ -35,17 +35,20 @@ import com.google.auth.RequestMetadataCallback;
 import com.google.common.base.Preconditions;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 /** Mock RequestMetadataCallback */
 public final class MockRequestMetadataCallback implements RequestMetadataCallback {
   Map<String, List<String>> metadata;
   Throwable exception;
+  CountDownLatch latch = new CountDownLatch(1);
 
   /** Called when metadata is successfully produced. */
   @Override
   public void onSuccess(Map<String, List<String>> metadata) {
     checkNotSet();
     this.metadata = metadata;
+    latch.countDown();
   }
 
   /** Called when metadata generation failed. */
@@ -53,11 +56,22 @@ public final class MockRequestMetadataCallback implements RequestMetadataCallbac
   public void onFailure(Throwable exception) {
     checkNotSet();
     this.exception = exception;
+    latch.countDown();
   }
 
   public void reset() {
     this.metadata = null;
     this.exception = null;
+    latch = new CountDownLatch(1);
+  }
+
+  public Map<String, List<String>> awaitResult() throws Throwable {
+    latch.await();
+    if (exception != null) {
+      throw exception;
+    } else {
+      return metadata;
+    }
   }
 
   private void checkNotSet() {
