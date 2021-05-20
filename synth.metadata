@@ -4,14 +4,14 @@
       "git": {
         "name": ".",
         "remote": "https://github.com/googleapis/google-auth-library-java.git",
-        "sha": "5ef4514d871189c9e454022ce08ad94b67e0fc3a"
+        "sha": "469b160d1c047f7c0284ccc1da576d116f140e3d"
       }
     },
     {
       "git": {
         "name": "synthtool",
         "remote": "https://github.com/googleapis/synthtool.git",
-        "sha": "046994f491c02806aea60118e214a9edd67f5ab7"
+        "sha": "7332178a11ddddc91188dc0f25bca1ccadcaa6c6"
       }
     }
   ],
@@ -76,6 +76,7 @@
     ".kokoro/release/stage.sh",
     ".kokoro/trampoline.sh",
     "CODE_OF_CONDUCT.md",
-    "CONTRIBUTING.md"
+    "CONTRIBUTING.md",
+    "codecov.yaml"
   ]
 }
