@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.26.0](https://www.github.com/googleapis/google-auth-library-java/compare/v0.25.5...v0.26.0) (2021-05-20)
+
+
+### Features
+
+* add `gcf-owl-bot[bot]` to `ignoreAuthors` ([#674](https://www.github.com/googleapis/google-auth-library-java/issues/674)) ([359b20f](https://www.github.com/googleapis/google-auth-library-java/commit/359b20f24f88e09b6b104c61ca63a1b604ea64d2))
+* added getter for credentials object in HttpCredentialsAdapter ([#658](https://www.github.com/googleapis/google-auth-library-java/issues/658)) ([5a946ea](https://www.github.com/googleapis/google-auth-library-java/commit/5a946ea5e0d974611f2205f468236db4b931e486))
+* enable pre-emptive async oauth token refreshes ([#646](https://www.github.com/googleapis/google-auth-library-java/issues/646)) ([e3f4c7e](https://www.github.com/googleapis/google-auth-library-java/commit/e3f4c7eac0417705553ef8259599ec29fc8ad9b4))
+* Returning an issuer claim on request errors ([#656](https://www.github.com/googleapis/google-auth-library-java/issues/656)) ([95d70ae](https://www.github.com/googleapis/google-auth-library-java/commit/95d70ae0f5f4c985455f913ddef14ebe75500656))
+
+
+### Bug Fixes
+
+* use orginal url as audience for self signed jwt if scheme or host is null ([#642](https://www.github.com/googleapis/google-auth-library-java/issues/642)) ([b4e6f1a](https://www.github.com/googleapis/google-auth-library-java/commit/b4e6f1a0bd17dd31edc85ed4879cea75857fd747))
+
 ### [0.25.5](https://www.github.com/googleapis/google-auth-library-java/compare/v0.25.4...v0.25.5) (2021-04-22)
 
 
