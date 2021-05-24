@@ -112,16 +112,16 @@ public class IdTokenCredentials extends OAuth2Credentials {
     this.idTokenProvider = Preconditions.checkNotNull(builder.getIdTokenProvider());
 
     // if UserCredential is used as id token provider - we need to refresh access token
-    if (this.idTokenProvider instanceof UserCredentials) {
-      try {
-        this.refresh();
-      } catch (IOException ignored) {
-        // ignore because all we need here is to reset the metadata
-      }
-    } else {
-      // target audience can't be used for UserCredentials
-      this.targetAudience = Preconditions.checkNotNull(builder.getTargetAudience());
-    }
+    // if (this.idTokenProvider instanceof UserCredentials) {
+    //   try {
+    //     this.refresh();
+    //   } catch (IOException ignored) {
+    //     // ignore because all we need here is to reset the metadata
+    //   }
+    // } else {
+    //   // target audience can't be used for UserCredentials
+    //   this.targetAudience = Preconditions.checkNotNull(builder.getTargetAudience());
+    // }
     this.options = builder.getOptions();
   }
 
