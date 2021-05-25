@@ -722,6 +722,8 @@ public class UserCredentialsTest extends BaseSerializationTest {
     IdTokenCredentials tokenCredential =
         IdTokenCredentials.newBuilder().setIdTokenProvider(credentials).build();
 
+    tokenCredential.getRequestMetadata();
+
     // UserCredential returns access token until refresh,
     // IDTokenCredential does refresh during instantiation
     assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getAccessToken().getTokenValue());
