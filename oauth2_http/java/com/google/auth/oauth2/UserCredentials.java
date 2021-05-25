@@ -214,7 +214,14 @@ public class UserCredentials extends GoogleCredentials
       String idTokenString =
           OAuth2Utils.validateString(responseData, idTokenKey, PARSE_ERROR_PREFIX);
 
-      Thread.sleep(5000);
+      try {        
+        System.out.println( "idTokenRefreshStart");
+        Thread.sleep(5000);
+        System.out.println( "idTokenRefreshDone");
+      } catch (InterruptedException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
       return IdToken.create(idTokenString);
     }
 

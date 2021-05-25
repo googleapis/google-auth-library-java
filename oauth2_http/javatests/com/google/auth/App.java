@@ -20,7 +20,7 @@ import com.google.auth.oauth2.ServiceAccountCredentials;
 public class App 
 {
     private static void Runner(int id, IdTokenCredentials credential) {
-        System.out.println( "Hello World! #" + id + "  " + Thread.currentThread().getId());
+        System.out.println( "#" + id + "  " + Thread.currentThread().getId());
         
         try {
             String serviceUrl = "https://helloworld-qk56ikjwfq-uw.a.run.app";
@@ -42,12 +42,14 @@ public class App
     {
         GoogleCredentials credentials;
 
-        credentials = ServiceAccountCredentials.fromStream(new FileInputStream("/Users/stim/Documents/keys/GCP_sandbox.json"))
-        .createScoped("foo", "bar");
+        // credentials = ServiceAccountCredentials.fromStream(new FileInputStream("/Users/stim/Documents/keys/GCP_sandbox.json"))
+        // .createScoped("foo", "bar");
+        credentials = GoogleCredentials.getApplicationDefault();
         String serviceUrl = "https://helloworld-qk56ikjwfq-uw.a.run.app";
         if (!(credentials instanceof IdTokenProvider)) {
             throw new IllegalArgumentException("Credentials are not an instance of IdTokenProvider.");
         }
+        credentials.getRequestMetadata();
         final IdTokenCredentials tokenCredential =
             IdTokenCredentials.newBuilder()
                 .setIdTokenProvider((IdTokenProvider) credentials)
