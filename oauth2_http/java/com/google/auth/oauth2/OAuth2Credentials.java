@@ -47,6 +47,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.common.util.concurrent.MoreExecutors;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
@@ -67,8 +68,8 @@ import javax.annotation.Nullable;
 public class OAuth2Credentials extends Credentials {
 
   private static final long serialVersionUID = 4556936364828217687L;
-  static final long MINIMUM_TOKEN_MILLISECONDS = MINUTES.toMillis(5);
-  static final long REFRESH_MARGIN_MILLISECONDS = MINIMUM_TOKEN_MILLISECONDS + MINUTES.toMillis(1);
+  static final long MINIMUM_TOKEN_MILLISECONDS = MINUTES.toMillis(55);
+  static final long REFRESH_MARGIN_MILLISECONDS = MINIMUM_TOKEN_MILLISECONDS + MINUTES.toMillis(4);
   private static final ImmutableMap<String, List<String>> EMPTY_EXTRA_HEADERS = ImmutableMap.of();
 
   // byte[] is serializable, so the lock variable can be final
@@ -162,6 +163,7 @@ public class OAuth2Credentials extends Credentials {
    */
   @Override
   public void refresh() throws IOException {
+    System.out.println("in refresh");
     AsyncRefreshResult refreshResult = getOrCreateRefreshTask();
     refreshResult.executeIfNew(MoreExecutors.directExecutor());
     unwrapDirectFuture(refreshResult.task);
@@ -174,6 +176,7 @@ public class OAuth2Credentials extends Credentials {
    */
   public void refreshIfExpired() throws IOException {
     // asyncFetch will ensure that the token is refreshed
+    System.out.println("in refreshIfExpired");
     unwrapDirectFuture(asyncFetch(MoreExecutors.directExecutor()));
   }
 
@@ -187,16 +190,19 @@ public class OAuth2Credentials extends Credentials {
   private ListenableFuture<OAuthValue> asyncFetch(Executor executor) {
     AsyncRefreshResult refreshResult = null;
 
+    System.out.println("in asyncRefresh, state: " + getState());
     // fast and common path: skip the lock if the token is fresh
     // The inherent race condition here is a non-issue: even if the value gets replaced after the
     // state check, the new token will still be fresh.
     if (getState() == CacheState.FRESH) {
+      System.out.println("fresh: return");
       return Futures.immediateFuture(value);
     }
 
     // Schedule a refresh as necessary
     synchronized (lock) {
       if (getState() != CacheState.FRESH) {
+        System.out.println(" not fresh: request");
         refreshResult = getOrCreateRefreshTask();
       }
     }
@@ -210,8 +216,10 @@ public class OAuth2Credentials extends Credentials {
       // Immediately resolve the token token if its not expired, or wait for the refresh task to
       // complete
       if (getState() != CacheState.EXPIRED) {
+        System.out.println("in asyncRefresh lock, return with State " + getState());
         return Futures.immediateFuture(value);
       } else if (refreshResult != null) {
+        System.out.println("in asyncRefresh: lock, await refresh");
         return refreshResult.task;
       } else {
         // Should never happen
@@ -231,6 +239,7 @@ public class OAuth2Credentials extends Credentials {
    */
   private AsyncRefreshResult getOrCreateRefreshTask() {
     synchronized (lock) {
+      System.out.println("in create refresh task");
       if (refreshTask != null) {
         return new AsyncRefreshResult(refreshTask, false);
       }
@@ -267,6 +276,7 @@ public class OAuth2Credentials extends Credentials {
   private void finishRefreshAsync(ListenableFuture<OAuthValue> finishedTask) {
     synchronized (lock) {
       try {
+        System.out.println("in finish refresh async");
         this.value = finishedTask.get();
         for (CredentialsChangedListener listener : changeListeners) {
           listener.onChanged(this);
