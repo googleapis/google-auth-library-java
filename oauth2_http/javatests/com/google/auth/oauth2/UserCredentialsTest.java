@@ -34,6 +34,7 @@ package com.google.auth.oauth2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -722,10 +723,12 @@ public class UserCredentialsTest extends BaseSerializationTest {
     IdTokenCredentials tokenCredential =
         IdTokenCredentials.newBuilder().setIdTokenProvider(credentials).build();
 
+    assertNull(tokenCredential.getAccessToken());
+    assertNull(tokenCredential.getIdToken());
+
+    // trigger the refresh like it would happen during a request build
     tokenCredential.getRequestMetadata();
 
-    // UserCredential returns access token until refresh,
-    // IDTokenCredential does refresh during instantiation
     assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getAccessToken().getTokenValue());
     assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getIdToken().getTokenValue());
   }
