@@ -58,7 +58,8 @@ import java.util.Map;
 import java.util.Objects;
 
 /** OAuth2 Credentials representing a user's identity and consent. */
-public class UserCredentials extends GoogleCredentials implements QuotaProjectIdProvider {
+public class UserCredentials extends GoogleCredentials
+    implements QuotaProjectIdProvider, IdTokenProvider {
 
   private static final String GRANT_TYPE = "refresh_token";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
@@ -186,28 +187,40 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
   /** Refreshes the OAuth2 access token by getting a new access token from the refresh token */
   @Override
   public AccessToken refreshAccessToken() throws IOException {
-    if (refreshToken == null) {
-      throw new IllegalStateException(
-          "UserCredentials instance cannot refresh because there is no" + " refresh token.");
-    }
-    GenericData tokenRequest = new GenericData();
-    tokenRequest.set("client_id", clientId);
-    tokenRequest.set("client_secret", clientSecret);
-    tokenRequest.set("refresh_token", refreshToken);
-    tokenRequest.set("grant_type", GRANT_TYPE);
-    UrlEncodedContent content = new UrlEncodedContent(tokenRequest);
-
-    HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
-    HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
-    request.setParser(new JsonObjectParser(JSON_FACTORY));
-    HttpResponse response = request.execute();
-    GenericData responseData = response.parseAs(GenericData.class);
+    GenericData responseData = doRefreshAccessToken();
     String accessToken =
         OAuth2Utils.validateString(responseData, "access_token", PARSE_ERROR_PREFIX);
     int expiresInSeconds =
         OAuth2Utils.validateInt32(responseData, "expires_in", PARSE_ERROR_PREFIX);
     long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000;
     return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
+  }
+
+  /**
+   * Returns a Google ID Token from the refresh token response.
+   *
+   * @param targetAudience This can't be used for UserCredentials.
+   * @param options list of Credential specific options for the token. Currently unused for
+   *     UserCredentials.
+   * @throws IOException if the attempt to get an IdToken failed
+   * @return IdToken object which includes the raw id_token, expiration and audience
+   */
+  @Override
+  public IdToken idTokenWithAudience(String targetAudience, List<Option> options)
+      throws IOException {
+    GenericData responseData = doRefreshAccessToken();
+    String idTokenKey = "id_token";
+    if (responseData.containsKey(idTokenKey)) {
+      String idTokenString =
+          OAuth2Utils.validateString(responseData, idTokenKey, PARSE_ERROR_PREFIX);
+      return IdToken.create(idTokenString);
+    }
+
+    throw new IOException(
+        "UserCredentials can obtain an id token only when authenticated through"
+            + " gcloud running 'gcloud auth login --update-adc' or 'gcloud auth application-default"
+            + " login'. The latter form would not work for Cloud Run, but would still generate an"
+            + " id token.");
   }
 
   /**
@@ -235,6 +248,30 @@ public class UserCredentials extends GoogleCredentials implements QuotaProjectId
    */
   public final String getRefreshToken() {
     return refreshToken;
+  }
+
+  /**
+   * Does refresh access token request
+   *
+   * @return Refresh token response data
+   */
+  private GenericData doRefreshAccessToken() throws IOException {
+    if (refreshToken == null) {
+      throw new IllegalStateException(
+          "UserCredentials instance cannot refresh because there is no refresh token.");
+    }
+    GenericData tokenRequest = new GenericData();
+    tokenRequest.set("client_id", clientId);
+    tokenRequest.set("client_secret", clientSecret);
+    tokenRequest.set("refresh_token", refreshToken);
+    tokenRequest.set("grant_type", GRANT_TYPE);
+    UrlEncodedContent content = new UrlEncodedContent(tokenRequest);
+
+    HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
+    HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
+    request.setParser(new JsonObjectParser(JSON_FACTORY));
+    HttpResponse response = request.execute();
+    return response.parseAs(GenericData.class);
   }
 
   /**

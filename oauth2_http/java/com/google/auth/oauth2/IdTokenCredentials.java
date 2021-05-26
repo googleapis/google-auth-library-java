@@ -110,7 +110,12 @@ public class IdTokenCredentials extends OAuth2Credentials {
 
   private IdTokenCredentials(Builder builder) {
     this.idTokenProvider = Preconditions.checkNotNull(builder.getIdTokenProvider());
-    this.targetAudience = Preconditions.checkNotNull(builder.getTargetAudience());
+
+    // target audience can't be used for UserCredentials
+    if (!(this.idTokenProvider instanceof UserCredentials)) {
+      this.targetAudience = Preconditions.checkNotNull(builder.getTargetAudience());
+    }
+
     this.options = builder.getOptions();
   }
 

@@ -34,6 +34,7 @@ package com.google.auth.oauth2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -73,6 +74,12 @@ public class UserCredentialsTest extends BaseSerializationTest {
   private static final String QUOTA_PROJECT = "sample-quota-project-id";
   private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
+  public static final String DEFAULT_ID_TOKEN =
+      "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRmMzc1ODkwOGI3OTIyO"
+          + "TNhZDk3N2EwYjk5MWQ5OGE3N2Y0ZWVlY2QiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJodHRwczovL2Zvby5iYXIiL"
+          + "CJhenAiOiIxMDIxMDE1NTA4MzQyMDA3MDg1NjgiLCJleHAiOjE1NjQ0NzUwNTEsImlhdCI6MTU2NDQ3MTQ1MSwi"
+          + "aXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwic3ViIjoiMTAyMTAxNTUwODM0MjAwNzA4NTY4In0"
+          + ".redacted";
 
   @Test(expected = IllegalStateException.class)
   public void constructor_accessAndRefreshTokenNull_throws() {
@@ -697,6 +704,59 @@ public class UserCredentialsTest extends BaseSerializationTest {
         });
 
     assertTrue("Should have run onSuccess() callback", success.get());
+  }
+
+  @Test
+  public void IdTokenCredentials_WithUserEmailScope_success() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    String refreshToken = MockTokenServerTransport.REFRESH_TOKEN_WITH_USER_SCOPE;
+
+    transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
+    transportFactory.transport.addRefreshToken(refreshToken, ACCESS_TOKEN);
+    InputStream userStream = writeUserStream(CLIENT_ID, CLIENT_SECRET, refreshToken, QUOTA_PROJECT);
+
+    UserCredentials credentials = UserCredentials.fromStream(userStream, transportFactory);
+    credentials.refresh();
+
+    assertEquals(ACCESS_TOKEN, credentials.getAccessToken().getTokenValue());
+
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder().setIdTokenProvider(credentials).build();
+
+    assertNull(tokenCredential.getAccessToken());
+    assertNull(tokenCredential.getIdToken());
+
+    // trigger the refresh like it would happen during a request build
+    tokenCredential.getRequestMetadata();
+
+    assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getAccessToken().getTokenValue());
+    assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getIdToken().getTokenValue());
+  }
+
+  @Test
+  public void IdTokenCredentials_NoUserEmailScope_throws() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
+    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
+    InputStream userStream =
+        writeUserStream(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
+
+    UserCredentials credentials = UserCredentials.fromStream(userStream, transportFactory);
+
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder().setIdTokenProvider(credentials).build();
+
+    String expectedMessageContent =
+        "UserCredentials can obtain an id token only when authenticated through"
+            + " gcloud running 'gcloud auth login --update-adc' or 'gcloud auth application-default"
+            + " login'. The latter form would not work for Cloud Run, but would still generate an"
+            + " id token.";
+
+    try {
+      tokenCredential.refresh();
+    } catch (IOException expected) {
+      assertTrue(expected.getMessage().equals(expectedMessageContent));
+    }
   }
 
   static GenericJson writeUserJson(

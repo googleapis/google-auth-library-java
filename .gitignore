@@ -9,3 +9,6 @@ target/
 # Intellij
 *.iml
 .idea/
+
+# VS Code
+.vscode/
