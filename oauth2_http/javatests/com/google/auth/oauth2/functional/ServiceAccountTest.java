@@ -51,8 +51,7 @@ public final class ServiceAccountTest {
     
 @Test
   public void NoScopeNoAudienceTest() throws Exception {
-    final GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream("/Users/stim/Documents/keys/gcloud-devel-it-service-9e9c1ba6f2dc.json"))
-    //GoogleCredentials.getApplicationDefault()
+    final GoogleCredentials credentials = GoogleCredentials.getApplicationDefault()
     .createScoped("https://www.googleapis.com/auth/cloud-platform");
     HttpResponse response = TestUtils.executeRequestWithCredentials(cloudTasksUrl, credentials);
     assertEquals(200, response.getStatusCode());
