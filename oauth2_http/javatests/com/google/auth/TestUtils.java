@@ -34,12 +34,19 @@ package com.google.auth;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpHeaders;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpResponseException;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.auth.http.AuthHttpConstants;
+import com.google.auth.http.HttpCredentialsAdapter;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import java.io.ByteArrayInputStream;
@@ -146,6 +153,15 @@ public class TestUtils {
     calendar.setTime(new Date());
     calendar.add(Calendar.SECOND, 300);
     return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(calendar.getTime());
+  }
+
+  public static HttpResponse executeRequestWithCredentials(String serviceUrl, GoogleCredentials credentials) throws IOException {
+
+      GenericUrl genericUrl = new GenericUrl(serviceUrl);
+      HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
+      HttpTransport transport = new NetHttpTransport();
+      HttpRequest request = transport.createRequestFactory(adapter).buildGetRequest(genericUrl);
+      return request.execute();
   }
 
   private TestUtils() {}
