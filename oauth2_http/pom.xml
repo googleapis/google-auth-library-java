@@ -147,5 +147,10 @@
       <version>1.3</version>
       <scope>test</scope>
     </dependency>
+      <dependency>
+          <groupId>com.google.auth</groupId>
+          <artifactId>google-auth-library-credentials</artifactId>
+          <version>0.24.0</version>
+      </dependency>
   </dependencies>
 </project>
