@@ -31,7 +31,9 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import com.google.auth.oauth2.CredentialAccessBoundary.AccessBoundaryRule;
 import com.google.auth.oauth2.CredentialAccessBoundary.AccessBoundaryRule.AvailabilityCondition;
@@ -69,8 +71,23 @@ public class CredentialAccessBoundaryTest {
             .build();
 
     assertEquals(2, credentialAccessBoundary.getAccessBoundaryRules().size());
-    assertEquals(firstRule, credentialAccessBoundary.getAccessBoundaryRules().get(0));
-    assertEquals(secondRule, credentialAccessBoundary.getAccessBoundaryRules().get(1));
+
+    AccessBoundaryRule first = credentialAccessBoundary.getAccessBoundaryRules().get(0);
+    assertEquals(firstRule, first);
+    assertEquals("firstResource", first.getAvailableResource());
+    assertEquals(1, first.getAvailablePermissions().size());
+    assertEquals("firstPermission", first.getAvailablePermissions().get(0));
+    assertEquals(availabilityCondition, first.getAvailabilityCondition());
+    assertEquals("expression", first.getAvailabilityCondition().getExpression());
+    assertNull(first.getAvailabilityCondition().getTitle());
+    assertNull(first.getAvailabilityCondition().getDescription());
+
+    AccessBoundaryRule second = credentialAccessBoundary.getAccessBoundaryRules().get(1);
+    assertEquals(secondRule, second);
+    assertEquals("secondResource", second.getAvailableResource());
+    assertEquals(1, second.getAvailablePermissions().size());
+    assertEquals("secondPermission", second.getAvailablePermissions().get(0));
+    assertNull(second.getAvailabilityCondition());
   }
 
   @Test
@@ -107,7 +124,11 @@ public class CredentialAccessBoundaryTest {
   @Test
   public void credentialAccessBoundary_toJson() {
     AvailabilityCondition availabilityCondition =
-        AvailabilityCondition.newBuilder().setExpression("expression").build();
+        AvailabilityCondition.newBuilder()
+            .setExpression("expression")
+            .setTitle("title")
+            .setDescription("description")
+            .build();
 
     AccessBoundaryRule firstRule =
         AccessBoundaryRule.newBuilder()
@@ -131,7 +152,8 @@ public class CredentialAccessBoundaryTest {
         "{\"accessBoundary\":{\"accessBoundaryRules\":"
             + "[{\"availableResource\":\"firstResource\","
             + "\"availablePermissions\":[\"firstPermission\"],"
-            + "\"availabilityCondition\":{\"expression\":\"expression\"}},"
+            + "\"availabilityCondition\":{\"expression\":\"expression\","
+            + "\"title\":\"title\",\"description\":\"description\"}},"
             + "{\"availableResource\":\"secondResource\","
             + "\"availablePermissions\":[\"firstPermission\","
             + "\"secondPermission\"]}]}}";
@@ -173,12 +195,25 @@ public class CredentialAccessBoundaryTest {
   }
 
   @Test
+  public void accessBoundaryRule_withEmptyAvailableResource_throws() {
+    try {
+      AccessBoundaryRule.newBuilder()
+          .setAvailableResource("")
+          .addAvailablePermission("permission")
+          .build();
+      fail("Should fail.");
+    } catch (IllegalArgumentException e) {
+      assertEquals("The provided availableResource is either null or empty.", e.getMessage());
+    }
+  }
+
+  @Test
   public void accessBoundaryRule_withoutAvailableResource_throws() {
     try {
       AccessBoundaryRule.newBuilder().addAvailablePermission("permission").build();
       fail("Should fail.");
-    } catch (NullPointerException e) {
-      // Expected.
+    } catch (IllegalArgumentException e) {
+      assertEquals("The provided availableResource is either null or empty.", e.getMessage());
     }
   }
 
@@ -249,8 +284,18 @@ public class CredentialAccessBoundaryTest {
     try {
       AvailabilityCondition.newBuilder().setExpression(null).build();
       fail("Should fail.");
-    } catch (NullPointerException e) {
-      // Expected.
+    } catch (IllegalArgumentException e) {
+      assertEquals("The provided expression is null or empty.", e.getMessage());
+    }
+  }
+
+  @Test
+  public void availabilityCondition_emptyExpression_throws() {
+    try {
+      AvailabilityCondition.newBuilder().setExpression("").build();
+      fail("Should fail.");
+    } catch (IllegalArgumentException e) {
+      assertEquals("The provided expression is null or empty.", e.getMessage());
     }
   }
 }

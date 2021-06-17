@@ -31,14 +31,20 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.*;
 
 import com.google.api.client.json.GenericJson;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
-/** Defines an upper bound of permissions available for a GCP credential. */
+/**
+ * Defines an upper bound of permissions available for a GCP credential via {@link
+ * AccessBoundaryRule}s.
+ *
+ * <p>See <a href='https://cloud.google.com/iam/docs/downscoping-short-lived-credentials'>for more
+ * information.</a>
+ */
 final class CredentialAccessBoundary {
 
   private static final int RULES_SIZE_LIMIT = 10;
@@ -52,7 +58,8 @@ final class CredentialAccessBoundary {
     }
     if (accessBoundaryRules.size() > RULES_SIZE_LIMIT) {
       throw new IllegalArgumentException(
-          "The provided list has more than 10 access boundary rules.");
+          String.format(
+              "The provided list has more than %s access boundary rules.", RULES_SIZE_LIMIT));
     }
   }
 
@@ -131,7 +138,19 @@ final class CredentialAccessBoundary {
     }
   }
 
-  /** Defines an upper bound of permissions on a particular resource. */
+  /**
+   * Defines an upper bound of permissions on a particular resource.
+   *
+   * <p>The following snippet shows an AccessBoundaryRule that applies to the GCS bucket bucket-one
+   * to set the upper bound of permissions to those defined by the roles/storage.objectViewer role.
+   *
+   * <pre><code>
+   * AccessBoundaryRule rule = AccessBoundaryRule.newBuilder()
+   *   .setAvailableResource("//storage.googleapis.com/projects/_/buckets/bucket-one")
+   *   .addAvailablePermission("inRole:roles/storage.objectViewer")
+   *   .build();
+   * </code></pre>
+   */
   public static final class AccessBoundaryRule {
 
     private final String availableResource;
@@ -143,9 +162,12 @@ final class CredentialAccessBoundary {
         String availableResource,
         List<String> availablePermissions,
         @Nullable AvailabilityCondition availabilityCondition) {
-      this.availableResource = checkNotNull(availableResource);
-      this.availablePermissions = new ArrayList<>(checkNotNull(availablePermissions));
+      checkArgument(
+          availableResource != null && !availableResource.isEmpty(),
+          "The provided availableResource is either null or empty.");
+      this.availableResource = availableResource;
 
+      this.availablePermissions = new ArrayList<>(checkNotNull(availablePermissions));
       for (String permission : availablePermissions) {
         if (permission == null || permission.isEmpty()) {
           throw new IllegalArgumentException(
@@ -184,6 +206,8 @@ final class CredentialAccessBoundary {
       /**
        * Sets the available resource, which is the full resource name of the GCP resource to allow
        * access to.
+       *
+       * <p>For example: "//storage.googleapis.com/projects/_/buckets/example".
        */
       public Builder setAvailableResource(String availableResource) {
         this.availableResource = availableResource;
@@ -194,7 +218,7 @@ final class CredentialAccessBoundary {
        * Sets the list of permissions that can be used on the resource. This should be a list of IAM
        * roles prefixed by inRole.
        *
-       * <p>e.g. {"inRole:roles/storage.objectViewer"}.
+       * <p>For example: {"inRole:roles/storage.objectViewer"}.
        */
       public Builder setAvailablePermissions(List<String> availablePermissions) {
         this.availablePermissions = new ArrayList<>(checkNotNull(availablePermissions));
@@ -205,7 +229,7 @@ final class CredentialAccessBoundary {
        * Adds a permission that can be used on the resource. This should be an IAM role prefixed by
        * inRole.
        *
-       * <p>e.g. "inRole:roles/storage.objectViewer".
+       * <p>For example: "inRole:roles/storage.objectViewer".
        */
       public Builder addAvailablePermission(String availableResource) {
         if (availablePermissions == null) {
@@ -231,8 +255,21 @@ final class CredentialAccessBoundary {
     }
 
     /**
-     * An optional condition that can be used as part of a {@link CredentialAccessBoundary} to
-     * further restrict permissions.
+     * An optional condition that can be used as part of a {@link AccessBoundaryRule} to further
+     * restrict permissions.
+     *
+     * <p>For example, you can define an AvailabilityCondition that applies to a set of GCS objects
+     * whose names start with auth:
+     *
+     * <pre><code>
+     * AvailabilityCondition availabilityCondition = AvailabilityCondition.newBuilder()
+     *   .setExpression("resource.name.startsWith('projects/_/buckets/bucket-123/objects/auth')")
+     *   .build();
+     * </code></pre>
+     *
+     * The expression is defined in Common Expression Language (CEL) format. See <a
+     * href='https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oauth'>
+     * for more information.</a>
      */
     public static final class AvailabilityCondition {
       private final String expression;
@@ -242,7 +279,10 @@ final class CredentialAccessBoundary {
 
       AvailabilityCondition(
           String expression, @Nullable String title, @Nullable String description) {
-        this.expression = checkNotNull(expression);
+        checkArgument(
+            expression != null && !expression.isEmpty(),
+            "The provided expression is null or empty.");
+        this.expression = expression;
         this.title = title;
         this.description = description;
       }
@@ -273,7 +313,6 @@ final class CredentialAccessBoundary {
 
         private Builder() {}
 
-        /** */
         public Builder setExpression(String expression) {
           this.expression = expression;
           return this;
