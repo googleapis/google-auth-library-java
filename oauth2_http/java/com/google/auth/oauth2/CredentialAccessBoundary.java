@@ -268,8 +268,7 @@ final class CredentialAccessBoundary {
      * </code></pre>
      *
      * The expression is defined in Common Expression Language (CEL) format. See <a
-     * href='https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oauth'>
-     * for more information.</a>
+     * href='https://cloud.google.com/iam/docs/conditions-overview#cel'>for more information.</a>
      */
     public static final class AvailabilityCondition {
       private final String expression;
