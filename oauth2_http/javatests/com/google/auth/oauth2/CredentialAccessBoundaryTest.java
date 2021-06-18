@@ -37,6 +37,7 @@ import static org.junit.Assert.fail;
 
 import com.google.auth.oauth2.CredentialAccessBoundary.AccessBoundaryRule;
 import com.google.auth.oauth2.CredentialAccessBoundary.AccessBoundaryRule.AvailabilityCondition;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import org.junit.Test;
@@ -222,13 +223,27 @@ public class CredentialAccessBoundaryTest {
     try {
       AccessBoundaryRule.newBuilder().setAvailableResource("resource").build();
       fail("Should fail.");
-    } catch (NullPointerException e) {
+    } catch (IllegalArgumentException e) {
       // Expected.
     }
   }
 
   @Test
-  public void accessBoundaryRule_withNullAvailablePermission_throws() {
+  public void accessBoundaryRule_withEmptyAvailablePermissions_throws() {
+    try {
+      AccessBoundaryRule.newBuilder()
+          .setAvailableResource("resource")
+          .setAvailablePermissions(new ArrayList<String>())
+          .build();
+      fail("Should fail.");
+    } catch (IllegalArgumentException e) {
+      assertEquals(
+          "The list of provided availablePermissions is either null or empty.", e.getMessage());
+    }
+  }
+
+  @Test
+  public void accessBoundaryRule_withNullAvailablePermissions_throws() {
     try {
       AccessBoundaryRule.newBuilder()
           .setAvailableResource("resource")

@@ -167,7 +167,10 @@ final class CredentialAccessBoundary {
           "The provided availableResource is either null or empty.");
       this.availableResource = availableResource;
 
-      this.availablePermissions = new ArrayList<>(checkNotNull(availablePermissions));
+      checkArgument(
+          availablePermissions != null && !availablePermissions.isEmpty(),
+          "The list of provided availablePermissions is either null or empty.");
+      this.availablePermissions = new ArrayList<>(availablePermissions);
       for (String permission : availablePermissions) {
         if (permission == null || permission.isEmpty()) {
           throw new IllegalArgumentException(
@@ -231,11 +234,11 @@ final class CredentialAccessBoundary {
        *
        * <p>For example: "inRole:roles/storage.objectViewer".
        */
-      public Builder addAvailablePermission(String availableResource) {
+      public Builder addAvailablePermission(String availablePermission) {
         if (availablePermissions == null) {
           availablePermissions = new ArrayList<>();
         }
-        availablePermissions.add(availableResource);
+        availablePermissions.add(availablePermission);
         return this;
       }
 
