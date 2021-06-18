@@ -96,8 +96,8 @@ public class CredentialAccessBoundaryTest {
     try {
       CredentialAccessBoundary.newBuilder().build();
       fail("Should fail.");
-    } catch (IllegalArgumentException e) {
-      assertEquals("The provided list of accessBoundaryRules is null.", e.getMessage());
+    } catch (NullPointerException e) {
+      // Expected.
     }
   }
 
@@ -223,8 +223,8 @@ public class CredentialAccessBoundaryTest {
     try {
       AccessBoundaryRule.newBuilder().addAvailablePermission("permission").build();
       fail("Should fail.");
-    } catch (IllegalArgumentException e) {
-      assertEquals("The provided availableResource is null.", e.getMessage());
+    } catch (NullPointerException e) {
+      // Expected.
     }
   }
 
@@ -233,7 +233,7 @@ public class CredentialAccessBoundaryTest {
     try {
       AccessBoundaryRule.newBuilder().setAvailableResource("resource").build();
       fail("Should fail.");
-    } catch (IllegalArgumentException e) {
+    } catch (NullPointerException e) {
       // Expected.
     }
   }
@@ -306,8 +306,8 @@ public class CredentialAccessBoundaryTest {
     try {
       AvailabilityCondition.newBuilder().setExpression(null).build();
       fail("Should fail.");
-    } catch (IllegalArgumentException e) {
-      assertEquals("The provided expression is null.", e.getMessage());
+    } catch (NullPointerException e) {
+      // Expected.
     }
   }
 

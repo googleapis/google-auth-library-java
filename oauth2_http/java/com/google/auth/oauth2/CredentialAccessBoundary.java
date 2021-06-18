@@ -31,7 +31,8 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.api.client.json.GenericJson;
 import java.util.ArrayList;
@@ -52,7 +53,7 @@ public final class CredentialAccessBoundary {
   private final List<AccessBoundaryRule> accessBoundaryRules;
 
   CredentialAccessBoundary(List<AccessBoundaryRule> accessBoundaryRules) {
-    checkArgument(accessBoundaryRules != null, "The provided list of accessBoundaryRules is null.");
+    checkNotNull(accessBoundaryRules);
     checkArgument(
         !accessBoundaryRules.isEmpty(), "At least one access boundary rule must be provided.");
     checkArgument(
@@ -163,10 +164,11 @@ public final class CredentialAccessBoundary {
         String availableResource,
         List<String> availablePermissions,
         @Nullable AvailabilityCondition availabilityCondition) {
-      checkArgument(availableResource != null, "The provided availableResource is null.");
+      this.availableResource = checkNotNull(availableResource);
+      this.availablePermissions = new ArrayList<>(checkNotNull(availablePermissions));
+      this.availabilityCondition = availabilityCondition;
+
       checkArgument(!availableResource.isEmpty(), "The provided availableResource is empty.");
-      checkArgument(
-          availablePermissions != null, "The list of provided availablePermissions is null.");
       checkArgument(
           !availablePermissions.isEmpty(), "The list of provided availablePermissions is empty.");
       for (String permission : availablePermissions) {
@@ -177,9 +179,6 @@ public final class CredentialAccessBoundary {
           throw new IllegalArgumentException("One of the provided available permissions is empty.");
         }
       }
-      this.availableResource = availableResource;
-      this.availablePermissions = new ArrayList<>(availablePermissions);
-      this.availabilityCondition = availabilityCondition;
     }
 
     public String getAvailableResource() {
@@ -279,11 +278,10 @@ public final class CredentialAccessBoundary {
 
       AvailabilityCondition(
           String expression, @Nullable String title, @Nullable String description) {
-        this.expression = expression;
+        this.expression = checkNotNull(expression);
         this.title = title;
         this.description = description;
 
-        checkArgument(expression != null, "The provided expression is null.");
         checkArgument(!expression.isEmpty(), "The provided expression is empty.");
       }
 
