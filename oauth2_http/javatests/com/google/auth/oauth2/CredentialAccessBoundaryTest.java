@@ -92,9 +92,19 @@ public class CredentialAccessBoundaryTest {
   }
 
   @Test
-  public void credentialAccessBoundary_withoutRules_throws() {
+  public void credentialAccessBoundary_nullRules_throws() {
     try {
       CredentialAccessBoundary.newBuilder().build();
+      fail("Should fail.");
+    } catch (IllegalArgumentException e) {
+      assertEquals("The provided list of accessBoundaryRules is null.", e.getMessage());
+    }
+  }
+
+  @Test
+  public void credentialAccessBoundary_withoutRules_throws() {
+    try {
+      CredentialAccessBoundary.newBuilder().setRules(new ArrayList<AccessBoundaryRule>()).build();
       fail("Should fail.");
     } catch (IllegalArgumentException e) {
       assertEquals("At least one access boundary rule must be provided.", e.getMessage());
@@ -204,7 +214,7 @@ public class CredentialAccessBoundaryTest {
           .build();
       fail("Should fail.");
     } catch (IllegalArgumentException e) {
-      assertEquals("The provided availableResource is either null or empty.", e.getMessage());
+      assertEquals("The provided availableResource is empty.", e.getMessage());
     }
   }
 
@@ -214,7 +224,7 @@ public class CredentialAccessBoundaryTest {
       AccessBoundaryRule.newBuilder().addAvailablePermission("permission").build();
       fail("Should fail.");
     } catch (IllegalArgumentException e) {
-      assertEquals("The provided availableResource is either null or empty.", e.getMessage());
+      assertEquals("The provided availableResource is null.", e.getMessage());
     }
   }
 
@@ -237,8 +247,7 @@ public class CredentialAccessBoundaryTest {
           .build();
       fail("Should fail.");
     } catch (IllegalArgumentException e) {
-      assertEquals(
-          "The list of provided availablePermissions is either null or empty.", e.getMessage());
+      assertEquals("The list of provided availablePermissions is empty.", e.getMessage());
     }
   }
 
@@ -251,8 +260,7 @@ public class CredentialAccessBoundaryTest {
           .build();
       fail("Should fail.");
     } catch (IllegalArgumentException e) {
-      assertEquals(
-          "One of the provided available permissions is either null or empty.", e.getMessage());
+      assertEquals("One of the provided available permissions is null.", e.getMessage());
     }
   }
 
@@ -265,8 +273,7 @@ public class CredentialAccessBoundaryTest {
           .build();
       fail("Should fail.");
     } catch (IllegalArgumentException e) {
-      assertEquals(
-          "One of the provided available permissions is either null or empty.", e.getMessage());
+      assertEquals("One of the provided available permissions is empty.", e.getMessage());
     }
   }
 
@@ -300,7 +307,7 @@ public class CredentialAccessBoundaryTest {
       AvailabilityCondition.newBuilder().setExpression(null).build();
       fail("Should fail.");
     } catch (IllegalArgumentException e) {
-      assertEquals("The provided expression is null or empty.", e.getMessage());
+      assertEquals("The provided expression is null.", e.getMessage());
     }
   }
 
@@ -310,7 +317,7 @@ public class CredentialAccessBoundaryTest {
       AvailabilityCondition.newBuilder().setExpression("").build();
       fail("Should fail.");
     } catch (IllegalArgumentException e) {
-      assertEquals("The provided expression is null or empty.", e.getMessage());
+      assertEquals("The provided expression is empty.", e.getMessage());
     }
   }
 }

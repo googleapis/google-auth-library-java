@@ -45,22 +45,21 @@ import javax.annotation.Nullable;
  * <p>See <a href='https://cloud.google.com/iam/docs/downscoping-short-lived-credentials'>for more
  * information.</a>
  */
-final class CredentialAccessBoundary {
+public final class CredentialAccessBoundary {
 
   private static final int RULES_SIZE_LIMIT = 10;
 
   private final List<AccessBoundaryRule> accessBoundaryRules;
 
   CredentialAccessBoundary(List<AccessBoundaryRule> accessBoundaryRules) {
-    this.accessBoundaryRules = checkNotNull(accessBoundaryRules);
-    if (accessBoundaryRules.isEmpty()) {
-      throw new IllegalArgumentException("At least one access boundary rule must be provided.");
-    }
-    if (accessBoundaryRules.size() > RULES_SIZE_LIMIT) {
-      throw new IllegalArgumentException(
-          String.format(
-              "The provided list has more than %s access boundary rules.", RULES_SIZE_LIMIT));
-    }
+    checkArgument(accessBoundaryRules != null, "The provided list of accessBoundaryRules is null.");
+    checkArgument(
+        !accessBoundaryRules.isEmpty(), "At least one access boundary rule must be provided.");
+    checkArgument(
+        accessBoundaryRules.size() < RULES_SIZE_LIMIT,
+        String.format(
+            "The provided list has more than %s access boundary rules.", RULES_SIZE_LIMIT));
+    this.accessBoundaryRules = accessBoundaryRules;
   }
 
   /**
@@ -114,9 +113,7 @@ final class CredentialAccessBoundary {
   public static class Builder {
     private List<AccessBoundaryRule> accessBoundaryRules;
 
-    private Builder() {
-      accessBoundaryRules = new ArrayList<>();
-    }
+    private Builder() {}
 
     /**
      * Sets the list of {@link AccessBoundaryRule}'s.
@@ -129,6 +126,9 @@ final class CredentialAccessBoundary {
     }
 
     public CredentialAccessBoundary.Builder addRule(AccessBoundaryRule rule) {
+      if (accessBoundaryRules == null) {
+        accessBoundaryRules = new ArrayList<>();
+      }
       accessBoundaryRules.add(checkNotNull(rule));
       return this;
     }
@@ -163,22 +163,22 @@ final class CredentialAccessBoundary {
         String availableResource,
         List<String> availablePermissions,
         @Nullable AvailabilityCondition availabilityCondition) {
+      checkArgument(availableResource != null, "The provided availableResource is null.");
+      checkArgument(!availableResource.isEmpty(), "The provided availableResource is empty.");
       checkArgument(
-          availableResource != null && !availableResource.isEmpty(),
-          "The provided availableResource is either null or empty.");
-      this.availableResource = availableResource;
-
+          availablePermissions != null, "The list of provided availablePermissions is null.");
       checkArgument(
-          availablePermissions != null && !availablePermissions.isEmpty(),
-          "The list of provided availablePermissions is either null or empty.");
-      this.availablePermissions = new ArrayList<>(availablePermissions);
+          !availablePermissions.isEmpty(), "The list of provided availablePermissions is empty.");
       for (String permission : availablePermissions) {
-        if (permission == null || permission.isEmpty()) {
-          throw new IllegalArgumentException(
-              "One of the provided available permissions is either null or empty.");
+        if (permission == null) {
+          throw new IllegalArgumentException("One of the provided available permissions is null.");
+        }
+        if (permission.isEmpty()) {
+          throw new IllegalArgumentException("One of the provided available permissions is empty.");
         }
       }
-
+      this.availableResource = availableResource;
+      this.availablePermissions = new ArrayList<>(availablePermissions);
       this.availabilityCondition = availabilityCondition;
     }
 
@@ -279,12 +279,12 @@ final class CredentialAccessBoundary {
 
       AvailabilityCondition(
           String expression, @Nullable String title, @Nullable String description) {
-        checkArgument(
-            expression != null && !expression.isEmpty(),
-            "The provided expression is null or empty.");
         this.expression = expression;
         this.title = title;
         this.description = description;
+
+        checkArgument(expression != null, "The provided expression is null.");
+        checkArgument(!expression.isEmpty(), "The provided expression is empty.");
       }
 
       public String getExpression() {
