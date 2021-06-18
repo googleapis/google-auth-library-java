@@ -141,8 +141,9 @@ final class CredentialAccessBoundary {
   /**
    * Defines an upper bound of permissions on a particular resource.
    *
-   * <p>The following snippet shows an AccessBoundaryRule that applies to the GCS bucket bucket-one
-   * to set the upper bound of permissions to those defined by the roles/storage.objectViewer role.
+   * <p>The following snippet shows an AccessBoundaryRule that applies to the Cloud Storage bucket
+   * bucket-one to set the upper bound of permissions to those defined by the
+   * roles/storage.objectViewer role.
    *
    * <pre><code>
    * AccessBoundaryRule rule = AccessBoundaryRule.newBuilder()
@@ -261,17 +262,14 @@ final class CredentialAccessBoundary {
      * An optional condition that can be used as part of a {@link AccessBoundaryRule} to further
      * restrict permissions.
      *
-     * <p>For example, you can define an AvailabilityCondition that applies to a set of GCS objects
-     * whose names start with auth:
+     * <p>For example, you can define an AvailabilityCondition that applies to a set of Cloud
+     * Storage objects whose names start with auth:
      *
      * <pre><code>
      * AvailabilityCondition availabilityCondition = AvailabilityCondition.newBuilder()
      *   .setExpression("resource.name.startsWith('projects/_/buckets/bucket-123/objects/auth')")
      *   .build();
      * </code></pre>
-     *
-     * The expression is defined in Common Expression Language (CEL) format. See <a
-     * href='https://cloud.google.com/iam/docs/conditions-overview#cel'>for more information.</a>
      */
     public static final class AvailabilityCondition {
       private final String expression;
@@ -315,16 +313,26 @@ final class CredentialAccessBoundary {
 
         private Builder() {}
 
+        /**
+         * Sets the required expression which must be defined in Common Expression Language (CEL)
+         * format.
+         *
+         * <p>This expression specifies the Cloud Storage object where permissions are available.
+         * See <a href='https://cloud.google.com/iam/docs/conditions-overview#cel'>for more
+         * information.</a>
+         */
         public Builder setExpression(String expression) {
           this.expression = expression;
           return this;
         }
 
+        /** Sets the optional title that identifies the purpose of the condition. */
         public Builder setTitle(String title) {
           this.title = title;
           return this;
         }
 
+        /** Sets the description that details the purpose of the condition. */
         public Builder setDescription(String description) {
           this.description = description;
           return this;
