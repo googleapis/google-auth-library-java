@@ -36,6 +36,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.FileInputStream;
+import java.io.IOException;
 
 import com.google.api.client.http.HttpResponse;
 import com.google.auth.TestUtils;
@@ -46,17 +47,60 @@ import org.junit.Before;
 import org.junit.Test;
 
 public final class ServiceAccountTest {
-    final String cloudTasksUrl = "https://cloudtasks.googleapis.com/v2/projects/gcloud-devel/locations";
-    final String storageUrl = "https://storage.googleapis.com/storage/v1/b?project=gcloud-devel";
     
 @Test
   public void NoScopeNoAudienceTest() throws Exception {
-    final GoogleCredentials credentials = GoogleCredentials.getApplicationDefault()
-    .createScoped("https://www.googleapis.com/auth/cloud-platform");
-    HttpResponse response = TestUtils.executeRequestWithCredentials(cloudTasksUrl, credentials);
-    assertEquals(200, response.getStatusCode());
+    final GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream("C:\\Users\\timur\\Documents\\Work\\keys\\gcloud-devel-stim-test-5aede6a71838.json"));
+    // = GoogleCredentials.getApplicationDefault()
+    //.createScoped("https://www.googleapis.com/auth/cloud-platform");
+    
+    //TODO remove authUri from the key, check that it works with default audience
+    //TODO: check it is actually JWTCredential
+    executeRequestWithCredentials(credentials, 200);
+  }
 
-    response = TestUtils.executeRequestWithCredentials(storageUrl, credentials);
-    assertEquals(200, response.getStatusCode());
+  public void AudienceSetNoScopeTest() throws Exception {
+    final GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream("C:\\Users\\timur\\Documents\\Work\\keys\\gcloud-devel-stim-test-5aede6a71838.json"));
+    // = GoogleCredentials.getApplicationDefault()
+    //.createScoped("https://www.googleapis.com/auth/cloud-platform");
+    
+    executeRequestWithCredentials(credentials, 200);
+  }
+
+  public void ScopeSetNoAudienceTest() throws Exception {
+    final GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream("C:\\Users\\timur\\Documents\\Work\\keys\\gcloud-devel-stim-test-5aede6a71838.json"))
+    // = GoogleCredentials.getApplicationDefault()
+    .createScoped("https://www.googleapis.com/auth/cloud-platform");
+    
+    //TODO: check it is actually SACred
+    executeRequestWithCredentials(credentials, 200);
+  }
+
+  public void WrongScopeTest() throws Exception {
+    final GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream("C:\\Users\\timur\\Documents\\Work\\keys\\gcloud-devel-stim-test-5aede6a71838.json"))
+    // = GoogleCredentials.getApplicationDefault()
+    .createScoped("some_scope");
+    
+    executeRequestWithCredentials(credentials, 200);
+  }
+
+
+
+  public void ScopeSetAudienceSetTest() {
+
+  }
+
+  private void executeRequestWithCredentials(GoogleCredentials credentials, int expectedStatusCode) throws IOException {
+    HttpResponse response = TestUtils.executeRequestWithCredentials(TestUtils.computeUrl, credentials);
+    assertEquals(expectedStatusCode, response.getStatusCode());
+
+    response = TestUtils.executeRequestWithCredentials(TestUtils.bigQueryUrl, credentials);
+    assertEquals(expectedStatusCode, response.getStatusCode());
+    
+    response = TestUtils.executeRequestWithCredentials(TestUtils.cloudTasksUrl, credentials);
+    assertEquals(expectedStatusCode, response.getStatusCode());
+
+    response = TestUtils.executeRequestWithCredentials(TestUtils.storageUrl, credentials);
+    assertEquals(expectedStatusCode, response.getStatusCode());
   }
 }

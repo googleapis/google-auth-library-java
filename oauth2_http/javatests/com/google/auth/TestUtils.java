@@ -65,6 +65,11 @@ import javax.annotation.Nullable;
 /** Utilities for test code under com.google.auth. */
 public class TestUtils {
 
+  public static final String cloudTasksUrl = "https://cloudtasks.googleapis.com/v2/projects/gcloud-devel/locations";
+  public static final String storageUrl = "https://storage.googleapis.com/storage/v1/b?project=gcloud-devel";
+  public static final String bigQueryUrl = "https://bigquery.googleapis.com/bigquery/v2/projects/gcloud-devel/datasets";
+  public static final String computeUrl = "https://compute.googleapis.com/compute/v1/projects/gcloud-devel/zones/us-central1-a/instances";
+    
   private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
   public static void assertContainsBearerToken(Map<String, List<String>> metadata, String token) {
