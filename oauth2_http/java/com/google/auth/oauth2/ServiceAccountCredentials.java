@@ -781,8 +781,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     return lifetime;
   }
 
-  @VisibleForTesting
-  boolean getAlwaysUseJwtAccess() {
+  public boolean getAlwaysUseJwtAccess() {
     return alwaysUseJwtAccess;
   }
 
