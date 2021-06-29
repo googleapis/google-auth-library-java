@@ -111,6 +111,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   private final int lifetime;
 
   private transient HttpTransportFactory transportFactory;
+  @VisibleForTesting
   private transient ServiceAccountJwtAccessCredentials jwtCredentials = null;
 
   /**
