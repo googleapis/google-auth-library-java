@@ -159,7 +159,7 @@ public final class FTServiceAccountCredentialsTest {
     try {
       executeRequestWithCredentialsWithScope(
           serviceUri, "https://www.googleapis.com/auth/adexchange.buyer");
-      fail(String.format("Should throw exception '%s'", expectedMessage));
+      fail("Should throw exception: " + expectedMessage);
     } catch (IOException expected) {
       assertTrue(expected.getMessage().contains(expectedMessage));
     }
@@ -168,8 +168,6 @@ public final class FTServiceAccountCredentialsTest {
   private HttpResponse executeRequestWithCredentialsWithoutScope(String serviceUrl)
       throws IOException {
     final GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
-    // = GoogleCredentials.getApplicationDefault();
-    // .createScoped("https://www.googleapis.com/auth/cloud-platform");
     GenericUrl genericUrl = new GenericUrl(serviceUrl);
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
     HttpTransport transport = new NetHttpTransport();
