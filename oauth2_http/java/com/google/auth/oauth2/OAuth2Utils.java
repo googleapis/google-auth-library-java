@@ -57,6 +57,8 @@ import java.util.Map;
 class OAuth2Utils {
   static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
 
+  static final String TOKEN_TYPE_ACCESS_TOKEN = "urn:ietf:params:oauth:token-type:access_token";
+
   static final URI TOKEN_SERVER_URI = URI.create("https://oauth2.googleapis.com/token");
   static final URI TOKEN_REVOKE_URI = URI.create("https://oauth2.googleapis.com/revoke");
   static final URI USER_AUTH_URI = URI.create("https://accounts.google.com/o/oauth2/auth");
