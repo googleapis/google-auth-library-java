@@ -53,8 +53,6 @@ import javax.annotation.Nullable;
 final class StsRequestHandler {
   private static final String TOKEN_EXCHANGE_GRANT_TYPE =
       "urn:ietf:params:oauth:grant-type:token-exchange";
-  private static final String REQUESTED_TOKEN_TYPE =
-      "urn:ietf:params:oauth:token-type:access_token";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token response.";
 
   private final String tokenExchangeEndpoint;
@@ -140,7 +138,9 @@ final class StsRequestHandler {
     // Set the requested token type, which defaults to
     // urn:ietf:params:oauth:token-type:access_token.
     String requestTokenType =
-        request.hasRequestedTokenType() ? request.getRequestedTokenType() : REQUESTED_TOKEN_TYPE;
+        request.hasRequestedTokenType()
+            ? request.getRequestedTokenType()
+            : OAuth2Utils.TOKEN_TYPE_ACCESS_TOKEN;
     tokenRequest.set("requested_token_type", requestTokenType);
 
     // Add other optional params, if possible.
