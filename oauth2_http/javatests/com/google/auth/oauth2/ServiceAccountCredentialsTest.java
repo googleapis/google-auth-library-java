@@ -1069,7 +1069,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
         String.format(
             "ServiceAccountCredentials{clientId=%s, clientEmail=%s, privateKeyId=%s, "
                 + "transportFactoryClassName=%s, tokenServerUri=%s, scopes=%s, defaultScopes=%s, serviceAccountUser=%s, "
-                + "quotaProjectId=%s, lifetime=3600, alwaysUseJwtAccess=false}",
+                + "quotaProjectId=%s, lifetime=3600, useJWTAccessWithScope=false}",
             CLIENT_ID,
             CLIENT_EMAIL,
             PRIVATE_KEY_ID,
@@ -1335,7 +1335,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             .setServiceAccountUser(USER)
             .setProjectId(PROJECT_ID)
             .setHttpTransportFactory(new MockTokenServerTransportFactory())
-            .setAlwaysUseJwtAccess(true)
+            .setUseJWTAccessWithScope(true)
             .build();
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
@@ -1355,7 +1355,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             .setServiceAccountUser(USER)
             .setProjectId(PROJECT_ID)
             .setHttpTransportFactory(new MockTokenServerTransportFactory())
-            .setAlwaysUseJwtAccess(true)
+            .setUseJWTAccessWithScope(true)
             .build();
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
@@ -1375,7 +1375,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             .setServiceAccountUser(USER)
             .setProjectId(PROJECT_ID)
             .setHttpTransportFactory(new MockTokenServerTransportFactory())
-            .setAlwaysUseJwtAccess(true)
+            .setUseJWTAccessWithScope(true)
             .build();
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata(null);
@@ -1395,7 +1395,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             .setProjectId(PROJECT_ID)
             .setQuotaProjectId("my-quota-project-id")
             .setHttpTransportFactory(new MockTokenServerTransportFactory())
-            .setAlwaysUseJwtAccess(true)
+            .setUseJWTAccessWithScope(true)
             .build();
 
     final AtomicBoolean success = new AtomicBoolean(false);
