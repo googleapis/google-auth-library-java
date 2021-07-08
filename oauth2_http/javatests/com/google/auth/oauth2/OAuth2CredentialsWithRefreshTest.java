@@ -40,23 +40,23 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Tests for {@link RefreshableOAuth2Credentials}. */
+/** Tests for {@link OAuth2CredentialsWithRefresh}. */
 @RunWith(JUnit4.class)
-public class RefreshableOAuth2CredentialsTest {
+public class OAuth2CredentialsWithRefreshTest {
 
   private static final AccessToken ACCESS_TOKEN = new AccessToken("accessToken", new Date());
 
   @Test
   public void builder() {
-    RefreshableOAuth2Credentials.OAuth2RefreshHandler refreshHandler =
-        new RefreshableOAuth2Credentials.OAuth2RefreshHandler() {
+    OAuth2CredentialsWithRefresh.OAuth2RefreshHandler refreshHandler =
+        new OAuth2CredentialsWithRefresh.OAuth2RefreshHandler() {
           @Override
           public AccessToken refreshAccessToken() {
             return null;
           }
         };
-    RefreshableOAuth2Credentials credential =
-        RefreshableOAuth2Credentials.newBuilder()
+    OAuth2CredentialsWithRefresh credential =
+        OAuth2CredentialsWithRefresh.newBuilder()
             .setAccessToken(ACCESS_TOKEN)
             .setRefreshHandler(refreshHandler)
             .build();
@@ -67,9 +67,9 @@ public class RefreshableOAuth2CredentialsTest {
 
   @Test
   public void builder_noAccessToken() {
-    RefreshableOAuth2Credentials.newBuilder()
+    OAuth2CredentialsWithRefresh.newBuilder()
         .setRefreshHandler(
-            new RefreshableOAuth2Credentials.OAuth2RefreshHandler() {
+            new OAuth2CredentialsWithRefresh.OAuth2RefreshHandler() {
               @Override
               public AccessToken refreshAccessToken() {
                 return null;
@@ -81,7 +81,7 @@ public class RefreshableOAuth2CredentialsTest {
   @Test
   public void builder_noRefreshHandler_throws() {
     try {
-      RefreshableOAuth2Credentials.newBuilder().setAccessToken(ACCESS_TOKEN).build();
+      OAuth2CredentialsWithRefresh.newBuilder().setAccessToken(ACCESS_TOKEN).build();
       fail("Should fail as a refresh handler must be provided.");
     } catch (NullPointerException e) {
       // Expected.
@@ -91,11 +91,11 @@ public class RefreshableOAuth2CredentialsTest {
   @Test
   public void refreshAccessToken_delegateToRefreshHandler() throws IOException {
     final AccessToken refreshedToken = new AccessToken("refreshedAccessToken", new Date());
-    RefreshableOAuth2Credentials credentials =
-        RefreshableOAuth2Credentials.newBuilder()
+    OAuth2CredentialsWithRefresh credentials =
+        OAuth2CredentialsWithRefresh.newBuilder()
             .setAccessToken(ACCESS_TOKEN)
             .setRefreshHandler(
-                new RefreshableOAuth2Credentials.OAuth2RefreshHandler() {
+                new OAuth2CredentialsWithRefresh.OAuth2RefreshHandler() {
                   @Override
                   public AccessToken refreshAccessToken() {
                     return refreshedToken;

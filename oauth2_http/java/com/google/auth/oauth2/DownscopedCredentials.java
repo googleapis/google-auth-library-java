@@ -80,9 +80,9 @@ import java.util.Arrays;
  * System.out.printf("Blob %s retrieved.", blob.getBlobId());
  * </code></pre>
  *
- * Note that {@link RefreshableOAuth2Credentials} can instead be used to consume the downscoped
+ * Note that {@link OAuth2CredentialsWithRefresh} can instead be used to consume the downscoped
  * token, allowing for automatic token refreshes by providing a {@link
- * RefreshableOAuth2Credentials.OAuth2RefreshHandler}.
+ * OAuth2CredentialsWithRefresh.OAuth2RefreshHandler}.
  */
 public final class DownscopedCredentials extends OAuth2Credentials {
 

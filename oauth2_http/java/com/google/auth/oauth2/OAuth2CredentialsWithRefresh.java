@@ -40,16 +40,16 @@ import java.io.IOException;
  *
  * <p>To enable automatic token refreshes, you must provide an {@link OAuth2RefreshHandler}.
  */
-public class RefreshableOAuth2Credentials extends OAuth2Credentials {
+public class OAuth2CredentialsWithRefresh extends OAuth2Credentials {
 
   /** Interface for the refresh handler. */
   public interface OAuth2RefreshHandler {
-    AccessToken refreshAccessToken();
+    AccessToken refreshAccessToken() throws IOException;
   }
 
   private final OAuth2RefreshHandler refreshHandler;
 
-  protected RefreshableOAuth2Credentials(
+  protected OAuth2CredentialsWithRefresh(
       AccessToken accessToken, OAuth2RefreshHandler refreshHandler) {
     super(accessToken);
     this.refreshHandler = checkNotNull(refreshHandler);
@@ -88,8 +88,8 @@ public class RefreshableOAuth2Credentials extends OAuth2Credentials {
       return this;
     }
 
-    public RefreshableOAuth2Credentials build() {
-      return new RefreshableOAuth2Credentials(getAccessToken(), refreshHandler);
+    public OAuth2CredentialsWithRefresh build() {
+      return new OAuth2CredentialsWithRefresh(getAccessToken(), refreshHandler);
     }
   }
 }
