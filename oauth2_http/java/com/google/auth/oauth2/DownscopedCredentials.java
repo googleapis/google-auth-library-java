@@ -43,7 +43,7 @@ import java.util.Arrays;
  * DownscopedCredentials enables the ability to downscope, or restrict, the Identity and Access
  * Management (IAM) permissions that a short-lived credential can use for Cloud Storage.
  *
- * <p>To downscope permissions you must define a {@link CredentialAccessBoundary} which will specify
+ * <p>To downscope permissions you must define a {@link CredentialAccessBoundary} which specifies
  * the upper bound of permissions that the credential can access. You must also provide a source
  * credential which will be used to acquire the downscoped credential.
  *
@@ -87,8 +87,7 @@ import java.util.Arrays;
 public final class DownscopedCredentials extends OAuth2Credentials {
 
   private static final String TOKEN_EXCHANGE_ENDPOINT = "https://sts.googleapis.com/v1/token";
-  private static final String ACCESS_TOKEN_IDENTIFIER =
-      "urn:ietf:params:oauth:token-type:access_token";
+
   private static final String CLOUD_PLATFORM_SCOPE =
       "https://www.googleapis.com/auth/cloud-platform";
 
@@ -119,8 +118,9 @@ public final class DownscopedCredentials extends OAuth2Credentials {
 
     StsTokenExchangeRequest request =
         StsTokenExchangeRequest.newBuilder(
-                sourceCredential.getAccessToken().getTokenValue(), ACCESS_TOKEN_IDENTIFIER)
-            .setRequestTokenType(ACCESS_TOKEN_IDENTIFIER)
+                sourceCredential.getAccessToken().getTokenValue(),
+                OAuth2Utils.TOKEN_TYPE_ACCESS_TOKEN)
+            .setRequestTokenType(OAuth2Utils.TOKEN_TYPE_ACCESS_TOKEN)
             .build();
 
     StsRequestHandler handler =
