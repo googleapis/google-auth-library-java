@@ -136,4 +136,16 @@ public class JwtClaimsTest {
     assertEquals("bar", mergedAdditionalClaims.get("foo"));
     assertEquals("qwer", mergedAdditionalClaims.get("asdf"));
   }
+
+  @Test
+  public void testIsComplete() {
+    // Test JwtClaim is complete if audience is not set but scope is provided.
+    JwtClaims claims =
+        JwtClaims.newBuilder()
+            .setIssuer("issuer-1")
+            .setSubject("subject-1")
+            .setAdditionalClaims(Collections.singletonMap("scope", "foo"))
+            .build();
+    assertTrue(claims.isComplete());
+  }
 }

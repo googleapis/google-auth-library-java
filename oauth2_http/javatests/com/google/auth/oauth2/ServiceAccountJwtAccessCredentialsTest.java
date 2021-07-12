@@ -92,7 +92,6 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
   private static final String JWT_ACCESS_PREFIX =
       ServiceAccountJwtAccessCredentials.JWT_ACCESS_PREFIX;
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
-  private static final URI CALL_URI_AUDIENCE = URI.create("http://googleapis.com/");
   private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
   private static final String QUOTA_PROJECT = "sample-quota-project-id";
 
@@ -173,29 +172,6 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
   }
 
   @Test
-  public void getUriForSelfSignedJWT() {
-    assertNull(ServiceAccountJwtAccessCredentials.getUriForSelfSignedJWT(null));
-
-    URI uri = URI.create("https://compute.googleapis.com/compute/v1/projects/");
-    URI expected = URI.create("https://compute.googleapis.com/");
-    assertEquals(expected, ServiceAccountJwtAccessCredentials.getUriForSelfSignedJWT(uri));
-  }
-
-  @Test
-  public void getUriForSelfSignedJWT_noHost() {
-    URI uri = URI.create("file:foo");
-    URI expected = URI.create("file:foo");
-    assertEquals(expected, ServiceAccountJwtAccessCredentials.getUriForSelfSignedJWT(uri));
-  }
-
-  @Test
-  public void getUriForSelfSignedJWT_forStaticAudience_returnsURI() {
-    URI uri = URI.create("compute.googleapis.com");
-    URI expected = URI.create("compute.googleapis.com");
-    assertEquals(expected, ServiceAccountJwtAccessCredentials.getUriForSelfSignedJWT(uri));
-  }
-
-  @Test
   public void hasRequestMetadata_returnsTrue() throws IOException {
     Credentials credentials =
         ServiceAccountJwtAccessCredentials.fromPkcs8(
@@ -224,7 +200,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
-    verifyJwtAccess(metadata, SA_CLIENT_EMAIL, CALL_URI_AUDIENCE, SA_PRIVATE_KEY_ID);
+    verifyJwtAccess(metadata, SA_CLIENT_EMAIL, CALL_URI, SA_PRIVATE_KEY_ID);
   }
 
   @Test
@@ -329,7 +305,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
     credentials.getRequestMetadata(CALL_URI, executor, callback);
     assertEquals(0, executor.numTasks());
     assertNotNull(callback.metadata);
-    verifyJwtAccess(callback.metadata, SA_CLIENT_EMAIL, CALL_URI_AUDIENCE, SA_PRIVATE_KEY_ID);
+    verifyJwtAccess(callback.metadata, SA_CLIENT_EMAIL, CALL_URI, SA_PRIVATE_KEY_ID);
   }
 
   @Test
@@ -678,7 +654,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
 
     assertNotNull(credentials);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
-    verifyJwtAccess(metadata, SA_CLIENT_EMAIL, CALL_URI_AUDIENCE, SA_PRIVATE_KEY_ID);
+    verifyJwtAccess(metadata, SA_CLIENT_EMAIL, CALL_URI, SA_PRIVATE_KEY_ID);
   }
 
   @Test
