@@ -1016,8 +1016,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
               + " providing uri to getRequestMetadata.");
     }
 
-    // If scopes are provided but we cannot use self signed JWT, then use scopes in the normal oauth
-    // way.
+    // If scopes are provided but we cannot use self signed JWT, then use scopes to get access
+    // token.
     if (!createScopedRequired() && !useJwtAccessWithScope) {
       return super.getRequestMetadata(uri);
     }
