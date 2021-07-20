@@ -106,7 +106,9 @@ public abstract class JwtClaims implements Serializable {
    * @return true if all required fields have been set; false otherwise
    */
   public boolean isComplete() {
-    return getAudience() != null && getIssuer() != null && getSubject() != null;
+    boolean hasScopes =
+        getAdditionalClaims().containsKey("scope") && !getAdditionalClaims().get("scope").isEmpty();
+    return (getAudience() != null || hasScopes) && getIssuer() != null && getSubject() != null;
   }
 
   @AutoValue.Builder
