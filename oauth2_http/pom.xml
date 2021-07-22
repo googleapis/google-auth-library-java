@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.google.auth</groupId>
     <artifactId>google-auth-library-parent</artifactId>
-    <version>0.26.1-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
+    <version>0.27.0</version><!-- {x-version-update:google-auth-library-parent:current} -->
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -67,6 +67,7 @@
           <reportNameSuffix>sponge_log</reportNameSuffix>
           <includes>
             <include>**/IT*.java</include>
+            <include>**/functional/*.java</include>
           </includes>
         </configuration>
         <dependencies>
@@ -85,6 +86,7 @@
           <!-- Excludes integration tests when unit tests are run. -->
           <excludes>
             <exclude>**/IT*.java</exclude>
+            <exclude>**/functional/*.java</exclude>
           </excludes>
           <reportNameSuffix>sponge_log</reportNameSuffix>
         </configuration>

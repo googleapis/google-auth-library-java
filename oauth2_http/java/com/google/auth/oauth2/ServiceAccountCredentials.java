@@ -77,6 +77,7 @@ import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -109,9 +110,9 @@ public class ServiceAccountCredentials extends GoogleCredentials
   private final Collection<String> defaultScopes;
   private final String quotaProjectId;
   private final int lifetime;
+  private final boolean useJwtAccessWithScope;
 
   private transient HttpTransportFactory transportFactory;
-  private transient ServiceAccountJwtAccessCredentials jwtCredentials = null;
 
   /**
    * Constructor with minimum identifying information and custom HTTP transport.
@@ -133,6 +134,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
    *     most 43200 (12 hours). If the token is used for calling a Google API, then the value should
    *     be at most 3600 (1 hour). If the given value is 0, then the default value 3600 will be used
    *     when creating the credentials.
+   * @param useJwtAccessWithScope whether self signed JWT with scopes should be always used.
    */
   ServiceAccountCredentials(
       String clientId,
@@ -146,7 +148,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
       String serviceAccountUser,
       String projectId,
       String quotaProjectId,
-      int lifetime) {
+      int lifetime,
+      boolean useJwtAccessWithScope) {
     this.clientId = clientId;
     this.clientEmail = Preconditions.checkNotNull(clientEmail);
     this.privateKey = Preconditions.checkNotNull(privateKey);
@@ -167,18 +170,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
       throw new IllegalStateException("lifetime must be less than or equal to 43200");
     }
     this.lifetime = lifetime;
-
-    // Use self signed JWT if scopes is not set, see https://google.aip.dev/auth/4111.
-    if (this.scopes.isEmpty()) {
-      jwtCredentials =
-          new ServiceAccountJwtAccessCredentials.Builder()
-              .setClientEmail(clientEmail)
-              .setClientId(clientId)
-              .setPrivateKey(privateKey)
-              .setPrivateKeyId(privateKeyId)
-              .setQuotaProjectId(quotaProjectId)
-              .build();
-    }
+    this.useJwtAccessWithScope = useJwtAccessWithScope;
   }
 
   /**
@@ -492,7 +484,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
         serviceAccountUser,
         projectId,
         quotaProject,
-        DEFAULT_LIFETIME_IN_SECONDS);
+        DEFAULT_LIFETIME_IN_SECONDS,
+        false);
   }
 
   /** Helper to convert from a PKCS#8 String to an RSA private key */
@@ -698,7 +691,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
         serviceAccountUser,
         projectId,
         quotaProjectId,
-        lifetime);
+        lifetime,
+        useJwtAccessWithScope);
   }
 
   /**
@@ -712,6 +706,16 @@ public class ServiceAccountCredentials extends GoogleCredentials
    */
   public ServiceAccountCredentials createWithCustomLifetime(int lifetime) {
     return this.toBuilder().setLifetime(lifetime).build();
+  }
+
+  /**
+   * Clones the service account with a new useJwtAccessWithScope value.
+   *
+   * @param useJwtAccessWithScope whether self signed JWT with scopes should be used
+   * @return the cloned service account credentials with the given useJwtAccessWithScope
+   */
+  public ServiceAccountCredentials createWithUseJwtAccessWithScope(boolean useJwtAccessWithScope) {
+    return this.toBuilder().setUseJwtAccessWithScope(useJwtAccessWithScope).build();
   }
 
   @Override
@@ -728,7 +732,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
         user,
         projectId,
         quotaProjectId,
-        lifetime);
+        lifetime,
+        useJwtAccessWithScope);
   }
 
   public final String getClientId() {
@@ -774,6 +779,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
   @VisibleForTesting
   int getLifetime() {
     return lifetime;
+  }
+
+  public boolean getUseJwtAccessWithScope() {
+    return useJwtAccessWithScope;
   }
 
   @Override
@@ -833,7 +842,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
         scopes,
         defaultScopes,
         quotaProjectId,
-        lifetime);
+        lifetime,
+        useJwtAccessWithScope);
   }
 
   @Override
@@ -849,6 +859,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         .add("serviceAccountUser", serviceAccountUser)
         .add("quotaProjectId", quotaProjectId)
         .add("lifetime", lifetime)
+        .add("useJwtAccessWithScope", useJwtAccessWithScope)
         .toString();
   }
 
@@ -867,7 +878,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
         && Objects.equals(this.scopes, other.scopes)
         && Objects.equals(this.defaultScopes, other.defaultScopes)
         && Objects.equals(this.quotaProjectId, other.quotaProjectId)
-        && Objects.equals(this.lifetime, other.lifetime);
+        && Objects.equals(this.lifetime, other.lifetime)
+        && Objects.equals(this.useJwtAccessWithScope, other.useJwtAccessWithScope);
   }
 
   String createAssertion(JsonFactory jsonFactory, long currentTime, String audience)
@@ -937,11 +949,58 @@ public class ServiceAccountCredentials extends GoogleCredentials
     }
   }
 
+  /**
+   * Self signed JWT uses uri as audience, which should have the "https://{host}/" format. For
+   * instance, if the uri is "https://compute.googleapis.com/compute/v1/projects/", then this
+   * function returns "https://compute.googleapis.com/".
+   */
+  @VisibleForTesting
+  static URI getUriForSelfSignedJWT(URI uri) {
+    if (uri == null || uri.getScheme() == null || uri.getHost() == null) {
+      return uri;
+    }
+    try {
+      return new URI(uri.getScheme(), uri.getHost(), "/", null);
+    } catch (URISyntaxException unused) {
+      return uri;
+    }
+  }
+
+  @VisibleForTesting
+  JwtCredentials createSelfSignedJwtCredentials(final URI uri) {
+    // Create a JwtCredentials for self signed JWT. See https://google.aip.dev/auth/4111.
+    JwtClaims.Builder claimsBuilder =
+        JwtClaims.newBuilder().setIssuer(clientEmail).setSubject(clientEmail);
+
+    if (uri == null) {
+      // If uri is null, use scopes.
+      String scopeClaim = "";
+      if (!scopes.isEmpty()) {
+        scopeClaim = Joiner.on(' ').join(scopes);
+      } else {
+        scopeClaim = Joiner.on(' ').join(defaultScopes);
+      }
+      claimsBuilder.setAdditionalClaims(Collections.singletonMap("scope", scopeClaim));
+    } else {
+      // otherwise, use audience with the uri.
+      claimsBuilder.setAudience(getUriForSelfSignedJWT(uri).toString());
+    }
+    return JwtCredentials.newBuilder()
+        .setPrivateKey(privateKey)
+        .setPrivateKeyId(privateKeyId)
+        .setJwtClaims(claimsBuilder.build())
+        .setClock(clock)
+        .build();
+  }
+
   @Override
   public void getRequestMetadata(
       final URI uri, Executor executor, final RequestMetadataCallback callback) {
-    if (jwtCredentials != null && uri != null) {
-      jwtCredentials.getRequestMetadata(uri, executor, callback);
+    if (useJwtAccessWithScope) {
+      // This will call getRequestMetadata(URI uri), which handles self signed JWT logic.
+      // Self signed JWT doesn't use network, so here we do a blocking call to improve
+      // efficiency. executor will be ignored since it is intended for async operation.
+      blockingGetToCallback(uri, callback);
     } else {
       super.getRequestMetadata(uri, executor, callback);
     }
@@ -950,17 +1009,31 @@ public class ServiceAccountCredentials extends GoogleCredentials
   /** Provide the request metadata by putting an access JWT directly in the metadata. */
   @Override
   public Map<String, List<String>> getRequestMetadata(URI uri) throws IOException {
-    if (scopes.isEmpty() && defaultScopes.isEmpty() && uri == null) {
+    if (createScopedRequired() && uri == null) {
       throw new IOException(
-          "Scopes and uri are not configured for service account. Either pass uri"
-              + " to getRequestMetadata to use self signed JWT, or specify the scopes"
-              + " by calling createScoped or passing scopes to constructor.");
+          "Scopes and uri are not configured for service account. Specify the scopes"
+              + " by calling createScoped or passing scopes to constructor or"
+              + " providing uri to getRequestMetadata.");
     }
-    if (jwtCredentials != null && uri != null) {
-      return jwtCredentials.getRequestMetadata(uri);
-    } else {
+
+    // If scopes are provided but we cannot use self signed JWT, then use scopes to get access
+    // token.
+    if (!createScopedRequired() && !useJwtAccessWithScope) {
       return super.getRequestMetadata(uri);
     }
+
+    // If scopes are provided and self signed JWT can be used, use self signed JWT with scopes.
+    // Otherwise, use self signed JWT with uri as the audience.
+    JwtCredentials jwtCredentials;
+    if (!createScopedRequired() && useJwtAccessWithScope) {
+      // Create JWT credentials with the scopes.
+      jwtCredentials = createSelfSignedJwtCredentials(null);
+    } else {
+      // Create JWT credentials with the uri as audience.
+      jwtCredentials = createSelfSignedJwtCredentials(uri);
+    }
+    Map<String, List<String>> requestMetadata = jwtCredentials.getRequestMetadata(null);
+    return addQuotaProjectIdToRequestMetadata(quotaProjectId, requestMetadata);
   }
 
   @SuppressWarnings("unused")
@@ -997,6 +1070,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     private HttpTransportFactory transportFactory;
     private String quotaProjectId;
     private int lifetime = DEFAULT_LIFETIME_IN_SECONDS;
+    private boolean useJwtAccessWithScope = false;
 
     protected Builder() {}
 
@@ -1013,6 +1087,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
       this.projectId = credentials.projectId;
       this.quotaProjectId = credentials.quotaProjectId;
       this.lifetime = credentials.lifetime;
+      this.useJwtAccessWithScope = credentials.useJwtAccessWithScope;
     }
 
     public Builder setClientId(String clientId) {
@@ -1077,6 +1152,11 @@ public class ServiceAccountCredentials extends GoogleCredentials
       return this;
     }
 
+    public Builder setUseJwtAccessWithScope(boolean useJwtAccessWithScope) {
+      this.useJwtAccessWithScope = useJwtAccessWithScope;
+      return this;
+    }
+
     public String getClientId() {
       return clientId;
     }
@@ -1125,6 +1205,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
       return lifetime;
     }
 
+    public boolean getUseJwtAccessWithScope() {
+      return useJwtAccessWithScope;
+    }
+
     public ServiceAccountCredentials build() {
       return new ServiceAccountCredentials(
           clientId,
@@ -1138,7 +1222,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
           serviceAccountUser,
           projectId,
           quotaProjectId,
-          lifetime);
+          lifetime,
+          useJwtAccessWithScope);
     }
   }
 }
