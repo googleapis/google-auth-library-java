@@ -44,20 +44,43 @@ import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.auth.TestUtils;
+import com.google.common.base.Joiner;
 import java.io.IOException;
+import java.util.ArrayDeque;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 
 /** Transport that mocks a basic STS endpoint. */
-public class MockStsTransport extends MockHttpTransport {
+public final class MockStsTransport extends MockHttpTransport {
 
   private static final String EXPECTED_GRANT_TYPE =
       "urn:ietf:params:oauth:grant-type:token-exchange";
   private static final String ISSUED_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:access_token";
   private static final String STS_URL = "https://sts.googleapis.com/v1/token";
   private static final String ACCESS_TOKEN = "accessToken";
+  private static final String TOKEN_TYPE = "Bearer";
   private static final Long EXPIRES_IN = 3600L;
 
+  private final Queue<IOException> responseErrorSequence = new ArrayDeque<>();
+  private final Queue<List<String>> scopeSequence = new ArrayDeque<>();
+  private final Queue<String> refreshTokenSequence = new ArrayDeque<>();
+
+  private boolean returnExpiresIn = true;
   private MockLowLevelHttpRequest request;
+
+  public void addResponseErrorSequence(IOException... errors) {
+    Collections.addAll(responseErrorSequence, errors);
+  }
+
+  public void addRefreshTokenSequence(String... refreshTokens) {
+    Collections.addAll(refreshTokenSequence, refreshTokens);
+  }
+
+  public void addScopeSequence(List<String> scopes) {
+    Collections.addAll(scopeSequence, scopes);
+  }
 
   @Override
   public LowLevelHttpRequest buildRequest(final String method, final String url) {
@@ -69,6 +92,10 @@ public class MockStsTransport extends MockHttpTransport {
               return makeErrorResponse();
             }
 
+            if (!responseErrorSequence.isEmpty()) {
+              throw responseErrorSequence.poll();
+            }
+
             Map<String, String> query = TestUtils.parseQuery(getContentAsString());
             assertEquals(EXPECTED_GRANT_TYPE, query.get("grant_type"));
             assertNotNull(query.get("subject_token_type"));
@@ -76,10 +103,19 @@ public class MockStsTransport extends MockHttpTransport {
 
             GenericJson response = new GenericJson();
             response.setFactory(new GsonFactory());
-            response.put("token_type", "Bearer");
-            response.put("expires_in", EXPIRES_IN);
+            response.put("token_type", TOKEN_TYPE);
             response.put("access_token", ACCESS_TOKEN);
             response.put("issued_token_type", ISSUED_TOKEN_TYPE);
+
+            if (returnExpiresIn) {
+              response.put("expires_in", EXPIRES_IN);
+            }
+            if (!refreshTokenSequence.isEmpty()) {
+              response.put("refresh_token", refreshTokenSequence.poll());
+            }
+            if (!scopeSequence.isEmpty()) {
+              response.put("scope", Joiner.on(' ').join(scopeSequence.poll()));
+            }
 
             return new MockLowLevelHttpResponse()
                 .setContentType(Json.MEDIA_TYPE)
@@ -103,5 +139,21 @@ public class MockStsTransport extends MockHttpTransport {
 
   public String getAccessToken() {
     return ACCESS_TOKEN;
+  }
+
+  public String getTokenType() {
+    return TOKEN_TYPE;
+  }
+
+  public String getIssuedTokenType() {
+    return ISSUED_TOKEN_TYPE;
+  }
+
+  public Long getExpiresIn() {
+    return EXPIRES_IN;
+  }
+
+  public void setReturnExpiresIn(boolean returnExpiresIn) {
+    this.returnExpiresIn = returnExpiresIn;
   }
 }

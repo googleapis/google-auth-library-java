@@ -39,6 +39,7 @@ import com.google.api.client.http.HttpTransport;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import java.io.IOException;
+import java.util.Date;
 import java.util.Map;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -85,7 +86,8 @@ public class DownscopedCredentialsTest {
   public void refreshAccessToken() throws IOException {
     MockStsTransportFactory transportFactory = new MockStsTransportFactory();
 
-    GoogleCredentials sourceCredentials = getSourceCredentials(/* canRefresh= */ true);
+    GoogleCredentials sourceCredentials =
+        getServiceAccountSourceCredentials(/* canRefresh= */ true);
 
     DownscopedCredentials downscopedCredentials =
         DownscopedCredentials.newBuilder()
@@ -108,10 +110,34 @@ public class DownscopedCredentialsTest {
   }
 
   @Test
+  public void refreshAccessToken_userCredentials_expectExpiresInCopied() throws IOException {
+    MockStsTransportFactory transportFactory = new MockStsTransportFactory();
+    transportFactory.transport.setReturnExpiresIn(false);
+
+    GoogleCredentials sourceCredentials = getUserSourceCredentials();
+
+    DownscopedCredentials downscopedCredentials =
+        DownscopedCredentials.newBuilder()
+            .setSourceCredential(sourceCredentials)
+            .setCredentialAccessBoundary(CREDENTIAL_ACCESS_BOUNDARY)
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    AccessToken accessToken = downscopedCredentials.refreshAccessToken();
+
+    assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
+
+    // Validate that the expires_in has been copied from the source credential.
+    assertEquals(
+        sourceCredentials.getAccessToken().getExpirationTime(), accessToken.getExpirationTime());
+  }
+
+  @Test
   public void refreshAccessToken_cantRefreshSourceCredentials_throws() throws IOException {
     MockStsTransportFactory transportFactory = new MockStsTransportFactory();
 
-    GoogleCredentials sourceCredentials = getSourceCredentials(/* canRefresh= */ false);
+    GoogleCredentials sourceCredentials =
+        getServiceAccountSourceCredentials(/* canRefresh= */ false);
 
     DownscopedCredentials downscopedCredentials =
         DownscopedCredentials.newBuilder()
@@ -146,7 +172,7 @@ public class DownscopedCredentialsTest {
     try {
       DownscopedCredentials.newBuilder()
           .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-          .setSourceCredential(getSourceCredentials(/* canRefresh= */ true))
+          .setSourceCredential(getServiceAccountSourceCredentials(/* canRefresh= */ true))
           .build();
       fail("Should fail as no access boundary was provided.");
     } catch (NullPointerException e) {
@@ -156,7 +182,8 @@ public class DownscopedCredentialsTest {
 
   @Test
   public void builder_noTransport_defaults() throws IOException {
-    GoogleCredentials sourceCredentials = getSourceCredentials(/* canRefresh= */ true);
+    GoogleCredentials sourceCredentials =
+        getServiceAccountSourceCredentials(/* canRefresh= */ true);
     DownscopedCredentials credentials =
         DownscopedCredentials.newBuilder()
             .setSourceCredential(sourceCredentials)
@@ -170,7 +197,8 @@ public class DownscopedCredentialsTest {
     assertEquals(OAuth2Utils.HTTP_TRANSPORT_FACTORY, credentials.getTransportFactory());
   }
 
-  private static GoogleCredentials getSourceCredentials(boolean canRefresh) throws IOException {
+  private static GoogleCredentials getServiceAccountSourceCredentials(boolean canRefresh)
+      throws IOException {
     GoogleCredentialsTest.MockTokenServerTransportFactory transportFactory =
         new GoogleCredentialsTest.MockTokenServerTransportFactory();
 
@@ -192,5 +220,20 @@ public class DownscopedCredentialsTest {
     }
 
     return sourceCredentials;
+  }
+
+  private static GoogleCredentials getUserSourceCredentials() {
+    GoogleCredentialsTest.MockTokenServerTransportFactory transportFactory =
+        new GoogleCredentialsTest.MockTokenServerTransportFactory();
+    transportFactory.transport.addClient("clientId", "clientSecret");
+    transportFactory.transport.addRefreshToken("refreshToken", "accessToken");
+    AccessToken accessToken = new AccessToken("accessToken", new Date());
+    return UserCredentials.newBuilder()
+        .setClientId("clientId")
+        .setClientSecret("clientSecret")
+        .setRefreshToken("refreshToken")
+        .setAccessToken(accessToken)
+        .setHttpTransportFactory(transportFactory)
+        .build();
   }
 }
