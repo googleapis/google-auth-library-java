@@ -60,13 +60,13 @@ public final class StsRequestHandlerTest {
       "https://www.googleapis.com/auth/cloud-platform";
   private static final String DEFAULT_REQUESTED_TOKEN_TYPE =
       "urn:ietf:params:oauth:token-type:access_token";
-  private static final String TOKEN_URL = "https://www.sts.google.com";
+  private static final String TOKEN_URL = "https://sts.googleapis.com/v1/token";
 
-  private MockExternalAccountCredentialsTransport transport;
+  private MockStsTransport transport;
 
   @Before
   public void setup() {
-    transport = new MockExternalAccountCredentialsTransport();
+    transport = new MockStsTransport();
   }
 
   @Test
@@ -247,5 +247,32 @@ public final class StsRequestHandlerTest {
               }
             });
     assertEquals(e, thrownException);
+  }
+
+  @Test
+  public void exchangeToken_noExpiresInReturned() throws IOException {
+    // Don't return expires in. This happens in the CAB flow when the subject token does not belong
+    // to a service account.
+    transport.setReturnExpiresIn(/* returnExpiresIn= */ false);
+
+    StsTokenExchangeRequest stsTokenExchangeRequest =
+        StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType")
+            .setScopes(Arrays.asList(CLOUD_PLATFORM_SCOPE))
+            .build();
+
+    StsRequestHandler requestHandler =
+        StsRequestHandler.newBuilder(
+                TOKEN_URL, stsTokenExchangeRequest, transport.createRequestFactory())
+            .build();
+
+    StsTokenExchangeResponse response = requestHandler.exchangeToken();
+
+    // Validate response.
+    assertEquals(transport.getAccessToken(), response.getAccessToken().getTokenValue());
+    assertNull(response.getAccessToken().getExpirationTime());
+
+    assertEquals(transport.getTokenType(), response.getTokenType());
+    assertEquals(transport.getIssuedTokenType(), response.getIssuedTokenType());
+    assertNull(response.getExpiresInSeconds());
   }
 }
