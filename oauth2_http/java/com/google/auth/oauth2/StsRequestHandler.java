@@ -168,13 +168,14 @@ final class StsRequestHandler {
     String issuedTokenType =
         OAuth2Utils.validateString(responseData, "issued_token_type", PARSE_ERROR_PREFIX);
     String tokenType = OAuth2Utils.validateString(responseData, "token_type", PARSE_ERROR_PREFIX);
-    Long expiresInSeconds =
-        OAuth2Utils.validateLong(responseData, "expires_in", PARSE_ERROR_PREFIX);
 
     StsTokenExchangeResponse.Builder builder =
-        StsTokenExchangeResponse.newBuilder(
-            accessToken, issuedTokenType, tokenType, expiresInSeconds);
+        StsTokenExchangeResponse.newBuilder(accessToken, issuedTokenType, tokenType);
 
+    if (responseData.containsKey("expires_in")) {
+      builder.setExpiresInSeconds(
+          OAuth2Utils.validateLong(responseData, "expires_in", PARSE_ERROR_PREFIX));
+    }
     if (responseData.containsKey("refresh_token")) {
       builder.setRefreshToken(
           OAuth2Utils.validateString(responseData, "refresh_token", PARSE_ERROR_PREFIX));
