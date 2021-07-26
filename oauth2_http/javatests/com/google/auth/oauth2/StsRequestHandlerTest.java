@@ -251,7 +251,8 @@ public final class StsRequestHandlerTest {
 
   @Test
   public void exchangeToken_noExpiresInReturned() throws IOException {
-    // Don't return expires in.
+    // Don't return expires in. This happens in the CAB flow when the subject token does not belong
+    // to a service account.
     transport.setReturnExpiresIn(/* returnExpiresIn= */ false);
 
     StsTokenExchangeRequest stsTokenExchangeRequest =

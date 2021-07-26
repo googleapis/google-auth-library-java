@@ -132,8 +132,7 @@ public final class DownscopedCredentials extends OAuth2Credentials {
     AccessToken downscopedAccessToken = handler.exchangeToken().getAccessToken();
 
     // The STS endpoint will only return the expiration time for the downscoped token if the
-    // original access token
-    // represents a service account.
+    // original access token represents a service account.
     // The downscoped token's expiration time will always match the source credential expiration.
     // When no expires_in is returned, we can copy the source credential's expiration time.
     if (downscopedAccessToken.getExpirationTime() == null) {

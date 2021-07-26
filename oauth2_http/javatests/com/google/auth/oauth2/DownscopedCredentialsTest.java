@@ -111,6 +111,11 @@ public class DownscopedCredentialsTest {
 
   @Test
   public void refreshAccessToken_userCredentials_expectExpiresInCopied() throws IOException {
+    // STS only returns expires_in if the source access token belongs to a service account.
+    // For other source credential types, we can copy the source credentials expiration as
+    // the generated downscoped token will always have the same expiration time as the source
+    // credentials.
+
     MockStsTransportFactory transportFactory = new MockStsTransportFactory();
     transportFactory.transport.setReturnExpiresIn(false);
 
