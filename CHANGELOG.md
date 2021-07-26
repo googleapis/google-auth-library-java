@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.27.0](https://www.github.com/googleapis/google-auth-library-java/compare/v0.26.0...v0.27.0) (2021-07-14)
+
+
+### Features
+
+* add Id token support for UserCredentials ([#650](https://www.github.com/googleapis/google-auth-library-java/issues/650)) ([5a8f467](https://www.github.com/googleapis/google-auth-library-java/commit/5a8f4676630854c53aa708a9c8b960770067f858))
+* add impersonation credentials to ADC  ([#613](https://www.github.com/googleapis/google-auth-library-java/issues/613)) ([b9823f7](https://www.github.com/googleapis/google-auth-library-java/commit/b9823f70d7f3f7461b7de40bee06f5e7ba0e797c))
+* Adding functional tests for Service Account  ([#685](https://www.github.com/googleapis/google-auth-library-java/issues/685)) ([dfe118c](https://www.github.com/googleapis/google-auth-library-java/commit/dfe118c261aadf137a3cf47a7acb9892c7a6db4d))
+* allow scopes for self signed jwt ([#689](https://www.github.com/googleapis/google-auth-library-java/issues/689)) ([f4980c7](https://www.github.com/googleapis/google-auth-library-java/commit/f4980c77566bbd5ef4c532acb199d7d484dbcd01))
+
 ## [0.26.0](https://www.github.com/googleapis/google-auth-library-java/compare/v0.25.5...v0.26.0) (2021-05-20)
 
 
