@@ -89,6 +89,18 @@ public class OAuth2CredentialsWithRefreshTest {
   }
 
   @Test
+  public void builder_noExpirationTimeInAccessToken_throws() {
+    try {
+      OAuth2CredentialsWithRefresh.newBuilder()
+          .setAccessToken(new AccessToken("accessToken", null))
+          .build();
+      fail("Should fail as a refresh handler must be provided.");
+    } catch (IllegalArgumentException e) {
+      // Expected.
+    }
+  }
+
+  @Test
   public void refreshAccessToken_delegateToRefreshHandler() throws IOException {
     final AccessToken refreshedToken = new AccessToken("refreshedAccessToken", new Date());
     OAuth2CredentialsWithRefresh credentials =

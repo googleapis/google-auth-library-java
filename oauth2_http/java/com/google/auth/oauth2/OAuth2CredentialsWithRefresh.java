@@ -52,6 +52,13 @@ public class OAuth2CredentialsWithRefresh extends OAuth2Credentials {
   protected OAuth2CredentialsWithRefresh(
       AccessToken accessToken, OAuth2RefreshHandler refreshHandler) {
     super(accessToken);
+
+    // If no expirationTime is provided, the token will never be refreshed.
+    if (accessToken != null && accessToken.getExpirationTime() == null) {
+      throw new IllegalArgumentException(
+          "The provided access token must contain the expiration time.");
+    }
+
     this.refreshHandler = checkNotNull(refreshHandler);
   }
 
@@ -77,12 +84,17 @@ public class OAuth2CredentialsWithRefresh extends OAuth2Credentials {
 
     private Builder() {}
 
+    /**
+     * Sets the {@link AccessToken} to be consumed. It must contain an expiration time otherwise an
+     * {@link IllegalArgumentException} will be thrown.
+     */
     @Override
     public Builder setAccessToken(AccessToken token) {
       super.setAccessToken(token);
       return this;
     }
 
+    /** Sets the {@link OAuth2RefreshHandler} to be used for token refreshes. */
     public Builder setRefreshHandler(OAuth2RefreshHandler handler) {
       this.refreshHandler = handler;
       return this;
