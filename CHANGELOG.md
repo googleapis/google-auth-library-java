@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.0.0](https://www.github.com/googleapis/google-auth-library-java/compare/v0.27.0...v1.0.0) (2021-07-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* updating google-auth-library-java min Java version to 1.8
+
+### Features
+
+* GA release of google-auth-library-java (ver 1.0.0) ([#704](https://www.github.com/googleapis/google-auth-library-java/issues/704)) ([3d9874f](https://www.github.com/googleapis/google-auth-library-java/commit/3d9874f1c91dfa10d6f72d41e922b3f1ec654943))
+* updating google-auth-library-java min Java version to 1.8 ([3d9874f](https://www.github.com/googleapis/google-auth-library-java/commit/3d9874f1c91dfa10d6f72d41e922b3f1ec654943))
+
+
+### Bug Fixes
+
+* Add shopt -s nullglob to dependencies script ([#693](https://www.github.com/googleapis/google-auth-library-java/issues/693)) ([c5aa708](https://www.github.com/googleapis/google-auth-library-java/commit/c5aa7084d9ca817a53cf6bac14d442adeeaeb310))
+* Update dependencies.sh to not break on mac ([c5aa708](https://www.github.com/googleapis/google-auth-library-java/commit/c5aa7084d9ca817a53cf6bac14d442adeeaeb310))
+
 ## [0.27.0](https://www.github.com/googleapis/google-auth-library-java/compare/v0.26.0...v0.27.0) (2021-07-14)
 
 
