@@ -10,7 +10,6 @@ branchProtectionRules:
       - linkage-monitor
       - lint
       - clirr
-      - units (7)
       - units (8)
       - units (11)
       - cla/google
@@ -26,6 +25,20 @@ branchProtectionRules:
       - lint
       - clirr
       - units (7)
+      - units (8)
+      - units (11)
+      - cla/google
+    requiredApprovingReviewCount: 1
+    requiresCodeOwnerReviews: true
+    requiresStrictStatusChecks: true
+  - pattern: java7
+    isAdminEnforced: true
+    requiredStatusCheckContexts:
+      - dependencies (8)
+      - dependencies (11)
+      - linkage-monitor
+      - lint
+      - clirr
       - units (8)
       - units (11)
       - cla/google
