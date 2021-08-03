@@ -53,8 +53,6 @@ import javax.annotation.Nullable;
 final class StsRequestHandler {
   private static final String TOKEN_EXCHANGE_GRANT_TYPE =
       "urn:ietf:params:oauth:grant-type:token-exchange";
-  private static final String REQUESTED_TOKEN_TYPE =
-      "urn:ietf:params:oauth:token-type:access_token";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token response.";
 
   private final String tokenExchangeEndpoint;
@@ -140,7 +138,9 @@ final class StsRequestHandler {
     // Set the requested token type, which defaults to
     // urn:ietf:params:oauth:token-type:access_token.
     String requestTokenType =
-        request.hasRequestedTokenType() ? request.getRequestedTokenType() : REQUESTED_TOKEN_TYPE;
+        request.hasRequestedTokenType()
+            ? request.getRequestedTokenType()
+            : OAuth2Utils.TOKEN_TYPE_ACCESS_TOKEN;
     tokenRequest.set("requested_token_type", requestTokenType);
 
     // Add other optional params, if possible.
@@ -168,13 +168,14 @@ final class StsRequestHandler {
     String issuedTokenType =
         OAuth2Utils.validateString(responseData, "issued_token_type", PARSE_ERROR_PREFIX);
     String tokenType = OAuth2Utils.validateString(responseData, "token_type", PARSE_ERROR_PREFIX);
-    Long expiresInSeconds =
-        OAuth2Utils.validateLong(responseData, "expires_in", PARSE_ERROR_PREFIX);
 
     StsTokenExchangeResponse.Builder builder =
-        StsTokenExchangeResponse.newBuilder(
-            accessToken, issuedTokenType, tokenType, expiresInSeconds);
+        StsTokenExchangeResponse.newBuilder(accessToken, issuedTokenType, tokenType);
 
+    if (responseData.containsKey("expires_in")) {
+      builder.setExpiresInSeconds(
+          OAuth2Utils.validateLong(responseData, "expires_in", PARSE_ERROR_PREFIX));
+    }
     if (responseData.containsKey("refresh_token")) {
       builder.setRefreshToken(
           OAuth2Utils.validateString(responseData, "refresh_token", PARSE_ERROR_PREFIX));

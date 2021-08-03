@@ -46,8 +46,8 @@ final class StsTokenExchangeResponse {
   private final AccessToken accessToken;
   private final String issuedTokenType;
   private final String tokenType;
-  private final Long expiresInSeconds;
 
+  @Nullable private final Long expiresInSeconds;
   @Nullable private final String refreshToken;
   @Nullable private final List<String> scopes;
 
@@ -55,22 +55,25 @@ final class StsTokenExchangeResponse {
       String accessToken,
       String issuedTokenType,
       String tokenType,
-      Long expiresInSeconds,
+      @Nullable Long expiresInSeconds,
       @Nullable String refreshToken,
       @Nullable List<String> scopes) {
     checkNotNull(accessToken);
-    this.expiresInSeconds = checkNotNull(expiresInSeconds);
-    long expiresAtMilliseconds = System.currentTimeMillis() + expiresInSeconds * 1000L;
-    this.accessToken = new AccessToken(accessToken, new Date(expiresAtMilliseconds));
+
+    this.expiresInSeconds = expiresInSeconds;
+    Long expiresAtMilliseconds =
+        expiresInSeconds == null ? null : System.currentTimeMillis() + expiresInSeconds * 1000L;
+    Date date = expiresAtMilliseconds == null ? null : new Date(expiresAtMilliseconds);
+    this.accessToken = new AccessToken(accessToken, date);
+
     this.issuedTokenType = checkNotNull(issuedTokenType);
     this.tokenType = checkNotNull(tokenType);
     this.refreshToken = refreshToken;
     this.scopes = scopes;
   }
 
-  public static Builder newBuilder(
-      String accessToken, String issuedTokenType, String tokenType, Long expiresIn) {
-    return new Builder(accessToken, issuedTokenType, tokenType, expiresIn);
+  public static Builder newBuilder(String accessToken, String issuedTokenType, String tokenType) {
+    return new Builder(accessToken, issuedTokenType, tokenType);
   }
 
   public AccessToken getAccessToken() {
@@ -85,6 +88,7 @@ final class StsTokenExchangeResponse {
     return tokenType;
   }
 
+  @Nullable
   public Long getExpiresInSeconds() {
     return expiresInSeconds;
   }
@@ -106,17 +110,20 @@ final class StsTokenExchangeResponse {
     private final String accessToken;
     private final String issuedTokenType;
     private final String tokenType;
-    private final Long expiresInSeconds;
 
+    @Nullable private Long expiresInSeconds;
     @Nullable private String refreshToken;
     @Nullable private List<String> scopes;
 
-    private Builder(
-        String accessToken, String issuedTokenType, String tokenType, Long expiresInSeconds) {
+    private Builder(String accessToken, String issuedTokenType, String tokenType) {
       this.accessToken = accessToken;
       this.issuedTokenType = issuedTokenType;
       this.tokenType = tokenType;
+    }
+
+    public StsTokenExchangeResponse.Builder setExpiresInSeconds(long expiresInSeconds) {
       this.expiresInSeconds = expiresInSeconds;
+      return this;
     }
 
     public StsTokenExchangeResponse.Builder setRefreshToken(String refreshToken) {
