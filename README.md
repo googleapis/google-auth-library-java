@@ -377,6 +377,141 @@ ExternalAccountCredentials credentials =
     ExternalAccountCredentials.fromStream(new FileInputStream("/path/to/credentials.json"));
 ```
 
+### Downscoping with Credential Access Boundaries
+
+[Downscoping with Credential Access Boundaries](https://cloud.google.com/iam/docs/downscoping-short-lived-credentials)
+enables the ability to downscope, or restrict, the Identity and Access Management (IAM) permissions
+that a short-lived credential can use for Cloud Storage.
+
+The `DownscopedCredentials` class can be used to produce a downscoped access token from a 
+`CredentialAccessBoundary` and a source credential. The Credential Access Boundary specifies which
+resources the newly created credential can access, as well as an upper bound on the permissions that
+are available on each resource. Using downscoped credentials ensures tokens in flight always have
+the least privileges (Principle of Least Privilege).
+
+The snippet below shows how to initialize a CredentialAccessBoundary with one AccessBoundaryRule 
+which specifies that the downscoped token will have readonly access to objects starting with
+"customer-a" in bucket "bucket-123":
+```java
+// Create the AccessBoundaryRule.
+String availableResource = "//storage.googleapis.com/projects/_/buckets/bucket-123";
+String availablePermission = "inRole:roles/storage.objectViewer";
+String expression =  "resource.name.startsWith('projects/_/buckets/bucket-123/objects/customer-a')";
+
+CredentialAccessBoundary.AccessBoundaryRule rule =
+    CredentialAccessBoundary.AccessBoundaryRule.newBuilder()
+        .setAvailableResource(availableResource)
+        .addAvailablePermission(availablePermission)
+        .setAvailabilityCondition(
+            new AvailabilityCondition(expression, /* title= */ null, /* description= */ null))
+        .build();
+
+// Create the CredentialAccessBoundary with the rule.
+CredentialAccessBoundary credentialAccessBoundary = 
+        CredentialAccessBoundary.newBuilder().addRule(rule).build();
+```
+
+The common pattern of usage is to have a token broker with elevated access generate these downscoped
+credentials from higher access source credentials and pass the downscoped short-lived access tokens
+to a token consumer via some secure authenticated channel for limited access to Google Cloud Storage
+resources.
+
+Using the CredentialAccessBoundary created above in the Token Broker:
+```java
+// Retrieve the source credentials from ADC.
+GoogleCredentials sourceCredentials = GoogleCredentials.getApplicationDefault();
+
+// Initialize the DownscopedCredentials class.
+DownscopedCredentials downscopedCredentials =
+    DownscopedCredentials.newBuilder()
+        .setSourceCredential(credentials)
+        .setCredentialAccessBoundary(credentialAccessBoundary)
+        .build();
+
+// Retrieve the downscoped access token.
+// This will need to be passed to the Token Consumer.
+AccessToken downscopedAccessToken = downscopedCredentials.refreshAccessToken();
+```
+
+A token broker can be set up on a server in a private network. Various workloads 
+(token consumers) in the same network will send authenticated requests to that broker for downscoped
+tokens to access or modify specific google cloud storage buckets.
+
+The broker will instantiate downscoped credentials instances that can be used to generate short 
+lived downscoped access tokens which will be passed to the token consumer. 
+
+Putting it all together:
+```java
+// Retrieve the source credentials from ADC.
+GoogleCredentials sourceCredentials = GoogleCredentials.getApplicationDefault();
+
+// Create an Access Boundary Rule which will restrict the downscoped token to having readonly
+// access to objects starting with "customer-a" in bucket "bucket-123".
+String availableResource = "//storage.googleapis.com/projects/_/buckets/bucket-123";
+String availablePermission = "inRole:roles/storage.objectViewer";
+String expression =  "resource.name.startsWith('projects/_/buckets/bucket-123/objects/customer-a')";
+        
+CredentialAccessBoundary.AccessBoundaryRule rule =
+    CredentialAccessBoundary.AccessBoundaryRule.newBuilder()
+        .setAvailableResource(availableResource)
+        .addAvailablePermission(availablePermission)
+        .setAvailabilityCondition(
+            new AvailabilityCondition(expression, /* title= */ null, /* description= */ null))
+        .build();
+
+// Initialize the DownscopedCredentials class.
+DownscopedCredentials downscopedCredentials =
+    DownscopedCredentials.newBuilder()
+        .setSourceCredential(credentials)
+        .setCredentialAccessBoundary(CredentialAccessBoundary.newBuilder().addRule(rule).build())
+        .build();
+
+// Retrieve the downscoped access token.
+// This will need to be passed to the Token Consumer.
+AccessToken downscopedAccessToken = downscopedCredentials.refreshAccessToken();
+```
+
+These downscoped access tokens can be used by the Token Consumer via `OAuth2Credentials` or
+`OAuth2CredentialsWithRefresh`. This credential can then be used to initialize a storage client 
+instance to access Google Cloud Storage resources with restricted access.
+
+```java
+// You can pass an `OAuth2RefreshHandler` to `OAuth2CredentialsWithRefresh` which will allow the
+// library to seamlessly handle downscoped token refreshes on expiration.
+OAuth2CredentialsWithRefresh.OAuth2RefreshHandler handler = 
+        new OAuth2CredentialsWithRefresh.OAuth2RefreshHandler() {
+    @Override
+    public AccessToken refreshAccessToken() {
+      // Add the logic here that retrieves the token from your Token Broker.
+      return accessToken;
+    }
+};
+
+// Downscoped token retrieved from token broker.
+AccessToken downscopedToken = handler.refreshAccessToken();
+
+// Build the OAuth2CredentialsWithRefresh from the downscoped token and pass a refresh handler 
+// to handle token expiration. Passing the original downscoped token or the expiry here is optional,
+// as the refresh_handler will generate the downscoped token on demand.
+OAuth2CredentialsWithRefresh credentials =
+    OAuth2CredentialsWithRefresh.newBuilder()
+        .setAccessToken(downscopedToken)
+        .setRefreshHandler(handler)
+        .build();
+
+// Use the credentials with the Cloud Storage SDK.
+StorageOptions options = StorageOptions.newBuilder().setCredentials(credentials).build();
+Storage storage = options.getService();
+
+// Call GCS APIs.
+// Since we passed the downscoped credential, we will have have limited readonly access to objects
+// starting with "customer-a" in bucket "bucket-123".
+storage.get(...)
+```
+
+Note: Only Cloud Storage supports Credential Access Boundaries. Other Google Cloud services do not
+support this feature.
+
 ## Configuring a Proxy
 
 For HTTP clients, a basic proxy can be configured by using `http.proxyHost` and related system properties as documented

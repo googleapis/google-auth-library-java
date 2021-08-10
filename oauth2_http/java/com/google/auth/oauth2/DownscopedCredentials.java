@@ -64,7 +64,7 @@ import java.util.Arrays;
  *
  * DownscopedCredentials downscopedCredentials =
  *     DownscopedCredentials.newBuilder()
- *         .setSourceCredential(credentials)
+ *         .setSourceCredential(sourceCredentials)
  *         .setCredentialAccessBoundary(
  *             CredentialAccessBoundary.newBuilder().addRule(rule).build())
  *         .build();
