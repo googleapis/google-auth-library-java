@@ -59,6 +59,8 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class IdentityPoolCredentialsTest {
 
+  private static final String STS_URL = "https://sts.googleapis.com";
+
   private static final Map<String, Object> FILE_CREDENTIAL_SOURCE_MAP =
       new HashMap<String, Object>() {
         {
@@ -75,7 +77,7 @@ public class IdentityPoolCredentialsTest {
               .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
               .setAudience("audience")
               .setSubjectTokenType("subjectTokenType")
-              .setTokenUrl("tokenUrl")
+              .setTokenUrl(STS_URL)
               .setTokenInfoUrl("tokenInfoUrl")
               .setCredentialSource(FILE_CREDENTIAL_SOURCE)
               .build();
@@ -422,9 +424,9 @@ public class IdentityPoolCredentialsTest {
                 .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
                 .setAudience("audience")
                 .setSubjectTokenType("subjectTokenType")
-                .setTokenUrl("tokenUrl")
-                .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+                .setTokenUrl(STS_URL)
                 .setTokenInfoUrl("tokenInfoUrl")
+                .setCredentialSource(FILE_CREDENTIAL_SOURCE)
                 .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
                 .setQuotaProjectId("quotaProjectId")
                 .setClientId("clientId")
@@ -434,7 +436,7 @@ public class IdentityPoolCredentialsTest {
 
     assertEquals("audience", credentials.getAudience());
     assertEquals("subjectTokenType", credentials.getSubjectTokenType());
-    assertEquals(credentials.getTokenUrl(), "tokenUrl");
+    assertEquals(credentials.getTokenUrl(), STS_URL);
     assertEquals(credentials.getTokenInfoUrl(), "tokenInfoUrl");
     assertEquals(
         credentials.getServiceAccountImpersonationUrl(), SERVICE_ACCOUNT_IMPERSONATION_URL);

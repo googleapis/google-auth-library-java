@@ -68,7 +68,7 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
   private static final String AWS_CREDENTIALS_URL = "https://www.aws-credentials.com";
   private static final String AWS_REGION_URL = "https://www.aws-region.com";
   private static final String METADATA_SERVER_URL = "https://www.metadata.google.com";
-  private static final String STS_URL = "https://www.sts.google.com";
+  private static final String STS_URL = "https://sts.googleapis.com";
 
   private static final String SUBJECT_TOKEN = "subjectToken";
   private static final String TOKEN_TYPE = "Bearer";

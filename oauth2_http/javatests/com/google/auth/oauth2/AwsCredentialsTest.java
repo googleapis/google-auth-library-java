@@ -58,6 +58,8 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class AwsCredentialsTest {
 
+  private static final String STS_URL = "https://sts.googleapis.com";
+
   private static final String GET_CALLER_IDENTITY_URL =
       "https://sts.amazonaws.com?Action=GetCallerIdentity&Version=2011-06-15";
 
@@ -83,7 +85,7 @@ public class AwsCredentialsTest {
               .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
               .setAudience("audience")
               .setSubjectTokenType("subjectTokenType")
-              .setTokenUrl("tokenUrl")
+              .setTokenUrl(STS_URL)
               .setTokenInfoUrl("tokenInfoUrl")
               .setCredentialSource(AWS_CREDENTIAL_SOURCE)
               .build();
@@ -495,7 +497,8 @@ public class AwsCredentialsTest {
                 .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
                 .setAudience("audience")
                 .setSubjectTokenType("subjectTokenType")
-                .setTokenUrl("tokenUrl")
+                .setTokenUrl(STS_URL)
+                .setTokenInfoUrl("tokenInfoUrl")
                 .setCredentialSource(AWS_CREDENTIAL_SOURCE)
                 .setTokenInfoUrl("tokenInfoUrl")
                 .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
@@ -507,7 +510,7 @@ public class AwsCredentialsTest {
 
     assertEquals("audience", credentials.getAudience());
     assertEquals("subjectTokenType", credentials.getSubjectTokenType());
-    assertEquals(credentials.getTokenUrl(), "tokenUrl");
+    assertEquals(credentials.getTokenUrl(), STS_URL);
     assertEquals(credentials.getTokenInfoUrl(), "tokenInfoUrl");
     assertEquals(
         credentials.getServiceAccountImpersonationUrl(), SERVICE_ACCOUNT_IMPERSONATION_URL);
