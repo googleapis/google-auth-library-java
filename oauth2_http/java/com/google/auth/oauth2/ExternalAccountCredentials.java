@@ -474,7 +474,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     }
 
     for (Pattern pattern : patterns) {
-      Matcher match = pattern.matcher(uri.getHost());
+      Matcher match = pattern.matcher(uri.getHost().toLowerCase(Locale.US));
       if (match.matches()) {
         return true;
       }

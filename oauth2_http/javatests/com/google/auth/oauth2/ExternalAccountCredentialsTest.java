@@ -49,6 +49,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import javax.annotation.Nullable;
 import org.junit.Before;
@@ -340,6 +341,7 @@ public class ExternalAccountCredentialsTest {
 
     for (String url : validUrls) {
       ExternalAccountCredentials.validateTokenUrl(url);
+      ExternalAccountCredentials.validateTokenUrl(url.toUpperCase(Locale.US));
     }
   }
 
@@ -350,6 +352,7 @@ public class ExternalAccountCredentialsTest {
             "https://iamcredentials.googleapis.com",
             "sts.googleapis.com",
             "https://",
+            "https://st.s.googleapis.com",
             "https://us-eas\\t-1.sts.googleapis.com",
             "https:/us-east-1.sts.googleapis.com",
             "https://US-WE/ST-1-sts.googleapis.com",
@@ -362,7 +365,8 @@ public class ExternalAccountCredentialsTest {
             "https://sts.googleapis.comevil.com",
             "hhttps://us-east-1.sts.googleapis.com",
             "https://us- -1.sts.googleapis.com",
-            "https://-sts.googleapis.com");
+            "https://-sts.googleapis.com",
+            "https://us-east-1.sts.googleapis.com.evil.com");
 
     for (String url : invalidUrls) {
       try {
@@ -389,6 +393,8 @@ public class ExternalAccountCredentialsTest {
 
     for (String url : validUrls) {
       ExternalAccountCredentials.validateServiceAccountImpersonationInfoUrl(url);
+      ExternalAccountCredentials.validateServiceAccountImpersonationInfoUrl(
+          url.toUpperCase(Locale.US));
     }
   }
 
@@ -399,6 +405,7 @@ public class ExternalAccountCredentialsTest {
             "https://sts.googleapis.com",
             "iamcredentials.googleapis.com",
             "https://",
+            "https://iamcre.dentials.googleapis.com",
             "https://us-eas\t-1.iamcredentials.googleapis.com",
             "https:/us-east-1.iamcredentials.googleapis.com",
             "https://US-WE/ST-1-iamcredentials.googleapis.com",
@@ -411,7 +418,8 @@ public class ExternalAccountCredentialsTest {
             "https://iamcredentials.googleapis.comevil.com",
             "hhttps://us-east-1.iamcredentials.googleapis.com",
             "https://us- -1.iamcredentials.googleapis.com",
-            "https://-sts.googleapis.com");
+            "https://-iamcredentials.googleapis.com",
+            "https://us-east-1.iamcredentials.googleapis.com.evil.com");
 
     for (String url : invalidUrls) {
       try {
