@@ -403,7 +403,7 @@ CredentialAccessBoundary.AccessBoundaryRule rule =
         .setAvailableResource(availableResource)
         .addAvailablePermission(availablePermission)
         .setAvailabilityCondition(
-            new AvailabilityCondition(expression, /* title= */ null, /* description= */ null))
+        CredentialAccessBoundary.AccessBoundaryRule.AvailabilityCondition.newBuilder().setExpression(expression).build())
         .build();
 
 // Create the CredentialAccessBoundary with the rule.
@@ -419,7 +419,8 @@ resources.
 Using the CredentialAccessBoundary created above in the Token Broker:
 ```java
 // Retrieve the source credentials from ADC.
-GoogleCredentials sourceCredentials = GoogleCredentials.getApplicationDefault();
+GoogleCredentials sourceCredentials = GoogleCredentials.getApplicationDefault()
+        .createScoped("https://www.googleapis.com/auth/cloud-platform");
 
 // Initialize the DownscopedCredentials class.
 DownscopedCredentials downscopedCredentials =
@@ -443,7 +444,8 @@ lived downscoped access tokens which will be passed to the token consumer.
 Putting it all together:
 ```java
 // Retrieve the source credentials from ADC.
-GoogleCredentials sourceCredentials = GoogleCredentials.getApplicationDefault();
+GoogleCredentials sourceCredentials = GoogleCredentials.getApplicationDefault()
+        .createScoped("https://www.googleapis.com/auth/cloud-platform");
 
 // Create an Access Boundary Rule which will restrict the downscoped token to having readonly
 // access to objects starting with "customer-a" in bucket "bucket-123".

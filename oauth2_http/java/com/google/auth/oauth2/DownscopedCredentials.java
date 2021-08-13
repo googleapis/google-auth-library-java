@@ -37,7 +37,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
-import java.util.Arrays;
 
 /**
  * DownscopedCredentials enables the ability to downscope, or restrict, the Identity and Access
@@ -53,7 +52,8 @@ import java.util.Arrays;
  * <p>Usage:
  *
  * <pre><code>
- * GoogleCredentials sourceCredentials = GoogleCredentials.getApplicationDefault();
+ * GoogleCredentials sourceCredentials = GoogleCredentials.getApplicationDefault()
+ *    .createScoped("https://www.googleapis.com/auth/cloud-platform");
  *
  * CredentialAccessBoundary.AccessBoundaryRule rule =
  *     CredentialAccessBoundary.AccessBoundaryRule.newBuilder()
@@ -88,9 +88,6 @@ public final class DownscopedCredentials extends OAuth2Credentials {
 
   private static final String TOKEN_EXCHANGE_ENDPOINT = "https://sts.googleapis.com/v1/token";
 
-  private static final String CLOUD_PLATFORM_SCOPE =
-      "https://www.googleapis.com/auth/cloud-platform";
-
   private final GoogleCredentials sourceCredential;
   private final CredentialAccessBoundary credentialAccessBoundary;
   private final transient HttpTransportFactory transportFactory;
@@ -103,8 +100,7 @@ public final class DownscopedCredentials extends OAuth2Credentials {
         firstNonNull(
             transportFactory,
             getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
-    this.sourceCredential =
-        checkNotNull(sourceCredential.createScoped(Arrays.asList(CLOUD_PLATFORM_SCOPE)));
+    this.sourceCredential = checkNotNull(sourceCredential);
     this.credentialAccessBoundary = checkNotNull(credentialAccessBoundary);
   }
 

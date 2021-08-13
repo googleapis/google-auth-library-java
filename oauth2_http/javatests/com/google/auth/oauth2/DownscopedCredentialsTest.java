@@ -224,7 +224,7 @@ public class DownscopedCredentialsTest {
       transportFactory.transport.setError(new IOException());
     }
 
-    return sourceCredentials;
+    return sourceCredentials.createScoped("https://www.googleapis.com/auth/cloud-platform");
   }
 
   private static GoogleCredentials getUserSourceCredentials() {
