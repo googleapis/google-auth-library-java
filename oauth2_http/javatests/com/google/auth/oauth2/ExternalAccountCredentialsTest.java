@@ -44,10 +44,12 @@ import com.google.auth.oauth2.ExternalAccountCredentialsTest.TestExternalAccount
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import javax.annotation.Nullable;
 import org.junit.Before;
@@ -59,7 +61,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class ExternalAccountCredentialsTest {
 
-  private static final String STS_URL = "https://www.sts.google.com";
+  private static final String STS_URL = "https://sts.googleapis.com";
 
   static class MockExternalAccountCredentialsTransportFactory implements HttpTransportFactory {
 
@@ -176,7 +178,7 @@ public class ExternalAccountCredentialsTest {
   @Test
   public void fromJson_invalidServiceAccountImpersonationUrl_throws() {
     GenericJson json = buildJsonIdentityPoolCredential();
-    json.put("service_account_impersonation_url", "invalid_url");
+    json.put("service_account_impersonation_url", "https://iamcredentials.googleapis.com");
 
     try {
       ExternalAccountCredentials.fromJson(json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
@@ -196,6 +198,48 @@ public class ExternalAccountCredentialsTest {
       fail("Exception should be thrown.");
     } catch (NullPointerException e) {
       // Expected.
+    }
+  }
+
+  @Test
+  public void constructor_invalidTokenUrl() {
+    try {
+      new TestExternalAccountCredentials(
+          transportFactory,
+          "audience",
+          "subjectTokenType",
+          "tokenUrl",
+          new TestCredentialSource(new HashMap<String, Object>()),
+          STS_URL,
+          /* serviceAccountImpersonationUrl= */ null,
+          "quotaProjectId",
+          /* clientId= */ null,
+          /* clientSecret= */ null,
+          /* scopes= */ null);
+      fail("Should have failed since an invalid token URL was passed.");
+    } catch (IllegalArgumentException e) {
+      assertEquals("The provided token URL is invalid.", e.getMessage());
+    }
+  }
+
+  @Test
+  public void constructor_invalidServiceAccountImpersonationUrl() {
+    try {
+      new TestExternalAccountCredentials(
+          transportFactory,
+          "audience",
+          "subjectTokenType",
+          "tokenUrl",
+          new TestCredentialSource(new HashMap<String, Object>()),
+          /* tokenInfoUrl= */ null,
+          "serviceAccountImpersonationUrl",
+          "quotaProjectId",
+          /* clientId= */ null,
+          /* clientSecret= */ null,
+          /* scopes= */ null);
+      fail("Should have failed since an invalid token URL was passed.");
+    } catch (IllegalArgumentException e) {
+      assertEquals("The provided token URL is invalid.", e.getMessage());
     }
   }
 
@@ -267,7 +311,7 @@ public class ExternalAccountCredentialsTest {
             transportFactory,
             "audience",
             "subjectTokenType",
-            "tokenUrl",
+            STS_URL,
             new TestCredentialSource(new HashMap<String, Object>()),
             "tokenInfoUrl",
             /* serviceAccountImpersonationUrl= */ null,
@@ -280,6 +324,113 @@ public class ExternalAccountCredentialsTest {
         testCredentials.getRequestMetadata(URI.create("http://googleapis.com/foo/bar"));
 
     assertEquals("quotaProjectId", requestMetadata.get("x-goog-user-project").get(0));
+  }
+
+  @Test
+  public void validateTokenUrl_validUrls() {
+    List<String> validUrls =
+        Arrays.asList(
+            "https://sts.googleapis.com",
+            "https://us-east-1.sts.googleapis.com",
+            "https://US-EAST-1.sts.googleapis.com",
+            "https://sts.us-east-1.googleapis.com",
+            "https://sts.US-WEST-1.googleapis.com",
+            "https://us-east-1-sts.googleapis.com",
+            "https://US-WEST-1-sts.googleapis.com",
+            "https://us-west-1-sts.googleapis.com/path?query");
+
+    for (String url : validUrls) {
+      ExternalAccountCredentials.validateTokenUrl(url);
+      ExternalAccountCredentials.validateTokenUrl(url.toUpperCase(Locale.US));
+    }
+  }
+
+  @Test
+  public void validateTokenUrl_invalidUrls() {
+    List<String> invalidUrls =
+        Arrays.asList(
+            "https://iamcredentials.googleapis.com",
+            "sts.googleapis.com",
+            "https://",
+            "http://sts.googleapis.com",
+            "https://st.s.googleapis.com",
+            "https://us-eas\\t-1.sts.googleapis.com",
+            "https:/us-east-1.sts.googleapis.com",
+            "https://US-WE/ST-1-sts.googleapis.com",
+            "https://sts-us-east-1.googleapis.com",
+            "https://sts-US-WEST-1.googleapis.com",
+            "testhttps://us-east-1.sts.googleapis.com",
+            "https://us-east-1.sts.googleapis.comevil.com",
+            "https://us-east-1.us-east-1.sts.googleapis.com",
+            "https://us-ea.s.t.sts.googleapis.com",
+            "https://sts.googleapis.comevil.com",
+            "hhttps://us-east-1.sts.googleapis.com",
+            "https://us- -1.sts.googleapis.com",
+            "https://-sts.googleapis.com",
+            "https://us-east-1.sts.googleapis.com.evil.com");
+
+    for (String url : invalidUrls) {
+      try {
+        ExternalAccountCredentials.validateTokenUrl(url);
+        fail("Should have failed since an invalid URL was passed.");
+      } catch (IllegalArgumentException e) {
+        assertEquals("The provided token URL is invalid.", e.getMessage());
+      }
+    }
+  }
+
+  @Test
+  public void validateServiceAccountImpersonationUrls_validUrls() {
+    List<String> validUrls =
+        Arrays.asList(
+            "https://iamcredentials.googleapis.com",
+            "https://us-east-1.iamcredentials.googleapis.com",
+            "https://US-EAST-1.iamcredentials.googleapis.com",
+            "https://iamcredentials.us-east-1.googleapis.com",
+            "https://iamcredentials.US-WEST-1.googleapis.com",
+            "https://us-east-1-iamcredentials.googleapis.com",
+            "https://US-WEST-1-iamcredentials.googleapis.com",
+            "https://us-west-1-iamcredentials.googleapis.com/path?query");
+
+    for (String url : validUrls) {
+      ExternalAccountCredentials.validateServiceAccountImpersonationInfoUrl(url);
+      ExternalAccountCredentials.validateServiceAccountImpersonationInfoUrl(
+          url.toUpperCase(Locale.US));
+    }
+  }
+
+  @Test
+  public void validateServiceAccountImpersonationUrls_invalidUrls() {
+    List<String> invalidUrls =
+        Arrays.asList(
+            "https://sts.googleapis.com",
+            "iamcredentials.googleapis.com",
+            "https://",
+            "http://iamcredentials.googleapis.com",
+            "https://iamcre.dentials.googleapis.com",
+            "https://us-eas\t-1.iamcredentials.googleapis.com",
+            "https:/us-east-1.iamcredentials.googleapis.com",
+            "https://US-WE/ST-1-iamcredentials.googleapis.com",
+            "https://iamcredentials-us-east-1.googleapis.com",
+            "https://iamcredentials-US-WEST-1.googleapis.com",
+            "testhttps://us-east-1.iamcredentials.googleapis.com",
+            "https://us-east-1.iamcredentials.googleapis.comevil.com",
+            "https://us-east-1.us-east-1.iamcredentials.googleapis.com",
+            "https://us-ea.s.t.iamcredentials.googleapis.com",
+            "https://iamcredentials.googleapis.comevil.com",
+            "hhttps://us-east-1.iamcredentials.googleapis.com",
+            "https://us- -1.iamcredentials.googleapis.com",
+            "https://-iamcredentials.googleapis.com",
+            "https://us-east-1.iamcredentials.googleapis.com.evil.com");
+
+    for (String url : invalidUrls) {
+      try {
+        ExternalAccountCredentials.validateServiceAccountImpersonationInfoUrl(url);
+        fail("Should have failed since an invalid URL was passed.");
+      } catch (IllegalArgumentException e) {
+        assertEquals("The provided service account impersonation URL is invalid.", e.getMessage());
+      }
+    }
   }
 
   private GenericJson buildJsonIdentityPoolCredential() {
