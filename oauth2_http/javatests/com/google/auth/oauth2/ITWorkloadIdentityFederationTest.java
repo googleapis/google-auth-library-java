@@ -164,7 +164,7 @@ public final class ITWorkloadIdentityFederationTest {
     config.put("type", "external_account");
     config.put("audience", OIDC_AUDIENCE);
     config.put("subject_token_type", "urn:ietf:params:oauth:token-type:jwt");
-    config.put("token_url", "https://sts.googleapis.com/v1beta/token");
+    config.put("token_url", "https://sts.googleapis.com/v1/token");
     config.put(
         "service_account_impersonation_url",
         String.format(
@@ -183,7 +183,7 @@ public final class ITWorkloadIdentityFederationTest {
     config.put("type", "external_account");
     config.put("audience", AWS_AUDIENCE);
     config.put("subject_token_type", "urn:ietf:params:aws:token-type:aws4_request");
-    config.put("token_url", "https://sts.googleapis.com/v1beta/token");
+    config.put("token_url", "https://sts.googleapis.com/v1/token");
     config.put(
         "service_account_impersonation_url",
         String.format(

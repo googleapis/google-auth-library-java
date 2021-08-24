@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.1.0](https://www.github.com/googleapis/google-auth-library-java/compare/v1.0.0...v1.1.0) (2021-08-17)
+
+
+### Features
+
+* downscoping with credential access boundaries ([#702](https://www.github.com/googleapis/google-auth-library-java/issues/702)) ([aa7ede1](https://www.github.com/googleapis/google-auth-library-java/commit/aa7ede1d1c688ba437798f4204820c0506d5d969))
+
+
+### Bug Fixes
+
+* add validation for the token URL and service account impersonation URL for Workload Identity Federation ([#717](https://www.github.com/googleapis/google-auth-library-java/issues/717)) ([23cb8ef](https://www.github.com/googleapis/google-auth-library-java/commit/23cb8ef778d012bbd452c1dfdac5f096d1af6c95))
+
+
+### Documentation
+
+* updates README for downscoping with CAB ([#716](https://www.github.com/googleapis/google-auth-library-java/issues/716)) ([68bceba](https://www.github.com/googleapis/google-auth-library-java/commit/68bceba21c05870f6eb616cc057ddf0521c581b8))
+
 ## [1.0.0](https://www.github.com/googleapis/google-auth-library-java/compare/v0.27.0...v1.0.0) (2021-07-28)
 
 
