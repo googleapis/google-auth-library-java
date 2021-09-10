@@ -293,22 +293,23 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
    * @return the credentials defined by the JSON
    */
   static ExternalAccountCredentials fromJson(
-      Map<String, Object> json, HttpTransportFactory transportFactory) {
+      Map<String, Object> json, HttpTransportFactory transportFactory) throws IOException {
     checkNotNull(json);
     checkNotNull(transportFactory);
 
     String audience = (String) json.get("audience");
     String subjectTokenType = (String) json.get("subject_token_type");
     String tokenUrl = (String) json.get("token_url");
-    String serviceAccountImpersonationUrl = (String) json.get("service_account_impersonation_url");
 
     Map<String, Object> credentialSourceMap = (Map<String, Object>) json.get("credential_source");
 
     // Optional params.
+    String serviceAccountImpersonationUrl = (String) json.get("service_account_impersonation_url");
     String tokenInfoUrl = (String) json.get("token_info_url");
     String clientId = (String) json.get("client_id");
     String clientSecret = (String) json.get("client_secret");
     String quotaProjectId = (String) json.get("quota_project_id");
+    String userProject = (String) json.get("workforce_pool_user_project");
 
     if (isAwsCredential(credentialSourceMap)) {
       return new AwsCredentials(
@@ -325,19 +326,30 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
           /* scopes= */ null,
           /* environmentProvider= */ null);
     }
-    return new IdentityPoolCredentials(
-        transportFactory,
-        audience,
-        subjectTokenType,
-        tokenUrl,
-        new IdentityPoolCredentialSource(credentialSourceMap),
-        tokenInfoUrl,
-        serviceAccountImpersonationUrl,
-        quotaProjectId,
-        clientId,
-        clientSecret,
-        /* scopes= */ null,
-        /* environmentProvider= */ null);
+
+    // Validate that the userProject parameter, if present, is for a Workforce configuration.
+    // This doesn't validate the if the workforce audience is valid, only if it follows the
+    // workforce pattern.
+    Pattern workforceAudiencePattern =
+        Pattern.compile("^.+/locations/.+/workforcePools/.+/providers/.+$");
+    if (userProject != null && !workforceAudiencePattern.matcher(audience).matches()) {
+      throw new IOException(
+          "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.");
+    }
+
+    return IdentityPoolCredentials.newBuilder()
+        .setWorkforcePoolUserProject(userProject)
+        .setHttpTransportFactory(transportFactory)
+        .setAudience(audience)
+        .setSubjectTokenType(subjectTokenType)
+        .setTokenUrl(tokenUrl)
+        .setTokenInfoUrl(tokenInfoUrl)
+        .setCredentialSource(new IdentityPoolCredentialSource(credentialSourceMap))
+        .setServiceAccountImpersonationUrl(serviceAccountImpersonationUrl)
+        .setQuotaProjectId(quotaProjectId)
+        .setClientId(clientId)
+        .setClientSecret(clientSecret)
+        .build();
   }
 
   private static boolean isAwsCredential(Map<String, Object> credentialSource) {
@@ -362,6 +374,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     StsRequestHandler requestHandler =
         StsRequestHandler.newBuilder(
                 tokenUrl, stsTokenExchangeRequest, transportFactory.create().createRequestFactory())
+            .setInternalOptions(stsTokenExchangeRequest.getInternalOptions())
             .build();
 
     StsTokenExchangeResponse response = requestHandler.exchangeToken();

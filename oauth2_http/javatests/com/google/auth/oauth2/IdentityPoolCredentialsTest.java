@@ -34,6 +34,7 @@ package com.google.auth.oauth2;
 import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
 import static com.google.auth.oauth2.OAuth2Utils.JSON_FACTORY;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import com.google.api.client.http.HttpTransport;
@@ -324,6 +325,38 @@ public class IdentityPoolCredentialsTest {
     AccessToken accessToken = credential.refreshAccessToken();
 
     assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
+  }
+
+  @Test
+  public void refreshAccessToken_internalOptionsSet() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    IdentityPoolCredentials credential =
+        (IdentityPoolCredentials)
+            IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+                .setWorkforcePoolUserProject("userProject")
+                .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setHttpTransportFactory(transportFactory)
+                .setCredentialSource(
+                    buildUrlBasedCredentialSource(transportFactory.transport.getMetadataUrl()))
+                .build();
+
+    AccessToken accessToken = credential.refreshAccessToken();
+
+    assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
+
+    // If the IdentityPoolCredential is initialized with a userProject, it must be passed
+    // to STS via internal options.
+    Map<String, String> query =
+        TestUtils.parseQuery(transportFactory.transport.getRequest().getContentAsString());
+    assertNotNull(query.get("options"));
+
+    GenericJson expectedInternalOptions = new GenericJson();
+    expectedInternalOptions.setFactory(OAuth2Utils.JSON_FACTORY);
+    expectedInternalOptions.put("userProject", "userProject");
+
+    assertEquals(expectedInternalOptions.toString(), query.get("options"));
   }
 
   @Test

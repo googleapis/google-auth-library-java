@@ -33,6 +33,7 @@ package com.google.auth.oauth2;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -138,13 +139,15 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  public void fromJson_identityPoolCredentials() {
+  public void fromJson_identityPoolCredentialsWorkload() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
             buildJsonIdentityPoolCredential(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
 
     assertTrue(credential instanceof IdentityPoolCredentials);
-    assertEquals("audience", credential.getAudience());
+    assertEquals(
+        "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider",
+        credential.getAudience());
     assertEquals("subjectTokenType", credential.getSubjectTokenType());
     assertEquals(STS_URL, credential.getTokenUrl());
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
@@ -152,7 +155,25 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  public void fromJson_awsCredentials() {
+  public void fromJson_identityPoolCredentialsWorkforce() throws IOException {
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(
+            buildJsonIdentityPoolWorkforceCredential(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+
+    assertTrue(credential instanceof IdentityPoolCredentials);
+    assertEquals(
+        "//iam.googleapis.com/projects/123/locations/global/workforcePools/pool/providers/provider",
+        credential.getAudience());
+    assertEquals("subjectTokenType", credential.getSubjectTokenType());
+    assertEquals(STS_URL, credential.getTokenUrl());
+    assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
+    assertEquals(
+        "userProject", ((IdentityPoolCredentials) credential).getWorkforcePoolUserProject());
+    assertNotNull(credential.getCredentialSource());
+  }
+
+  @Test
+  public void fromJson_awsCredentials() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
             buildJsonAwsCredential(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
@@ -170,6 +191,8 @@ public class ExternalAccountCredentialsTest {
     try {
       ExternalAccountCredentials.fromJson(/* json= */ null, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
       fail("Exception should be thrown.");
+    } catch (IOException e) {
+      fail("NullPointerException expected.");
     } catch (NullPointerException e) {
       // Expected.
     }
@@ -183,6 +206,8 @@ public class ExternalAccountCredentialsTest {
     try {
       ExternalAccountCredentials.fromJson(json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
       fail("Exception should be thrown.");
+    } catch (IOException e) {
+      fail("IllegalArgumentException expected.");
     } catch (IllegalArgumentException e) {
       assertEquals(
           "Unable to determine target principal from service account impersonation URL.",
@@ -196,8 +221,39 @@ public class ExternalAccountCredentialsTest {
       ExternalAccountCredentials.fromJson(
           new HashMap<String, Object>(), /* transportFactory= */ null);
       fail("Exception should be thrown.");
+    } catch (IOException e) {
+      fail("NullPointerException expected.");
     } catch (NullPointerException e) {
       // Expected.
+    }
+  }
+
+  @Test
+  public void fromJson_invalidWorkloadAudiences_throws() {
+    List<String> invalidAudiences =
+        Arrays.asList(
+            "//iam.googleapis.com/projects/x23/locations/global/workloadIdentityPools/pool/providers/provider",
+            "//iam.googleapis.com/projects/y16/locations/global/workforcepools/pool/providers/provider",
+            "//iam.googleapis.com/projects/z6/locations/global/workforcePools/providers/provider",
+            "//iam.googleapis.com/projects/aa4/locations/global/workforcePools/providers",
+            "//iam.googleapis.com/projects/b5/locations/global/workforcePools/",
+            "//iam.googleapis.com/projects/6c/locations//workforcePools/providers",
+            "//iam.googleapis.com/projects/df7/notlocations/global/workforcePools/providers",
+            "//iam.googleapis.com/projects/e6/locations/global/workforce/providers");
+
+    for (String audience : invalidAudiences) {
+      try {
+        GenericJson json = buildJsonIdentityPoolCredential();
+        json.put("audience", audience);
+        json.put("workforce_pool_user_project", "userProject");
+
+        ExternalAccountCredentials.fromJson(json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+        fail("Exception should be thrown.");
+      } catch (IOException e) {
+        assertEquals(
+            "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.",
+            e.getMessage());
+      }
     }
   }
 
@@ -255,6 +311,35 @@ public class ExternalAccountCredentialsTest {
         credential.exchangeExternalCredentialForAccessToken(stsTokenExchangeRequest);
 
     assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
+
+    // Validate no internal options set.
+    Map<String, String> query =
+        TestUtils.parseQuery(transportFactory.transport.getRequest().getContentAsString());
+    assertNull(query.get("options"));
+  }
+
+  @Test
+  public void exchangeExternalCredentialForAccessToken_withInternalOptions() throws IOException {
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(buildJsonIdentityPoolCredential(), transportFactory);
+
+    GenericJson internalOptions = new GenericJson();
+    internalOptions.put("key", "value");
+    StsTokenExchangeRequest stsTokenExchangeRequest =
+        StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType")
+            .setInternalOptions(internalOptions.toString())
+            .build();
+
+    AccessToken accessToken =
+        credential.exchangeExternalCredentialForAccessToken(stsTokenExchangeRequest);
+
+    assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
+
+    // Validate internal options set.
+    Map<String, String> query =
+        TestUtils.parseQuery(transportFactory.transport.getRequest().getContentAsString());
+    assertNotNull(query.get("options"));
+    assertEquals(internalOptions.toString(), query.get("options"));
   }
 
   @Test
@@ -435,7 +520,9 @@ public class ExternalAccountCredentialsTest {
 
   private GenericJson buildJsonIdentityPoolCredential() {
     GenericJson json = new GenericJson();
-    json.put("audience", "audience");
+    json.put(
+        "audience",
+        "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider");
     json.put("subject_token_type", "subjectTokenType");
     json.put("token_url", STS_URL);
     json.put("token_info_url", "tokenInfoUrl");
@@ -443,6 +530,15 @@ public class ExternalAccountCredentialsTest {
     Map<String, String> map = new HashMap<>();
     map.put("file", "file");
     json.put("credential_source", map);
+    return json;
+  }
+
+  private GenericJson buildJsonIdentityPoolWorkforceCredential() {
+    GenericJson json = buildJsonIdentityPoolCredential();
+    json.put(
+        "audience",
+        "//iam.googleapis.com/projects/123/locations/global/workforcePools/pool/providers/provider");
+    json.put("workforce_pool_user_project", "userProject");
     return json;
   }
 
