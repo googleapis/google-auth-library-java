@@ -53,6 +53,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -175,6 +176,17 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
         builder.environmentProvider);
     this.identityPoolCredentialSource = (IdentityPoolCredentialSource) builder.credentialSource;
     this.workforcePoolUserProject = builder.workforcePoolUserProject;
+
+    // Validate that the userProject parameter, if present, is for a Workforce configuration.
+    // This doesn't validate the if the workforce audience is valid, only if it follows the
+    // workforce pattern.
+    Pattern workforceAudiencePattern =
+        Pattern.compile("^.+/locations/.+/workforcePools/.+/providers/.+$");
+    if (workforcePoolUserProject != null
+        && !workforceAudiencePattern.matcher(getAudience()).matches()) {
+      throw new IllegalArgumentException(
+          "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.");
+    }
   }
 
   @Nullable

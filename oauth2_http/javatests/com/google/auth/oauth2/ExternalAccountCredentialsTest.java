@@ -139,7 +139,20 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  public void fromJson_identityPoolCredentialsWorkload() throws IOException {
+  public void fromStream_invalidWorkloadAudience_throws() throws IOException {
+    try {
+      GenericJson json = buildJsonIdentityPoolWorkforceCredential();
+      json.put("audience", "invalidAudience");
+      ExternalAccountCredentials credential =
+          ExternalAccountCredentials.fromStream(TestUtils.jsonToInputStream(json));
+      fail("CredentialFormatException should be thrown.");
+    } catch (CredentialFormatException e) {
+      assertEquals("An invalid input stream was provided.", e.getMessage());
+    }
+  }
+
+  @Test
+  public void fromJson_identityPoolCredentialsWorkload() {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
             buildJsonIdentityPoolCredential(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
@@ -155,7 +168,7 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  public void fromJson_identityPoolCredentialsWorkforce() throws IOException {
+  public void fromJson_identityPoolCredentialsWorkforce() {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
             buildJsonIdentityPoolWorkforceCredential(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
@@ -191,8 +204,6 @@ public class ExternalAccountCredentialsTest {
     try {
       ExternalAccountCredentials.fromJson(/* json= */ null, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
       fail("Exception should be thrown.");
-    } catch (IOException e) {
-      fail("NullPointerException expected.");
     } catch (NullPointerException e) {
       // Expected.
     }
@@ -206,8 +217,6 @@ public class ExternalAccountCredentialsTest {
     try {
       ExternalAccountCredentials.fromJson(json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
       fail("Exception should be thrown.");
-    } catch (IOException e) {
-      fail("IllegalArgumentException expected.");
     } catch (IllegalArgumentException e) {
       assertEquals(
           "Unable to determine target principal from service account impersonation URL.",
@@ -221,8 +230,6 @@ public class ExternalAccountCredentialsTest {
       ExternalAccountCredentials.fromJson(
           new HashMap<String, Object>(), /* transportFactory= */ null);
       fail("Exception should be thrown.");
-    } catch (IOException e) {
-      fail("NullPointerException expected.");
     } catch (NullPointerException e) {
       // Expected.
     }
@@ -249,7 +256,7 @@ public class ExternalAccountCredentialsTest {
 
         ExternalAccountCredentials.fromJson(json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
         fail("Exception should be thrown.");
-      } catch (IOException e) {
+      } catch (IllegalArgumentException e) {
         assertEquals(
             "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.",
             e.getMessage());

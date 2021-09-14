@@ -76,7 +76,8 @@ public class IdentityPoolCredentialsTest {
       (IdentityPoolCredentials)
           IdentityPoolCredentials.newBuilder()
               .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-              .setAudience("audience")
+              .setAudience(
+                  "//iam.googleapis.com/projects/123/locations/global/workforcePools/pool/providers/provider")
               .setSubjectTokenType("subjectTokenType")
               .setTokenUrl(STS_URL)
               .setTokenInfoUrl("tokenInfoUrl")
@@ -479,6 +480,40 @@ public class IdentityPoolCredentialsTest {
     assertEquals(credentials.getClientSecret(), "clientSecret");
     assertEquals(credentials.getScopes(), scopes);
     assertEquals(credentials.getEnvironmentProvider(), SystemEnvironmentProvider.getInstance());
+  }
+
+  @Test
+  public void builder_invalidWorkloadAudiences_throws() {
+    List<String> invalidAudiences =
+        Arrays.asList(
+            "//iam.googleapis.com/projects/x23/locations/global/workloadIdentityPools/pool/providers/provider",
+            "//iam.googleapis.com/projects/y16/locations/global/workforcepools/pool/providers/provider",
+            "//iam.googleapis.com/projects/z6/locations/global/workforcePools/providers/provider",
+            "//iam.googleapis.com/projects/aa4/locations/global/workforcePools/providers",
+            "//iam.googleapis.com/projects/b5/locations/global/workforcePools/",
+            "//iam.googleapis.com/projects/6c/locations//workforcePools/providers",
+            "//iam.googleapis.com/projects/df7/notlocations/global/workforcePools/providers",
+            "//iam.googleapis.com/projects/e6/locations/global/workforce/providers");
+
+    for (String audience : invalidAudiences) {
+      try {
+        IdentityPoolCredentials.newBuilder()
+            .setWorkforcePoolUserProject("workforcePoolUserProject")
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .setAudience(audience)
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+            .setQuotaProjectId("quotaProjectId")
+            .build();
+        fail("Exception should be thrown.");
+      } catch (IllegalArgumentException e) {
+        assertEquals(
+            "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.",
+            e.getMessage());
+      }
+    }
   }
 
   static InputStream writeIdentityPoolCredentialsStream(

@@ -280,7 +280,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
         parser.parseAndClose(credentialsStream, StandardCharsets.UTF_8, GenericJson.class);
     try {
       return fromJson(fileContents, transportFactory);
-    } catch (ClassCastException e) {
+    } catch (ClassCastException | IllegalArgumentException e) {
       throw new CredentialFormatException("An invalid input stream was provided.", e);
     }
   }
@@ -293,7 +293,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
    * @return the credentials defined by the JSON
    */
   static ExternalAccountCredentials fromJson(
-      Map<String, Object> json, HttpTransportFactory transportFactory) throws IOException {
+      Map<String, Object> json, HttpTransportFactory transportFactory) {
     checkNotNull(json);
     checkNotNull(transportFactory);
 
@@ -325,16 +325,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
           clientSecret,
           /* scopes= */ null,
           /* environmentProvider= */ null);
-    }
-
-    // Validate that the userProject parameter, if present, is for a Workforce configuration.
-    // This doesn't validate the if the workforce audience is valid, only if it follows the
-    // workforce pattern.
-    Pattern workforceAudiencePattern =
-        Pattern.compile("^.+/locations/.+/workforcePools/.+/providers/.+$");
-    if (userProject != null && !workforceAudiencePattern.matcher(audience).matches()) {
-      throw new IOException(
-          "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.");
     }
 
     return IdentityPoolCredentials.newBuilder()
