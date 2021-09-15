@@ -4,7 +4,7 @@
       "git": {
         "name": ".",
         "remote": "https://github.com/googleapis/google-auth-library-java.git",
-        "sha": "aa7ede1d1c688ba437798f4204820c0506d5d969"
+        "sha": "998b402420f9d309a1d432728c093f2fc7a7d51b"
       }
     },
     {
