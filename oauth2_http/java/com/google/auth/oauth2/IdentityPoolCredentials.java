@@ -177,13 +177,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
     this.identityPoolCredentialSource = (IdentityPoolCredentialSource) builder.credentialSource;
     this.workforcePoolUserProject = builder.workforcePoolUserProject;
 
-    // Validate that the userProject parameter, if present, is for a Workforce configuration.
-    // This doesn't validate the if the workforce audience is valid, only if it follows the
-    // workforce pattern.
-    Pattern workforceAudiencePattern =
-        Pattern.compile("^.+/locations/.+/workforcePools/.+/providers/.+$");
-    if (workforcePoolUserProject != null
-        && !workforceAudiencePattern.matcher(getAudience()).matches()) {
+    if (workforcePoolUserProject != null && !isWorkforcePoolConfiguration()) {
       throw new IllegalArgumentException(
           "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.");
     }
@@ -280,6 +274,19 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       throw new IOException(
           String.format("Error getting subject token from metadata server: %s", e.getMessage()), e);
     }
+  }
+
+  /**
+   * Returns whether or not the current configuration is for Workforce Pools (which enable 3p user
+   * identities, rather than workloads).
+   */
+  private boolean isWorkforcePoolConfiguration() {
+    // This doesn't validate the if the audience is valid, only if it follows the
+    // workforce pattern.
+    Pattern workforceAudiencePattern =
+        Pattern.compile("^.+/locations/.+/workforcePools/.+/providers/.+$");
+    return workforcePoolUserProject != null
+        && workforceAudiencePattern.matcher(getAudience()).matches();
   }
 
   /** Clones the IdentityPoolCredentials with the specified scopes. */
