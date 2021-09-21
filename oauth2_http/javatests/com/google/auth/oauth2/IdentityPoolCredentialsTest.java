@@ -77,7 +77,7 @@ public class IdentityPoolCredentialsTest {
           IdentityPoolCredentials.newBuilder()
               .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
               .setAudience(
-                  "//iam.googleapis.com/projects/123/locations/global/workforcePools/pool/providers/provider")
+                  "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
               .setSubjectTokenType("subjectTokenType")
               .setTokenUrl(STS_URL)
               .setTokenInfoUrl("tokenInfoUrl")
@@ -483,9 +483,10 @@ public class IdentityPoolCredentialsTest {
   }
 
   @Test
-  public void builder_invalidWorkloadAudiences_throws() {
+  public void builder_invalidWorkforceAudiences_throws() {
     List<String> invalidAudiences =
         Arrays.asList(
+            "",
             "//iam.googleapis.com/projects/x23/locations/global/workloadIdentityPools/pool/providers/provider",
             "//iam.googleapis.com/projects/y16/locations/global/workforcepools/pool/providers/provider",
             "//iam.googleapis.com/projects/z6/locations/global/workforcePools/providers/provider",
@@ -513,6 +514,28 @@ public class IdentityPoolCredentialsTest {
             "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.",
             e.getMessage());
       }
+    }
+  }
+
+  @Test
+  public void builder_emptyWorkforceUserProjectWithWorkforceAudience_throws() {
+    try {
+      IdentityPoolCredentials.newBuilder()
+          .setWorkforcePoolUserProject("")
+          .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+          .setAudience(
+              "//iam.googleapis.com/projects/123/locations/global/workforcePools/providers/provider")
+          .setSubjectTokenType("subjectTokenType")
+          .setTokenUrl(STS_URL)
+          .setTokenInfoUrl("tokenInfoUrl")
+          .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+          .setQuotaProjectId("quotaProjectId")
+          .build();
+      fail("Exception should be thrown.");
+    } catch (IllegalArgumentException e) {
+      assertEquals(
+          "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.",
+          e.getMessage());
     }
   }
 

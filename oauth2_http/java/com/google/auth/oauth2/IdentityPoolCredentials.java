@@ -200,9 +200,9 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       stsTokenExchangeRequest.setScopes(new ArrayList<>(scopes));
     }
 
-    // If the workforcePoolUserProject is set, we need to pass it to STS via the the internal
-    // options param.
-    if (workforcePoolUserProject != null && !workforcePoolUserProject.isEmpty()) {
+    // If this credential was initialized with a Workforce configuration then the
+    // workforcePoolUserProject must passed to STS via the the internal options param.
+    if (isWorkforcePoolConfiguration()) {
       GenericJson options = new GenericJson();
       options.setFactory(OAuth2Utils.JSON_FACTORY);
       options.put("userProject", workforcePoolUserProject);
@@ -280,12 +280,12 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
    * Returns whether or not the current configuration is for Workforce Pools (which enable 3p user
    * identities, rather than workloads).
    */
-  private boolean isWorkforcePoolConfiguration() {
-    // This doesn't validate the if the audience is valid, only if it follows the
-    // workforce pattern.
+  public boolean isWorkforcePoolConfiguration() {
     Pattern workforceAudiencePattern =
-        Pattern.compile("^.+/locations/.+/workforcePools/.+/providers/.+$");
+        Pattern.compile(
+            "^//iam.googleapis.com/projects/.+/locations/.+/workforcePools/.+/providers/.+$");
     return workforcePoolUserProject != null
+        && !workforcePoolUserProject.isEmpty()
         && workforceAudiencePattern.matcher(getAudience()).matches();
   }
 
