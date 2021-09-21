@@ -525,8 +525,7 @@ public class IdentityPoolCredentialsTest {
       IdentityPoolCredentials.newBuilder()
           .setWorkforcePoolUserProject("")
           .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-          .setAudience(
-              "//iam.googleapis.com/locations/global/workforcePools/providers/provider")
+          .setAudience("//iam.googleapis.com/locations/global/workforcePools/providers/provider")
           .setSubjectTokenType("subjectTokenType")
           .setTokenUrl(STS_URL)
           .setTokenInfoUrl("tokenInfoUrl")

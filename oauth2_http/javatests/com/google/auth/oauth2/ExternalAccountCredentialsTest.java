@@ -543,8 +543,7 @@ public class ExternalAccountCredentialsTest {
   private GenericJson buildJsonIdentityPoolWorkforceCredential() {
     GenericJson json = buildJsonIdentityPoolCredential();
     json.put(
-        "audience",
-        "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider");
+        "audience", "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider");
     json.put("workforce_pool_user_project", "userProject");
     return json;
   }
