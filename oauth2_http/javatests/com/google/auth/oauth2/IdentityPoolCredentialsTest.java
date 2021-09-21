@@ -337,6 +337,8 @@ public class IdentityPoolCredentialsTest {
         (IdentityPoolCredentials)
             IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
                 .setWorkforcePoolUserProject("userProject")
+                .setAudience(
+                    "//iam.googleapis.com/projects/123/locations/global/workforcePools/pool/providers/provider")
                 .setTokenUrl(transportFactory.transport.getStsUrl())
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(
