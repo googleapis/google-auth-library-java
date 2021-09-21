@@ -175,7 +175,7 @@ public class ExternalAccountCredentialsTest {
 
     assertTrue(credential instanceof IdentityPoolCredentials);
     assertEquals(
-        "//iam.googleapis.com/projects/123/locations/global/workforcePools/pool/providers/provider",
+        "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider",
         credential.getAudience());
     assertEquals("subjectTokenType", credential.getSubjectTokenType());
     assertEquals(STS_URL, credential.getTokenUrl());
@@ -236,17 +236,17 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  public void fromJson_invalidWorkloadAudiences_throws() {
+  public void fromJson_invalidWorkforceAudiences_throws() {
     List<String> invalidAudiences =
         Arrays.asList(
-            "//iam.googleapis.com/projects/x23/locations/global/workloadIdentityPools/pool/providers/provider",
-            "//iam.googleapis.com/projects/y16/locations/global/workforcepools/pool/providers/provider",
-            "//iam.googleapis.com/projects/z6/locations/global/workforcePools/providers/provider",
-            "//iam.googleapis.com/projects/aa4/locations/global/workforcePools/providers",
-            "//iam.googleapis.com/projects/b5/locations/global/workforcePools/",
-            "//iam.googleapis.com/projects/6c/locations//workforcePools/providers",
-            "//iam.googleapis.com/projects/df7/notlocations/global/workforcePools/providers",
-            "//iam.googleapis.com/projects/e6/locations/global/workforce/providers");
+            "//iam.googleapis.com/locations/global/workloadIdentityPools/pool/providers/provider",
+            "//iam.googleapis.com/locations/global/workforcepools/pool/providers/provider",
+            "//iam.googleapis.com/locations/global/workforcePools/providers/provider",
+            "//iam.googleapis.com/locations/global/workforcePools/providers",
+            "//iam.googleapis.com/locations/global/workforcePools/",
+            "//iam.googleapis.com/locations//workforcePools/providers",
+            "//iam.googleapis.com/notlocations/global/workforcePools/providers",
+            "//iam.googleapis.com/locations/global/workforce/providers");
 
     for (String audience : invalidAudiences) {
       try {
@@ -543,8 +543,7 @@ public class ExternalAccountCredentialsTest {
   private GenericJson buildJsonIdentityPoolWorkforceCredential() {
     GenericJson json = buildJsonIdentityPoolCredential();
     json.put(
-        "audience",
-        "//iam.googleapis.com/projects/123/locations/global/workforcePools/pool/providers/provider");
+        "audience", "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider");
     json.put("workforce_pool_user_project", "userProject");
     return json;
   }

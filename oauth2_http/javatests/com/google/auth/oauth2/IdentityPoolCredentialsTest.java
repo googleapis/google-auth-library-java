@@ -338,7 +338,7 @@ public class IdentityPoolCredentialsTest {
             IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
                 .setWorkforcePoolUserProject("userProject")
                 .setAudience(
-                    "//iam.googleapis.com/projects/123/locations/global/workforcePools/pool/providers/provider")
+                    "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
                 .setTokenUrl(transportFactory.transport.getStsUrl())
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(
@@ -490,13 +490,13 @@ public class IdentityPoolCredentialsTest {
         Arrays.asList(
             "",
             "//iam.googleapis.com/projects/x23/locations/global/workloadIdentityPools/pool/providers/provider",
-            "//iam.googleapis.com/projects/y16/locations/global/workforcepools/pool/providers/provider",
-            "//iam.googleapis.com/projects/z6/locations/global/workforcePools/providers/provider",
-            "//iam.googleapis.com/projects/aa4/locations/global/workforcePools/providers",
-            "//iam.googleapis.com/projects/b5/locations/global/workforcePools/",
-            "//iam.googleapis.com/projects/6c/locations//workforcePools/providers",
-            "//iam.googleapis.com/projects/df7/notlocations/global/workforcePools/providers",
-            "//iam.googleapis.com/projects/e6/locations/global/workforce/providers");
+            "//iam.googleapis.com/locations/global/workforcepools/pool/providers/provider",
+            "//iam.googleapis.com/locations/global/workforcePools/providers/provider",
+            "//iam.googleapis.com/locations/global/workforcePools/providers",
+            "//iam.googleapis.com/locations/global/workforcePools/",
+            "//iam.googleapis.com/locations//workforcePools/providers",
+            "//iam.googleapis.com/notlocations/global/workforcePools/providers",
+            "//iam.googleapis.com/locations/global/workforce/providers");
 
     for (String audience : invalidAudiences) {
       try {
@@ -525,8 +525,7 @@ public class IdentityPoolCredentialsTest {
       IdentityPoolCredentials.newBuilder()
           .setWorkforcePoolUserProject("")
           .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-          .setAudience(
-              "//iam.googleapis.com/projects/123/locations/global/workforcePools/providers/provider")
+          .setAudience("//iam.googleapis.com/locations/global/workforcePools/providers/provider")
           .setSubjectTokenType("subjectTokenType")
           .setTokenUrl(STS_URL)
           .setTokenInfoUrl("tokenInfoUrl")
