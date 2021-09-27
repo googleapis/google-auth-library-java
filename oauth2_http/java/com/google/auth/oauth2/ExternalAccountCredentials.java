@@ -280,7 +280,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
         parser.parseAndClose(credentialsStream, StandardCharsets.UTF_8, GenericJson.class);
     try {
       return fromJson(fileContents, transportFactory);
-    } catch (ClassCastException e) {
+    } catch (ClassCastException | IllegalArgumentException e) {
       throw new CredentialFormatException("An invalid input stream was provided.", e);
     }
   }
@@ -300,15 +300,16 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     String audience = (String) json.get("audience");
     String subjectTokenType = (String) json.get("subject_token_type");
     String tokenUrl = (String) json.get("token_url");
-    String serviceAccountImpersonationUrl = (String) json.get("service_account_impersonation_url");
 
     Map<String, Object> credentialSourceMap = (Map<String, Object>) json.get("credential_source");
 
     // Optional params.
+    String serviceAccountImpersonationUrl = (String) json.get("service_account_impersonation_url");
     String tokenInfoUrl = (String) json.get("token_info_url");
     String clientId = (String) json.get("client_id");
     String clientSecret = (String) json.get("client_secret");
     String quotaProjectId = (String) json.get("quota_project_id");
+    String userProject = (String) json.get("workforce_pool_user_project");
 
     if (isAwsCredential(credentialSourceMap)) {
       return new AwsCredentials(
@@ -325,19 +326,20 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
           /* scopes= */ null,
           /* environmentProvider= */ null);
     }
-    return new IdentityPoolCredentials(
-        transportFactory,
-        audience,
-        subjectTokenType,
-        tokenUrl,
-        new IdentityPoolCredentialSource(credentialSourceMap),
-        tokenInfoUrl,
-        serviceAccountImpersonationUrl,
-        quotaProjectId,
-        clientId,
-        clientSecret,
-        /* scopes= */ null,
-        /* environmentProvider= */ null);
+
+    return IdentityPoolCredentials.newBuilder()
+        .setWorkforcePoolUserProject(userProject)
+        .setHttpTransportFactory(transportFactory)
+        .setAudience(audience)
+        .setSubjectTokenType(subjectTokenType)
+        .setTokenUrl(tokenUrl)
+        .setTokenInfoUrl(tokenInfoUrl)
+        .setCredentialSource(new IdentityPoolCredentialSource(credentialSourceMap))
+        .setServiceAccountImpersonationUrl(serviceAccountImpersonationUrl)
+        .setQuotaProjectId(quotaProjectId)
+        .setClientId(clientId)
+        .setClientSecret(clientSecret)
+        .build();
   }
 
   private static boolean isAwsCredential(Map<String, Object> credentialSource) {
@@ -362,6 +364,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     StsRequestHandler requestHandler =
         StsRequestHandler.newBuilder(
                 tokenUrl, stsTokenExchangeRequest, transportFactory.create().createRequestFactory())
+            .setInternalOptions(stsTokenExchangeRequest.getInternalOptions())
             .build();
 
     StsTokenExchangeResponse response = requestHandler.exchangeToken();

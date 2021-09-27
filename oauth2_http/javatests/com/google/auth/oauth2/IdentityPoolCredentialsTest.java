@@ -34,6 +34,7 @@ package com.google.auth.oauth2;
 import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
 import static com.google.auth.oauth2.OAuth2Utils.JSON_FACTORY;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import com.google.api.client.http.HttpTransport;
@@ -75,7 +76,8 @@ public class IdentityPoolCredentialsTest {
       (IdentityPoolCredentials)
           IdentityPoolCredentials.newBuilder()
               .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-              .setAudience("audience")
+              .setAudience(
+                  "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
               .setSubjectTokenType("subjectTokenType")
               .setTokenUrl(STS_URL)
               .setTokenInfoUrl("tokenInfoUrl")
@@ -327,6 +329,40 @@ public class IdentityPoolCredentialsTest {
   }
 
   @Test
+  public void refreshAccessToken_internalOptionsSet() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    IdentityPoolCredentials credential =
+        (IdentityPoolCredentials)
+            IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+                .setWorkforcePoolUserProject("userProject")
+                .setAudience(
+                    "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+                .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setHttpTransportFactory(transportFactory)
+                .setCredentialSource(
+                    buildUrlBasedCredentialSource(transportFactory.transport.getMetadataUrl()))
+                .build();
+
+    AccessToken accessToken = credential.refreshAccessToken();
+
+    assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
+
+    // If the IdentityPoolCredential is initialized with a userProject, it must be passed
+    // to STS via internal options.
+    Map<String, String> query =
+        TestUtils.parseQuery(transportFactory.transport.getRequest().getContentAsString());
+    assertNotNull(query.get("options"));
+
+    GenericJson expectedInternalOptions = new GenericJson();
+    expectedInternalOptions.setFactory(OAuth2Utils.JSON_FACTORY);
+    expectedInternalOptions.put("userProject", "userProject");
+
+    assertEquals(expectedInternalOptions.toString(), query.get("options"));
+  }
+
+  @Test
   public void refreshAccessToken_withServiceAccountImpersonation() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
@@ -446,6 +482,62 @@ public class IdentityPoolCredentialsTest {
     assertEquals(credentials.getClientSecret(), "clientSecret");
     assertEquals(credentials.getScopes(), scopes);
     assertEquals(credentials.getEnvironmentProvider(), SystemEnvironmentProvider.getInstance());
+  }
+
+  @Test
+  public void builder_invalidWorkforceAudiences_throws() {
+    List<String> invalidAudiences =
+        Arrays.asList(
+            "",
+            "//iam.googleapis.com/projects/x23/locations/global/workloadIdentityPools/pool/providers/provider",
+            "//iam.googleapis.com/locations/global/workforcepools/pool/providers/provider",
+            "//iam.googleapis.com/locations/global/workforcePools/providers/provider",
+            "//iam.googleapis.com/locations/global/workforcePools/providers",
+            "//iam.googleapis.com/locations/global/workforcePools/",
+            "//iam.googleapis.com/locations//workforcePools/providers",
+            "//iam.googleapis.com/notlocations/global/workforcePools/providers",
+            "//iam.googleapis.com/locations/global/workforce/providers");
+
+    for (String audience : invalidAudiences) {
+      try {
+        IdentityPoolCredentials.newBuilder()
+            .setWorkforcePoolUserProject("workforcePoolUserProject")
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .setAudience(audience)
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+            .setQuotaProjectId("quotaProjectId")
+            .build();
+        fail("Exception should be thrown.");
+      } catch (IllegalArgumentException e) {
+        assertEquals(
+            "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.",
+            e.getMessage());
+      }
+    }
+  }
+
+  @Test
+  public void builder_emptyWorkforceUserProjectWithWorkforceAudience_throws() {
+    try {
+      IdentityPoolCredentials.newBuilder()
+          .setWorkforcePoolUserProject("")
+          .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+          .setAudience("//iam.googleapis.com/locations/global/workforcePools/providers/provider")
+          .setSubjectTokenType("subjectTokenType")
+          .setTokenUrl(STS_URL)
+          .setTokenInfoUrl("tokenInfoUrl")
+          .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+          .setQuotaProjectId("quotaProjectId")
+          .build();
+      fail("Exception should be thrown.");
+    } catch (IllegalArgumentException e) {
+      assertEquals(
+          "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.",
+          e.getMessage());
+    }
   }
 
   static InputStream writeIdentityPoolCredentialsStream(
