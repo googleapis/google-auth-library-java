@@ -38,6 +38,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
+import com.google.api.client.http.HttpResponseException;
+
 /** Represents an abstract authorized identity instance. */
 public abstract class Credentials implements Serializable {
 
@@ -111,7 +113,12 @@ public abstract class Credentials implements Serializable {
     try {
       result = getRequestMetadata(uri);
     } catch (Throwable e) {
-      callback.onFailure(e);
+      if (e instanceof HttpResponseException) {
+        HttpResponseException httpException = (HttpResponseException) e;
+        callback.onFailure(new GoogleAuthException(httpException.getStatusCode(), httpException.getRetryCount(), e));
+      }
+
+      callback.onFailure(new GoogleAuthException(e));
       return;
     }
     callback.onSuccess(result);
