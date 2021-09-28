@@ -157,6 +157,17 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     }
     Map<String, List<String>> initialMetadata = callback.awaitResult();
 
+    // wait for background task to finish
+    for (int i = 0; i < 100; i++) {
+      synchronized (credentials.lock) {
+        if (credentials.refreshTask == null) {
+          break;
+        } else {
+          Thread.sleep(100);
+        }
+      }
+    }
+
     // Make sure that stale token is returned before configured expiration
     AccessToken newToken = new AccessToken(ACCESS_TOKEN + "-1", Date.from(actualExpiration));
     currentToken.set(newToken);
