@@ -66,6 +66,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.After;
@@ -125,75 +126,64 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
           @Override
           public AccessToken refreshAccessToken() throws IOException {
             refreshCount.incrementAndGet();
+            // Inject delay to model network latency
+            // This is needed to make to deflake the stale tests:
+            // if the refresh is super quick, then a stale refresh will return the new token
+            try {
+              Thread.sleep(100);
+            } catch (InterruptedException e) {
+              throw new IOException(e);
+            }
+
             return currentToken.get();
           }
         };
 
     TestClock clock = new TestClock();
-    clock.setCurrentTime(clientStale.toEpochMilli() - 1);
     credentials.clock = clock;
 
-    // Make sure that nothing is refresh before configured refreshMargin
+    // Rewind time to when the token is fresh
+    clock.setCurrentTime(clientStale.toEpochMilli() - 1);
     MockRequestMetadataCallback callback = new MockRequestMetadataCallback();
     credentials.getRequestMetadata(CALL_URI, realExecutor, callback);
     synchronized (credentials.lock) {
       assertNull(credentials.refreshTask);
     }
     assertEquals(0, refreshCount.get());
+    Map<String, List<String>> lastMetadata = credentials.getRequestMetadata(CALL_URI);
 
-    // Make sure that a refresh happens at the configured margin
+    // Fast forward to when the token just turned STALE
     clock.setCurrentTime(clientStale.toEpochMilli());
-    callback = new MockRequestMetadataCallback();
+    currentToken.set(new AccessToken(ACCESS_TOKEN + "-1", Date.from(actualExpiration)));
+    callback.reset();
     credentials.getRequestMetadata(CALL_URI, realExecutor, callback);
-    synchronized (credentials.lock) {
-      assertTrue(credentials.refreshTask != null || refreshCount.get() == 1);
-    }
-    // wait for the refresh to finish
-    for (int i = 0; i < 100; i++) {
-      if (refreshCount.get() == 1) {
-        break;
-      }
-      Thread.sleep(100);
-    }
-    Map<String, List<String>> initialMetadata = callback.awaitResult();
+    assertEquals(lastMetadata, callback.awaitResult());
+    waitForRefreshTaskCompletion(credentials);
+    assertEquals(1, refreshCount.get());
+    lastMetadata = credentials.getRequestMetadata(CALL_URI);
+    refreshCount.set(0);
 
-    // wait for background task to finish
-    for (int i = 0; i < 100; i++) {
-      synchronized (credentials.lock) {
-        if (credentials.refreshTask == null) {
-          break;
-        } else {
-          Thread.sleep(100);
-        }
-      }
-    }
-
-    // Make sure that stale token is returned before configured expiration
-    AccessToken newToken = new AccessToken(ACCESS_TOKEN + "-1", Date.from(actualExpiration));
-    currentToken.set(newToken);
+    // Fast forward to when the token turned STALE just before expiration
     clock.setCurrentTime(clientExpired.toEpochMilli() - 1);
-    callback = new MockRequestMetadataCallback();
+    currentToken.set(new AccessToken(ACCESS_TOKEN + "-2", Date.from(actualExpiration)));
+    callback.reset();
     credentials.getRequestMetadata(CALL_URI, realExecutor, callback);
-    assertEquals(initialMetadata, callback.awaitResult());
+    assertEquals(lastMetadata, callback.awaitResult());
+    waitForRefreshTaskCompletion(credentials);
+    assertEquals(1, refreshCount.get());
+    lastMetadata = credentials.getRequestMetadata();
+    refreshCount.set(0);
 
-    // wait for background task to finish
-    for (int i = 0; i < 100; i++) {
-      synchronized (credentials.lock) {
-        if (credentials.refreshTask == null) {
-          break;
-        } else {
-          Thread.sleep(100);
-        }
-      }
-    }
-
-    AccessToken newToken2 = new AccessToken(ACCESS_TOKEN + "-2", Date.from(actualExpiration));
-    currentToken.set(newToken2);
+    // Fast forward to expired
     clock.setCurrentTime(clientExpired.toEpochMilli());
-    callback = new MockRequestMetadataCallback();
+    AccessToken newToken = new AccessToken(ACCESS_TOKEN + "-3", Date.from(actualExpiration));
+    currentToken.set(newToken);
+    callback.reset();
     credentials.getRequestMetadata(CALL_URI, realExecutor, callback);
-    Map<String, List<String>> metadata2 = callback.awaitResult();
-    TestUtils.assertContainsBearerToken(metadata2, newToken2.getTokenValue());
+    TestUtils.assertContainsBearerToken(callback.awaitResult(), newToken.getTokenValue());
+    assertEquals(1, refreshCount.get());
+    waitForRefreshTaskCompletion(credentials);
+    lastMetadata = credentials.getRequestMetadata();
   }
 
   @Test
@@ -880,6 +870,26 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     assertEquals(credentials.hashCode(), deserializedCredentials.hashCode());
     assertEquals(credentials.toString(), deserializedCredentials.toString());
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
+  }
+
+  private void waitForRefreshTaskCompletion(OAuth2Credentials credentials)
+      throws TimeoutException, InterruptedException {
+    for (int i = 0; i < 100; i++) {
+      synchronized (credentials.lock) {
+        if (credentials.refreshTask == null) {
+          return;
+        } else if (credentials.refreshTask.isDone()) {
+          System.out.println("done?");
+        }
+      }
+      Thread.sleep(100);
+    }
+    ListenableFutureTask<OAuthValue> t = credentials.refreshTask;
+    System.out.println(t);
+    if (t != null) {
+      System.out.println(t.isDone());
+    }
+    throw new TimeoutException("timed out waiting for refresh task to finish");
   }
 
   private static class TestChangeListener implements OAuth2Credentials.CredentialsChangedListener {
