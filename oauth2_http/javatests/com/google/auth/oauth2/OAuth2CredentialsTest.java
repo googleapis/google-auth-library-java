@@ -168,7 +168,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     // wait for background task to finish
     for (int i = 0; i < 100; i++) {
       synchronized (credentials.lock) {
-        if(credentials.refreshTask == null) {
+        if (credentials.refreshTask == null) {
           break;
         } else {
           Thread.sleep(100);
