@@ -878,16 +878,9 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
       synchronized (credentials.lock) {
         if (credentials.refreshTask == null) {
           return;
-        } else if (credentials.refreshTask.isDone()) {
-          System.out.println("done?");
         }
       }
       Thread.sleep(100);
-    }
-    ListenableFutureTask<OAuthValue> t = credentials.refreshTask;
-    System.out.println(t);
-    if (t != null) {
-      System.out.println(t.isDone());
     }
     throw new TimeoutException("timed out waiting for refresh task to finish");
   }
