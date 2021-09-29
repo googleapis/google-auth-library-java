@@ -97,6 +97,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final int TWELVE_HOURS_IN_SECONDS = 43200;
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
+  private static final int DEFAULT_NUMBER_OF_RETRIES = 3;
 
   private final String clientId;
   private final String clientEmail;
@@ -576,24 +577,19 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
+    request.setNumberOfRetries(DEFAULT_NUMBER_OF_RETRIES);
     request.setParser(new JsonObjectParser(jsonFactory));
 
-    request.setIOExceptionHandler(new HttpBackOffIOExceptionHandler(new ExponentialBackOff()));
     request.setUnsuccessfulResponseHandler(
         new HttpBackOffUnsuccessfulResponseHandler(new ExponentialBackOff())
             .setBackOffRequired(
                 new BackOffRequired() {
                   public boolean isRequired(HttpResponse response) {
                     int code = response.getStatusCode();
-                    return (
-                    // Server error --- includes timeout errors, which use 500 instead of 408
-                    code / 100 == 5
-                        // Forbidden error --- for historical reasons, used for rate_limit_exceeded
-                        // errors instead of 429, but there currently seems no robust automatic way
-                        // to
-                        // distinguish these cases: see
-                        // https://github.com/google/google-api-java-client/issues/662
-                        || code == 403);
+
+                    // Server errors --- includes timeout errors, which use 500 instead of 408
+                    // Other 5xx codes are either not used or retries are unlickely to succeed
+                    return code == 500 || code == 503;
                   }
                 }));
 
