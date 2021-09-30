@@ -37,7 +37,6 @@ import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
-import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSource.CredentialFormatType;
 import com.google.common.io.CharStreams;
 import java.io.BufferedReader;
@@ -54,6 +53,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -155,39 +155,37 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   private final IdentityPoolCredentialSource identityPoolCredentialSource;
 
-  /**
-   * Internal constructor. See {@link
-   * ExternalAccountCredentials#ExternalAccountCredentials(HttpTransportFactory, String, String,
-   * String, CredentialSource, String, String, String, String, String, Collection,
-   * EnvironmentProvider)}
-   */
-  IdentityPoolCredentials(
-      HttpTransportFactory transportFactory,
-      String audience,
-      String subjectTokenType,
-      String tokenUrl,
-      IdentityPoolCredentialSource credentialSource,
-      @Nullable String tokenInfoUrl,
-      @Nullable String serviceAccountImpersonationUrl,
-      @Nullable String quotaProjectId,
-      @Nullable String clientId,
-      @Nullable String clientSecret,
-      @Nullable Collection<String> scopes,
-      @Nullable EnvironmentProvider environmentProvider) {
+  // This is used for Workforce Pools. It is passed to STS during token exchange in the
+  // `options` param and will be embedded in the token by STS.
+  @Nullable private String workforcePoolUserProject;
+
+  /** Internal constructor. See {@link Builder}. */
+  IdentityPoolCredentials(Builder builder) {
     super(
-        transportFactory,
-        audience,
-        subjectTokenType,
-        tokenUrl,
-        credentialSource,
-        tokenInfoUrl,
-        serviceAccountImpersonationUrl,
-        quotaProjectId,
-        clientId,
-        clientSecret,
-        scopes,
-        environmentProvider);
-    this.identityPoolCredentialSource = credentialSource;
+        builder.transportFactory,
+        builder.audience,
+        builder.subjectTokenType,
+        builder.tokenUrl,
+        builder.credentialSource,
+        builder.tokenInfoUrl,
+        builder.serviceAccountImpersonationUrl,
+        builder.quotaProjectId,
+        builder.clientId,
+        builder.clientSecret,
+        builder.scopes,
+        builder.environmentProvider);
+    this.identityPoolCredentialSource = (IdentityPoolCredentialSource) builder.credentialSource;
+    this.workforcePoolUserProject = builder.workforcePoolUserProject;
+
+    if (workforcePoolUserProject != null && !isWorkforcePoolConfiguration()) {
+      throw new IllegalArgumentException(
+          "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.");
+    }
+  }
+
+  @Nullable
+  public String getWorkforcePoolUserProject() {
+    return workforcePoolUserProject;
   }
 
   @Override
@@ -200,6 +198,15 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
     Collection<String> scopes = getScopes();
     if (scopes != null && !scopes.isEmpty()) {
       stsTokenExchangeRequest.setScopes(new ArrayList<>(scopes));
+    }
+
+    // If this credential was initialized with a Workforce configuration then the
+    // workforcePoolUserProject must passed to STS via the the internal options param.
+    if (isWorkforcePoolConfiguration()) {
+      GenericJson options = new GenericJson();
+      options.setFactory(OAuth2Utils.JSON_FACTORY);
+      options.put("userProject", workforcePoolUserProject);
+      stsTokenExchangeRequest.setInternalOptions(options.toString());
     }
 
     return exchangeExternalCredentialForAccessToken(stsTokenExchangeRequest.build());
@@ -269,22 +276,22 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
     }
   }
 
+  /**
+   * Returns whether or not the current configuration is for Workforce Pools (which enable 3p user
+   * identities, rather than workloads).
+   */
+  public boolean isWorkforcePoolConfiguration() {
+    Pattern workforceAudiencePattern =
+        Pattern.compile("^//iam.googleapis.com/locations/.+/workforcePools/.+/providers/.+$");
+    return workforcePoolUserProject != null
+        && workforceAudiencePattern.matcher(getAudience()).matches();
+  }
+
   /** Clones the IdentityPoolCredentials with the specified scopes. */
   @Override
   public IdentityPoolCredentials createScoped(Collection<String> newScopes) {
     return new IdentityPoolCredentials(
-        transportFactory,
-        getAudience(),
-        getSubjectTokenType(),
-        getTokenUrl(),
-        identityPoolCredentialSource,
-        getTokenInfoUrl(),
-        getServiceAccountImpersonationUrl(),
-        getQuotaProjectId(),
-        getClientId(),
-        getClientSecret(),
-        newScopes,
-        getEnvironmentProvider());
+        (IdentityPoolCredentials.Builder) newBuilder(this).setScopes(newScopes));
   }
 
   public static Builder newBuilder() {
@@ -297,27 +304,23 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   public static class Builder extends ExternalAccountCredentials.Builder {
 
+    @Nullable private String workforcePoolUserProject;
+
     Builder() {}
 
     Builder(IdentityPoolCredentials credentials) {
       super(credentials);
+      setWorkforcePoolUserProject(credentials.getWorkforcePoolUserProject());
+    }
+
+    public Builder setWorkforcePoolUserProject(String workforcePoolUserProject) {
+      this.workforcePoolUserProject = workforcePoolUserProject;
+      return this;
     }
 
     @Override
     public IdentityPoolCredentials build() {
-      return new IdentityPoolCredentials(
-          transportFactory,
-          audience,
-          subjectTokenType,
-          tokenUrl,
-          (IdentityPoolCredentialSource) credentialSource,
-          tokenInfoUrl,
-          serviceAccountImpersonationUrl,
-          quotaProjectId,
-          clientId,
-          clientSecret,
-          scopes,
-          environmentProvider);
+      return new IdentityPoolCredentials(this);
     }
   }
 }

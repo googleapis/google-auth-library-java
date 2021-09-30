@@ -51,6 +51,7 @@ final class StsTokenExchangeRequest {
   @Nullable private final String resource;
   @Nullable private final String audience;
   @Nullable private final String requestedTokenType;
+  @Nullable private final String internalOptions;
 
   private StsTokenExchangeRequest(
       String subjectToken,
@@ -59,7 +60,8 @@ final class StsTokenExchangeRequest {
       @Nullable List<String> scopes,
       @Nullable String resource,
       @Nullable String audience,
-      @Nullable String requestedTokenType) {
+      @Nullable String requestedTokenType,
+      @Nullable String internalOptions) {
     this.subjectToken = checkNotNull(subjectToken);
     this.subjectTokenType = checkNotNull(subjectTokenType);
     this.actingParty = actingParty;
@@ -67,6 +69,7 @@ final class StsTokenExchangeRequest {
     this.resource = resource;
     this.audience = audience;
     this.requestedTokenType = requestedTokenType;
+    this.internalOptions = internalOptions;
   }
 
   public static Builder newBuilder(String subjectToken, String subjectTokenType) {
@@ -110,6 +113,11 @@ final class StsTokenExchangeRequest {
     return actingParty;
   }
 
+  @Nullable
+  public String getInternalOptions() {
+    return internalOptions;
+  }
+
   public boolean hasResource() {
     return resource != null && !resource.isEmpty();
   }
@@ -139,6 +147,7 @@ final class StsTokenExchangeRequest {
     @Nullable private String requestedTokenType;
     @Nullable private List<String> scopes;
     @Nullable private ActingParty actingParty;
+    @Nullable private String internalOptions;
 
     private Builder(String subjectToken, String subjectTokenType) {
       this.subjectToken = subjectToken;
@@ -170,6 +179,11 @@ final class StsTokenExchangeRequest {
       return this;
     }
 
+    public StsTokenExchangeRequest.Builder setInternalOptions(String internalOptions) {
+      this.internalOptions = internalOptions;
+      return this;
+    }
+
     public StsTokenExchangeRequest build() {
       return new StsTokenExchangeRequest(
           subjectToken,
@@ -178,7 +192,8 @@ final class StsTokenExchangeRequest {
           scopes,
           resource,
           audience,
-          requestedTokenType);
+          requestedTokenType,
+          internalOptions);
     }
   }
 }
