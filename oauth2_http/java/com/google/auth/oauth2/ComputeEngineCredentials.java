@@ -72,6 +72,11 @@ import java.util.logging.Logger;
 public class ComputeEngineCredentials extends GoogleCredentials
     implements ServiceAccountSigner, IdTokenProvider {
 
+  // Decrease timing margins on GCE.
+  // This is needed because GCE VMs maintain their own OAuth cache that expires T-5mins, attempting
+  // to refresh a token before then, will yield the same stale token. To enable pre-emptive
+  // refreshes, the margins must be shortened. This shouldn't cause problems since the clock skew
+  // on the VM and metadata proxy should be non-existent.
   static final Duration COMPUTE_EXPIRATION_MARGIN = Duration.ofMinutes(3);
   static final Duration COMPUTE_REFRESH_MARGIN = Duration.ofMinutes(4);
 
