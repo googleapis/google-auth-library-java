@@ -50,6 +50,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -70,6 +71,14 @@ import java.util.logging.Logger;
  */
 public class ComputeEngineCredentials extends GoogleCredentials
     implements ServiceAccountSigner, IdTokenProvider {
+
+  // Decrease timing margins on GCE.
+  // This is needed because GCE VMs maintain their own OAuth cache that expires T-5mins, attempting
+  // to refresh a token before then, will yield the same stale token. To enable pre-emptive
+  // refreshes, the margins must be shortened. This shouldn't cause problems since the clock skew
+  // on the VM and metadata proxy should be non-existent.
+  static final Duration COMPUTE_EXPIRATION_MARGIN = Duration.ofMinutes(3);
+  static final Duration COMPUTE_REFRESH_MARGIN = Duration.ofMinutes(4);
 
   private static final Logger LOGGER = Logger.getLogger(ComputeEngineCredentials.class.getName());
 
@@ -116,6 +125,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
       HttpTransportFactory transportFactory,
       Collection<String> scopes,
       Collection<String> defaultScopes) {
+    super(/* accessToken= */ null, COMPUTE_REFRESH_MARGIN, COMPUTE_EXPIRATION_MARGIN);
+
     this.transportFactory =
         firstNonNull(
             transportFactory,

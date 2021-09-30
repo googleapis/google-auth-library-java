@@ -49,14 +49,14 @@ import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFact
 import com.google.auth.oauth2.OAuth2Credentials.OAuthValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.primitives.Ints;
 import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.net.URI;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +66,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.After;
 import org.junit.Before;
@@ -101,6 +103,87 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     OAuth2Credentials credentials =
         OAuth2Credentials.newBuilder().setAccessToken(new AccessToken(ACCESS_TOKEN, null)).build();
     assertEquals(credentials.getAccessToken().getTokenValue(), ACCESS_TOKEN);
+  }
+
+  @Test
+  public void constructor_overrideMargin() throws Throwable {
+    Duration staleMargin = Duration.ofMinutes(3);
+    Duration expirationMargin = Duration.ofMinutes(2);
+
+    Instant actualExpiration = Instant.now();
+    Instant clientStale = actualExpiration.minus(staleMargin);
+    Instant clientExpired = actualExpiration.minus(expirationMargin);
+
+    AccessToken initialToken = new AccessToken(ACCESS_TOKEN, Date.from(actualExpiration));
+    AtomicInteger refreshCount = new AtomicInteger();
+    AtomicReference<AccessToken> currentToken = new AtomicReference<>(initialToken);
+
+    OAuth2Credentials credentials =
+        new OAuth2Credentials(
+            currentToken.get(),
+            /* refreshMargin= */ Duration.ofMinutes(3),
+            /* expirationMargin= */ Duration.ofMinutes(2)) {
+          @Override
+          public AccessToken refreshAccessToken() throws IOException {
+            refreshCount.incrementAndGet();
+            // Inject delay to model network latency
+            // This is needed to make to deflake the stale tests:
+            // if the refresh is super quick, then a stale refresh will return the new token
+            try {
+              Thread.sleep(100);
+            } catch (InterruptedException e) {
+              throw new IOException(e);
+            }
+
+            return currentToken.get();
+          }
+        };
+
+    TestClock clock = new TestClock();
+    credentials.clock = clock;
+
+    // Rewind time to when the token is fresh
+    clock.setCurrentTime(clientStale.toEpochMilli() - 1);
+    MockRequestMetadataCallback callback = new MockRequestMetadataCallback();
+    credentials.getRequestMetadata(CALL_URI, realExecutor, callback);
+    synchronized (credentials.lock) {
+      assertNull(credentials.refreshTask);
+    }
+    assertEquals(0, refreshCount.get());
+    Map<String, List<String>> lastMetadata = credentials.getRequestMetadata(CALL_URI);
+
+    // Fast forward to when the token just turned STALE
+    clock.setCurrentTime(clientStale.toEpochMilli());
+    currentToken.set(new AccessToken(ACCESS_TOKEN + "-1", Date.from(actualExpiration)));
+    callback.reset();
+    credentials.getRequestMetadata(CALL_URI, realExecutor, callback);
+    assertEquals(lastMetadata, callback.awaitResult());
+    waitForRefreshTaskCompletion(credentials);
+    assertEquals(1, refreshCount.get());
+    lastMetadata = credentials.getRequestMetadata(CALL_URI);
+    refreshCount.set(0);
+
+    // Fast forward to when the token turned STALE just before expiration
+    clock.setCurrentTime(clientExpired.toEpochMilli() - 1);
+    currentToken.set(new AccessToken(ACCESS_TOKEN + "-2", Date.from(actualExpiration)));
+    callback.reset();
+    credentials.getRequestMetadata(CALL_URI, realExecutor, callback);
+    assertEquals(lastMetadata, callback.awaitResult());
+    waitForRefreshTaskCompletion(credentials);
+    assertEquals(1, refreshCount.get());
+    lastMetadata = credentials.getRequestMetadata();
+    refreshCount.set(0);
+
+    // Fast forward to expired
+    clock.setCurrentTime(clientExpired.toEpochMilli());
+    AccessToken newToken = new AccessToken(ACCESS_TOKEN + "-3", Date.from(actualExpiration));
+    currentToken.set(newToken);
+    callback.reset();
+    credentials.getRequestMetadata(CALL_URI, realExecutor, callback);
+    TestUtils.assertContainsBearerToken(callback.awaitResult(), newToken.getTokenValue());
+    assertEquals(1, refreshCount.get());
+    waitForRefreshTaskCompletion(credentials);
+    lastMetadata = credentials.getRequestMetadata();
   }
 
   @Test
@@ -406,21 +489,16 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
 
   @Test
   public void getRequestMetadata_staleTemporaryToken() throws IOException, InterruptedException {
-    Calendar calendar = Calendar.getInstance();
-    Date actualExpiration = calendar.getTime();
-
-    calendar.setTime(actualExpiration);
-    calendar.add(
-        Calendar.MILLISECOND, -1 * Ints.checkedCast(OAuth2Credentials.REFRESH_MARGIN_MILLISECONDS));
-    Date clientStale = calendar.getTime();
+    Instant actualExpiration = Instant.now();
+    Instant clientStale = actualExpiration.minus(OAuth2Credentials.DEFAULT_REFRESH_MARGIN);
 
     TestClock testClock = new TestClock();
-    testClock.setCurrentTime(clientStale.getTime());
+    testClock.setCurrentTime(clientStale.toEpochMilli());
 
     // Initialize credentials which are initially stale and set to refresh
     final SettableFuture<AccessToken> refreshedTokenFuture = SettableFuture.create();
     OAuth2Credentials creds =
-        new OAuth2Credentials(new AccessToken(ACCESS_TOKEN, actualExpiration)) {
+        new OAuth2Credentials(new AccessToken(ACCESS_TOKEN, Date.from(actualExpiration))) {
           @Override
           public AccessToken refreshAccessToken() {
 
@@ -481,25 +559,16 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
 
   @Test
   public void getRequestMetadata_staleTemporaryToken_expirationWaits() throws Throwable {
-    Calendar calendar = Calendar.getInstance();
-    Date actualExpiration = calendar.getTime();
-
-    calendar.setTime(actualExpiration);
-    calendar.add(
-        Calendar.MILLISECOND, -1 * Ints.checkedCast(OAuth2Credentials.REFRESH_MARGIN_MILLISECONDS));
-    Date clientStale = calendar.getTime();
-
-    calendar.setTime(actualExpiration);
-    calendar.add(
-        Calendar.MILLISECOND, -1 * Ints.checkedCast(OAuth2Credentials.MINIMUM_TOKEN_MILLISECONDS));
-    Date clientExpired = calendar.getTime();
+    Instant actualExpiration = Instant.now();
+    Instant clientStale = actualExpiration.minus(OAuth2Credentials.DEFAULT_REFRESH_MARGIN);
+    Instant clientExpired = actualExpiration.minus(OAuth2Credentials.DEFAULT_EXPIRATION_MARGIN);
 
     TestClock testClock = new TestClock();
 
     // Initialize credentials which are initially stale and set to refresh
     final SettableFuture<AccessToken> refreshedTokenFuture = SettableFuture.create();
     OAuth2Credentials creds =
-        new OAuth2Credentials(new AccessToken(ACCESS_TOKEN, actualExpiration)) {
+        new OAuth2Credentials(new AccessToken(ACCESS_TOKEN, Date.from(actualExpiration))) {
           @Override
           public AccessToken refreshAccessToken() {
 
@@ -516,7 +585,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     }
 
     // Calls should return immediately with stale token, but a refresh is scheduled
-    testClock.setCurrentTime(clientStale.getTime());
+    testClock.setCurrentTime(clientStale.toEpochMilli());
     MockRequestMetadataCallback callback = new MockRequestMetadataCallback();
     creds.getRequestMetadata(CALL_URI, realExecutor, callback);
     TestUtils.assertContainsBearerToken(callback.metadata, ACCESS_TOKEN);
@@ -524,7 +593,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     ListenableFutureTask<OAuthValue> refreshTask = creds.refreshTask;
 
     // Fast forward to expiration, which will hang cause the callback to hang
-    testClock.setCurrentTime(clientExpired.getTime());
+    testClock.setCurrentTime(clientExpired.toEpochMilli());
     // Make sure that the callback is hung (while giving it a chance to run)
     for (int i = 0; i < 10; i++) {
       Thread.sleep(10);
@@ -559,26 +628,17 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
 
   @Test
   public void getRequestMetadata_singleFlightErrorSharing() {
-    Calendar calendar = Calendar.getInstance();
-    Date actualExpiration = calendar.getTime();
-
-    calendar.setTime(actualExpiration);
-    calendar.add(
-        Calendar.MILLISECOND, -1 * Ints.checkedCast(OAuth2Credentials.REFRESH_MARGIN_MILLISECONDS));
-    Date clientStale = calendar.getTime();
-
-    calendar.setTime(actualExpiration);
-    calendar.add(
-        Calendar.MILLISECOND, -1 * Ints.checkedCast(OAuth2Credentials.MINIMUM_TOKEN_MILLISECONDS));
-    Date clientExpired = calendar.getTime();
+    Instant actualExpiration = Instant.now();
+    Instant clientStale = actualExpiration.minus(OAuth2Credentials.DEFAULT_REFRESH_MARGIN);
+    Instant clientExpired = actualExpiration.minus(OAuth2Credentials.DEFAULT_EXPIRATION_MARGIN);
 
     TestClock testClock = new TestClock();
-    testClock.setCurrentTime(clientStale.getTime());
+    testClock.setCurrentTime(clientStale.toEpochMilli());
 
     // Initialize credentials which are initially expired
     final SettableFuture<RuntimeException> refreshErrorFuture = SettableFuture.create();
     final OAuth2Credentials creds =
-        new OAuth2Credentials(new AccessToken(ACCESS_TOKEN, clientExpired)) {
+        new OAuth2Credentials(new AccessToken(ACCESS_TOKEN, Date.from(clientExpired))) {
           @Override
           public AccessToken refreshAccessToken() {
             RuntimeException injectedError;
@@ -810,6 +870,19 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     assertEquals(credentials.hashCode(), deserializedCredentials.hashCode());
     assertEquals(credentials.toString(), deserializedCredentials.toString());
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
+  }
+
+  private void waitForRefreshTaskCompletion(OAuth2Credentials credentials)
+      throws TimeoutException, InterruptedException {
+    for (int i = 0; i < 100; i++) {
+      synchronized (credentials.lock) {
+        if (credentials.refreshTask == null) {
+          return;
+        }
+      }
+      Thread.sleep(100);
+    }
+    throw new TimeoutException("timed out waiting for refresh task to finish");
   }
 
   private static class TestChangeListener implements OAuth2Credentials.CredentialsChangedListener {
