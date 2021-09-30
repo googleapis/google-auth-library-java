@@ -284,7 +284,6 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
     Pattern workforceAudiencePattern =
         Pattern.compile("^//iam.googleapis.com/locations/.+/workforcePools/.+/providers/.+$");
     return workforcePoolUserProject != null
-        && !workforcePoolUserProject.isEmpty()
         && workforceAudiencePattern.matcher(getAudience()).matches();
   }
 
