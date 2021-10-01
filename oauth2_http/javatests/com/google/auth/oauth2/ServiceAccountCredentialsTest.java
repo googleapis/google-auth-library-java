@@ -1355,7 +1355,6 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             .setPrivateKey(privateKey)
             .setPrivateKeyId(PRIVATE_KEY_ID)
             .setScopes(SCOPES)
-            .setServiceAccountUser(USER)
             .setProjectId(PROJECT_ID)
             .setHttpTransportFactory(new MockTokenServerTransportFactory())
             .setUseJwtAccessWithScope(true)
@@ -1363,6 +1362,42 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     verifyJwtAccess(metadata, "dummy.scope");
+  }
+
+  @Test
+  public void refreshAccessToken_withDomainDelegation_selfSignedJWT_disabled() throws IOException {
+    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    MockTokenServerTransport transport = transportFactory.transport;
+    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    GoogleCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientEmail(CLIENT_EMAIL)
+            .setPrivateKey(privateKey)
+            .setPrivateKeyId(PRIVATE_KEY_ID)
+            .setScopes(SCOPES)
+            .setServiceAccountUser(USER)
+            .setProjectId(PROJECT_ID)
+            .setHttpTransportFactory(transportFactory)
+            .setUseJwtAccessWithScope(true)
+            .build();
+
+    transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, accessToken1);
+
+    try {
+      verifyJwtAccess(metadata, "dummy.scope");
+      fail("jwt access should fail with ServiceAccountUser");
+    } catch (Exception ex) {
+      // expected
+    }
+
+    transport.addServiceAccount(CLIENT_EMAIL, accessToken2);
+    credentials.refresh();
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken2);
   }
 
   @Test
@@ -1374,7 +1409,6 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             .setClientEmail(CLIENT_EMAIL)
             .setPrivateKey(privateKey)
             .setPrivateKeyId(PRIVATE_KEY_ID)
-            .setServiceAccountUser(USER)
             .setProjectId(PROJECT_ID)
             .setHttpTransportFactory(new MockTokenServerTransportFactory())
             .build();
@@ -1393,7 +1427,6 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             .setPrivateKey(privateKey)
             .setPrivateKeyId(PRIVATE_KEY_ID)
             .setScopes(null, SCOPES)
-            .setServiceAccountUser(USER)
             .setProjectId(PROJECT_ID)
             .setHttpTransportFactory(new MockTokenServerTransportFactory())
             .setUseJwtAccessWithScope(true)
@@ -1412,7 +1445,6 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             .setClientEmail(CLIENT_EMAIL)
             .setPrivateKey(privateKey)
             .setPrivateKeyId(PRIVATE_KEY_ID)
-            .setServiceAccountUser(USER)
             .setProjectId(PROJECT_ID)
             .setQuotaProjectId("my-quota-project-id")
             .setHttpTransportFactory(new MockTokenServerTransportFactory())
