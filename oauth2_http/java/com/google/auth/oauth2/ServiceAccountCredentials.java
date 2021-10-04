@@ -1018,8 +1018,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
     // If scopes are provided but we cannot use self signed JWT, then use scopes to get access
     // token.
-    if (!createScopedRequired() && !useJwtAccessWithScope
-        || serviceAccountUser != null && serviceAccountUser.length() > 0) {
+    if ((!createScopedRequired() && !useJwtAccessWithScope)
+        || (serviceAccountUser != null && serviceAccountUser.length() > 0)) {
       return super.getRequestMetadata(uri);
     }
 
