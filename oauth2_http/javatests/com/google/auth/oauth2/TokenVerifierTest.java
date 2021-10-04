@@ -242,8 +242,6 @@ public class TokenVerifierTest {
   @Test
   public void verifyServiceAccountRs256Token()
       throws TokenVerifier.VerificationException, IOException {
-    HttpTransportFactory httpTransportFactory =
-        mockTransport(SERVICE_ACCOUNT_CERT_URL, readResourceAsString("service_account_keys.json"));
     TokenVerifier tokenVerifier =
         TokenVerifier.newBuilder()
             .setClock(FIXED_CLOCK)
