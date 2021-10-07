@@ -232,7 +232,7 @@ public class GoogleCredentials extends OAuth2Credentials {
   }
 
   /**
-   * If the credentials support scopes, creates a copy of the the identity with the specified
+   * If the credentials support scopes, creates a copy of the identity with the specified
    * scopes; otherwise, returns the same instance.
    *
    * @param scopes Collection of scopes to request.
@@ -243,7 +243,7 @@ public class GoogleCredentials extends OAuth2Credentials {
   }
 
   /**
-   * If the credentials support scopes, creates a copy of the the identity with the specified scopes
+   * If the credentials support scopes, creates a copy of the identity with the specified scopes
    * and default scopes; otherwise, returns the same instance. This is mainly used by client
    * libraries.
    *
@@ -257,7 +257,7 @@ public class GoogleCredentials extends OAuth2Credentials {
   }
 
   /**
-   * If the credentials support scopes, creates a copy of the the identity with the specified
+   * If the credentials support scopes, creates a copy of the identity with the specified
    * scopes; otherwise, returns the same instance.
    *
    * @param scopes Collection of scopes to request.
@@ -265,6 +265,17 @@ public class GoogleCredentials extends OAuth2Credentials {
    */
   public GoogleCredentials createScoped(String... scopes) {
     return createScoped(ImmutableList.copyOf(scopes));
+  }
+
+   /**
+   * If the credentials support automatic retries, creates a copy of the identity with 
+   * the provided retry strategy
+   *
+   * @param retryStrategy a retry strategy setting
+   * @return GoogleCredentials with the new retry strategy setting.
+   */
+  public GoogleCredentials createWithCustomRetryStrategy(RetryStrategy retryStrategy) {
+    return this;
   }
 
   /**

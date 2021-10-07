@@ -44,11 +44,8 @@ public class GoogleAuthException extends IOException implements Retryable {
   /**
    * Constructor with all parameters
    * 
-   * @param responseStatus 
-   *        A response status from the related HTTP request
-   * 
-   * @param retryCount 
-   *        A number of retries performed
+   * @param retryStatus 
+   *        A retry status for the related HTTP request
    * 
    * @param message
    *        The detail message (which is saved for later retrieval
@@ -58,11 +55,10 @@ public class GoogleAuthException extends IOException implements Retryable {
    *        The cause (which is saved for later retrieval by the
    *        {@link #getCause()} method).  (A null value is permitted,
    *        and indicates that the cause is nonexistent or unknown.)
-   * 
    */
-  public GoogleAuthException(int responseStatus, int retryCount, String message, Throwable cause) {
+  public GoogleAuthException(RetryStatus retryStatus, String message, Throwable cause) {
     super(message, cause);
-    retryStatus = getRetryStatus(responseStatus, retryCount);
+    this.retryStatus = retryStatus;
   }
 
   /**
@@ -71,9 +67,9 @@ public class GoogleAuthException extends IOException implements Retryable {
    * @param responseStatus A response status from the related HTTP request
    * @param retryCount A number of retries performed
    */
-  public GoogleAuthException(int responseStatus, int retryCount, Throwable cause) {
+  public GoogleAuthException(RetryStatus retryStatus, Throwable cause) {
     super(cause);
-    retryStatus = getRetryStatus(responseStatus, retryCount);
+    this.retryStatus = retryStatus;
   }
 
   /**
@@ -96,19 +92,5 @@ public class GoogleAuthException extends IOException implements Retryable {
   @Override
   public RetryStatus getRetryStatus() {
     return retryStatus;
-  }
-
-  /**
-   * Calculates retry status based on HTTP response status and number of performed retries
-   * @param responseStatus A response status from the related HTTP request
-   * @param retryCount A number of retries performed
-   * @return a retry status
-   */
-  private RetryStatus getRetryStatus(int responseStatus, int retryCount) {
-    if (responseStatus == 500 || responseStatus == 503) {
-      return retryCount > 0 ? RetryStatus.RETRIED : RetryStatus.RETRYABLE;
-    } else {
-      return RetryStatus.NON_RETRYABLE;
-    }
   }
 }
