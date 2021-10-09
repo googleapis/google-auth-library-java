@@ -31,12 +31,12 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -47,12 +47,9 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
-@RunWith(JUnit4.class)
-public class AppEngineCredentialsTest extends BaseSerializationTest {
+class AppEngineCredentialsTest extends BaseSerializationTest {
 
   private static final String EXPECTED_ACCESS_TOKEN = "ExpectedAccessToken";
   private static final Date EXPECTED_EXPIRATION_DATE =
@@ -66,7 +63,7 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
       Collections.unmodifiableCollection(Arrays.asList("scope3"));
 
   @Test
-  public void constructor_usesAppIdentityService() throws IOException {
+  void constructor_usesAppIdentityService() throws IOException {
     Collection<String> scopes = Collections.singleton("SomeScope");
     TestAppEngineCredentials credentials = new TestAppEngineCredentials(scopes);
     List<String> forNameArgs = credentials.getForNameArgs();
@@ -78,23 +75,24 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void constructor_noAppEngineRuntime_throwsHelpfulLoadError() throws IOException {
-    try {
-      new TestAppEngineCredentialsNoSdk();
-      fail("Credential expected to fail to load if credential class not present.");
-    } catch (IOException e) {
-      String message = e.getMessage();
-      assertTrue(message.contains("Check that the App Engine SDK is deployed."));
-      assertTrue(e.getCause() instanceof ClassNotFoundException);
-      assertTrue(
-          e.getCause()
-              .getMessage()
-              .contains(AppEngineCredentials.APP_IDENTITY_SERVICE_FACTORY_CLASS));
-    }
+  void constructor_noAppEngineRuntime_throwsHelpfulLoadError() {
+    IOException exception =
+        assertThrows(
+            IOException.class,
+            TestAppEngineCredentialsNoSdk::new,
+            "Credential expected to fail to load if credential class not present.");
+    String message = exception.getMessage();
+    assertTrue(message.contains("Check that the App Engine SDK is deployed."));
+    assertTrue(exception.getCause() instanceof ClassNotFoundException);
+    assertTrue(
+        exception
+            .getCause()
+            .getMessage()
+            .contains(AppEngineCredentials.APP_IDENTITY_SERVICE_FACTORY_CLASS));
   }
 
   @Test
-  public void refreshAccessToken_sameAs() throws IOException {
+  void refreshAccessToken_sameAs() throws IOException {
     TestAppEngineCredentials credentials = new TestAppEngineCredentials(SCOPES);
     AccessToken accessToken = credentials.refreshAccessToken();
     assertEquals(EXPECTED_ACCESS_TOKEN, accessToken.getTokenValue());
@@ -102,27 +100,25 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getAccount_sameAs() throws IOException {
+  void getAccount_sameAs() throws IOException {
     TestAppEngineCredentials credentials = new TestAppEngineCredentials(SCOPES);
     assertEquals(EXPECTED_ACCOUNT, credentials.getAccount());
   }
 
   @Test
-  public void sign_sameAs() throws IOException {
+  void sign_sameAs() throws IOException {
     TestAppEngineCredentials credentials = new TestAppEngineCredentials(SCOPES);
     assertArrayEquals(EXPECTED_SIGNATURE, credentials.sign("Bytes to sign".getBytes()));
   }
 
   @Test
-  public void createScoped_clonesWithScopes() throws IOException {
+  void createScoped_clonesWithScopes() throws IOException {
     TestAppEngineCredentials credentials = new TestAppEngineCredentials(null);
     assertTrue(credentials.createScopedRequired());
-    try {
-      credentials.refreshAccessToken();
-      fail("Should not be able to use credential without scopes.");
-    } catch (Exception expected) {
-      // Expected
-    }
+    assertThrows(
+        Exception.class,
+        credentials::refreshAccessToken,
+        "Should not be able to use credential without scopes.");
 
     GoogleCredentials scopedCredentials = credentials.createScoped(SCOPES);
     assertNotSame(credentials, scopedCredentials);
@@ -133,7 +129,7 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void createScoped_defaultScopes() throws IOException {
+  void createScoped_defaultScopes() throws IOException {
     TestAppEngineCredentials credentials = new TestAppEngineCredentials(null);
     assertTrue(credentials.createScopedRequired());
 
@@ -152,7 +148,7 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void equals_true() throws IOException {
+  void equals_true() throws IOException {
     GoogleCredentials credentials = new TestAppEngineCredentials(SCOPES);
     GoogleCredentials otherCredentials = new TestAppEngineCredentials(SCOPES);
     assertTrue(credentials.equals(credentials));
@@ -161,7 +157,7 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void equals_false_scopes() throws IOException {
+  void equals_false_scopes() throws IOException {
     final Collection<String> emptyScopes = Collections.emptyList();
     Collection<String> scopes = Collections.singleton("SomeScope");
     AppEngineCredentials credentials = new TestAppEngineCredentials(emptyScopes);
@@ -171,7 +167,7 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void toString_containsFields() throws IOException {
+  void toString_containsFields() throws IOException {
     String expectedToString =
         String.format(
             "TestAppEngineCredentials{scopes=[%s], scopesRequired=%b}", "SomeScope", false);
@@ -181,13 +177,13 @@ public class AppEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void hashCode_equals() throws IOException {
+  void hashCode_equals() throws IOException {
     AppEngineCredentials credentials = new TestAppEngineCredentials(SCOPES);
     assertEquals(credentials.hashCode(), credentials.hashCode());
   }
 
   @Test
-  public void serialize() throws IOException, ClassNotFoundException {
+  void serialize() throws IOException, ClassNotFoundException {
     Collection<String> scopes = Collections.singleton("SomeScope");
     AppEngineCredentials credentials = new TestAppEngineCredentials(scopes);
     GoogleCredentials deserializedCredentials = serializeAndDeserialize(credentials);
