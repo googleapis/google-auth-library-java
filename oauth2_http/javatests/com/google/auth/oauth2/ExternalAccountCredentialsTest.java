@@ -31,11 +31,11 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
@@ -53,13 +53,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import javax.annotation.Nullable;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /** Tests for {@link ExternalAccountCredentials}. */
-@RunWith(JUnit4.class)
 public class ExternalAccountCredentialsTest {
 
   private static final String STS_URL = "https://sts.googleapis.com";
@@ -77,13 +74,13 @@ public class ExternalAccountCredentialsTest {
 
   private MockExternalAccountCredentialsTransportFactory transportFactory;
 
-  @Before
-  public void setup() {
+  @BeforeEach
+  void setup() {
     transportFactory = new MockExternalAccountCredentialsTransportFactory();
   }
 
   @Test
-  public void fromStream_identityPoolCredentials() throws IOException {
+  void fromStream_identityPoolCredentials() throws IOException {
     GenericJson json = buildJsonIdentityPoolCredential();
 
     ExternalAccountCredentials credential =
@@ -93,7 +90,7 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  public void fromStream_awsCredentials() throws IOException {
+  void fromStream_awsCredentials() throws IOException {
     GenericJson json = buildJsonAwsCredential();
 
     ExternalAccountCredentials credential =
@@ -103,56 +100,57 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  public void fromStream_invalidStream_throws() throws IOException {
+  void fromStream_invalidStream_throws() {
     GenericJson json = buildJsonAwsCredential();
 
     json.put("audience", new HashMap<>());
 
-    try {
-      ExternalAccountCredentials.fromStream(TestUtils.jsonToInputStream(json));
-      fail("Should fail.");
-    } catch (CredentialFormatException e) {
-      assertEquals("An invalid input stream was provided.", e.getMessage());
-    }
+    CredentialFormatException exception =
+        assertThrows(
+            CredentialFormatException.class,
+            () -> ExternalAccountCredentials.fromStream(TestUtils.jsonToInputStream(json)),
+            "Should fail.");
+    assertEquals("An invalid input stream was provided.", exception.getMessage());
   }
 
   @Test
-  public void fromStream_nullTransport_throws() throws IOException {
-    try {
-      ExternalAccountCredentials.fromStream(
-          new ByteArrayInputStream("foo".getBytes()), /* transportFactory= */ null);
-      fail("NullPointerException should be thrown.");
-    } catch (NullPointerException e) {
-      // Expected.
-    }
+  void fromStream_nullTransport_throws() {
+    assertThrows(
+        NullPointerException.class,
+        () -> {
+          ExternalAccountCredentials.fromStream(
+              new ByteArrayInputStream("foo".getBytes()), /* transportFactory= */ null);
+        },
+        "NullPointerException should be thrown.");
   }
 
   @Test
-  public void fromStream_nullStream_throws() throws IOException {
-    try {
-      ExternalAccountCredentials.fromStream(
-          /* credentialsStream= */ null, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
-      fail("NullPointerException should be thrown.");
-    } catch (NullPointerException e) {
-      // Expected.
-    }
+  void fromStream_nullStream_throws() {
+    assertThrows(
+        NullPointerException.class,
+        () -> {
+          ExternalAccountCredentials.fromStream(
+              /* credentialsStream= */ null, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+        },
+        "NullPointerException should be thrown.");
   }
 
   @Test
-  public void fromStream_invalidWorkloadAudience_throws() throws IOException {
-    try {
-      GenericJson json = buildJsonIdentityPoolWorkforceCredential();
-      json.put("audience", "invalidAudience");
-      ExternalAccountCredentials credential =
-          ExternalAccountCredentials.fromStream(TestUtils.jsonToInputStream(json));
-      fail("CredentialFormatException should be thrown.");
-    } catch (CredentialFormatException e) {
-      assertEquals("An invalid input stream was provided.", e.getMessage());
-    }
+  void fromStream_invalidWorkloadAudience_throws() throws IOException {
+    CredentialFormatException exception =
+        assertThrows(
+            CredentialFormatException.class,
+            () -> {
+              GenericJson json = buildJsonIdentityPoolWorkforceCredential();
+              json.put("audience", "invalidAudience");
+              ExternalAccountCredentials.fromStream(TestUtils.jsonToInputStream(json));
+            },
+            "CredentialFormatException should be thrown.");
+    assertEquals("An invalid input stream was provided.", exception.getMessage());
   }
 
   @Test
-  public void fromJson_identityPoolCredentialsWorkload() {
+  void fromJson_identityPoolCredentialsWorkload() {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
             buildJsonIdentityPoolCredential(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
@@ -168,7 +166,7 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  public void fromJson_identityPoolCredentialsWorkforce() {
+  void fromJson_identityPoolCredentialsWorkforce() {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
             buildJsonIdentityPoolWorkforceCredential(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
@@ -186,7 +184,7 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  public void fromJson_awsCredentials() throws IOException {
+  void fromJson_awsCredentials() {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
             buildJsonAwsCredential(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
@@ -200,43 +198,40 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  public void fromJson_nullJson_throws() {
-    try {
-      ExternalAccountCredentials.fromJson(/* json= */ null, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
-      fail("Exception should be thrown.");
-    } catch (NullPointerException e) {
-      // Expected.
-    }
+  void fromJson_nullJson_throws() {
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            ExternalAccountCredentials.fromJson(
+                /* json= */ null, OAuth2Utils.HTTP_TRANSPORT_FACTORY),
+        "Exception should be thrown.");
   }
 
   @Test
-  public void fromJson_invalidServiceAccountImpersonationUrl_throws() {
+  void fromJson_invalidServiceAccountImpersonationUrl_throws() {
     GenericJson json = buildJsonIdentityPoolCredential();
     json.put("service_account_impersonation_url", "https://iamcredentials.googleapis.com");
 
-    try {
-      ExternalAccountCredentials.fromJson(json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
-      fail("Exception should be thrown.");
-    } catch (IllegalArgumentException e) {
-      assertEquals(
-          "Unable to determine target principal from service account impersonation URL.",
-          e.getMessage());
-    }
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> ExternalAccountCredentials.fromJson(json, OAuth2Utils.HTTP_TRANSPORT_FACTORY),
+            "Exception should be thrown.");
+    assertEquals(
+        "Unable to determine target principal from service account impersonation URL.",
+        exception.getMessage());
   }
 
   @Test
-  public void fromJson_nullTransport_throws() {
-    try {
-      ExternalAccountCredentials.fromJson(
-          new HashMap<String, Object>(), /* transportFactory= */ null);
-      fail("Exception should be thrown.");
-    } catch (NullPointerException e) {
-      // Expected.
-    }
+  void fromJson_nullTransport_throws() {
+    assertThrows(
+        NullPointerException.class,
+        () -> ExternalAccountCredentials.fromJson(new HashMap<>(), /* transportFactory= */ null),
+        "Exception should be thrown.");
   }
 
   @Test
-  public void fromJson_invalidWorkforceAudiences_throws() {
+  void fromJson_invalidWorkforceAudiences_throws() {
     List<String> invalidAudiences =
         Arrays.asList(
             "//iam.googleapis.com/locations/global/workloadIdentityPools/pool/providers/provider",
@@ -249,65 +244,71 @@ public class ExternalAccountCredentialsTest {
             "//iam.googleapis.com/locations/global/workforce/providers");
 
     for (String audience : invalidAudiences) {
-      try {
-        GenericJson json = buildJsonIdentityPoolCredential();
-        json.put("audience", audience);
-        json.put("workforce_pool_user_project", "userProject");
+      IllegalArgumentException exception =
+          assertThrows(
+              IllegalArgumentException.class,
+              () -> {
+                GenericJson json = buildJsonIdentityPoolCredential();
+                json.put("audience", audience);
+                json.put("workforce_pool_user_project", "userProject");
 
-        ExternalAccountCredentials.fromJson(json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
-        fail("Exception should be thrown.");
-      } catch (IllegalArgumentException e) {
-        assertEquals(
-            "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.",
-            e.getMessage());
-      }
+                ExternalAccountCredentials.fromJson(json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+              },
+              "Exception should be thrown.");
+      assertEquals(
+          "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.",
+          exception.getMessage());
     }
   }
 
   @Test
-  public void constructor_invalidTokenUrl() {
-    try {
-      new TestExternalAccountCredentials(
-          transportFactory,
-          "audience",
-          "subjectTokenType",
-          "tokenUrl",
-          new TestCredentialSource(new HashMap<String, Object>()),
-          STS_URL,
-          /* serviceAccountImpersonationUrl= */ null,
-          "quotaProjectId",
-          /* clientId= */ null,
-          /* clientSecret= */ null,
-          /* scopes= */ null);
-      fail("Should have failed since an invalid token URL was passed.");
-    } catch (IllegalArgumentException e) {
-      assertEquals("The provided token URL is invalid.", e.getMessage());
-    }
+  void constructor_invalidTokenUrl() {
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> {
+              new TestExternalAccountCredentials(
+                  transportFactory,
+                  "audience",
+                  "subjectTokenType",
+                  "tokenUrl",
+                  new TestCredentialSource(new HashMap<String, Object>()),
+                  STS_URL,
+                  /* serviceAccountImpersonationUrl= */ null,
+                  "quotaProjectId",
+                  /* clientId= */ null,
+                  /* clientSecret= */ null,
+                  /* scopes= */ null);
+            },
+            "Should have failed since an invalid token URL was passed.");
+    assertEquals("The provided token URL is invalid.", exception.getMessage());
   }
 
   @Test
-  public void constructor_invalidServiceAccountImpersonationUrl() {
-    try {
-      new TestExternalAccountCredentials(
-          transportFactory,
-          "audience",
-          "subjectTokenType",
-          "tokenUrl",
-          new TestCredentialSource(new HashMap<String, Object>()),
-          /* tokenInfoUrl= */ null,
-          "serviceAccountImpersonationUrl",
-          "quotaProjectId",
-          /* clientId= */ null,
-          /* clientSecret= */ null,
-          /* scopes= */ null);
-      fail("Should have failed since an invalid token URL was passed.");
-    } catch (IllegalArgumentException e) {
-      assertEquals("The provided token URL is invalid.", e.getMessage());
-    }
+  void constructor_invalidServiceAccountImpersonationUrl() {
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> {
+              new TestExternalAccountCredentials(
+                  transportFactory,
+                  "audience",
+                  "subjectTokenType",
+                  "tokenUrl",
+                  new TestCredentialSource(new HashMap<>()),
+                  /* tokenInfoUrl= */ null,
+                  "serviceAccountImpersonationUrl",
+                  "quotaProjectId",
+                  /* clientId= */ null,
+                  /* clientSecret= */ null,
+                  /* scopes= */ null);
+            },
+            "Should have failed since an invalid token URL was passed.");
+    assertEquals("The provided token URL is invalid.", exception.getMessage());
   }
 
   @Test
-  public void exchangeExternalCredentialForAccessToken() throws IOException {
+  void exchangeExternalCredentialForAccessToken() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(buildJsonIdentityPoolCredential(), transportFactory);
 
@@ -326,7 +327,7 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  public void exchangeExternalCredentialForAccessToken_withInternalOptions() throws IOException {
+  void exchangeExternalCredentialForAccessToken_withInternalOptions() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(buildJsonIdentityPoolCredential(), transportFactory);
 
@@ -350,7 +351,7 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  public void exchangeExternalCredentialForAccessToken_withServiceAccountImpersonation()
+  void exchangeExternalCredentialForAccessToken_withServiceAccountImpersonation()
       throws IOException {
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
 
@@ -373,7 +374,7 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  public void exchangeExternalCredentialForAccessToken_throws() throws IOException {
+  void exchangeExternalCredentialForAccessToken_throws() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(buildJsonIdentityPoolCredential(), transportFactory);
 
@@ -386,18 +387,18 @@ public class ExternalAccountCredentialsTest {
     StsTokenExchangeRequest stsTokenExchangeRequest =
         StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
 
-    try {
-      credential.exchangeExternalCredentialForAccessToken(stsTokenExchangeRequest);
-      fail("Exception should be thrown.");
-    } catch (OAuthException e) {
-      assertEquals(errorCode, e.getErrorCode());
-      assertEquals(errorDescription, e.getErrorDescription());
-      assertEquals(errorUri, e.getErrorUri());
-    }
+    OAuthException exception =
+        assertThrows(
+            OAuthException.class,
+            () -> credential.exchangeExternalCredentialForAccessToken(stsTokenExchangeRequest),
+            "Exception should be thrown.");
+    assertEquals(errorCode, exception.getErrorCode());
+    assertEquals(errorDescription, exception.getErrorDescription());
+    assertEquals(errorUri, exception.getErrorUri());
   }
 
   @Test
-  public void getRequestMetadata_withQuotaProjectId() throws IOException {
+  void getRequestMetadata_withQuotaProjectId() throws IOException {
     TestExternalAccountCredentials testCredentials =
         new TestExternalAccountCredentials(
             transportFactory,
@@ -419,7 +420,7 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  public void validateTokenUrl_validUrls() {
+  void validateTokenUrl_validUrls() {
     List<String> validUrls =
         Arrays.asList(
             "https://sts.googleapis.com",
@@ -438,7 +439,7 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  public void validateTokenUrl_invalidUrls() {
+  void validateTokenUrl_invalidUrls() {
     List<String> invalidUrls =
         Arrays.asList(
             "https://iamcredentials.googleapis.com",
@@ -462,17 +463,17 @@ public class ExternalAccountCredentialsTest {
             "https://us-east-1.sts.googleapis.com.evil.com");
 
     for (String url : invalidUrls) {
-      try {
-        ExternalAccountCredentials.validateTokenUrl(url);
-        fail("Should have failed since an invalid URL was passed.");
-      } catch (IllegalArgumentException e) {
-        assertEquals("The provided token URL is invalid.", e.getMessage());
-      }
+      IllegalArgumentException exception =
+          assertThrows(
+              IllegalArgumentException.class,
+              () -> ExternalAccountCredentials.validateTokenUrl(url),
+              "Should have failed since an invalid URL was passed.");
+      assertEquals("The provided token URL is invalid.", exception.getMessage());
     }
   }
 
   @Test
-  public void validateServiceAccountImpersonationUrls_validUrls() {
+  void validateServiceAccountImpersonationUrls_validUrls() {
     List<String> validUrls =
         Arrays.asList(
             "https://iamcredentials.googleapis.com",
@@ -492,7 +493,7 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  public void validateServiceAccountImpersonationUrls_invalidUrls() {
+  void validateServiceAccountImpersonationUrls_invalidUrls() {
     List<String> invalidUrls =
         Arrays.asList(
             "https://sts.googleapis.com",
@@ -516,12 +517,13 @@ public class ExternalAccountCredentialsTest {
             "https://us-east-1.iamcredentials.googleapis.com.evil.com");
 
     for (String url : invalidUrls) {
-      try {
-        ExternalAccountCredentials.validateServiceAccountImpersonationInfoUrl(url);
-        fail("Should have failed since an invalid URL was passed.");
-      } catch (IllegalArgumentException e) {
-        assertEquals("The provided service account impersonation URL is invalid.", e.getMessage());
-      }
+      IllegalArgumentException exception =
+          assertThrows(
+              IllegalArgumentException.class,
+              () -> ExternalAccountCredentials.validateServiceAccountImpersonationInfoUrl(url),
+              "Should have failed since an invalid URL was passed.");
+      assertEquals(
+          "The provided service account impersonation URL is invalid.", exception.getMessage());
     }
   }
 
