@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.2.1](https://www.github.com/googleapis/google-auth-library-java/compare/v1.2.0...v1.2.1) (2021-10-11)
+
+
+### Bug Fixes
+
+* disabling self-signed jwt for domain wide delegation ([#754](https://www.github.com/googleapis/google-auth-library-java/issues/754)) ([ac70a27](https://www.github.com/googleapis/google-auth-library-java/commit/ac70a279bdaf681507d7815264a3f5e92fd2aaa6))
+
 ## [1.2.0](https://www.github.com/googleapis/google-auth-library-java/compare/v1.1.0...v1.2.0) (2021-09-30)
 
 
