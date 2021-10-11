@@ -31,19 +31,16 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
 /** Test case for {@link IdTokenCredentials}. */
-@RunWith(JUnit4.class)
-public class IdTokenCredentialsTest extends BaseSerializationTest {
+class IdTokenCredentialsTest extends BaseSerializationTest {
 
   @Test
-  public void hashCode_equals() throws IOException {
+  void hashCode_equals() throws IOException {
     ComputeEngineCredentialsTest.MockMetadataServerTransportFactory transportFactory =
         new ComputeEngineCredentialsTest.MockMetadataServerTransportFactory();
     transportFactory.transport.setIdToken(ComputeEngineCredentialsTest.STANDARD_ID_TOKEN);
@@ -69,7 +66,7 @@ public class IdTokenCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void toString_equals() throws IOException {
+  void toString_equals() throws IOException {
     ComputeEngineCredentialsTest.MockMetadataServerTransportFactory transportFactory =
         new ComputeEngineCredentialsTest.MockMetadataServerTransportFactory();
     transportFactory.transport.setIdToken(ComputeEngineCredentialsTest.STANDARD_ID_TOKEN);
@@ -95,7 +92,7 @@ public class IdTokenCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void serialize() throws IOException, ClassNotFoundException {
+  void serialize() throws IOException, ClassNotFoundException {
 
     ComputeEngineCredentialsTest.MockMetadataServerTransportFactory transportFactory =
         new ComputeEngineCredentialsTest.MockMetadataServerTransportFactory();
