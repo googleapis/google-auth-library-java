@@ -31,14 +31,13 @@
 
 package com.google.auth.oauth2;
 
-import static java.util.concurrent.TimeUnit.MINUTES;
-
 import com.google.api.client.util.Clock;
 import com.google.auth.Credentials;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -51,6 +50,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.net.URI;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -67,9 +67,12 @@ import javax.annotation.Nullable;
 public class OAuth2Credentials extends Credentials {
 
   private static final long serialVersionUID = 4556936364828217687L;
-  static final long MINIMUM_TOKEN_MILLISECONDS = MINUTES.toMillis(5);
-  static final long REFRESH_MARGIN_MILLISECONDS = MINIMUM_TOKEN_MILLISECONDS + MINUTES.toMillis(1);
+  static final Duration DEFAULT_EXPIRATION_MARGIN = Duration.ofMinutes(5);
+  static final Duration DEFAULT_REFRESH_MARGIN = Duration.ofMinutes(6);
   private static final ImmutableMap<String, List<String>> EMPTY_EXTRA_HEADERS = ImmutableMap.of();
+
+  private final Duration expirationMargin;
+  private final Duration refreshMargin;
 
   // byte[] is serializable, so the lock variable can be final
   @VisibleForTesting final Object lock = new byte[0];
@@ -102,9 +105,20 @@ public class OAuth2Credentials extends Credentials {
    * @param accessToken initial or temporary access token
    */
   protected OAuth2Credentials(AccessToken accessToken) {
+    this(accessToken, DEFAULT_REFRESH_MARGIN, DEFAULT_EXPIRATION_MARGIN);
+  }
+
+  protected OAuth2Credentials(
+      AccessToken accessToken, Duration refreshMargin, Duration expirationMargin) {
     if (accessToken != null) {
       this.value = OAuthValue.create(accessToken, EMPTY_EXTRA_HEADERS);
     }
+
+    this.refreshMargin = Preconditions.checkNotNull(refreshMargin, "refreshMargin");
+    Preconditions.checkArgument(!refreshMargin.isNegative(), "refreshMargin can't be negative");
+    this.expirationMargin = Preconditions.checkNotNull(expirationMargin, "expirationMargin");
+    Preconditions.checkArgument(
+        !expirationMargin.isNegative(), "expirationMargin can't be negative");
   }
 
   @Override
@@ -324,13 +338,12 @@ public class OAuth2Credentials extends Credentials {
       return CacheState.FRESH;
     }
 
-    long remainingMillis = expirationTime.getTime() - clock.currentTimeMillis();
-
-    if (remainingMillis <= MINIMUM_TOKEN_MILLISECONDS) {
+    Duration remaining = Duration.ofMillis(expirationTime.getTime() - clock.currentTimeMillis());
+    if (remaining.compareTo(expirationMargin) <= 0) {
       return CacheState.EXPIRED;
     }
 
-    if (remainingMillis <= REFRESH_MARGIN_MILLISECONDS) {
+    if (remaining.compareTo(refreshMargin) <= 0) {
       return CacheState.STALE;
     }
 
@@ -572,11 +585,15 @@ public class OAuth2Credentials extends Credentials {
   public static class Builder {
 
     private AccessToken accessToken;
+    private Duration refreshMargin = DEFAULT_REFRESH_MARGIN;
+    private Duration expirationMargin = DEFAULT_EXPIRATION_MARGIN;
 
     protected Builder() {}
 
     protected Builder(OAuth2Credentials credentials) {
       this.accessToken = credentials.getAccessToken();
+      this.refreshMargin = credentials.refreshMargin;
+      this.expirationMargin = credentials.expirationMargin;
     }
 
     public Builder setAccessToken(AccessToken token) {
@@ -584,12 +601,30 @@ public class OAuth2Credentials extends Credentials {
       return this;
     }
 
+    public Builder setRefreshMargin(Duration refreshMargin) {
+      this.refreshMargin = refreshMargin;
+      return this;
+    }
+
+    public Duration getRefreshMargin() {
+      return refreshMargin;
+    }
+
+    public Builder setExpirationMargin(Duration expirationMargin) {
+      this.expirationMargin = expirationMargin;
+      return this;
+    }
+
+    public Duration getExpirationMargin() {
+      return expirationMargin;
+    }
+
     public AccessToken getAccessToken() {
       return accessToken;
     }
 
     public OAuth2Credentials build() {
-      return new OAuth2Credentials(accessToken);
+      return new OAuth2Credentials(accessToken, refreshMargin, expirationMargin);
     }
   }
 }

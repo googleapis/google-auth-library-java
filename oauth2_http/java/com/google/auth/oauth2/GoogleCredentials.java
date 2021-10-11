@@ -40,6 +40,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -211,6 +212,16 @@ public class GoogleCredentials extends OAuth2Credentials {
    */
   public GoogleCredentials(AccessToken accessToken) {
     super(accessToken);
+  }
+
+  /**
+   * Constructor with explicit access token and refresh times
+   *
+   * @param accessToken initial or temporary access token
+   */
+  protected GoogleCredentials(
+      AccessToken accessToken, Duration refreshMargin, Duration expirationMargin) {
+    super(accessToken, refreshMargin, expirationMargin);
   }
 
   public static Builder newBuilder() {
