@@ -31,8 +31,8 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
@@ -51,8 +51,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Integration tests for Workload Identity Federation.
@@ -62,7 +62,7 @@ import org.junit.Test;
  * (workloadidentityfederation-setup). These tests call GCS to get bucket information. The bucket
  * name must be provided through the GCS_BUCKET environment variable.
  */
-public final class ITWorkloadIdentityFederationTest {
+class ITWorkloadIdentityFederationTest {
 
   // Copy output from workloadidentityfederation-setup.
   private static final String AUDIENCE_PREFIX =
@@ -75,8 +75,8 @@ public final class ITWorkloadIdentityFederationTest {
 
   private String clientEmail;
 
-  @Before
-  public void setup() throws IOException {
+  @BeforeEach
+  void setup() throws IOException {
     GenericJson keys = getServiceAccountKeyFileAsJson();
     clientEmail = (String) keys.get("client_email");
   }
@@ -89,7 +89,7 @@ public final class ITWorkloadIdentityFederationTest {
    * service account key.
    */
   @Test
-  public void identityPoolCredentials() throws IOException {
+  void identityPoolCredentials() throws IOException {
     IdentityPoolCredentials identityPoolCredentials =
         (IdentityPoolCredentials)
             ExternalAccountCredentials.fromJson(
@@ -108,7 +108,7 @@ public final class ITWorkloadIdentityFederationTest {
    * service account key.
    */
   @Test
-  public void awsCredentials() throws Exception {
+  void awsCredentials() throws Exception {
     String idToken = generateGoogleIdToken(AWS_AUDIENCE);
 
     String url =
@@ -202,9 +202,7 @@ public final class ITWorkloadIdentityFederationTest {
 
   private void callGcs(GoogleCredentials credentials) throws IOException {
     String bucketName = System.getenv("GCS_BUCKET");
-    if (bucketName == null) {
-      fail("GCS bucket name not set through GCS_BUCKET env variable.");
-    }
+    assertNotNull(bucketName, "GCS bucket name not set through GCS_BUCKET env variable.");
 
     String url = "https://storage.googleapis.com/storage/v1/b/" + bucketName;
 
