@@ -31,23 +31,20 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
 import java.util.Date;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
 /** Tests for {@link OAuth2CredentialsWithRefresh}. */
-@RunWith(JUnit4.class)
-public class OAuth2CredentialsWithRefreshTest {
+class OAuth2CredentialsWithRefreshTest {
 
   private static final AccessToken ACCESS_TOKEN = new AccessToken("accessToken", new Date());
 
   @Test
-  public void builder() {
+  void builder() {
     OAuth2CredentialsWithRefresh.OAuth2RefreshHandler refreshHandler =
         new OAuth2CredentialsWithRefresh.OAuth2RefreshHandler() {
           @Override
@@ -66,7 +63,7 @@ public class OAuth2CredentialsWithRefreshTest {
   }
 
   @Test
-  public void builder_noAccessToken() {
+  void builder_noAccessToken() {
     OAuth2CredentialsWithRefresh.newBuilder()
         .setRefreshHandler(
             new OAuth2CredentialsWithRefresh.OAuth2RefreshHandler() {
@@ -79,29 +76,27 @@ public class OAuth2CredentialsWithRefreshTest {
   }
 
   @Test
-  public void builder_noRefreshHandler_throws() {
-    try {
-      OAuth2CredentialsWithRefresh.newBuilder().setAccessToken(ACCESS_TOKEN).build();
-      fail("Should fail as a refresh handler must be provided.");
-    } catch (NullPointerException e) {
-      // Expected.
-    }
+  void builder_noRefreshHandler_throws() {
+    assertThrows(
+        NullPointerException.class,
+        () -> OAuth2CredentialsWithRefresh.newBuilder().setAccessToken(ACCESS_TOKEN).build(),
+        "Should fail as a refresh handler must be provided.");
   }
 
   @Test
-  public void builder_noExpirationTimeInAccessToken_throws() {
-    try {
-      OAuth2CredentialsWithRefresh.newBuilder()
-          .setAccessToken(new AccessToken("accessToken", null))
-          .build();
-      fail("Should fail as a refresh handler must be provided.");
-    } catch (IllegalArgumentException e) {
-      // Expected.
-    }
+  void builder_noExpirationTimeInAccessToken_throws() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> {
+          OAuth2CredentialsWithRefresh.newBuilder()
+              .setAccessToken(new AccessToken("accessToken", null))
+              .build();
+        },
+        "Should fail as a refresh handler must be provided.");
   }
 
   @Test
-  public void refreshAccessToken_delegateToRefreshHandler() throws IOException {
+  void refreshAccessToken_delegateToRefreshHandler() throws IOException {
     final AccessToken refreshedToken = new AccessToken("refreshedAccessToken", new Date());
     OAuth2CredentialsWithRefresh credentials =
         OAuth2CredentialsWithRefresh.newBuilder()
