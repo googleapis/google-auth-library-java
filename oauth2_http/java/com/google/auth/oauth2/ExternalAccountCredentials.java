@@ -100,6 +100,103 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   private EnvironmentProvider environmentProvider;
 
   /**
+   * Constructor with minimum identifying information and custom HTTP transport. Does not support
+   * workforce credentials.
+   *
+   * @param transportFactory HTTP transport factory, creates the transport used to get access tokens
+   * @param audience the STS audience which is usually the fully specified resource name of the
+   *     workload/workforce pool provider
+   * @param subjectTokenType the STS subject token type based on the OAuth 2.0 token exchange spec.
+   *     Indicates the type of the security token in the credential file
+   * @param tokenUrl the STS token exchange endpoint
+   * @param tokenInfoUrl the endpoint used to retrieve account related information. Required for
+   *     gCloud session account identification.
+   * @param credentialSource the external credential source
+   * @param serviceAccountImpersonationUrl the URL for the service account impersonation request.
+   *     This is only required for workload identity pools when APIs to be accessed have not
+   *     integrated with UberMint. If this is not available, the STS returned GCP access token is
+   *     directly used. May be null.
+   * @param quotaProjectId the project used for quota and billing purposes. May be null.
+   * @param clientId client ID of the service account from the console. May be null.
+   * @param clientSecret client secret of the service account from the console. May be null.
+   * @param scopes the scopes to request during the authorization grant. May be null.
+   */
+  protected ExternalAccountCredentials(
+      HttpTransportFactory transportFactory,
+      String audience,
+      String subjectTokenType,
+      String tokenUrl,
+      CredentialSource credentialSource,
+      @Nullable String tokenInfoUrl,
+      @Nullable String serviceAccountImpersonationUrl,
+      @Nullable String quotaProjectId,
+      @Nullable String clientId,
+      @Nullable String clientSecret,
+      @Nullable Collection<String> scopes) {
+    this(
+        transportFactory,
+        audience,
+        subjectTokenType,
+        tokenUrl,
+        credentialSource,
+        tokenInfoUrl,
+        serviceAccountImpersonationUrl,
+        quotaProjectId,
+        clientId,
+        clientSecret,
+        scopes,
+        /* environmentProvider= */ null);
+  }
+
+  /**
+   * See {@link ExternalAccountCredentials#ExternalAccountCredentials(HttpTransportFactory, String,
+   * String, String, CredentialSource, String, String, String, String, String, Collection)}
+   *
+   * @param environmentProvider the environment provider. May be null. Defaults to {@link
+   *     SystemEnvironmentProvider}.
+   */
+  protected ExternalAccountCredentials(
+      HttpTransportFactory transportFactory,
+      String audience,
+      String subjectTokenType,
+      String tokenUrl,
+      CredentialSource credentialSource,
+      @Nullable String tokenInfoUrl,
+      @Nullable String serviceAccountImpersonationUrl,
+      @Nullable String quotaProjectId,
+      @Nullable String clientId,
+      @Nullable String clientSecret,
+      @Nullable Collection<String> scopes,
+      @Nullable EnvironmentProvider environmentProvider) {
+    this.transportFactory =
+        MoreObjects.firstNonNull(
+            transportFactory,
+            getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
+    this.transportFactoryClassName = checkNotNull(this.transportFactory.getClass().getName());
+    this.audience = checkNotNull(audience);
+    this.subjectTokenType = checkNotNull(subjectTokenType);
+    this.tokenUrl = checkNotNull(tokenUrl);
+    this.credentialSource = checkNotNull(credentialSource);
+    this.tokenInfoUrl = tokenInfoUrl;
+    this.serviceAccountImpersonationUrl = serviceAccountImpersonationUrl;
+    this.quotaProjectId = quotaProjectId;
+    this.clientId = clientId;
+    this.clientSecret = clientSecret;
+    this.scopes =
+        (scopes == null || scopes.isEmpty()) ? Arrays.asList(CLOUD_PLATFORM_SCOPE) : scopes;
+    this.environmentProvider =
+        environmentProvider == null ? SystemEnvironmentProvider.getInstance() : environmentProvider;
+    this.workforcePoolUserProject = null;
+
+    validateTokenUrl(tokenUrl);
+    if (serviceAccountImpersonationUrl != null) {
+      validateServiceAccountImpersonationInfoUrl(serviceAccountImpersonationUrl);
+    }
+
+    this.impersonatedCredentials = initializeImpersonatedCredentials();
+  }
+
+  /**
    * Internal constructor with minimum identifying information and custom HTTP transport. See {@link
    * ExternalAccountCredentials.Builder}.
    */
