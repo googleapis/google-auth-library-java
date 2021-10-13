@@ -379,6 +379,42 @@ class IdentityPoolCredentialsTest {
   }
 
   @Test
+  void refreshAccessToken_workforceWithServiceAccountImpersonation() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
+    IdentityPoolCredentials credential =
+        (IdentityPoolCredentials)
+            IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+                .setAudience(
+                    "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+                .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setServiceAccountImpersonationUrl(
+                    transportFactory.transport.getServiceAccountImpersonationUrl())
+                .setHttpTransportFactory(transportFactory)
+                .setCredentialSource(
+                    buildUrlBasedCredentialSource(transportFactory.transport.getMetadataUrl()))
+                .setWorkforcePoolUserProject("userProject")
+                .build();
+
+    AccessToken accessToken = credential.refreshAccessToken();
+
+    assertEquals(
+        transportFactory.transport.getServiceAccountAccessToken(), accessToken.getTokenValue());
+
+    // Validate internal options set.
+    Map<String, String> query = TestUtils.parseQuery(transportFactory.transport.getStsContent());
+
+    GenericJson expectedInternalOptions = new GenericJson();
+    expectedInternalOptions.setFactory(OAuth2Utils.JSON_FACTORY);
+    expectedInternalOptions.put("userProject", "userProject");
+
+    assertNotNull(query.get("options"));
+    assertEquals(expectedInternalOptions.toString(), query.get("options"));
+  }
+
+  @Test
   void identityPoolCredentialSource_invalidSourceType() {
     IllegalArgumentException exception =
         assertThrows(
