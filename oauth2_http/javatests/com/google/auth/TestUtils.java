@@ -31,8 +31,9 @@
 
 package com.google.auth;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpResponseException;
@@ -45,8 +46,8 @@ import com.google.common.collect.Lists;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -63,40 +64,31 @@ public class TestUtils {
   public static void assertContainsBearerToken(Map<String, List<String>> metadata, String token) {
     assertNotNull(metadata);
     assertNotNull(token);
-    assertTrue("Bearer token not found", hasBearerToken(metadata, token));
+    assertTrue(hasBearerToken(metadata, token), "Bearer token not found");
   }
 
   public static void assertNotContainsBearerToken(
       Map<String, List<String>> metadata, String token) {
     assertNotNull(metadata);
     assertNotNull(token);
-    assertTrue("Bearer token found", !hasBearerToken(metadata, token));
+    assertFalse(hasBearerToken(metadata, token), "Bearer token found");
   }
 
   private static boolean hasBearerToken(Map<String, List<String>> metadata, String token) {
     String expectedValue = AuthHttpConstants.BEARER + " " + token;
     List<String> authorizations = metadata.get(AuthHttpConstants.AUTHORIZATION);
-    assertNotNull("Authorization headers not found", authorizations);
-    for (String authorization : authorizations) {
-      if (expectedValue.equals(authorization)) {
-        return true;
-      }
-    }
-    return false;
+    assertNotNull(authorizations, "Authorization headers not found");
+    return authorizations.contains(expectedValue);
   }
 
   public static InputStream jsonToInputStream(GenericJson json) throws IOException {
     json.setFactory(JSON_FACTORY);
     String text = json.toPrettyString();
-    return new ByteArrayInputStream(text.getBytes("UTF-8"));
+    return new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8));
   }
 
   public static InputStream stringToInputStream(String text) {
-    try {
-      return new ByteArrayInputStream(text.getBytes("UTF-8"));
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException("Unexpected encoding exception", e);
-    }
+    return new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8));
   }
 
   public static Map<String, String> parseQuery(String query) throws IOException {
