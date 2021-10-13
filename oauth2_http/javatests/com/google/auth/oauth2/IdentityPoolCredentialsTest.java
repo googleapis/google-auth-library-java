@@ -515,27 +515,18 @@ class IdentityPoolCredentialsTest {
   }
 
   @Test
-  void builder_emptyWorkforceUserProjectWithWorkforceAudience_throws() {
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> {
-              IdentityPoolCredentials.newBuilder()
-                  .setWorkforcePoolUserProject("")
-                  .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-                  .setAudience(
-                      "//iam.googleapis.com/locations/global/workforcePools/providers/provider")
-                  .setSubjectTokenType("subjectTokenType")
-                  .setTokenUrl(STS_URL)
-                  .setTokenInfoUrl("tokenInfoUrl")
-                  .setCredentialSource(FILE_CREDENTIAL_SOURCE)
-                  .setQuotaProjectId("quotaProjectId")
-                  .build();
-            },
-            "Exception should be thrown.");
-    assertEquals(
-        "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.",
-        exception.getMessage());
+  void builder_emptyWorkforceUserProjectWithWorkforceAudience() {
+    // No exception should be thrown.
+    IdentityPoolCredentials.newBuilder()
+        .setWorkforcePoolUserProject("")
+        .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+        .setAudience("//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+        .setSubjectTokenType("subjectTokenType")
+        .setTokenUrl(STS_URL)
+        .setTokenInfoUrl("tokenInfoUrl")
+        .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+        .setQuotaProjectId("quotaProjectId")
+        .build();
   }
 
   static InputStream writeIdentityPoolCredentialsStream(

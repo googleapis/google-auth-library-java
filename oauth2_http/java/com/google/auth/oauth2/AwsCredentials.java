@@ -37,7 +37,6 @@ import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonParser;
-import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -49,7 +48,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.annotation.Nullable;
 
 /**
  * AWS credentials representing a third-party identity for calling Google APIs.
@@ -114,39 +112,10 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
   private final AwsCredentialSource awsCredentialSource;
 
-  /**
-   * Internal constructor. See {@link
-   * ExternalAccountCredentials#ExternalAccountCredentials(HttpTransportFactory, String, String,
-   * String, CredentialSource, String, String, String, String, String, Collection,
-   * EnvironmentProvider)}
-   */
-  AwsCredentials(
-      HttpTransportFactory transportFactory,
-      String audience,
-      String subjectTokenType,
-      String tokenUrl,
-      AwsCredentialSource credentialSource,
-      @Nullable String tokenInfoUrl,
-      @Nullable String serviceAccountImpersonationUrl,
-      @Nullable String quotaProjectId,
-      @Nullable String clientId,
-      @Nullable String clientSecret,
-      @Nullable Collection<String> scopes,
-      @Nullable EnvironmentProvider environmentProvider) {
-    super(
-        transportFactory,
-        audience,
-        subjectTokenType,
-        tokenUrl,
-        credentialSource,
-        tokenInfoUrl,
-        serviceAccountImpersonationUrl,
-        quotaProjectId,
-        clientId,
-        clientSecret,
-        scopes,
-        environmentProvider);
-    this.awsCredentialSource = credentialSource;
+  /** Internal constructor. See {@link AwsCredentials.Builder}. */
+  AwsCredentials(Builder builder) {
+    super(builder);
+    this.awsCredentialSource = (AwsCredentialSource) builder.credentialSource;
   }
 
   @Override
@@ -192,19 +161,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
   /** Clones the AwsCredentials with the specified scopes. */
   @Override
   public GoogleCredentials createScoped(Collection<String> newScopes) {
-    return new AwsCredentials(
-        transportFactory,
-        getAudience(),
-        getSubjectTokenType(),
-        getTokenUrl(),
-        awsCredentialSource,
-        getTokenInfoUrl(),
-        getServiceAccountImpersonationUrl(),
-        getQuotaProjectId(),
-        getClientId(),
-        getClientSecret(),
-        newScopes,
-        getEnvironmentProvider());
+    return new AwsCredentials((AwsCredentials.Builder) newBuilder(this).setScopes(newScopes));
   }
 
   private String retrieveResource(String url, String resourceName) throws IOException {
@@ -342,19 +299,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
     @Override
     public AwsCredentials build() {
-      return new AwsCredentials(
-          transportFactory,
-          audience,
-          subjectTokenType,
-          tokenUrl,
-          (AwsCredentialSource) credentialSource,
-          tokenInfoUrl,
-          serviceAccountImpersonationUrl,
-          quotaProjectId,
-          clientId,
-          clientSecret,
-          scopes,
-          environmentProvider);
+      return new AwsCredentials(this);
     }
   }
 }
