@@ -60,12 +60,9 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.security.PrivateKey;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import com.google.common.collect.ImmutableSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -107,11 +104,13 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
           + "CJzdWIiOiIxMDIxMDE1NTA4MzQyMDA3MDg1NjgifQ.redacted";
   public static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
 
+  private static final Set<String> IMMUTABLE_SCOPES = ImmutableSet.of("scope1","scope2");
+
   private static final String PROJECT_ID = "project-id";
   public static final String IMPERSONATED_CLIENT_EMAIL =
       "impersonated-account@iam.gserviceaccount.com";
   private static final List<String> SCOPES =
-      Arrays.asList("https://www.googleapis.com/auth/devstorage.read_only");
+          ImmutableList.of("scope1", "scope2");
   private static final int VALID_LIFETIME = 300;
   private static final int INVALID_LIFETIME = 43210;
   private static JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
@@ -300,6 +299,29 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
     assertEquals(targetCredentials.getLifetime(), scoped_credentials.getLifetime());
     assertEquals(
         targetCredentials.getSourceCredentials(), scoped_credentials.getSourceCredentials());
+    assertEquals(targetCredentials.getQuotaProjectId(), scoped_credentials.getQuotaProjectId());
+    assertEquals(Arrays.asList("scope1", "scope2"), scoped_credentials.getScopes());
+  }
+
+  @Test
+  void createScopedWithImmutableScopes() {
+    ImpersonatedCredentials targetCredentials =
+            ImpersonatedCredentials.create(
+                    sourceCredentials,
+                    IMPERSONATED_CLIENT_EMAIL,
+                    DELEGATES,
+                    SCOPES,
+                    VALID_LIFETIME,
+                    mockTransportFactory,
+                    QUOTA_PROJECT_ID);
+
+    ImpersonatedCredentials scoped_credentials =
+            (ImpersonatedCredentials) targetCredentials.createScoped(IMMUTABLE_SCOPES);
+    assertEquals(targetCredentials.getAccount(), scoped_credentials.getAccount());
+    assertEquals(targetCredentials.getDelegates(), scoped_credentials.getDelegates());
+    assertEquals(targetCredentials.getLifetime(), scoped_credentials.getLifetime());
+    assertEquals(
+            targetCredentials.getSourceCredentials(), scoped_credentials.getSourceCredentials());
     assertEquals(targetCredentials.getQuotaProjectId(), scoped_credentials.getQuotaProjectId());
     assertEquals(Arrays.asList("scope1", "scope2"), scoped_credentials.getScopes());
   }
