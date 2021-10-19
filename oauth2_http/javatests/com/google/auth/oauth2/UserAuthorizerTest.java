@@ -31,11 +31,11 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.google.auth.TestUtils;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
@@ -46,13 +46,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
 /** Unit Tests for UserAuthorizer */
-@RunWith(JUnit4.class)
-public class UserAuthorizerTest {
+class UserAuthorizerTest {
   private static final String CLIENT_ID_VALUE = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
   private static final String CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
   private static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
@@ -69,7 +66,7 @@ public class UserAuthorizerTest {
   private static final URI BASE_URI = URI.create("http://example.com/foo");
 
   @Test
-  public void constructorMinimum() {
+  void constructorMinimum() {
     TokenStore store = new MemoryTokensStorage();
 
     UserAuthorizer authorizer =
@@ -86,7 +83,7 @@ public class UserAuthorizerTest {
   }
 
   @Test
-  public void constructorCommon() {
+  void constructorCommon() {
     TokenStore store = new MemoryTokensStorage();
 
     UserAuthorizer authorizer =
@@ -103,18 +100,22 @@ public class UserAuthorizerTest {
     assertEquals(CALLBACK_URI, authorizer.getCallbackUri());
   }
 
-  @Test(expected = NullPointerException.class)
-  public void constructorCommon_nullClientId_throws() {
-    UserAuthorizer.newBuilder().setScopes(SCOPES).setCallbackUri(CALLBACK_URI).build();
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void constructorCommon_nullScopes_throws() {
-    UserAuthorizer.newBuilder().setClientId(CLIENT_ID).build();
+  @Test
+  void constructorCommon_nullClientId_throws() {
+    assertThrows(
+        NullPointerException.class,
+        () -> UserAuthorizer.newBuilder().setScopes(SCOPES).setCallbackUri(CALLBACK_URI).build());
   }
 
   @Test
-  public void getCallbackUri_relativeToBase() {
+  void constructorCommon_nullScopes_throws() {
+    assertThrows(
+        NullPointerException.class,
+        () -> UserAuthorizer.newBuilder().setClientId(CLIENT_ID).build());
+  }
+
+  @Test
+  void getCallbackUri_relativeToBase() {
     final URI callbackURI = URI.create("/bar");
     final URI expectedCallbackURI = URI.create("http://example.com/bar");
     UserAuthorizer authorizer =
@@ -130,7 +131,7 @@ public class UserAuthorizerTest {
   }
 
   @Test
-  public void getAuthorizationUrl() throws IOException {
+  void getAuthorizationUrl() throws IOException {
     final String CUSTOM_STATE = "custom_state";
     final String PROTOCOL = "https";
     final String HOST = "accounts.test.com";
@@ -162,7 +163,7 @@ public class UserAuthorizerTest {
   }
 
   @Test
-  public void getCredentials_noCredentials_returnsNull() throws IOException {
+  void getCredentials_noCredentials_returnsNull() throws IOException {
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
@@ -176,7 +177,7 @@ public class UserAuthorizerTest {
   }
 
   @Test
-  public void getCredentials_storedCredentials_returnsStored() throws IOException {
+  void getCredentials_storedCredentials_returnsStored() throws IOException {
     TokenStore tokenStore = new MemoryTokensStorage();
 
     UserCredentials initialCredentials =
@@ -202,8 +203,8 @@ public class UserAuthorizerTest {
     assertEquals(EXPIRATION_TIME, credentials.getAccessToken().getExpirationTimeMillis());
   }
 
-  @Test(expected = NullPointerException.class)
-  public void getCredentials_nullUserId_throws() throws IOException {
+  @Test
+  void getCredentials_nullUserId_throws() {
     TokenStore tokenStore = new MemoryTokensStorage();
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
@@ -212,11 +213,11 @@ public class UserAuthorizerTest {
             .setTokenStore(tokenStore)
             .build();
 
-    authorizer.getCredentials(null);
+    assertThrows(NullPointerException.class, () -> authorizer.getCredentials(null));
   }
 
   @Test
-  public void getCredentials_refreshedToken_stored() throws IOException {
+  void getCredentials_refreshedToken_stored() throws IOException {
     final String accessTokenValue1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessTokenValue2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     AccessToken accessToken1 = new AccessToken(accessTokenValue1, new Date(EXPIRATION_TIME));
@@ -262,7 +263,7 @@ public class UserAuthorizerTest {
   }
 
   @Test
-  public void getCredentialsFromCode_conevertsCodeToTokens() throws IOException {
+  void getCredentialsFromCode_conevertsCodeToTokens() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
     transportFactory.transport.addAuthorizationCode(CODE, REFRESH_TOKEN, ACCESS_TOKEN_VALUE);
@@ -281,8 +282,8 @@ public class UserAuthorizerTest {
     assertEquals(ACCESS_TOKEN_VALUE, credentials.getAccessToken().getTokenValue());
   }
 
-  @Test(expected = NullPointerException.class)
-  public void getCredentialsFromCode_nullCode_throws() throws IOException {
+  @Test
+  void getCredentialsFromCode_nullCode_throws() {
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
@@ -290,11 +291,12 @@ public class UserAuthorizerTest {
             .setTokenStore(new MemoryTokensStorage())
             .build();
 
-    authorizer.getCredentialsFromCode(null, BASE_URI);
+    assertThrows(
+        NullPointerException.class, () -> authorizer.getCredentialsFromCode(null, BASE_URI));
   }
 
   @Test
-  public void getAndStoreCredentialsFromCode_getAndStoresCredentials() throws IOException {
+  void getAndStoreCredentialsFromCode_getAndStoresCredentials() throws IOException {
     final String accessTokenValue1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessTokenValue2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -329,8 +331,8 @@ public class UserAuthorizerTest {
     assertEquals(accessTokenValue2, credentials2.getAccessToken().getTokenValue());
   }
 
-  @Test(expected = NullPointerException.class)
-  public void getAndStoreCredentialsFromCode_nullCode_throws() throws IOException {
+  @Test
+  void getAndStoreCredentialsFromCode_nullCode_throws() {
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
@@ -338,23 +340,27 @@ public class UserAuthorizerTest {
             .setTokenStore(new MemoryTokensStorage())
             .build();
 
-    authorizer.getAndStoreCredentialsFromCode(USER_ID, null, BASE_URI);
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void getAndStoreCredentialsFromCode_nullUserId_throws() throws IOException {
-    UserAuthorizer authorizer =
-        UserAuthorizer.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setScopes(SCOPES)
-            .setTokenStore(new MemoryTokensStorage())
-            .build();
-
-    authorizer.getAndStoreCredentialsFromCode(null, CODE, BASE_URI);
+    assertThrows(
+        NullPointerException.class,
+        () -> authorizer.getAndStoreCredentialsFromCode(USER_ID, null, BASE_URI));
   }
 
   @Test
-  public void revokeAuthorization_revokesAndClears() throws IOException {
+  void getAndStoreCredentialsFromCode_nullUserId_throws() throws IOException {
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(SCOPES)
+            .setTokenStore(new MemoryTokensStorage())
+            .build();
+
+    assertThrows(
+        NullPointerException.class,
+        () -> authorizer.getAndStoreCredentialsFromCode(null, CODE, BASE_URI));
+  }
+
+  @Test
+  void revokeAuthorization_revokesAndClears() throws IOException {
     TokenStore tokenStore = new MemoryTokensStorage();
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
@@ -385,12 +391,8 @@ public class UserAuthorizerTest {
 
     authorizer.revokeAuthorization(USER_ID);
 
-    try {
-      credentials1.refresh();
-      fail("Credentials should not refresh after revoke.");
-    } catch (IOException expected) {
-      // Expected
-    }
+    assertThrows(
+        IOException.class, credentials1::refresh, "Credentials should not refresh after revoke.");
     UserCredentials credentials2 = authorizer.getCredentials(USER_ID);
     assertNull(credentials2);
   }
