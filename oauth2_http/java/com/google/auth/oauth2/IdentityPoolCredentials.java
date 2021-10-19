@@ -244,14 +244,6 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
     }
   }
 
-  /**
-   * Returns whether or not the current configuration is for Workforce Pools (which enable 3p user
-   * identities, rather than workloads).
-   */
-  public boolean isWorkforcePoolConfiguration() {
-    return super.isWorkforcePoolConfiguration();
-  }
-
   /** Clones the IdentityPoolCredentials with the specified scopes. */
   @Override
   public IdentityPoolCredentials createScoped(Collection<String> newScopes) {

@@ -36,6 +36,7 @@ import static com.google.auth.oauth2.OAuth2Utils.JSON_FACTORY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
@@ -553,16 +554,21 @@ class IdentityPoolCredentialsTest {
   @Test
   void builder_emptyWorkforceUserProjectWithWorkforceAudience() {
     // No exception should be thrown.
-    IdentityPoolCredentials.newBuilder()
-        .setWorkforcePoolUserProject("")
-        .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-        .setAudience("//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
-        .setSubjectTokenType("subjectTokenType")
-        .setTokenUrl(STS_URL)
-        .setTokenInfoUrl("tokenInfoUrl")
-        .setCredentialSource(FILE_CREDENTIAL_SOURCE)
-        .setQuotaProjectId("quotaProjectId")
-        .build();
+    IdentityPoolCredentials credentials =
+        (IdentityPoolCredentials)
+            IdentityPoolCredentials.newBuilder()
+                .setWorkforcePoolUserProject("")
+                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+                .setAudience(
+                    "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenUrl(STS_URL)
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+                .setQuotaProjectId("quotaProjectId")
+                .build();
+
+    assertTrue(credentials.isWorkforcePoolConfiguration());
   }
 
   static InputStream writeIdentityPoolCredentialsStream(
