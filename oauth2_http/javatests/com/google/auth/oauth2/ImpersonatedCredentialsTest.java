@@ -293,7 +293,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             QUOTA_PROJECT_ID);
 
     ImpersonatedCredentials scoped_credentials =
-        (ImpersonatedCredentials) targetCredentials.createScoped(Arrays.asList("scope1", "scope2"));
+        (ImpersonatedCredentials) targetCredentials.createScoped(SCOPES);
     assertEquals(targetCredentials.getAccount(), scoped_credentials.getAccount());
     assertEquals(targetCredentials.getDelegates(), scoped_credentials.getDelegates());
     assertEquals(targetCredentials.getLifetime(), scoped_credentials.getLifetime());
