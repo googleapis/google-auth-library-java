@@ -535,9 +535,9 @@ class AwsRequestSignerTest {
 
     GenericJson json = parser.parseAndClose(stream, StandardCharsets.UTF_8, GenericJson.class);
 
-    String awsToken = (String) json.get("Token");
-    String secretAccessKey = (String) json.get("SecretAccessKey");
     String accessKeyId = (String) json.get("AccessKeyId");
+    String secretAccessKey = (String) json.get("SecretAccessKey");
+    String awsToken = (String) json.get("Token");
 
     return new AwsSecurityCredentials(accessKeyId, secretAccessKey, awsToken);
   }
