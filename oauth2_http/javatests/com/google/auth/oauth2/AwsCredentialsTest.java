@@ -276,7 +276,7 @@ class AwsCredentialsTest {
     environmentProvider
         .setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId")
         .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey")
-        .setEnv("Token", "token");
+        .setEnv("AWS_SESSION_TOKEN", "awsSessionToken");
 
     AwsCredentials testAwsCredentials =
         (AwsCredentials)
@@ -288,7 +288,7 @@ class AwsCredentialsTest {
 
     assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
     assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
-    assertEquals("token", credentials.getToken());
+    assertEquals("awsSessionToken", credentials.getToken());
   }
 
   @Test
