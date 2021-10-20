@@ -262,6 +262,11 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       super(credentials);
     }
 
+    public Builder setWorkforcePoolUserProject(String workforcePoolUserProject) {
+      super.setWorkforcePoolUserProject(workforcePoolUserProject);
+      return this;
+    }
+
     @Override
     public IdentityPoolCredentials build() {
       return new IdentityPoolCredentials(this);
