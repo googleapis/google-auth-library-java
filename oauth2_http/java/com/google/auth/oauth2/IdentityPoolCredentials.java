@@ -160,11 +160,6 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
     this.identityPoolCredentialSource = (IdentityPoolCredentialSource) builder.credentialSource;
   }
 
-  @Nullable
-  public String getWorkforcePoolUserProject() {
-    return super.getWorkforcePoolUserProject();
-  }
-
   @Override
   public AccessToken refreshAccessToken() throws IOException {
     String credential = retrieveSubjectToken();
@@ -265,11 +260,6 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
     Builder(IdentityPoolCredentials credentials) {
       super(credentials);
-    }
-
-    public Builder setWorkforcePoolUserProject(String workforcePoolUserProject) {
-      super.setWorkforcePoolUserProject(workforcePoolUserProject);
-      return this;
     }
 
     @Override
