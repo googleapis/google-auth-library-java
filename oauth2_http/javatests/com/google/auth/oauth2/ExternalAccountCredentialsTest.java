@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -46,13 +47,11 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -60,6 +59,13 @@ import org.junit.jupiter.api.Test;
 public class ExternalAccountCredentialsTest {
 
   private static final String STS_URL = "https://sts.googleapis.com";
+
+  private static final Map<String, Object> FILE_CREDENTIAL_SOURCE_MAP =
+      new HashMap<String, Object>() {
+        {
+          put("file", "file");
+        }
+      };
 
   static class MockExternalAccountCredentialsTransportFactory implements HttpTransportFactory {
 
@@ -262,49 +268,132 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  void constructor_invalidTokenUrl() {
+  void constructor_builder() {
+    HashMap<String, Object> credentialSource = new HashMap<>();
+    credentialSource.put("file", "file");
+
+    ExternalAccountCredentials credentials =
+        IdentityPoolCredentials.newBuilder()
+            .setHttpTransportFactory(transportFactory)
+            .setAudience(
+                "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setTokenInfoUrl("https://tokeninfo.com")
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .setCredentialSource(new TestCredentialSource(credentialSource))
+            .setScopes(Arrays.asList("scope1", "scope2"))
+            .setQuotaProjectId("projectId")
+            .setClientId("clientId")
+            .setClientSecret("clientSecret")
+            .setWorkforcePoolUserProject("workforcePoolUserProject")
+            .build();
+
+    assertEquals(
+        "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider",
+        credentials.getAudience());
+    assertEquals("subjectTokenType", credentials.getSubjectTokenType());
+    assertEquals(STS_URL, credentials.getTokenUrl());
+    assertEquals("https://tokeninfo.com", credentials.getTokenInfoUrl());
+    assertEquals(
+        SERVICE_ACCOUNT_IMPERSONATION_URL, credentials.getServiceAccountImpersonationUrl());
+    assertEquals(Arrays.asList("scope1", "scope2"), credentials.getScopes());
+    assertEquals("projectId", credentials.getQuotaProjectId());
+    assertEquals("clientId", credentials.getClientId());
+    assertEquals("clientSecret", credentials.getClientSecret());
+    assertEquals("workforcePoolUserProject", credentials.getWorkforcePoolUserProject());
+    assertNotNull(credentials.getCredentialSource());
+  }
+
+  @Test
+  void constructor_builder_invalidTokenUrl() {
     IllegalArgumentException exception =
         assertThrows(
             IllegalArgumentException.class,
             () -> {
-              new TestExternalAccountCredentials(
-                  transportFactory,
-                  "audience",
-                  "subjectTokenType",
-                  "tokenUrl",
-                  new TestCredentialSource(new HashMap<String, Object>()),
-                  STS_URL,
-                  /* serviceAccountImpersonationUrl= */ null,
-                  "quotaProjectId",
-                  /* clientId= */ null,
-                  /* clientSecret= */ null,
-                  /* scopes= */ null);
+              ExternalAccountCredentials.Builder builder =
+                  TestExternalAccountCredentials.newBuilder()
+                      .setHttpTransportFactory(transportFactory)
+                      .setAudience("audience")
+                      .setSubjectTokenType("subjectTokenType")
+                      .setTokenUrl("tokenUrl")
+                      .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP));
+              new TestExternalAccountCredentials(builder);
             },
             "Should have failed since an invalid token URL was passed.");
     assertEquals("The provided token URL is invalid.", exception.getMessage());
   }
 
   @Test
-  void constructor_invalidServiceAccountImpersonationUrl() {
+  void constructor_builder_invalidServiceAccountImpersonationUrl() {
     IllegalArgumentException exception =
         assertThrows(
             IllegalArgumentException.class,
             () -> {
-              new TestExternalAccountCredentials(
-                  transportFactory,
-                  "audience",
-                  "subjectTokenType",
-                  "tokenUrl",
-                  new TestCredentialSource(new HashMap<>()),
-                  /* tokenInfoUrl= */ null,
-                  "serviceAccountImpersonationUrl",
-                  "quotaProjectId",
-                  /* clientId= */ null,
-                  /* clientSecret= */ null,
-                  /* scopes= */ null);
+              ExternalAccountCredentials.Builder builder =
+                  TestExternalAccountCredentials.newBuilder()
+                      .setHttpTransportFactory(transportFactory)
+                      .setAudience("audience")
+                      .setSubjectTokenType("subjectTokenType")
+                      .setTokenUrl("tokenUrl")
+                      .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+                      .setServiceAccountImpersonationUrl("serviceAccountImpersonationUrl");
+              new TestExternalAccountCredentials(builder);
             },
             "Should have failed since an invalid token URL was passed.");
     assertEquals("The provided token URL is invalid.", exception.getMessage());
+  }
+
+  @Test
+  void constructor_builderWithInvalidWorkforceAudiences_throws() {
+    List<String> invalidAudiences =
+        Arrays.asList(
+            "",
+            "//iam.googleapis.com/projects/x23/locations/global/workloadIdentityPools/pool/providers/provider",
+            "//iam.googleapis.com/locations/global/workforcepools/pool/providers/provider",
+            "//iam.googleapis.com/locations/global/workforcePools/providers/provider",
+            "//iam.googleapis.com/locations/global/workforcePools/providers",
+            "//iam.googleapis.com/locations/global/workforcePools/",
+            "//iam.googleapis.com/locations//workforcePools/providers",
+            "//iam.googleapis.com/notlocations/global/workforcePools/providers",
+            "//iam.googleapis.com/locations/global/workforce/providers");
+
+    HashMap<String, Object> credentialSource = new HashMap<>();
+    credentialSource.put("file", "file");
+    for (String audience : invalidAudiences) {
+      IllegalArgumentException exception =
+          assertThrows(
+              IllegalArgumentException.class,
+              () -> {
+                TestExternalAccountCredentials.newBuilder()
+                    .setWorkforcePoolUserProject("workforcePoolUserProject")
+                    .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+                    .setAudience(audience)
+                    .setSubjectTokenType("subjectTokenType")
+                    .setTokenUrl(STS_URL)
+                    .setCredentialSource(new TestCredentialSource(credentialSource))
+                    .build();
+              },
+              "Exception should be thrown.");
+      assertEquals(
+          "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.",
+          exception.getMessage());
+    }
+  }
+
+  @Test
+  void constructor_builderWithEmptyWorkforceUserProjectAndWorkforceAudience() {
+    HashMap<String, Object> credentialSource = new HashMap<>();
+    credentialSource.put("file", "file");
+    // No exception should be thrown.
+    TestExternalAccountCredentials.newBuilder()
+        .setWorkforcePoolUserProject("")
+        .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+        .setAudience("//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+        .setSubjectTokenType("subjectTokenType")
+        .setTokenUrl(STS_URL)
+        .setCredentialSource(new TestCredentialSource(credentialSource))
+        .build();
   }
 
   @Test
@@ -330,6 +419,57 @@ public class ExternalAccountCredentialsTest {
   void exchangeExternalCredentialForAccessToken_withInternalOptions() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(buildJsonIdentityPoolCredential(), transportFactory);
+
+    GenericJson internalOptions = new GenericJson();
+    internalOptions.setFactory(OAuth2Utils.JSON_FACTORY);
+    internalOptions.put("key", "value");
+    StsTokenExchangeRequest stsTokenExchangeRequest =
+        StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType")
+            .setInternalOptions(internalOptions.toString())
+            .build();
+
+    AccessToken accessToken =
+        credential.exchangeExternalCredentialForAccessToken(stsTokenExchangeRequest);
+
+    assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
+
+    // Validate internal options set.
+    Map<String, String> query =
+        TestUtils.parseQuery(transportFactory.transport.getRequest().getContentAsString());
+    assertNotNull(query.get("options"));
+    assertEquals(internalOptions.toString(), query.get("options"));
+  }
+
+  @Test
+  void exchangeExternalCredentialForAccessToken_workforceCred_expectUserProjectPassedToSts()
+      throws IOException {
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(
+            buildJsonIdentityPoolWorkforceCredential(), transportFactory);
+
+    StsTokenExchangeRequest stsTokenExchangeRequest =
+        StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
+
+    AccessToken accessToken =
+        credential.exchangeExternalCredentialForAccessToken(stsTokenExchangeRequest);
+
+    assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
+
+    // Validate internal options set.
+    Map<String, String> query =
+        TestUtils.parseQuery(transportFactory.transport.getRequest().getContentAsString());
+    GenericJson internalOptions = new GenericJson();
+    internalOptions.setFactory(OAuth2Utils.JSON_FACTORY);
+    internalOptions.put("userProject", "userProject");
+    assertEquals(internalOptions.toString(), query.get("options"));
+  }
+
+  @Test
+  void exchangeExternalCredentialForAccessToken_workforceCredWithInternalOptions_expectOverridden()
+      throws IOException {
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(
+            buildJsonIdentityPoolWorkforceCredential(), transportFactory);
 
     GenericJson internalOptions = new GenericJson();
     internalOptions.put("key", "value");
@@ -400,18 +540,15 @@ public class ExternalAccountCredentialsTest {
   @Test
   void getRequestMetadata_withQuotaProjectId() throws IOException {
     TestExternalAccountCredentials testCredentials =
-        new TestExternalAccountCredentials(
-            transportFactory,
-            "audience",
-            "subjectTokenType",
-            STS_URL,
-            new TestCredentialSource(new HashMap<String, Object>()),
-            "tokenInfoUrl",
-            /* serviceAccountImpersonationUrl= */ null,
-            "quotaProjectId",
-            /* clientId= */ null,
-            /* clientSecret= */ null,
-            /* scopes= */ null);
+        (TestExternalAccountCredentials)
+            TestExternalAccountCredentials.newBuilder()
+                .setHttpTransportFactory(transportFactory)
+                .setAudience("audience")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenUrl(STS_URL)
+                .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+                .setQuotaProjectId("quotaProjectId")
+                .build();
 
     Map<String, List<String>> requestMetadata =
         testCredentials.getRequestMetadata(URI.create("http://googleapis.com/foo/bar"));
@@ -568,64 +705,27 @@ public class ExternalAccountCredentialsTest {
   }
 
   static class TestExternalAccountCredentials extends ExternalAccountCredentials {
-    static class TestCredentialSource extends ExternalAccountCredentials.CredentialSource {
+    static class TestCredentialSource extends IdentityPoolCredentials.IdentityPoolCredentialSource {
       protected TestCredentialSource(Map<String, Object> credentialSourceMap) {
         super(credentialSourceMap);
       }
     }
 
-    protected TestExternalAccountCredentials(
-        HttpTransportFactory transportFactory,
-        String audience,
-        String subjectTokenType,
-        String tokenUrl,
-        CredentialSource credentialSource,
-        @Nullable String tokenInfoUrl,
-        @Nullable String serviceAccountImpersonationUrl,
-        @Nullable String quotaProjectId,
-        @Nullable String clientId,
-        @Nullable String clientSecret,
-        @Nullable Collection<String> scopes) {
-      super(
-          transportFactory,
-          audience,
-          subjectTokenType,
-          tokenUrl,
-          credentialSource,
-          tokenInfoUrl,
-          serviceAccountImpersonationUrl,
-          quotaProjectId,
-          clientId,
-          clientSecret,
-          scopes);
+    public static Builder newBuilder() {
+      return new Builder();
     }
 
-    protected TestExternalAccountCredentials(
-        HttpTransportFactory transportFactory,
-        String audience,
-        String subjectTokenType,
-        String tokenUrl,
-        CredentialSource credentialSource,
-        @Nullable String tokenInfoUrl,
-        @Nullable String serviceAccountImpersonationUrl,
-        @Nullable String quotaProjectId,
-        @Nullable String clientId,
-        @Nullable String clientSecret,
-        @Nullable Collection<String> scopes,
-        @Nullable EnvironmentProvider environmentProvider) {
-      super(
-          transportFactory,
-          audience,
-          subjectTokenType,
-          tokenUrl,
-          credentialSource,
-          tokenInfoUrl,
-          serviceAccountImpersonationUrl,
-          quotaProjectId,
-          clientId,
-          clientSecret,
-          scopes,
-          environmentProvider);
+    static class Builder extends ExternalAccountCredentials.Builder {
+      Builder() {}
+
+      @Override
+      public TestExternalAccountCredentials build() {
+        return new TestExternalAccountCredentials(this);
+      }
+    }
+
+    protected TestExternalAccountCredentials(ExternalAccountCredentials.Builder builder) {
+      super(builder);
     }
 
     @Override
