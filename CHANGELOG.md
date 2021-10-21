@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.2.2](https://www.github.com/googleapis/google-auth-library-java/compare/v1.2.1...v1.2.2) (2021-10-20)
+
+
+### Bug Fixes
+
+* environment variable is "AWS_SESSION_TOKEN" and not "Token" ([#772](https://www.github.com/googleapis/google-auth-library-java/issues/772)) ([c8c3073](https://www.github.com/googleapis/google-auth-library-java/commit/c8c3073790ca2f660eabd2c410b0e295f693040b))
+
 ### [1.2.1](https://www.github.com/googleapis/google-auth-library-java/compare/v1.2.0...v1.2.1) (2021-10-11)
 
 
