@@ -230,7 +230,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
     // Check environment variables for credentials first.
     String accessKeyId = getEnvironmentProvider().getEnv("AWS_ACCESS_KEY_ID");
     String secretAccessKey = getEnvironmentProvider().getEnv("AWS_SECRET_ACCESS_KEY");
-    String token = getEnvironmentProvider().getEnv("Token");
+    String token = getEnvironmentProvider().getEnv("AWS_SESSION_TOKEN");
     if (accessKeyId != null && secretAccessKey != null) {
       return new AwsSecurityCredentials(accessKeyId, secretAccessKey, token);
     }

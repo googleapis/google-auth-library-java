@@ -138,7 +138,7 @@ class ITWorkloadIdentityFederationTest {
     testEnvironmentProvider
         .setEnv("AWS_ACCESS_KEY_ID", awsAccessKeyId)
         .setEnv("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey)
-        .setEnv("Token", awsSessionToken)
+        .setEnv("AWS_SESSION_TOKEN", awsSessionToken)
         .setEnv("AWS_REGION", "us-east-2");
 
     AwsCredentials awsCredential =
