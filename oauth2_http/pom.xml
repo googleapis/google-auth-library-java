@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.google.auth</groupId>
     <artifactId>google-auth-library-parent</artifactId>
-    <version>1.2.2-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
+    <version>1.2.3-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -61,7 +61,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>3.0.0-M4</version>
+        <version>3.0.0-M5</version>
         <configuration>
           <forkedProcessTimeoutInSeconds>1200</forkedProcessTimeoutInSeconds>
           <reportNameSuffix>sponge_log</reportNameSuffix>
@@ -70,13 +70,6 @@
             <include>**/functional/*.java</include>
           </includes>
         </configuration>
-        <dependencies>
-          <dependency>
-            <groupId>org.apache.maven.surefire</groupId>
-            <artifactId>surefire-junit47</artifactId>
-            <version>3.0.0-M4</version>
-          </dependency>
-        </dependencies>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

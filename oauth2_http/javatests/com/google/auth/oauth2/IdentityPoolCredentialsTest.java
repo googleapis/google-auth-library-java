@@ -36,6 +36,7 @@ import static com.google.auth.oauth2.OAuth2Utils.JSON_FACTORY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
@@ -379,6 +380,42 @@ class IdentityPoolCredentialsTest {
   }
 
   @Test
+  void refreshAccessToken_workforceWithServiceAccountImpersonation() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
+    IdentityPoolCredentials credential =
+        (IdentityPoolCredentials)
+            IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+                .setAudience(
+                    "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+                .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setServiceAccountImpersonationUrl(
+                    transportFactory.transport.getServiceAccountImpersonationUrl())
+                .setHttpTransportFactory(transportFactory)
+                .setCredentialSource(
+                    buildUrlBasedCredentialSource(transportFactory.transport.getMetadataUrl()))
+                .setWorkforcePoolUserProject("userProject")
+                .build();
+
+    AccessToken accessToken = credential.refreshAccessToken();
+
+    assertEquals(
+        transportFactory.transport.getServiceAccountAccessToken(), accessToken.getTokenValue());
+
+    // Validate internal options set.
+    Map<String, String> query = TestUtils.parseQuery(transportFactory.transport.getStsContent());
+
+    GenericJson expectedInternalOptions = new GenericJson();
+    expectedInternalOptions.setFactory(OAuth2Utils.JSON_FACTORY);
+    expectedInternalOptions.put("userProject", "userProject");
+
+    assertNotNull(query.get("options"));
+    assertEquals(expectedInternalOptions.toString(), query.get("options"));
+  }
+
+  @Test
   void identityPoolCredentialSource_invalidSourceType() {
     IllegalArgumentException exception =
         assertThrows(
@@ -515,27 +552,23 @@ class IdentityPoolCredentialsTest {
   }
 
   @Test
-  void builder_emptyWorkforceUserProjectWithWorkforceAudience_throws() {
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> {
-              IdentityPoolCredentials.newBuilder()
-                  .setWorkforcePoolUserProject("")
-                  .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-                  .setAudience(
-                      "//iam.googleapis.com/locations/global/workforcePools/providers/provider")
-                  .setSubjectTokenType("subjectTokenType")
-                  .setTokenUrl(STS_URL)
-                  .setTokenInfoUrl("tokenInfoUrl")
-                  .setCredentialSource(FILE_CREDENTIAL_SOURCE)
-                  .setQuotaProjectId("quotaProjectId")
-                  .build();
-            },
-            "Exception should be thrown.");
-    assertEquals(
-        "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.",
-        exception.getMessage());
+  void builder_emptyWorkforceUserProjectWithWorkforceAudience() {
+    // No exception should be thrown.
+    IdentityPoolCredentials credentials =
+        (IdentityPoolCredentials)
+            IdentityPoolCredentials.newBuilder()
+                .setWorkforcePoolUserProject("")
+                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+                .setAudience(
+                    "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenUrl(STS_URL)
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+                .setQuotaProjectId("quotaProjectId")
+                .build();
+
+    assertTrue(credentials.isWorkforcePoolConfiguration());
   }
 
   static InputStream writeIdentityPoolCredentialsStream(

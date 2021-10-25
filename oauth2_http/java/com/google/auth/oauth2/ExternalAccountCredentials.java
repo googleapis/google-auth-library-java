@@ -89,6 +89,10 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   @Nullable private final String clientId;
   @Nullable private final String clientSecret;
 
+  // This is used for Workforce Pools. It is passed to STS during token exchange in the
+  // `options` param and will be embedded in the token by STS.
+  @Nullable private final String workforcePoolUserProject;
+
   protected transient HttpTransportFactory transportFactory;
 
   @Nullable protected final ImpersonatedCredentials impersonatedCredentials;
@@ -96,7 +100,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   private EnvironmentProvider environmentProvider;
 
   /**
-   * Constructor with minimum identifying information and custom HTTP transport.
+   * Constructor with minimum identifying information and custom HTTP transport. Does not support
+   * workforce credentials.
    *
    * @param transportFactory HTTP transport factory, creates the transport used to get access tokens
    * @param audience the STS audience which is usually the fully specified resource name of the
@@ -181,6 +186,49 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
         (scopes == null || scopes.isEmpty()) ? Arrays.asList(CLOUD_PLATFORM_SCOPE) : scopes;
     this.environmentProvider =
         environmentProvider == null ? SystemEnvironmentProvider.getInstance() : environmentProvider;
+    this.workforcePoolUserProject = null;
+
+    validateTokenUrl(tokenUrl);
+    if (serviceAccountImpersonationUrl != null) {
+      validateServiceAccountImpersonationInfoUrl(serviceAccountImpersonationUrl);
+    }
+
+    this.impersonatedCredentials = initializeImpersonatedCredentials();
+  }
+
+  /**
+   * Internal constructor with minimum identifying information and custom HTTP transport. See {@link
+   * ExternalAccountCredentials.Builder}.
+   */
+  protected ExternalAccountCredentials(ExternalAccountCredentials.Builder builder) {
+    this.transportFactory =
+        MoreObjects.firstNonNull(
+            builder.transportFactory,
+            getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
+    this.transportFactoryClassName = checkNotNull(this.transportFactory.getClass().getName());
+    this.audience = checkNotNull(builder.audience);
+    this.subjectTokenType = checkNotNull(builder.subjectTokenType);
+    this.tokenUrl = checkNotNull(builder.tokenUrl);
+    this.credentialSource = checkNotNull(builder.credentialSource);
+    this.tokenInfoUrl = builder.tokenInfoUrl;
+    this.serviceAccountImpersonationUrl = builder.serviceAccountImpersonationUrl;
+    this.quotaProjectId = builder.quotaProjectId;
+    this.clientId = builder.clientId;
+    this.clientSecret = builder.clientSecret;
+    this.scopes =
+        (builder.scopes == null || builder.scopes.isEmpty())
+            ? Arrays.asList(CLOUD_PLATFORM_SCOPE)
+            : builder.scopes;
+    this.environmentProvider =
+        builder.environmentProvider == null
+            ? SystemEnvironmentProvider.getInstance()
+            : builder.environmentProvider;
+
+    this.workforcePoolUserProject = builder.workforcePoolUserProject;
+    if (workforcePoolUserProject != null && !isWorkforcePoolConfiguration()) {
+      throw new IllegalArgumentException(
+          "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.");
+    }
 
     validateTokenUrl(tokenUrl);
     if (serviceAccountImpersonationUrl != null) {
@@ -312,23 +360,21 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     String userProject = (String) json.get("workforce_pool_user_project");
 
     if (isAwsCredential(credentialSourceMap)) {
-      return new AwsCredentials(
-          transportFactory,
-          audience,
-          subjectTokenType,
-          tokenUrl,
-          new AwsCredentialSource(credentialSourceMap),
-          tokenInfoUrl,
-          serviceAccountImpersonationUrl,
-          quotaProjectId,
-          clientId,
-          clientSecret,
-          /* scopes= */ null,
-          /* environmentProvider= */ null);
+      return AwsCredentials.newBuilder()
+          .setHttpTransportFactory(transportFactory)
+          .setAudience(audience)
+          .setSubjectTokenType(subjectTokenType)
+          .setTokenUrl(tokenUrl)
+          .setTokenInfoUrl(tokenInfoUrl)
+          .setCredentialSource(new AwsCredentialSource(credentialSourceMap))
+          .setServiceAccountImpersonationUrl(serviceAccountImpersonationUrl)
+          .setQuotaProjectId(quotaProjectId)
+          .setClientId(clientId)
+          .setClientSecret(clientSecret)
+          .build();
     }
 
     return IdentityPoolCredentials.newBuilder()
-        .setWorkforcePoolUserProject(userProject)
         .setHttpTransportFactory(transportFactory)
         .setAudience(audience)
         .setSubjectTokenType(subjectTokenType)
@@ -339,6 +385,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
         .setQuotaProjectId(quotaProjectId)
         .setClientId(clientId)
         .setClientSecret(clientSecret)
+        .setWorkforcePoolUserProject(userProject)
         .build();
   }
 
@@ -361,13 +408,25 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       return impersonatedCredentials.refreshAccessToken();
     }
 
-    StsRequestHandler requestHandler =
+    StsRequestHandler.Builder requestHandler =
         StsRequestHandler.newBuilder(
-                tokenUrl, stsTokenExchangeRequest, transportFactory.create().createRequestFactory())
-            .setInternalOptions(stsTokenExchangeRequest.getInternalOptions())
-            .build();
+            tokenUrl, stsTokenExchangeRequest, transportFactory.create().createRequestFactory());
 
-    StsTokenExchangeResponse response = requestHandler.exchangeToken();
+    // If this credential was initialized with a Workforce configuration then the
+    // workforcePoolUserProject must passed to STS via the the internal options param.
+    if (isWorkforcePoolConfiguration()) {
+      GenericJson options = new GenericJson();
+      options.setFactory(OAuth2Utils.JSON_FACTORY);
+      options.put("userProject", workforcePoolUserProject);
+      requestHandler.setInternalOptions(options.toString());
+    }
+
+    if (stsTokenExchangeRequest.getInternalOptions() != null) {
+      // Overwrite internal options. Let subclass handle setting options.
+      requestHandler.setInternalOptions(stsTokenExchangeRequest.getInternalOptions());
+    }
+
+    StsTokenExchangeResponse response = requestHandler.build().exchangeToken();
     return response.getAccessToken();
   }
 
@@ -427,8 +486,24 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     return scopes;
   }
 
+  @Nullable
+  public String getWorkforcePoolUserProject() {
+    return workforcePoolUserProject;
+  }
+
   EnvironmentProvider getEnvironmentProvider() {
     return environmentProvider;
+  }
+
+  /**
+   * Returns whether or not the current configuration is for Workforce Pools (which enable 3p user
+   * identities, rather than workloads).
+   */
+  public boolean isWorkforcePoolConfiguration() {
+    Pattern workforceAudiencePattern =
+        Pattern.compile("^//iam.googleapis.com/locations/.+/workforcePools/.+/providers/.+$");
+    return workforcePoolUserProject != null
+        && workforceAudiencePattern.matcher(getAudience()).matches();
   }
 
   static void validateTokenUrl(String tokenUrl) {
@@ -501,6 +576,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     @Nullable protected String clientId;
     @Nullable protected String clientSecret;
     @Nullable protected Collection<String> scopes;
+    @Nullable protected String workforcePoolUserProject;
 
     protected Builder() {}
 
@@ -517,60 +593,95 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       this.clientSecret = credentials.clientSecret;
       this.scopes = credentials.scopes;
       this.environmentProvider = credentials.environmentProvider;
+      this.workforcePoolUserProject = credentials.workforcePoolUserProject;
     }
 
+    /** Sets the HTTP transport factory, creates the transport used to get access tokens. */
+    public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
+      this.transportFactory = transportFactory;
+      return this;
+    }
+
+    /**
+     * Sets the STS audience which is usually the fully specified resource name of the
+     * workload/workforce pool provider.
+     */
     public Builder setAudience(String audience) {
       this.audience = audience;
       return this;
     }
 
+    /**
+     * Sets the STS subject token type based on the OAuth 2.0 token exchange spec. Indicates the
+     * type of the security token in the credential file.
+     */
     public Builder setSubjectTokenType(String subjectTokenType) {
       this.subjectTokenType = subjectTokenType;
       return this;
     }
 
+    /** Sets the STS token exchange endpoint. */
     public Builder setTokenUrl(String tokenUrl) {
       this.tokenUrl = tokenUrl;
       return this;
     }
 
-    public Builder setTokenInfoUrl(String tokenInfoUrl) {
-      this.tokenInfoUrl = tokenInfoUrl;
-      return this;
-    }
-
-    public Builder setServiceAccountImpersonationUrl(String serviceAccountImpersonationUrl) {
-      this.serviceAccountImpersonationUrl = serviceAccountImpersonationUrl;
-      return this;
-    }
-
+    /** Sets the external credential source. */
     public Builder setCredentialSource(CredentialSource credentialSource) {
       this.credentialSource = credentialSource;
       return this;
     }
 
-    public Builder setScopes(Collection<String> scopes) {
-      this.scopes = scopes;
+    /**
+     * Sets the optional URL used for service account impersonation. This is only required when APIs
+     * to be accessed have not integrated with UberMint. If this is not available, the STS returned
+     * GCP access token is directly used.
+     */
+    public Builder setServiceAccountImpersonationUrl(String serviceAccountImpersonationUrl) {
+      this.serviceAccountImpersonationUrl = serviceAccountImpersonationUrl;
       return this;
     }
 
+    /**
+     * Sets the optional endpoint used to retrieve account related information. Required for gCloud
+     * session account identification.
+     */
+    public Builder setTokenInfoUrl(String tokenInfoUrl) {
+      this.tokenInfoUrl = tokenInfoUrl;
+      return this;
+    }
+
+    /** Sets the optional project used for quota and billing purposes. */
     public Builder setQuotaProjectId(String quotaProjectId) {
       this.quotaProjectId = quotaProjectId;
       return this;
     }
 
+    /** Sets the optional client ID of the service account from the console. */
     public Builder setClientId(String clientId) {
       this.clientId = clientId;
       return this;
     }
 
+    /** Sets the optional client secret of the service account from the console. */
     public Builder setClientSecret(String clientSecret) {
       this.clientSecret = clientSecret;
       return this;
     }
 
-    public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
-      this.transportFactory = transportFactory;
+    /** Sets the optional scopes to request during the authorization grant. */
+    public Builder setScopes(Collection<String> scopes) {
+      this.scopes = scopes;
+      return this;
+    }
+
+    /**
+     * Sets the optional workforce pool user project number when the credential corresponds to a
+     * workforce pool and not a workload identity pool. The underlying principal must still have
+     * serviceusage.services.use IAM permission to use the project for billing/quota.
+     */
+    public Builder setWorkforcePoolUserProject(String workforcePoolUserProject) {
+      this.workforcePoolUserProject = workforcePoolUserProject;
       return this;
     }
 
