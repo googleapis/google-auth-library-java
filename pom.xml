@@ -67,6 +67,7 @@
     <deploy.autorelease>false</deploy.autorelease>
     <project.autovalue.version>1.8.2</project.autovalue.version>
     <auto-value-annotation.version>1.8.2</auto-value-annotation.version>
+    <auto-service-annotation.version>1.0</auto-service-annotation.version>
   </properties>
 
   <dependencyManagement>
