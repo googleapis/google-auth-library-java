@@ -115,8 +115,8 @@ public abstract class Credentials implements Serializable {
     } catch (Throwable e) {
       if (e instanceof HttpResponseException) {
         HttpResponseException httpException = (HttpResponseException) e;
-        RetryStatus retryStatus = getRetryStatus(httpException.getStatusCode(), httpException.getRetryCount());
-        callback.onFailure(new GoogleAuthException(retryStatus, e));
+        boolean isRetryable = getIsRetryable(httpException);
+        callback.onFailure(new GoogleAuthException(isRetryable, httpException.getRetryCount() , e));
       }
 
       callback.onFailure(new GoogleAuthException(e));
@@ -126,14 +126,11 @@ public abstract class Credentials implements Serializable {
   }
 
   /**
-   * Calculates default retry status based on HTTP response status and number of performed retries
-   * By default, an error is considered a non-retryable, unless retries are configured in the calling credential
-   * @param responseStatus A response status from the related HTTP request
-   * @param retryCount A number of retries performed
-   * @return {@code RetryStatus.RETRIED} if any retries performed, {@code RetryStatus.NON_RETRYABLE} otherwise
+   * Implements the logic to decide whether the related HTTP request is retryable
+   * @param responseException An instance of HttpException for the related HTTP request
    */
-  protected RetryStatus getRetryStatus(int responseStatus, int retryCount) {
-      return retryCount > 0 ? RetryStatus.RETRIED : RetryStatus.NON_RETRYABLE;
+  protected boolean getIsRetryable(HttpResponseException responseException) {
+      return false;
   }
 
   /**

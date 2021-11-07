@@ -33,5 +33,15 @@ package com.google.auth;
 
 // an interface to identify retryable errors
 public interface Retryable {
-    RetryStatus getRetryStatus();
+    /**
+     * A flag indicating whether the error is retryable
+     * @return true if related error is retryable, false otherwise
+     */
+    boolean isRetryable();
+
+    /**
+     * Gets a number of performed retries for related HttpRequest
+     * @return a number of performed retries
+     */
+    int getRetryCount();
 }

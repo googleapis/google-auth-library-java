@@ -39,6 +39,7 @@ import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler.BackOff
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.UrlEncodedContent;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
@@ -53,7 +54,6 @@ import com.google.api.client.util.PemReader.Section;
 import com.google.api.client.util.Preconditions;
 import com.google.api.client.util.SecurityUtils;
 import com.google.auth.RequestMetadataCallback;
-import com.google.auth.RetryStatus;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
@@ -853,17 +853,12 @@ public class ServiceAccountCredentials extends GoogleCredentials
    * Calculates retry status based on HTTP response status and number of performed retries
    * @param responseStatus A response status from the related HTTP request
    * @param retryCount A number of retries performed
-   * @return {@code RetryStatus.RETRIED} if any retries performed, 
-   * {@code RetryStatus.RETRYABLE} if response status is either 500 or 503 and no retries were performed,
-   * {@code RetryStatus.NON_RETRYABLE} otherwise
+   * @return true if response status is either 500 or 503 and false otherwise
    */
   @Override
-  protected RetryStatus getRetryStatus(int responseStatus, int retryCount) {
-    if (responseStatus == 500 || responseStatus == 503) {
-      return retryCount > 0 ? RetryStatus.RETRIED : RetryStatus.RETRYABLE;
-    } else {
-      return RetryStatus.NON_RETRYABLE;
-    }
+  protected boolean getIsRetryable(HttpResponseException responseException) {
+    int responseStatus = responseException.getStatusCode();
+    return (responseStatus == 500 || responseStatus == 503) ? true : false;
   }
 
   @Override
