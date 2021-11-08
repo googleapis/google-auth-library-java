@@ -122,6 +122,11 @@
         <version>${auto-value-annotation.version}</version>
       </dependency>
       <dependency>
+        <groupId>com.google.auto.value</groupId>
+        <artifactId>auto-service-annotations</artifactId>
+        <version>${auto-service-annotation.version}</version>
+      </dependency>
+      <dependency>
         <groupId>com.google.appengine</groupId>
         <artifactId>appengine</artifactId>
         <version>${project.appengine.version}</version>
