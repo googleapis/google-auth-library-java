@@ -32,6 +32,7 @@ java.common_templates(
         "samples/**",
         ".github/workflows/approve-readme.yaml",
         ".github/workflows/samples.yaml",
+        ".github/workflows/ci.yaml",
         ".kokoro/nightly/integration.cfg",
         ".kokoro/presubmit/integration.cfg",
     ]
