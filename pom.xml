@@ -122,7 +122,7 @@
         <version>${auto-value-annotation.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.google.auto.value</groupId>
+        <groupId>com.google.auto.service</groupId>
         <artifactId>auto-service-annotations</artifactId>
         <version>${auto-service-annotation.version}</version>
       </dependency>
