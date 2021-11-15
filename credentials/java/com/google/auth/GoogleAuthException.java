@@ -34,8 +34,8 @@ package com.google.auth;
 import java.io.IOException;
 
 /**
- * Base class for the standard Auth error response. 
- * It extends a default exception while keeping Json response format 
+ * Base class for the standard Auth error response. It extends a default exception while keeping
+ * Json response format
  */
 public class GoogleAuthException extends IOException implements Retryable {
 
@@ -44,21 +44,13 @@ public class GoogleAuthException extends IOException implements Retryable {
 
   /**
    * Constructor with all parameters
-   * 
-   * @param isRetryable 
-   *        A retry status for the related HTTP request
-   * 
-   * @param retryCount
-   *        A number of retries performed for the related HTTP request
-   * 
-   * @param message
-   *        The detail message (which is saved for later retrieval
-   *        by the {@link #getMessage()} method)
    *
-   * @param cause
-   *        The cause (which is saved for later retrieval by the
-   *        {@link #getCause()} method).  (A null value is permitted,
-   *        and indicates that the cause is nonexistent or unknown.)
+   * @param isRetryable A retry status for the related HTTP request
+   * @param retryCount A number of retries performed for the related HTTP request
+   * @param message The detail message (which is saved for later retrieval by the {@link
+   *     #getMessage()} method)
+   * @param cause The cause (which is saved for later retrieval by the {@link #getCause()} method).
+   *     (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
    */
   public GoogleAuthException(boolean isRetryable, int retryCount, String message, Throwable cause) {
     super(message, cause);
@@ -68,15 +60,11 @@ public class GoogleAuthException extends IOException implements Retryable {
 
   /**
    * Constructor with message defaulted to the cause
-   * 
-   * @param isRetryable
-   *        A retry status for the related HTTP request
-   * @param retryCount
-   *        A number of retries performed for the related HTTP request
-   * @param cause
-   *        The cause (which is saved for later retrieval by the
-   *        {@link #getCause()} method).  (A null value is permitted,
-   *        and indicates that the cause is nonexistent or unknown.)
+   *
+   * @param isRetryable A retry status for the related HTTP request
+   * @param retryCount A number of retries performed for the related HTTP request
+   * @param cause The cause (which is saved for later retrieval by the {@link #getCause()} method).
+   *     (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
    */
   public GoogleAuthException(boolean isRetryable, int retryCount, Throwable cause) {
     super(cause);
@@ -86,13 +74,10 @@ public class GoogleAuthException extends IOException implements Retryable {
 
   /**
    * Constructor without retry count
-   * 
-   * @param isRetryable
-   *        A retry status for the related HTTP request
-   * @param cause
-   *        The cause (which is saved for later retrieval by the
-   *        {@link #getCause()} method).  (A null value is permitted,
-   *        and indicates that the cause is nonexistent or unknown.)
+   *
+   * @param isRetryable A retry status for the related HTTP request
+   * @param cause The cause (which is saved for later retrieval by the {@link #getCause()} method).
+   *     (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
    */
   public GoogleAuthException(boolean isRetryable, Throwable cause) {
     super(cause);
@@ -103,10 +88,8 @@ public class GoogleAuthException extends IOException implements Retryable {
   /**
    * Constructor without retry info
    *
-   * @param cause
-   *        The cause (which is saved for later retrieval by the
-   *        {@link #getCause()} method).  (A null value is permitted,
-   *        and indicates that the cause is nonexistent or unknown.)
+   * @param cause The cause (which is saved for later retrieval by the {@link #getCause()} method).
+   *     (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
    */
   public GoogleAuthException(Throwable cause) {
     super(cause);
@@ -114,17 +97,13 @@ public class GoogleAuthException extends IOException implements Retryable {
     this.retryCount = 0;
   }
 
-  /** 
-   * Returns true if the error is retryable, false otherwise
-   */
+  /** Returns true if the error is retryable, false otherwise */
   @Override
   public boolean isRetryable() {
     return isRetryable;
   }
 
-  /** 
-   * Retruns number of reties performed for the related HTTP request
-   */
+  /** Retruns number of reties performed for the related HTTP request */
   @Override
   public int getRetryCount() {
     return retryCount;

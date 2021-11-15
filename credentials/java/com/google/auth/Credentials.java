@@ -31,14 +31,13 @@
 
 package com.google.auth;
 
+import com.google.api.client.http.HttpResponseException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
-
-import com.google.api.client.http.HttpResponseException;
 
 /** Represents an abstract authorized identity instance. */
 public abstract class Credentials implements Serializable {
@@ -116,7 +115,7 @@ public abstract class Credentials implements Serializable {
       if (e instanceof HttpResponseException) {
         HttpResponseException httpException = (HttpResponseException) e;
         boolean isRetryable = getIsRetryable(httpException);
-        callback.onFailure(new GoogleAuthException(isRetryable, httpException.getRetryCount() , e));
+        callback.onFailure(new GoogleAuthException(isRetryable, httpException.getRetryCount(), e));
       }
 
       callback.onFailure(new GoogleAuthException(e));
@@ -127,12 +126,12 @@ public abstract class Credentials implements Serializable {
 
   /**
    * Implements the logic to decide whether the related HTTP request is retryable
+   *
    * @param responseException An instance of HttpException for the related HTTP request
-   * 
    * @return true if the {@code responseException} may be retried, false otherwise.
    */
   protected boolean getIsRetryable(HttpResponseException responseException) {
-      return false;
+    return false;
   }
 
   /**

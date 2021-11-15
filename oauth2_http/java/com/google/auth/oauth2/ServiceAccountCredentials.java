@@ -586,11 +586,12 @@ public class ServiceAccountCredentials extends GoogleCredentials
     request.setNumberOfRetries(DEFAULT_NUMBER_OF_RETRIES);
     request.setParser(new JsonObjectParser(jsonFactory));
 
-    ExponentialBackOff backoff = new ExponentialBackOff.Builder()
-    .setInitialIntervalMillis(INITIAL_RETRY_INTERVAL_MILLIS)
-    .setRandomizationFactor(RETRY_RANDOMIZATION_FACTOR)
-    .build();
-    
+    ExponentialBackOff backoff =
+        new ExponentialBackOff.Builder()
+            .setInitialIntervalMillis(INITIAL_RETRY_INTERVAL_MILLIS)
+            .setRandomizationFactor(RETRY_RANDOMIZATION_FACTOR)
+            .build();
+
     request.setUnsuccessfulResponseHandler(
         new HttpBackOffUnsuccessfulResponseHandler(backoff)
             .setBackOffRequired(
@@ -670,7 +671,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   /**
    * Clones the service account with the specified retry strategy.
-   * 
+   *
    * @param retryStrategy a retry strategy setting
    */
   @Override
@@ -851,6 +852,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   /**
    * Calculates retry status based on HTTP response status and number of performed retries
+   *
    * @param responseStatus A response status from the related HTTP request
    * @param retryCount A number of retries performed
    * @return true if response status is either 500 or 503 and false otherwise

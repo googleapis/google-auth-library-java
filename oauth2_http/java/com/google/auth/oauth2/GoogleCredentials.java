@@ -243,8 +243,8 @@ public class GoogleCredentials extends OAuth2Credentials {
   }
 
   /**
-   * If the credentials support scopes, creates a copy of the identity with the specified
-   * scopes; otherwise, returns the same instance.
+   * If the credentials support scopes, creates a copy of the identity with the specified scopes;
+   * otherwise, returns the same instance.
    *
    * @param scopes Collection of scopes to request.
    * @return GoogleCredentials with requested scopes.
@@ -254,9 +254,8 @@ public class GoogleCredentials extends OAuth2Credentials {
   }
 
   /**
-   * If the credentials support scopes, creates a copy of the identity with the specified scopes
-   * and default scopes; otherwise, returns the same instance. This is mainly used by client
-   * libraries.
+   * If the credentials support scopes, creates a copy of the identity with the specified scopes and
+   * default scopes; otherwise, returns the same instance. This is mainly used by client libraries.
    *
    * @param scopes Collection of scopes to request.
    * @param defaultScopes Collection of default scopes to request.
@@ -268,8 +267,8 @@ public class GoogleCredentials extends OAuth2Credentials {
   }
 
   /**
-   * If the credentials support scopes, creates a copy of the identity with the specified
-   * scopes; otherwise, returns the same instance.
+   * If the credentials support scopes, creates a copy of the identity with the specified scopes;
+   * otherwise, returns the same instance.
    *
    * @param scopes Collection of scopes to request.
    * @return GoogleCredentials with requested scopes.
@@ -278,9 +277,9 @@ public class GoogleCredentials extends OAuth2Credentials {
     return createScoped(ImmutableList.copyOf(scopes));
   }
 
-   /**
-   * If the credentials support automatic retries, creates a copy of the identity with 
-   * the provided retry strategy
+  /**
+   * If the credentials support automatic retries, creates a copy of the identity with the provided
+   * retry strategy
    *
    * @param defaultRetriesEnabled a flag enabling or disabling default retries
    * @return GoogleCredentials with the new default retries configuration.
