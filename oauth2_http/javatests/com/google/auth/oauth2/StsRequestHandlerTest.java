@@ -31,9 +31,9 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
@@ -44,15 +44,11 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.function.ThrowingRunnable;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /** Tests for {@link StsRequestHandler}. */
-@RunWith(JUnit4.class)
-public final class StsRequestHandlerTest {
+class StsRequestHandlerTest {
 
   private static final String TOKEN_EXCHANGE_GRANT_TYPE =
       "urn:ietf:params:oauth:grant-type:token-exchange";
@@ -64,13 +60,13 @@ public final class StsRequestHandlerTest {
 
   private MockStsTransport transport;
 
-  @Before
+  @BeforeEach
   public void setup() {
     transport = new MockStsTransport();
   }
 
   @Test
-  public void exchangeToken() throws IOException {
+  void exchangeToken() throws IOException {
     StsTokenExchangeRequest stsTokenExchangeRequest =
         StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType")
             .setScopes(Arrays.asList(CLOUD_PLATFORM_SCOPE))
@@ -104,7 +100,7 @@ public final class StsRequestHandlerTest {
   }
 
   @Test
-  public void exchangeToken_withOptionalParams() throws IOException {
+  void exchangeToken_withOptionalParams() throws IOException {
     // Return optional params scope and the refresh_token.
     transport.addScopeSequence(Arrays.asList("scope1", "scope2", "scope3"));
     transport.addRefreshTokenSequence("refreshToken");
@@ -168,7 +164,7 @@ public final class StsRequestHandlerTest {
   }
 
   @Test
-  public void exchangeToken_throwsException() throws IOException {
+  void exchangeToken_throwsException() throws IOException {
     StsTokenExchangeRequest stsTokenExchangeRequest =
         StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
 
@@ -181,23 +177,15 @@ public final class StsRequestHandlerTest {
         TestUtils.buildHttpResponseException(
             "invalidRequest", /* errorDescription= */ null, /* errorUri= */ null));
 
-    OAuthException e =
-        assertThrows(
-            OAuthException.class,
-            new ThrowingRunnable() {
-              @Override
-              public void run() throws Throwable {
-                requestHandler.exchangeToken();
-              }
-            });
+    OAuthException exception = assertThrows(OAuthException.class, requestHandler::exchangeToken);
 
-    assertEquals("invalidRequest", e.getErrorCode());
-    assertNull(e.getErrorDescription());
-    assertNull(e.getErrorUri());
+    assertEquals("invalidRequest", exception.getErrorCode());
+    assertNull(exception.getErrorDescription());
+    assertNull(exception.getErrorUri());
   }
 
   @Test
-  public void exchangeToken_withOptionalParams_throwsException() throws IOException {
+  void exchangeToken_withOptionalParams_throwsException() throws IOException {
     StsTokenExchangeRequest stsTokenExchangeRequest =
         StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
 
@@ -209,23 +197,15 @@ public final class StsRequestHandlerTest {
     transport.addResponseErrorSequence(
         TestUtils.buildHttpResponseException("invalidRequest", "errorDescription", "errorUri"));
 
-    OAuthException e =
-        assertThrows(
-            OAuthException.class,
-            new ThrowingRunnable() {
-              @Override
-              public void run() throws Throwable {
-                requestHandler.exchangeToken();
-              }
-            });
+    OAuthException exception = assertThrows(OAuthException.class, requestHandler::exchangeToken);
 
-    assertEquals("invalidRequest", e.getErrorCode());
-    assertEquals("errorDescription", e.getErrorDescription());
-    assertEquals("errorUri", e.getErrorUri());
+    assertEquals("invalidRequest", exception.getErrorCode());
+    assertEquals("errorDescription", exception.getErrorDescription());
+    assertEquals("errorUri", exception.getErrorUri());
   }
 
   @Test
-  public void exchangeToken_ioException() {
+  void exchangeToken_ioException() {
     StsTokenExchangeRequest stsTokenExchangeRequest =
         StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
 
@@ -237,20 +217,12 @@ public final class StsRequestHandlerTest {
     IOException e = new IOException();
     transport.addResponseErrorSequence(e);
 
-    IOException thrownException =
-        assertThrows(
-            IOException.class,
-            new ThrowingRunnable() {
-              @Override
-              public void run() throws Throwable {
-                requestHandler.exchangeToken();
-              }
-            });
+    IOException thrownException = assertThrows(IOException.class, requestHandler::exchangeToken);
     assertEquals(e, thrownException);
   }
 
   @Test
-  public void exchangeToken_noExpiresInReturned() throws IOException {
+  void exchangeToken_noExpiresInReturned() throws IOException {
     // Don't return expires in. This happens in the CAB flow when the subject token does not belong
     // to a service account.
     transport.setReturnExpiresIn(/* returnExpiresIn= */ false);

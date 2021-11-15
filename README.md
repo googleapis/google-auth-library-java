@@ -31,7 +31,7 @@ If you are using Maven, add this to your pom.xml file (notice that you can repla
 <dependency>
   <groupId>com.google.auth</groupId>
   <artifactId>google-auth-library-oauth2-http</artifactId>
-  <version>1.1.0</version>
+  <version>1.3.0</version>
 </dependency>
 ```
 [//]: # ({x-version-update-end})
@@ -41,7 +41,7 @@ If you are using Gradle, add this to your dependencies
 
 [//]: # ({x-version-update-start:google-auth-library-oauth2-http:released})
 ```Groovy
-compile 'com.google.auth:google-auth-library-oauth2-http:1.1.0'
+compile 'com.google.auth:google-auth-library-oauth2-http:1.3.0'
 ```
 [//]: # ({x-version-update-end})
 
@@ -49,7 +49,7 @@ If you are using SBT, add this to your dependencies
 
 [//]: # ({x-version-update-start:google-auth-library-oauth2-http:released})
 ```Scala
-libraryDependencies += "com.google.auth" % "google-auth-library-oauth2-http" % "1.1.0"
+libraryDependencies += "com.google.auth" % "google-auth-library-oauth2-http" % "1.3.0"
 ```
 [//]: # ({x-version-update-end})
 
@@ -682,7 +682,7 @@ $ mvn test
 BSD 3-Clause - See [LICENSE](LICENSE) for more information.
 
 [appengine-sdk-versions]: https://search.maven.org/search?q=g:com.google.appengine%20AND%20a:appengine-api-1.0-sdk&core=gav
-[appengine-sdk-install]: https://github.com/googleapis/google-auth-library-java/blob/master/README.md#google-auth-library-appengine
+[appengine-sdk-install]: https://github.com/googleapis/google-auth-library-java/blob/main/README.md#google-auth-library-appengine
 [appengine-app-identity-service]: https://cloud.google.com/appengine/docs/java/javadoc/com/google/appengine/api/appidentity/AppIdentityService
 [apiary-clients]: https://search.maven.org/search?q=g:com.google.apis
 [http-credentials-adapter]: https://googleapis.dev/java/google-auth-library/latest/index.html?com/google/auth/http/HttpCredentialsAdapter.html

@@ -69,6 +69,11 @@ integration)
       verify
     RETURN_CODE=$?
     ;;
+graalvm)
+    # Run Unit and Integration Tests with Native Image
+    mvn test -Pnative -Penable-integration-tests
+    RETURN_CODE=$?
+    ;;
 samples)
     SAMPLES_DIR=samples
     # only run ITs in snapshot/ on presubmit PRs. run ITs in all 3 samples/ subdirectories otherwise.
@@ -115,7 +120,7 @@ fi
 # fix output location of logs
 bash .kokoro/coerce_logs.sh
 
-if [[ "${ENABLE_BUILD_COP}" == "true" ]]
+if [[ "${ENABLE_FLAKYBOT}" == "true" ]]
 then
     chmod +x ${KOKORO_GFILE_DIR}/linux_amd64/flakybot
     ${KOKORO_GFILE_DIR}/linux_amd64/flakybot -repo=googleapis/google-auth-library-java

@@ -39,8 +39,8 @@ import java.util.concurrent.CountDownLatch;
 
 /** Mock RequestMetadataCallback */
 public final class MockRequestMetadataCallback implements RequestMetadataCallback {
-  Map<String, List<String>> metadata;
-  Throwable exception;
+  volatile Map<String, List<String>> metadata;
+  volatile Throwable exception;
   CountDownLatch latch = new CountDownLatch(1);
 
   /** Called when metadata is successfully produced. */

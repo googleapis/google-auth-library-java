@@ -31,9 +31,9 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.auth.TestUtils;
@@ -41,13 +41,10 @@ import com.google.auth.http.HttpTransportFactory;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Map;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
 /** Tests for {@link DownscopedCredentials}. */
-@RunWith(JUnit4.class)
-public class DownscopedCredentialsTest {
+class DownscopedCredentialsTest {
 
   private static final String SA_PRIVATE_KEY_PKCS8 =
       "-----BEGIN PRIVATE KEY-----\n"
@@ -83,7 +80,7 @@ public class DownscopedCredentialsTest {
   }
 
   @Test
-  public void refreshAccessToken() throws IOException {
+  void refreshAccessToken() throws IOException {
     MockStsTransportFactory transportFactory = new MockStsTransportFactory();
 
     GoogleCredentials sourceCredentials =
@@ -110,7 +107,7 @@ public class DownscopedCredentialsTest {
   }
 
   @Test
-  public void refreshAccessToken_userCredentials_expectExpiresInCopied() throws IOException {
+  void refreshAccessToken_userCredentials_expectExpiresInCopied() throws IOException {
     // STS only returns expires_in if the source access token belongs to a service account.
     // For other source credential types, we can copy the source credentials expiration as
     // the generated downscoped token will always have the same expiration time as the source
@@ -138,7 +135,7 @@ public class DownscopedCredentialsTest {
   }
 
   @Test
-  public void refreshAccessToken_cantRefreshSourceCredentials_throws() throws IOException {
+  void refreshAccessToken_cantRefreshSourceCredentials_throws() throws IOException {
     MockStsTransportFactory transportFactory = new MockStsTransportFactory();
 
     GoogleCredentials sourceCredentials =
@@ -151,42 +148,42 @@ public class DownscopedCredentialsTest {
             .setHttpTransportFactory(transportFactory)
             .build();
 
-    try {
-      downscopedCredentials.refreshAccessToken();
-      fail("Should fail as the source credential should not be able to be refreshed.");
-    } catch (IOException e) {
-      assertEquals("Unable to refresh the provided source credential.", e.getMessage());
-    }
+    IOException exception =
+        assertThrows(
+            IOException.class,
+            downscopedCredentials::refreshAccessToken,
+            "Should fail as the source credential should not be able to be refreshed.");
+    assertEquals("Unable to refresh the provided source credential.", exception.getMessage());
   }
 
   @Test
-  public void builder_noSourceCredential_throws() {
-    try {
-      DownscopedCredentials.newBuilder()
-          .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-          .setCredentialAccessBoundary(CREDENTIAL_ACCESS_BOUNDARY)
-          .build();
-      fail("Should fail as the source credential is null.");
-    } catch (NullPointerException e) {
-      // Expected.
-    }
+  void builder_noSourceCredential_throws() {
+    assertThrows(
+        NullPointerException.class,
+        () -> {
+          DownscopedCredentials.newBuilder()
+              .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+              .setCredentialAccessBoundary(CREDENTIAL_ACCESS_BOUNDARY)
+              .build();
+        },
+        "Should fail as the source credential is null.");
   }
 
   @Test
-  public void builder_noCredentialAccessBoundary_throws() throws IOException {
-    try {
-      DownscopedCredentials.newBuilder()
-          .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-          .setSourceCredential(getServiceAccountSourceCredentials(/* canRefresh= */ true))
-          .build();
-      fail("Should fail as no access boundary was provided.");
-    } catch (NullPointerException e) {
-      // Expected.
-    }
+  void builder_noCredentialAccessBoundary_throws() throws IOException {
+    assertThrows(
+        NullPointerException.class,
+        () -> {
+          DownscopedCredentials.newBuilder()
+              .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+              .setSourceCredential(getServiceAccountSourceCredentials(/* canRefresh= */ true))
+              .build();
+        },
+        "Should fail as no access boundary was provided.");
   }
 
   @Test
-  public void builder_noTransport_defaults() throws IOException {
+  void builder_noTransport_defaults() throws IOException {
     GoogleCredentials sourceCredentials =
         getServiceAccountSourceCredentials(/* canRefresh= */ true);
     DownscopedCredentials credentials =

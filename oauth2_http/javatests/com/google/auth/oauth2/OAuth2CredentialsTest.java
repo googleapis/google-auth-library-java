@@ -32,14 +32,13 @@
 package com.google.auth.oauth2;
 
 import static java.util.concurrent.TimeUnit.HOURS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.api.client.util.Clock;
 import com.google.auth.TestClock;
@@ -49,14 +48,14 @@ import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFact
 import com.google.auth.oauth2.OAuth2Credentials.OAuthValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.primitives.Ints;
 import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.net.URI;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -66,17 +65,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.function.ThrowingRunnable;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /** Test case for {@link OAuth2Credentials}. */
-@RunWith(JUnit4.class)
-public class OAuth2CredentialsTest extends BaseSerializationTest {
+class OAuth2CredentialsTest extends BaseSerializationTest {
 
   private static final String CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
   private static final String CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
@@ -86,36 +83,117 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
 
   private ExecutorService realExecutor;
 
-  @Before
-  public void setUp() {
+  @BeforeEach
+  void setUp() {
     realExecutor = Executors.newCachedThreadPool();
   }
 
-  @After
-  public void tearDown() {
+  @AfterEach
+  void tearDown() {
     realExecutor.shutdown();
   }
 
   @Test
-  public void constructor_storesAccessToken() {
+  void constructor_storesAccessToken() {
     OAuth2Credentials credentials =
         OAuth2Credentials.newBuilder().setAccessToken(new AccessToken(ACCESS_TOKEN, null)).build();
-    assertEquals(credentials.getAccessToken().getTokenValue(), ACCESS_TOKEN);
+    assertEquals(ACCESS_TOKEN, credentials.getAccessToken().getTokenValue());
   }
 
   @Test
-  public void getAuthenticationType_returnsOAuth2() {
+  void constructor_overrideMargin() throws Throwable {
+    Duration staleMargin = Duration.ofMinutes(3);
+    Duration expirationMargin = Duration.ofMinutes(2);
+
+    Instant actualExpiration = Instant.now();
+    Instant clientStale = actualExpiration.minus(staleMargin);
+    Instant clientExpired = actualExpiration.minus(expirationMargin);
+
+    AccessToken initialToken = new AccessToken(ACCESS_TOKEN, Date.from(actualExpiration));
+    AtomicInteger refreshCount = new AtomicInteger();
+    AtomicReference<AccessToken> currentToken = new AtomicReference<>(initialToken);
+
+    OAuth2Credentials credentials =
+        new OAuth2Credentials(
+            currentToken.get(),
+            /* refreshMargin= */ Duration.ofMinutes(3),
+            /* expirationMargin= */ Duration.ofMinutes(2)) {
+          @Override
+          public AccessToken refreshAccessToken() throws IOException {
+            refreshCount.incrementAndGet();
+            // Inject delay to model network latency
+            // This is needed to make to deflake the stale tests:
+            // if the refresh is super quick, then a stale refresh will return the new token
+            try {
+              Thread.sleep(100);
+            } catch (InterruptedException e) {
+              throw new IOException(e);
+            }
+
+            return currentToken.get();
+          }
+        };
+
+    TestClock clock = new TestClock();
+    credentials.clock = clock;
+
+    // Rewind time to when the token is fresh
+    clock.setCurrentTime(clientStale.toEpochMilli() - 1);
+    MockRequestMetadataCallback callback = new MockRequestMetadataCallback();
+    credentials.getRequestMetadata(CALL_URI, realExecutor, callback);
+    synchronized (credentials.lock) {
+      assertNull(credentials.refreshTask);
+    }
+    assertEquals(0, refreshCount.get());
+    Map<String, List<String>> lastMetadata = credentials.getRequestMetadata(CALL_URI);
+
+    // Fast forward to when the token just turned STALE
+    clock.setCurrentTime(clientStale.toEpochMilli());
+    currentToken.set(new AccessToken(ACCESS_TOKEN + "-1", Date.from(actualExpiration)));
+    callback.reset();
+    credentials.getRequestMetadata(CALL_URI, realExecutor, callback);
+    assertEquals(lastMetadata, callback.awaitResult());
+    waitForRefreshTaskCompletion(credentials);
+    assertEquals(1, refreshCount.get());
+    lastMetadata = credentials.getRequestMetadata(CALL_URI);
+    refreshCount.set(0);
+
+    // Fast forward to when the token turned STALE just before expiration
+    clock.setCurrentTime(clientExpired.toEpochMilli() - 1);
+    currentToken.set(new AccessToken(ACCESS_TOKEN + "-2", Date.from(actualExpiration)));
+    callback.reset();
+    credentials.getRequestMetadata(CALL_URI, realExecutor, callback);
+    assertEquals(lastMetadata, callback.awaitResult());
+    waitForRefreshTaskCompletion(credentials);
+    assertEquals(1, refreshCount.get());
+    lastMetadata = credentials.getRequestMetadata();
+    refreshCount.set(0);
+
+    // Fast forward to expired
+    clock.setCurrentTime(clientExpired.toEpochMilli());
+    AccessToken newToken = new AccessToken(ACCESS_TOKEN + "-3", Date.from(actualExpiration));
+    currentToken.set(newToken);
+    callback.reset();
+    credentials.getRequestMetadata(CALL_URI, realExecutor, callback);
+    TestUtils.assertContainsBearerToken(callback.awaitResult(), newToken.getTokenValue());
+    assertEquals(1, refreshCount.get());
+    waitForRefreshTaskCompletion(credentials);
+    lastMetadata = credentials.getRequestMetadata();
+  }
+
+  @Test
+  void getAuthenticationType_returnsOAuth2() {
     OAuth2Credentials credentials =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
             .setClientSecret(CLIENT_SECRET)
             .setRefreshToken(REFRESH_TOKEN)
             .build();
-    assertEquals(credentials.getAuthenticationType(), "OAuth2");
+    assertEquals("OAuth2", credentials.getAuthenticationType());
   }
 
   @Test
-  public void hasRequestMetadata_returnsTrue() {
+  void hasRequestMetadata_returnsTrue() {
     OAuth2Credentials credentials =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -126,7 +204,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void hasRequestMetadataOnly_returnsTrue() {
+  void hasRequestMetadataOnly_returnsTrue() {
     OAuth2Credentials credentials =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -137,7 +215,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void addChangeListener_notifiesOnRefresh() throws IOException {
+  void addChangeListener_notifiesOnRefresh() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -175,7 +253,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void removeChangeListener_unregisters_observer() throws IOException {
+  void removeChangeListener_unregisters_observer() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -212,7 +290,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getRequestMetadata_blocking_cachesExpiringToken() throws IOException {
+  void getRequestMetadata_blocking_cachesExpiringToken() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -250,13 +328,11 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     clock.addToCurrentTime(60 * 60 * 1000);
     assertEquals(0, transportFactory.transport.buildRequestCount);
 
-    try {
-      credentials.getRequestMetadata(CALL_URI);
-      fail("Should throw");
-    } catch (IOException e) {
-      assertSame(error, e);
-      assertEquals(1, transportFactory.transport.buildRequestCount--);
-    }
+    IOException exception =
+        assertThrows(
+            IOException.class, () -> credentials.getRequestMetadata(CALL_URI), "Should throw");
+    assertSame(error, exception);
+    assertEquals(1, transportFactory.transport.buildRequestCount--);
 
     // Reset the error and try again
     transportFactory.transport.setError(null);
@@ -266,7 +342,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getRequestMetadata_async() throws IOException {
+  void getRequestMetadata_async() {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -336,8 +412,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getRequestMetadata_async_refreshRace()
-      throws ExecutionException, InterruptedException {
+  void getRequestMetadata_async_refreshRace() throws ExecutionException, InterruptedException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
@@ -395,7 +470,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getRequestMetadata_temporaryToken_hasToken() throws IOException {
+  void getRequestMetadata_temporaryToken_hasToken() throws IOException {
     OAuth2Credentials credentials =
         OAuth2Credentials.newBuilder().setAccessToken(new AccessToken(ACCESS_TOKEN, null)).build();
 
@@ -405,22 +480,17 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getRequestMetadata_staleTemporaryToken() throws IOException, InterruptedException {
-    Calendar calendar = Calendar.getInstance();
-    Date actualExpiration = calendar.getTime();
-
-    calendar.setTime(actualExpiration);
-    calendar.add(
-        Calendar.MILLISECOND, -1 * Ints.checkedCast(OAuth2Credentials.REFRESH_MARGIN_MILLISECONDS));
-    Date clientStale = calendar.getTime();
+  void getRequestMetadata_staleTemporaryToken() throws IOException, InterruptedException {
+    Instant actualExpiration = Instant.now();
+    Instant clientStale = actualExpiration.minus(OAuth2Credentials.DEFAULT_REFRESH_MARGIN);
 
     TestClock testClock = new TestClock();
-    testClock.setCurrentTime(clientStale.getTime());
+    testClock.setCurrentTime(clientStale.toEpochMilli());
 
     // Initialize credentials which are initially stale and set to refresh
     final SettableFuture<AccessToken> refreshedTokenFuture = SettableFuture.create();
     OAuth2Credentials creds =
-        new OAuth2Credentials(new AccessToken(ACCESS_TOKEN, actualExpiration)) {
+        new OAuth2Credentials(new AccessToken(ACCESS_TOKEN, Date.from(actualExpiration))) {
           @Override
           public AccessToken refreshAccessToken() {
 
@@ -480,26 +550,17 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getRequestMetadata_staleTemporaryToken_expirationWaits() throws Throwable {
-    Calendar calendar = Calendar.getInstance();
-    Date actualExpiration = calendar.getTime();
-
-    calendar.setTime(actualExpiration);
-    calendar.add(
-        Calendar.MILLISECOND, -1 * Ints.checkedCast(OAuth2Credentials.REFRESH_MARGIN_MILLISECONDS));
-    Date clientStale = calendar.getTime();
-
-    calendar.setTime(actualExpiration);
-    calendar.add(
-        Calendar.MILLISECOND, -1 * Ints.checkedCast(OAuth2Credentials.MINIMUM_TOKEN_MILLISECONDS));
-    Date clientExpired = calendar.getTime();
+  void getRequestMetadata_staleTemporaryToken_expirationWaits() throws Throwable {
+    Instant actualExpiration = Instant.now();
+    Instant clientStale = actualExpiration.minus(OAuth2Credentials.DEFAULT_REFRESH_MARGIN);
+    Instant clientExpired = actualExpiration.minus(OAuth2Credentials.DEFAULT_EXPIRATION_MARGIN);
 
     TestClock testClock = new TestClock();
 
     // Initialize credentials which are initially stale and set to refresh
     final SettableFuture<AccessToken> refreshedTokenFuture = SettableFuture.create();
     OAuth2Credentials creds =
-        new OAuth2Credentials(new AccessToken(ACCESS_TOKEN, actualExpiration)) {
+        new OAuth2Credentials(new AccessToken(ACCESS_TOKEN, Date.from(actualExpiration))) {
           @Override
           public AccessToken refreshAccessToken() {
 
@@ -516,7 +577,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     }
 
     // Calls should return immediately with stale token, but a refresh is scheduled
-    testClock.setCurrentTime(clientStale.getTime());
+    testClock.setCurrentTime(clientStale.toEpochMilli());
     MockRequestMetadataCallback callback = new MockRequestMetadataCallback();
     creds.getRequestMetadata(CALL_URI, realExecutor, callback);
     TestUtils.assertContainsBearerToken(callback.metadata, ACCESS_TOKEN);
@@ -524,7 +585,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     ListenableFutureTask<OAuthValue> refreshTask = creds.refreshTask;
 
     // Fast forward to expiration, which will hang cause the callback to hang
-    testClock.setCurrentTime(clientExpired.getTime());
+    testClock.setCurrentTime(clientExpired.toEpochMilli());
     // Make sure that the callback is hung (while giving it a chance to run)
     for (int i = 0; i < 10; i++) {
       Thread.sleep(10);
@@ -558,27 +619,18 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getRequestMetadata_singleFlightErrorSharing() {
-    Calendar calendar = Calendar.getInstance();
-    Date actualExpiration = calendar.getTime();
-
-    calendar.setTime(actualExpiration);
-    calendar.add(
-        Calendar.MILLISECOND, -1 * Ints.checkedCast(OAuth2Credentials.REFRESH_MARGIN_MILLISECONDS));
-    Date clientStale = calendar.getTime();
-
-    calendar.setTime(actualExpiration);
-    calendar.add(
-        Calendar.MILLISECOND, -1 * Ints.checkedCast(OAuth2Credentials.MINIMUM_TOKEN_MILLISECONDS));
-    Date clientExpired = calendar.getTime();
+  void getRequestMetadata_singleFlightErrorSharing() {
+    Instant actualExpiration = Instant.now();
+    Instant clientStale = actualExpiration.minus(OAuth2Credentials.DEFAULT_REFRESH_MARGIN);
+    Instant clientExpired = actualExpiration.minus(OAuth2Credentials.DEFAULT_EXPIRATION_MARGIN);
 
     TestClock testClock = new TestClock();
-    testClock.setCurrentTime(clientStale.getTime());
+    testClock.setCurrentTime(clientStale.toEpochMilli());
 
     // Initialize credentials which are initially expired
     final SettableFuture<RuntimeException> refreshErrorFuture = SettableFuture.create();
     final OAuth2Credentials creds =
-        new OAuth2Credentials(new AccessToken(ACCESS_TOKEN, clientExpired)) {
+        new OAuth2Credentials(new AccessToken(ACCESS_TOKEN, Date.from(clientExpired))) {
           @Override
           public AccessToken refreshAccessToken() {
             RuntimeException injectedError;
@@ -611,32 +663,17 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
 
     // Get the error that getRequestMetadata(uri) created
     Throwable actualBlockingError =
-        assertThrows(
-                ExecutionException.class,
-                new ThrowingRunnable() {
-                  @Override
-                  public void run() throws Throwable {
-                    blockingCall.get();
-                  }
-                })
-            .getCause();
+        assertThrows(ExecutionException.class, blockingCall::get).getCause();
 
     assertEquals(error, actualBlockingError);
 
     RuntimeException actualAsyncError =
-        assertThrows(
-            RuntimeException.class,
-            new ThrowingRunnable() {
-              @Override
-              public void run() throws Throwable {
-                callback1.awaitResult();
-              }
-            });
+        assertThrows(RuntimeException.class, callback1::awaitResult);
     assertEquals(error, actualAsyncError);
   }
 
   @Test
-  public void getRequestMetadata_syncErrorsIncludeCallingStackframe() {
+  void getRequestMetadata_syncErrorsIncludeCallingStackframe() {
     final OAuth2Credentials creds =
         new OAuth2Credentials() {
           @Override
@@ -666,7 +703,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void refresh_refreshesToken() throws IOException {
+  void refresh_refreshesToken() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -702,7 +739,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void refreshIfExpired_refreshesToken() throws IOException {
+  void refreshIfExpired_refreshesToken() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -745,15 +782,21 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     assertEquals(1, transportFactory.transport.buildRequestCount--);
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void refresh_temporaryToken_throws() throws IOException {
-    OAuth2Credentials credentials =
-        OAuth2Credentials.newBuilder().setAccessToken(new AccessToken(ACCESS_TOKEN, null)).build();
-    credentials.refresh();
+  @Test
+  void refresh_temporaryToken_throws() {
+    assertThrows(
+        IllegalStateException.class,
+        () -> {
+          OAuth2Credentials credentials =
+              OAuth2Credentials.newBuilder()
+                  .setAccessToken(new AccessToken(ACCESS_TOKEN, null))
+                  .build();
+          credentials.refresh();
+        });
   }
 
   @Test
-  public void equals_true() throws IOException {
+  void equals_true() {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     OAuth2Credentials credentials =
         OAuth2Credentials.newBuilder().setAccessToken(new AccessToken(accessToken1, null)).build();
@@ -764,7 +807,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void equals_false_accessToken() throws IOException {
+  void equals_false_accessToken() {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     OAuth2Credentials credentials =
@@ -776,7 +819,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void toString_containsFields() throws IOException {
+  void toString_containsFields() {
     AccessToken accessToken = new AccessToken("1/MkSJoj1xsli0AccessToken_NKPY2", null);
     OAuth2Credentials credentials =
         OAuth2Credentials.newBuilder().setAccessToken(accessToken).build();
@@ -791,7 +834,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void hashCode_equals() throws IOException {
+  void hashCode_equals() throws IOException {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     OAuth2Credentials credentials =
         OAuth2Credentials.newBuilder().setAccessToken(new AccessToken(accessToken, null)).build();
@@ -801,7 +844,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void serialize() throws IOException, ClassNotFoundException {
+  void serialize() throws IOException, ClassNotFoundException {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     OAuth2Credentials credentials =
         OAuth2Credentials.newBuilder().setAccessToken(new AccessToken(accessToken, null)).build();
@@ -810,6 +853,19 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     assertEquals(credentials.hashCode(), deserializedCredentials.hashCode());
     assertEquals(credentials.toString(), deserializedCredentials.toString());
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
+  }
+
+  private void waitForRefreshTaskCompletion(OAuth2Credentials credentials)
+      throws TimeoutException, InterruptedException {
+    for (int i = 0; i < 100; i++) {
+      synchronized (credentials.lock) {
+        if (credentials.refreshTask == null) {
+          return;
+        }
+      }
+      Thread.sleep(100);
+    }
+    throw new TimeoutException("timed out waiting for refresh task to finish");
   }
 
   private static class TestChangeListener implements OAuth2Credentials.CredentialsChangedListener {

@@ -37,7 +37,6 @@ import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
-import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSource.CredentialFormatType;
 import com.google.common.io.CharStreams;
 import java.io.BufferedReader;
@@ -155,39 +154,10 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   private final IdentityPoolCredentialSource identityPoolCredentialSource;
 
-  /**
-   * Internal constructor. See {@link
-   * ExternalAccountCredentials#ExternalAccountCredentials(HttpTransportFactory, String, String,
-   * String, CredentialSource, String, String, String, String, String, Collection,
-   * EnvironmentProvider)}
-   */
-  IdentityPoolCredentials(
-      HttpTransportFactory transportFactory,
-      String audience,
-      String subjectTokenType,
-      String tokenUrl,
-      IdentityPoolCredentialSource credentialSource,
-      @Nullable String tokenInfoUrl,
-      @Nullable String serviceAccountImpersonationUrl,
-      @Nullable String quotaProjectId,
-      @Nullable String clientId,
-      @Nullable String clientSecret,
-      @Nullable Collection<String> scopes,
-      @Nullable EnvironmentProvider environmentProvider) {
-    super(
-        transportFactory,
-        audience,
-        subjectTokenType,
-        tokenUrl,
-        credentialSource,
-        tokenInfoUrl,
-        serviceAccountImpersonationUrl,
-        quotaProjectId,
-        clientId,
-        clientSecret,
-        scopes,
-        environmentProvider);
-    this.identityPoolCredentialSource = credentialSource;
+  /** Internal constructor. See {@link Builder}. */
+  IdentityPoolCredentials(Builder builder) {
+    super(builder);
+    this.identityPoolCredentialSource = (IdentityPoolCredentialSource) builder.credentialSource;
   }
 
   @Override
@@ -273,18 +243,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
   @Override
   public IdentityPoolCredentials createScoped(Collection<String> newScopes) {
     return new IdentityPoolCredentials(
-        transportFactory,
-        getAudience(),
-        getSubjectTokenType(),
-        getTokenUrl(),
-        identityPoolCredentialSource,
-        getTokenInfoUrl(),
-        getServiceAccountImpersonationUrl(),
-        getQuotaProjectId(),
-        getClientId(),
-        getClientSecret(),
-        newScopes,
-        getEnvironmentProvider());
+        (IdentityPoolCredentials.Builder) newBuilder(this).setScopes(newScopes));
   }
 
   public static Builder newBuilder() {
@@ -303,21 +262,14 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       super(credentials);
     }
 
+    public Builder setWorkforcePoolUserProject(String workforcePoolUserProject) {
+      super.setWorkforcePoolUserProject(workforcePoolUserProject);
+      return this;
+    }
+
     @Override
     public IdentityPoolCredentials build() {
-      return new IdentityPoolCredentials(
-          transportFactory,
-          audience,
-          subjectTokenType,
-          tokenUrl,
-          (IdentityPoolCredentialSource) credentialSource,
-          tokenInfoUrl,
-          serviceAccountImpersonationUrl,
-          quotaProjectId,
-          clientId,
-          clientSecret,
-          scopes,
-          environmentProvider);
+      return new IdentityPoolCredentials(this);
     }
   }
 }

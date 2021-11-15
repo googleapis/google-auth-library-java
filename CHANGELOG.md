@@ -1,5 +1,46 @@
 # Changelog
 
+## [1.3.0](https://www.github.com/googleapis/google-auth-library-java/compare/v1.2.2...v1.3.0) (2021-11-10)
+
+
+### Features
+
+* next release from main branch is 1.3.0 ([#780](https://www.github.com/googleapis/google-auth-library-java/issues/780)) ([1149581](https://www.github.com/googleapis/google-auth-library-java/commit/1149581e63267e3553c74ba2114d849c5b24f27b))
+
+
+### Bug Fixes
+
+* **java:** java 17 dependency arguments ([#1266](https://www.github.com/googleapis/google-auth-library-java/issues/1266)) ([#779](https://www.github.com/googleapis/google-auth-library-java/issues/779)) ([9160a53](https://www.github.com/googleapis/google-auth-library-java/commit/9160a53e6507c1c938795e181c65ad80db1bcf11))
+* service account impersonation with workforce credentials ([#770](https://www.github.com/googleapis/google-auth-library-java/issues/770)) ([6449ef0](https://www.github.com/googleapis/google-auth-library-java/commit/6449ef0922053121a6732933ab9e246965fde3b7))
+
+### [1.2.2](https://www.github.com/googleapis/google-auth-library-java/compare/v1.2.1...v1.2.2) (2021-10-20)
+
+
+### Bug Fixes
+
+* environment variable is "AWS_SESSION_TOKEN" and not "Token" ([#772](https://www.github.com/googleapis/google-auth-library-java/issues/772)) ([c8c3073](https://www.github.com/googleapis/google-auth-library-java/commit/c8c3073790ca2f660eabd2c410b0e295f693040b))
+
+### [1.2.1](https://www.github.com/googleapis/google-auth-library-java/compare/v1.2.0...v1.2.1) (2021-10-11)
+
+
+### Bug Fixes
+
+* disabling self-signed jwt for domain wide delegation ([#754](https://www.github.com/googleapis/google-auth-library-java/issues/754)) ([ac70a27](https://www.github.com/googleapis/google-auth-library-java/commit/ac70a279bdaf681507d7815264a3f5e92fd2aaa6))
+
+## [1.2.0](https://www.github.com/googleapis/google-auth-library-java/compare/v1.1.0...v1.2.0) (2021-09-30)
+
+
+### Features
+
+* add support for Workforce Pools ([#729](https://www.github.com/googleapis/google-auth-library-java/issues/729)) ([5f3fed7](https://www.github.com/googleapis/google-auth-library-java/commit/5f3fed79e22f3c2d585c5b03c01791b0f8109929))
+
+
+### Bug Fixes
+
+* allow empty workforce_pool_user_project ([#752](https://www.github.com/googleapis/google-auth-library-java/issues/752)) ([e1cbce1](https://www.github.com/googleapis/google-auth-library-java/commit/e1cbce1a5cb269c6613bc6d40f06145bd45099c0))
+* timing of stale token refreshes on ComputeEngine ([#749](https://www.github.com/googleapis/google-auth-library-java/issues/749)) ([c813d55](https://www.github.com/googleapis/google-auth-library-java/commit/c813d55a78053ecbec1a9640e6c9814da87319eb))
+* workforce audience ([#741](https://www.github.com/googleapis/google-auth-library-java/issues/741)) ([a08cacc](https://www.github.com/googleapis/google-auth-library-java/commit/a08cacc7990b9058c8f1af3f9d8d816119562cc4))
+
 ## [1.1.0](https://www.github.com/googleapis/google-auth-library-java/compare/v1.0.0...v1.1.0) (2021-08-17)
 
 
