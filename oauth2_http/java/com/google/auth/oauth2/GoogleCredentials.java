@@ -282,10 +282,10 @@ public class GoogleCredentials extends OAuth2Credentials {
    * If the credentials support automatic retries, creates a copy of the identity with 
    * the provided retry strategy
    *
-   * @param retryStrategy a retry strategy setting
-   * @return GoogleCredentials with the new retry strategy setting.
+   * @param defaultRetriesEnabled a flag enabling or disabling default retries
+   * @return GoogleCredentials with the new default retries configuration.
    */
-  public GoogleCredentials createWithCustomRetryStrategy(RetryStrategy retryStrategy) {
+  public GoogleCredentials createWithCustomRetryStrategy(boolean defaultRetriesEnabled) {
     return this;
   }
 

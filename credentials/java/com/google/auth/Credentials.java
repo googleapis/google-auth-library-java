@@ -128,6 +128,8 @@ public abstract class Credentials implements Serializable {
   /**
    * Implements the logic to decide whether the related HTTP request is retryable
    * @param responseException An instance of HttpException for the related HTTP request
+   * 
+   * @return true if the {@code responseException} may be retried, false otherwise.
    */
   protected boolean getIsRetryable(HttpResponseException responseException) {
       return false;
