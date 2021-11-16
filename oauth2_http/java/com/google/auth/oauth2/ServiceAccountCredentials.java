@@ -97,7 +97,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   // Includes expected server errors
   // Other 5xx codes are either not used or retries are unlikely to succeed
-  public static final Set<Integer> RETRYABLE_STATUSCODE_LIST = new HashSet<>(Arrays.asList(500, 503, 408, 429));
+  public static final Set<Integer> RETRYABLE_STATUSCODE_LIST =
+      new HashSet<>(Arrays.asList(500, 503, 408, 429));
 
   private static final long serialVersionUID = 7807543542681217978L;
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
