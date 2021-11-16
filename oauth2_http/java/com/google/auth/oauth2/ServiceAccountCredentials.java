@@ -82,6 +82,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.Executor;
 
 /**
@@ -91,6 +92,10 @@ import java.util.concurrent.Executor;
  */
 public class ServiceAccountCredentials extends GoogleCredentials
     implements ServiceAccountSigner, IdTokenProvider, JwtProvider, QuotaProjectIdProvider {
+
+  // Includes expected server errors
+  // Other 5xx codes are either not used or retries are unlikely to succeed
+  public static final Set<Integer> RETRYABLE_STATUSCODE_LIST = Set.of(500, 503, 408, 429);
 
   private static final long serialVersionUID = 7807543542681217978L;
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
@@ -114,7 +119,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   private final String quotaProjectId;
   private final int lifetime;
   private final boolean useJwtAccessWithScope;
-  private final RetryStrategy retryStrategy;
+  private final boolean defaultRetriesEnabled;
 
   private transient HttpTransportFactory transportFactory;
 
@@ -154,7 +159,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
       String quotaProjectId,
       int lifetime,
       boolean useJwtAccessWithScope,
-      RetryStrategy retryStrategy) {
+      boolean defaultRetriesEnabled) {
     this.clientId = clientId;
     this.clientEmail = Preconditions.checkNotNull(clientEmail);
     this.privateKey = Preconditions.checkNotNull(privateKey);
@@ -176,7 +181,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     }
     this.lifetime = lifetime;
     this.useJwtAccessWithScope = useJwtAccessWithScope;
-    this.retryStrategy = retryStrategy;
+    this.defaultRetriesEnabled = defaultRetriesEnabled;
   }
 
   /**
@@ -492,7 +497,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         quotaProject,
         DEFAULT_LIFETIME_IN_SECONDS,
         false,
-        RetryStrategy.DEFAULT);
+        true);
   }
 
   /** Helper to convert from a PKCS#8 String to an RSA private key */
@@ -599,9 +604,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
                   public boolean isRequired(HttpResponse response) {
                     int code = response.getStatusCode();
 
-                    // Server errors --- includes timeout errors, which use 500 instead of 408
-                    // Other 5xx codes are either not used or retries are unlikely to succeed
-                    return code == 500 || code == 503;
+                    return RETRYABLE_STATUSCODE_LIST.contains(code);
                   }
                 }));
 
@@ -670,13 +673,14 @@ public class ServiceAccountCredentials extends GoogleCredentials
   }
 
   /**
-   * Clones the service account with the specified retry strategy.
+   * Clones the service account with the specified default retries.
    *
-   * @param retryStrategy a retry strategy setting
+   * @param defaultRetriesEnabled a flag enabling or disabling default retries
+   * @return GoogleCredentials with the specified retry configuration.
    */
   @Override
-  public GoogleCredentials createWithCustomRetryStrategy(RetryStrategy retryStrategy) {
-    return this.toBuilder().setRetryStrategy(retryStrategy).build();
+  public GoogleCredentials createWithCustomRetryStrategy(boolean defaultRetriesEnabled) {
+    return this.toBuilder().setDefaultRetriesEnabled(defaultRetriesEnabled).build();
   }
 
   /**
@@ -711,7 +715,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         quotaProjectId,
         lifetime,
         useJwtAccessWithScope,
-        retryStrategy);
+        defaultRetriesEnabled);
   }
 
   /**
@@ -753,7 +757,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         quotaProjectId,
         lifetime,
         useJwtAccessWithScope,
-        retryStrategy);
+        defaultRetriesEnabled);
   }
 
   public final String getClientId() {
@@ -851,16 +855,16 @@ public class ServiceAccountCredentials extends GoogleCredentials
   }
 
   /**
-   * Calculates retry status based on HTTP response status and number of performed retries
+   * Calculates retry status based on related {@code HttpResponseException}
    *
-   * @param responseStatus A response status from the related HTTP request
-   * @param retryCount A number of retries performed
-   * @return true if response status is either 500 or 503 and false otherwise
+   * @param responseException An exception for the related HTTP request
+   * @return true if related HTTP exception has retryable status code included into {@code
+   *     ServiceAccountCredentials.RETRYABLE_STATUSCODE_LIST}
    */
   @Override
   protected boolean getIsRetryable(HttpResponseException responseException) {
     int responseStatus = responseException.getStatusCode();
-    return (responseStatus == 500 || responseStatus == 503) ? true : false;
+    return (RETRYABLE_STATUSCODE_LIST.contains(responseStatus)) ? true : false;
   }
 
   @Override
@@ -1105,7 +1109,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     private String quotaProjectId;
     private int lifetime = DEFAULT_LIFETIME_IN_SECONDS;
     private boolean useJwtAccessWithScope = false;
-    private RetryStrategy retryStrategy = RetryStrategy.DEFAULT;
+    private boolean defaultRetriesEnabled = true;
 
     protected Builder() {}
 
@@ -1123,7 +1127,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
       this.quotaProjectId = credentials.quotaProjectId;
       this.lifetime = credentials.lifetime;
       this.useJwtAccessWithScope = credentials.useJwtAccessWithScope;
-      this.retryStrategy = credentials.retryStrategy;
+      this.defaultRetriesEnabled = credentials.defaultRetriesEnabled;
     }
 
     public Builder setClientId(String clientId) {
@@ -1193,8 +1197,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
       return this;
     }
 
-    public Builder setRetryStrategy(RetryStrategy retryStrategy) {
-      this.retryStrategy = retryStrategy;
+    public Builder setDefaultRetriesEnabled(boolean defaultRetriesEnabled) {
+      this.defaultRetriesEnabled = defaultRetriesEnabled;
       return this;
     }
 
@@ -1250,8 +1254,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
       return useJwtAccessWithScope;
     }
 
-    public RetryStrategy getRetryStrategy() {
-      return retryStrategy;
+    public boolean isDefaultRetriesEnabled() {
+      return defaultRetriesEnabled;
     }
 
     public ServiceAccountCredentials build() {
@@ -1269,7 +1273,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
           quotaProjectId,
           lifetime,
           useJwtAccessWithScope,
-          retryStrategy);
+          defaultRetriesEnabled);
     }
   }
 }
