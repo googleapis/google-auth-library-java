@@ -76,9 +76,11 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -95,7 +97,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   // Includes expected server errors
   // Other 5xx codes are either not used or retries are unlikely to succeed
-  public static final Set<Integer> RETRYABLE_STATUSCODE_LIST = Set.of(500, 503, 408, 429);
+  public static final Set<Integer> RETRYABLE_STATUSCODE_LIST = new HashSet<>(Arrays.asList(500, 503, 408, 429));
 
   private static final long serialVersionUID = 7807543542681217978L;
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
