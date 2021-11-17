@@ -67,6 +67,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -662,82 +664,7 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void refreshAccessToken_retriesIOException() throws IOException {
-    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
-    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
-    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    MockTokenServerTransport transport = transportFactory.transport;
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            SCOPES,
-            transportFactory,
-            null);
-
-    transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
-    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
-
-    transport.addResponseErrorSequence(new IOException());
-    transport.addServiceAccount(CLIENT_EMAIL, accessToken2);
-    credentials.refresh();
-    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken2);
-  }
-
-  @Test
-  void refreshAccessToken_retriesForbiddenError() throws IOException {
-    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
-    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
-    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    MockTokenServerTransport transport = transportFactory.transport;
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            SCOPES,
-            transportFactory,
-            null);
-
-    transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
-    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
-
-    transport.addResponseSequence(new MockLowLevelHttpResponse().setStatusCode(403));
-    transport.addServiceAccount(CLIENT_EMAIL, accessToken2);
-    credentials.refresh();
-    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken2);
-  }
-
-  @Test
-  void refreshAccessToken_retriesServerError() throws IOException {
-    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
-    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
-    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    MockTokenServerTransport transport = transportFactory.transport;
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            SCOPES,
-            transportFactory,
-            null);
-
-    transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
-    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
-
-    transport.addResponseSequence(new MockLowLevelHttpResponse().setStatusCode(500));
-    transport.addServiceAccount(CLIENT_EMAIL, accessToken2);
-    credentials.refresh();
-    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken2);
-  }
-
-  @Test
-  void refreshAccessToken_failsNotFoundError() throws IOException {
+  void refreshAccessToken_IOException_NoRetry() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -756,13 +683,142 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
 
     assertThrows(
-        IOException.class,
-        () -> {
-          transport.addResponseSequence(new MockLowLevelHttpResponse().setStatusCode(404));
-          transport.addServiceAccount(CLIENT_EMAIL, accessToken2);
-          credentials.refresh();
-        },
-        "Should not retry on Not Found");
+            IOException.class,
+            () -> {
+              transport.addResponseErrorSequence(new IOException());
+              transport.addServiceAccount(CLIENT_EMAIL, accessToken2);
+              credentials.refresh();
+            },
+            "Should not retry on IOException");
+  }
+  @Test
+  void refreshAccessToken_retriesServerErrors() throws IOException {
+    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    MockTokenServerTransport transport = transportFactory.transport;
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.fromPkcs8(
+            CLIENT_ID,
+            CLIENT_EMAIL,
+            PRIVATE_KEY_PKCS8,
+            PRIVATE_KEY_ID,
+            SCOPES,
+            transportFactory,
+            null);
+
+    transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
+
+    MockLowLevelHttpResponse response500 = new MockLowLevelHttpResponse().setStatusCode(500);
+    MockLowLevelHttpResponse response503 = new MockLowLevelHttpResponse().setStatusCode(503);
+    transport.addResponseSequence(response500, response503);
+    transport.addServiceAccount(CLIENT_EMAIL, accessToken2);
+    credentials.refresh();
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken2);
+  }
+
+  @Test
+  void refreshAccessToken_retriesTimeoutAndThrottled() throws IOException {
+    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    MockTokenServerTransport transport = transportFactory.transport;
+    ServiceAccountCredentials credentials =
+            ServiceAccountCredentials.fromPkcs8(
+                    CLIENT_ID,
+                    CLIENT_EMAIL,
+                    PRIVATE_KEY_PKCS8,
+                    PRIVATE_KEY_ID,
+                    SCOPES,
+                    transportFactory,
+                    null);
+
+    transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
+
+    MockLowLevelHttpResponse response408 = new MockLowLevelHttpResponse().setStatusCode(408);
+    MockLowLevelHttpResponse response429 = new MockLowLevelHttpResponse().setStatusCode(429);
+    transport.addResponseSequence(response408, response429);
+    transport.addServiceAccount(CLIENT_EMAIL, accessToken2);
+    credentials.refresh();
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken2);
+  }
+
+  @Test
+  void refreshAccessToken_maxRetries_maxDelay() throws IOException {
+    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    MockTokenServerTransport transport = transportFactory.transport;
+    ServiceAccountCredentials credentials =
+            ServiceAccountCredentials.fromPkcs8(
+                    CLIENT_ID,
+                    CLIENT_EMAIL,
+                    PRIVATE_KEY_PKCS8,
+                    PRIVATE_KEY_ID,
+                    SCOPES,
+                    transportFactory,
+                    null);
+
+    transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
+
+    MockLowLevelHttpResponse response408 = new MockLowLevelHttpResponse().setStatusCode(408);
+    MockLowLevelHttpResponse response429 = new MockLowLevelHttpResponse().setStatusCode(429);
+    MockLowLevelHttpResponse response500 = new MockLowLevelHttpResponse().setStatusCode(500);
+    MockLowLevelHttpResponse response503 = new MockLowLevelHttpResponse().setStatusCode(503);
+
+    Instant start = Instant.now();
+    IOException ex = assertThrows(
+            IOException.class,
+            () -> {
+              transport.addResponseSequence(response408, response429, response500, response503);
+              credentials.refresh();
+            },
+            "Should retry only three times");
+    Instant finish = Instant.now();
+    long timeElapsed = Duration.between(start, finish).toMillis();
+
+    // we expect max retry time of 7 sec +/- jitter
+    assertTrue(timeElapsed > 5500 && timeElapsed < 10000);
+    assertTrue(ex.getMessage().contains("Error getting access token for service account: 503"));
+  }
+
+  @Test
+  void refreshAccessToken_4xx_5xx_NonRetryableFails() throws IOException {
+    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    MockTokenServerTransport transport = transportFactory.transport;
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.fromPkcs8(
+            CLIENT_ID,
+            CLIENT_EMAIL,
+            PRIVATE_KEY_PKCS8,
+            PRIVATE_KEY_ID,
+            SCOPES,
+            transportFactory,
+            null);
+
+    transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
+
+    for (int status = 400; status < 600; status++) {
+      if (ServiceAccountCredentials.RETRYABLE_STATUSCODE_LIST.contains(status)) {
+        continue;
+      }
+
+      MockLowLevelHttpResponse mockResponse = new MockLowLevelHttpResponse().setStatusCode(status);
+      assertThrows(
+              IOException.class,
+              () -> {
+                transport.addResponseSequence(mockResponse);
+                transport.addServiceAccount(CLIENT_EMAIL, accessToken2);
+                credentials.refresh();
+              },
+              "Should not retry status " + status);
+    }
   }
 
   @Test

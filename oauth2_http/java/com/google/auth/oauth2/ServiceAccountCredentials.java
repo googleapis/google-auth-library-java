@@ -108,6 +108,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   private static final int DEFAULT_NUMBER_OF_RETRIES = 3;
   private static final int INITIAL_RETRY_INTERVAL_MILLIS = 1000;
   private static final double RETRY_RANDOMIZATION_FACTOR = 0.1;
+  private static final double RETRY_MULTIPLIER = 2;
 
   private final String clientId;
   private final String clientEmail;
@@ -598,6 +599,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         new ExponentialBackOff.Builder()
             .setInitialIntervalMillis(INITIAL_RETRY_INTERVAL_MILLIS)
             .setRandomizationFactor(RETRY_RANDOMIZATION_FACTOR)
+            .setMultiplier(RETRY_MULTIPLIER)
             .build();
 
     request.setUnsuccessfulResponseHandler(
