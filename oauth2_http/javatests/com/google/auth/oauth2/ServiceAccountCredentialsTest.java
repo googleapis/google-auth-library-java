@@ -683,14 +683,15 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
 
     assertThrows(
-            IOException.class,
-            () -> {
-              transport.addResponseErrorSequence(new IOException());
-              transport.addServiceAccount(CLIENT_EMAIL, accessToken2);
-              credentials.refresh();
-            },
-            "Should not retry on IOException");
+        IOException.class,
+        () -> {
+          transport.addResponseErrorSequence(new IOException());
+          transport.addServiceAccount(CLIENT_EMAIL, accessToken2);
+          credentials.refresh();
+        },
+        "Should not retry on IOException");
   }
+
   @Test
   void refreshAccessToken_retriesServerErrors() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
@@ -725,14 +726,14 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
     ServiceAccountCredentials credentials =
-            ServiceAccountCredentials.fromPkcs8(
-                    CLIENT_ID,
-                    CLIENT_EMAIL,
-                    PRIVATE_KEY_PKCS8,
-                    PRIVATE_KEY_ID,
-                    SCOPES,
-                    transportFactory,
-                    null);
+        ServiceAccountCredentials.fromPkcs8(
+            CLIENT_ID,
+            CLIENT_EMAIL,
+            PRIVATE_KEY_PKCS8,
+            PRIVATE_KEY_ID,
+            SCOPES,
+            transportFactory,
+            null);
 
     transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
@@ -752,14 +753,14 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
     ServiceAccountCredentials credentials =
-            ServiceAccountCredentials.fromPkcs8(
-                    CLIENT_ID,
-                    CLIENT_EMAIL,
-                    PRIVATE_KEY_PKCS8,
-                    PRIVATE_KEY_ID,
-                    SCOPES,
-                    transportFactory,
-                    null);
+        ServiceAccountCredentials.fromPkcs8(
+            CLIENT_ID,
+            CLIENT_EMAIL,
+            PRIVATE_KEY_PKCS8,
+            PRIVATE_KEY_ID,
+            SCOPES,
+            transportFactory,
+            null);
 
     transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
@@ -770,7 +771,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     MockLowLevelHttpResponse response503 = new MockLowLevelHttpResponse().setStatusCode(503);
 
     Instant start = Instant.now();
-    IOException ex = assertThrows(
+    IOException ex =
+        assertThrows(
             IOException.class,
             () -> {
               transport.addResponseSequence(response408, response429, response500, response503);
@@ -811,13 +813,13 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
       MockLowLevelHttpResponse mockResponse = new MockLowLevelHttpResponse().setStatusCode(status);
       assertThrows(
-              IOException.class,
-              () -> {
-                transport.addResponseSequence(mockResponse);
-                transport.addServiceAccount(CLIENT_EMAIL, accessToken2);
-                credentials.refresh();
-              },
-              "Should not retry status " + status);
+          IOException.class,
+          () -> {
+            transport.addResponseSequence(mockResponse);
+            transport.addServiceAccount(CLIENT_EMAIL, accessToken2);
+            credentials.refresh();
+          },
+          "Should not retry status " + status);
     }
   }
 
