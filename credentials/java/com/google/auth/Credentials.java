@@ -115,7 +115,7 @@ public abstract class Credentials implements Serializable {
       if (e instanceof HttpResponseException) {
         HttpResponseException httpException = (HttpResponseException) e;
         boolean isRetryable = getIsRetryable(httpException);
-        callback.onFailure(new GoogleAuthException(isRetryable, httpException.getRetryCount(), e));
+        callback.onFailure(new GoogleAuthException(isRetryable, httpException.getAttemptCount() - 1, e));
       }
 
       callback.onFailure(new GoogleAuthException(e));
