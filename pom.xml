@@ -59,7 +59,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.google.http.version>1.40.1</project.google.http.version>
+    <project.google.http.version>1.40.2-SNAPSHOT</project.google.http.version>
     <project.junit.bom.version>5.8.1</project.junit.bom.version>
     <project.guava.version>31.0.1-android</project.guava.version>
     <project.appengine.version>1.9.92</project.appengine.version>
@@ -71,6 +71,11 @@
 
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>com.google.http-client</groupId>
+        <artifactId>google-http-client</artifactId>
+        <version>${project.google.http.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.junit</groupId>
         <artifactId>junit-bom</artifactId>
@@ -92,13 +97,6 @@
         <groupId>com.google.auth</groupId>
         <artifactId>google-auth-library-cloudshell</artifactId>
         <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.http-client</groupId>
-        <artifactId>google-http-client-bom</artifactId>
-        <version>${project.google.http.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>com.google.appengine</groupId>
