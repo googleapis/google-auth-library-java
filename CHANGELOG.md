@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.3.0](https://www.github.com/googleapis/google-auth-library-java/compare/v1.2.2...v1.3.0) (2021-11-10)
+
+
+### Features
+
+* next release from main branch is 1.3.0 ([#780](https://www.github.com/googleapis/google-auth-library-java/issues/780)) ([1149581](https://www.github.com/googleapis/google-auth-library-java/commit/1149581e63267e3553c74ba2114d849c5b24f27b))
+
+
+### Bug Fixes
+
+* **java:** java 17 dependency arguments ([#1266](https://www.github.com/googleapis/google-auth-library-java/issues/1266)) ([#779](https://www.github.com/googleapis/google-auth-library-java/issues/779)) ([9160a53](https://www.github.com/googleapis/google-auth-library-java/commit/9160a53e6507c1c938795e181c65ad80db1bcf11))
+* service account impersonation with workforce credentials ([#770](https://www.github.com/googleapis/google-auth-library-java/issues/770)) ([6449ef0](https://www.github.com/googleapis/google-auth-library-java/commit/6449ef0922053121a6732933ab9e246965fde3b7))
+
 ### [1.2.2](https://www.github.com/googleapis/google-auth-library-java/compare/v1.2.1...v1.2.2) (2021-10-20)
 
 
