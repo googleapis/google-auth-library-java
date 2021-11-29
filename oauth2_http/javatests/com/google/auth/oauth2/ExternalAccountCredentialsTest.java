@@ -262,7 +262,8 @@ public class ExternalAccountCredentialsTest {
               },
               "Exception should be thrown.");
       assertEquals(
-          "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.",
+          "The workforce_pool_user_project parameter should only be provided for a Workforce Pool"
+              + " configuration.",
           exception.getMessage());
     }
   }
@@ -376,7 +377,8 @@ public class ExternalAccountCredentialsTest {
               },
               "Exception should be thrown.");
       assertEquals(
-          "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.",
+          "The workforce_pool_user_project parameter should only be provided for a Workforce Pool"
+              + " configuration.",
           exception.getMessage());
     }
   }

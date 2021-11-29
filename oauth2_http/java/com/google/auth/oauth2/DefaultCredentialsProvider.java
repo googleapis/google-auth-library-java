@@ -133,8 +133,9 @@ class DefaultCredentialsProvider {
     throw new IOException(
         String.format(
             "The Application Default Credentials are not available. They are available if running"
-                + " in Google Compute Engine. Otherwise, the environment variable %s must be defined"
-                + " pointing to a file defining the credentials. See %s for more information.",
+                + " in Google Compute Engine. Otherwise, the environment variable %s must be"
+                + " defined pointing to a file defining the credentials. See %s for more"
+                + " information.",
             CREDENTIAL_ENV_VAR, HELP_PERMALINK));
   }
 

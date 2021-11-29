@@ -215,7 +215,8 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
     if (awsCredentialSource.regionUrl == null || awsCredentialSource.regionUrl.isEmpty()) {
       throw new IOException(
-          "Unable to determine the AWS region. The credential source does not contain the region URL.");
+          "Unable to determine the AWS region. The credential source does not contain the region"
+              + " URL.");
     }
 
     region = retrieveResource(awsCredentialSource.regionUrl, "region");

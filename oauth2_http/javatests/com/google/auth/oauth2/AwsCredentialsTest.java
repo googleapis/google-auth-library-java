@@ -332,7 +332,8 @@ class AwsCredentialsTest {
             awsCredential::getAwsSecurityCredentials,
             "Exception should be thrown.");
     assertEquals(
-        "Unable to determine the AWS IAM role name. The credential source does not contain the url field.",
+        "Unable to determine the AWS IAM role name. The credential source does not contain the url"
+            + " field.",
         exception.getMessage());
   }
 
@@ -471,7 +472,8 @@ class AwsCredentialsTest {
             () -> new AwsCredentialSource(new HashMap<>()),
             "Exception should be thrown.");
     assertEquals(
-        "A regional_cred_verification_url representing the GetCallerIdentity action URL must be specified.",
+        "A regional_cred_verification_url representing the GetCallerIdentity action URL must be"
+            + " specified.",
         exception.getMessage());
   }
 

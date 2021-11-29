@@ -227,7 +227,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     this.workforcePoolUserProject = builder.workforcePoolUserProject;
     if (workforcePoolUserProject != null && !isWorkforcePoolConfiguration()) {
       throw new IllegalArgumentException(
-          "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.");
+          "The workforce_pool_user_project parameter should only be provided for a Workforce Pool"
+              + " configuration.");
     }
 
     validateTokenUrl(tokenUrl);

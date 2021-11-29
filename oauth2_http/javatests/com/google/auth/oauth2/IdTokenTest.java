@@ -76,7 +76,9 @@ class IdTokenTest extends BaseSerializationTest {
     IdToken accessToken = IdToken.create(TOKEN_1);
     String expectedToString =
         String.format(
-            "IdToken{tokenValue=%s, JsonWebSignature=JsonWebSignature{header={\"alg\":\"RS256\",\"kid\":\"3494b1e786cdad092e423766bbe37f54ed87b22d\",\"typ\":\"JWT\"}, payload={\"aud\":\"https://foo.bar\",\"exp\":1565391138,\"iat\":1565387538,\"iss\":\"https://accounts.google.com\",\"sub\":\"100147106996764479085\",\"azp\":\"svc-2-429@mineral-minutia-820.iam.gserviceaccount.com\",\"email\":\"svc-2-429@mineral-minutia-820.iam.gserviceaccount.com\",\"email_verified\":true}}}",
+            "IdToken{tokenValue=%s,"
+                + " JsonWebSignature=JsonWebSignature{header={\"alg\":\"RS256\",\"kid\":\"3494b1e786cdad092e423766bbe37f54ed87b22d\",\"typ\":\"JWT\"},"
+                + " payload={\"aud\":\"https://foo.bar\",\"exp\":1565391138,\"iat\":1565387538,\"iss\":\"https://accounts.google.com\",\"sub\":\"100147106996764479085\",\"azp\":\"svc-2-429@mineral-minutia-820.iam.gserviceaccount.com\",\"email\":\"svc-2-429@mineral-minutia-820.iam.gserviceaccount.com\",\"email_verified\":true}}}",
             TOKEN_1);
     assertEquals(expectedToString, accessToken.toString());
   }

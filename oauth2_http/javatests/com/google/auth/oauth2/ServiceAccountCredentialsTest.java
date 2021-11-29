@@ -94,8 +94,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
           + "SXagBxzp8PecbaCHjzNRSQE2in81qYnrAFNB4o3DpHyMMY6s5ALLeHKscEWnqP8Ur6X4PvzZecCWU9BKAZAkAut"
           + "LPknAuxSCsUOvUfS1i87ex77Ot+w6POp34pEX+UWb+u5iFn2cQacDTHLV1LtE80L8jVLSbrbrlH43H0DjU5AkEA"
           + "gidhycxS86dxpEljnOMCw8CKoUBd5I880IUahEiUltk7OLJYS/Ts1wbn3kPOVX3wyJs8WBDtBkFrDHW2ezth2QJ"
-          + "ADj3e1YhMVdjJW5jqwlD/VNddGjgzyunmiZg0uOXsHXbytYmsA545S8KRQFaJKFXYYFo2kOjqOiC1T2cAzMDjCQ"
-          + "==\n-----END PRIVATE KEY-----\n";
+          + "ADj3e1YhMVdjJW5jqwlD/VNddGjgzyunmiZg0uOXsHXbytYmsA545S8KRQFaJKFXYYFo2kOjqOiC1T2cAzMDjCQ==\n"
+          + "-----END PRIVATE KEY-----\n";
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
   private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
   private static final Collection<String> DEFAULT_SCOPES =
@@ -1064,9 +1064,10 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
             QUOTA_PROJECT);
     String expectedToString =
         String.format(
-            "ServiceAccountCredentials{clientId=%s, clientEmail=%s, privateKeyId=%s, "
-                + "transportFactoryClassName=%s, tokenServerUri=%s, scopes=%s, defaultScopes=%s, serviceAccountUser=%s, "
-                + "quotaProjectId=%s, lifetime=3600, useJwtAccessWithScope=false}",
+            "ServiceAccountCredentials{clientId=%s, clientEmail=%s, privateKeyId=%s,"
+                + " transportFactoryClassName=%s, tokenServerUri=%s, scopes=%s, defaultScopes=%s,"
+                + " serviceAccountUser=%s, quotaProjectId=%s, lifetime=3600,"
+                + " useJwtAccessWithScope=false}",
             CLIENT_ID,
             CLIENT_EMAIL,
             PRIVATE_KEY_ID,
