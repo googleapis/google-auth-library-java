@@ -60,9 +60,9 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.google.http.version>1.40.1</project.google.http.version>
-    <project.junit.bom.version>5.8.1</project.junit.bom.version>
+    <project.junit.bom.version>5.8.2</project.junit.bom.version>
     <project.guava.version>31.0.1-android</project.guava.version>
-    <project.appengine.version>1.9.93</project.appengine.version>
+    <project.appengine.version>2.0.0</project.appengine.version>
     <project.findbugs.version>3.0.2</project.findbugs.version>
     <deploy.autorelease>false</deploy.autorelease>
     <project.autovalue.version>1.8.2</project.autovalue.version>
@@ -207,7 +207,7 @@
         <plugin>
           <groupId>com.coveo</groupId>
           <artifactId>fmt-maven-plugin</artifactId>
-          <version>2.12</version>
+          <version>2.13</version>
           <configuration>
             <verbose>true</verbose>
           </configuration>
