@@ -41,7 +41,7 @@ If you are using Gradle, add this to your dependencies
 
 [//]: # ({x-version-update-start:google-auth-library-oauth2-http:released})
 ```Groovy
-implementation 'com.google.auth:google-auth-library-oauth2-http:1.3.0'
+compile 'com.google.auth:google-auth-library-oauth2-http:1.3.0'
 ```
 [//]: # ({x-version-update-end})
 
