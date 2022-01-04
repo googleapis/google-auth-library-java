@@ -1,5 +1,125 @@
 # Changelog
 
+## [1.0.0](https://github.com/googleapis/google-auth-library-java/compare/google-auth-library-java-v1.3.0...google-auth-library-java-v1.0.0) (2022-01-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* updating google-auth-library-java min Java version to 1.8
+* 1.0.0
+* privatize deprecated constructor (#473)
+
+### Features
+
+* add `gcf-owl-bot[bot]` to `ignoreAuthors` ([#674](https://github.com/googleapis/google-auth-library-java/issues/674)) ([359b20f](https://github.com/googleapis/google-auth-library-java/commit/359b20f24f88e09b6b104c61ca63a1b604ea64d2))
+* add Automatic-Module-Name to manifest ([#326](https://github.com/googleapis/google-auth-library-java/issues/326)) ([29f58b4](https://github.com/googleapis/google-auth-library-java/commit/29f58b4894a9fa3c03c980d5154794034a0b9b6f))
+* add Id token support for UserCredentials ([#650](https://github.com/googleapis/google-auth-library-java/issues/650)) ([5a8f467](https://github.com/googleapis/google-auth-library-java/commit/5a8f4676630854c53aa708a9c8b960770067f858))
+* add IDTokenCredential support ([#303](https://github.com/googleapis/google-auth-library-java/issues/303)) ([a87e3fd](https://github.com/googleapis/google-auth-library-java/commit/a87e3fdcbc74a94a53b0d35cd3664a115acd68d8))
+* add impersonation credentials to ADC  ([#613](https://github.com/googleapis/google-auth-library-java/issues/613)) ([b9823f7](https://github.com/googleapis/google-auth-library-java/commit/b9823f70d7f3f7461b7de40bee06f5e7ba0e797c))
+* add JwtCredentials with custom claims ([#290](https://github.com/googleapis/google-auth-library-java/issues/290)) ([3f37172](https://github.com/googleapis/google-auth-library-java/commit/3f37172638c9252fcec7ed6437a333c71af87c71))
+* add logging at FINE level for each step of ADC ([#435](https://github.com/googleapis/google-auth-library-java/issues/435)) ([7d145b2](https://github.com/googleapis/google-auth-library-java/commit/7d145b2371033093ea13fd05520c90970a5ef363))
+* add self signed jwt support ([#572](https://github.com/googleapis/google-auth-library-java/issues/572)) ([efe103a](https://github.com/googleapis/google-auth-library-java/commit/efe103a2e688ca915ec9925a72c49bb2a1b3c3b5))
+* add support for Workforce Pools ([#729](https://github.com/googleapis/google-auth-library-java/issues/729)) ([5f3fed7](https://github.com/googleapis/google-auth-library-java/commit/5f3fed79e22f3c2d585c5b03c01791b0f8109929))
+* add TokenVerifier class that can verify RS256/ES256 tokens ([#420](https://github.com/googleapis/google-auth-library-java/issues/420)) ([5014ac7](https://github.com/googleapis/google-auth-library-java/commit/5014ac72a59d877ef95c616d0b33792b9fc70c25))
+* add workload identity federation support ([#547](https://github.com/googleapis/google-auth-library-java/issues/547)) ([b8dde1e](https://github.com/googleapis/google-auth-library-java/commit/b8dde1e43f86a0a00741790c12d73f6cbda6251d))
+* added getter for credentials object in HttpCredentialsAdapter ([#658](https://github.com/googleapis/google-auth-library-java/issues/658)) ([5a946ea](https://github.com/googleapis/google-auth-library-java/commit/5a946ea5e0d974611f2205f468236db4b931e486))
+* Adding functional tests for Service Account  ([#685](https://github.com/googleapis/google-auth-library-java/issues/685)) ([dfe118c](https://github.com/googleapis/google-auth-library-java/commit/dfe118c261aadf137a3cf47a7acb9892c7a6db4d))
+* allow arbitrary additional claims for JwtClaims ([#331](https://github.com/googleapis/google-auth-library-java/issues/331)) ([888c61c](https://github.com/googleapis/google-auth-library-java/commit/888c61cdcc99d30aa2f2470d029be00d19c53aad))
+* allow custom lifespan for impersonated creds ([#515](https://github.com/googleapis/google-auth-library-java/issues/515)) ([0707ed4](https://github.com/googleapis/google-auth-library-java/commit/0707ed4bbb40fb775f196004ee30f8c695fe662b))
+* allow custom scopes for compute engine creds ([#514](https://github.com/googleapis/google-auth-library-java/issues/514)) ([edc8d6e](https://github.com/googleapis/google-auth-library-java/commit/edc8d6e0e7ca2c6749d026ba42854a09c4879fd6))
+* allow scopes for self signed jwt ([#689](https://github.com/googleapis/google-auth-library-java/issues/689)) ([f4980c7](https://github.com/googleapis/google-auth-library-java/commit/f4980c77566bbd5ef4c532acb199d7d484dbcd01))
+* allow set lifetime for service account creds ([#516](https://github.com/googleapis/google-auth-library-java/issues/516)) ([427f2d5](https://github.com/googleapis/google-auth-library-java/commit/427f2d5610f0e8184a21b24531d2549a68c0b546))
+* downscoping with credential access boundaries ([#702](https://github.com/googleapis/google-auth-library-java/issues/702)) ([aa7ede1](https://github.com/googleapis/google-auth-library-java/commit/aa7ede1d1c688ba437798f4204820c0506d5d969))
+* enable pre-emptive async oauth token refreshes ([#646](https://github.com/googleapis/google-auth-library-java/issues/646)) ([e3f4c7e](https://github.com/googleapis/google-auth-library-java/commit/e3f4c7eac0417705553ef8259599ec29fc8ad9b4))
+* GA release of google-auth-library-java (ver 1.0.0) ([#704](https://github.com/googleapis/google-auth-library-java/issues/704)) ([3d9874f](https://github.com/googleapis/google-auth-library-java/commit/3d9874f1c91dfa10d6f72d41e922b3f1ec654943))
+* next release from main branch is 1.3.0 ([#780](https://github.com/googleapis/google-auth-library-java/issues/780)) ([1149581](https://github.com/googleapis/google-auth-library-java/commit/1149581e63267e3553c74ba2114d849c5b24f27b))
+* promote IdToken and JWT features ([#538](https://github.com/googleapis/google-auth-library-java/issues/538)) ([b514fe0](https://github.com/googleapis/google-auth-library-java/commit/b514fe0cebe5a294e0cf97b7b5349e6a523dc7b2))
+* Returning an issuer claim on request errors ([#656](https://github.com/googleapis/google-auth-library-java/issues/656)) ([95d70ae](https://github.com/googleapis/google-auth-library-java/commit/95d70ae0f5f4c985455f913ddef14ebe75500656))
+* support reading in quotaProjectId for billing ([#383](https://github.com/googleapis/google-auth-library-java/issues/383)) ([f38c3c8](https://github.com/googleapis/google-auth-library-java/commit/f38c3c84748fadc1591f092edd1974539cf7b644))
+* updated `JwtClaims.Builder` methods to `public` ([#396](https://github.com/googleapis/google-auth-library-java/issues/396)) ([9e5de14](https://github.com/googleapis/google-auth-library-java/commit/9e5de14263a01d746af2fc192cf1b82a2acff35c))
+* updating google-auth-library-java min Java version to 1.8 ([3d9874f](https://github.com/googleapis/google-auth-library-java/commit/3d9874f1c91dfa10d6f72d41e922b3f1ec654943))
+
+
+### Bug Fixes
+
+* Add shopt -s nullglob to dependencies script ([#693](https://github.com/googleapis/google-auth-library-java/issues/693)) ([c5aa708](https://github.com/googleapis/google-auth-library-java/commit/c5aa7084d9ca817a53cf6bac14d442adeeaeb310))
+* add validation for the token URL and service account impersonation URL for Workload Identity Federation ([#717](https://github.com/googleapis/google-auth-library-java/issues/717)) ([23cb8ef](https://github.com/googleapis/google-auth-library-java/commit/23cb8ef778d012bbd452c1dfdac5f096d1af6c95))
+* allow empty workforce_pool_user_project ([#752](https://github.com/googleapis/google-auth-library-java/issues/752)) ([e1cbce1](https://github.com/googleapis/google-auth-library-java/commit/e1cbce1a5cb269c6613bc6d40f06145bd45099c0))
+* allow unset/null privateKeyId for JwtCredentials ([#336](https://github.com/googleapis/google-auth-library-java/issues/336)) ([d28a6ed](https://github.com/googleapis/google-auth-library-java/commit/d28a6ed08a5236b4aa3ff1e6249b9437f574f243))
+* cleanup unused code and deprecation warnings ([#315](https://github.com/googleapis/google-auth-library-java/issues/315)) ([7fd94c0](https://github.com/googleapis/google-auth-library-java/commit/7fd94c0c2d2b900d1562d756eb3817f5349c4824))
+* disabling self-signed jwt for domain wide delegation ([#754](https://github.com/googleapis/google-auth-library-java/issues/754)) ([ac70a27](https://github.com/googleapis/google-auth-library-java/commit/ac70a279bdaf681507d7815264a3f5e92fd2aaa6))
+* don't log downloads ([#576](https://github.com/googleapis/google-auth-library-java/issues/576)) ([6181030](https://github.com/googleapis/google-auth-library-java/commit/61810306dc0e18500a4a6b2704e00842fbecd879))
+* environment variable is "AWS_SESSION_TOKEN" and not "Token" ([#772](https://github.com/googleapis/google-auth-library-java/issues/772)) ([c8c3073](https://github.com/googleapis/google-auth-library-java/commit/c8c3073790ca2f660eabd2c410b0e295f693040b))
+* fix service account credentials createScopedRequired ([#601](https://github.com/googleapis/google-auth-library-java/issues/601)) ([0614482](https://github.com/googleapis/google-auth-library-java/commit/061448209da05ddfc75b40aae495c33d0ee7f1ee))
+* follow up fix service account credentials createScopedRequired ([#605](https://github.com/googleapis/google-auth-library-java/issues/605)) ([7ddac43](https://github.com/googleapis/google-auth-library-java/commit/7ddac43c418bb8b0cc3fd8d4f9d8752ad65bd842))
+* **java:** add -ntp flag to native image testing command ([#1299](https://github.com/googleapis/google-auth-library-java/issues/1299)) ([#807](https://github.com/googleapis/google-auth-library-java/issues/807)) ([aa6654a](https://github.com/googleapis/google-auth-library-java/commit/aa6654a639ea15bcce7c7a6e86f170b1345895f0))
+* **java:** java 17 dependency arguments ([#1266](https://github.com/googleapis/google-auth-library-java/issues/1266)) ([#779](https://github.com/googleapis/google-auth-library-java/issues/779)) ([9160a53](https://github.com/googleapis/google-auth-library-java/commit/9160a53e6507c1c938795e181c65ad80db1bcf11))
+* **java:** run Maven in plain console-friendly mode ([#1301](https://github.com/googleapis/google-auth-library-java/issues/1301)) ([#818](https://github.com/googleapis/google-auth-library-java/issues/818)) ([4df45d0](https://github.com/googleapis/google-auth-library-java/commit/4df45d0d03a973f1beff43d8965c26289f217f22))
+* make JwtClaims.newBuilder() public ([#350](https://github.com/googleapis/google-auth-library-java/issues/350)) ([6ab8758](https://github.com/googleapis/google-auth-library-java/commit/6ab87588b9e99c7b224a782f9766e4dfeea653f4))
+* move autovalue into annotation processor path instead of classpath ([#358](https://github.com/googleapis/google-auth-library-java/issues/358)) ([a82d348](https://github.com/googleapis/google-auth-library-java/commit/a82d34885d265861a150268dbe06431f89f3aa3e))
+* per google style, logger is lower case ([#529](https://github.com/googleapis/google-auth-library-java/issues/529)) ([ecfc6a2](https://github.com/googleapis/google-auth-library-java/commit/ecfc6a2ea6060e06629b5d422b23b842b917f55e))
+* privatize deprecated constructor ([#473](https://github.com/googleapis/google-auth-library-java/issues/473)) ([5804ff0](https://github.com/googleapis/google-auth-library-java/commit/5804ff03a531268831ac797ab262638a3119c14f))
+* quotaProjectId should be applied for cached `getRequestMetadata(URI, Executor, RequestMetadataCallback)` ([#509](https://github.com/googleapis/google-auth-library-java/issues/509)) ([0a8412f](https://github.com/googleapis/google-auth-library-java/commit/0a8412fcf9de4ac568b9f88618e44087dd31b144))
+* release scripts from issuing overlapping phases ([#634](https://github.com/googleapis/google-auth-library-java/issues/634)) ([b8d851e](https://github.com/googleapis/google-auth-library-java/commit/b8d851e1ac97b71e986c9afccca42021be3f9dd1))
+* remove 1 hour limit for impersonated token ([#490](https://github.com/googleapis/google-auth-library-java/issues/490)) ([927e3d5](https://github.com/googleapis/google-auth-library-java/commit/927e3d5598e2d2b06512b27f4210994c65b26f59))
+* remove deprecated methods ([#537](https://github.com/googleapis/google-auth-library-java/issues/537)) ([427963e](https://github.com/googleapis/google-auth-library-java/commit/427963e04702d8b73eca5ed555539b11bbe97342))
+* replace non-precondition use of Preconditions ([#539](https://github.com/googleapis/google-auth-library-java/issues/539)) ([f2ab4f1](https://github.com/googleapis/google-auth-library-java/commit/f2ab4f14262d54de0fde85494cfd92cf01a30cbe))
+* service account impersonation with workforce credentials ([#770](https://github.com/googleapis/google-auth-library-java/issues/770)) ([6449ef0](https://github.com/googleapis/google-auth-library-java/commit/6449ef0922053121a6732933ab9e246965fde3b7))
+* support AWS_DEFAULT_REGION env var ([#599](https://github.com/googleapis/google-auth-library-java/issues/599)) ([3d066ee](https://github.com/googleapis/google-auth-library-java/commit/3d066ee4755c20e2bd44b234dff71df1c4815aec))
+* switch to GSON ([#531](https://github.com/googleapis/google-auth-library-java/issues/531)) ([1b98d5c](https://github.com/googleapis/google-auth-library-java/commit/1b98d5c86fc5e56187c977e7f43c39bb62483d40))
+* throw SigningException as documented ([#316](https://github.com/googleapis/google-auth-library-java/issues/316)) ([a1ab97c](https://github.com/googleapis/google-auth-library-java/commit/a1ab97c0da43956a3ca0c112c3eba858be14084f))
+* timing of stale token refreshes on ComputeEngine ([#749](https://github.com/googleapis/google-auth-library-java/issues/749)) ([c813d55](https://github.com/googleapis/google-auth-library-java/commit/c813d55a78053ecbec1a9640e6c9814da87319eb))
+* typo ([#632](https://github.com/googleapis/google-auth-library-java/issues/632)) ([d860608](https://github.com/googleapis/google-auth-library-java/commit/d8606083b6632e26463aac0a0d1e92835d2fbcd0))
+* typo in BOM dependency ([#345](https://github.com/googleapis/google-auth-library-java/issues/345)) ([a1d63bb](https://github.com/googleapis/google-auth-library-java/commit/a1d63bb1a1304f0e44688aafecd492288b83bba4))
+* typo in ComputeEngineCredentials exception message ([#313](https://github.com/googleapis/google-auth-library-java/issues/313)) ([1a16f38](https://github.com/googleapis/google-auth-library-java/commit/1a16f3809168f9d5b4cca139b0fb935134eaed14))
+* Update dependencies.sh to not break on mac ([c5aa708](https://github.com/googleapis/google-auth-library-java/commit/c5aa7084d9ca817a53cf6bac14d442adeeaeb310))
+* use default timeout if given 0 for ImpersonatedCredentials ([#527](https://github.com/googleapis/google-auth-library-java/issues/527)) ([ec74870](https://github.com/googleapis/google-auth-library-java/commit/ec74870c372a33d4157b45bb5d59ad7464fb2238))
+* use orginal url as audience for self signed jwt if scheme or host is null ([#642](https://github.com/googleapis/google-auth-library-java/issues/642)) ([b4e6f1a](https://github.com/googleapis/google-auth-library-java/commit/b4e6f1a0bd17dd31edc85ed4879cea75857fd747))
+* workforce audience ([#741](https://github.com/googleapis/google-auth-library-java/issues/741)) ([a08cacc](https://github.com/googleapis/google-auth-library-java/commit/a08cacc7990b9058c8f1af3f9d8d816119562cc4))
+
+
+### Reverts
+
+* "build: run in debug mode ([#319](https://github.com/googleapis/google-auth-library-java/issues/319))" ([#320](https://github.com/googleapis/google-auth-library-java/issues/320)) ([de79e14](https://github.com/googleapis/google-auth-library-java/commit/de79e1476a8f52e872cfe902141ef708846d5100))
+
+
+### Dependencies
+
+* update appengine-sdk to 1.9.76 ([#366](https://github.com/googleapis/google-auth-library-java/issues/366)) ([590883d](https://github.com/googleapis/google-auth-library-java/commit/590883d57158275b988b5e6c7f6d608eaa3c08ad))
+* update autovalue packages to v1.7 ([#365](https://github.com/googleapis/google-auth-library-java/issues/365)) ([42a1694](https://github.com/googleapis/google-auth-library-java/commit/42a169463ab3c36552e2eea605571ee9808f346c))
+* update autovalue packages to v1.7.2 ([#429](https://github.com/googleapis/google-auth-library-java/issues/429)) ([5758364](https://github.com/googleapis/google-auth-library-java/commit/575836405bd5803d6202bd0018609184d6a15831))
+* update autovalue to 1.8.1 ([#638](https://github.com/googleapis/google-auth-library-java/issues/638)) ([62cd356](https://github.com/googleapis/google-auth-library-java/commit/62cd3564a93abe3cbbe083ac9b7aaebe4608b4bd))
+* update dependency com.google.appengine:appengine to v1.9.77 ([#377](https://github.com/googleapis/google-auth-library-java/issues/377)) ([c3c950e](https://github.com/googleapis/google-auth-library-java/commit/c3c950e7d906aaa4187305a5fd9b05785e19766a))
+* update dependency com.google.appengine:appengine-api-1.0-sdk to v1.9.84 ([#422](https://github.com/googleapis/google-auth-library-java/issues/422)) ([b262c45](https://github.com/googleapis/google-auth-library-java/commit/b262c4587b058e6837429ee05f1b6a63620ee598))
+* update dependency com.google.guava:guava to v30 ([#497](https://github.com/googleapis/google-auth-library-java/issues/497)) ([0551649](https://github.com/googleapis/google-auth-library-java/commit/055164969d175718ee8f2c0369b84bcddc1d7134))
+* update dependency com.google.guava:guava to v30.1-android ([#522](https://github.com/googleapis/google-auth-library-java/issues/522)) ([4090d1c](https://github.com/googleapis/google-auth-library-java/commit/4090d1cb50041bceb1cd975d1a9249a412df936f))
+* update dependency com.google.http-client:google-http-client-bom to v1.32.0 ([#341](https://github.com/googleapis/google-auth-library-java/issues/341)) ([e656244](https://github.com/googleapis/google-auth-library-java/commit/e656244d1f875ce95f5e80005dbda7256f0f3c0c))
+* update dependency com.google.http-client:google-http-client-bom to v1.32.1 ([#346](https://github.com/googleapis/google-auth-library-java/issues/346)) ([be4a7c4](https://github.com/googleapis/google-auth-library-java/commit/be4a7c4b4ee447f03a3aa46502e34ecfa0b147a3))
+* update dependency com.google.http-client:google-http-client-bom to v1.33.0 ([#374](https://github.com/googleapis/google-auth-library-java/issues/374)) ([af0af50](https://github.com/googleapis/google-auth-library-java/commit/af0af5061f4544b8b5bb43c82d2ab66c08143b90))
+* update dependency com.google.http-client:google-http-client-bom to v1.35.0 ([#427](https://github.com/googleapis/google-auth-library-java/issues/427)) ([5494ec0](https://github.com/googleapis/google-auth-library-java/commit/5494ec0a73319fb955b3d7ba025aea9607020c4e))
+* update dependency com.google.http-client:google-http-client-bom to v1.37.0 ([#486](https://github.com/googleapis/google-auth-library-java/issues/486)) ([3027fbf](https://github.com/googleapis/google-auth-library-java/commit/3027fbfaf017f5aa5a22cc51cd38a522597729c0))
+* update dependency com.google.http-client:google-http-client-bom to v1.38.0 ([#503](https://github.com/googleapis/google-auth-library-java/issues/503)) ([46f20bc](https://github.com/googleapis/google-auth-library-java/commit/46f20bca8b5951ebea6a963b3affde2b92d403c7))
+* update dependency com.google.http-client:google-http-client-bom to v1.39.0 ([#580](https://github.com/googleapis/google-auth-library-java/issues/580)) ([88718b0](https://github.com/googleapis/google-auth-library-java/commit/88718b0185ee6a3ff1168ac68621be0c5ff0efab))
+* update google-http-client to 1.36.0 ([#447](https://github.com/googleapis/google-auth-library-java/issues/447)) ([b913d19](https://github.com/googleapis/google-auth-library-java/commit/b913d194259e4f93bb401a844480f56b48dad3bd))
+* update guava patch ([#628](https://github.com/googleapis/google-auth-library-java/issues/628)) ([8ff3207](https://github.com/googleapis/google-auth-library-java/commit/8ff320755e44f937590196bcbefa8c9537244af6))
+* update Guava to 28.1 ([#353](https://github.com/googleapis/google-auth-library-java/issues/353)) ([f4f05be](https://github.com/googleapis/google-auth-library-java/commit/f4f05be44ab073ee16d92a1647e74b8bb187a442))
+* update guava to 28.2-android ([#389](https://github.com/googleapis/google-auth-library-java/issues/389)) ([70bd8ff](https://github.com/googleapis/google-auth-library-java/commit/70bd8ff15a9b0cb1dab9f350bd49dd60b2da33c7))
+* update Guava to 29.0-android ([#426](https://github.com/googleapis/google-auth-library-java/issues/426)) ([0cd3c2e](https://github.com/googleapis/google-auth-library-java/commit/0cd3c2ec0aef3ff0f0379b32f9d05126442219b6))
+
+
+### Documentation
+
+* add instructions for using workload identity federation ([#564](https://github.com/googleapis/google-auth-library-java/issues/564)) ([2142db3](https://github.com/googleapis/google-auth-library-java/commit/2142db314666f298071ae30a7419b00d48d87476))
+* backfill CHANGELOG.md ([#327](https://github.com/googleapis/google-auth-library-java/issues/327)) ([117141c](https://github.com/googleapis/google-auth-library-java/commit/117141c4710db91c2e536b18729c0ff4bd2bf685))
+* fix include instructions in google-auth-library-bom README ([#352](https://github.com/googleapis/google-auth-library-java/issues/352)) ([f649735](https://github.com/googleapis/google-auth-library-java/commit/f649735cb88ad9a3f666a11278da120d867f6343))
+* fix minor typo in google-auth-library-bom README ([#332](https://github.com/googleapis/google-auth-library-java/issues/332)) ([29ed29a](https://github.com/googleapis/google-auth-library-java/commit/29ed29aeddd29deccd5bb7a23d097575c4288518))
+* fix README link to javadoc ([#322](https://github.com/googleapis/google-auth-library-java/issues/322)) ([bc59ea6](https://github.com/googleapis/google-auth-library-java/commit/bc59ea63f1fae3f1489649119bbe96bee4cdf024))
+* fix wording in jwtWithClaims Javadoc ([#536](https://github.com/googleapis/google-auth-library-java/issues/536)) ([af21727](https://github.com/googleapis/google-auth-library-java/commit/af21727815263fb5ffc07ede953cf042fac3ac2b))
+* remove bad javadoc tags ([#478](https://github.com/googleapis/google-auth-library-java/issues/478)) ([a329c41](https://github.com/googleapis/google-auth-library-java/commit/a329c4171735c3d4ee574978e6c3742b96c01f74))
+* remove outdated comment on explicit IP address ([#370](https://github.com/googleapis/google-auth-library-java/issues/370)) ([71faa5f](https://github.com/googleapis/google-auth-library-java/commit/71faa5f6f26ef2f267743248b828d636d99a9d50))
+* updates README for downscoping with CAB ([#716](https://github.com/googleapis/google-auth-library-java/issues/716)) ([68bceba](https://github.com/googleapis/google-auth-library-java/commit/68bceba21c05870f6eb616cc057ddf0521c581b8))
+* xml syntax error in bom/README.md ([#372](https://github.com/googleapis/google-auth-library-java/issues/372)) ([ff8606a](https://github.com/googleapis/google-auth-library-java/commit/ff8606a608f9261a9714ceda823479f156f65643))
+
 ## [1.3.0](https://www.github.com/googleapis/google-auth-library-java/compare/v1.2.2...v1.3.0) (2021-11-10)
 
 
