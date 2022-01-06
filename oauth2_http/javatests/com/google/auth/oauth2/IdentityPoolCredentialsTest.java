@@ -48,10 +48,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
@@ -413,6 +410,49 @@ class IdentityPoolCredentialsTest {
 
     assertNotNull(query.get("options"));
     assertEquals(expectedInternalOptions.toString(), query.get("options"));
+  }
+
+  @Test
+  void identityPoolCredentialSource_validFormats() {
+    Map<String, Object> credentialSourceMapWithFileTextSource = new HashMap<>();
+    Map<String, Object> credentialSourceMapWithFileJsonTextSource = new HashMap<>();
+    Map<String, Object> credentialSourceMapWithUrlTextSource = new HashMap<>();
+    Map<String, Object> credentialSourceMapWithUrlJsonTextSource = new HashMap<>();
+
+    credentialSourceMapWithFileTextSource.put("file", "/path/to/file");
+    credentialSourceMapWithFileJsonTextSource.put("file", "/path/to/file");
+
+    credentialSourceMapWithUrlTextSource.put("url", "https://google.com");
+    credentialSourceMapWithUrlJsonTextSource.put("url", "https://google.com");
+    Map<String, String> headersMap = new HashMap<>();
+    headersMap.put("header1", "value1");
+    headersMap.put("header2", "value2");
+    credentialSourceMapWithUrlTextSource.put("headers", headersMap);
+    credentialSourceMapWithUrlJsonTextSource.put("headers", headersMap);
+
+    Map<String, String> textFormat = new HashMap<>();
+    textFormat.put("type", "text");
+
+    Map<String, String> jsonTextFormat = new HashMap<>();
+    jsonTextFormat.put("type", "json");
+    jsonTextFormat.put("subject_token_field_name", "access_token");
+
+    credentialSourceMapWithFileTextSource.put("format", textFormat);
+    credentialSourceMapWithFileJsonTextSource.put("format", jsonTextFormat);
+
+    credentialSourceMapWithUrlTextSource.put("format", textFormat);
+    credentialSourceMapWithUrlJsonTextSource.put("format", jsonTextFormat);
+
+    List<Map<String, Object>> sources =
+        Arrays.asList(
+            credentialSourceMapWithFileTextSource,
+            credentialSourceMapWithFileJsonTextSource,
+            credentialSourceMapWithUrlTextSource,
+            credentialSourceMapWithUrlJsonTextSource);
+    for (Map<String, Object> source : sources) {
+      // Should not throw.
+      new IdentityPoolCredentialSource(source);
+    }
   }
 
   @Test

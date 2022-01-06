@@ -132,18 +132,21 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       Map<String, String> formatMap = (Map<String, String>) credentialSourceMap.get("format");
       if (formatMap != null && formatMap.containsKey("type")) {
         String type = formatMap.get("type");
-        if (!"text".equals(type) && !"json".equals(type)) {
+
+        if ("json".equals(type)) {
+          // For JSON, the subject_token field name must be provided.
+          if (!formatMap.containsKey("subject_token_field_name")) {
+            throw new IllegalArgumentException(
+                "When specifying a JSON credential type, the subject_token_field_name must be set.");
+          }
+          credentialFormatType = CredentialFormatType.JSON;
+          subjectTokenFieldName = formatMap.get("subject_token_field_name");
+        } else if ("text".equals(type)) {
+          credentialFormatType = CredentialFormatType.TEXT;
+        } else {
           throw new IllegalArgumentException(
               String.format("Invalid credential source format type: %s.", type));
         }
-        credentialFormatType =
-            type.equals("text") ? CredentialFormatType.TEXT : CredentialFormatType.JSON;
-
-        if (!formatMap.containsKey("subject_token_field_name")) {
-          throw new IllegalArgumentException(
-              "When specifying a JSON credential type, the subject_token_field_name must be set.");
-        }
-        subjectTokenFieldName = formatMap.get("subject_token_field_name");
       }
     }
 
