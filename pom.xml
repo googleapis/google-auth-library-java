@@ -59,7 +59,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.google.http.version>1.40.1</project.google.http.version>
+    <project.google.http.version>1.41.0</project.google.http.version>
     <project.junit.bom.version>5.8.2</project.junit.bom.version>
     <project.guava.version>31.0.1-android</project.guava.version>
     <project.appengine.version>2.0.1</project.appengine.version>
