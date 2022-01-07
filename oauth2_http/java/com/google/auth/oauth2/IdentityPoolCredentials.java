@@ -49,10 +49,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import javax.annotation.Nullable;
 
 /**
@@ -133,7 +130,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       if (formatMap != null && formatMap.containsKey("type")) {
         String type = formatMap.get("type");
 
-        if ("json".equals(type)) {
+        if ("json".equals(type.toLowerCase(Locale.US))) {
           // For JSON, the subject_token field name must be provided.
           if (!formatMap.containsKey("subject_token_field_name")) {
             throw new IllegalArgumentException(
@@ -141,7 +138,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
           }
           credentialFormatType = CredentialFormatType.JSON;
           subjectTokenFieldName = formatMap.get("subject_token_field_name");
-        } else if ("text".equals(type)) {
+        } else if ("text".equals(type.toLowerCase(Locale.US))) {
           credentialFormatType = CredentialFormatType.TEXT;
         } else {
           throw new IllegalArgumentException(
