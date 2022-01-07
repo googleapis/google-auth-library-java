@@ -130,7 +130,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       if (formatMap != null && formatMap.containsKey("type")) {
         String type = formatMap.get("type");
 
-        if ("json".equals(type.toLowerCase(Locale.US))) {
+        if (type != null && "json".equals(type.toLowerCase(Locale.US))) {
           // For JSON, the subject_token field name must be provided.
           if (!formatMap.containsKey("subject_token_field_name")) {
             throw new IllegalArgumentException(
@@ -138,7 +138,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
           }
           credentialFormatType = CredentialFormatType.JSON;
           subjectTokenFieldName = formatMap.get("subject_token_field_name");
-        } else if ("text".equals(type.toLowerCase(Locale.US))) {
+        } else if (type != null && "text".equals(type.toLowerCase(Locale.US))) {
           credentialFormatType = CredentialFormatType.TEXT;
         } else {
           throw new IllegalArgumentException(
