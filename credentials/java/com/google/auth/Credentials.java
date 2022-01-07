@@ -130,8 +130,8 @@ public abstract class Credentials implements Serializable {
    * @param uri URI of the entry point for the request.
    * @return The request metadata used for populating headers or other context.
    * @throws IOException if there was an error getting up-to-date access. The exception should
-   * implement {@link Retryable} and {@code isRetryable()} will return true if the operation
-   * may be retried.
+   *     implement {@link Retryable} and {@code isRetryable()} will return true if the operation may
+   *     be retried.
    */
   public abstract Map<String, List<String>> getRequestMetadata(URI uri) throws IOException;
 

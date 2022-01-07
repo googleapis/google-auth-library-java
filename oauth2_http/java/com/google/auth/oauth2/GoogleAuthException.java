@@ -66,8 +66,9 @@ class GoogleAuthException extends IOException implements Retryable {
    * @param isRetryable A retry status for the related HTTP request
    * @param retryCount A number of retries performed for the related HTTP request
    * @param cause The cause (which is saved for later retrieval by the {@link #getCause()} method).
-   *     (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
-   *     If the cause has retry information, it is going to be skipped in favor of the {@code retryCount} parameter
+   *     (A null value is permitted, and indicates that the cause is nonexistent or unknown.) If the
+   *     cause has retry information, it is going to be skipped in favor of the {@code retryCount}
+   *     parameter
    */
   public GoogleAuthException(boolean isRetryable, int retryCount, Throwable cause) {
     super(cause);
@@ -92,18 +93,19 @@ class GoogleAuthException extends IOException implements Retryable {
    * Constructor without retry info
    *
    * @param cause The cause (which is saved for later retrieval by the {@link #getCause()} method).
-   *     (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
-   *     If the cause is an instance of the {@link HttpResponseException}, it becomes a source of
-   *     the {@code retryCount}.
+   *     (A null value is permitted, and indicates that the cause is nonexistent or unknown.) If the
+   *     cause is an instance of the {@link HttpResponseException}, it becomes a source of the
+   *     {@code retryCount}.
    */
   public GoogleAuthException(Throwable cause) {
     this(false, cause);
   }
 
-
-  public static GoogleAuthException createWithTokenEndpointResponseException(HttpResponseException responseException) {
+  public static GoogleAuthException createWithTokenEndpointResponseException(
+      HttpResponseException responseException) {
     int responseStatus = responseException.getStatusCode();
-    boolean isRetryable = ServiceAccountCredentials.RETRYABLE_STATUSCODE_LIST.contains(responseStatus);
+    boolean isRetryable =
+        ServiceAccountCredentials.RETRYABLE_STATUSCODE_LIST.contains(responseStatus);
     int retryCount = responseException.getAttemptCount() - 1;
 
     return new GoogleAuthException(isRetryable, retryCount, responseException);

@@ -814,14 +814,15 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
       }
 
       MockLowLevelHttpResponse mockResponse = new MockLowLevelHttpResponse().setStatusCode(status);
-      GoogleAuthException ex = assertThrows(
-          GoogleAuthException.class,
-          () -> {
-            transport.addResponseSequence(mockResponse);
-            transport.addServiceAccount(CLIENT_EMAIL, accessToken2);
-            credentials.refresh();
-          },
-          "Should not retry status " + status);
+      GoogleAuthException ex =
+          assertThrows(
+              GoogleAuthException.class,
+              () -> {
+                transport.addResponseSequence(mockResponse);
+                transport.addServiceAccount(CLIENT_EMAIL, accessToken2);
+                credentials.refresh();
+              },
+              "Should not retry status " + status);
       assertFalse(ex.isRetryable());
       assertEquals(0, ex.getRetryCount());
     }

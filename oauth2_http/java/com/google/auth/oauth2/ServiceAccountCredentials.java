@@ -618,13 +618,11 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
     try {
       response = request.execute();
-    }
-    catch (HttpResponseException re) {
+    } catch (HttpResponseException re) {
       GoogleAuthException ex = GoogleAuthException.createWithTokenEndpointResponseException(re);
       String message = String.format(errorTemplate, re.getMessage(), getIssuer());
       throw new GoogleAuthException(ex.isRetryable(), ex.getRetryCount(), message, re);
-    }
-    catch (IOException e) {
+    } catch (IOException e) {
       throw new IOException(String.format(errorTemplate, e.getMessage(), getIssuer()), e);
     }
 
