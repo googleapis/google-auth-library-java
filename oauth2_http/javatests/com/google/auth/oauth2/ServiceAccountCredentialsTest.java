@@ -771,9 +771,9 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     MockLowLevelHttpResponse response503 = new MockLowLevelHttpResponse().setStatusCode(503);
 
     Instant start = Instant.now();
-    IOException ex =
+    GoogleAuthException ex =
         assertThrows(
-            IOException.class,
+            GoogleAuthException.class,
             () -> {
               transport.addResponseSequence(response408, response429, response500, response503);
               credentials.refresh();
@@ -785,6 +785,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     // we expect max retry time of 7 sec +/- jitter
     assertTrue(timeElapsed > 5500 && timeElapsed < 10000);
     assertTrue(ex.getMessage().contains("Error getting access token for service account: 503"));
+    assertTrue(ex.isRetryable());
+    assertEquals(3, ex.getRetryCount());
   }
 
   @Test
@@ -812,14 +814,16 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
       }
 
       MockLowLevelHttpResponse mockResponse = new MockLowLevelHttpResponse().setStatusCode(status);
-      assertThrows(
-          IOException.class,
+      GoogleAuthException ex = assertThrows(
+          GoogleAuthException.class,
           () -> {
             transport.addResponseSequence(mockResponse);
             transport.addServiceAccount(CLIENT_EMAIL, accessToken2);
             credentials.refresh();
           },
           "Should not retry status " + status);
+      assertFalse(ex.isRetryable());
+      assertEquals(0, ex.getRetryCount());
     }
   }
 

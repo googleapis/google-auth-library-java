@@ -614,14 +614,18 @@ public class ServiceAccountCredentials extends GoogleCredentials
                 }));
 
     HttpResponse response;
+    String errorTemplate = "Error getting access token for service account: %s, iss: %s";
+
     try {
       response = request.execute();
-    } catch (IOException e) {
-      throw new IOException(
-          String.format(
-              "Error getting access token for service account: %s, iss: %s",
-              e.getMessage(), getIssuer()),
-          e);
+    }
+    catch (HttpResponseException re) {
+      GoogleAuthException ex = GoogleAuthException.createWithTokenEndpointResponseException(re);
+      String message = String.format(errorTemplate, re.getMessage(), getIssuer());
+      throw new GoogleAuthException(ex.isRetryable(), ex.getRetryCount(), message, re);
+    }
+    catch (IOException e) {
+      throw new IOException(String.format(errorTemplate, e.getMessage(), getIssuer()), e);
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
@@ -637,7 +641,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
    * Returns a Google ID Token from the metadata server on ComputeEngine.
    *
    * @param targetAudience the aud: field the IdToken should include.
-   * @param options list of Credential specific options for for the token. Currently unused for
+   * @param options list of Credential specific options for the token. Currently, unused for
    *     ServiceAccountCredentials.
    * @throws IOException if the attempt to get an IdToken failed
    * @return IdToken object which includes the raw id_token, expiration and audience
@@ -857,19 +861,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
       return addQuotaProjectIdToRequestMetadata(quotaProjectId, headers);
     }
     return headers;
-  }
-
-  /**
-   * Calculates retry status based on related {@code HttpResponseException}
-   *
-   * @param responseException An exception for the related HTTP request
-   * @return true if related HTTP exception has retryable status code included into {@code
-   *     ServiceAccountCredentials.RETRYABLE_STATUSCODE_LIST}
-   */
-  @Override
-  protected boolean getIsRetryable(HttpResponseException responseException) {
-    int responseStatus = responseException.getStatusCode();
-    return (RETRYABLE_STATUSCODE_LIST.contains(responseStatus)) ? true : false;
   }
 
   @Override

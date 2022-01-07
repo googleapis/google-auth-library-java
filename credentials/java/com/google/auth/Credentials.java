@@ -31,7 +31,6 @@
 
 package com.google.auth;
 
-import com.google.api.client.http.HttpResponseException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
@@ -112,27 +111,10 @@ public abstract class Credentials implements Serializable {
     try {
       result = getRequestMetadata(uri);
     } catch (Throwable e) {
-      if (e instanceof HttpResponseException) {
-        HttpResponseException httpException = (HttpResponseException) e;
-        boolean isRetryable = getIsRetryable(httpException);
-        callback.onFailure(
-            new GoogleAuthException(isRetryable, httpException.getAttemptCount() - 1, e));
-      }
-
-      callback.onFailure(new GoogleAuthException(e));
+      callback.onFailure(e);
       return;
     }
     callback.onSuccess(result);
-  }
-
-  /**
-   * Implements the logic to decide whether the related HTTP request is retryable
-   *
-   * @param responseException An instance of HttpException for the related HTTP request
-   * @return true if the {@code responseException} may be retried, false otherwise.
-   */
-  protected boolean getIsRetryable(HttpResponseException responseException) {
-    return false;
   }
 
   /**
@@ -147,7 +129,9 @@ public abstract class Credentials implements Serializable {
    *
    * @param uri URI of the entry point for the request.
    * @return The request metadata used for populating headers or other context.
-   * @throws IOException if there was an error getting up-to-date access.
+   * @throws IOException if there was an error getting up-to-date access. The exception should
+   * implement {@link Retryable} and {@code isRetryable()} will return true if the operation
+   * may be retried.
    */
   public abstract Map<String, List<String>> getRequestMetadata(URI uri) throws IOException;
 
