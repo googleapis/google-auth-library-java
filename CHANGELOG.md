@@ -1,5 +1,14 @@
 # Changelog
 
+### [1.3.1](https://www.github.com/googleapis/google-auth-library-java/compare/v1.3.0...v1.3.1) (2022-01-10)
+
+
+### Bug Fixes
+
+* (WIF) remove erroneous check for the subject token field name for text credential source ([#822](https://www.github.com/googleapis/google-auth-library-java/issues/822)) ([6d35c68](https://www.github.com/googleapis/google-auth-library-java/commit/6d35c681cf397ff2a90363184e26ee5850294c41))
+* **java:** add -ntp flag to native image testing command ([#1299](https://www.github.com/googleapis/google-auth-library-java/issues/1299)) ([#807](https://www.github.com/googleapis/google-auth-library-java/issues/807)) ([aa6654a](https://www.github.com/googleapis/google-auth-library-java/commit/aa6654a639ea15bcce7c7a6e86f170b1345895f0))
+* **java:** run Maven in plain console-friendly mode ([#1301](https://www.github.com/googleapis/google-auth-library-java/issues/1301)) ([#818](https://www.github.com/googleapis/google-auth-library-java/issues/818)) ([4df45d0](https://www.github.com/googleapis/google-auth-library-java/commit/4df45d0d03a973f1beff43d8965c26289f217f22))
+
 ## [1.3.0](https://www.github.com/googleapis/google-auth-library-java/compare/v1.2.2...v1.3.0) (2021-11-10)
 
 
