@@ -93,22 +93,47 @@ class GoogleAuthException extends IOException implements Retryable {
    * Constructor without retry info
    *
    * @param cause The cause (which is saved for later retrieval by the {@link #getCause()} method).
-   *     (A null value is permitted, and indicates that the cause is nonexistent or unknown.) If the
-   *     cause is an instance of the {@link HttpResponseException}, it becomes a source of the
-   *     {@code retryCount}.
+   *     (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
    */
   public GoogleAuthException(Throwable cause) {
     this(false, cause);
   }
 
+  /**
+   * Creates an instance of the exception based on {@link HttpResponseException} and a custom
+   * error message.
+   * @see #createWithTokenEndpointResponseException(HttpResponseException, String)
+   *
+   * @param responseException an instance of {@link HttpResponseException}
+   * @param message The detail message (which is saved for later retrieval by the {@link
+   * #getMessage()} method)
+   * @return new instance of {@link GoogleAuthException}
+   */
   public static GoogleAuthException createWithTokenEndpointResponseException(
-      HttpResponseException responseException) {
+      HttpResponseException responseException, String message) {
     int responseStatus = responseException.getStatusCode();
     boolean isRetryable =
         ServiceAccountCredentials.RETRYABLE_STATUSCODE_LIST.contains(responseStatus);
     int retryCount = responseException.getAttemptCount() - 1;
 
-    return new GoogleAuthException(isRetryable, retryCount, responseException);
+    if (message == null) {
+      return new GoogleAuthException(isRetryable, retryCount, responseException);
+    } else {
+      return new GoogleAuthException(isRetryable, retryCount, message, responseException);
+    }
+  }
+
+  /**
+   * Creates an instance of the exception based on {@link HttpResponseException} returned by
+   * Google token endpoint. It uses response status code information to populate
+   * the {@code #isRetryable} property and a number of performed attempts to populate
+   * the {@code #retryCount} property
+   * @param responseException an instance of {@link HttpResponseException}
+   * @return new instance of {@link GoogleAuthException}
+   */
+  public static GoogleAuthException createWithTokenEndpointResponseException(
+      HttpResponseException responseException) {
+    return GoogleAuthException.createWithTokenEndpointResponseException(responseException, null);
   }
 
   /** Returns true if the error is retryable, false otherwise */
