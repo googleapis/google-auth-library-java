@@ -100,13 +100,13 @@ class GoogleAuthException extends IOException implements Retryable {
   }
 
   /**
-   * Creates an instance of the exception based on {@link HttpResponseException} and a custom
-   * error message.
-   * @see #createWithTokenEndpointResponseException(HttpResponseException, String)
+   * Creates an instance of the exception based on {@link HttpResponseException} and a custom error
+   * message.
    *
+   * @see #createWithTokenEndpointResponseException(HttpResponseException, String)
    * @param responseException an instance of {@link HttpResponseException}
    * @param message The detail message (which is saved for later retrieval by the {@link
-   * #getMessage()} method)
+   *     #getMessage()} method)
    * @return new instance of {@link GoogleAuthException}
    */
   public static GoogleAuthException createWithTokenEndpointResponseException(
@@ -124,10 +124,10 @@ class GoogleAuthException extends IOException implements Retryable {
   }
 
   /**
-   * Creates an instance of the exception based on {@link HttpResponseException} returned by
-   * Google token endpoint. It uses response status code information to populate
-   * the {@code #isRetryable} property and a number of performed attempts to populate
-   * the {@code #retryCount} property
+   * Creates an instance of the exception based on {@link HttpResponseException} returned by Google
+   * token endpoint. It uses response status code information to populate the {@code #isRetryable}
+   * property and a number of performed attempts to populate the {@code #retryCount} property
+   *
    * @param responseException an instance of {@link HttpResponseException}
    * @return new instance of {@link GoogleAuthException}
    */

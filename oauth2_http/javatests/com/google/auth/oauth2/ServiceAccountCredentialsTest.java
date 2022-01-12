@@ -753,15 +753,17 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
     ServiceAccountCredentials credentials =
-        (ServiceAccountCredentials) ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            SCOPES,
-            transportFactory,
-            null)
-            .createWithCustomRetryStrategy(false);;
+        (ServiceAccountCredentials)
+            ServiceAccountCredentials.fromPkcs8(
+                    CLIENT_ID,
+                    CLIENT_EMAIL,
+                    PRIVATE_KEY_PKCS8,
+                    PRIVATE_KEY_ID,
+                    SCOPES,
+                    transportFactory,
+                    null)
+                .createWithCustomRetryStrategy(false);
+    ;
 
     transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
