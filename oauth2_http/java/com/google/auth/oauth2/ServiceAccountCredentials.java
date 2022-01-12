@@ -592,7 +592,13 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
-    request.setNumberOfRetries(DEFAULT_NUMBER_OF_RETRIES);
+
+    if (this.defaultRetriesEnabled) {
+      request.setNumberOfRetries(DEFAULT_NUMBER_OF_RETRIES);
+    } else {
+      request.setNumberOfRetries(0);
+    }
+
     request.setParser(new JsonObjectParser(jsonFactory));
 
     ExponentialBackOff backoff =

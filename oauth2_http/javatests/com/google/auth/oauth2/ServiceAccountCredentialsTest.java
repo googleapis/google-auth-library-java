@@ -747,6 +747,43 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  void refreshAccessToken_defaultRetriesDisabled() throws IOException {
+    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    MockTokenServerTransport transport = transportFactory.transport;
+    ServiceAccountCredentials credentials =
+        (ServiceAccountCredentials) ServiceAccountCredentials.fromPkcs8(
+            CLIENT_ID,
+            CLIENT_EMAIL,
+            PRIVATE_KEY_PKCS8,
+            PRIVATE_KEY_ID,
+            SCOPES,
+            transportFactory,
+            null)
+            .createWithCustomRetryStrategy(false);;
+
+    transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
+
+    MockLowLevelHttpResponse response408 = new MockLowLevelHttpResponse().setStatusCode(408);
+    MockLowLevelHttpResponse response429 = new MockLowLevelHttpResponse().setStatusCode(429);
+    transport.addServiceAccount(CLIENT_EMAIL, accessToken2);
+    GoogleAuthException ex =
+        assertThrows(
+            GoogleAuthException.class,
+            () -> {
+              transport.addResponseSequence(response408, response429);
+              credentials.refresh();
+            },
+            "Should not retry");
+
+    assertTrue(ex.getMessage().contains("Error getting access token for service account: 408"));
+    assertTrue(ex.isRetryable());
+    assertEquals(0, ex.getRetryCount());
+  }
+
+  @Test
   void refreshAccessToken_maxRetries_maxDelay() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";

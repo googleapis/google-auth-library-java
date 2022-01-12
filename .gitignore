@@ -9,6 +9,7 @@ target/
 
 # Intellij
 *.iml
+*.factorypath
 .idea/
 
 # VS Code
