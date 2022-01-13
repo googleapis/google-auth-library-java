@@ -598,7 +598,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
     } else {
       request.setNumberOfRetries(0);
     }
-
     request.setParser(new JsonObjectParser(jsonFactory));
 
     ExponentialBackOff backoff =
@@ -691,7 +690,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
    * @return GoogleCredentials with the specified retry configuration.
    */
   @Override
-  public GoogleCredentials createWithCustomRetryStrategy(boolean defaultRetriesEnabled) {
+  public ServiceAccountCredentials createWithCustomRetryStrategy(boolean defaultRetriesEnabled) {
     return this.toBuilder().setDefaultRetriesEnabled(defaultRetriesEnabled).build();
   }
 
