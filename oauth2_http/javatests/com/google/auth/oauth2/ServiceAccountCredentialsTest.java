@@ -762,7 +762,6 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
                 transportFactory,
                 null)
             .createWithCustomRetryStrategy(false);
-    ;
 
     transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
