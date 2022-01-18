@@ -882,8 +882,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         && Objects.equals(this.useJwtAccessWithScope, other.useJwtAccessWithScope);
   }
 
-  String createAssertion(JsonFactory jsonFactory, long currentTime)
-      throws IOException {
+  String createAssertion(JsonFactory jsonFactory, long currentTime) throws IOException {
     JsonWebSignature.Header header = new JsonWebSignature.Header();
     header.setAlgorithm("RS256");
     header.setType("JWT");
