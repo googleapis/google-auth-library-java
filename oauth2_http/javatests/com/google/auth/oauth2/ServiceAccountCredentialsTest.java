@@ -242,7 +242,7 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
-    String assertion = credentials.createAssertion(jsonFactory, currentTimeMillis, null);
+    String assertion = credentials.createAssertion(jsonFactory, currentTimeMillis);
 
     JsonWebSignature signature = JsonWebSignature.parse(jsonFactory, assertion);
     JsonWebToken.Payload payload = signature.getPayload();
@@ -272,7 +272,7 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
-    String assertion = credentials.createAssertion(jsonFactory, currentTimeMillis, null);
+    String assertion = credentials.createAssertion(jsonFactory, currentTimeMillis);
 
     JsonWebSignature signature = JsonWebSignature.parse(jsonFactory, assertion);
     JsonWebToken.Payload payload = signature.getPayload();
@@ -290,7 +290,7 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
-    String assertion = credentials.createAssertion(jsonFactory, currentTimeMillis, null);
+    String assertion = credentials.createAssertion(jsonFactory, currentTimeMillis);
 
     JsonWebSignature signature = JsonWebSignature.parse(jsonFactory, assertion);
     JsonWebToken.Payload payload = signature.getPayload();
@@ -370,36 +370,6 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(currentTimeMillis / 1000, (long) payload.getIssuedAtTimeSeconds());
     assertEquals(currentTimeMillis / 1000 + 3600, (long) payload.getExpirationTimeSeconds());
     assertEquals(USER, payload.getSubject());
-  }
-
-  @Test
-  void createAssertion_withTokenUri_correct() throws IOException {
-    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
-    List<String> scopes = Arrays.asList("scope1", "scope2");
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientEmail(CLIENT_EMAIL)
-            .setPrivateKey(privateKey)
-            .setPrivateKeyId(PRIVATE_KEY_ID)
-            .setScopes(scopes)
-            .setServiceAccountUser(USER)
-            .setProjectId(PROJECT_ID)
-            .build();
-
-    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
-    long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
-    String assertion =
-        credentials.createAssertion(jsonFactory, currentTimeMillis, "https://foo.com/bar");
-
-    JsonWebSignature signature = JsonWebSignature.parse(jsonFactory, assertion);
-    JsonWebToken.Payload payload = signature.getPayload();
-    assertEquals(CLIENT_EMAIL, payload.getIssuer());
-    assertEquals("https://foo.com/bar", payload.getAudience());
-    assertEquals(currentTimeMillis / 1000, (long) payload.getIssuedAtTimeSeconds());
-    assertEquals(currentTimeMillis / 1000 + 3600, (long) payload.getExpirationTimeSeconds());
-    assertEquals(USER, payload.getSubject());
-    assertEquals(String.join(" ", scopes), payload.get("scope"));
   }
 
   @Test
