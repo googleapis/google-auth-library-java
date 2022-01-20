@@ -5,6 +5,7 @@ target/
 .classpath
 .project
 .settings
+.factorypath
 
 # Intellij
 *.iml
@@ -12,3 +13,6 @@ target/
 
 # VS Code
 .vscode/
+
+# MacOS
+.DS_Store
