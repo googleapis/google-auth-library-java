@@ -138,4 +138,9 @@ jobs:
         java-version: ${{matrix.java}}
     - run: java -version
     - run: sudo apt-get install libxml2-utils
-    - run: .kokoro/downstream-client-library-check.sh ${{matrix.repo}} google-auth-library-bom
+    - uses: nick-invision/retry@v2
+      with:
+        timeout_minutes: 10
+        max_attempts: 3
+        retry_on: error
+        command: .kokoro/downstream-client-library-check.sh google-auth-library-bom ${{matrix.repo}}
