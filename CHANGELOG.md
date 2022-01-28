@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.4.0](https://github.com/googleapis/google-auth-library-java/compare/v1.3.0...v1.4.0) (2022-01-19)
+
+
+### Features
+
+* setting the audience to always point to google token endpoint ([#833](https://github.com/googleapis/google-auth-library-java/issues/833)) ([33bfe7a](https://github.com/googleapis/google-auth-library-java/commit/33bfe7a788a524324cd9b0a54acc8917f6b75556))
+
+
+### Bug Fixes
+
+* (WIF) remove erroneous check for the subject token field name for text credential source ([#822](https://github.com/googleapis/google-auth-library-java/issues/822)) ([6d35c68](https://github.com/googleapis/google-auth-library-java/commit/6d35c681cf397ff2a90363184e26ee5850294c41))
+* **java:** add -ntp flag to native image testing command ([#1299](https://github.com/googleapis/google-auth-library-java/issues/1299)) ([#807](https://github.com/googleapis/google-auth-library-java/issues/807)) ([aa6654a](https://github.com/googleapis/google-auth-library-java/commit/aa6654a639ea15bcce7c7a6e86f170b1345895f0))
+* **java:** run Maven in plain console-friendly mode ([#1301](https://github.com/googleapis/google-auth-library-java/issues/1301)) ([#818](https://github.com/googleapis/google-auth-library-java/issues/818)) ([4df45d0](https://github.com/googleapis/google-auth-library-java/commit/4df45d0d03a973f1beff43d8965c26289f217f22))
+
 ## [1.3.0](https://www.github.com/googleapis/google-auth-library-java/compare/v1.2.2...v1.3.0) (2021-11-10)
 
 
