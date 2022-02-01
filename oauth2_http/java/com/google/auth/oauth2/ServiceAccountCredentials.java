@@ -583,7 +583,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   public AccessToken refreshAccessToken() throws IOException {
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     long currentTime = clock.currentTimeMillis();
-    String assertion = createAssertion(jsonFactory, currentTime, tokenServerUri.toString());
+    String assertion = createAssertion(jsonFactory, currentTime);
 
     GenericData tokenRequest = new GenericData();
     tokenRequest.set("grant_type", GRANT_TYPE);
@@ -917,8 +917,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         && Objects.equals(this.useJwtAccessWithScope, other.useJwtAccessWithScope);
   }
 
-  String createAssertion(JsonFactory jsonFactory, long currentTime, String audience)
-      throws IOException {
+  String createAssertion(JsonFactory jsonFactory, long currentTime) throws IOException {
     JsonWebSignature.Header header = new JsonWebSignature.Header();
     header.setAlgorithm("RS256");
     header.setType("JWT");
@@ -935,13 +934,9 @@ public class ServiceAccountCredentials extends GoogleCredentials
       payload.put("scope", Joiner.on(' ').join(scopes));
     }
 
-    if (audience == null) {
-      payload.setAudience(OAuth2Utils.TOKEN_SERVER_URI.toString());
-    } else {
-      payload.setAudience(audience);
-    }
-
+    payload.setAudience(OAuth2Utils.TOKEN_SERVER_URI.toString());
     String assertion;
+
     try {
       assertion = JsonWebSignature.signUsingRsaSha256(privateKey, jsonFactory, header, payload);
     } catch (GeneralSecurityException e) {
