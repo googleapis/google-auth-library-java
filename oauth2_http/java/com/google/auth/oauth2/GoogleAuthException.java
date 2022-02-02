@@ -99,9 +99,7 @@ class GoogleAuthException extends IOException implements Retryable {
     this(false, cause);
   }
 
-  /**
-   * A default Constructor
-   */
+  /** A default Constructor */
   public GoogleAuthException() {
     super();
     this.isRetryable = false;
