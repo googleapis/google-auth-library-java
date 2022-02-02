@@ -41,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.api.client.json.GenericJson;
+import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.TestUtils;
@@ -729,6 +730,83 @@ class UserCredentialsTest extends BaseSerializationTest {
 
     assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getAccessToken().getTokenValue());
     assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getIdToken().getTokenValue());
+  }
+
+  @Test
+  void IdTokenCredentials_NoRetry_RetryableStatus_throws() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    String refreshToken = MockTokenServerTransport.REFRESH_TOKEN_WITH_USER_SCOPE;
+
+    transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
+    transportFactory.transport.addRefreshToken(refreshToken, ACCESS_TOKEN);
+    InputStream userStream = writeUserStream(CLIENT_ID, CLIENT_SECRET, refreshToken, QUOTA_PROJECT);
+
+    MockLowLevelHttpResponse response408 = new MockLowLevelHttpResponse().setStatusCode(408);
+    MockLowLevelHttpResponse response429 = new MockLowLevelHttpResponse().setStatusCode(429);
+
+    UserCredentials credentials = UserCredentials.fromStream(userStream, transportFactory);
+
+    GoogleAuthException ex =
+        assertThrows(
+            GoogleAuthException.class,
+            () -> {
+              transportFactory.transport.addResponseSequence(response408, response429);
+              credentials.refresh();
+            },
+            "Should not retry");
+
+    assertTrue(ex.getMessage().contains("com.google.api.client.http.HttpResponseException: 408"));
+    assertTrue(ex.isRetryable());
+    assertEquals(0, ex.getRetryCount());
+
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder().setIdTokenProvider(credentials).build();
+
+    assertNull(tokenCredential.getAccessToken());
+    assertNull(tokenCredential.getIdToken());
+
+    // trigger the refresh like it would happen during a request build
+    ex =
+        assertThrows(
+            GoogleAuthException.class,
+            () -> {
+              tokenCredential.getRequestMetadata();
+            },
+            "Should not retry");
+
+    assertTrue(ex.getMessage().contains("com.google.api.client.http.HttpResponseException: 429"));
+    assertTrue(ex.isRetryable());
+    assertEquals(0, ex.getRetryCount());
+  }
+
+  @Test
+  void refreshAccessToken_4xx_5xx_NonRetryableFails() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    String refreshToken = MockTokenServerTransport.REFRESH_TOKEN_WITH_USER_SCOPE;
+
+    transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
+    transportFactory.transport.addRefreshToken(refreshToken, ACCESS_TOKEN);
+    InputStream userStream = writeUserStream(CLIENT_ID, CLIENT_SECRET, refreshToken, QUOTA_PROJECT);
+
+    UserCredentials credentials = UserCredentials.fromStream(userStream, transportFactory);
+
+    for (int status = 400; status < 600; status++) {
+      if (ServiceAccountCredentials.RETRYABLE_STATUSCODE_LIST.contains(status)) {
+        continue;
+      }
+
+      MockLowLevelHttpResponse mockResponse = new MockLowLevelHttpResponse().setStatusCode(status);
+      GoogleAuthException ex =
+          assertThrows(
+              GoogleAuthException.class,
+              () -> {
+                transportFactory.transport.addResponseSequence(mockResponse);
+                credentials.refresh();
+              },
+              "Should not retry status " + status);
+      assertFalse(ex.isRetryable());
+      assertEquals(0, ex.getRetryCount());
+    }
   }
 
   @Test

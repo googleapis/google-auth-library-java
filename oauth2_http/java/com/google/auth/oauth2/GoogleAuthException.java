@@ -100,6 +100,15 @@ class GoogleAuthException extends IOException implements Retryable {
   }
 
   /**
+   * A default Constructor
+   */
+  public GoogleAuthException() {
+    super();
+    this.isRetryable = false;
+    this.retryCount = 0;
+  }
+
+  /**
    * Creates an instance of the exception based on {@link HttpResponseException} and a custom error
    * message.
    *
