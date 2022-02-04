@@ -1120,15 +1120,16 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     final URI tokenServer = URI.create("https://foo.com/bar");
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
 
-    ServiceAccountCredentials.Builder builder = ServiceAccountCredentials.newBuilder()
-        .setClientId(CLIENT_ID)
-        .setClientEmail(CLIENT_EMAIL)
-        .setPrivateKeyId(PRIVATE_KEY_ID)
-        .setScopes(SCOPES, DEFAULT_SCOPES)
-        .setHttpTransportFactory(transportFactory)
-        .setTokenServerUri(tokenServer)
-        .setServiceAccountUser(USER)
-        .setQuotaProjectId(QUOTA_PROJECT);
+    ServiceAccountCredentials.Builder builder =
+        ServiceAccountCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientEmail(CLIENT_EMAIL)
+            .setPrivateKeyId(PRIVATE_KEY_ID)
+            .setScopes(SCOPES, DEFAULT_SCOPES)
+            .setHttpTransportFactory(transportFactory)
+            .setTokenServerUri(tokenServer)
+            .setServiceAccountUser(USER)
+            .setQuotaProjectId(QUOTA_PROJECT);
 
     OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(PRIVATE_KEY_PKCS8, builder);
     String expectedToString =
