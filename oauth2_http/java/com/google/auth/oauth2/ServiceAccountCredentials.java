@@ -76,15 +76,12 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.Executor;
 
 /**
@@ -94,11 +91,6 @@ import java.util.concurrent.Executor;
  */
 public class ServiceAccountCredentials extends GoogleCredentials
     implements ServiceAccountSigner, IdTokenProvider, JwtProvider, QuotaProjectIdProvider {
-
-  // Includes expected server errors
-  // Other 5xx codes are either not used or retries are unlikely to succeed
-  public static final Set<Integer> RETRYABLE_STATUSCODE_LIST =
-      new HashSet<>(Arrays.asList(500, 503, 408, 429));
 
   private static final long serialVersionUID = 7807543542681217978L;
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
@@ -129,63 +121,51 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   /**
    * Constructor with minimum identifying information and custom HTTP transport.
-   *
-   * @param clientId client ID of the service account from the console. May be null.
-   * @param clientEmail client email address of the service account from the console
-   * @param privateKey RSA private key object for the service account
-   * @param privateKeyId private key identifier for the service account. May be null.
-   * @param scopes scope strings for the APIs to be called. May be null or an empty collection.
-   * @param defaultScopes default scope strings for the APIs to be called. May be null or an empty.
-   * @param transportFactory HTTP transport factory, creates the transport used to get access
+   * @param builder A builder for {@link ServiceAccountCredentials} See {@link ServiceAccountCredentials.Builder}
+   * List of fields being set:
+   * clientId: client ID of the service account from the console. May be null.
+   * clientEmail: client email address of the service account from the console
+   * privateKey: RSA private key object for the service account
+   * privateKeyId: private key identifier for the service account. May be null.
+   * scopes: scope strings for the APIs to be called. May be null or an empty collection.
+   * defaultScopes: default scope strings for the APIs to be called. May be null or an empty.
+   * transportFactory: HTTP transport factory, creates the transport used to get access
    *     tokens.
-   * @param tokenServerUri URI of the end point that provides tokens.
-   * @param serviceAccountUser email of the user account to impersonate, if delegating domain-wide
+   * tokenServerUri: URI of the end point that provides tokens.
+   * serviceAccountUser: email of the user account to impersonate, if delegating domain-wide
    *     authority to the service account.
-   * @param projectId the project used for billing
-   * @param quotaProjectId the project used for quota and billing purposes. May be null.
-   * @param lifetime number of seconds the access token should be valid for. The value should be at
+   * projectId: the project used for billing
+   * quotaProjectId: the project used for quota and billing purposes. May be null.
+   * lifetime: number of seconds the access token should be valid for. The value should be at
    *     most 43200 (12 hours). If the token is used for calling a Google API, then the value should
    *     be at most 3600 (1 hour). If the given value is 0, then the default value 3600 will be used
    *     when creating the credentials.
-   * @param useJwtAccessWithScope whether self signed JWT with scopes should be always used.
+   * useJwtAccessWithScope: whether self signed JWT with scopes should be always used.
+   * defaultRetriesEnabled: whether default retries are enabled
    */
-  ServiceAccountCredentials(
-      String clientId,
-      String clientEmail,
-      PrivateKey privateKey,
-      String privateKeyId,
-      Collection<String> scopes,
-      Collection<String> defaultScopes,
-      HttpTransportFactory transportFactory,
-      URI tokenServerUri,
-      String serviceAccountUser,
-      String projectId,
-      String quotaProjectId,
-      int lifetime,
-      boolean useJwtAccessWithScope,
-      boolean defaultRetriesEnabled) {
-    this.clientId = clientId;
-    this.clientEmail = Preconditions.checkNotNull(clientEmail);
-    this.privateKey = Preconditions.checkNotNull(privateKey);
-    this.privateKeyId = privateKeyId;
-    this.scopes = (scopes == null) ? ImmutableSet.<String>of() : ImmutableSet.copyOf(scopes);
+  ServiceAccountCredentials(ServiceAccountCredentials.Builder builder) {
+    this.clientId = builder.clientId;
+    this.clientEmail = Preconditions.checkNotNull(builder.clientEmail);
+    this.privateKey = Preconditions.checkNotNull(builder.privateKey);
+    this.privateKeyId = builder.privateKeyId;
+    this.scopes = (builder.scopes == null) ? ImmutableSet.<String>of() : ImmutableSet.copyOf(builder.scopes);
     this.defaultScopes =
-        (defaultScopes == null) ? ImmutableSet.<String>of() : ImmutableSet.copyOf(defaultScopes);
+        (builder.defaultScopes == null) ? ImmutableSet.<String>of() : ImmutableSet.copyOf(builder.defaultScopes);
     this.transportFactory =
         firstNonNull(
-            transportFactory,
+            builder.transportFactory,
             getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
-    this.tokenServerUri = (tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : tokenServerUri;
-    this.serviceAccountUser = serviceAccountUser;
-    this.projectId = projectId;
-    this.quotaProjectId = quotaProjectId;
-    if (lifetime > TWELVE_HOURS_IN_SECONDS) {
+    this.tokenServerUri = (builder.tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : builder.tokenServerUri;
+    this.serviceAccountUser = builder.serviceAccountUser;
+    this.projectId = builder.projectId;
+    this.quotaProjectId = builder.quotaProjectId;
+    if (builder.lifetime > TWELVE_HOURS_IN_SECONDS) {
       throw new IllegalStateException("lifetime must be less than or equal to 43200");
     }
-    this.lifetime = lifetime;
-    this.useJwtAccessWithScope = useJwtAccessWithScope;
-    this.defaultRetriesEnabled = defaultRetriesEnabled;
+    this.lifetime = builder.lifetime;
+    this.useJwtAccessWithScope = builder.useJwtAccessWithScope;
+    this.defaultRetriesEnabled = builder.defaultRetriesEnabled;
   }
 
   /**
@@ -224,18 +204,16 @@ public class ServiceAccountCredentials extends GoogleCredentials
               + "expecting  'client_id', 'client_email', 'private_key' and 'private_key_id'.");
     }
 
-    return fromPkcs8(
-        clientId,
-        clientEmail,
-        privateKeyPkcs8,
-        privateKeyId,
-        null,
-        null,
-        transportFactory,
-        tokenServerUriFromCreds,
-        null,
-        projectId,
-        quotaProjectId);
+    ServiceAccountCredentials.Builder builder = ServiceAccountCredentials.newBuilder()
+        .setClientId(clientId)
+        .setClientEmail(clientEmail)
+        .setPrivateKeyId(privateKeyId)
+        .setHttpTransportFactory(transportFactory)
+        .setTokenServerUri(tokenServerUriFromCreds)
+        .setProjectId(projectId)
+        .setQuotaProjectId(quotaProjectId);
+
+    return fromPkcs8(privateKeyPkcs8, builder);
   }
 
   /**
@@ -257,18 +235,13 @@ public class ServiceAccountCredentials extends GoogleCredentials
       String privateKeyId,
       Collection<String> scopes)
       throws IOException {
-    return fromPkcs8(
-        clientId,
-        clientEmail,
-        privateKeyPkcs8,
-        privateKeyId,
-        scopes,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null);
+    ServiceAccountCredentials.Builder builder = ServiceAccountCredentials.newBuilder()
+        .setClientId(clientId)
+        .setClientEmail(clientEmail)
+        .setPrivateKeyId(privateKeyId)
+        .setScopes(scopes);
+
+    return fromPkcs8(privateKeyPkcs8, builder);
   }
 
   /**
@@ -291,18 +264,13 @@ public class ServiceAccountCredentials extends GoogleCredentials
       Collection<String> scopes,
       Collection<String> defaultScopes)
       throws IOException {
-    return fromPkcs8(
-        clientId,
-        clientEmail,
-        privateKeyPkcs8,
-        privateKeyId,
-        scopes,
-        defaultScopes,
-        null,
-        null,
-        null,
-        null,
-        null);
+    ServiceAccountCredentials.Builder builder = ServiceAccountCredentials.newBuilder()
+        .setClientId(clientId)
+        .setClientEmail(clientEmail)
+        .setPrivateKeyId(privateKeyId)
+        .setScopes(scopes, defaultScopes);
+
+    return fromPkcs8(privateKeyPkcs8, builder);
   }
 
   /**
@@ -330,18 +298,16 @@ public class ServiceAccountCredentials extends GoogleCredentials
       HttpTransportFactory transportFactory,
       URI tokenServerUri)
       throws IOException {
-    return fromPkcs8(
-        clientId,
-        clientEmail,
-        privateKeyPkcs8,
-        privateKeyId,
-        scopes,
-        null,
-        transportFactory,
-        tokenServerUri,
-        null,
-        null,
-        null);
+
+    ServiceAccountCredentials.Builder builder = ServiceAccountCredentials.newBuilder()
+        .setClientId(clientId)
+        .setClientEmail(clientEmail)
+        .setPrivateKeyId(privateKeyId)
+        .setScopes(scopes)
+        .setHttpTransportFactory(transportFactory)
+        .setTokenServerUri(tokenServerUri);
+
+    return fromPkcs8(privateKeyPkcs8, builder);
   }
 
   /**
@@ -372,18 +338,16 @@ public class ServiceAccountCredentials extends GoogleCredentials
       HttpTransportFactory transportFactory,
       URI tokenServerUri)
       throws IOException {
-    return fromPkcs8(
-        clientId,
-        clientEmail,
-        privateKeyPkcs8,
-        privateKeyId,
-        scopes,
-        defaultScopes,
-        transportFactory,
-        tokenServerUri,
-        null,
-        null,
-        null);
+
+    ServiceAccountCredentials.Builder builder = ServiceAccountCredentials.newBuilder()
+        .setClientId(clientId)
+        .setClientEmail(clientEmail)
+        .setPrivateKeyId(privateKeyId)
+        .setScopes(scopes, defaultScopes)
+        .setHttpTransportFactory(transportFactory)
+        .setTokenServerUri(tokenServerUri);
+
+    return fromPkcs8(privateKeyPkcs8, builder);
   }
 
   /**
@@ -414,18 +378,17 @@ public class ServiceAccountCredentials extends GoogleCredentials
       URI tokenServerUri,
       String serviceAccountUser)
       throws IOException {
-    return fromPkcs8(
-        clientId,
-        clientEmail,
-        privateKeyPkcs8,
-        privateKeyId,
-        scopes,
-        null,
-        transportFactory,
-        tokenServerUri,
-        serviceAccountUser,
-        null,
-        null);
+
+    ServiceAccountCredentials.Builder builder = ServiceAccountCredentials.newBuilder()
+        .setClientId(clientId)
+        .setClientEmail(clientEmail)
+        .setPrivateKeyId(privateKeyId)
+        .setScopes(scopes)
+        .setHttpTransportFactory(transportFactory)
+        .setTokenServerUri(tokenServerUri)
+        .setServiceAccountUser(serviceAccountUser);
+
+    return fromPkcs8(privateKeyPkcs8, builder);
   }
 
   /**
@@ -459,49 +422,26 @@ public class ServiceAccountCredentials extends GoogleCredentials
       URI tokenServerUri,
       String serviceAccountUser)
       throws IOException {
-    return fromPkcs8(
-        clientId,
-        clientEmail,
-        privateKeyPkcs8,
-        privateKeyId,
-        scopes,
-        defaultScopes,
-        transportFactory,
-        tokenServerUri,
-        serviceAccountUser,
-        null,
-        null);
+    ServiceAccountCredentials.Builder builder = ServiceAccountCredentials.newBuilder()
+        .setClientId(clientId)
+        .setClientEmail(clientEmail)
+        .setPrivateKeyId(privateKeyId)
+        .setScopes(scopes, defaultScopes)
+        .setHttpTransportFactory(transportFactory)
+        .setTokenServerUri(tokenServerUri)
+        .setServiceAccountUser(serviceAccountUser);
+
+    return fromPkcs8(privateKeyPkcs8, builder);
   }
 
   static ServiceAccountCredentials fromPkcs8(
-      String clientId,
-      String clientEmail,
       String privateKeyPkcs8,
-      String privateKeyId,
-      Collection<String> scopes,
-      Collection<String> defaultScopes,
-      HttpTransportFactory transportFactory,
-      URI tokenServerUri,
-      String serviceAccountUser,
-      String projectId,
-      String quotaProject)
+      ServiceAccountCredentials.Builder builder)
       throws IOException {
     PrivateKey privateKey = privateKeyFromPkcs8(privateKeyPkcs8);
-    return new ServiceAccountCredentials(
-        clientId,
-        clientEmail,
-        privateKey,
-        privateKeyId,
-        scopes,
-        defaultScopes,
-        transportFactory,
-        tokenServerUri,
-        serviceAccountUser,
-        projectId,
-        quotaProject,
-        DEFAULT_LIFETIME_IN_SECONDS,
-        false,
-        true);
+    builder.setPrivateKey(privateKey);
+
+    return new ServiceAccountCredentials(builder);
   }
 
   /** Helper to convert from a PKCS#8 String to an RSA private key */
@@ -614,7 +554,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
                   public boolean isRequired(HttpResponse response) {
                     int code = response.getStatusCode();
 
-                    return RETRYABLE_STATUSCODE_LIST.contains(code);
+                    return OAuth2Utils.TOKEN_ENDPOINT_RETRYABLE_STATUS_CODES.contains(code);
                   }
                 }));
 
@@ -712,21 +652,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   @Override
   public GoogleCredentials createScoped(
       Collection<String> newScopes, Collection<String> newDefaultScopes) {
-    return new ServiceAccountCredentials(
-        clientId,
-        clientEmail,
-        privateKey,
-        privateKeyId,
-        newScopes,
-        newDefaultScopes,
-        transportFactory,
-        tokenServerUri,
-        serviceAccountUser,
-        projectId,
-        quotaProjectId,
-        lifetime,
-        useJwtAccessWithScope,
-        defaultRetriesEnabled);
+    return this.toBuilder().setScopes(newScopes, newDefaultScopes).build();
   }
 
   /**
@@ -754,21 +680,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   @Override
   public GoogleCredentials createDelegated(String user) {
-    return new ServiceAccountCredentials(
-        clientId,
-        clientEmail,
-        privateKey,
-        privateKeyId,
-        scopes,
-        defaultScopes,
-        transportFactory,
-        tokenServerUri,
-        user,
-        projectId,
-        quotaProjectId,
-        lifetime,
-        useJwtAccessWithScope,
-        defaultRetriesEnabled);
+    return this.toBuilder().setServiceAccountUser(user).build();
   }
 
   public final String getClientId() {
@@ -878,7 +790,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
         defaultScopes,
         quotaProjectId,
         lifetime,
-        useJwtAccessWithScope);
+        useJwtAccessWithScope,
+        defaultRetriesEnabled);
   }
 
   @Override
@@ -895,6 +808,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         .add("quotaProjectId", quotaProjectId)
         .add("lifetime", lifetime)
         .add("useJwtAccessWithScope", useJwtAccessWithScope)
+        .add("defaultRetriesEnabled", defaultRetriesEnabled)
         .toString();
   }
 
@@ -914,7 +828,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
         && Objects.equals(this.defaultScopes, other.defaultScopes)
         && Objects.equals(this.quotaProjectId, other.quotaProjectId)
         && Objects.equals(this.lifetime, other.lifetime)
-        && Objects.equals(this.useJwtAccessWithScope, other.useJwtAccessWithScope);
+        && Objects.equals(this.useJwtAccessWithScope, other.useJwtAccessWithScope)
+        && Objects.equals(this.defaultRetriesEnabled, other.defaultRetriesEnabled);
   }
 
   String createAssertion(JsonFactory jsonFactory, long currentTime) throws IOException {
@@ -1252,21 +1167,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     }
 
     public ServiceAccountCredentials build() {
-      return new ServiceAccountCredentials(
-          clientId,
-          clientEmail,
-          privateKey,
-          privateKeyId,
-          scopes,
-          defaultScopes,
-          transportFactory,
-          tokenServerUri,
-          serviceAccountUser,
-          projectId,
-          quotaProjectId,
-          lifetime,
-          useJwtAccessWithScope,
-          defaultRetriesEnabled);
+      return new ServiceAccountCredentials(this);
     }
   }
 }

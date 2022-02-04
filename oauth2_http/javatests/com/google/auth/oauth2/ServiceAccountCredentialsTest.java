@@ -816,7 +816,7 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
 
     for (int status = 400; status < 600; status++) {
-      if (ServiceAccountCredentials.RETRYABLE_STATUSCODE_LIST.contains(status)) {
+      if (OAuth2Utils.TOKEN_ENDPOINT_RETRYABLE_STATUS_CODES.contains(status)) {
         continue;
       }
 
@@ -1119,24 +1119,23 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
   void toString_containsFields() throws IOException {
     final URI tokenServer = URI.create("https://foo.com/bar");
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    OAuth2Credentials credentials =
-        ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            SCOPES,
-            DEFAULT_SCOPES,
-            transportFactory,
-            tokenServer,
-            USER,
-            null,
-            QUOTA_PROJECT);
+
+    ServiceAccountCredentials.Builder builder = ServiceAccountCredentials.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setClientEmail(CLIENT_EMAIL)
+        .setPrivateKeyId(PRIVATE_KEY_ID)
+        .setScopes(SCOPES, DEFAULT_SCOPES)
+        .setHttpTransportFactory(transportFactory)
+        .setTokenServerUri(tokenServer)
+        .setServiceAccountUser(USER)
+        .setQuotaProjectId(QUOTA_PROJECT);
+
+    OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(PRIVATE_KEY_PKCS8, builder);
     String expectedToString =
         String.format(
             "ServiceAccountCredentials{clientId=%s, clientEmail=%s, privateKeyId=%s, "
                 + "transportFactoryClassName=%s, tokenServerUri=%s, scopes=%s, defaultScopes=%s, serviceAccountUser=%s, "
-                + "quotaProjectId=%s, lifetime=3600, useJwtAccessWithScope=false}",
+                + "quotaProjectId=%s, lifetime=3600, useJwtAccessWithScope=false, defaultRetriesEnabled=true}",
             CLIENT_ID,
             CLIENT_EMAIL,
             PRIVATE_KEY_ID,

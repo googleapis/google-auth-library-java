@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Google LLC
+ * Copyright 2022 Google LLC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -54,7 +54,7 @@ class GoogleAuthException extends IOException implements Retryable {
    * @param cause The cause (which is saved for later retrieval by the {@link #getCause()} method).
    *     (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
    */
-  public GoogleAuthException(boolean isRetryable, int retryCount, String message, Throwable cause) {
+  GoogleAuthException(boolean isRetryable, int retryCount, String message, Throwable cause) {
     super(message, cause);
     this.isRetryable = isRetryable;
     this.retryCount = retryCount;
@@ -70,7 +70,7 @@ class GoogleAuthException extends IOException implements Retryable {
    *     cause has retry information, it is going to be skipped in favor of the {@code retryCount}
    *     parameter
    */
-  public GoogleAuthException(boolean isRetryable, int retryCount, Throwable cause) {
+  GoogleAuthException(boolean isRetryable, int retryCount, Throwable cause) {
     super(cause);
     this.isRetryable = isRetryable;
     this.retryCount = retryCount;
@@ -83,7 +83,7 @@ class GoogleAuthException extends IOException implements Retryable {
    * @param cause The cause (which is saved for later retrieval by the {@link #getCause()} method).
    *     (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
    */
-  public GoogleAuthException(boolean isRetryable, Throwable cause) {
+  GoogleAuthException(boolean isRetryable, Throwable cause) {
     super(cause);
     this.isRetryable = isRetryable;
     this.retryCount = 0;
@@ -95,12 +95,12 @@ class GoogleAuthException extends IOException implements Retryable {
    * @param cause The cause (which is saved for later retrieval by the {@link #getCause()} method).
    *     (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
    */
-  public GoogleAuthException(Throwable cause) {
+  GoogleAuthException(Throwable cause) {
     this(false, cause);
   }
 
   /** A default Constructor */
-  public GoogleAuthException() {
+  GoogleAuthException() {
     super();
     this.isRetryable = false;
     this.retryCount = 0;
@@ -116,11 +116,11 @@ class GoogleAuthException extends IOException implements Retryable {
    *     #getMessage()} method)
    * @return new instance of {@link GoogleAuthException}
    */
-  public static GoogleAuthException createWithTokenEndpointResponseException(
+  static GoogleAuthException createWithTokenEndpointResponseException(
       HttpResponseException responseException, String message) {
     int responseStatus = responseException.getStatusCode();
     boolean isRetryable =
-        ServiceAccountCredentials.RETRYABLE_STATUSCODE_LIST.contains(responseStatus);
+        OAuth2Utils.TOKEN_ENDPOINT_RETRYABLE_STATUS_CODES.contains(responseStatus);
     int retryCount = responseException.getAttemptCount() - 1;
 
     if (message == null) {
@@ -138,7 +138,7 @@ class GoogleAuthException extends IOException implements Retryable {
    * @param responseException an instance of {@link HttpResponseException}
    * @return new instance of {@link GoogleAuthException}
    */
-  public static GoogleAuthException createWithTokenEndpointResponseException(
+  static GoogleAuthException createWithTokenEndpointResponseException(
       HttpResponseException responseException) {
     return GoogleAuthException.createWithTokenEndpointResponseException(responseException, null);
   }
