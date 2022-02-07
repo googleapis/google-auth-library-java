@@ -121,7 +121,9 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   /**
    * Internal constructor
-   * @param builder A builder for {@link ServiceAccountCredentials} See {@link ServiceAccountCredentials.Builder}
+   *
+   * @param builder A builder for {@link ServiceAccountCredentials} See {@link
+   *     ServiceAccountCredentials.Builder}
    */
   ServiceAccountCredentials(ServiceAccountCredentials.Builder builder) {
     this.clientId = builder.clientId;
@@ -427,8 +429,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   /**
    * Internal constructor
+   *
    * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
-   * @param builder A builder for {@link ServiceAccountCredentials} See {@link ServiceAccountCredentials.Builder}
+   * @param builder A builder for {@link ServiceAccountCredentials} See {@link
+   *     ServiceAccountCredentials.Builder}
    * @return an instance of {@link ServiceAccountCredentials}
    */
   static ServiceAccountCredentials fromPkcs8(
