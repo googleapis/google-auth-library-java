@@ -120,25 +120,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
   private transient HttpTransportFactory transportFactory;
 
   /**
-   * Constructor with minimum identifying information and custom HTTP transport.
-   *
-   * @param builder A builder for {@link ServiceAccountCredentials} See {@link
-   *     ServiceAccountCredentials.Builder} List of fields being set: clientId: client ID of the
-   *     service account from the console. May be null. clientEmail: client email address of the
-   *     service account from the console privateKey: RSA private key object for the service account
-   *     privateKeyId: private key identifier for the service account. May be null. scopes: scope
-   *     strings for the APIs to be called. May be null or an empty collection. defaultScopes:
-   *     default scope strings for the APIs to be called. May be null or an empty. transportFactory:
-   *     HTTP transport factory, creates the transport used to get access tokens. tokenServerUri:
-   *     URI of the end point that provides tokens. serviceAccountUser: email of the user account to
-   *     impersonate, if delegating domain-wide authority to the service account. projectId: the
-   *     project used for billing quotaProjectId: the project used for quota and billing purposes.
-   *     May be null. lifetime: number of seconds the access token should be valid for. The value
-   *     should be at most 43200 (12 hours). If the token is used for calling a Google API, then the
-   *     value should be at most 3600 (1 hour). If the given value is 0, then the default value 3600
-   *     will be used when creating the credentials. useJwtAccessWithScope: whether self signed JWT
-   *     with scopes should be always used. defaultRetriesEnabled: whether default retries are
-   *     enabled
+   * Internal constructor
+   * @param builder A builder for {@link ServiceAccountCredentials} See {@link ServiceAccountCredentials.Builder}
    */
   ServiceAccountCredentials(ServiceAccountCredentials.Builder builder) {
     this.clientId = builder.clientId;
@@ -442,6 +425,12 @@ public class ServiceAccountCredentials extends GoogleCredentials
     return fromPkcs8(privateKeyPkcs8, builder);
   }
 
+  /**
+   * Internal constructor
+   * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
+   * @param builder A builder for {@link ServiceAccountCredentials} See {@link ServiceAccountCredentials.Builder}
+   * @return an instance of {@link ServiceAccountCredentials}
+   */
   static ServiceAccountCredentials fromPkcs8(
       String privateKeyPkcs8, ServiceAccountCredentials.Builder builder) throws IOException {
     PrivateKey privateKey = privateKeyFromPkcs8(privateKeyPkcs8);
