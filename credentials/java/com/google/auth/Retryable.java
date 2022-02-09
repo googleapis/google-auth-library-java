@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Google LLC
+ * Copyright 2022 Google LLC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -29,52 +29,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.google.auth.oauth2;
+package com.google.auth;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+// an interface to identify retryable errors
+public interface Retryable {
+  /**
+   * A flag indicating whether the error is retryable
+   *
+   * @return true if related error is retryable, false otherwise
+   */
+  boolean isRetryable();
 
-import javax.annotation.Nullable;
-
-/**
- * Encapsulates the standard OAuth error response. See
- * https://tools.ietf.org/html/rfc6749#section-5.2.
- */
-class OAuthException extends GoogleAuthException {
-
-  private final String errorCode;
-  @Nullable private final String errorDescription;
-  @Nullable private final String errorUri;
-
-  OAuthException(String errorCode, @Nullable String errorDescription, @Nullable String errorUri) {
-    this.errorCode = checkNotNull(errorCode);
-    this.errorDescription = errorDescription;
-    this.errorUri = errorUri;
-  }
-
-  @Override
-  public String getMessage() {
-    // Fully specified message will have the format Error code %s: %s - %s.
-    StringBuilder sb = new StringBuilder("Error code " + errorCode);
-    if (errorDescription != null) {
-      sb.append(": ").append(errorDescription);
-    }
-    if (errorUri != null) {
-      sb.append(" - ").append(errorUri);
-    }
-    return sb.toString();
-  }
-
-  String getErrorCode() {
-    return errorCode;
-  }
-
-  @Nullable
-  String getErrorDescription() {
-    return errorDescription;
-  }
-
-  @Nullable
-  String getErrorUri() {
-    return errorUri;
-  }
+  /**
+   * Gets a number of performed retries for related HttpRequest
+   *
+   * @return a number of performed retries
+   */
+  int getRetryCount();
 }
