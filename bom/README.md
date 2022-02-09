@@ -25,4 +25,4 @@ To use it in Maven, add the following to your `pom.xml`:
 
 Apache 2.0 - See [LICENSE] for more information.
 
-[LICENSE]: https://github.com/googleapis/google-auth-library-java/blob/master/LICENSE
+[LICENSE]: https://github.com/googleapis/google-auth-library-java/blob/main/LICENSE
