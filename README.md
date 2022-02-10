@@ -211,6 +211,10 @@ Where the following variables need to be substituted:
 
 This generates the configuration file in the specified output file.
 
+If you want to use IDMSv2, then below field needs to be added to credential_source
+section of credential configuration.
+"aws_session_token_url": "http://169.254.169.254/latest/api/token"
+
 You can now [use the Auth library](#using-external-identities) to call Google Cloud
 resources from AWS.
 

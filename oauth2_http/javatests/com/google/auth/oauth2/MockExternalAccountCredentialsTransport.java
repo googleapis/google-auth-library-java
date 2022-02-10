@@ -67,6 +67,7 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
   private static final String ISSUED_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:access_token";
   private static final String AWS_CREDENTIALS_URL = "https://www.aws-credentials.com";
   private static final String AWS_REGION_URL = "https://www.aws-region.com";
+  private static final String AWS_SESSION_TOKEN_URL = "https://www.aws-session-token.com";
   private static final String METADATA_SERVER_URL = "https://www.metadata.google.com";
   private static final String STS_URL = "https://sts.googleapis.com";
 
@@ -119,6 +120,11 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
               throw responseErrorSequence.poll();
             }
 
+            if (AWS_SESSION_TOKEN_URL.equals(url)) {
+              return new MockLowLevelHttpResponse()
+                  .setContentType("text/html")
+                  .setContent("sessiontoken");
+            }
             if (AWS_REGION_URL.equals(url)) {
               return new MockLowLevelHttpResponse()
                   .setContentType("text/html")
@@ -253,6 +259,10 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
 
   public String getAwsRegionUrl() {
     return AWS_REGION_URL;
+  }
+
+  public String getAwsSessionTokenUrl() {
+    return AWS_SESSION_TOKEN_URL;
   }
 
   public String getAwsRegion() {

@@ -97,7 +97,7 @@ class AwsCredentialsTest {
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setTokenUrl(transportFactory.transport.getStsUrl())
                 .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory))
+                .setCredentialSource(buildAwsCredentialSource(transportFactory, false))
                 .build();
 
     AccessToken accessToken = awsCredential.refreshAccessToken();
@@ -119,7 +119,7 @@ class AwsCredentialsTest {
                 .setServiceAccountImpersonationUrl(
                     transportFactory.transport.getServiceAccountImpersonationUrl())
                 .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory))
+                .setCredentialSource(buildAwsCredentialSource(transportFactory, false))
                 .build();
 
     AccessToken accessToken = awsCredential.refreshAccessToken();
@@ -137,7 +137,42 @@ class AwsCredentialsTest {
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory))
+                .setCredentialSource(buildAwsCredentialSource(transportFactory, false))
+                .build();
+
+    String subjectToken = URLDecoder.decode(awsCredential.retrieveSubjectToken(), "UTF-8");
+
+    JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser(subjectToken);
+    GenericJson json = parser.parseAndClose(GenericJson.class);
+
+    List<Map<String, String>> headersList = (List<Map<String, String>>) json.get("headers");
+    Map<String, String> headers = new HashMap<>();
+    for (Map<String, String> header : headersList) {
+      headers.put(header.get("key"), header.get("value"));
+    }
+
+    assertEquals("POST", json.get("method"));
+    assertEquals(GET_CALLER_IDENTITY_URL, json.get("url"));
+    assertEquals(URI.create(GET_CALLER_IDENTITY_URL).getHost(), headers.get("host"));
+    assertEquals("token", headers.get("x-amz-security-token"));
+    assertEquals(awsCredential.getAudience(), headers.get("x-goog-cloud-target-resource"));
+    assertTrue(headers.containsKey("x-amz-date"));
+    assertNotNull(headers.get("Authorization"));
+  }
+
+  @Test
+  void retrieveSubjectTokenWithSessionTokenUrl() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    // Map<String, Object> credentialMap = new HashMap<>(AWS_CREDENTIAL_SOURCE_MAP);
+    // credentialMap.put("aws_session_token_url", "awsSesionTokenUrl")
+
+    AwsCredentials awsCredential =
+        (AwsCredentials)
+            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+                .setHttpTransportFactory(transportFactory)
+                .setCredentialSource(buildAwsCredentialSource(transportFactory, true))
                 .build();
 
     String subjectToken = URLDecoder.decode(awsCredential.retrieveSubjectToken(), "UTF-8");
@@ -172,7 +207,7 @@ class AwsCredentialsTest {
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory))
+                .setCredentialSource(buildAwsCredentialSource(transportFactory, false))
                 .build();
 
     IOException exception =
@@ -194,7 +229,7 @@ class AwsCredentialsTest {
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory))
+                .setCredentialSource(buildAwsCredentialSource(transportFactory, false))
                 .build();
 
     IOException exception =
@@ -216,7 +251,7 @@ class AwsCredentialsTest {
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory))
+                .setCredentialSource(buildAwsCredentialSource(transportFactory, false))
                 .build();
 
     IOException exception =
@@ -263,7 +298,7 @@ class AwsCredentialsTest {
                 .setEnvironmentProvider(environmentProvider)
                 .build();
 
-    AwsSecurityCredentials credentials = testAwsCredentials.getAwsSecurityCredentials();
+    AwsSecurityCredentials credentials = testAwsCredentials.getAwsSecurityCredentials(null);
 
     assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
     assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
@@ -284,7 +319,7 @@ class AwsCredentialsTest {
                 .setEnvironmentProvider(environmentProvider)
                 .build();
 
-    AwsSecurityCredentials credentials = testAwsCredentials.getAwsSecurityCredentials();
+    AwsSecurityCredentials credentials = testAwsCredentials.getAwsSecurityCredentials(null);
 
     assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
     assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
@@ -300,10 +335,10 @@ class AwsCredentialsTest {
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory))
+                .setCredentialSource(buildAwsCredentialSource(transportFactory, false))
                 .build();
 
-    AwsSecurityCredentials credentials = awsCredential.getAwsSecurityCredentials();
+    AwsSecurityCredentials credentials = awsCredential.getAwsSecurityCredentials(null);
 
     assertEquals("accessKeyId", credentials.getAccessKeyId());
     assertEquals("secretAccessKey", credentials.getSecretAccessKey());
@@ -329,7 +364,9 @@ class AwsCredentialsTest {
     IOException exception =
         assertThrows(
             IOException.class,
-            awsCredential::getAwsSecurityCredentials,
+            () -> {
+              awsCredential.getAwsSecurityCredentials(null);
+            },
             "Exception should be thrown.");
     assertEquals(
         "Unable to determine the AWS IAM role name. The credential source does not contain the url field.",
@@ -348,11 +385,11 @@ class AwsCredentialsTest {
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory))
+                .setCredentialSource(buildAwsCredentialSource(transportFactory, false))
                 .setEnvironmentProvider(environmentProvider)
                 .build();
 
-    String region = awsCredentials.getAwsRegion();
+    String region = awsCredentials.getAwsRegion(null);
 
     // Should attempt to retrieve the region from AWS_REGION env var first.
     // Metadata server would return us-east-1b.
@@ -370,11 +407,11 @@ class AwsCredentialsTest {
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory))
+                .setCredentialSource(buildAwsCredentialSource(transportFactory, false))
                 .setEnvironmentProvider(environmentProvider)
                 .build();
 
-    String region = awsCredentials.getAwsRegion();
+    String region = awsCredentials.getAwsRegion(null);
 
     // Should attempt to retrieve the region from DEFAULT_AWS_REGION before calling the metadata
     // server. Metadata server would return us-east-1b.
@@ -389,10 +426,10 @@ class AwsCredentialsTest {
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory))
+                .setCredentialSource(buildAwsCredentialSource(transportFactory, false))
                 .build();
 
-    String region = awsCredentials.getAwsRegion();
+    String region = awsCredentials.getAwsRegion(null);
 
     // Should retrieve the region from the Metadata server.
     String expectedRegion =
@@ -511,12 +548,19 @@ class AwsCredentialsTest {
   }
 
   private static AwsCredentialSource buildAwsCredentialSource(
-      MockExternalAccountCredentialsTransportFactory transportFactory) {
+      MockExternalAccountCredentialsTransportFactory transportFactory,
+      Boolean includeAwsSessionTokenUrl) {
     Map<String, Object> credentialSourceMap = new HashMap<>();
     credentialSourceMap.put("environment_id", "aws1");
     credentialSourceMap.put("region_url", transportFactory.transport.getAwsRegionUrl());
     credentialSourceMap.put("url", transportFactory.transport.getAwsCredentialsUrl());
     credentialSourceMap.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
+
+    if (includeAwsSessionTokenUrl) {
+      credentialSourceMap.put(
+          "aws_session_token_url", transportFactory.transport.getAwsSessionTokenUrl());
+    }
+
     return new AwsCredentialSource(credentialSourceMap);
   }
 
