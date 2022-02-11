@@ -39,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonParser;
+import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.auth.TestUtils;
 import com.google.auth.oauth2.AwsCredentials.AwsCredentialSource;
 import com.google.auth.oauth2.ExternalAccountCredentialsTest.MockExternalAccountCredentialsTransportFactory;
@@ -47,6 +48,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +58,13 @@ import org.junit.jupiter.api.Test;
 class AwsCredentialsTest {
 
   private static final String STS_URL = "https://sts.googleapis.com";
+  private static final String AWS_CREDENTIALS_URL = "https://www.aws-credentials.com";
+  private static final String AWS_CREDENTIALS_URL_WITH_ROLE =
+      "https://www.aws-credentials.com/roleName";
+  private static final String AWS_REGION_URL = "https://www.aws-region.com";
+  private static final String AWS_SESSION_TOKEN_URL = "https://www.aws-session-token.com";
+  private static final String AWS_SESSION_TOKEN = "sessiontoken";
+  private static final String AWS_SESSION_TOKEN_HEADER = "x-aws-ec2-metadata-token";
 
   private static final String GET_CALLER_IDENTITY_URL =
       "https://sts.amazonaws.com?Action=GetCallerIdentity&Version=2011-06-15";
@@ -72,6 +81,9 @@ class AwsCredentialsTest {
           put("regional_cred_verification_url", "regionalCredVerificationUrl");
         }
       };
+
+  private static final Map<String, Object> emptyMetadataHeaders = Collections.emptyMap();
+  private static final Map<String, String> emptyStringHeaders = Collections.emptyMap();
 
   private static final AwsCredentialSource AWS_CREDENTIAL_SOURCE =
       new AwsCredentialSource(AWS_CREDENTIAL_SOURCE_MAP);
@@ -97,7 +109,7 @@ class AwsCredentialsTest {
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setTokenUrl(transportFactory.transport.getStsUrl())
                 .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory, false))
+                .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .build();
 
     AccessToken accessToken = awsCredential.refreshAccessToken();
@@ -119,7 +131,7 @@ class AwsCredentialsTest {
                 .setServiceAccountImpersonationUrl(
                     transportFactory.transport.getServiceAccountImpersonationUrl())
                 .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory, false))
+                .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .build();
 
     AccessToken accessToken = awsCredential.refreshAccessToken();
@@ -137,7 +149,7 @@ class AwsCredentialsTest {
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory, false))
+                .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .build();
 
     String subjectToken = URLDecoder.decode(awsCredential.retrieveSubjectToken(), "UTF-8");
@@ -158,6 +170,18 @@ class AwsCredentialsTest {
     assertEquals(awsCredential.getAudience(), headers.get("x-goog-cloud-target-resource"));
     assertTrue(headers.containsKey("x-amz-date"));
     assertNotNull(headers.get("Authorization"));
+
+    List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
+    assertEquals(3, requests.size());
+
+    // Validate region request.
+    ValidateRequest(requests.get(0), AWS_REGION_URL, emptyStringHeaders);
+
+    // Validate role request.
+    ValidateRequest(requests.get(1), AWS_CREDENTIALS_URL, emptyStringHeaders);
+
+    // Validate security credentials request.
+    ValidateRequest(requests.get(2), AWS_CREDENTIALS_URL_WITH_ROLE, emptyStringHeaders);
   }
 
   @Test
@@ -165,14 +189,19 @@ class AwsCredentialsTest {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
-    // Map<String, Object> credentialMap = new HashMap<>(AWS_CREDENTIAL_SOURCE_MAP);
-    // credentialMap.put("aws_session_token_url", "awsSesionTokenUrl")
+    Map<String, Object> credentialSourceMap = new HashMap<>();
+    credentialSourceMap.put("environment_id", "aws1");
+    credentialSourceMap.put("region_url", transportFactory.transport.getAwsRegionUrl());
+    credentialSourceMap.put("url", transportFactory.transport.getAwsCredentialsUrl());
+    credentialSourceMap.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
+    credentialSourceMap.put(
+        "aws_session_token_url", transportFactory.transport.getAwsSessionTokenUrl());
 
     AwsCredentials awsCredential =
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory, true))
+                .setCredentialSource(new AwsCredentialSource(credentialSourceMap))
                 .build();
 
     String subjectToken = URLDecoder.decode(awsCredential.retrieveSubjectToken(), "UTF-8");
@@ -193,6 +222,29 @@ class AwsCredentialsTest {
     assertEquals(awsCredential.getAudience(), headers.get("x-goog-cloud-target-resource"));
     assertTrue(headers.containsKey("x-amz-date"));
     assertNotNull(headers.get("Authorization"));
+
+    List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
+    assertEquals(4, requests.size());
+
+    // Validate the session token request
+    ValidateRequest(
+        requests.get(0),
+        AWS_SESSION_TOKEN_URL,
+        Map.of("x-aws-ec2-metadata-token-ttl-seconds", "21600"));
+
+    // Validate region request.
+    ValidateRequest(
+        requests.get(1), AWS_REGION_URL, Map.of(AWS_SESSION_TOKEN_HEADER, AWS_SESSION_TOKEN));
+
+    // Validate role request.
+    ValidateRequest(
+        requests.get(2), AWS_CREDENTIALS_URL, Map.of(AWS_SESSION_TOKEN_HEADER, AWS_SESSION_TOKEN));
+
+    // Validate security credentials request.
+    ValidateRequest(
+        requests.get(3),
+        AWS_CREDENTIALS_URL_WITH_ROLE,
+        Map.of(AWS_SESSION_TOKEN_HEADER, AWS_SESSION_TOKEN));
   }
 
   @Test
@@ -207,13 +259,19 @@ class AwsCredentialsTest {
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory, false))
+                .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .build();
 
     IOException exception =
         assertThrows(
             IOException.class, awsCredential::retrieveSubjectToken, "Exception should be thrown.");
     assertEquals("Failed to retrieve AWS region.", exception.getMessage());
+
+    List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
+    assertEquals(1, requests.size());
+
+    // Validate region request.
+    ValidateRequest(requests.get(0), AWS_REGION_URL, emptyStringHeaders);
   }
 
   @Test
@@ -229,13 +287,22 @@ class AwsCredentialsTest {
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory, false))
+                .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .build();
 
     IOException exception =
         assertThrows(
             IOException.class, awsCredential::retrieveSubjectToken, "Exception should be thrown.");
     assertEquals("Failed to retrieve AWS IAM role.", exception.getMessage());
+
+    List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
+    assertEquals(2, requests.size());
+
+    // Validate region request.
+    ValidateRequest(requests.get(0), AWS_REGION_URL, emptyStringHeaders);
+
+    // Validate role request.
+    ValidateRequest(requests.get(1), AWS_CREDENTIALS_URL, emptyStringHeaders);
   }
 
   @Test
@@ -251,13 +318,25 @@ class AwsCredentialsTest {
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory, false))
+                .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .build();
 
     IOException exception =
         assertThrows(
             IOException.class, awsCredential::retrieveSubjectToken, "Exception should be thrown.");
     assertEquals("Failed to retrieve AWS credentials.", exception.getMessage());
+
+    List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
+    assertEquals(3, requests.size());
+
+    // Validate region request.
+    ValidateRequest(requests.get(0), AWS_REGION_URL, emptyStringHeaders);
+
+    // Validate role request.
+    ValidateRequest(requests.get(1), AWS_CREDENTIALS_URL, emptyStringHeaders);
+
+    // Validate security credentials request.
+    ValidateRequest(requests.get(2), AWS_CREDENTIALS_URL_WITH_ROLE, emptyStringHeaders);
   }
 
   @Test
@@ -283,6 +362,10 @@ class AwsCredentialsTest {
         "Unable to determine the AWS region. The credential source does not "
             + "contain the region URL.",
         exception.getMessage());
+
+    // No requests because the credential source does not contain region URL
+    List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
+    assertEquals(true, requests.isEmpty());
   }
 
   @Test
@@ -298,7 +381,8 @@ class AwsCredentialsTest {
                 .setEnvironmentProvider(environmentProvider)
                 .build();
 
-    AwsSecurityCredentials credentials = testAwsCredentials.getAwsSecurityCredentials(null);
+    AwsSecurityCredentials credentials =
+        testAwsCredentials.getAwsSecurityCredentials(emptyMetadataHeaders);
 
     assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
     assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
@@ -319,7 +403,8 @@ class AwsCredentialsTest {
                 .setEnvironmentProvider(environmentProvider)
                 .build();
 
-    AwsSecurityCredentials credentials = testAwsCredentials.getAwsSecurityCredentials(null);
+    AwsSecurityCredentials credentials =
+        testAwsCredentials.getAwsSecurityCredentials(emptyMetadataHeaders);
 
     assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
     assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
@@ -335,14 +420,24 @@ class AwsCredentialsTest {
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory, false))
+                .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .build();
 
-    AwsSecurityCredentials credentials = awsCredential.getAwsSecurityCredentials(null);
+    AwsSecurityCredentials credentials =
+        awsCredential.getAwsSecurityCredentials(emptyMetadataHeaders);
 
     assertEquals("accessKeyId", credentials.getAccessKeyId());
     assertEquals("secretAccessKey", credentials.getSecretAccessKey());
     assertEquals("token", credentials.getToken());
+
+    List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
+    assertEquals(2, requests.size());
+
+    // Validate role request.
+    ValidateRequest(requests.get(0), AWS_CREDENTIALS_URL, emptyStringHeaders);
+
+    // Validate security credentials request.
+    ValidateRequest(requests.get(1), AWS_CREDENTIALS_URL_WITH_ROLE, emptyStringHeaders);
   }
 
   @Test
@@ -365,12 +460,16 @@ class AwsCredentialsTest {
         assertThrows(
             IOException.class,
             () -> {
-              awsCredential.getAwsSecurityCredentials(null);
+              awsCredential.getAwsSecurityCredentials(emptyMetadataHeaders);
             },
             "Exception should be thrown.");
     assertEquals(
         "Unable to determine the AWS IAM role name. The credential source does not contain the url field.",
         exception.getMessage());
+
+    // No requests because url field is not present in credential source
+    List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
+    assertEquals(true, requests.isEmpty());
   }
 
   @Test
@@ -385,15 +484,19 @@ class AwsCredentialsTest {
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory, false))
+                .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .setEnvironmentProvider(environmentProvider)
                 .build();
 
-    String region = awsCredentials.getAwsRegion(null);
+    String region = awsCredentials.getAwsRegion(emptyMetadataHeaders);
 
     // Should attempt to retrieve the region from AWS_REGION env var first.
     // Metadata server would return us-east-1b.
     assertEquals("region", region);
+
+    // No requests because region is obtained from environment variables
+    List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
+    assertEquals(true, requests.isEmpty());
   }
 
   @Test
@@ -407,15 +510,19 @@ class AwsCredentialsTest {
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory, false))
+                .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .setEnvironmentProvider(environmentProvider)
                 .build();
 
-    String region = awsCredentials.getAwsRegion(null);
+    String region = awsCredentials.getAwsRegion(emptyMetadataHeaders);
 
     // Should attempt to retrieve the region from DEFAULT_AWS_REGION before calling the metadata
     // server. Metadata server would return us-east-1b.
     assertEquals("defaultRegion", region);
+
+    // No requests because region is obtained from environment variables
+    List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
+    assertEquals(true, requests.isEmpty());
   }
 
   @Test
@@ -426,10 +533,10 @@ class AwsCredentialsTest {
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory, false))
+                .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .build();
 
-    String region = awsCredentials.getAwsRegion(null);
+    String region = awsCredentials.getAwsRegion(emptyMetadataHeaders);
 
     // Should retrieve the region from the Metadata server.
     String expectedRegion =
@@ -438,6 +545,12 @@ class AwsCredentialsTest {
             .getAwsRegion()
             .substring(0, transportFactory.transport.getAwsRegion().length() - 1);
     assertEquals(expectedRegion, region);
+
+    List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
+    assertEquals(1, requests.size());
+
+    // Validate region request.
+    ValidateRequest(requests.get(0), AWS_REGION_URL, emptyStringHeaders);
   }
 
   @Test
@@ -547,19 +660,26 @@ class AwsCredentialsTest {
     assertEquals(credentials.getEnvironmentProvider(), SystemEnvironmentProvider.getInstance());
   }
 
+  private static void ValidateRequest(
+      MockLowLevelHttpRequest request, String expectedUrl, Map<String, String> expectedHeaders) {
+    assertEquals(expectedUrl, request.getUrl());
+    Map<String, List<String>> actualHeaders = request.getHeaders();
+
+    for (Map.Entry<String, String> expectedHeader : expectedHeaders.entrySet()) {
+      assertEquals(true, actualHeaders.containsKey(expectedHeader.getKey()));
+      List<String> actualValues = actualHeaders.get(expectedHeader.getKey());
+      assertEquals(1, actualValues.size());
+      assertEquals(expectedHeader.getValue(), actualValues.get(0));
+    }
+  }
+
   private static AwsCredentialSource buildAwsCredentialSource(
-      MockExternalAccountCredentialsTransportFactory transportFactory,
-      Boolean includeAwsSessionTokenUrl) {
+      MockExternalAccountCredentialsTransportFactory transportFactory) {
     Map<String, Object> credentialSourceMap = new HashMap<>();
     credentialSourceMap.put("environment_id", "aws1");
     credentialSourceMap.put("region_url", transportFactory.transport.getAwsRegionUrl());
     credentialSourceMap.put("url", transportFactory.transport.getAwsCredentialsUrl());
     credentialSourceMap.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
-
-    if (includeAwsSessionTokenUrl) {
-      credentialSourceMap.put(
-          "aws_session_token_url", transportFactory.transport.getAwsSessionTokenUrl());
-    }
 
     return new AwsCredentialSource(credentialSourceMap);
   }

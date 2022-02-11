@@ -346,7 +346,7 @@ class IdentityPoolCredentialsTest {
     // If the IdentityPoolCredential is initialized with a userProject, it must be passed
     // to STS via internal options.
     Map<String, String> query =
-        TestUtils.parseQuery(transportFactory.transport.getRequest().getContentAsString());
+        TestUtils.parseQuery(transportFactory.transport.getLastRequest().getContentAsString());
     assertNotNull(query.get("options"));
 
     GenericJson expectedInternalOptions = new GenericJson();

@@ -74,6 +74,7 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
   private static final String SUBJECT_TOKEN = "subjectToken";
   private static final String TOKEN_TYPE = "Bearer";
   private static final String ACCESS_TOKEN = "accessToken";
+  private static final String AWS_SESSION_TOKEN = "sessiontoken";
   private static final String SERVICE_ACCOUNT_ACCESS_TOKEN = "serviceAccountAccessToken";
   private static final String AWS_REGION = "us-east-1b";
   private static final Long EXPIRES_IN = 3600L;
@@ -87,7 +88,7 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
   private Queue<IOException> responseErrorSequence = new ArrayDeque<>();
   private Queue<String> refreshTokenSequence = new ArrayDeque<>();
   private Queue<List<String>> scopeSequence = new ArrayDeque<>();
-  private MockLowLevelHttpRequest request;
+  private List<MockLowLevelHttpRequest> requests = new ArrayList<>();
   private String expireTime;
   private String metadataServerContentType;
   private String stsContent;
@@ -110,7 +111,7 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
 
   @Override
   public LowLevelHttpRequest buildRequest(final String method, final String url) {
-    this.request =
+    MockLowLevelHttpRequest request =
         new MockLowLevelHttpRequest(url) {
           @Override
           public LowLevelHttpResponse execute() throws IOException {
@@ -123,7 +124,7 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
             if (AWS_SESSION_TOKEN_URL.equals(url)) {
               return new MockLowLevelHttpResponse()
                   .setContentType("text/html")
-                  .setContent("sessiontoken");
+                  .setContent(AWS_SESSION_TOKEN);
             }
             if (AWS_REGION_URL.equals(url)) {
               return new MockLowLevelHttpResponse()
@@ -214,15 +215,25 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
             return null;
           }
         };
-    return this.request;
+
+    this.requests.add(request);
+    return request;
   }
 
   public String getStsContent() {
     return stsContent;
   }
 
-  public MockLowLevelHttpRequest getRequest() {
-    return request;
+  public MockLowLevelHttpRequest getLastRequest() {
+    if (requests.isEmpty()) {
+      return null;
+    }
+
+    return requests.get(requests.size() - 1);
+  }
+
+  public List<MockLowLevelHttpRequest> getRequests() {
+    return Collections.unmodifiableList(requests);
   }
 
   public String getTokenType() {
