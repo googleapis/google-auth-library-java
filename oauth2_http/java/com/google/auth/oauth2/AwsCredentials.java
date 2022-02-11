@@ -169,7 +169,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
               "Session Token",
               HttpMethods.PUT,
               tokenRequestHeaders,
-              /*content =*/ null);
+              /* content= */ null);
       metadataHeaders.put("x-aws-ec2-metadata-token", awsSessionToken);
     }
 
@@ -204,7 +204,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
   private String retrieveResource(String url, String resourceName, Map<String, Object> headers)
       throws IOException {
-    return retrieveResource(url, resourceName, HttpMethods.GET, headers, /*content =*/ null);
+    return retrieveResource(url, resourceName, HttpMethods.GET, headers, /* content= */ null);
   }
 
   private String retrieveResource(

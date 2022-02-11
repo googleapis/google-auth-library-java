@@ -82,8 +82,8 @@ class AwsCredentialsTest {
         }
       };
 
-  private static final Map<String, Object> emptyMetadataHeaders = Collections.emptyMap();
-  private static final Map<String, String> emptyStringHeaders = Collections.emptyMap();
+  private static final Map<String, Object> EMPTY_METADATA_HEADERS = Collections.emptyMap();
+  private static final Map<String, String> EMPTY_STRING_HEADERS = Collections.emptyMap();
 
   private static final AwsCredentialSource AWS_CREDENTIAL_SOURCE =
       new AwsCredentialSource(AWS_CREDENTIAL_SOURCE_MAP);
@@ -175,13 +175,13 @@ class AwsCredentialsTest {
     assertEquals(3, requests.size());
 
     // Validate region request.
-    ValidateRequest(requests.get(0), AWS_REGION_URL, emptyStringHeaders);
+    ValidateRequest(requests.get(0), AWS_REGION_URL, EMPTY_STRING_HEADERS);
 
     // Validate role request.
-    ValidateRequest(requests.get(1), AWS_CREDENTIALS_URL, emptyStringHeaders);
+    ValidateRequest(requests.get(1), AWS_CREDENTIALS_URL, EMPTY_STRING_HEADERS);
 
     // Validate security credentials request.
-    ValidateRequest(requests.get(2), AWS_CREDENTIALS_URL_WITH_ROLE, emptyStringHeaders);
+    ValidateRequest(requests.get(2), AWS_CREDENTIALS_URL_WITH_ROLE, EMPTY_STRING_HEADERS);
   }
 
   @Test
@@ -236,35 +236,21 @@ class AwsCredentialsTest {
           }
         });
 
-    // Validate region request.
-    ValidateRequest(
-        requests.get(1),
-        AWS_REGION_URL,
+    Map<String, String> sessionTokenHeader =
         new HashMap<String, String>() {
           {
             put(AWS_SESSION_TOKEN_HEADER, AWS_SESSION_TOKEN);
           }
-        });
+        };
+
+    // Validate region request.
+    ValidateRequest(requests.get(1), AWS_REGION_URL, sessionTokenHeader);
 
     // Validate role request.
-    ValidateRequest(
-        requests.get(2),
-        AWS_CREDENTIALS_URL,
-        new HashMap<String, String>() {
-          {
-            put(AWS_SESSION_TOKEN_HEADER, AWS_SESSION_TOKEN);
-          }
-        });
+    ValidateRequest(requests.get(2), AWS_CREDENTIALS_URL, sessionTokenHeader);
 
     // Validate security credentials request.
-    ValidateRequest(
-        requests.get(3),
-        AWS_CREDENTIALS_URL_WITH_ROLE,
-        new HashMap<String, String>() {
-          {
-            put(AWS_SESSION_TOKEN_HEADER, AWS_SESSION_TOKEN);
-          }
-        });
+    ValidateRequest(requests.get(3), AWS_CREDENTIALS_URL_WITH_ROLE, sessionTokenHeader);
   }
 
   @Test
@@ -291,7 +277,7 @@ class AwsCredentialsTest {
     assertEquals(1, requests.size());
 
     // Validate region request.
-    ValidateRequest(requests.get(0), AWS_REGION_URL, emptyStringHeaders);
+    ValidateRequest(requests.get(0), AWS_REGION_URL, EMPTY_STRING_HEADERS);
   }
 
   @Test
@@ -319,10 +305,10 @@ class AwsCredentialsTest {
     assertEquals(2, requests.size());
 
     // Validate region request.
-    ValidateRequest(requests.get(0), AWS_REGION_URL, emptyStringHeaders);
+    ValidateRequest(requests.get(0), AWS_REGION_URL, EMPTY_STRING_HEADERS);
 
     // Validate role request.
-    ValidateRequest(requests.get(1), AWS_CREDENTIALS_URL, emptyStringHeaders);
+    ValidateRequest(requests.get(1), AWS_CREDENTIALS_URL, EMPTY_STRING_HEADERS);
   }
 
   @Test
@@ -350,13 +336,13 @@ class AwsCredentialsTest {
     assertEquals(3, requests.size());
 
     // Validate region request.
-    ValidateRequest(requests.get(0), AWS_REGION_URL, emptyStringHeaders);
+    ValidateRequest(requests.get(0), AWS_REGION_URL, EMPTY_STRING_HEADERS);
 
     // Validate role request.
-    ValidateRequest(requests.get(1), AWS_CREDENTIALS_URL, emptyStringHeaders);
+    ValidateRequest(requests.get(1), AWS_CREDENTIALS_URL, EMPTY_STRING_HEADERS);
 
     // Validate security credentials request.
-    ValidateRequest(requests.get(2), AWS_CREDENTIALS_URL_WITH_ROLE, emptyStringHeaders);
+    ValidateRequest(requests.get(2), AWS_CREDENTIALS_URL_WITH_ROLE, EMPTY_STRING_HEADERS);
   }
 
   @Test
@@ -383,9 +369,9 @@ class AwsCredentialsTest {
             + "contain the region URL.",
         exception.getMessage());
 
-    // No requests because the credential source does not contain region URL
+    // No requests because the credential source does not contain region URL.
     List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
-    assertEquals(true, requests.isEmpty());
+    assertTrue(requests.isEmpty());
   }
 
   @Test
@@ -402,7 +388,7 @@ class AwsCredentialsTest {
                 .build();
 
     AwsSecurityCredentials credentials =
-        testAwsCredentials.getAwsSecurityCredentials(emptyMetadataHeaders);
+        testAwsCredentials.getAwsSecurityCredentials(EMPTY_METADATA_HEADERS);
 
     assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
     assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
@@ -424,7 +410,7 @@ class AwsCredentialsTest {
                 .build();
 
     AwsSecurityCredentials credentials =
-        testAwsCredentials.getAwsSecurityCredentials(emptyMetadataHeaders);
+        testAwsCredentials.getAwsSecurityCredentials(EMPTY_METADATA_HEADERS);
 
     assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
     assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
@@ -444,7 +430,7 @@ class AwsCredentialsTest {
                 .build();
 
     AwsSecurityCredentials credentials =
-        awsCredential.getAwsSecurityCredentials(emptyMetadataHeaders);
+        awsCredential.getAwsSecurityCredentials(EMPTY_METADATA_HEADERS);
 
     assertEquals("accessKeyId", credentials.getAccessKeyId());
     assertEquals("secretAccessKey", credentials.getSecretAccessKey());
@@ -454,10 +440,10 @@ class AwsCredentialsTest {
     assertEquals(2, requests.size());
 
     // Validate role request.
-    ValidateRequest(requests.get(0), AWS_CREDENTIALS_URL, emptyStringHeaders);
+    ValidateRequest(requests.get(0), AWS_CREDENTIALS_URL, EMPTY_STRING_HEADERS);
 
     // Validate security credentials request.
-    ValidateRequest(requests.get(1), AWS_CREDENTIALS_URL_WITH_ROLE, emptyStringHeaders);
+    ValidateRequest(requests.get(1), AWS_CREDENTIALS_URL_WITH_ROLE, EMPTY_STRING_HEADERS);
   }
 
   @Test
@@ -480,16 +466,16 @@ class AwsCredentialsTest {
         assertThrows(
             IOException.class,
             () -> {
-              awsCredential.getAwsSecurityCredentials(emptyMetadataHeaders);
+              awsCredential.getAwsSecurityCredentials(EMPTY_METADATA_HEADERS);
             },
             "Exception should be thrown.");
     assertEquals(
         "Unable to determine the AWS IAM role name. The credential source does not contain the url field.",
         exception.getMessage());
 
-    // No requests because url field is not present in credential source
+    // No requests because url field is not present in credential source.
     List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
-    assertEquals(true, requests.isEmpty());
+    assertTrue(requests.isEmpty());
   }
 
   @Test
@@ -508,15 +494,15 @@ class AwsCredentialsTest {
                 .setEnvironmentProvider(environmentProvider)
                 .build();
 
-    String region = awsCredentials.getAwsRegion(emptyMetadataHeaders);
+    String region = awsCredentials.getAwsRegion(EMPTY_METADATA_HEADERS);
 
     // Should attempt to retrieve the region from AWS_REGION env var first.
     // Metadata server would return us-east-1b.
     assertEquals("region", region);
 
-    // No requests because region is obtained from environment variables
+    // No requests because region is obtained from environment variables.
     List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
-    assertEquals(true, requests.isEmpty());
+    assertTrue(requests.isEmpty());
   }
 
   @Test
@@ -534,15 +520,15 @@ class AwsCredentialsTest {
                 .setEnvironmentProvider(environmentProvider)
                 .build();
 
-    String region = awsCredentials.getAwsRegion(emptyMetadataHeaders);
+    String region = awsCredentials.getAwsRegion(EMPTY_METADATA_HEADERS);
 
     // Should attempt to retrieve the region from DEFAULT_AWS_REGION before calling the metadata
     // server. Metadata server would return us-east-1b.
     assertEquals("defaultRegion", region);
 
-    // No requests because region is obtained from environment variables
+    // No requests because region is obtained from environment variables.
     List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
-    assertEquals(true, requests.isEmpty());
+    assertTrue(requests.isEmpty());
   }
 
   @Test
@@ -556,7 +542,7 @@ class AwsCredentialsTest {
                 .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .build();
 
-    String region = awsCredentials.getAwsRegion(emptyMetadataHeaders);
+    String region = awsCredentials.getAwsRegion(EMPTY_METADATA_HEADERS);
 
     // Should retrieve the region from the Metadata server.
     String expectedRegion =
@@ -570,7 +556,7 @@ class AwsCredentialsTest {
     assertEquals(1, requests.size());
 
     // Validate region request.
-    ValidateRequest(requests.get(0), AWS_REGION_URL, emptyStringHeaders);
+    ValidateRequest(requests.get(0), AWS_REGION_URL, EMPTY_STRING_HEADERS);
   }
 
   @Test
@@ -686,7 +672,7 @@ class AwsCredentialsTest {
     Map<String, List<String>> actualHeaders = request.getHeaders();
 
     for (Map.Entry<String, String> expectedHeader : expectedHeaders.entrySet()) {
-      assertEquals(true, actualHeaders.containsKey(expectedHeader.getKey()));
+      assertTrue(actualHeaders.containsKey(expectedHeader.getKey()));
       List<String> actualValues = actualHeaders.get(expectedHeader.getKey());
       assertEquals(1, actualValues.size());
       assertEquals(expectedHeader.getValue(), actualValues.get(0));
