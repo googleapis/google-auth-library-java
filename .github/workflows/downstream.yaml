@@ -13,6 +13,7 @@ jobs:
       matrix:
         java: [17]
         repo:
+        # This list needs to be updated manually until an automated solution is in place.
         - accessapproval
         - accesscontextmanager
         - aiplatform
@@ -138,9 +139,4 @@ jobs:
         java-version: ${{matrix.java}}
     - run: java -version
     - run: sudo apt-get install libxml2-utils
-    - uses: nick-invision/retry@v2
-      with:
-        timeout_minutes: 10
-        max_attempts: 3
-        retry_on: error
-        command: .kokoro/downstream-client-library-check.sh google-auth-library-bom ${{matrix.repo}}
+    - run: .kokoro/downstream-client-library-check.sh google-auth-library-bom ${{matrix.repo}}
