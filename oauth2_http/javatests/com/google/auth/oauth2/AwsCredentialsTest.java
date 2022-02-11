@@ -230,21 +230,41 @@ class AwsCredentialsTest {
     ValidateRequest(
         requests.get(0),
         AWS_SESSION_TOKEN_URL,
-        Map.of("x-aws-ec2-metadata-token-ttl-seconds", "21600"));
+        new HashMap<String, String>() {
+          {
+            put("x-aws-ec2-metadata-token-ttl-seconds", "21600");
+          }
+        });
 
     // Validate region request.
     ValidateRequest(
-        requests.get(1), AWS_REGION_URL, Map.of(AWS_SESSION_TOKEN_HEADER, AWS_SESSION_TOKEN));
+        requests.get(1),
+        AWS_REGION_URL,
+        new HashMap<String, String>() {
+          {
+            put(AWS_SESSION_TOKEN_HEADER, AWS_SESSION_TOKEN);
+          }
+        });
 
     // Validate role request.
     ValidateRequest(
-        requests.get(2), AWS_CREDENTIALS_URL, Map.of(AWS_SESSION_TOKEN_HEADER, AWS_SESSION_TOKEN));
+        requests.get(2),
+        AWS_CREDENTIALS_URL,
+        new HashMap<String, String>() {
+          {
+            put(AWS_SESSION_TOKEN_HEADER, AWS_SESSION_TOKEN);
+          }
+        });
 
     // Validate security credentials request.
     ValidateRequest(
         requests.get(3),
         AWS_CREDENTIALS_URL_WITH_ROLE,
-        Map.of(AWS_SESSION_TOKEN_HEADER, AWS_SESSION_TOKEN));
+        new HashMap<String, String>() {
+          {
+            put(AWS_SESSION_TOKEN_HEADER, AWS_SESSION_TOKEN);
+          }
+        });
   }
 
   @Test

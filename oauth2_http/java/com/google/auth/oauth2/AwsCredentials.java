@@ -157,7 +157,11 @@ public class AwsCredentials extends ExternalAccountCredentials {
     Map<String, Object> metadataHeaders = new HashMap<>();
     if (awsCredentialSource.awsSessionTokenUrl != null) {
       Map<String, Object> tokenRequestHeaders =
-          Map.of("x-aws-ec2-metadata-token-ttl-seconds", "21600");
+          new HashMap<String, Object>() {
+            {
+              put("x-aws-ec2-metadata-token-ttl-seconds", "21600");
+            }
+          };
 
       String awsSessionToken =
           retrieveResource(
