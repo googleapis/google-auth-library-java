@@ -20,9 +20,9 @@ set -x
 CORE_LIBRARY_ARTIFACT=$1
 CLIENT_LIBRARY=$2
 ## Get the directory of the build script
-scriptDir=$(realpath $(dirname "${BASH_SOURCE[0]}"))
+scriptDir="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 ## cd to the parent directory, i.e. the root of the git repo
-cd ${scriptDir}/..
+cd "${scriptDir}"/..
 
 # Make java core library artifacts available for 'mvn install' at the bottom
 mvn verify install -B -V -ntp -fae \
@@ -32,7 +32,7 @@ mvn verify install -B -V -ntp -fae \
 -Denforcer.skip=true
 
 # Namespace (xmlns) prevents xmllint from specifying tag names in XPath
-CORE_VERSION=`sed -e 's/xmlns=".*"//' pom.xml | xmllint --xpath '/project/version/text()' -`
+CORE_VERSION=$(sed -e 's/xmlns=".*"//' pom.xml | xmllint --xpath '/project/version/text()' -)
 
 if [ -z "${CORE_VERSION}" ]; then
   echo "Version is not found in ${CORE_VERSION_POM}"
@@ -64,7 +64,7 @@ mvn verify install -B -V -ntp -fae \
 -Denforcer.skip=true
 
 # Namespace (xmlns) prevents xmllint from specifying tag names in XPath
-SHARED_DEPS_VERSION=`sed -e 's/xmlns=".*"//' pom.xml | xmllint --xpath '/project/version/text()' -`
+SHARED_DEPS_VERSION=$(sed -e 's/xmlns=".*"//' pom.xml | xmllint --xpath '/project/version/text()' -)
 
 if [ -z "${SHARED_DEPS_VERSION}" ]; then
   echo "Version is not found in ${SHARED_DEPS_VERSION_POM}"
@@ -75,7 +75,7 @@ fi
 
 # Check this BOM against java client libraries
 git clone "https://github.com/googleapis/java-${CLIENT_LIBRARY}.git" --depth=1
-pushd java-${CLIENT_LIBRARY}
+pushd java-"${CLIENT_LIBRARY}"
 
 if [[ $CLIENT_LIBRARY == "bigtable" ]]; then
   pushd google-cloud-bigtable-deps-bom
