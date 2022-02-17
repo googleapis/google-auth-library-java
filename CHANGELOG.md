@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.5.0](https://github.com/googleapis/google-auth-library-java/compare/v1.4.0...v1.5.0) (2022-02-14)
+
+
+### Features
+
+* update retries and implement Retryable ([#750](https://github.com/googleapis/google-auth-library-java/issues/750)) ([f9a9b8a](https://github.com/googleapis/google-auth-library-java/commit/f9a9b8ace0199e6b75ed42c7bacfa3be30c34111))
+
+
+### Dependencies
+
+* **java:** update actions/github-script action to v5 ([#1339](https://github.com/googleapis/google-auth-library-java/issues/1339)) ([#843](https://github.com/googleapis/google-auth-library-java/issues/843)) ([ce44591](https://github.com/googleapis/google-auth-library-java/commit/ce445910198e7b78c9500ab148a1b6b99268185e))
+
 ## [1.4.0](https://github.com/googleapis/google-auth-library-java/compare/v1.3.0...v1.4.0) (2022-01-19)
 
 
