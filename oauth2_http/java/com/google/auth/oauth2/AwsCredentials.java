@@ -69,7 +69,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
     private final String regionUrl;
     private final String url;
     private final String regionalCredentialVerificationUrl;
-    private final String awsSessionTokenUrl;
+    private final String imdsv2SessionTokenUrl;
 
     /**
      * The source of the AWS credential. The credential source map must contain the
@@ -113,10 +113,10 @@ public class AwsCredentials extends ExternalAccountCredentials {
       this.regionalCredentialVerificationUrl =
           (String) credentialSourceMap.get("regional_cred_verification_url");
 
-      if (credentialSourceMap.containsKey("aws_session_token_url")) {
-        this.awsSessionTokenUrl = (String) credentialSourceMap.get("aws_session_token_url");
+      if (credentialSourceMap.containsKey("imdsv2_session_token_url")) {
+        this.imdsv2SessionTokenUrl = (String) credentialSourceMap.get("imdsv2_session_token_url");
       } else {
-        this.awsSessionTokenUrl = null;
+        this.imdsv2SessionTokenUrl = null;
       }
     }
   }
@@ -149,28 +149,28 @@ public class AwsCredentials extends ExternalAccountCredentials {
     // AWS IDMSv2 introduced a requirement for a session token to be present
     // with the requests made to metadata endpoints. This requirement is to help
     // prevent SSRF attacks.
-    // Presence of "aws_session_token_url" in Credential Source of config file
+    // Presence of "imdsv2_session_token_url" in Credential Source of config file
     // will trigger a flow with session token, else there will not be a session
     // token with the metadata requests.
     // Both flows work for IDMS v1 and v2. But if IDMSv2 is enabled, then if
     // session token is not present, Unauthorized exception will be thrown.
     Map<String, Object> metadataHeaders = new HashMap<>();
-    if (awsCredentialSource.awsSessionTokenUrl != null) {
+    if (awsCredentialSource.imdsv2SessionTokenUrl != null) {
       Map<String, Object> tokenRequestHeaders =
           new HashMap<String, Object>() {
             {
-              put("x-aws-ec2-metadata-token-ttl-seconds", "21600");
+              put("x-aws-ec2-metadata-token-ttl-seconds", "300");
             }
           };
 
-      String awsSessionToken =
+      String imdsv2SessionToken =
           retrieveResource(
-              awsCredentialSource.awsSessionTokenUrl,
+              awsCredentialSource.imdsv2SessionTokenUrl,
               "Session Token",
               HttpMethods.PUT,
               tokenRequestHeaders,
               /* content= */ null);
-      metadataHeaders.put("x-aws-ec2-metadata-token", awsSessionToken);
+      metadataHeaders.put("x-aws-ec2-metadata-token", imdsv2SessionToken);
     }
 
     // The targeted region is required to generate the signed request. The regional

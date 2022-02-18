@@ -67,14 +67,14 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
   private static final String ISSUED_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:access_token";
   private static final String AWS_CREDENTIALS_URL = "https://www.aws-credentials.com";
   private static final String AWS_REGION_URL = "https://www.aws-region.com";
-  private static final String AWS_SESSION_TOKEN_URL = "https://www.aws-session-token.com";
+  private static final String AWS_IMDSV2_SESSION_TOKEN_URL = "https://www.aws-session-token.com";
   private static final String METADATA_SERVER_URL = "https://www.metadata.google.com";
   private static final String STS_URL = "https://sts.googleapis.com";
 
   private static final String SUBJECT_TOKEN = "subjectToken";
   private static final String TOKEN_TYPE = "Bearer";
   private static final String ACCESS_TOKEN = "accessToken";
-  private static final String AWS_SESSION_TOKEN = "sessiontoken";
+  private static final String AWS_IMDSV2_SESSION_TOKEN = "sessiontoken";
   private static final String SERVICE_ACCOUNT_ACCESS_TOKEN = "serviceAccountAccessToken";
   private static final String AWS_REGION = "us-east-1b";
   private static final Long EXPIRES_IN = 3600L;
@@ -121,10 +121,10 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
               throw responseErrorSequence.poll();
             }
 
-            if (AWS_SESSION_TOKEN_URL.equals(url)) {
+            if (AWS_IMDSV2_SESSION_TOKEN_URL.equals(url)) {
               return new MockLowLevelHttpResponse()
                   .setContentType("text/html")
-                  .setContent(AWS_SESSION_TOKEN);
+                  .setContent(AWS_IMDSV2_SESSION_TOKEN);
             }
             if (AWS_REGION_URL.equals(url)) {
               return new MockLowLevelHttpResponse()
@@ -272,8 +272,8 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
     return AWS_REGION_URL;
   }
 
-  public String getAwsSessionTokenUrl() {
-    return AWS_SESSION_TOKEN_URL;
+  public String getAwsImdsv2SessionTokenUrl() {
+    return AWS_IMDSV2_SESSION_TOKEN_URL;
   }
 
   public String getAwsRegion() {

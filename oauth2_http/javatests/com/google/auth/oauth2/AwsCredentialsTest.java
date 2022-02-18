@@ -62,9 +62,9 @@ class AwsCredentialsTest {
   private static final String AWS_CREDENTIALS_URL_WITH_ROLE =
       "https://www.aws-credentials.com/roleName";
   private static final String AWS_REGION_URL = "https://www.aws-region.com";
-  private static final String AWS_SESSION_TOKEN_URL = "https://www.aws-session-token.com";
-  private static final String AWS_SESSION_TOKEN = "sessiontoken";
-  private static final String AWS_SESSION_TOKEN_HEADER = "x-aws-ec2-metadata-token";
+  private static final String AWS_IMDSV2_SESSION_TOKEN_URL = "https://www.aws-session-token.com";
+  private static final String AWS_IMDSV2_SESSION_TOKEN = "sessiontoken";
+  private static final String AWS_IMDSV2_SESSION_TOKEN_HEADER = "x-aws-ec2-metadata-token";
 
   private static final String GET_CALLER_IDENTITY_URL =
       "https://sts.amazonaws.com?Action=GetCallerIdentity&Version=2011-06-15";
@@ -195,7 +195,7 @@ class AwsCredentialsTest {
     credentialSourceMap.put("url", transportFactory.transport.getAwsCredentialsUrl());
     credentialSourceMap.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
     credentialSourceMap.put(
-        "aws_session_token_url", transportFactory.transport.getAwsSessionTokenUrl());
+        "imdsv2_session_token_url", transportFactory.transport.getAwsImdsv2SessionTokenUrl());
 
     AwsCredentials awsCredential =
         (AwsCredentials)
@@ -229,17 +229,17 @@ class AwsCredentialsTest {
     // Validate the session token request
     ValidateRequest(
         requests.get(0),
-        AWS_SESSION_TOKEN_URL,
+        AWS_IMDSV2_SESSION_TOKEN_URL,
         new HashMap<String, String>() {
           {
-            put("x-aws-ec2-metadata-token-ttl-seconds", "21600");
+            put("x-aws-ec2-metadata-token-ttl-seconds", "300");
           }
         });
 
     Map<String, String> sessionTokenHeader =
         new HashMap<String, String>() {
           {
-            put(AWS_SESSION_TOKEN_HEADER, AWS_SESSION_TOKEN);
+            put(AWS_IMDSV2_SESSION_TOKEN_HEADER, AWS_IMDSV2_SESSION_TOKEN);
           }
         };
 
