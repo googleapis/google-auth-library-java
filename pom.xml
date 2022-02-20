@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.auth</groupId>
   <artifactId>google-auth-library-parent</artifactId>
-  <version>1.4.1-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
+  <version>1.5.1-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
   <packaging>pom</packaging>
   <name>Google Auth Library for Java</name>
   <description>Client libraries providing authentication and
@@ -59,7 +59,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.google.http.version>1.41.2</project.google.http.version>
+    <project.google.http.version>1.41.3</project.google.http.version>
     <project.junit.bom.version>5.8.2</project.junit.bom.version>
     <project.guava.version>31.0.1-android</project.guava.version>
     <project.appengine.version>2.0.2</project.appengine.version>
@@ -142,7 +142,7 @@
         <plugin>
           <groupId>org.sonatype.plugins</groupId>
           <artifactId>nexus-staging-maven-plugin</artifactId>
-          <version>1.6.8</version>
+          <version>1.6.11</version>
           <extensions>true</extensions>
           <configuration>
             <serverId>ossrh</serverId>
@@ -271,7 +271,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-site-plugin</artifactId>
-        <version>3.9.1</version>
+        <version>3.11.0</version>
         <configuration>
           <skipDeploy>true</skipDeploy>
         </configuration>
