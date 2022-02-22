@@ -66,6 +66,8 @@ public class AwsCredentials extends ExternalAccountCredentials {
    */
   static class AwsCredentialSource extends CredentialSource {
 
+    private static final String imdsv2SessionTokenUrlFieldName = "imdsv2_session_token_url";
+
     private final String regionUrl;
     private final String url;
     private final String regionalCredentialVerificationUrl;
@@ -113,13 +115,18 @@ public class AwsCredentials extends ExternalAccountCredentials {
       this.regionalCredentialVerificationUrl =
           (String) credentialSourceMap.get("regional_cred_verification_url");
 
-      if (credentialSourceMap.containsKey("imdsv2_session_token_url")) {
-        this.imdsv2SessionTokenUrl = (String) credentialSourceMap.get("imdsv2_session_token_url");
+      if (credentialSourceMap.containsKey(imdsv2SessionTokenUrlFieldName)) {
+        this.imdsv2SessionTokenUrl =
+            (String) credentialSourceMap.get(imdsv2SessionTokenUrlFieldName);
       } else {
         this.imdsv2SessionTokenUrl = null;
       }
     }
   }
+
+  static final String AWS_IMDSV2_SESSION_TOKEN_HEADER = "x-aws-ec2-metadata-token";
+  static final String AWS_IMDSV2_SESSION_TOKEN_TTL_HEADER = "x-aws-ec2-metadata-token-ttl-seconds";
+  static final String AWS_IMDSV2_SESSION_TOKEN_TTL = "300";
 
   private final AwsCredentialSource awsCredentialSource;
 
@@ -154,30 +161,18 @@ public class AwsCredentials extends ExternalAccountCredentials {
     // token with the metadata requests.
     // Both flows work for IDMS v1 and v2. But if IDMSv2 is enabled, then if
     // session token is not present, Unauthorized exception will be thrown.
-    Map<String, Object> metadataHeaders = new HashMap<>();
+    Map<String, Object> metadataRequestHeaders = new HashMap<>();
     if (awsCredentialSource.imdsv2SessionTokenUrl != null) {
-      Map<String, Object> tokenRequestHeaders =
-          new HashMap<String, Object>() {
-            {
-              put("x-aws-ec2-metadata-token-ttl-seconds", "300");
-            }
-          };
-
-      String imdsv2SessionToken =
-          retrieveResource(
-              awsCredentialSource.imdsv2SessionTokenUrl,
-              "Session Token",
-              HttpMethods.PUT,
-              tokenRequestHeaders,
-              /* content= */ null);
-      metadataHeaders.put("x-aws-ec2-metadata-token", imdsv2SessionToken);
+      metadataRequestHeaders.put(
+          AWS_IMDSV2_SESSION_TOKEN_HEADER,
+          getAwsImdsv2SessionToken(awsCredentialSource.imdsv2SessionTokenUrl));
     }
 
     // The targeted region is required to generate the signed request. The regional
     // endpoint must also be used.
-    String region = getAwsRegion(metadataHeaders);
+    String region = getAwsRegion(metadataRequestHeaders);
 
-    AwsSecurityCredentials credentials = getAwsSecurityCredentials(metadataHeaders);
+    AwsSecurityCredentials credentials = getAwsSecurityCredentials(metadataRequestHeaders);
 
     // Generate the signed request to the AWS STS GetCallerIdentity API.
     Map<String, String> headers = new HashMap<>();
@@ -219,9 +214,9 @@ public class AwsCredentials extends ExternalAccountCredentials {
       HttpRequest request =
           requestFactory.buildRequest(requestMethod, new GenericUrl(url), content);
 
-      HttpHeaders httpHeaders = request.getHeaders();
+      HttpHeaders requestHeaders = request.getHeaders();
       for (Map.Entry<String, Object> header : headers.entrySet()) {
-        httpHeaders.set(header.getKey(), header.getValue());
+        requestHeaders.set(header.getKey(), header.getValue());
       }
 
       HttpResponse response = request.execute();
@@ -256,8 +251,27 @@ public class AwsCredentials extends ExternalAccountCredentials {
     return URLEncoder.encode(token.toString(), "UTF-8");
   }
 
+  String getAwsImdsv2SessionToken(String imdsv2SessionTokenUrl) throws IOException {
+    Map<String, Object> tokenRequestHeaders =
+        new HashMap<String, Object>() {
+          {
+            put(AWS_IMDSV2_SESSION_TOKEN_TTL_HEADER, AWS_IMDSV2_SESSION_TOKEN_TTL);
+          }
+        };
+
+    String imdsv2SessionToken =
+        retrieveResource(
+            imdsv2SessionTokenUrl,
+            "Session Token",
+            HttpMethods.PUT,
+            tokenRequestHeaders,
+            /* content= */ null);
+
+    return imdsv2SessionToken;
+  }
+
   @VisibleForTesting
-  String getAwsRegion(Map<String, Object> metadataHeaders) throws IOException {
+  String getAwsRegion(Map<String, Object> metadataRequestHeaders) throws IOException {
     // For AWS Lambda, the region is retrieved through the AWS_REGION environment variable.
     String region = getEnvironmentProvider().getEnv("AWS_REGION");
     if (region != null) {
@@ -274,7 +288,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
           "Unable to determine the AWS region. The credential source does not contain the region URL.");
     }
 
-    region = retrieveResource(awsCredentialSource.regionUrl, "region", metadataHeaders);
+    region = retrieveResource(awsCredentialSource.regionUrl, "region", metadataRequestHeaders);
 
     // There is an extra appended character that must be removed. If `us-east-1b` is returned,
     // we want `us-east-1`.
@@ -282,7 +296,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
   }
 
   @VisibleForTesting
-  AwsSecurityCredentials getAwsSecurityCredentials(Map<String, Object> metadataHeaders)
+  AwsSecurityCredentials getAwsSecurityCredentials(Map<String, Object> metadataRequestHeaders)
       throws IOException {
     // Check environment variables for credentials first.
     String accessKeyId = getEnvironmentProvider().getEnv("AWS_ACCESS_KEY_ID");
@@ -300,12 +314,13 @@ public class AwsCredentials extends ExternalAccountCredentials {
           "Unable to determine the AWS IAM role name. The credential source does not contain the"
               + " url field.");
     }
-    String roleName = retrieveResource(awsCredentialSource.url, "IAM role", metadataHeaders);
+    String roleName = retrieveResource(awsCredentialSource.url, "IAM role", metadataRequestHeaders);
 
     // Retrieve the AWS security credentials by calling the endpoint specified by the credential
     // source.
     String awsCredentials =
-        retrieveResource(awsCredentialSource.url + "/" + roleName, "credentials", metadataHeaders);
+        retrieveResource(
+            awsCredentialSource.url + "/" + roleName, "credentials", metadataRequestHeaders);
 
     JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser(awsCredentials);
     GenericJson genericJson = parser.parseAndClose(GenericJson.class);

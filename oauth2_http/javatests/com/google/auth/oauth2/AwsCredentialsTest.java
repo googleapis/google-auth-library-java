@@ -64,7 +64,6 @@ class AwsCredentialsTest {
   private static final String AWS_REGION_URL = "https://www.aws-region.com";
   private static final String AWS_IMDSV2_SESSION_TOKEN_URL = "https://www.aws-session-token.com";
   private static final String AWS_IMDSV2_SESSION_TOKEN = "sessiontoken";
-  private static final String AWS_IMDSV2_SESSION_TOKEN_HEADER = "x-aws-ec2-metadata-token";
 
   private static final String GET_CALLER_IDENTITY_URL =
       "https://sts.amazonaws.com?Action=GetCallerIdentity&Version=2011-06-15";
@@ -232,14 +231,16 @@ class AwsCredentialsTest {
         AWS_IMDSV2_SESSION_TOKEN_URL,
         new HashMap<String, String>() {
           {
-            put("x-aws-ec2-metadata-token-ttl-seconds", "300");
+            put(
+                AwsCredentials.AWS_IMDSV2_SESSION_TOKEN_TTL_HEADER,
+                AwsCredentials.AWS_IMDSV2_SESSION_TOKEN_TTL);
           }
         });
 
     Map<String, String> sessionTokenHeader =
         new HashMap<String, String>() {
           {
-            put(AWS_IMDSV2_SESSION_TOKEN_HEADER, AWS_IMDSV2_SESSION_TOKEN);
+            put(AwsCredentials.AWS_IMDSV2_SESSION_TOKEN_HEADER, AWS_IMDSV2_SESSION_TOKEN);
           }
         };
 
