@@ -82,7 +82,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
   @Override
   public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
-    if (url.equals(ComputeEngineCredentials.getTokenServerEncodedUrl())) {
+    if (url.equals(ComputeEngineUtils.getTokenServerEncodedUrl())) {
 
       return new MockLowLevelHttpRequest(url) {
         @Override
@@ -112,7 +112,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
               .setContent(refreshText);
         }
       };
-    } else if (url.equals(ComputeEngineCredentials.getMetadataServerUrl())) {
+    } else if (url.equals(ComputeEngineUtils.getMetadataServerUrl())) {
       return new MockLowLevelHttpRequest(url) {
         @Override
         public LowLevelHttpResponse execute() {
@@ -214,7 +214,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
   }
 
   protected boolean isGetServiceAccountsUrl(String url) {
-    return url.equals(ComputeEngineCredentials.getServiceAccountsUrl());
+    return url.equals(ComputeEngineUtils.getServiceAccountsUrl());
   }
 
   protected boolean isSignRequestUrl(String url) {
@@ -224,6 +224,6 @@ public class MockMetadataServerTransport extends MockHttpTransport {
   }
 
   protected boolean isIdentityDocumentUrl(String url) {
-    return url.startsWith(String.format(ComputeEngineCredentials.getIdentityDocumentUrl()));
+    return url.startsWith(String.format(ComputeEngineUtils.getIdentityDocumentUrl()));
   }
 }

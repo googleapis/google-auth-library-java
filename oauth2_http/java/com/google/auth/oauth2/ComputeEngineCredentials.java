@@ -34,7 +34,6 @@ package com.google.auth.oauth2;
 import static com.google.common.base.MoreObjects.firstNonNull;
 
 import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpStatusCodes;
@@ -48,7 +47,6 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
-import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -59,7 +57,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -80,23 +77,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
   static final Duration COMPUTE_EXPIRATION_MARGIN = Duration.ofMinutes(3);
   static final Duration COMPUTE_REFRESH_MARGIN = Duration.ofMinutes(4);
 
-  private static final Logger LOGGER = Logger.getLogger(ComputeEngineCredentials.class.getName());
-
-  static final String DEFAULT_METADATA_SERVER_URL = "http://metadata.google.internal";
-
   static final String SIGN_BLOB_URL_FORMAT =
       "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
-
-  // Note: the explicit `timeout` and `tries` below is a workaround. The underlying
-  // issue is that resolving an unknown host on some networks will take
-  // 20-30 seconds; making this timeout short fixes the issue, but
-  // could lead to false negatives in the event that we are on GCE, but
-  // the metadata resolution was particularly slow. The latter case is
-  // "unlikely" since the expected 4-nines time is about 0.5 seconds.
-  // This allows us to limit the total ping maximum timeout to 1.5 seconds
-  // for developer desktop scenarios.
-  static final int MAX_COMPUTE_PING_TRIES = 3;
-  static final int COMPUTE_PING_CONNECTION_TIMEOUT_MS = 500;
 
   private static final String METADATA_FLAVOR = "Metadata-Flavor";
   private static final String GOOGLE = "Google";
@@ -177,7 +159,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
    * @return token url with the given scopes
    */
   String createTokenUrlWithScopes() {
-    GenericUrl tokenUrl = new GenericUrl(getTokenServerEncodedUrl());
+    GenericUrl tokenUrl = new GenericUrl(ComputeEngineUtils.getTokenServerEncodedUrl());
     if (!scopes.isEmpty()) {
       tokenUrl.set("scopes", Joiner.on(',').join(scopes));
     }
@@ -240,7 +222,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
   @Override
   public IdToken idTokenWithAudience(String targetAudience, List<IdTokenProvider.Option> options)
       throws IOException {
-    GenericUrl documentUrl = new GenericUrl(getIdentityDocumentUrl());
+    GenericUrl documentUrl = new GenericUrl(ComputeEngineUtils.getIdentityDocumentUrl());
     if (options != null) {
       if (options.contains(IdTokenProvider.Option.FORMAT_FULL)) {
         documentUrl.set("format", "full");
@@ -289,67 +271,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
       return false;
     }
 
-    GenericUrl tokenUrl = new GenericUrl(getMetadataServerUrl(provider));
-    for (int i = 1; i <= MAX_COMPUTE_PING_TRIES; ++i) {
-      try {
-        HttpRequest request =
-            transportFactory.create().createRequestFactory().buildGetRequest(tokenUrl);
-        request.setConnectTimeout(COMPUTE_PING_CONNECTION_TIMEOUT_MS);
-        request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
-
-        HttpResponse response = request.execute();
-        try {
-          // Internet providers can return a generic response to all requests, so it is necessary
-          // to check that metadata header is present also.
-          HttpHeaders headers = response.getHeaders();
-          return OAuth2Utils.headersContainValue(headers, METADATA_FLAVOR, GOOGLE);
-        } finally {
-          response.disconnect();
-        }
-      } catch (SocketTimeoutException expected) {
-        // Ignore logging timeouts which is the expected failure mode in non GCE environments.
-      } catch (IOException e) {
-        LOGGER.log(
-            Level.FINE,
-            "Encountered an unexpected exception when determining"
-                + " if we are running on Google Compute Engine.",
-            e);
-      }
-    }
-    LOGGER.log(Level.FINE, "Failed to detect whether we are running on Google Compute Engine.");
-    return false;
-  }
-
-  public static String getMetadataServerUrl(DefaultCredentialsProvider provider) {
-    String metadataServerAddress =
-        provider.getEnv(DefaultCredentialsProvider.GCE_METADATA_HOST_ENV_VAR);
-    if (metadataServerAddress != null) {
-      return "http://" + metadataServerAddress;
-    }
-    return DEFAULT_METADATA_SERVER_URL;
-  }
-
-  public static String getMetadataServerUrl() {
-    return getMetadataServerUrl(DefaultCredentialsProvider.DEFAULT);
-  }
-
-  public static String getTokenServerEncodedUrl(DefaultCredentialsProvider provider) {
-    return getMetadataServerUrl(provider)
-        + "/computeMetadata/v1/instance/service-accounts/default/token";
-  }
-
-  public static String getTokenServerEncodedUrl() {
-    return getTokenServerEncodedUrl(DefaultCredentialsProvider.DEFAULT);
-  }
-
-  public static String getServiceAccountsUrl() {
-    return getMetadataServerUrl(DefaultCredentialsProvider.DEFAULT)
-        + "/computeMetadata/v1/instance/service-accounts/?recursive=true";
-  }
-
-  public static String getIdentityDocumentUrl() {
-    return getMetadataServerUrl(DefaultCredentialsProvider.DEFAULT)
-        + "/computeMetadata/v1/instance/service-accounts/default/identity";
+    return ComputeEngineUtils.isOnGce(transportFactory, provider);
   }
 
   @Override
@@ -432,7 +354,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
   }
 
   private String getDefaultServiceAccount() throws IOException {
-    HttpResponse response = getMetadataResponse(getServiceAccountsUrl());
+    HttpResponse response = getMetadataResponse(ComputeEngineUtils.getServiceAccountsUrl());
     int statusCode = response.getStatusCode();
     if (statusCode == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
       throw new IOException(

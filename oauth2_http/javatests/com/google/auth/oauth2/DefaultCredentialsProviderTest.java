@@ -159,14 +159,14 @@ class DefaultCredentialsProviderTest {
         "No credential expected.");
     assertEquals(
         transportFactory.transport.getRequestCount(),
-        ComputeEngineCredentials.MAX_COMPUTE_PING_TRIES);
+        ComputeEngineUtils.MAX_COMPUTE_PING_TRIES);
     assertThrows(
         IOException.class,
         () -> testProvider.getDefaultCredentials(transportFactory),
         "No credential expected.");
     assertEquals(
         transportFactory.transport.getRequestCount(),
-        ComputeEngineCredentials.MAX_COMPUTE_PING_TRIES);
+        ComputeEngineUtils.MAX_COMPUTE_PING_TRIES);
   }
 
   @Test
@@ -337,7 +337,7 @@ class DefaultCredentialsProviderTest {
     String testUrl = "192.0.2.0";
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setEnv(DefaultCredentialsProvider.GCE_METADATA_HOST_ENV_VAR, testUrl);
-    assertEquals(ComputeEngineCredentials.getMetadataServerUrl(testProvider), "http://" + testUrl);
+    assertEquals(ComputeEngineUtils.getMetadataServerUrl(testProvider), "http://" + testUrl);
   }
 
   @Test
@@ -346,7 +346,7 @@ class DefaultCredentialsProviderTest {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setEnv(DefaultCredentialsProvider.GCE_METADATA_HOST_ENV_VAR, testUrl);
     assertEquals(
-        ComputeEngineCredentials.getTokenServerEncodedUrl(testProvider),
+        ComputeEngineUtils.getTokenServerEncodedUrl(testProvider),
         "http://" + testUrl + "/computeMetadata/v1/instance/service-accounts/default/token");
   }
 
