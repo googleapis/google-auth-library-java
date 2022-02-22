@@ -57,7 +57,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.logging.Logger;
 
 /**
  * OAuth2 credentials representing the built-in service account for a Google Compute Engine VM.

@@ -158,15 +158,13 @@ class DefaultCredentialsProviderTest {
         () -> testProvider.getDefaultCredentials(transportFactory),
         "No credential expected.");
     assertEquals(
-        transportFactory.transport.getRequestCount(),
-        ComputeEngineUtils.MAX_COMPUTE_PING_TRIES);
+        transportFactory.transport.getRequestCount(), ComputeEngineUtils.MAX_COMPUTE_PING_TRIES);
     assertThrows(
         IOException.class,
         () -> testProvider.getDefaultCredentials(transportFactory),
         "No credential expected.");
     assertEquals(
-        transportFactory.transport.getRequestCount(),
-        ComputeEngineUtils.MAX_COMPUTE_PING_TRIES);
+        transportFactory.transport.getRequestCount(), ComputeEngineUtils.MAX_COMPUTE_PING_TRIES);
   }
 
   @Test

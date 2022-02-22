@@ -70,7 +70,8 @@ public final class ComputeEngineUtils {
   private ComputeEngineUtils() {}
 
   /** Returns {@code true} if currently running on Google Compute Environment (GCE). */
-  public static synchronized boolean isOnGce(HttpTransportFactory transportFactory, DefaultCredentialsProvider provider) {
+  public static synchronized boolean isOnGce(
+      HttpTransportFactory transportFactory, DefaultCredentialsProvider provider) {
     boolean result = isRunningOnGce();
 
     if (!result) {
