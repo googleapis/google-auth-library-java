@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.5.1](https://github.com/googleapis/google-auth-library-java/compare/v1.5.0...v1.5.1) (2022-02-22)
+
+
+### Bug Fixes
+
+* **deps:** update dependency org.apache.maven.plugins:maven-javadoc-plugin to v3.3.2 ([#852](https://github.com/googleapis/google-auth-library-java/issues/852)) ([aa557c7](https://github.com/googleapis/google-auth-library-java/commit/aa557c7545941d712339b4b62a413997a54bcccc))
+
 ## [1.5.0](https://github.com/googleapis/google-auth-library-java/compare/v1.4.0...v1.5.0) (2022-02-14)
 
 
