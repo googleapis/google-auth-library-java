@@ -74,11 +74,21 @@ libraryDependencies += "com.google.auth" % "google-auth-library-oauth2-http" % "
 
 ### Application Default Credentials
 
-This library provides an implementation of [Application Default Credentials](https://cloud.google.com/docs/authentication/getting-started) for Java. The [Application Default Credentials](https://cloud.google.com/docs/authentication/getting-started) provide a simple way to get authorization credentials for use in calling Google APIs.
+This library provides an implementation of [Application Default Credentials](https://cloud.google.com/docs/authentication/getting-started)
+for Java. The [Application Default Credentials](https://cloud.google.com/docs/authentication/getting-started) 
+provide a simple way to get authorization credentials for use in calling Google APIs.
 
-They are best suited for cases when the call needs to have the same identity and authorization level for the application independent of the user. This is the recommended approach to authorize calls to Cloud APIs, particularly when you're building an application that uses Google Cloud Platform.
+They are best suited for cases when the call needs to have the same identity and 
+authorization level for the application independent of the user. This is the recommended 
+approach to authorize calls to Cloud APIs, particularly when you're building an application 
+that uses Google Cloud Platform.
 
-Application Default Credentials also support workload identity federation to access Google Cloud resources from non-Google Cloud platforms including Amazon Web Services (AWS), Microsoft Azure or any identity provider that supports OpenID Connect (OIDC). Workload identity federation is recommended for non-Google Cloud environments as it avoids the need to download, manage and store service account private keys locally, see: [Workload Identity Federation](#workload-identity-federation).
+Application Default Credentials also support workload identity federation to access 
+Google Cloud resources from non-Google Cloud platforms including Amazon Web Services (AWS), 
+Microsoft Azure or any identity provider that supports OpenID Connect (OIDC). Workload 
+identity federation is recommended for non-Google Cloud environments as it avoids the 
+need to download, manage and store service account private keys locally, see: 
+[Workload Identity Federation](#workload-identity-federation).
 
 #### Getting Application Default Credentials
 
@@ -659,7 +669,6 @@ Credentials credentials =
 
 Java Version | Status
 ------------ | ------
-Java 7 | [![Kokoro CI](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java7.svg)](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java7.html)
 Java 8 | [![Kokoro CI](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8.svg)](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8.html)
 Java 8 OSX | [![Kokoro CI](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8-osx.svg)](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8-osx.html)
 Java 8 Windows | [![Kokoro CI](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8-win.svg)](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8-win.html)
