@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.5.3](https://github.com/googleapis/google-auth-library-java/compare/v1.5.2...v1.5.3) (2022-02-24)
+
+
+### Bug Fixes
+
+* **ci:** downgrade nexus-staging-maven-plugin to 1.6.8 ([#874](https://github.com/googleapis/google-auth-library-java/issues/874)) ([fc331d4](https://github.com/googleapis/google-auth-library-java/commit/fc331d466286d99cb3c6aa8977d34fd5f224eff7))
+
 ### [1.5.2](https://github.com/googleapis/google-auth-library-java/compare/v1.5.1...v1.5.2) (2022-02-24)
 
 
