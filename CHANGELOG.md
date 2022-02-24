@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.5.2](https://github.com/googleapis/google-auth-library-java/compare/v1.5.1...v1.5.2) (2022-02-24)
+
+
+### Bug Fixes
+
+* downgrading nexus staging plugin 1.6.8 ([#871](https://github.com/googleapis/google-auth-library-java/issues/871)) ([e87224c](https://github.com/googleapis/google-auth-library-java/commit/e87224cca10d5d24523a5c3ac1e829fd51089f0c))
+
 ### [1.5.1](https://github.com/googleapis/google-auth-library-java/compare/v1.5.0...v1.5.1) (2022-02-22)
 
 
