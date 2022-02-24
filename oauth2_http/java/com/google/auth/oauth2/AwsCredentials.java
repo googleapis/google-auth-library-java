@@ -60,13 +60,17 @@ import javax.annotation.Nullable;
  */
 public class AwsCredentials extends ExternalAccountCredentials {
 
+  static final String AWS_IMDSV2_SESSION_TOKEN_HEADER = "x-aws-ec2-metadata-token";
+  static final String AWS_IMDSV2_SESSION_TOKEN_TTL_HEADER = "x-aws-ec2-metadata-token-ttl-seconds";
+  static final String AWS_IMDSV2_SESSION_TOKEN_TTL = "300";
+
   /**
    * The AWS credential source. Stores data required to retrieve the AWS credential from the AWS
    * metadata server.
    */
   static class AwsCredentialSource extends CredentialSource {
 
-    private static final String imdsv2SessionTokenUrlFieldName = "imdsv2_session_token_url";
+    private static final String IMDSV2_SESSION_TOKEN_URL_FIELD_NAME = "imdsv2_session_token_url";
 
     private final String regionUrl;
     private final String url;
@@ -115,18 +119,14 @@ public class AwsCredentials extends ExternalAccountCredentials {
       this.regionalCredentialVerificationUrl =
           (String) credentialSourceMap.get("regional_cred_verification_url");
 
-      if (credentialSourceMap.containsKey(imdsv2SessionTokenUrlFieldName)) {
+      if (credentialSourceMap.containsKey(IMDSV2_SESSION_TOKEN_URL_FIELD_NAME)) {
         this.imdsv2SessionTokenUrl =
-            (String) credentialSourceMap.get(imdsv2SessionTokenUrlFieldName);
+            (String) credentialSourceMap.get(IMDSV2_SESSION_TOKEN_URL_FIELD_NAME);
       } else {
         this.imdsv2SessionTokenUrl = null;
       }
     }
   }
-
-  static final String AWS_IMDSV2_SESSION_TOKEN_HEADER = "x-aws-ec2-metadata-token";
-  static final String AWS_IMDSV2_SESSION_TOKEN_TTL_HEADER = "x-aws-ec2-metadata-token-ttl-seconds";
-  static final String AWS_IMDSV2_SESSION_TOKEN_TTL = "300";
 
   private final AwsCredentialSource awsCredentialSource;
 
@@ -153,20 +153,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
   @Override
   public String retrieveSubjectToken() throws IOException {
-    // AWS IDMSv2 introduced a requirement for a session token to be present
-    // with the requests made to metadata endpoints. This requirement is to help
-    // prevent SSRF attacks.
-    // Presence of "imdsv2_session_token_url" in Credential Source of config file
-    // will trigger a flow with session token, else there will not be a session
-    // token with the metadata requests.
-    // Both flows work for IDMS v1 and v2. But if IDMSv2 is enabled, then if
-    // session token is not present, Unauthorized exception will be thrown.
-    Map<String, Object> metadataRequestHeaders = new HashMap<>();
-    if (awsCredentialSource.imdsv2SessionTokenUrl != null) {
-      metadataRequestHeaders.put(
-          AWS_IMDSV2_SESSION_TOKEN_HEADER,
-          getAwsImdsv2SessionToken(awsCredentialSource.imdsv2SessionTokenUrl));
-    }
+    Map<String, Object> metadataRequestHeaders = createMetadataRequestHeaders(awsCredentialSource);
 
     // The targeted region is required to generate the signed request. The regional
     // endpoint must also be used.
@@ -251,23 +238,38 @@ public class AwsCredentials extends ExternalAccountCredentials {
     return URLEncoder.encode(token.toString(), "UTF-8");
   }
 
-  String getAwsImdsv2SessionToken(String imdsv2SessionTokenUrl) throws IOException {
-    Map<String, Object> tokenRequestHeaders =
-        new HashMap<String, Object>() {
-          {
-            put(AWS_IMDSV2_SESSION_TOKEN_TTL_HEADER, AWS_IMDSV2_SESSION_TOKEN_TTL);
-          }
-        };
+  Map<String, Object> createMetadataRequestHeaders(AwsCredentialSource awsCredentialSource)
+      throws IOException {
+    Map<String, Object> metadataRequestHeaders = new HashMap<>();
 
-    String imdsv2SessionToken =
-        retrieveResource(
-            imdsv2SessionTokenUrl,
-            "Session Token",
-            HttpMethods.PUT,
-            tokenRequestHeaders,
-            /* content= */ null);
+    // AWS IDMSv2 introduced a requirement for a session token to be present
+    // with the requests made to metadata endpoints. This requirement is to help
+    // prevent SSRF attacks.
+    // Presence of "imdsv2_session_token_url" in Credential Source of config file
+    // will trigger a flow with session token, else there will not be a session
+    // token with the metadata requests.
+    // Both flows work for IDMS v1 and v2. But if IDMSv2 is enabled, then if
+    // session token is not present, Unauthorized exception will be thrown.
+    if (awsCredentialSource.imdsv2SessionTokenUrl != null) {
+      Map<String, Object> tokenRequestHeaders =
+          new HashMap<String, Object>() {
+            {
+              put(AWS_IMDSV2_SESSION_TOKEN_TTL_HEADER, AWS_IMDSV2_SESSION_TOKEN_TTL);
+            }
+          };
 
-    return imdsv2SessionToken;
+      String imdsv2SessionToken =
+          retrieveResource(
+              awsCredentialSource.imdsv2SessionTokenUrl,
+              "Session Token",
+              HttpMethods.PUT,
+              tokenRequestHeaders,
+              /* content= */ null);
+
+      metadataRequestHeaders.put(AWS_IMDSV2_SESSION_TOKEN_HEADER, imdsv2SessionToken);
+    }
+
+    return metadataRequestHeaders;
   }
 
   @VisibleForTesting
