@@ -411,7 +411,7 @@ public class ExternalAccountCredentialsTest {
 
     // Validate no internal options set.
     Map<String, String> query =
-        TestUtils.parseQuery(transportFactory.transport.getRequest().getContentAsString());
+        TestUtils.parseQuery(transportFactory.transport.getLastRequest().getContentAsString());
     assertNull(query.get("options"));
   }
 
@@ -435,7 +435,7 @@ public class ExternalAccountCredentialsTest {
 
     // Validate internal options set.
     Map<String, String> query =
-        TestUtils.parseQuery(transportFactory.transport.getRequest().getContentAsString());
+        TestUtils.parseQuery(transportFactory.transport.getLastRequest().getContentAsString());
     assertNotNull(query.get("options"));
     assertEquals(internalOptions.toString(), query.get("options"));
   }
@@ -457,7 +457,7 @@ public class ExternalAccountCredentialsTest {
 
     // Validate internal options set.
     Map<String, String> query =
-        TestUtils.parseQuery(transportFactory.transport.getRequest().getContentAsString());
+        TestUtils.parseQuery(transportFactory.transport.getLastRequest().getContentAsString());
     GenericJson internalOptions = new GenericJson();
     internalOptions.setFactory(OAuth2Utils.JSON_FACTORY);
     internalOptions.put("userProject", "userProject");
@@ -485,7 +485,7 @@ public class ExternalAccountCredentialsTest {
 
     // Validate internal options set.
     Map<String, String> query =
-        TestUtils.parseQuery(transportFactory.transport.getRequest().getContentAsString());
+        TestUtils.parseQuery(transportFactory.transport.getLastRequest().getContentAsString());
     assertNotNull(query.get("options"));
     assertEquals(internalOptions.toString(), query.get("options"));
   }
