@@ -191,6 +191,11 @@ Where the following variables need to be substituted:
 
 This generates the configuration file in the specified output file.
 
+If you want to use the AWS IMDSv2 flow, you can add the field below to the credential_source in your AWS ADC configuration file:
+"imdsv2_session_token_url": "http://169.254.169.254/latest/api/token"
+
+The gcloud create-cred-config command will be updated to support this soon.
+
 You can now [use the Auth library](#using-external-identities) to call Google Cloud
 resources from AWS.
 

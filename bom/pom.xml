@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.auth</groupId>
   <artifactId>google-auth-library-bom</artifactId>
-  <version>1.5.1-SNAPSHOT</version><!-- {x-version-update:google-auth-library-bom:current} -->
+  <version>1.5.4-SNAPSHOT</version><!-- {x-version-update:google-auth-library-bom:current} -->
   <packaging>pom</packaging>
   <name>Google Auth Library for Java BOM</name>
   <description>
@@ -72,7 +72,7 @@
       <plugin>
         <groupId>org.sonatype.plugins</groupId>
         <artifactId>nexus-staging-maven-plugin</artifactId>
-        <version>1.6.11</version>
+        <version>1.6.8</version>
         <extensions>true</extensions>
         <configuration>
           <serverId>ossrh</serverId>
