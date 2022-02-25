@@ -74,8 +74,8 @@ libraryDependencies += "com.google.auth" % "google-auth-library-oauth2-http" % "
 
 ### Application Default Credentials
 
-This library provides an implementation of [Application Default Credentials](https://cloud.google.com/docs/authentication/getting-started)
-for Java. The [Application Default Credentials](https://cloud.google.com/docs/authentication/getting-started) 
+This library provides an implementation of [Application Default Credentials](https://google.aip.dev/auth/4110)
+for Java. The [Application Default Credentials](https://google.aip.dev/auth/4110) 
 provide a simple way to get authorization credentials for use in calling Google APIs.
 
 They are best suited for cases when the call needs to have the same identity and 
