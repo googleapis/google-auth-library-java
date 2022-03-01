@@ -2,22 +2,39 @@
 
 Open source authentication client library for Java.
 
-[![unstable](http://badges.github.io/stability-badges/dist/unstable.svg)](http://github.com/badges/stability-badges)
+[![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges)
 [![Maven](https://img.shields.io/maven-central/v/com.google.auth/google-auth-library-credentials.svg)](https://img.shields.io/maven-central/v/com.google.auth/google-auth-library-credentials.svg)
 
 -  [API Documentation](https://googleapis.dev/java/google-auth-library/latest)
 
 This project consists of 3 artifacts:
 
--  [*google-auth-library-credentials*](#google-auth-library-credentials): contains base classes and
+- [*google-auth-library-credentials*](#google-auth-library-credentials): contains base classes and
 interfaces for Google credentials
--  [*google-auth-library-appengine*](#google-auth-library-appengine): contains App Engine
+- [*google-auth-library-appengine*](#google-auth-library-appengine): contains App Engine
 credentials. This artifact depends on the App Engine SDK.
--  [*google-auth-library-oauth2-http*](#google-auth-library-oauth2-http): contains a wide variety of
+- [*google-auth-library-oauth2-http*](#google-auth-library-oauth2-http): contains a wide variety of
 credentials as well as utility methods to create them and to get Application Default Credentials
 
-> Note: This client is a work-in-progress, and may occasionally
-> make backwards-incompatible changes.
+**Table of contents:**
+
+
+* [Quickstart](#quickstart)
+
+* [google-auth-library-oauth2-http](#google-auth-library-oauth2-http)
+  * [Application Default Credentials](#application-default-credentials)
+  * [ImpersonatedCredentials](#impersonatedcredentials)
+  * [Workload Identity Federation](#workload-identity-federation)
+  * [Downscoping with Credential Access Boundaries](#downscoping-with-credential-access-boundaries)
+  * [Configuring a Proxy](#configuring-a-proxy)
+  * [Using Credentials with google-http-client](#using-credentials-with-google-http-client)
+  * [Verifying JWT Tokens](#verifying-a-signature)
+* [google-auth-library-credentials](#google-auth-library-credentials)
+* [google-auth-library-appengine](#google-auth-library-appengine)
+* [CI Status](#ci-status)
+* [Contributing](#contributing)
+* [License](#license)
+
 
 ## Quickstart
 
@@ -53,64 +70,27 @@ libraryDependencies += "com.google.auth" % "google-auth-library-oauth2-http" % "
 ```
 [//]: # ({x-version-update-end})
 
-## google-auth-library-credentials
-
-This artifact contains base classes and interfaces for Google credentials:
-- `Credentials`: base class for an authorized identity. Implementations of this class can be used to
-authorize your application
-- `RequestMetadataCallback`: interface for the callback that receives the result of the asynchronous
-`Credentials.getRequestMetadata(URI, Executor, RequestMetadataCallback)`
-- `ServiceAccountSigner`: interface for a service account signer. Implementations of this class are
-capable of signing byte arrays using the credentials associated to a Google Service Account
-
-## google-auth-library-appengine
-
-This artifact depends on the App Engine SDK (`appengine-api-1.0-sdk`) and should be used only by
-applications running on App Engine environments that use urlfetch. The `AppEngineCredentials` class
-allows you to authorize your App Engine application given an instance of
-[AppIdentityService][appengine-app-identity-service].
-
-Usage:
-
-```java
-import com.google.appengine.api.appidentity.AppIdentityService;
-import com.google.appengine.api.appidentity.AppIdentityServiceFactory;
-import com.google.auth.Credentials;
-import com.google.auth.appengine.AppEngineCredentials;
-
-AppIdentityService appIdentityService = AppIdentityServiceFactory.getAppIdentityService();
-
-Credentials credentials =
-    AppEngineCredentials.newBuilder()
-        .setScopes(...)
-        .setAppIdentityService(appIdentityService)
-        .build();
-```
-
-**Important: `com.google.auth.appengine.AppEngineCredentials` is a separate class from
-`com.google.auth.oauth2.AppEngineCredentials`.**
-
 ## google-auth-library-oauth2-http
 
 ### Application Default Credentials
 
-This artifact contains a wide variety of credentials as well as utility methods to create them and
-to get Application Default Credentials.
-Credentials classes contained in this artifact are:
-- `CloudShellCredentials`: credentials for Google Cloud Shell built-in service account
-- `ComputeEngineCredentials`: credentials for Google Compute Engine built-in service account
-- `OAuth2Credentials`: base class for OAuth2-based credentials
-- `ServiceAccountCredentials`: credentials for a Service Account - use a JSON Web Token (JWT) to get
-access tokens
-- `ServiceAccountJwtAccessCredentials`: credentials for a Service Account - use JSON Web Token (JWT)
-directly in the request metadata to provide authorization
-- `UserCredentials`: credentials for a user identity and consent
-- `ExternalAccountCredentials`: base class for credentials using workload identity federation to 
-access Google Cloud resources from non-Google Cloud platforms
-- `IdentityPoolCredentials`: credentials using workload identity federation to access Google Cloud 
-resources from Microsoft Azure or any identity provider that supports OpenID Connect (OIDC)
-- `AwsCredentials`: credentials using workload identity federation to access Google Cloud resources 
-from Amazon Web Services (AWS)
+This library provides an implementation of [Application Default Credentials](https://google.aip.dev/auth/4110)
+for Java. The [Application Default Credentials](https://google.aip.dev/auth/4110) 
+provide a simple way to get authorization credentials for use in calling Google APIs.
+
+They are best suited for cases when the call needs to have the same identity and 
+authorization level for the application independent of the user. This is the recommended 
+approach to authorize calls to Cloud APIs, particularly when you're building an application 
+that uses Google Cloud Platform.
+
+Application Default Credentials also support workload identity federation to access 
+Google Cloud resources from non-Google Cloud platforms including Amazon Web Services (AWS), 
+Microsoft Azure or any identity provider that supports OpenID Connect (OIDC). Workload 
+identity federation is recommended for non-Google Cloud environments as it avoids the 
+need to download, manage and store service account private keys locally, see: 
+[Workload Identity Federation](#workload-identity-federation).
+
+#### Getting Application Default Credentials
 
 To get Application Default Credentials use `GoogleCredentials.getApplicationDefault()` or
 `GoogleCredentials.getApplicationDefault(HttpTransportFactory)`. These methods return the
@@ -125,7 +105,7 @@ following are searched (in order) to find the Application Default Credentials:
    - Skip this check by setting the environment variable `NO_GCE_CHECK=true`
    - Customize the GCE metadata server address by setting the environment variable `GCE_METADATA_HOST=<hostname>`
 
-### Explicit Credential Loading
+#### Explicit Credential Loading
 
 To get Credentials from a Service Account JSON key use `GoogleCredentials.fromStream(InputStream)`
 or `GoogleCredentials.fromStream(InputStream, HttpTransportFactory)`. Note that the credentials must
@@ -210,6 +190,11 @@ Where the following variables need to be substituted:
 - `$SERVICE_ACCOUNT_EMAIL`: The email of the service account to impersonate.
 
 This generates the configuration file in the specified output file.
+
+If you want to use the AWS IMDSv2 flow, you can add the field below to the credential_source in your AWS ADC configuration file:
+"imdsv2_session_token_url": "http://169.254.169.254/latest/api/token"
+
+The gcloud create-cred-config command will be updated to support this soon.
 
 You can now [use the Auth library](#using-external-identities) to call Google Cloud
 resources from AWS.
@@ -647,11 +632,48 @@ try {
 
 For more options, see the [`TokenVerifier.Builder`][token-verifier-builder] documentation.
 
+
+## google-auth-library-credentials
+
+This artifact contains base classes and interfaces for Google credentials:
+- `Credentials`: base class for an authorized identity. Implementations of this class can be used to
+  authorize your application
+- `RequestMetadataCallback`: interface for the callback that receives the result of the asynchronous
+  `Credentials.getRequestMetadata(URI, Executor, RequestMetadataCallback)`
+- `ServiceAccountSigner`: interface for a service account signer. Implementations of this class are
+  capable of signing byte arrays using the credentials associated to a Google Service Account
+
+## google-auth-library-appengine
+
+This artifact depends on the App Engine SDK (`appengine-api-1.0-sdk`) and should be used only by
+applications running on App Engine environments that use urlfetch. The `AppEngineCredentials` class
+allows you to authorize your App Engine application given an instance of
+[AppIdentityService][appengine-app-identity-service].
+
+Usage:
+
+```java
+import com.google.appengine.api.appidentity.AppIdentityService;
+import com.google.appengine.api.appidentity.AppIdentityServiceFactory;
+import com.google.auth.Credentials;
+import com.google.auth.appengine.AppEngineCredentials;
+
+AppIdentityService appIdentityService = AppIdentityServiceFactory.getAppIdentityService();
+
+Credentials credentials =
+    AppEngineCredentials.newBuilder()
+        .setScopes(...)
+        .setAppIdentityService(appIdentityService)
+        .build();
+```
+
+**Important: `com.google.auth.appengine.AppEngineCredentials` is a separate class from
+`com.google.auth.oauth2.AppEngineCredentials`.**
+
 ## CI Status
 
 Java Version | Status
 ------------ | ------
-Java 7 | [![Kokoro CI](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java7.svg)](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java7.html)
 Java 8 | [![Kokoro CI](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8.svg)](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8.html)
 Java 8 OSX | [![Kokoro CI](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8-osx.svg)](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8-osx.html)
 Java 8 Windows | [![Kokoro CI](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8-win.svg)](http://storage.googleapis.com/cloud-devrel-public/java/badges/google-auth-library-java/java8-win.html)
