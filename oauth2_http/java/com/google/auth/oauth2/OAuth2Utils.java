@@ -50,8 +50,11 @@ import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /** Internal utilities for the com.google.auth.oauth2 namespace. */
 class OAuth2Utils {
@@ -73,6 +76,11 @@ class OAuth2Utils {
   private static String VALUE_WRONG_TYPE_MESSAGE = "%sExpected %s value %s of wrong type.";
 
   static final String BEARER_PREFIX = AuthHttpConstants.BEARER + " ";
+
+  // Includes expected server errors from Google token endpoint
+  // Other 5xx codes are either not used or retries are unlikely to succeed
+  public static final Set<Integer> TOKEN_ENDPOINT_RETRYABLE_STATUS_CODES =
+      new HashSet<>(Arrays.asList(500, 503, 408, 429));
 
   static class DefaultHttpTransportFactory implements HttpTransportFactory {
 
