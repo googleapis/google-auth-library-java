@@ -60,7 +60,13 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.security.PrivateKey;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.Map;
 
 import com.google.common.collect.ImmutableSet;
 import org.junit.jupiter.api.BeforeEach;
@@ -104,8 +110,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
           + "CJzdWIiOiIxMDIxMDE1NTA4MzQyMDA3MDg1NjgifQ.redacted";
   public static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
 
-  private static final Set<String> IMMUTABLE_SCOPES = ImmutableSet.of("scope1","scope2");
-
+  private static final Set<String> IMMUTABLE_SCOPES_SET = ImmutableSet.of("scope1","scope2");
   private static final String PROJECT_ID = "project-id";
   public static final String IMPERSONATED_CLIENT_EMAIL =
       "impersonated-account@iam.gserviceaccount.com";
@@ -316,7 +321,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
                     QUOTA_PROJECT_ID);
 
     ImpersonatedCredentials scoped_credentials =
-            (ImpersonatedCredentials) targetCredentials.createScoped(IMMUTABLE_SCOPES);
+            (ImpersonatedCredentials) targetCredentials.createScoped(IMMUTABLE_SCOPES_SET);
     assertEquals(targetCredentials.getAccount(), scoped_credentials.getAccount());
     assertEquals(targetCredentials.getDelegates(), scoped_credentials.getDelegates());
     assertEquals(targetCredentials.getLifetime(), scoped_credentials.getLifetime());
