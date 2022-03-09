@@ -365,12 +365,19 @@ public class ImpersonatedCredentials extends GoogleCredentials
   @Override
   public GoogleCredentials createScoped(Collection<String> scopes) {
     return toBuilder()
-        .setScopes((List<String>) scopes)
+        .setScopes(toList(scopes))
         .setLifetime(this.lifetime)
         .setDelegates(this.delegates)
         .setHttpTransportFactory(this.transportFactory)
         .setQuotaProjectId(this.quotaProjectId)
         .build();
+  }
+
+  private static <T> List<T> toList(Collection<T> collection) {
+    if (collection instanceof List) {
+      return (List<T>) collection;
+    }
+    return new ArrayList<>(collection);
   }
 
   @Override

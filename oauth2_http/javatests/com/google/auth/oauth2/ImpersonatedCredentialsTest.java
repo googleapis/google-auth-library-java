@@ -64,6 +64,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -842,6 +843,14 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
     assertEquals(targetCredentials.hashCode(), deserializedCredentials.hashCode());
     assertEquals(targetCredentials.toString(), deserializedCredentials.toString());
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
+  }
+
+  @Test
+  void testCreateScoped() {
+    final ImpersonatedCredentials credentials =
+        ImpersonatedCredentials.newBuilder().setScopes(new ArrayList<>()).build();
+    // Verify that this does not throw an exception
+    credentials.createScoped(new HashSet<>());
   }
 
   public static String getDefaultExpireTime() {
