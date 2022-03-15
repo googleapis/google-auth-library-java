@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.6.0](https://github.com/googleapis/google-auth-library-java/compare/v1.5.3...v1.6.0) (2022-03-15)
+
+
+### Features
+
+* Add AWS Session Token to Metadata Requests ([#850](https://github.com/googleapis/google-auth-library-java/issues/850)) ([577e9a5](https://github.com/googleapis/google-auth-library-java/commit/577e9a52204b0d6026a302bb7efe2c6162d57945))
+
+
+### Bug Fixes
+
+* ImmutableSet converted to List for Impersonated Credentials ([#732](https://github.com/googleapis/google-auth-library-java/issues/732)) ([7dcd549](https://github.com/googleapis/google-auth-library-java/commit/7dcd549c4ef0617e657315b7a718368fbd162997))
+* update library docs ([#868](https://github.com/googleapis/google-auth-library-java/issues/868)) ([a081015](https://github.com/googleapis/google-auth-library-java/commit/a081015cb72ade91c022b58261c8d253e46a7793))
+
 ### [1.5.3](https://github.com/googleapis/google-auth-library-java/compare/v1.5.2...v1.5.3) (2022-02-24)
 
 
