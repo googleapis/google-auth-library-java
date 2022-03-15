@@ -54,6 +54,7 @@ import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -65,10 +66,8 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 import java.util.Map;
-
-import com.google.common.collect.ImmutableSet;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -110,12 +109,11 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
           + "CJzdWIiOiIxMDIxMDE1NTA4MzQyMDA3MDg1NjgifQ.redacted";
   public static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
 
-  private static final Set<String> IMMUTABLE_SCOPES_SET = ImmutableSet.of("scope1","scope2");
+  private static final Set<String> IMMUTABLE_SCOPES_SET = ImmutableSet.of("scope1", "scope2");
   private static final String PROJECT_ID = "project-id";
   public static final String IMPERSONATED_CLIENT_EMAIL =
       "impersonated-account@iam.gserviceaccount.com";
-  private static final List<String> IMMUTABLE_SCOPES_LIST =
-          ImmutableList.of("scope1", "scope2");
+  private static final List<String> IMMUTABLE_SCOPES_LIST = ImmutableList.of("scope1", "scope2");
   private static final int VALID_LIFETIME = 300;
   private static final int INVALID_LIFETIME = 43210;
   private static JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
@@ -311,22 +309,22 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
   @Test
   void createScopedWithImmutableScopes() {
     ImpersonatedCredentials targetCredentials =
-            ImpersonatedCredentials.create(
-                    sourceCredentials,
-                    IMPERSONATED_CLIENT_EMAIL,
-                    DELEGATES,
-                    IMMUTABLE_SCOPES_LIST,
-                    VALID_LIFETIME,
-                    mockTransportFactory,
-                    QUOTA_PROJECT_ID);
+        ImpersonatedCredentials.create(
+            sourceCredentials,
+            IMPERSONATED_CLIENT_EMAIL,
+            DELEGATES,
+            IMMUTABLE_SCOPES_LIST,
+            VALID_LIFETIME,
+            mockTransportFactory,
+            QUOTA_PROJECT_ID);
 
     ImpersonatedCredentials scoped_credentials =
-            (ImpersonatedCredentials) targetCredentials.createScoped(IMMUTABLE_SCOPES_SET);
+        (ImpersonatedCredentials) targetCredentials.createScoped(IMMUTABLE_SCOPES_SET);
     assertEquals(targetCredentials.getAccount(), scoped_credentials.getAccount());
     assertEquals(targetCredentials.getDelegates(), scoped_credentials.getDelegates());
     assertEquals(targetCredentials.getLifetime(), scoped_credentials.getLifetime());
     assertEquals(
-            targetCredentials.getSourceCredentials(), scoped_credentials.getSourceCredentials());
+        targetCredentials.getSourceCredentials(), scoped_credentials.getSourceCredentials());
     assertEquals(targetCredentials.getQuotaProjectId(), scoped_credentials.getQuotaProjectId());
     assertEquals(Arrays.asList("scope1", "scope2"), scoped_credentials.getScopes());
   }
@@ -405,7 +403,11 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             () -> {
               ImpersonatedCredentials targetCredentials =
                   ImpersonatedCredentials.create(
-                      sourceCredentials, IMPERSONATED_CLIENT_EMAIL, null, IMMUTABLE_SCOPES_LIST, INVALID_LIFETIME);
+                      sourceCredentials,
+                      IMPERSONATED_CLIENT_EMAIL,
+                      null,
+                      IMMUTABLE_SCOPES_LIST,
+                      INVALID_LIFETIME);
               targetCredentials.refreshAccessToken().getTokenValue();
             },
             String.format(
