@@ -54,6 +54,7 @@ import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -66,6 +67,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -107,11 +109,11 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
           + "CJzdWIiOiIxMDIxMDE1NTA4MzQyMDA3MDg1NjgifQ.redacted";
   public static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
 
+  private static final Set<String> IMMUTABLE_SCOPES_SET = ImmutableSet.of("scope1", "scope2");
   private static final String PROJECT_ID = "project-id";
   public static final String IMPERSONATED_CLIENT_EMAIL =
       "impersonated-account@iam.gserviceaccount.com";
-  private static final List<String> SCOPES =
-      Arrays.asList("https://www.googleapis.com/auth/devstorage.read_only");
+  private static final List<String> IMMUTABLE_SCOPES_LIST = ImmutableList.of("scope1", "scope2");
   private static final int VALID_LIFETIME = 300;
   private static final int INVALID_LIFETIME = 43210;
   private static JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
@@ -156,7 +158,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             .setClientEmail(SA_CLIENT_EMAIL)
             .setPrivateKey(privateKey)
             .setPrivateKeyId(SA_PRIVATE_KEY_ID)
-            .setScopes(SCOPES)
+            .setScopes(IMMUTABLE_SCOPES_LIST)
             .setProjectId(PROJECT_ID)
             .setHttpTransportFactory(transportFactory)
             .build();
@@ -275,7 +277,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             sourceCredentials,
             IMPERSONATED_CLIENT_EMAIL,
             null,
-            SCOPES,
+            IMMUTABLE_SCOPES_LIST,
             VALID_LIFETIME,
             mockTransportFactory);
     assertFalse(targetCredentials.createScopedRequired());
@@ -288,13 +290,36 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             sourceCredentials,
             IMPERSONATED_CLIENT_EMAIL,
             DELEGATES,
-            SCOPES,
+            IMMUTABLE_SCOPES_LIST,
             VALID_LIFETIME,
             mockTransportFactory,
             QUOTA_PROJECT_ID);
 
     ImpersonatedCredentials scoped_credentials =
-        (ImpersonatedCredentials) targetCredentials.createScoped(Arrays.asList("scope1", "scope2"));
+        (ImpersonatedCredentials) targetCredentials.createScoped(IMMUTABLE_SCOPES_LIST);
+    assertEquals(targetCredentials.getAccount(), scoped_credentials.getAccount());
+    assertEquals(targetCredentials.getDelegates(), scoped_credentials.getDelegates());
+    assertEquals(targetCredentials.getLifetime(), scoped_credentials.getLifetime());
+    assertEquals(
+        targetCredentials.getSourceCredentials(), scoped_credentials.getSourceCredentials());
+    assertEquals(targetCredentials.getQuotaProjectId(), scoped_credentials.getQuotaProjectId());
+    assertEquals(Arrays.asList("scope1", "scope2"), scoped_credentials.getScopes());
+  }
+
+  @Test
+  void createScopedWithImmutableScopes() {
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            sourceCredentials,
+            IMPERSONATED_CLIENT_EMAIL,
+            DELEGATES,
+            IMMUTABLE_SCOPES_LIST,
+            VALID_LIFETIME,
+            mockTransportFactory,
+            QUOTA_PROJECT_ID);
+
+    ImpersonatedCredentials scoped_credentials =
+        (ImpersonatedCredentials) targetCredentials.createScoped(IMMUTABLE_SCOPES_SET);
     assertEquals(targetCredentials.getAccount(), scoped_credentials.getAccount());
     assertEquals(targetCredentials.getDelegates(), scoped_credentials.getDelegates());
     assertEquals(targetCredentials.getLifetime(), scoped_credentials.getLifetime());
@@ -319,7 +344,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             sourceCredentials,
             IMPERSONATED_CLIENT_EMAIL,
             null,
-            SCOPES,
+            IMMUTABLE_SCOPES_LIST,
             VALID_LIFETIME,
             mockTransportFactory);
 
@@ -348,7 +373,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             sourceCredentials,
             invalidTargetEmail,
             null,
-            SCOPES,
+            IMMUTABLE_SCOPES_LIST,
             VALID_LIFETIME,
             mockTransportFactory);
 
@@ -365,7 +390,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
   void credential_with_zero_lifetime() throws IllegalStateException {
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
-            sourceCredentials, IMPERSONATED_CLIENT_EMAIL, null, SCOPES, 0);
+            sourceCredentials, IMPERSONATED_CLIENT_EMAIL, null, IMMUTABLE_SCOPES_LIST, 0);
     assertEquals(3600, targetCredentials.getLifetime());
   }
 
@@ -378,7 +403,11 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             () -> {
               ImpersonatedCredentials targetCredentials =
                   ImpersonatedCredentials.create(
-                      sourceCredentials, IMPERSONATED_CLIENT_EMAIL, null, SCOPES, INVALID_LIFETIME);
+                      sourceCredentials,
+                      IMPERSONATED_CLIENT_EMAIL,
+                      null,
+                      IMMUTABLE_SCOPES_LIST,
+                      INVALID_LIFETIME);
               targetCredentials.refreshAccessToken().getTokenValue();
             },
             String.format(
@@ -415,7 +444,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             sourceCredentials,
             IMPERSONATED_CLIENT_EMAIL,
             null,
-            SCOPES,
+            IMMUTABLE_SCOPES_LIST,
             VALID_LIFETIME,
             mockTransportFactory);
 
@@ -433,7 +462,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             sourceCredentials,
             IMPERSONATED_CLIENT_EMAIL,
             null,
-            SCOPES,
+            IMMUTABLE_SCOPES_LIST,
             VALID_LIFETIME,
             mockTransportFactory,
             QUOTA_PROJECT_ID);
@@ -456,7 +485,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             sourceCredentials,
             IMPERSONATED_CLIENT_EMAIL,
             null,
-            SCOPES,
+            IMMUTABLE_SCOPES_LIST,
             VALID_LIFETIME,
             mockTransportFactory);
 
@@ -476,7 +505,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             sourceCredentials,
             IMPERSONATED_CLIENT_EMAIL,
             delegates,
-            SCOPES,
+            IMMUTABLE_SCOPES_LIST,
             VALID_LIFETIME,
             mockTransportFactory);
 
@@ -495,7 +524,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             sourceCredentials,
             IMPERSONATED_CLIENT_EMAIL,
             null,
-            SCOPES,
+            IMMUTABLE_SCOPES_LIST,
             VALID_LIFETIME,
             mockTransportFactory);
 
@@ -517,7 +546,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             sourceCredentials,
             IMPERSONATED_CLIENT_EMAIL,
             null,
-            SCOPES,
+            IMMUTABLE_SCOPES_LIST,
             VALID_LIFETIME,
             mockTransportFactory);
 
@@ -534,7 +563,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             sourceCredentials,
             IMPERSONATED_CLIENT_EMAIL,
             null,
-            SCOPES,
+            IMMUTABLE_SCOPES_LIST,
             VALID_LIFETIME,
             mockTransportFactory);
 
@@ -556,7 +585,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             sourceCredentials,
             IMPERSONATED_CLIENT_EMAIL,
             ImmutableList.of("delegate@example.com"),
-            SCOPES,
+            IMMUTABLE_SCOPES_LIST,
             VALID_LIFETIME,
             mockTransportFactory);
 
@@ -595,7 +624,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             sourceCredentials,
             IMPERSONATED_CLIENT_EMAIL,
             ImmutableList.of("delegate@example.com"),
-            SCOPES,
+            IMMUTABLE_SCOPES_LIST,
             VALID_LIFETIME,
             mockTransportFactory);
 
@@ -620,7 +649,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             sourceCredentials,
             IMPERSONATED_CLIENT_EMAIL,
             null,
-            SCOPES,
+            IMMUTABLE_SCOPES_LIST,
             VALID_LIFETIME,
             mockTransportFactory);
 
@@ -652,7 +681,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             sourceCredentials,
             IMPERSONATED_CLIENT_EMAIL,
             null,
-            SCOPES,
+            IMMUTABLE_SCOPES_LIST,
             VALID_LIFETIME,
             mockTransportFactory);
 
@@ -685,7 +714,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             sourceCredentials,
             IMPERSONATED_CLIENT_EMAIL,
             null,
-            SCOPES,
+            IMMUTABLE_SCOPES_LIST,
             VALID_LIFETIME,
             mockTransportFactory);
 
@@ -716,7 +745,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             sourceCredentials,
             IMPERSONATED_CLIENT_EMAIL,
             null,
-            SCOPES,
+            IMMUTABLE_SCOPES_LIST,
             VALID_LIFETIME,
             mockTransportFactory);
 
@@ -746,7 +775,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             sourceCredentials,
             IMPERSONATED_CLIENT_EMAIL,
             null,
-            SCOPES,
+            IMMUTABLE_SCOPES_LIST,
             VALID_LIFETIME,
             mockTransportFactory);
 
@@ -776,7 +805,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             sourceCredentials,
             IMPERSONATED_CLIENT_EMAIL,
             null,
-            SCOPES,
+            IMMUTABLE_SCOPES_LIST,
             VALID_LIFETIME,
             mockTransportFactory);
 
@@ -806,7 +835,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             sourceCredentials,
             IMPERSONATED_CLIENT_EMAIL,
             null,
-            SCOPES,
+            IMMUTABLE_SCOPES_LIST,
             VALID_LIFETIME,
             mockTransportFactory);
 
@@ -815,7 +844,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             sourceCredentials,
             IMPERSONATED_CLIENT_EMAIL,
             null,
-            SCOPES,
+            IMMUTABLE_SCOPES_LIST,
             VALID_LIFETIME,
             mockTransportFactory);
 
@@ -834,7 +863,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             sourceCredentials,
             IMPERSONATED_CLIENT_EMAIL,
             null,
-            SCOPES,
+            IMMUTABLE_SCOPES_LIST,
             VALID_LIFETIME,
             mockTransportFactory);
     GoogleCredentials deserializedCredentials = serializeAndDeserialize(targetCredentials);
