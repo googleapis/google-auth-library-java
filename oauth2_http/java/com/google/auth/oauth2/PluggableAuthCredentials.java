@@ -31,7 +31,7 @@
 
 package com.google.auth.oauth2;
 
-import com.google.auth.oauth2.PluggableAuthHandler.ExecutionOptions;
+import com.google.auth.oauth2.ExecutableHandler.ExecutableOptions;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.*;
 import java.math.BigDecimal;
@@ -171,7 +171,8 @@ public class PluggableAuthCredentials extends ExternalAccountCredentials {
     if (builder.handler != null) {
       handler = builder.handler;
     } else {
-      handler = new PluggableAuthHandler();
+      // TODO(lsirac): Initialize handler.
+      handler = null;
     }
 
     // Re-initialize impersonated credentials as the handler hasn't been set yet when
@@ -211,11 +212,30 @@ public class PluggableAuthCredentials extends ExternalAccountCredentials {
       envMap.put("GOOGLE_EXTERNAL_ACCOUNT_OUTPUT_FILE", outputFilePath);
     }
 
-    ExecutionOptions options =
-        ExecutionOptions.newBuilder(envMap, executableCommand)
-            .setTimeout(executableTimeoutMs)
-            .setOutputFilePath(outputFilePath)
-            .build();
+    // TODO(lsirac): replace with actual ExecutableOptions implementation.
+    ExecutableOptions options =
+        new ExecutableOptions() {
+          @Override
+          public String getExecutableCommand() {
+            return executableCommand;
+          }
+
+          @Override
+          public Map<String, String> getEnvironmentMap() {
+            return envMap;
+          }
+
+          @Override
+          public int getExecutableTimeoutMs() {
+            return executableTimeoutMs;
+          }
+
+          @Nullable
+          @Override
+          public String getOutputFilePath() {
+            return outputFilePath;
+          }
+        };
 
     // Delegate handling of the 3P executable to the handler.
     return this.handler.retrieveTokenFromExecutable(options);
