@@ -241,7 +241,6 @@ public class PluggableAuthCredentials extends ExternalAccountCredentials {
       envMap.put("GOOGLE_EXTERNAL_ACCOUNT_OUTPUT_FILE", outputFilePath);
     }
 
-    // TODO(lsirac): replace with actual ExecutableOptions implementation.
     ExecutableOptions options =
         new ExecutableOptions() {
           @Override
