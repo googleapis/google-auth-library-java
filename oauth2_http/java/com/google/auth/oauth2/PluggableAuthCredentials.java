@@ -55,34 +55,62 @@ import javax.annotation.Nullable;
  * required when an output_file is specified in the credential source, with the expectation being
  * that the output file will contain the JSON response instead.
  *
- * <p>OIDC response format { "version": 1, "success": true, "token_type":
- * "urn:ietf:params:oauth:token-type:id_token", "id_token": "HEADER.PAYLOAD.SIGNATURE",
- * "expiration_time": 1620433341 }
+ * <pre>
+ * OIDC response sample:
+ * {
+ *   "version": 1,
+ *   "success": true,
+ *   "token_type": "urn:ietf:params:oauth:token-type:id_token",
+ *   "id_token": "HEADER.PAYLOAD.SIGNATURE",
+ *   "expiration_time": 1620433341
+ * }
  *
- * <p>SAML2 response format { "version": 1, "success": true, "token_type":
- * "urn:ietf:params:oauth:token-type:saml2", "saml_response": "...", "expiration_time": 1620433341 }
+ * SAML2 response sample:
+ * {
+ *   "version": 1,
+ *   "success": true,
+ *   "token_type": "urn:ietf:params:oauth:token-type:saml2",
+ *   "saml_response": "...",
+ *   "expiration_time": 1620433341
+ * }
  *
- * <p>Error response format { "version": 1, "success": false, "code": "401", "message": "Error
- * message." }
+ * Error response sample:
+ * {
+ *   "version": 1,
+ *   "success": false,
+ *   "code": "401",
+ *   "message": "Error message."
+ * }
  *
- * <p>The auth libraries will populate certain environment variables that will be accessible by the
+ * The auth libraries will populate certain environment variables that will be accessible by the
  * executable, such as: GOOGLE_EXTERNAL_ACCOUNT_AUDIENCE, GOOGLE_EXTERNAL_ACCOUNT_TOKEN_TYPE,
  * GOOGLE_EXTERNAL_ACCOUNT_INTERACTIVE, GOOGLE_EXTERNAL_ACCOUNT_IMPERSONATED_EMAIL, and
  * GOOGLE_EXTERNAL_ACCOUNT_OUTPUT_FILE.
  *
  * <p>Please see this repositories README for a complete executable request/response specification.
+ * </pre>
  */
 public class PluggableAuthCredentials extends ExternalAccountCredentials {
 
   /**
    * Encapsulates the credential source portion of the configuration for PluggableAuthCredentials.
    *
-   * <p>Example credential source for Pluggable Auth credentials: "executable": { "command":
-   * "/path/to/get/credentials.sh --arg1=value1 --arg2=value2", "timeout_millis": 5000,
-   * "output_file": "/path/to/generated/cached/credentials" }
-   *
-   * <p>Command is the only required field. If timeout_millis is not specified, the executable will
+   * <p>Command is the only required field. If timeout_millis is not specified, the library will
    * default to a 30 second timeout.
+   *
+   * <pre>
+   * Sample credential source for Pluggable Auth credentials:
+   * {
+   *   ...
+   *   "credential_source": {
+   *     "executable": {
+   *       "command": "/path/to/get/credentials.sh --arg1=value1 --arg2=value2",
+   *       "timeout_millis": 5000,
+   *       "output_file": "/path/to/generated/cached/credentials"
+   *     }
+   *   }
+   * }
+   * </pre>
    */
   static class PluggableAuthCredentialSource extends CredentialSource {
 
@@ -93,13 +121,14 @@ public class PluggableAuthCredentials extends ExternalAccountCredentials {
     // The maximum timeout for waiting for the executable to finish (120 seconds).
     private static final int MAXIMUM_EXECUTABLE_TIMEOUT_MS = 120 * 1000;
 
-    // Required. The command used to retrieve the 3P token.
+    // Required. The command used to retrieve the 3rd party token.
     private final String executableCommand;
 
     // Optional. Set to the default timeout when not provided.
     private final int executableTimeoutMs;
 
-    // Optional. Provided when the 3P executable caches the response at the specified location.
+    // Optional. Provided when the 3rd party executable caches the response at the specified
+    // location.
     @Nullable private final String outputFilePath;
 
     PluggableAuthCredentialSource(Map<String, Object> credentialSourceMap) {
@@ -237,7 +266,7 @@ public class PluggableAuthCredentials extends ExternalAccountCredentials {
           }
         };
 
-    // Delegate handling of the 3P executable to the handler.
+    // Delegate handling of the executable to the handler.
     return this.handler.retrieveTokenFromExecutable(options);
   }
 
