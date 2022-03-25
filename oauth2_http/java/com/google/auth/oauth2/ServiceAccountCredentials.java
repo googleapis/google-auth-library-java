@@ -1052,8 +1052,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
       return this;
     }
 
-    public Builder setPrivateKeyString(String privateKeyPkcs8)
-        throws IOException {
+    public Builder setPrivateKeyString(String privateKeyPkcs8) throws IOException {
       this.privateKey = privateKeyFromPkcs8(privateKeyPkcs8);
       return this;
     }
