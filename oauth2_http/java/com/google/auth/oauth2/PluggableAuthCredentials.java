@@ -121,6 +121,10 @@ public class PluggableAuthCredentials extends ExternalAccountCredentials {
     // The maximum timeout for waiting for the executable to finish (120 seconds).
     private static final int MAXIMUM_EXECUTABLE_TIMEOUT_MS = 120 * 1000;
 
+    private static final String COMMAND_KEY = "command";
+    private static final String TIMEOUT_MILLIS_KEY = "timeout_millis";
+    private static final String OUTPUT_FILE_KEY = "output_file";
+
     // Required. The command used to retrieve the 3rd party token.
     private final String executableCommand;
 
@@ -134,25 +138,26 @@ public class PluggableAuthCredentials extends ExternalAccountCredentials {
     PluggableAuthCredentialSource(Map<String, Object> credentialSourceMap) {
       super(credentialSourceMap);
 
-      if (!credentialSourceMap.containsKey("executable")) {
+      if (!credentialSourceMap.containsKey(EXECUTABLE_SOURCE_KEY)) {
         throw new IllegalArgumentException(
             "Invalid credential source for PluggableAuth credentials.");
       }
 
-      Map<String, Object> executable = (Map<String, Object>) credentialSourceMap.get("executable");
+      Map<String, Object> executable =
+          (Map<String, Object>) credentialSourceMap.get(EXECUTABLE_SOURCE_KEY);
 
       // Command is the only required field.
-      if (!executable.containsKey("command")) {
+      if (!executable.containsKey(COMMAND_KEY)) {
         throw new IllegalArgumentException(
             "The PluggableAuthCredentialSource is missing the required 'command' field.");
       }
 
       // Parse the executable timeout.
-      if (executable.containsKey("timeout_millis")) {
-        Object timeout = executable.get("timeout_millis");
+      if (executable.containsKey(TIMEOUT_MILLIS_KEY)) {
+        Object timeout = executable.get(TIMEOUT_MILLIS_KEY);
         if (timeout instanceof BigDecimal) {
           executableTimeoutMs = ((BigDecimal) timeout).intValue();
-        } else if (executable.get("timeout_millis") instanceof Integer) {
+        } else if (executable.get(TIMEOUT_MILLIS_KEY) instanceof Integer) {
           executableTimeoutMs = (int) timeout;
         } else {
           executableTimeoutMs = Integer.parseInt((String) timeout);
@@ -170,8 +175,8 @@ public class PluggableAuthCredentials extends ExternalAccountCredentials {
                 MINIMUM_EXECUTABLE_TIMEOUT_MS, MAXIMUM_EXECUTABLE_TIMEOUT_MS));
       }
 
-      executableCommand = (String) executable.get("command");
-      outputFilePath = (String) executable.get("output_file");
+      executableCommand = (String) executable.get(COMMAND_KEY);
+      outputFilePath = (String) executable.get(OUTPUT_FILE_KEY);
     }
 
     String getCommand() {

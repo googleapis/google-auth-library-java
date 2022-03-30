@@ -77,6 +77,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       "https://www.googleapis.com/auth/cloud-platform";
 
   static final String EXTERNAL_ACCOUNT_FILE_TYPE = "external_account";
+  static final String EXECUTABLE_SOURCE_KEY = "executable";
 
   private final String transportFactoryClassName;
   private final String audience;
@@ -410,7 +411,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
 
   private static boolean isPluggableAuthCredential(Map<String, Object> credentialSource) {
     // Pluggable Auth is enabled via a nested executable field in the credential source.
-    return credentialSource.containsKey("executable");
+    return credentialSource.containsKey(EXECUTABLE_SOURCE_KEY);
   }
 
   private static boolean isAwsCredential(Map<String, Object> credentialSource) {

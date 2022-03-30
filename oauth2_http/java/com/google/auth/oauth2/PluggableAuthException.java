@@ -40,7 +40,7 @@ class PluggableAuthException extends OAuthException {
     super(errorCode, checkNotNull(errorDescription), /* errorUri=*/ null);
   }
 
-  /** @return The message with format: Error code {errorCode}: {errorDescription}. */
+  /** The message with format: Error code {errorCode}: {errorDescription}. */
   @Override
   public String getMessage() {
     return "Error code " + getErrorCode() + ": " + getErrorDescription();
