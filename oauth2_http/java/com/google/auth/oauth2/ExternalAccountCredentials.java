@@ -39,6 +39,7 @@ import com.google.auth.RequestMetadataCallback;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.AwsCredentials.AwsCredentialSource;
 import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSource;
+import com.google.auth.oauth2.PluggableAuthCredentials.PluggableAuthCredentialSource;
 import com.google.common.base.MoreObjects;
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,7 +59,8 @@ import javax.annotation.Nullable;
 /**
  * Base external account credentials class.
  *
- * <p>Handles initializing external credentials, calls to STS, and service account impersonation.
+ * <p>Handles initializing external credentials, calls to the Security Token Service, and service
+ * account impersonation.
  */
 public abstract class ExternalAccountCredentials extends GoogleCredentials
     implements QuotaProjectIdProvider {
@@ -75,6 +77,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       "https://www.googleapis.com/auth/cloud-platform";
 
   static final String EXTERNAL_ACCOUNT_FILE_TYPE = "external_account";
+  static final String EXECUTABLE_SOURCE_KEY = "executable";
 
   private final String transportFactoryClassName;
   private final String audience;
@@ -89,13 +92,14 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   @Nullable private final String clientId;
   @Nullable private final String clientSecret;
 
-  // This is used for Workforce Pools. It is passed to STS during token exchange in the
-  // `options` param and will be embedded in the token by STS.
+  // This is used for Workforce Pools. It is passed to the Security Token Service during token
+  // exchange in the `options` param and will be embedded in the token by the Security Token
+  // Service.
   @Nullable private final String workforcePoolUserProject;
 
   protected transient HttpTransportFactory transportFactory;
 
-  @Nullable protected final ImpersonatedCredentials impersonatedCredentials;
+  @Nullable protected ImpersonatedCredentials impersonatedCredentials;
 
   private EnvironmentProvider environmentProvider;
 
@@ -104,18 +108,17 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
    * workforce credentials.
    *
    * @param transportFactory HTTP transport factory, creates the transport used to get access tokens
-   * @param audience the STS audience which is usually the fully specified resource name of the
-   *     workload/workforce pool provider
-   * @param subjectTokenType the STS subject token type based on the OAuth 2.0 token exchange spec.
-   *     Indicates the type of the security token in the credential file
-   * @param tokenUrl the STS token exchange endpoint
+   * @param audience the Security Token Service audience, which is usually the fully specified
+   *     resource name of the workload/workforce pool provider
+   * @param subjectTokenType the Security Token Service subject token type based on the OAuth 2.0
+   *     token exchange spec. Indicates the type of the security token in the credential file
+   * @param tokenUrl the Security Token Service token exchange endpoint
    * @param tokenInfoUrl the endpoint used to retrieve account related information. Required for
    *     gCloud session account identification.
    * @param credentialSource the external credential source
    * @param serviceAccountImpersonationUrl the URL for the service account impersonation request.
-   *     This is only required for workload identity pools when APIs to be accessed have not
-   *     integrated with UberMint. If this is not available, the STS returned GCP access token is
-   *     directly used. May be null.
+   *     This URL is required for some APIs. If this URL is not available, the access token from the
+   *     Security Token Service is used directly. May be null.
    * @param quotaProjectId the project used for quota and billing purposes. May be null.
    * @param clientId client ID of the service account from the console. May be null.
    * @param clientSecret client secret of the service account from the console. May be null.
@@ -238,7 +241,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     this.impersonatedCredentials = initializeImpersonatedCredentials();
   }
 
-  private ImpersonatedCredentials initializeImpersonatedCredentials() {
+  protected ImpersonatedCredentials initializeImpersonatedCredentials() {
     if (serviceAccountImpersonationUrl == null) {
       return null;
     }
@@ -247,6 +250,11 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     if (this instanceof AwsCredentials) {
       sourceCredentials =
           AwsCredentials.newBuilder((AwsCredentials) this)
+              .setServiceAccountImpersonationUrl(null)
+              .build();
+    } else if (this instanceof PluggableAuthCredentials) {
+      sourceCredentials =
+          PluggableAuthCredentials.newBuilder((PluggableAuthCredentials) this)
               .setServiceAccountImpersonationUrl(null)
               .build();
     } else {
@@ -372,8 +380,20 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
           .setClientId(clientId)
           .setClientSecret(clientSecret)
           .build();
+    } else if (isPluggableAuthCredential(credentialSourceMap)) {
+      return PluggableAuthCredentials.newBuilder()
+          .setHttpTransportFactory(transportFactory)
+          .setAudience(audience)
+          .setSubjectTokenType(subjectTokenType)
+          .setTokenUrl(tokenUrl)
+          .setTokenInfoUrl(tokenInfoUrl)
+          .setCredentialSource(new PluggableAuthCredentialSource(credentialSourceMap))
+          .setServiceAccountImpersonationUrl(serviceAccountImpersonationUrl)
+          .setQuotaProjectId(quotaProjectId)
+          .setClientId(clientId)
+          .setClientSecret(clientSecret)
+          .build();
     }
-
     return IdentityPoolCredentials.newBuilder()
         .setHttpTransportFactory(transportFactory)
         .setAudience(audience)
@@ -389,17 +409,22 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
         .build();
   }
 
+  private static boolean isPluggableAuthCredential(Map<String, Object> credentialSource) {
+    // Pluggable Auth is enabled via a nested executable field in the credential source.
+    return credentialSource.containsKey(EXECUTABLE_SOURCE_KEY);
+  }
+
   private static boolean isAwsCredential(Map<String, Object> credentialSource) {
     return credentialSource.containsKey("environment_id")
         && ((String) credentialSource.get("environment_id")).startsWith("aws");
   }
 
   /**
-   * Exchanges the external credential for a GCP access token.
+   * Exchanges the external credential for a Google Cloud access token.
    *
-   * @param stsTokenExchangeRequest the STS token exchange request
-   * @return the access token returned by STS
-   * @throws OAuthException if the call to STS fails
+   * @param stsTokenExchangeRequest the Security Token Service token exchange request
+   * @return the access token returned by the Security Token Service
+   * @throws OAuthException if the call to the Security Token Service fails
    */
   protected AccessToken exchangeExternalCredentialForAccessToken(
       StsTokenExchangeRequest stsTokenExchangeRequest) throws IOException {
@@ -413,7 +438,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
             tokenUrl, stsTokenExchangeRequest, transportFactory.create().createRequestFactory());
 
     // If this credential was initialized with a Workforce configuration then the
-    // workforcePoolUserProject must passed to STS via the the internal options param.
+    // workforcePoolUserProject must be passed to the Security Token Service via the internal
+    // options param.
     if (isWorkforcePoolConfiguration()) {
       GenericJson options = new GenericJson();
       options.setFactory(OAuth2Utils.JSON_FACTORY);
@@ -431,7 +457,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   }
 
   /**
-   * Retrieves the external subject token to be exchanged for a GCP access token.
+   * Retrieves the external subject token to be exchanged for a Google Cloud access token.
    *
    * <p>Must be implemented by subclasses as the retrieval method is dependent on the credential
    * source.
@@ -465,6 +491,15 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     return serviceAccountImpersonationUrl;
   }
 
+  /** The service account email to be impersonated, if available. */
+  @Nullable
+  public String getServiceAccountEmail() {
+    if (serviceAccountImpersonationUrl == null || serviceAccountImpersonationUrl.isEmpty()) {
+      return null;
+    }
+    return ImpersonatedCredentials.extractTargetPrincipal(serviceAccountImpersonationUrl);
+  }
+
   @Override
   @Nullable
   public String getQuotaProjectId() {
@@ -496,7 +531,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   }
 
   /**
-   * Returns whether or not the current configuration is for Workforce Pools (which enable 3p user
+   * Returns whether the current configuration is for Workforce Pools (which enable 3p user
    * identities, rather than workloads).
    */
   public boolean isWorkforcePoolConfiguration() {
@@ -603,8 +638,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     }
 
     /**
-     * Sets the STS audience which is usually the fully specified resource name of the
-     * workload/workforce pool provider.
+     * Sets the Security Token Service audience, which is usually the fully specified resource name
+     * of the workload/workforce pool provider.
      */
     public Builder setAudience(String audience) {
       this.audience = audience;
@@ -612,15 +647,15 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     }
 
     /**
-     * Sets the STS subject token type based on the OAuth 2.0 token exchange spec. Indicates the
-     * type of the security token in the credential file.
+     * Sets the Security Token Service subject token type based on the OAuth 2.0 token exchange
+     * spec. Indicates the type of the security token in the credential file.
      */
     public Builder setSubjectTokenType(String subjectTokenType) {
       this.subjectTokenType = subjectTokenType;
       return this;
     }
 
-    /** Sets the STS token exchange endpoint. */
+    /** Sets the Security Token Service token exchange endpoint. */
     public Builder setTokenUrl(String tokenUrl) {
       this.tokenUrl = tokenUrl;
       return this;
@@ -633,9 +668,9 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     }
 
     /**
-     * Sets the optional URL used for service account impersonation. This is only required when APIs
-     * to be accessed have not integrated with UberMint. If this is not available, the STS returned
-     * GCP access token is directly used.
+     * Sets the optional URL used for service account impersonation, which is required for some
+     * APIs. If this URL is not available, the access token from the Security Token Service is used
+     * directly.
      */
     public Builder setServiceAccountImpersonationUrl(String serviceAccountImpersonationUrl) {
       this.serviceAccountImpersonationUrl = serviceAccountImpersonationUrl;
