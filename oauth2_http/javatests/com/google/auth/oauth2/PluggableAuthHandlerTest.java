@@ -55,11 +55,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
-import org.junit.Before;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 
 /** Tests for {@link PluggableAuthHandler}. */
@@ -98,11 +96,6 @@ class PluggableAuthHandlerTest {
           return null;
         }
       };
-
-  @Before
-  public void setup() {
-    MockitoAnnotations.initMocks(this);
-  }
 
   @Test
   void retrieveTokenFromExecutable_oidcResponse() throws IOException, InterruptedException {
