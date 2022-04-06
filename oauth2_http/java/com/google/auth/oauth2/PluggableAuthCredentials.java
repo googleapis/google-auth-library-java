@@ -205,8 +205,7 @@ public class PluggableAuthCredentials extends ExternalAccountCredentials {
     if (builder.handler != null) {
       handler = builder.handler;
     } else {
-      // TODO(lsirac): Initialize handler.
-      handler = null;
+      handler = new PluggableAuthHandler(getEnvironmentProvider());
     }
 
     // Re-initialize impersonated credentials as the handler hasn't been set yet when
