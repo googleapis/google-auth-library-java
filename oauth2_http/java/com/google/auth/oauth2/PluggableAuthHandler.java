@@ -1,0 +1,241 @@
+/*
+ * Copyright 2022 Google LLC
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ *    * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ *    * Redistributions in binary form must reproduce the above
+ * copyright notice, this list of conditions and the following disclaimer
+ * in the documentation and/or other materials provided with the
+ * distribution.
+ *
+ *    * Neither the name of Google LLC nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+package com.google.auth.oauth2;
+
+import com.google.api.client.json.GenericJson;
+import com.google.api.client.json.JsonParser;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Splitter;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * Internal handler for retrieving 3rd party tokens from user defined scripts/executables for
+ * workload identity federation.
+ *
+ * <p>See {@link PluggableAuthCredentials}.
+ */
+final class PluggableAuthHandler implements ExecutableHandler {
+
+  /** An interface for creating and managing a process. */
+  abstract static class InternalProcessBuilder {
+
+    abstract Map<String, String> environment();
+
+    abstract InternalProcessBuilder redirectErrorStream(boolean redirectErrorStream);
+
+    abstract Process start() throws IOException;
+  }
+
+  /**
+   * The default implementation that wraps {@link ProcessBuilder} for creating and managing a
+   * process.
+   */
+  static final class DefaultProcessBuilder extends InternalProcessBuilder {
+    ProcessBuilder processBuilder;
+
+    DefaultProcessBuilder(ProcessBuilder processBuilder) {
+      this.processBuilder = processBuilder;
+    }
+
+    @Override
+    Map<String, String> environment() {
+      return this.processBuilder.environment();
+    }
+
+    @Override
+    InternalProcessBuilder redirectErrorStream(boolean redirectErrorStream) {
+      this.processBuilder.redirectErrorStream(redirectErrorStream);
+      return this;
+    }
+
+    @Override
+    Process start() throws IOException {
+      return this.processBuilder.start();
+    }
+  }
+
+  // The maximum supported version for the executable response.
+  // The executable response always includes a version number that is used
+  // to detect compatibility with the response and library verions.
+  private static final int EXECUTABLE_SUPPORTED_MAX_VERSION = 1;
+
+  // The GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES dictates if this feature is enabled.
+  // The GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES environment variable must be set to '1' for
+  // security reasons.
+  private static final String GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES =
+      "GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES";
+
+  // The exit status of the 3P script that represents a successful execution.
+  private static final int EXIT_CODE_SUCCESS = 0;
+
+  private final EnvironmentProvider environmentProvider;
+  private InternalProcessBuilder internalProcessBuilder;
+
+  PluggableAuthHandler(EnvironmentProvider environmentProvider) {
+    this.environmentProvider = environmentProvider;
+  }
+
+  @VisibleForTesting
+  PluggableAuthHandler(
+      EnvironmentProvider environmentProvider, InternalProcessBuilder internalProcessBuilder) {
+    this.environmentProvider = environmentProvider;
+    this.internalProcessBuilder = internalProcessBuilder;
+  }
+
+  @Override
+  public String retrieveTokenFromExecutable(ExecutableOptions options) throws IOException {
+    // Validate that executables are allowed to run. To use Pluggable Auth,
+    // The GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES environment variable must be set to 1
+    // for security reasons.
+    if (!"1".equals(this.environmentProvider.getEnv(GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES))) {
+      throw new PluggableAuthException(
+          "PLUGGABLE_AUTH_DISABLED",
+          "Pluggable Auth executables need "
+              + "to be explicitly allowed to run by setting the "
+              + "GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES environment variable to 1.");
+    }
+
+    // Users can specify an output file path in the Pluggable Auth ADC configuration.
+    // This is the file's absolute path. Their executable will handle writing the 3P credentials to
+    // this file.
+    // If specified, we will first check if we have valid unexpired credentials stored in this
+    // location to avoid running the executable until they are expired.
+    ExecutableResponse executableResponse = null;
+    if (options.getOutputFilePath() != null && !options.getOutputFilePath().isEmpty()) {
+      // Read cached response from output_file.
+      InputStream inputStream = new FileInputStream(options.getOutputFilePath());
+      BufferedReader reader =
+          new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+      JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser(reader);
+
+      ExecutableResponse cachedResponse =
+          new ExecutableResponse(parser.parseAndClose(GenericJson.class));
+
+      // If the cached response is successful and unexpired, we can use it.
+      // Response version will be validated below.
+      if (cachedResponse.isValid()) {
+        executableResponse = cachedResponse;
+      }
+    }
+
+    // If the output_file does not contain a valid response, call the executable.
+    if (executableResponse == null) {
+      executableResponse = getExecutableResponse(options);
+    }
+
+    // The executable response includes a version. Validate that the version is compatible
+    // with the library.
+    if (executableResponse.getVersion() > EXECUTABLE_SUPPORTED_MAX_VERSION) {
+      throw new PluggableAuthException(
+          "UNSUPPORTED_VERSION",
+          "The version of the executable response is not supported. "
+              + String.format(
+                  "The maximum version currently supported is %s.",
+                  EXECUTABLE_SUPPORTED_MAX_VERSION));
+    }
+
+    if (!executableResponse.isSuccessful()) {
+      throw new PluggableAuthException(
+          executableResponse.getErrorCode(), executableResponse.getErrorMessage());
+    }
+
+    if (executableResponse.isExpired()) {
+      throw new PluggableAuthException("INVALID_RESPONSE", "The executable response is expired.");
+    }
+
+    // Subject token is valid and can be returned.
+    return executableResponse.getSubjectToken();
+  }
+
+  ExecutableResponse getExecutableResponse(ExecutableOptions options) throws IOException {
+    List<String> components = Splitter.on(" ").splitToList(options.getExecutableCommand());
+
+    // Create the process.
+    InternalProcessBuilder processBuilder = getProcessBuilder(components);
+
+    // Inject environment variables.
+    Map<String, String> envMap = processBuilder.environment();
+    envMap.putAll(options.getEnvironmentMap());
+
+    // Redirect error stream.
+    processBuilder.redirectErrorStream(true);
+
+    // Start the process.
+    Process process = processBuilder.start();
+
+    ExecutableResponse execResp;
+    try {
+      boolean success = process.waitFor(options.getExecutableTimeoutMs(), TimeUnit.MILLISECONDS);
+      if (!success) {
+        // Process has not terminated within the specified timeout.
+        process.destroyForcibly();
+        throw new PluggableAuthException(
+            "TIMEOUT_EXCEEDED", "The executable failed to finish within the timeout specified.");
+      }
+      int exitCode = process.exitValue();
+      if (exitCode != EXIT_CODE_SUCCESS) {
+        process.destroyForcibly();
+        throw new PluggableAuthException(
+            "EXIT_CODE", String.format("The executable failed with exit code %s.", exitCode));
+      }
+      BufferedReader reader =
+          new BufferedReader(
+              new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
+      JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser(reader);
+
+      execResp = new ExecutableResponse(parser.parseAndClose(GenericJson.class));
+    } catch (InterruptedException e) {
+      // Destroy the process.
+      process.destroyForcibly();
+      throw new PluggableAuthException(
+          "INTERRUPTED", String.format("The execution was interrupted: %s.", e));
+    }
+
+    process.destroyForcibly();
+    return execResp;
+  }
+
+  InternalProcessBuilder getProcessBuilder(List<String> commandComponents) {
+    if (internalProcessBuilder != null) {
+      return internalProcessBuilder;
+    }
+    return new DefaultProcessBuilder(new ProcessBuilder(commandComponents));
+  }
+}
