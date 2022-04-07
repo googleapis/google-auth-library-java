@@ -169,6 +169,7 @@
           <version>3.3.2</version>
           <configuration>
             <source>7</source>
+            <failOnError>false</failOnError>
           </configuration>
           <executions>
             <execution>
@@ -329,6 +330,7 @@
           </reportSet>
         </reportSets>
         <configuration>
+          <failOnError>false</failOnError>
           <doclint>none</doclint>
           <source>7</source>
           <outputDirectory>${project.build.directory}/javadoc</outputDirectory>
@@ -504,6 +506,7 @@
               <sourceFileExcludes>
                 <exclude>${sourceFileExclude}</exclude>
               </sourceFileExcludes>
+              <failOnError>false</failOnError>
             </configuration>
           </plugin>  
         </plugins>
