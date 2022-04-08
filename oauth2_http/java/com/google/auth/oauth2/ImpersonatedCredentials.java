@@ -105,6 +105,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
   private List<String> scopes;
   private int lifetime;
   private String quotaProjectId;
+  private String iamEndpointOverride;
   private final String transportFactoryClassName;
 
   private transient HttpTransportFactory transportFactory;
@@ -201,6 +202,54 @@ public class ImpersonatedCredentials extends GoogleCredentials
    *     granted to the preceding identity. For example, if set to [serviceAccountB,
    *     serviceAccountC], the sourceCredential must have the Token Creator role on serviceAccountB.
    *     serviceAccountB must have the Token Creator on serviceAccountC. Finally, C must have Token
+   *     Creator on target_principal. If unset, sourceCredential must have that role on
+   *     targetPrincipal.
+   * @param scopes scopes to request during the authorization grant
+   * @param lifetime number of seconds the delegated credential should be valid. By default this
+   *     value should be at most 3600. However, you can follow <a
+   *     href='https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oauth'>these
+   *     instructions</a> to set up the service account and extend the maximum lifetime to 43200 (12
+   *     hours). If the given lifetime is 0, default value 3600 will be used instead when creating
+   *     the credentials.
+   * @param transportFactory HTTP transport factory that creates the transport used to get access
+   *     tokens.
+   * @param quotaProjectId the project used for quota and billing purposes. Should be null unless
+   *     the caller wants to use a project different from the one that owns the impersonated
+   *     credential for billing/quota purposes.
+   * @param iamEndpointOverride The full IAM endpoint override with the target_principal embedded.
+   *     This is useful when supporting impersonation with regional endpoints.
+   * @return new credentials
+   */
+  public static ImpersonatedCredentials create(
+      GoogleCredentials sourceCredentials,
+      String targetPrincipal,
+      List<String> delegates,
+      List<String> scopes,
+      int lifetime,
+      HttpTransportFactory transportFactory,
+      String quotaProjectId,
+      String iamEndpointOverride) {
+    return ImpersonatedCredentials.newBuilder()
+        .setSourceCredentials(sourceCredentials)
+        .setTargetPrincipal(targetPrincipal)
+        .setDelegates(delegates)
+        .setScopes(scopes)
+        .setLifetime(lifetime)
+        .setHttpTransportFactory(transportFactory)
+        .setQuotaProjectId(quotaProjectId)
+        .setIamEndpointOverride(iamEndpointOverride)
+        .build();
+  }
+
+  /**
+   * @param sourceCredentials the source credential used to acquire the impersonated credentials. It
+   *     should be either a user account credential or a service account credential.
+   * @param targetPrincipal the service account to impersonate
+   * @param delegates the chained list of delegates required to grant the final access_token. If
+   *     set, the sequence of identities must have "Service Account Token Creator" capability
+   *     granted to the preceding identity. For example, if set to [serviceAccountB,
+   *     serviceAccountC], the sourceCredential must have the Token Creator role on serviceAccountB.
+   *     serviceAccountB must have the Token Creator on serviceAccountC. Finally, C must have Token
    *     Creator on target_principal. If left unset, sourceCredential must have that role on
    *     targetPrincipal.
    * @param scopes scopes to request during the authorization grant
@@ -256,6 +305,9 @@ public class ImpersonatedCredentials extends GoogleCredentials
   public String getQuotaProjectId() {
     return this.quotaProjectId;
   }
+
+  @VisibleForTesting
+  String getIamEndpointOverride() { return this.iamEndpointOverride; }
 
   @VisibleForTesting
   List<String> getDelegates() {
@@ -320,8 +372,9 @@ public class ImpersonatedCredentials extends GoogleCredentials
     String sourceCredentialsType;
     String quotaProjectId;
     String targetPrincipal;
+    String serviceAccountImpersonationUrl;
     try {
-      String serviceAccountImpersonationUrl =
+      serviceAccountImpersonationUrl =
           (String) json.get("service_account_impersonation_url");
       if (json.containsKey("delegates")) {
         delegates = (List<String>) json.get("delegates");
@@ -354,6 +407,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
         .setLifetime(DEFAULT_LIFETIME_IN_SECONDS)
         .setHttpTransportFactory(transportFactory)
         .setQuotaProjectId(quotaProjectId)
+        .setIamEndpointOverride(serviceAccountImpersonationUrl)
         .build();
   }
 
@@ -393,6 +447,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
             builder.getHttpTransportFactory(),
             getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     this.quotaProjectId = builder.quotaProjectId;
+    this.iamEndpointOverride = builder.iamEndpointOverride;
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
     if (this.delegates == null) {
       this.delegates = new ArrayList<String>();
@@ -424,7 +479,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(sourceCredentials);
     HttpRequestFactory requestFactory = httpTransport.createRequestFactory();
 
-    String endpointUrl = String.format(IAM_ACCESS_TOKEN_ENDPOINT, this.targetPrincipal);
+    String endpointUrl = this.iamEndpointOverride != null ? this.iamEndpointOverride :
+        String.format(IAM_ACCESS_TOKEN_ENDPOINT, this.targetPrincipal);
     GenericUrl url = new GenericUrl(endpointUrl);
 
     Map<String, Object> body =
@@ -489,7 +545,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
   @Override
   public int hashCode() {
     return Objects.hash(
-        sourceCredentials, targetPrincipal, delegates, scopes, lifetime, quotaProjectId);
+        sourceCredentials, targetPrincipal, delegates, scopes, lifetime, quotaProjectId, iamEndpointOverride);
   }
 
   @Override
@@ -502,6 +558,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
         .add("lifetime", lifetime)
         .add("transportFactoryClassName", transportFactoryClassName)
         .add("quotaProjectId", quotaProjectId)
+        .add("iamEndpointOverride", iamEndpointOverride)
         .toString();
   }
 
@@ -517,7 +574,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
         && Objects.equals(this.scopes, other.scopes)
         && Objects.equals(this.lifetime, other.lifetime)
         && Objects.equals(this.transportFactoryClassName, other.transportFactoryClassName)
-        && Objects.equals(this.quotaProjectId, other.quotaProjectId);
+        && Objects.equals(this.quotaProjectId, other.quotaProjectId)
+        && Objects.equals(this.iamEndpointOverride, other.iamEndpointOverride);
   }
 
   public Builder toBuilder() {
@@ -537,6 +595,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     private int lifetime = DEFAULT_LIFETIME_IN_SECONDS;
     private HttpTransportFactory transportFactory;
     private String quotaProjectId;
+    private String iamEndpointOverride;
 
     protected Builder() {}
 
@@ -601,6 +660,11 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
     public Builder setQuotaProjectId(String quotaProjectId) {
       this.quotaProjectId = quotaProjectId;
+      return this;
+    }
+
+    public Builder setIamEndpointOverride(String iamEndpointOverride) {
+      this.iamEndpointOverride = iamEndpointOverride;
       return this;
     }
 
