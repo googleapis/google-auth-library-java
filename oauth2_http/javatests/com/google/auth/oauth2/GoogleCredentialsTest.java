@@ -273,6 +273,7 @@ public class GoogleCredentialsTest {
         ImpersonatedCredentialsTest.IMPERSONATED_CLIENT_EMAIL);
     transportFactory.transport.setAccessToken(ImpersonatedCredentialsTest.ACCESS_TOKEN);
     transportFactory.transport.setExpireTime(ImpersonatedCredentialsTest.getDefaultExpireTime());
+    transportFactory.transport.setAccessTokenEndpoint(ImpersonatedCredentialsTest.IMPERSONATION_URL);
 
     InputStream impersonationCredentialsStream =
         ImpersonatedCredentialsTest.writeImpersonationCredentialsStream(
@@ -307,6 +308,7 @@ public class GoogleCredentialsTest {
         ImpersonatedCredentialsTest.IMPERSONATED_CLIENT_EMAIL);
     transportFactory.transport.setAccessToken(ImpersonatedCredentialsTest.ACCESS_TOKEN);
     transportFactory.transport.setExpireTime(ImpersonatedCredentialsTest.getDefaultExpireTime());
+    transportFactory.transport.setAccessTokenEndpoint(ImpersonatedCredentialsTest.IMPERSONATION_URL);
 
     InputStream impersonationCredentialsStream =
         ImpersonatedCredentialsTest.writeImpersonationCredentialsStream(
