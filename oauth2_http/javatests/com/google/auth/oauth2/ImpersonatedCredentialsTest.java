@@ -119,6 +119,10 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
   private static JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
   private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+  public static final String DEFAULT_IMPERSONATION_URL =
+      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/"
+          + IMPERSONATED_CLIENT_EMAIL
+          + ":generateAccessToken";
   public static final String IMPERSONATION_URL =
       "https://us-east1-iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/"
           + IMPERSONATED_CLIENT_EMAIL
@@ -453,15 +457,16 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             mockTransportFactory);
 
     assertEquals(ACCESS_TOKEN, targetCredentials.refreshAccessToken().getTokenValue());
+    assertEquals(DEFAULT_IMPERSONATION_URL, mockTransportFactory.transport.getRequest().getUrl());
   }
 
   @Test
   void refreshAccessToken_endpointOverride() throws IOException, IllegalStateException {
-
     mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
     mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
     mockTransportFactory.transport.setAccessTokenEndpoint(IMPERSONATION_URL);
+
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
             sourceCredentials,
