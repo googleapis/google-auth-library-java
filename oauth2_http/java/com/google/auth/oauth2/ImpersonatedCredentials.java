@@ -424,6 +424,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
         .setDelegates(this.delegates)
         .setHttpTransportFactory(this.transportFactory)
         .setQuotaProjectId(this.quotaProjectId)
+        .setIamEndpointOverride(this.iamEndpointOverride)
         .build();
   }
 

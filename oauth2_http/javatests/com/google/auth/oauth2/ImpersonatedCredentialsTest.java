@@ -338,6 +338,25 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  void createScopedWithIamEndpointOverride() {
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            sourceCredentials,
+            IMPERSONATED_CLIENT_EMAIL,
+            DELEGATES,
+            IMMUTABLE_SCOPES_LIST,
+            VALID_LIFETIME,
+            mockTransportFactory,
+            QUOTA_PROJECT_ID,
+            IMPERSONATION_URL);
+
+    ImpersonatedCredentials scoped_credentials =
+        (ImpersonatedCredentials) targetCredentials.createScoped(IMMUTABLE_SCOPES_SET);
+    assertEquals(
+        targetCredentials.getIamEndpointOverride(), scoped_credentials.getIamEndpointOverride());
+  }
+
+  @Test
   void refreshAccessToken_unauthorized() throws IOException {
 
     String expectedMessage = "The caller does not have permission";
