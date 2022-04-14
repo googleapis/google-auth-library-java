@@ -36,7 +36,6 @@ import com.google.api.client.json.JsonParser;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.io.CharStreams;
-import com.google.gson.stream.MalformedJsonException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -217,13 +216,11 @@ final class PluggableAuthHandler implements ExecutableHandler {
       boolean success = process.waitFor(options.getExecutableTimeoutMs(), TimeUnit.MILLISECONDS);
       if (!success) {
         // Process has not terminated within the specified timeout.
-        process.destroyForcibly();
         throw new PluggableAuthException(
             "TIMEOUT_EXCEEDED", "The executable failed to finish within the timeout specified.");
       }
       int exitCode = process.exitValue();
       if (exitCode != EXIT_CODE_SUCCESS) {
-        process.destroyForcibly();
         throw new PluggableAuthException(
             "EXIT_CODE", String.format("The executable failed with exit code %s.", exitCode));
       }
@@ -234,18 +231,21 @@ final class PluggableAuthHandler implements ExecutableHandler {
       executableOutput = CharStreams.toString(reader);
       JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser(executableOutput);
       execResp = new ExecutableResponse(parser.parseAndClose(GenericJson.class));
-    } catch (InterruptedException | MalformedJsonException e) {
+    } catch (InterruptedException e) {
       // Destroy the process.
       process.destroyForcibly();
-      if (e instanceof InterruptedException) {
-        throw new PluggableAuthException(
-            "INTERRUPTED", String.format("The execution was interrupted: %s.", e));
-      } else {
-        // An error may have occurred in the executable and needs to be surfaced.
-        throw new PluggableAuthException(
-            "INVALID_RESPONSE",
-            String.format("The executable returned an invalid response: %s.", executableOutput));
+      throw new PluggableAuthException(
+          "INTERRUPTED", String.format("The execution was interrupted: %s.", e));
+    } catch (IOException e) {
+      // Destroy the process.
+      process.destroyForcibly();
+      if (e instanceof PluggableAuthException) {
+        throw e;
       }
+      // An error may have occurred in the executable and needs to be surfaced.
+      throw new PluggableAuthException(
+          "INVALID_RESPONSE",
+          String.format("The executable returned an invalid response: %s.", executableOutput));
     }
     process.destroyForcibly();
     return execResp;
