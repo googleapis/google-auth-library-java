@@ -275,6 +275,59 @@ class PluggableAuthHandlerTest {
   }
 
   @Test
+  void retrieveTokenFromExecutable_withInvalidOutputFile_throws()
+      throws IOException, InterruptedException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
+
+    // Build output_file.
+    File file = File.createTempFile("output_file", /* suffix= */ null, /* directory= */ null);
+    file.deleteOnExit();
+
+    OAuth2Utils.writeInputStreamToFile(
+        new ByteArrayInputStream("Bad response.".getBytes(StandardCharsets.UTF_8)),
+        file.getAbsolutePath());
+
+    // Options with output file specified.
+    ExecutableOptions options =
+        new ExecutableOptions() {
+          @Override
+          public String getExecutableCommand() {
+            return "/path/to/executable";
+          }
+
+          @Override
+          public Map<String, String> getEnvironmentMap() {
+            return ImmutableMap.of();
+          }
+
+          @Override
+          public int getExecutableTimeoutMs() {
+            return 30000;
+          }
+
+          @Override
+          public String getOutputFilePath() {
+            return file.getAbsolutePath();
+          }
+        };
+
+    // Mock executable handling that does nothing since we are using the output file.
+    Process mockProcess = Mockito.mock(Process.class);
+    InternalProcessBuilder processBuilder =
+        buildInternalProcessBuilder(new HashMap<>(), mockProcess, options.getExecutableCommand());
+
+    PluggableAuthHandler handler = new PluggableAuthHandler(environmentProvider, processBuilder);
+
+    // Call retrieveTokenFromExecutable().
+    PluggableAuthException e =
+        assertThrows(
+            PluggableAuthException.class, () -> handler.retrieveTokenFromExecutable(options));
+
+    assertEquals("INVALID_OUTPUT_FILE", e.getErrorCode());
+  }
+
+  @Test
   void retrieveTokenFromExecutable_expiredOutputFileResponse_callsExecutable()
       throws IOException, InterruptedException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
@@ -659,6 +712,43 @@ class PluggableAuthHandlerTest {
     assertEquals("INTERRUPTED", e.getErrorCode());
     assertEquals(
         String.format("The execution was interrupted: %s.", new InterruptedException()),
+        e.getErrorDescription());
+
+    verify(mockProcess, times(1))
+        .waitFor(
+            eq(Long.valueOf(DEFAULT_OPTIONS.getExecutableTimeoutMs())), eq(TimeUnit.MILLISECONDS));
+    verify(mockProcess, times(1)).destroyForcibly();
+  }
+
+  @Test
+  void getExecutableResponse_invalidResponse_throws() throws InterruptedException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
+
+    // Mock executable handling.
+    Process mockProcess = Mockito.mock(Process.class);
+    when(mockProcess.waitFor(anyLong(), any(TimeUnit.class))).thenReturn(true);
+    when(mockProcess.exitValue()).thenReturn(EXIT_CODE_SUCCESS);
+
+    // Mock bad executable response.
+    String badResponse = "badResponse";
+    when(mockProcess.getInputStream())
+        .thenReturn(new ByteArrayInputStream(badResponse.getBytes(StandardCharsets.UTF_8)));
+
+    InternalProcessBuilder processBuilder =
+        buildInternalProcessBuilder(
+            new HashMap<>(), mockProcess, DEFAULT_OPTIONS.getExecutableCommand());
+
+    PluggableAuthHandler handler = new PluggableAuthHandler(environmentProvider, processBuilder);
+
+    // Call getExecutableResponse().
+    PluggableAuthException e =
+        assertThrows(
+            PluggableAuthException.class, () -> handler.getExecutableResponse(DEFAULT_OPTIONS));
+
+    assertEquals("INVALID_RESPONSE", e.getErrorCode());
+    assertEquals(
+        String.format("The executable returned an invalid response: %s.", badResponse),
         e.getErrorDescription());
 
     verify(mockProcess, times(1))
