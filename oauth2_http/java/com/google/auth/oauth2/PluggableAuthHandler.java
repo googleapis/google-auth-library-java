@@ -49,6 +49,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 
 /**
  * Internal handler for retrieving 3rd party tokens from user defined scripts/executables for
@@ -142,31 +143,7 @@ final class PluggableAuthHandler implements ExecutableHandler {
     // this file.
     // If specified, we will first check if we have valid unexpired credentials stored in this
     // location to avoid running the executable until they are expired.
-    ExecutableResponse executableResponse = null;
-    if (options.getOutputFilePath() != null && !options.getOutputFilePath().isEmpty()) {
-      // Try reading cached response from output_file.
-      try {
-        File outputFile = new File(options.getOutputFilePath());
-        // Check if the output file is valid and not empty.
-        if (outputFile.isFile() && outputFile.length() > 0) {
-          InputStream inputStream = new FileInputStream(options.getOutputFilePath());
-          BufferedReader reader =
-              new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-          JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser(reader);
-          ExecutableResponse cachedResponse =
-              new ExecutableResponse(parser.parseAndClose(GenericJson.class));
-          // If the cached response is successful and unexpired, we can use it.
-          // Response version will be validated below.
-          if (cachedResponse.isValid()) {
-            executableResponse = cachedResponse;
-          }
-        }
-      } catch (Exception e) {
-        throw new PluggableAuthException(
-            "INVALID_OUTPUT_FILE",
-            "The output_file specified contains an invalid or malformed response." + e);
-      }
-    }
+    ExecutableResponse executableResponse = getCachedExecutableResponse(options);
 
     // If the output_file does not contain a valid response, call the executable.
     if (executableResponse == null) {
@@ -195,6 +172,37 @@ final class PluggableAuthHandler implements ExecutableHandler {
 
     // Subject token is valid and can be returned.
     return executableResponse.getSubjectToken();
+  }
+
+  @Nullable
+  ExecutableResponse getCachedExecutableResponse(ExecutableOptions options)
+      throws PluggableAuthException {
+    ExecutableResponse executableResponse = null;
+    if (options.getOutputFilePath() != null && !options.getOutputFilePath().isEmpty()) {
+      // Try reading cached response from output_file.
+      try {
+        File outputFile = new File(options.getOutputFilePath());
+        // Check if the output file is valid and not empty.
+        if (outputFile.isFile() && outputFile.length() > 0) {
+          InputStream inputStream = new FileInputStream(options.getOutputFilePath());
+          BufferedReader reader =
+              new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+          JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser(reader);
+          ExecutableResponse cachedResponse =
+              new ExecutableResponse(parser.parseAndClose(GenericJson.class));
+          // If the cached response is successful and unexpired, we can use it.
+          // Response version will be validated below.
+          if (cachedResponse.isValid()) {
+            executableResponse = cachedResponse;
+          }
+        }
+      } catch (Exception e) {
+        throw new PluggableAuthException(
+            "INVALID_OUTPUT_FILE",
+            "The output_file specified contains an invalid or malformed response." + e);
+      }
+    }
+    return executableResponse;
   }
 
   ExecutableResponse getExecutableResponse(ExecutableOptions options) throws IOException {

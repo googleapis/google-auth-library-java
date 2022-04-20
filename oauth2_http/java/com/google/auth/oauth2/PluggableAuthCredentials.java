@@ -33,9 +33,12 @@ package com.google.auth.oauth2;
 
 import com.google.auth.oauth2.ExecutableHandler.ExecutableOptions;
 import com.google.common.annotations.VisibleForTesting;
-import java.io.*;
+import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
@@ -227,6 +230,12 @@ public class PluggableAuthCredentials extends ExternalAccountCredentials {
     return exchangeExternalCredentialForAccessToken(stsTokenExchangeRequest.build());
   }
 
+  /**
+   * Returns the 3rd party subject token by calling the executable specified in the credential
+   * source.
+   *
+   * @throws IOException if an error occurs with the executable execution.
+   */
   @Override
   public String retrieveSubjectToken() throws IOException {
     String executableCommand = config.getCommand();
