@@ -35,7 +35,6 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonParser;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
-import com.google.common.io.CharStreams;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -45,6 +44,10 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -213,6 +216,24 @@ final class PluggableAuthHandler implements ExecutableHandler {
     ExecutableResponse execResp;
     String executableOutput = "";
     try {
+      // Consume the input stream while waiting for the program to finish so that
+      // the process won't hang if the STDOUT buffer is filled.
+      ExecutorService executor = Executors.newSingleThreadExecutor();
+      Future<String> future =
+          executor.submit(
+              () -> {
+                BufferedReader reader =
+                    new BufferedReader(
+                        new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
+
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                  sb.append(line).append(System.lineSeparator());
+                }
+                return sb.toString().trim();
+              });
+
       boolean success = process.waitFor(options.getExecutableTimeoutMs(), TimeUnit.MILLISECONDS);
       if (!success) {
         // Process has not terminated within the specified timeout.
@@ -224,30 +245,32 @@ final class PluggableAuthHandler implements ExecutableHandler {
         throw new PluggableAuthException(
             "EXIT_CODE", String.format("The executable failed with exit code %s.", exitCode));
       }
-      BufferedReader reader =
-          new BufferedReader(
-              new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
 
-      executableOutput = CharStreams.toString(reader);
+      executableOutput = future.get();
+      executor.shutdownNow();
+
       JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser(executableOutput);
       execResp = new ExecutableResponse(parser.parseAndClose(GenericJson.class));
-    } catch (InterruptedException e) {
-      // Destroy the process.
-      process.destroyForcibly();
-      throw new PluggableAuthException(
-          "INTERRUPTED", String.format("The execution was interrupted: %s.", e));
     } catch (IOException e) {
       // Destroy the process.
-      process.destroyForcibly();
+      process.destroy();
+
       if (e instanceof PluggableAuthException) {
         throw e;
       }
-      // An error may have occurred in the executable and needs to be surfaced.
+      // An error may have occurred in the executable and should be surfaced.
       throw new PluggableAuthException(
           "INVALID_RESPONSE",
           String.format("The executable returned an invalid response: %s.", executableOutput));
+    } catch (InterruptedException | ExecutionException e) {
+      // Destroy the process.
+      process.destroy();
+
+      throw new PluggableAuthException(
+          "INTERRUPTED", String.format("The execution was interrupted: %s.", e));
     }
-    process.destroyForcibly();
+
+    process.destroy();
     return execResp;
   }
 
