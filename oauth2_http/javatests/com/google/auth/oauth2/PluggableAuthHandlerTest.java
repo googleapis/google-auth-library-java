@@ -758,6 +758,43 @@ class PluggableAuthHandlerTest {
     verify(mockProcess, times(1)).destroy();
   }
 
+  @Test
+  void getExecutableResponse_invalidResponse_throws() throws InterruptedException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
+
+    // Mock executable handling.
+    Process mockProcess = Mockito.mock(Process.class);
+    when(mockProcess.waitFor(anyLong(), any(TimeUnit.class))).thenReturn(true);
+    when(mockProcess.exitValue()).thenReturn(EXIT_CODE_SUCCESS);
+
+    // Mock bad executable response.
+    String badResponse = "badResponse";
+    when(mockProcess.getInputStream())
+        .thenReturn(new ByteArrayInputStream(badResponse.getBytes(StandardCharsets.UTF_8)));
+
+    InternalProcessBuilder processBuilder =
+        buildInternalProcessBuilder(
+            new HashMap<>(), mockProcess, DEFAULT_OPTIONS.getExecutableCommand());
+
+    PluggableAuthHandler handler = new PluggableAuthHandler(environmentProvider, processBuilder);
+
+    // Call getExecutableResponse().
+    PluggableAuthException e =
+        assertThrows(
+            PluggableAuthException.class, () -> handler.getExecutableResponse(DEFAULT_OPTIONS));
+
+    assertEquals("INVALID_RESPONSE", e.getErrorCode());
+    assertEquals(
+        String.format("The executable returned an invalid response: %s.", badResponse),
+        e.getErrorDescription());
+
+    verify(mockProcess, times(1))
+        .waitFor(
+            eq(Long.valueOf(DEFAULT_OPTIONS.getExecutableTimeoutMs())), eq(TimeUnit.MILLISECONDS));
+    verify(mockProcess, times(1)).destroyForcibly();
+  }
+
   private static GenericJson buildOidcResponse() {
     GenericJson json = new GenericJson();
     json.setFactory(OAuth2Utils.JSON_FACTORY);
