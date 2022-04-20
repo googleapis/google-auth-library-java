@@ -130,7 +130,7 @@ class PluggableAuthHandlerTest {
     // Call retrieveTokenFromExecutable().
     String token = handler.retrieveTokenFromExecutable(DEFAULT_OPTIONS);
 
-    verify(mockProcess, times(1)).destroyForcibly();
+    verify(mockProcess, times(1)).destroy();
     verify(mockProcess, times(1))
         .waitFor(
             eq(Long.valueOf(DEFAULT_OPTIONS.getExecutableTimeoutMs())), eq(TimeUnit.MILLISECONDS));
@@ -175,7 +175,7 @@ class PluggableAuthHandlerTest {
     // Call retrieveTokenFromExecutable().
     String token = handler.retrieveTokenFromExecutable(DEFAULT_OPTIONS);
 
-    verify(mockProcess, times(1)).destroyForcibly();
+    verify(mockProcess, times(1)).destroy();
     verify(mockProcess, times(1))
         .waitFor(
             eq(Long.valueOf(DEFAULT_OPTIONS.getExecutableTimeoutMs())), eq(TimeUnit.MILLISECONDS));
@@ -387,7 +387,7 @@ class PluggableAuthHandlerTest {
     String token = handler.retrieveTokenFromExecutable(options);
 
     // Validate that the executable was called.
-    verify(mockProcess, times(1)).destroyForcibly();
+    verify(mockProcess, times(1)).destroy();
     verify(mockProcess, times(1))
         .waitFor(eq(Long.valueOf(options.getExecutableTimeoutMs())), eq(TimeUnit.MILLISECONDS));
 
@@ -517,7 +517,7 @@ class PluggableAuthHandlerTest {
 
     ExecutableResponse response = handler.getExecutableResponse(DEFAULT_OPTIONS);
 
-    verify(mockProcess, times(1)).destroyForcibly();
+    verify(mockProcess, times(1)).destroy();
     verify(mockProcess, times(1))
         .waitFor(
             eq(Long.valueOf(DEFAULT_OPTIONS.getExecutableTimeoutMs())), eq(TimeUnit.MILLISECONDS));
@@ -564,7 +564,7 @@ class PluggableAuthHandlerTest {
     PluggableAuthHandler handler = new PluggableAuthHandler(environmentProvider, processBuilder);
     ExecutableResponse response = handler.getExecutableResponse(DEFAULT_OPTIONS);
 
-    verify(mockProcess, times(1)).destroyForcibly();
+    verify(mockProcess, times(1)).destroy();
     verify(mockProcess, times(1))
         .waitFor(
             eq(Long.valueOf(DEFAULT_OPTIONS.getExecutableTimeoutMs())), eq(TimeUnit.MILLISECONDS));
@@ -579,7 +579,7 @@ class PluggableAuthHandlerTest {
     assertEquals(4, currentEnv.size());
     assertEquals(expectedMap, currentEnv);
 
-    verify(mockProcess, times(1)).destroyForcibly();
+    verify(mockProcess, times(1)).destroy();
   }
 
   @Test
@@ -598,6 +598,7 @@ class PluggableAuthHandlerTest {
 
     // Mock executable handling.
     Process mockProcess = Mockito.mock(Process.class);
+
     when(mockProcess.waitFor(anyLong(), any(TimeUnit.class))).thenReturn(true);
     when(mockProcess.exitValue()).thenReturn(EXIT_CODE_SUCCESS);
 
@@ -615,7 +616,7 @@ class PluggableAuthHandlerTest {
     // Call getExecutableResponse().
     ExecutableResponse response = handler.getExecutableResponse(DEFAULT_OPTIONS);
 
-    verify(mockProcess, times(1)).destroyForcibly();
+    verify(mockProcess, times(1)).destroy();
     verify(mockProcess, times(1))
         .waitFor(
             eq(Long.valueOf(DEFAULT_OPTIONS.getExecutableTimeoutMs())), eq(TimeUnit.MILLISECONDS));
@@ -654,7 +655,7 @@ class PluggableAuthHandlerTest {
     verify(mockProcess, times(1))
         .waitFor(
             eq(Long.valueOf(DEFAULT_OPTIONS.getExecutableTimeoutMs())), eq(TimeUnit.MILLISECONDS));
-    verify(mockProcess, times(1)).destroyForcibly();
+    verify(mockProcess, times(1)).destroy();
   }
 
   @Test
@@ -686,7 +687,7 @@ class PluggableAuthHandlerTest {
     verify(mockProcess, times(1))
         .waitFor(
             eq(Long.valueOf(DEFAULT_OPTIONS.getExecutableTimeoutMs())), eq(TimeUnit.MILLISECONDS));
-    verify(mockProcess, times(1)).destroyForcibly();
+    verify(mockProcess, times(1)).destroy();
   }
 
   @Test
@@ -717,7 +718,7 @@ class PluggableAuthHandlerTest {
     verify(mockProcess, times(1))
         .waitFor(
             eq(Long.valueOf(DEFAULT_OPTIONS.getExecutableTimeoutMs())), eq(TimeUnit.MILLISECONDS));
-    verify(mockProcess, times(1)).destroyForcibly();
+    verify(mockProcess, times(1)).destroy();
   }
 
   @Test
@@ -754,7 +755,7 @@ class PluggableAuthHandlerTest {
     verify(mockProcess, times(1))
         .waitFor(
             eq(Long.valueOf(DEFAULT_OPTIONS.getExecutableTimeoutMs())), eq(TimeUnit.MILLISECONDS));
-    verify(mockProcess, times(1)).destroyForcibly();
+    verify(mockProcess, times(1)).destroy();
   }
 
   private static GenericJson buildOidcResponse() {

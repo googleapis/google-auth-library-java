@@ -35,7 +35,6 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonParser;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
-import com.google.common.io.CharStreams;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -45,7 +44,12 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 
 /**
  * Internal handler for retrieving 3rd party tokens from user defined scripts/executables for
@@ -139,31 +143,7 @@ final class PluggableAuthHandler implements ExecutableHandler {
     // this file.
     // If specified, we will first check if we have valid unexpired credentials stored in this
     // location to avoid running the executable until they are expired.
-    ExecutableResponse executableResponse = null;
-    if (options.getOutputFilePath() != null && !options.getOutputFilePath().isEmpty()) {
-      // Try reading cached response from output_file.
-      try {
-        File outputFile = new File(options.getOutputFilePath());
-        // Check if the output file is valid and not empty.
-        if (outputFile.isFile() && outputFile.length() > 0) {
-          InputStream inputStream = new FileInputStream(options.getOutputFilePath());
-          BufferedReader reader =
-              new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-          JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser(reader);
-          ExecutableResponse cachedResponse =
-              new ExecutableResponse(parser.parseAndClose(GenericJson.class));
-          // If the cached response is successful and unexpired, we can use it.
-          // Response version will be validated below.
-          if (cachedResponse.isValid()) {
-            executableResponse = cachedResponse;
-          }
-        }
-      } catch (Exception e) {
-        throw new PluggableAuthException(
-            "INVALID_OUTPUT_FILE",
-            "The output_file specified contains an invalid or malformed response." + e);
-      }
-    }
+    ExecutableResponse executableResponse = getCachedExecutableResponse(options);
 
     // If the output_file does not contain a valid response, call the executable.
     if (executableResponse == null) {
@@ -194,6 +174,37 @@ final class PluggableAuthHandler implements ExecutableHandler {
     return executableResponse.getSubjectToken();
   }
 
+  @Nullable
+  ExecutableResponse getCachedExecutableResponse(ExecutableOptions options)
+      throws PluggableAuthException {
+    ExecutableResponse executableResponse = null;
+    if (options.getOutputFilePath() != null && !options.getOutputFilePath().isEmpty()) {
+      // Try reading cached response from output_file.
+      try {
+        File outputFile = new File(options.getOutputFilePath());
+        // Check if the output file is valid and not empty.
+        if (outputFile.isFile() && outputFile.length() > 0) {
+          InputStream inputStream = new FileInputStream(options.getOutputFilePath());
+          BufferedReader reader =
+              new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+          JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser(reader);
+          ExecutableResponse cachedResponse =
+              new ExecutableResponse(parser.parseAndClose(GenericJson.class));
+          // If the cached response is successful and unexpired, we can use it.
+          // Response version will be validated below.
+          if (cachedResponse.isValid()) {
+            executableResponse = cachedResponse;
+          }
+        }
+      } catch (Exception e) {
+        throw new PluggableAuthException(
+            "INVALID_OUTPUT_FILE",
+            "The output_file specified contains an invalid or malformed response." + e);
+      }
+    }
+    return executableResponse;
+  }
+
   ExecutableResponse getExecutableResponse(ExecutableOptions options) throws IOException {
     List<String> components = Splitter.on(" ").splitToList(options.getExecutableCommand());
 
@@ -213,6 +224,24 @@ final class PluggableAuthHandler implements ExecutableHandler {
     ExecutableResponse execResp;
     String executableOutput = "";
     try {
+      // Consume the input stream while waiting for the program to finish so that
+      // the process won't hang if the STDOUT buffer is filled.
+      ExecutorService executor = Executors.newSingleThreadExecutor();
+      Future<String> future =
+          executor.submit(
+              () -> {
+                BufferedReader reader =
+                    new BufferedReader(
+                        new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
+
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                  sb.append(line).append(System.lineSeparator());
+                }
+                return sb.toString().trim();
+              });
+
       boolean success = process.waitFor(options.getExecutableTimeoutMs(), TimeUnit.MILLISECONDS);
       if (!success) {
         // Process has not terminated within the specified timeout.
@@ -224,30 +253,32 @@ final class PluggableAuthHandler implements ExecutableHandler {
         throw new PluggableAuthException(
             "EXIT_CODE", String.format("The executable failed with exit code %s.", exitCode));
       }
-      BufferedReader reader =
-          new BufferedReader(
-              new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
 
-      executableOutput = CharStreams.toString(reader);
+      executableOutput = future.get();
+      executor.shutdownNow();
+
       JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser(executableOutput);
       execResp = new ExecutableResponse(parser.parseAndClose(GenericJson.class));
-    } catch (InterruptedException e) {
-      // Destroy the process.
-      process.destroyForcibly();
-      throw new PluggableAuthException(
-          "INTERRUPTED", String.format("The execution was interrupted: %s.", e));
     } catch (IOException e) {
       // Destroy the process.
-      process.destroyForcibly();
+      process.destroy();
+
       if (e instanceof PluggableAuthException) {
         throw e;
       }
-      // An error may have occurred in the executable and needs to be surfaced.
+      // An error may have occurred in the executable and should be surfaced.
       throw new PluggableAuthException(
           "INVALID_RESPONSE",
           String.format("The executable returned an invalid response: %s.", executableOutput));
+    } catch (InterruptedException | ExecutionException e) {
+      // Destroy the process.
+      process.destroy();
+
+      throw new PluggableAuthException(
+          "INTERRUPTED", String.format("The execution was interrupted: %s.", e));
     }
-    process.destroyForcibly();
+
+    process.destroy();
     return execResp;
   }
 
