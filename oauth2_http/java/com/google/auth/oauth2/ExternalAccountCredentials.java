@@ -99,7 +99,11 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
 
   protected transient HttpTransportFactory transportFactory;
 
-  @Nullable protected ImpersonatedCredentials impersonatedCredentials;
+  @Nullable protected final ImpersonatedCredentials impersonatedCredentials;
+
+  // Internal override for impersonated credentials. This is done to keep
+  // impersonatedCredentials final.
+  @Nullable private ImpersonatedCredentials impersonatedCredentialsOverride;
 
   private EnvironmentProvider environmentProvider;
 
@@ -196,7 +200,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       validateServiceAccountImpersonationInfoUrl(serviceAccountImpersonationUrl);
     }
 
-    this.impersonatedCredentials = initializeImpersonatedCredentials();
+    this.impersonatedCredentials = buildImpersonatedCredentials();
   }
 
   /**
@@ -238,10 +242,10 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       validateServiceAccountImpersonationInfoUrl(serviceAccountImpersonationUrl);
     }
 
-    this.impersonatedCredentials = initializeImpersonatedCredentials();
+    this.impersonatedCredentials = buildImpersonatedCredentials();
   }
 
-  protected ImpersonatedCredentials initializeImpersonatedCredentials() {
+  ImpersonatedCredentials buildImpersonatedCredentials() {
     if (serviceAccountImpersonationUrl == null) {
       return null;
     }
@@ -273,6 +277,10 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
         .setScopes(new ArrayList<>(scopes))
         .setLifetime(3600) // 1 hour in seconds
         .build();
+  }
+
+  void overrideImpersonatedCredentials(ImpersonatedCredentials credentials) {
+    this.impersonatedCredentialsOverride = credentials;
   }
 
   @Override
@@ -429,7 +437,10 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   protected AccessToken exchangeExternalCredentialForAccessToken(
       StsTokenExchangeRequest stsTokenExchangeRequest) throws IOException {
     // Handle service account impersonation if necessary.
-    if (impersonatedCredentials != null) {
+    // Internal override takes priority.
+    if (impersonatedCredentialsOverride != null) {
+      return impersonatedCredentialsOverride.refreshAccessToken();
+    } else if (impersonatedCredentials != null) {
       return impersonatedCredentials.refreshAccessToken();
     }
 
