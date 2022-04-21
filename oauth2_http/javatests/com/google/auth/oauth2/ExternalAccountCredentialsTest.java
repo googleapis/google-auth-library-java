@@ -47,6 +47,7 @@ import com.google.auth.oauth2.PluggableAuthCredentials.PluggableAuthCredentialSo
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -569,6 +570,38 @@ public class ExternalAccountCredentialsTest {
 
     assertEquals(
         transportFactory.transport.getServiceAccountAccessToken(), returnedToken.getTokenValue());
+  }
+
+  @Test
+  void exchangeExternalCredentialForAccessToken_withServiceAccountImpersonationOverride()
+      throws IOException {
+    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
+
+    String serviceAccountEmail = "different@different.iam.gserviceaccount.com";
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromStream(
+            IdentityPoolCredentialsTest.writeIdentityPoolCredentialsStream(
+                transportFactory.transport.getStsUrl(),
+                transportFactory.transport.getMetadataUrl(),
+                transportFactory.transport.getServiceAccountImpersonationUrl()),
+            transportFactory);
+
+    // Override impersonated credentials.
+    ExternalAccountCredentials sourceCredentials =
+        IdentityPoolCredentials.newBuilder((IdentityPoolCredentials) credential)
+            .setServiceAccountImpersonationUrl(null)
+            .build();
+    credential.overrideImpersonatedCredentials(
+        new ImpersonatedCredentials.Builder(sourceCredentials, serviceAccountEmail)
+            .setScopes(new ArrayList<>(sourceCredentials.getScopes()))
+            .setHttpTransportFactory(transportFactory)
+            .build());
+
+    credential.exchangeExternalCredentialForAccessToken(
+        StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build());
+
+    assertTrue(
+        transportFactory.transport.getRequests().get(2).getUrl().contains(serviceAccountEmail));
   }
 
   @Test

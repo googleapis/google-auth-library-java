@@ -213,7 +213,7 @@ public class PluggableAuthCredentials extends ExternalAccountCredentials {
 
     // Re-initialize impersonated credentials as the handler hasn't been set yet when
     // this is called in the base class.
-    this.impersonatedCredentials = initializeImpersonatedCredentials();
+    overrideImpersonatedCredentials(buildImpersonatedCredentials());
   }
 
   @Override
