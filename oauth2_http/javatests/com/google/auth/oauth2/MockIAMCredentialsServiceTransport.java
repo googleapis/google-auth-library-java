@@ -113,8 +113,10 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
   @Override
   public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
 
-    String iamAccesssTokenformattedUrl = iamAccessTokenEndpoint != null ? iamAccessTokenEndpoint :
-        String.format(DEFAULT_IAM_ACCESS_TOKEN_ENDPOINT, this.targetPrincipal);
+    String iamAccesssTokenformattedUrl =
+        iamAccessTokenEndpoint != null
+            ? iamAccessTokenEndpoint
+            : String.format(DEFAULT_IAM_ACCESS_TOKEN_ENDPOINT, this.targetPrincipal);
     String iamSignBlobformattedUrl = String.format(IAM_SIGN_ENDPOINT, this.targetPrincipal);
     String iamIdTokenformattedUrl = String.format(IAM_ID_TOKEN_ENDPOINT, this.targetPrincipal);
     if (url.equals(iamAccesssTokenformattedUrl)) {

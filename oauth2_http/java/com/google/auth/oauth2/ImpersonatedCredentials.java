@@ -307,7 +307,9 @@ public class ImpersonatedCredentials extends GoogleCredentials
   }
 
   @VisibleForTesting
-  String getIamEndpointOverride() { return this.iamEndpointOverride; }
+  String getIamEndpointOverride() {
+    return this.iamEndpointOverride;
+  }
 
   @VisibleForTesting
   List<String> getDelegates() {
@@ -374,8 +376,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     String targetPrincipal;
     String serviceAccountImpersonationUrl;
     try {
-      serviceAccountImpersonationUrl =
-          (String) json.get("service_account_impersonation_url");
+      serviceAccountImpersonationUrl = (String) json.get("service_account_impersonation_url");
       if (json.containsKey("delegates")) {
         delegates = (List<String>) json.get("delegates");
       }
@@ -480,8 +481,10 @@ public class ImpersonatedCredentials extends GoogleCredentials
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(sourceCredentials);
     HttpRequestFactory requestFactory = httpTransport.createRequestFactory();
 
-    String endpointUrl = this.iamEndpointOverride != null ? this.iamEndpointOverride :
-        String.format(IAM_ACCESS_TOKEN_ENDPOINT, this.targetPrincipal);
+    String endpointUrl =
+        this.iamEndpointOverride != null
+            ? this.iamEndpointOverride
+            : String.format(IAM_ACCESS_TOKEN_ENDPOINT, this.targetPrincipal);
     GenericUrl url = new GenericUrl(endpointUrl);
 
     Map<String, Object> body =
@@ -546,7 +549,13 @@ public class ImpersonatedCredentials extends GoogleCredentials
   @Override
   public int hashCode() {
     return Objects.hash(
-        sourceCredentials, targetPrincipal, delegates, scopes, lifetime, quotaProjectId, iamEndpointOverride);
+        sourceCredentials,
+        targetPrincipal,
+        delegates,
+        scopes,
+        lifetime,
+        quotaProjectId,
+        iamEndpointOverride);
   }
 
   @Override
