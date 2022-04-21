@@ -59,44 +59,6 @@ import javax.annotation.Nullable;
  */
 final class PluggableAuthHandler implements ExecutableHandler {
 
-  /** An interface for creating and managing a process. */
-  abstract static class InternalProcessBuilder {
-
-    abstract Map<String, String> environment();
-
-    abstract InternalProcessBuilder redirectErrorStream(boolean redirectErrorStream);
-
-    abstract Process start() throws IOException;
-  }
-
-  /**
-   * The default implementation that wraps {@link ProcessBuilder} for creating and managing a
-   * process.
-   */
-  static final class DefaultProcessBuilder extends InternalProcessBuilder {
-    ProcessBuilder processBuilder;
-
-    DefaultProcessBuilder(ProcessBuilder processBuilder) {
-      this.processBuilder = processBuilder;
-    }
-
-    @Override
-    Map<String, String> environment() {
-      return this.processBuilder.environment();
-    }
-
-    @Override
-    InternalProcessBuilder redirectErrorStream(boolean redirectErrorStream) {
-      this.processBuilder.redirectErrorStream(redirectErrorStream);
-      return this;
-    }
-
-    @Override
-    Process start() throws IOException {
-      return this.processBuilder.start();
-    }
-  }
-
   // The maximum supported version for the executable response.
   // The executable response always includes a version number that is used
   // to detect compatibility with the response and library verions.
@@ -287,5 +249,47 @@ final class PluggableAuthHandler implements ExecutableHandler {
       return internalProcessBuilder;
     }
     return new DefaultProcessBuilder(new ProcessBuilder(commandComponents));
+  }
+
+  /**
+   * An interface for creating and managing a process.
+   *
+   * <p>ProcessBuilder is final and does not implement any interface. This class allows concrete
+   * implementations to be specified to test these changes.
+   */
+  abstract static class InternalProcessBuilder {
+
+    abstract Map<String, String> environment();
+
+    abstract InternalProcessBuilder redirectErrorStream(boolean redirectErrorStream);
+
+    abstract Process start() throws IOException;
+  }
+
+  /**
+   * A default implementation for {@link InternalProcessBuilder} that wraps {@link ProcessBuilder}.
+   */
+  static final class DefaultProcessBuilder extends InternalProcessBuilder {
+    ProcessBuilder processBuilder;
+
+    DefaultProcessBuilder(ProcessBuilder processBuilder) {
+      this.processBuilder = processBuilder;
+    }
+
+    @Override
+    Map<String, String> environment() {
+      return this.processBuilder.environment();
+    }
+
+    @Override
+    InternalProcessBuilder redirectErrorStream(boolean redirectErrorStream) {
+      this.processBuilder.redirectErrorStream(redirectErrorStream);
+      return this;
+    }
+
+    @Override
+    Process start() throws IOException {
+      return this.processBuilder.start();
+    }
   }
 }
