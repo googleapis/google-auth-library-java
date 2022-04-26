@@ -119,8 +119,12 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
   private static JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
   private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-  public static final String IMPERSONATION_URL =
+  public static final String DEFAULT_IMPERSONATION_URL =
       "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/"
+          + IMPERSONATED_CLIENT_EMAIL
+          + ":generateAccessToken";
+  public static final String IMPERSONATION_URL =
+      "https://us-east1-iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/"
           + IMPERSONATED_CLIENT_EMAIL
           + ":generateAccessToken";
   private static final String USER_ACCOUNT_CLIENT_ID =
@@ -180,6 +184,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
     ImpersonatedCredentials credentials =
         ImpersonatedCredentials.fromJson(json, mockTransportFactory);
     assertEquals(IMPERSONATED_CLIENT_EMAIL, credentials.getAccount());
+    assertEquals(IMPERSONATION_URL, credentials.getIamEndpointOverride());
     assertEquals(QUOTA_PROJECT_ID, credentials.getQuotaProjectId());
     assertEquals(DELEGATES, credentials.getDelegates());
     assertEquals(new ArrayList<String>(), credentials.getScopes());
@@ -201,6 +206,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
     ImpersonatedCredentials credentials =
         ImpersonatedCredentials.fromJson(json, mockTransportFactory);
     assertEquals(IMPERSONATED_CLIENT_EMAIL, credentials.getAccount());
+    assertEquals(IMPERSONATION_URL, credentials.getIamEndpointOverride());
     assertNull(credentials.getQuotaProjectId());
     assertEquals(DELEGATES, credentials.getDelegates());
     assertEquals(new ArrayList<String>(), credentials.getScopes());
@@ -223,6 +229,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
     ImpersonatedCredentials credentials =
         ImpersonatedCredentials.fromJson(json, mockTransportFactory);
     assertEquals(IMPERSONATED_CLIENT_EMAIL, credentials.getAccount());
+    assertEquals(IMPERSONATION_URL, credentials.getIamEndpointOverride());
     assertNull(credentials.getQuotaProjectId());
     assertEquals(new ArrayList<String>(), credentials.getDelegates());
     assertEquals(new ArrayList<String>(), credentials.getScopes());
@@ -238,6 +245,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
     ImpersonatedCredentials credentials =
         ImpersonatedCredentials.fromJson(json, mockTransportFactory);
     assertEquals(IMPERSONATED_CLIENT_EMAIL, credentials.getAccount());
+    assertEquals(IMPERSONATION_URL, credentials.getIamEndpointOverride());
     assertEquals(QUOTA_PROJECT_ID, credentials.getQuotaProjectId());
     assertEquals(DELEGATES, credentials.getDelegates());
     assertEquals(new ArrayList<String>(), credentials.getScopes());
@@ -327,6 +335,25 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
         targetCredentials.getSourceCredentials(), scoped_credentials.getSourceCredentials());
     assertEquals(targetCredentials.getQuotaProjectId(), scoped_credentials.getQuotaProjectId());
     assertEquals(Arrays.asList("scope1", "scope2"), scoped_credentials.getScopes());
+  }
+
+  @Test
+  void createScopedWithIamEndpointOverride() {
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            sourceCredentials,
+            IMPERSONATED_CLIENT_EMAIL,
+            DELEGATES,
+            IMMUTABLE_SCOPES_LIST,
+            VALID_LIFETIME,
+            mockTransportFactory,
+            QUOTA_PROJECT_ID,
+            IMPERSONATION_URL);
+
+    ImpersonatedCredentials scoped_credentials =
+        (ImpersonatedCredentials) targetCredentials.createScoped(IMMUTABLE_SCOPES_SET);
+    assertEquals(
+        targetCredentials.getIamEndpointOverride(), scoped_credentials.getIamEndpointOverride());
   }
 
   @Test
@@ -449,6 +476,29 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             mockTransportFactory);
 
     assertEquals(ACCESS_TOKEN, targetCredentials.refreshAccessToken().getTokenValue());
+    assertEquals(DEFAULT_IMPERSONATION_URL, mockTransportFactory.transport.getRequest().getUrl());
+  }
+
+  @Test
+  void refreshAccessToken_endpointOverride() throws IOException, IllegalStateException {
+    mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
+    mockTransportFactory.transport.setAccessTokenEndpoint(IMPERSONATION_URL);
+
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            sourceCredentials,
+            IMPERSONATED_CLIENT_EMAIL,
+            null,
+            IMMUTABLE_SCOPES_LIST,
+            VALID_LIFETIME,
+            mockTransportFactory,
+            QUOTA_PROJECT_ID,
+            IMPERSONATION_URL);
+
+    assertEquals(ACCESS_TOKEN, targetCredentials.refreshAccessToken().getTokenValue());
+    assertEquals(IMPERSONATION_URL, mockTransportFactory.transport.getRequest().getUrl());
   }
 
   @Test
