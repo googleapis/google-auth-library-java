@@ -88,7 +88,7 @@ class ITWorkloadIdentityFederationTest {
    * using the iamcredentials generateIdToken API. This will use the service account client ID as
    * the sub field of the token. This OIDC token will be used as the external subject token to be
    * exchanged for a GCP access token via GCP STS endpoint and then to impersonate the original
-   * service account key.  Retrieves the OIDC token from an output file.
+   * service account key. Retrieves the OIDC token from an output file.
    */
   @Test
   void identityPoolCredentials() throws IOException {
@@ -157,7 +157,7 @@ class ITWorkloadIdentityFederationTest {
    * using the iamcredentials generateIdToken API. This will use the service account client ID as
    * the sub field of the token. This OIDC token will be used as the external subject token to be
    * exchanged for a GCP access token via GCP STS endpoint and then to impersonate the original
-   * service account key.  Runs an executable to get the OIDC token.
+   * service account key. Runs an executable to get the OIDC token.
    */
   @Test
   void pluggableCredentials() throws IOException {
@@ -224,7 +224,8 @@ class ITWorkloadIdentityFederationTest {
       throw new IOException("Unable to make script executable");
     }
     OAuth2Utils.writeInputStreamToFile(
-        new ByteArrayInputStream(fileContents.toString().getBytes(StandardCharsets.UTF_8)), file.getAbsolutePath());
+        new ByteArrayInputStream(fileContents.toString().getBytes(StandardCharsets.UTF_8)),
+        file.getAbsolutePath());
 
     GenericJson config = new GenericJson();
     config.put("type", "external_account");
