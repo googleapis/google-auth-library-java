@@ -276,6 +276,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
         .setTargetPrincipal(targetPrincipal)
         .setScopes(new ArrayList<>(scopes))
         .setLifetime(3600) // 1 hour in seconds
+        .setIamEndpointOverride(serviceAccountImpersonationUrl)
         .build();
   }
 
