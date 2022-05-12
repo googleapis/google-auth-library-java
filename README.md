@@ -431,7 +431,7 @@ the existing supported mechanisms (file-sourced/URL-sourced) for providing 3rd p
 credentials unless they do not meet your specific requirements.
 
 You can now [use the Auth library](#using-external-identities) to call Google Cloud
-resources from an OIDC or SAML providers.
+resources from an OIDC or SAML provider.
 
 #### Using External Identities
 
