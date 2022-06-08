@@ -65,10 +65,11 @@ public class AuthenticateExplicit {
     for (Bucket bucket : buckets.iterateAll()) {
       System.out.println(bucket.toString());
     }
+    System.out.println("Authentication complete.");
   }
 
   // Initialize the Storage client by explicitly setting the Service account to use.
-  public static Storage initService(String projectId, String jsonCredentialPath, String scope)
+  private static Storage initService(String projectId, String jsonCredentialPath, String scope)
       throws IOException {
     // Construct the GoogleCredentials object which accepts the service account json file and
     // scope as the input parameters.

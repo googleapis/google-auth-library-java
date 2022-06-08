@@ -55,11 +55,12 @@ public class AuthWithCredentialsFromMetadataServer {
     for (Bucket bucket : buckets.iterateAll()) {
       System.out.println(bucket.toString());
     }
+    System.out.println("Authentication complete.");
   }
 
   // Initialize the Storage client by getting the Service account credentials
   // from a Metadata server.
-  public static Storage initService(String projectId) {
+  private static Storage initService(String projectId) {
     // Explicitly request the service account credentials from the ComputeEngine metadata server.
     GoogleCredentials credentials = ComputeEngineCredentials.create();
 

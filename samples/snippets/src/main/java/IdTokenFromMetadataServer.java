@@ -86,7 +86,7 @@ public class IdTokenFromMetadataServer {
   }
 
   // Makes a simple http get call.
-  public static void makeAuthenticatedRequest(IdTokenCredentials idTokenCredentials, String url)
+  private static void makeAuthenticatedRequest(IdTokenCredentials idTokenCredentials, String url)
       throws IOException {
     GenericUrl genericUrl = new GenericUrl(url);
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(idTokenCredentials);
@@ -98,7 +98,7 @@ public class IdTokenFromMetadataServer {
   }
 
   // Verifies the obtained Google id token.
-  public static boolean verifyGoogleIdToken(String idTokenString, String audience)
+  private static boolean verifyGoogleIdToken(String idTokenString, String audience)
       throws GeneralSecurityException, IOException {
     // Initialize the Google id token verifier and set the audience.
     GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(

@@ -127,7 +127,7 @@ public class IdTokenFromImpersonatedCredentials {
   }
 
   // Verifies the obtained Google id token.
-  public static boolean verifyGoogleIdToken(String idTokenString, String audience)
+  private static boolean verifyGoogleIdToken(String idTokenString, String audience)
       throws GeneralSecurityException, IOException {
     // Initialize the Google id token verifier and set the audience.
     GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
