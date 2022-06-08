@@ -33,8 +33,10 @@ public class AuthenticateImplicitWithAdc {
   // Authenticating using Client libraries can be done in one of the following ways:
   // 1. Implicit authentication with ADC (Application Default Credentials)
   // 2. Explicit authentication by specifying the service account
-  // 3. Bring your own (BYO) access token
-  // 4. Using API keys (for libraries that support)
+  // 3. Authentication with service account credentials obtained from metadata server, like,
+  // Compute Engine or App Engine etc.,
+  // 4. Bring your own (BYO) access token
+  // 5. Using API keys (for libraries that support)
   //
   // In this snippet, we demonstrate "Implicit authentication with ADC".
   // ADC - Application Default Credentials

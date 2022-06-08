@@ -15,16 +15,15 @@
  */
 
 import com.google.api.gax.paging.Page;
+import com.google.auth.oauth2.ComputeEngineCredentials;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
-import com.google.common.collect.Lists;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
-public class AuthenticateExplicit {
+public class AuthWithCredentialsFromMetadataServer {
 
   public static void main(String[] args) throws IOException, GeneralSecurityException {
     // TODO(Developer):
@@ -32,33 +31,24 @@ public class AuthenticateExplicit {
     //  2. Make sure you have the necessary permission to list storage buckets "storage.buckets.list"
     String projectId = "your-google-cloud-project-id";
 
-    // Path to the service account json credential file.
-    String jsonCredentialPath = "path-to-json-credential-file";
-
-    // Provide the scopes that you might need to request to access Google APIs,
-    // depending on the level of access you need.
-    // Example: The following scope lets you view and manage Pub/Sub topics and subscriptions.
-    // For more information, see: https://developers.google.com/identity/protocols/oauth2/scopes
-    String scope = "https://www.googleapis.com/auth/devstorage.full_control";
-
-    authenticateExplicit(projectId, jsonCredentialPath, scope);
+    authWithCredentialsFromMetadataServer(projectId);
   }
 
   // Authenticating using Client libraries can be done in one of the following ways:
   // 1. Implicit authentication with ADC (Application Default Credentials)
   // 2. Explicit authentication by specifying the service account
-  // 3. Authentication with service account credentials obtained from metadata server, like,
+  // 3. Authentication with service account credentials obtained from a metadata server, like,
   // Compute Engine or App Engine etc.,
   // 4. Bring your own (BYO) access token
   // 5. Using API keys (for libraries that support)
   //
-  // In this snippet, we demonstrate "Explicit authentication by specifying the service account".
-  public static void authenticateExplicit(String project, String jsonCredentialPath, String scope)
-      throws IOException {
+  // In this snippet, we demonstrate "Authentication with service account credentials
+  // obtained from a metadata server".
+  public static void authWithCredentialsFromMetadataServer(String project) {
 
     // This snippet demonstrates how to initialize Cloud Storage and list buckets.
-    // Note that the credentials are explicitly specified when constructing the client.
-    Storage storage = initService(project, jsonCredentialPath, scope);
+    // Note that the credentials are requested from the ComputeEngine metadata server.
+    Storage storage = initService(project);
 
     System.out.println("Buckets:");
     Page<Bucket> buckets = storage.list();
@@ -67,14 +57,14 @@ public class AuthenticateExplicit {
     }
   }
 
-  // Initialize the Storage client by explicitly setting the Service account to use.
-  public static Storage initService(String projectId, String jsonCredentialPath, String scope)
-      throws IOException {
-    // Construct the GoogleCredentials object which accepts the service account json file and
-    // scope as the input parameters.
-    GoogleCredentials credentials = GoogleCredentials
-        .fromStream(new FileInputStream(jsonCredentialPath))
-        .createScoped(Lists.newArrayList(scope));
+  // Initialize the Storage client by getting the Service account credentials
+  // from a Metadata server.
+  public static Storage initService(String projectId) {
+    // Explicitly request the service account credentials from the ComputeEngine metadata server.
+    GoogleCredentials credentials = ComputeEngineCredentials.create();
+
+    // Alternately, if executing within AppEngine, you can get credentials as follows:
+    // GoogleCredentials credentials = AppEngineCredentials.getApplicationDefault();
 
     // Construct the Storage client.
     // Note that, here we explicitly specify the service account to use.
