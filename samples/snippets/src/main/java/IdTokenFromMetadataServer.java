@@ -35,8 +35,7 @@ import java.util.Collections;
 
 public class IdTokenFromMetadataServer {
 
-  public static void main(String[] args)
-      throws IOException, GeneralSecurityException {
+  public static void main(String[] args) throws IOException, GeneralSecurityException {
     // TODO(Developer): Replace the below variables before running the code.
 
     // The service name for which the id token is requested. Service name refers to the
@@ -53,20 +52,23 @@ public class IdTokenFromMetadataServer {
   // ComputeEngine and use that information to obtain an id token.
   // Appengine 2nd Generation, Cloud Run or even Kubernetes engine's also expose a
   // metadata server.
-  // For AppEngine, see: https://cloud.google.com/appengine/docs/standard/java/accessing-instance-metadata#identifying_which_metadata_endpoint_to_use
-  // For CloudRun container instance, see: https://cloud.google.com/run/docs/container-contract#metadata-server
+  // For AppEngine, see:
+  // https://cloud.google.com/appengine/docs/standard/java/accessing-instance-metadata#identifying_which_metadata_endpoint_to_use
+  // For CloudRun container instance, see:
+  // https://cloud.google.com/run/docs/container-contract#metadata-server
   public static void getIdTokenFromMetadataServer(String targetAudience)
       throws GeneralSecurityException, IOException {
 
     // Optionally, you can also set scopes in computeEngineCredentials.
     ComputeEngineCredentials computeEngineCredentials = ComputeEngineCredentials.create();
 
-    IdTokenCredentials idTokenCredentials = IdTokenCredentials.newBuilder()
-        .setIdTokenProvider(computeEngineCredentials)
-        .setTargetAudience(targetAudience)
-        // Setting the id token options.
-        .setOptions(Arrays.asList(Option.FORMAT_FULL, Option.LICENSES_TRUE))
-        .build();
+    IdTokenCredentials idTokenCredentials =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(computeEngineCredentials)
+            .setTargetAudience(targetAudience)
+            // Setting the id token options.
+            .setOptions(Arrays.asList(Option.FORMAT_FULL, Option.LICENSES_TRUE))
+            .build();
 
     // Make a http request with the idTokenCredentials to obtain the access token.
     // stsEndpoint: The Security Token Service exchanges Google or third-party credentials for a
@@ -76,8 +78,8 @@ public class IdTokenFromMetadataServer {
     makeAuthenticatedRequest(idTokenCredentials, stsEndpoint);
 
     // Verify the obtained id token. This is done at the receiving end of the OIDC endpoint.
-    boolean isVerified = verifyGoogleIdToken(idTokenCredentials.getAccessToken().getTokenValue(),
-        targetAudience);
+    boolean isVerified =
+        verifyGoogleIdToken(idTokenCredentials.getAccessToken().getTokenValue(), targetAudience);
     if (isVerified) {
       System.out.println("Id token verified.");
       return;
@@ -101,10 +103,11 @@ public class IdTokenFromMetadataServer {
   private static boolean verifyGoogleIdToken(String idTokenString, String audience)
       throws GeneralSecurityException, IOException {
     // Initialize the Google id token verifier and set the audience.
-    GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
-        GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance())
-        .setAudience(Collections.singletonList(audience))
-        .build();
+    GoogleIdTokenVerifier verifier =
+        new GoogleIdTokenVerifier.Builder(
+                GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance())
+            .setAudience(Collections.singletonList(audience))
+            .build();
 
     // Verify the id token.
     GoogleIdToken idToken = verifier.verify(idTokenString);
@@ -122,5 +125,4 @@ public class IdTokenFromMetadataServer {
     }
     return false;
   }
-
 }

@@ -29,7 +29,8 @@ public class AuthenticateExplicit {
   public static void main(String[] args) throws IOException, GeneralSecurityException {
     // TODO(Developer):
     //  1. Replace the below variable.
-    //  2. Make sure you have the necessary permission to list storage buckets "storage.buckets.list"
+    //  2. Make sure you have the necessary permission to list storage buckets
+    // "storage.buckets.list"
     String projectId = "your-google-cloud-project-id";
 
     // Path to the service account json credential file.
@@ -73,9 +74,9 @@ public class AuthenticateExplicit {
       throws IOException {
     // Construct the GoogleCredentials object which accepts the service account json file and
     // scope as the input parameters.
-    GoogleCredentials credentials = GoogleCredentials
-        .fromStream(new FileInputStream(jsonCredentialPath))
-        .createScoped(Lists.newArrayList(scope));
+    GoogleCredentials credentials =
+        GoogleCredentials.fromStream(new FileInputStream(jsonCredentialPath))
+            .createScoped(Lists.newArrayList(scope));
 
     // Construct the Storage client.
     // Note that, here we explicitly specify the service account to use.

@@ -33,8 +33,7 @@ import java.util.List;
 
 public class IdTokenFromImpersonatedCredentials {
 
-  public static void main(String[] args)
-      throws IOException, GeneralSecurityException {
+  public static void main(String[] args) throws IOException, GeneralSecurityException {
     // TODO(Developer): Replace the below variables before running the code.
 
     // Your Google Cloud project id.
@@ -54,15 +53,17 @@ public class IdTokenFromImpersonatedCredentials {
     String targetAudience = "pubsub.googleapis.com";
 
     // The service account name of the limited-privilege account for whom the credential is created.
-    String impersonatedServiceAccount =
-        "name@project.service.gserviceaccount.com";
+    String impersonatedServiceAccount = "name@project.service.gserviceaccount.com";
 
-    getIdTokenFromImpersonatedCredentials(projectId, jsonCredentialPath, impersonatedServiceAccount,
-        scope, targetAudience);
+    getIdTokenFromImpersonatedCredentials(
+        projectId, jsonCredentialPath, impersonatedServiceAccount, scope, targetAudience);
   }
 
-  public static void getIdTokenFromImpersonatedCredentials(String projectId,
-      String jsonCredentialPath, String impersonatedServiceAccount, String scope,
+  public static void getIdTokenFromImpersonatedCredentials(
+      String projectId,
+      String jsonCredentialPath,
+      String impersonatedServiceAccount,
+      String scope,
       String targetAudience)
       throws GeneralSecurityException, IOException {
 
@@ -87,20 +88,23 @@ public class IdTokenFromImpersonatedCredentials {
     List<String> delegates = null;
 
     // Set the target audience and Token options.
-    GenerateIdTokenRequest idTokenRequest = new GenerateIdTokenRequest()
-        .setAudience(targetAudience)
-        .setDelegates(delegates)
-        // Setting this will include email in the id token.
-        .setIncludeEmail(Boolean.TRUE);
+    GenerateIdTokenRequest idTokenRequest =
+        new GenerateIdTokenRequest()
+            .setAudience(targetAudience)
+            .setDelegates(delegates)
+            // Setting this will include email in the id token.
+            .setIncludeEmail(Boolean.TRUE);
 
     // Generate the id token for the impersonated service account, using the generateIdToken()
     // from IAMCredentials class.
-    GenerateIdToken idToken = service
-        .projects()
-        .serviceAccounts()
-        .generateIdToken(
-            String.format("projects/%s/serviceAccounts/%s", projectId, impersonatedServiceAccount),
-            idTokenRequest);
+    GenerateIdToken idToken =
+        service
+            .projects()
+            .serviceAccounts()
+            .generateIdToken(
+                String.format(
+                    "projects/%s/serviceAccounts/%s", projectId, impersonatedServiceAccount),
+                idTokenRequest);
 
     // Verify the obtained id token. This is done at the receiving end of the OIDC endpoint.
     boolean isVerified = verifyGoogleIdToken(idToken.getAccessToken(), targetAudience);
@@ -119,9 +123,9 @@ public class IdTokenFromImpersonatedCredentials {
 
     // Initialize the IAMCredentials service.
     return new IAMCredentials.Builder(
-        GoogleNetHttpTransport.newTrustedTransport(),
-        GsonFactory.getDefaultInstance(),
-        new HttpCredentialsAdapter(credential))
+            GoogleNetHttpTransport.newTrustedTransport(),
+            GsonFactory.getDefaultInstance(),
+            new HttpCredentialsAdapter(credential))
         .setApplicationName("service-accounts")
         .build();
   }
@@ -130,10 +134,11 @@ public class IdTokenFromImpersonatedCredentials {
   private static boolean verifyGoogleIdToken(String idTokenString, String audience)
       throws GeneralSecurityException, IOException {
     // Initialize the Google id token verifier and set the audience.
-    GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
-        GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance())
-        .setAudience(Collections.singletonList(audience))
-        .build();
+    GoogleIdTokenVerifier verifier =
+        new GoogleIdTokenVerifier.Builder(
+                GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance())
+            .setAudience(Collections.singletonList(audience))
+            .build();
 
     // Verify the id token.
     GoogleIdToken idToken = verifier.verify(idTokenString);

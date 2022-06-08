@@ -51,24 +51,22 @@ public class IdTokenFromServiceAccount {
     getIdTokenFromServiceAccount(jsonCredentialPath, scope, targetAudience);
   }
 
-  public static void getIdTokenFromServiceAccount(String jsonCredentialPath, String scope,
-      String targetAudience)
+  public static void getIdTokenFromServiceAccount(
+      String jsonCredentialPath, String scope, String targetAudience)
       throws IOException, GeneralSecurityException {
 
     // Initialize the Service Account Credentials class with the path to the json file.
-    ServiceAccountCredentials serviceAccountCredentials = ServiceAccountCredentials.fromStream(
-        new FileInputStream(jsonCredentialPath));
+    ServiceAccountCredentials serviceAccountCredentials =
+        ServiceAccountCredentials.fromStream(new FileInputStream(jsonCredentialPath));
     // Restrict the scope of the service account.
-    serviceAccountCredentials = (ServiceAccountCredentials) serviceAccountCredentials.createScoped(
-        Arrays.asList(scope));
+    serviceAccountCredentials =
+        (ServiceAccountCredentials) serviceAccountCredentials.createScoped(Arrays.asList(scope));
 
     // Obtain the id token by providing the target audience.
     // tokenOption: Enum of various credential-specific options to apply to the token. Applicable
     // only for credentials obtained through Compute Engine or Impersonation.
     List<Option> tokenOption = Arrays.asList();
-    IdToken idToken = serviceAccountCredentials.idTokenWithAudience(
-        targetAudience,
-        tokenOption);
+    IdToken idToken = serviceAccountCredentials.idTokenWithAudience(targetAudience, tokenOption);
 
     // Verify the obtained id token. This is done at the receiving end of the OIDC endpoint.
     boolean isVerified = verifyGoogleIdToken(idToken.getTokenValue(), targetAudience);
@@ -79,15 +77,15 @@ public class IdTokenFromServiceAccount {
     System.out.println("Unable to verify id token.");
   }
 
-
   // Verifies the obtained Google id token.
   private static boolean verifyGoogleIdToken(String idTokenString, String audience)
       throws GeneralSecurityException, IOException {
     // Initialize the Google id token verifier and set the audience.
-    GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
-        GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance())
-        .setAudience(Collections.singletonList(audience))
-        .build();
+    GoogleIdTokenVerifier verifier =
+        new GoogleIdTokenVerifier.Builder(
+                GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance())
+            .setAudience(Collections.singletonList(audience))
+            .build();
 
     // Verify the id token.
     GoogleIdToken idToken = verifier.verify(idTokenString);
@@ -105,5 +103,4 @@ public class IdTokenFromServiceAccount {
     }
     return false;
   }
-
 }

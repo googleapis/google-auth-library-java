@@ -55,21 +55,22 @@ public class IdTokenFromServiceAccountREST {
     getIdTokenFromServiceAccountREST(jsonCredentialPath, scope, targetAudience);
   }
 
-  public static void getIdTokenFromServiceAccountREST(String jsonCredentialPath, String scope,
-      String targetAudience)
+  public static void getIdTokenFromServiceAccountREST(
+      String jsonCredentialPath, String scope, String targetAudience)
       throws IOException, ExecutionException, InterruptedException, GeneralSecurityException {
     // Initialize the Service Account Credentials class with the path to the json file.
-    ServiceAccountCredentials serviceAccountCredentials = ServiceAccountCredentials.fromStream(
-        new FileInputStream(jsonCredentialPath));
+    ServiceAccountCredentials serviceAccountCredentials =
+        ServiceAccountCredentials.fromStream(new FileInputStream(jsonCredentialPath));
     // Restrict the scope of the service account.
-    serviceAccountCredentials = (ServiceAccountCredentials) serviceAccountCredentials.createScoped(
-        Arrays.asList(scope));
+    serviceAccountCredentials =
+        (ServiceAccountCredentials) serviceAccountCredentials.createScoped(Arrays.asList(scope));
 
     // Set the service account and target audience.
-    IdTokenCredentials idTokenCredentials = IdTokenCredentials.newBuilder()
-        .setIdTokenProvider(serviceAccountCredentials)
-        .setTargetAudience(targetAudience)
-        .build();
+    IdTokenCredentials idTokenCredentials =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(serviceAccountCredentials)
+            .setTargetAudience(targetAudience)
+            .build();
 
     // Make a http request with the idTokenCredentials to obtain the access token.
     // stsEndpoint: The Security Token Service exchanges Google or third-party credentials for a
@@ -79,8 +80,8 @@ public class IdTokenFromServiceAccountREST {
     makeAuthenticatedRequest(idTokenCredentials, stsEndpoint);
 
     // Verify the obtained id token. This is done at the receiving end of the OIDC endpoint.
-    boolean isVerified = verifyGoogleIdToken(idTokenCredentials.getAccessToken().getTokenValue(),
-        targetAudience);
+    boolean isVerified =
+        verifyGoogleIdToken(idTokenCredentials.getAccessToken().getTokenValue(), targetAudience);
     if (isVerified) {
       System.out.println("Id token verified.");
       return;
@@ -104,10 +105,11 @@ public class IdTokenFromServiceAccountREST {
   private static boolean verifyGoogleIdToken(String idTokenString, String audience)
       throws GeneralSecurityException, IOException {
     // Initialize the Google id token verifier and set the audience.
-    GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
-        GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance())
-        .setAudience(Collections.singletonList(audience))
-        .build();
+    GoogleIdTokenVerifier verifier =
+        new GoogleIdTokenVerifier.Builder(
+                GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance())
+            .setAudience(Collections.singletonList(audience))
+            .build();
 
     // Verify the id token.
     GoogleIdToken idToken = verifier.verify(idTokenString);

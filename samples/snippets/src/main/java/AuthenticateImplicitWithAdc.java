@@ -56,7 +56,8 @@ public class AuthenticateImplicitWithAdc {
   // Cloud Code, the tool uses the credentials you provided when you logged in,
   // and manages any authorizations required.
   //
-  // For more environments, see: https://cloud.devsite.corp.google.com/docs/authentication/provide-credentials-adc
+  // For more environments, see:
+  // https://cloud.devsite.corp.google.com/docs/authentication/provide-credentials-adc
   //
   // ADC detection is independent of the client library and language and works with all Cloud Client
   // libraries.

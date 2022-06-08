@@ -38,8 +38,7 @@ import java.util.List;
 
 public class IdTokenFromImpersonatedCredentialsREST {
 
-  public static void main(String[] args)
-      throws IOException, GeneralSecurityException {
+  public static void main(String[] args) throws IOException, GeneralSecurityException {
     // TODO(Developer): Replace the below variables before running the code.
     // Path to the service account json credential file.
     String jsonCredentialPath = "path-to-json-credential-file";
@@ -55,27 +54,31 @@ public class IdTokenFromImpersonatedCredentialsREST {
     String targetAudience = "pubsub.googleapis.com";
 
     // The service account name of the limited-privilege account for whom the credential is created.
-    String impersonatedServiceAccount =
-        "name@project.service.gserviceaccount.com";
+    String impersonatedServiceAccount = "name@project.service.gserviceaccount.com";
 
-    getIdTokenFromImpersonatedCredentials(jsonCredentialPath, impersonatedServiceAccount, scope,
-        targetAudience);
+    getIdTokenFromImpersonatedCredentials(
+        jsonCredentialPath, impersonatedServiceAccount, scope, targetAudience);
   }
 
   // Use a service account (SA1) to impersonate as another service account (SA2) and obtain id token
   // for the impersonated account.
   // To obtain token for SA2, SA1 should have the "roles/iam.serviceAccountTokenCreator" permission
   // on SA2.
-  public static void getIdTokenFromImpersonatedCredentials(String jsonCredentialPath,
-      String impersonatedServiceAccount, String scope,
-      String targetAudience) throws IOException, GeneralSecurityException {
+  public static void getIdTokenFromImpersonatedCredentials(
+      String jsonCredentialPath,
+      String impersonatedServiceAccount,
+      String scope,
+      String targetAudience)
+      throws IOException, GeneralSecurityException {
     // Initialize the Service Account Credentials class with the path to the json file.
     // The caller who issues a request for the short-lived credentials.
-    ServiceAccountCredentials serviceAccountCredentials = ServiceAccountCredentials.fromStream(
-        new FileInputStream(jsonCredentialPath));
+    ServiceAccountCredentials serviceAccountCredentials =
+        ServiceAccountCredentials.fromStream(new FileInputStream(jsonCredentialPath));
     // Restrict the scope of the service account.
-    serviceAccountCredentials = (ServiceAccountCredentials) serviceAccountCredentials.createScoped(
-        Arrays.asList("https://www.googleapis.com/auth/cloud-platform"));
+    serviceAccountCredentials =
+        (ServiceAccountCredentials)
+            serviceAccountCredentials.createScoped(
+                Arrays.asList("https://www.googleapis.com/auth/cloud-platform"));
 
     // delegates: The chained list of delegates required to grant the final accessToken.
     //
@@ -89,20 +92,22 @@ public class IdTokenFromImpersonatedCredentialsREST {
     List<String> delegates = null;
 
     // Create the impersonated credential.
-    ImpersonatedCredentials impersonatedCredentials = ImpersonatedCredentials.create(
-        serviceAccountCredentials,
-        impersonatedServiceAccount,
-        delegates,
-        Arrays.asList(scope),
-        300);
+    ImpersonatedCredentials impersonatedCredentials =
+        ImpersonatedCredentials.create(
+            serviceAccountCredentials,
+            impersonatedServiceAccount,
+            delegates,
+            Arrays.asList(scope),
+            300);
 
     // Set the impersonated credential, target audience and token options.
-    IdTokenCredentials idTokenCredentials = IdTokenCredentials.newBuilder()
-        .setIdTokenProvider(impersonatedCredentials)
-        .setTargetAudience(targetAudience)
-        // Setting this will include email in the id token.
-        .setOptions(Arrays.asList(Option.INCLUDE_EMAIL))
-        .build();
+    IdTokenCredentials idTokenCredentials =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(impersonatedCredentials)
+            .setTargetAudience(targetAudience)
+            // Setting this will include email in the id token.
+            .setOptions(Arrays.asList(Option.INCLUDE_EMAIL))
+            .build();
 
     // Make a http request with the idTokenCredentials to obtain the access token.
     // stsEndpoint: The Security Token Service exchanges Google or third-party credentials for a
@@ -112,8 +117,8 @@ public class IdTokenFromImpersonatedCredentialsREST {
     makeAuthenticatedRequest(idTokenCredentials, stsEndpoint);
 
     // Verify the obtained id token. This is done at the receiving end of the OIDC endpoint.
-    boolean isVerified = verifyGoogleIdToken(idTokenCredentials.getAccessToken().getTokenValue(),
-        targetAudience);
+    boolean isVerified =
+        verifyGoogleIdToken(idTokenCredentials.getAccessToken().getTokenValue(), targetAudience);
     if (isVerified) {
       System.out.println("Id token verified.");
       return;
@@ -137,10 +142,11 @@ public class IdTokenFromImpersonatedCredentialsREST {
   private static boolean verifyGoogleIdToken(String idTokenString, String audience)
       throws GeneralSecurityException, IOException {
     // Initialize the Google id token verifier and set the audience.
-    GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
-        GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance())
-        .setAudience(Collections.singletonList(audience))
-        .build();
+    GoogleIdTokenVerifier verifier =
+        new GoogleIdTokenVerifier.Builder(
+                GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance())
+            .setAudience(Collections.singletonList(audience))
+            .build();
 
     // Verify the id token.
     GoogleIdToken idToken = verifier.verify(idTokenString);
@@ -158,5 +164,4 @@ public class IdTokenFromImpersonatedCredentialsREST {
     }
     return false;
   }
-
 }

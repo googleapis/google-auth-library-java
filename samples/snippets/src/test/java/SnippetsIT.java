@@ -41,7 +41,8 @@ public class SnippetsIT {
   // Check if the required environment variables are set.
   public static void requireEnvVar(String envVarName) {
     assertWithMessage(String.format("Missing environment variable '%s' ", envVarName))
-        .that(System.getenv(envVarName)).isNotEmpty();
+        .that(System.getenv(envVarName))
+        .isNotEmpty();
   }
 
   @BeforeClass
@@ -57,8 +58,7 @@ public class SnippetsIT {
   }
 
   @AfterClass
-  public static void cleanup() {
-  }
+  public static void cleanup() {}
 
   @Before
   public void beforeEach() {
@@ -75,9 +75,7 @@ public class SnippetsIT {
   @Test
   public void testIdTokenFromServiceAccount() throws GeneralSecurityException, IOException {
     IdTokenFromServiceAccount.getIdTokenFromServiceAccount(
-        CREDENTIALS,
-        "https://www.googleapis.com/auth/pubsub",
-        "pubsub.googleapis.com");
+        CREDENTIALS, "https://www.googleapis.com/auth/pubsub", "pubsub.googleapis.com");
     assertThat(stdOut.toString()).contains("Id token verified.");
   }
 
@@ -85,9 +83,7 @@ public class SnippetsIT {
   public void testIdTokenFromServiceAccountRest()
       throws GeneralSecurityException, IOException, ExecutionException, InterruptedException {
     IdTokenFromServiceAccountREST.getIdTokenFromServiceAccountREST(
-        CREDENTIALS,
-        "https://www.googleapis.com/auth/pubsub",
-        "pubsub.googleapis.com");
+        CREDENTIALS, "https://www.googleapis.com/auth/pubsub", "pubsub.googleapis.com");
     assertThat(stdOut.toString()).contains("Id token verified.");
   }
 
@@ -117,9 +113,7 @@ public class SnippetsIT {
   @Test
   public void testAuthenticateExplicit() throws IOException {
     AuthenticateExplicit.authenticateExplicit(
-        PROJECT_ID,
-        CREDENTIALS,
-        "https://www.googleapis.com/auth/devstorage.full_control");
+        PROJECT_ID, CREDENTIALS, "https://www.googleapis.com/auth/devstorage.full_control");
     assertThat(stdOut.toString()).contains("Authentication complete.");
   }
 
@@ -128,5 +122,4 @@ public class SnippetsIT {
     AuthWithCredentialsFromMetadataServer.authWithCredentialsFromMetadataServer(PROJECT_ID);
     assertThat(stdOut.toString()).contains("Authentication complete.");
   }
-
 }
