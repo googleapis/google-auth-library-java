@@ -1,3 +1,19 @@
+/*
+ * Copyright 2022 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
@@ -91,38 +107,3 @@ public class IdTokenFromServiceAccount {
   }
 
 }
-
-//
-// Iam service =
-//     new Iam.Builder(
-//         GoogleNetHttpTransport.newTrustedTransport(),
-//         GsonFactory.getDefaultInstance(),
-//         new HttpCredentialsAdapter(googleCredentials))
-//         .setApplicationName("service-accounts")
-//         .build();
-//
-// try {
-//   ServiceAccount serviceAccount = new ServiceAccount();
-//   serviceAccount.setDisplayName("serviceaccdummy");
-//   CreateServiceAccountRequest request = new CreateServiceAccountRequest();
-//   request.setAccountId("serviceAccountName");
-//   request.setServiceAccount(serviceAccount);
-//
-//   serviceAccount =
-//       service.projects().serviceAccounts().create("projects/" + projectId, request).execute();
-//
-//   System.out.println("Created service account: " + serviceAccount.getEmail());
-//
-//
-// GenerateIdToken iamCredentials = new IAMCredentials(
-//     GoogleNetHttpTransport.newTrustedTransport(),
-//     GsonFactory.getDefaultInstance(),
-//     new HttpCredentialsAdapter(googleCredentialsProvider)
-// ).projects().serviceAccounts().generateIdToken(String.format("projects/%s/serviceAccounts/%s", projectId, serviceAccount),
-//     new GenerateIdTokenRequest().setAudience("https://www.googleapis.com/auth/cloud-platform"));
-//
-// System.out.println(iamCredentials);
-//
-// } catch (IOException e) {
-//   System.out.println("Unable to create service account: \n" + e.toString());
-// }

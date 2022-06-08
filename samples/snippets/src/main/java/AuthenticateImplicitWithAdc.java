@@ -1,8 +1,24 @@
+/*
+ * Copyright 2022 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import com.google.cloud.compute.v1.Instance;
 import com.google.cloud.compute.v1.InstancesClient;
 import java.io.IOException;
 
-public class ApplicationDefaultCredentialsImplicit {
+public class AuthenticateImplicitWithAdc {
 
   public static void main(String[] args) throws IOException {
     // TODO(Developer):
@@ -14,6 +30,13 @@ public class ApplicationDefaultCredentialsImplicit {
     authenticateImplicitWithAdc(projectId);
   }
 
+  // Authenticating using Client libraries can be done in one of the following ways:
+  // 1. Implicit authentication with ADC (Application Default Credentials)
+  // 2. Explicit authentication by specifying the service account
+  // 3. Bring your own (BYO) access token
+  // 4. Using API keys (for libraries that support)
+  //
+  // In this snippet, we demonstrate "Implicit authentication with ADC".
   // ADC - Application Default Credentials
   // When interacting with Google Cloud Client libraries, the library can auto-detect the
   // credentials to use, if the "APPLICATION_DEFAULT_CREDENTIALS" is set.
