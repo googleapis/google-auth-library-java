@@ -91,7 +91,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     implements ServiceAccountSigner, IdTokenProvider, QuotaProjectIdProvider {
 
   private static final long serialVersionUID = -2133257318957488431L;
-  private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+  private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ssX";
   private static final int TWELVE_HOURS_IN_SECONDS = 43200;
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
   private static final String CLOUD_PLATFORM_SCOPE =
