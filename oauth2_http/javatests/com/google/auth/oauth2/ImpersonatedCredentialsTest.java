@@ -71,7 +71,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -585,7 +584,8 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             mockTransportFactory);
 
     assertEquals(ACCESS_TOKEN, targetCredentials.refreshAccessToken().getTokenValue());
-    assertEquals(c.getTime().toInstant().truncatedTo(ChronoUnit.SECONDS).toEpochMilli(),
+    assertEquals(
+        c.getTime().toInstant().truncatedTo(ChronoUnit.SECONDS).toEpochMilli(),
         targetCredentials.refreshAccessToken().getExpirationTimeMillis());
     assertEquals(DEFAULT_IMPERSONATION_URL, mockTransportFactory.transport.getRequest().getUrl());
   }
@@ -598,7 +598,8 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
     mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
-    mockTransportFactory.transport.setExpireTime(getFormattedTime(c.getTime(), TimeZone.getTimeZone("PDT")));
+    mockTransportFactory.transport.setExpireTime(
+        getFormattedTime(c.getTime(), TimeZone.getTimeZone("PDT")));
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
             sourceCredentials,
@@ -609,7 +610,8 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             mockTransportFactory);
 
     assertEquals(ACCESS_TOKEN, targetCredentials.refreshAccessToken().getTokenValue());
-    assertEquals(c.getTime().toInstant().truncatedTo(ChronoUnit.SECONDS).toEpochMilli(),
+    assertEquals(
+        c.getTime().toInstant().truncatedTo(ChronoUnit.SECONDS).toEpochMilli(),
         targetCredentials.refreshAccessToken().getExpirationTimeMillis());
     assertEquals(DEFAULT_IMPERSONATION_URL, mockTransportFactory.transport.getRequest().getUrl());
   }
@@ -982,18 +984,19 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   /**
-   Given a {@link Date}, it will return a string of the date
-   formatted like <b>yyyy-MM-dd'T'HH:mm:ss'Z'</b>
+   * Given a {@link Date}, it will return a string of the date formatted like
+   * <b>yyyy-MM-dd'T'HH:mm:ss'Z'</b>
    */
   private static String getFormattedTime(final Date date) {
-    //Set timezone to GMT since that's the TZ used in the response from the service impersonation token exchange
+    // Set timezone to GMT since that's the TZ used in the response from the service impersonation
+    // token exchange
     return getFormattedTime(date, TimeZone.getTimeZone("GMT"));
   }
 
   /**
-   Given a {@link Date} and a desired {@link TimeZone}, it will return a string of the date
-   formatted like <b>yyyy-MM-dd'T'HH:mm:ssX'</b> where X represents a timezone
-   code following RFC3339 standard
+   * Given a {@link Date} and a desired {@link TimeZone}, it will return a string of the date
+   * formatted like <b>yyyy-MM-dd'T'HH:mm:ssX'</b> where X represents a timezone code following
+   * RFC3339 standard
    */
   private static String getFormattedTime(final Date date, final TimeZone timeZone) {
     final DateFormat formatter = new SimpleDateFormat(RFC3339);
