@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.7.0](https://github.com/googleapis/google-auth-library-java/compare/v1.6.0...v1.7.0) (2022-05-12)
+
+
+### Features
+
+* Add ability to provide PrivateKey as Pkcs8 encoded string [#883](https://github.com/googleapis/google-auth-library-java/issues/883) ([#889](https://github.com/googleapis/google-auth-library-java/issues/889)) ([e0d6996](https://github.com/googleapis/google-auth-library-java/commit/e0d6996ac0db1bf75d92e5aba3eaab512affafe4))
+* Add iam endpoint override to ImpersonatedCredentials ([#910](https://github.com/googleapis/google-auth-library-java/issues/910)) ([97bfc4c](https://github.com/googleapis/google-auth-library-java/commit/97bfc4c8ceb199e775784ac3ed4fa992d4d2dcbf))
+
+
+### Bug Fixes
+
+* update branding in ExternalAccountCredentials ([#893](https://github.com/googleapis/google-auth-library-java/issues/893)) ([0200dbb](https://github.com/googleapis/google-auth-library-java/commit/0200dbb05cff06a333879cf99bac64adaada3239))
+
 ## [1.6.0](https://github.com/googleapis/google-auth-library-java/compare/v1.5.3...v1.6.0) (2022-03-15)
 
 
