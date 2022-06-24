@@ -185,10 +185,10 @@ final class PluggableAuthHandler implements ExecutableHandler {
 
     ExecutableResponse execResp;
     String executableOutput = "";
+    ExecutorService executor = Executors.newSingleThreadExecutor();
     try {
       // Consume the input stream while waiting for the program to finish so that
       // the process won't hang if the STDOUT buffer is filled.
-      ExecutorService executor = Executors.newSingleThreadExecutor();
       Future<String> future =
           executor.submit(
               () -> {
@@ -224,6 +224,11 @@ final class PluggableAuthHandler implements ExecutableHandler {
     } catch (IOException e) {
       // Destroy the process.
       process.destroy();
+
+      // Shutdown executor if needed.
+      if (!executor.isShutdown()) {
+        executor.shutdownNow();
+      }
 
       if (e instanceof PluggableAuthException) {
         throw e;
