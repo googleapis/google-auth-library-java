@@ -43,9 +43,11 @@ import com.google.api.client.json.GenericJson;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.ExternalAccountCredentialsTest.TestExternalAccountCredentials.TestCredentialSource;
+import com.google.auth.oauth2.PluggableAuthCredentials.PluggableAuthCredentialSource;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -103,6 +105,16 @@ public class ExternalAccountCredentialsTest {
         ExternalAccountCredentials.fromStream(TestUtils.jsonToInputStream(json));
 
     assertTrue(credential instanceof AwsCredentials);
+  }
+
+  @Test
+  void fromStream_pluggableAuthCredentials() throws IOException {
+    GenericJson json = buildJsonPluggableAuthCredential();
+
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromStream(TestUtils.jsonToInputStream(json));
+
+    assertTrue(credential instanceof PluggableAuthCredentials);
   }
 
   @Test
@@ -201,6 +213,53 @@ public class ExternalAccountCredentialsTest {
     assertEquals(STS_URL, credential.getTokenUrl());
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
     assertNotNull(credential.getCredentialSource());
+  }
+
+  @Test
+  void fromJson_pluggableAuthCredentials() {
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(
+            buildJsonPluggableAuthCredential(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+
+    assertTrue(credential instanceof PluggableAuthCredentials);
+    assertEquals("audience", credential.getAudience());
+    assertEquals("subjectTokenType", credential.getSubjectTokenType());
+    assertEquals(STS_URL, credential.getTokenUrl());
+    assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
+    assertNotNull(credential.getCredentialSource());
+
+    PluggableAuthCredentialSource source =
+        (PluggableAuthCredentialSource) credential.getCredentialSource();
+    assertEquals("command", source.getCommand());
+    assertEquals(30000, source.getTimeoutMs()); // Default timeout is 30s.
+    assertNull(source.getOutputFilePath());
+  }
+
+  @Test
+  void fromJson_pluggableAuthCredentials_allExecutableOptionsSet() {
+    GenericJson json = buildJsonPluggableAuthCredential();
+    Map<String, Object> credentialSourceMap = (Map<String, Object>) json.get("credential_source");
+    // Add optional params to the executable config (timeout, output file path).
+    Map<String, Object> executableConfig =
+        (Map<String, Object>) credentialSourceMap.get("executable");
+    executableConfig.put("timeout_millis", 5000);
+    executableConfig.put("output_file", "path/to/output/file");
+
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+
+    assertTrue(credential instanceof PluggableAuthCredentials);
+    assertEquals("audience", credential.getAudience());
+    assertEquals("subjectTokenType", credential.getSubjectTokenType());
+    assertEquals(STS_URL, credential.getTokenUrl());
+    assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
+    assertNotNull(credential.getCredentialSource());
+
+    PluggableAuthCredentialSource source =
+        (PluggableAuthCredentialSource) credential.getCredentialSource();
+    assertEquals("command", source.getCommand());
+    assertEquals("path/to/output/file", source.getOutputFilePath());
+    assertEquals(5000, source.getTimeoutMs());
   }
 
   @Test
@@ -514,6 +573,38 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
+  void exchangeExternalCredentialForAccessToken_withServiceAccountImpersonationOverride()
+      throws IOException {
+    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
+
+    String serviceAccountEmail = "different@different.iam.gserviceaccount.com";
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromStream(
+            IdentityPoolCredentialsTest.writeIdentityPoolCredentialsStream(
+                transportFactory.transport.getStsUrl(),
+                transportFactory.transport.getMetadataUrl(),
+                transportFactory.transport.getServiceAccountImpersonationUrl()),
+            transportFactory);
+
+    // Override impersonated credentials.
+    ExternalAccountCredentials sourceCredentials =
+        IdentityPoolCredentials.newBuilder((IdentityPoolCredentials) credential)
+            .setServiceAccountImpersonationUrl(null)
+            .build();
+    credential.overrideImpersonatedCredentials(
+        new ImpersonatedCredentials.Builder(sourceCredentials, serviceAccountEmail)
+            .setScopes(new ArrayList<>(sourceCredentials.getScopes()))
+            .setHttpTransportFactory(transportFactory)
+            .build());
+
+    credential.exchangeExternalCredentialForAccessToken(
+        StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build());
+
+    assertTrue(
+        transportFactory.transport.getRequests().get(2).getUrl().contains(serviceAccountEmail));
+  }
+
+  @Test
   void exchangeExternalCredentialForAccessToken_throws() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(buildJsonIdentityPoolCredential(), transportFactory);
@@ -700,6 +791,24 @@ public class ExternalAccountCredentialsTest {
     map.put("url", "url");
     map.put("regional_cred_verification_url", "regionalCredVerificationUrl");
     json.put("credential_source", map);
+
+    return json;
+  }
+
+  private GenericJson buildJsonPluggableAuthCredential() {
+    GenericJson json = new GenericJson();
+    json.put("audience", "audience");
+    json.put("subject_token_type", "subjectTokenType");
+    json.put("token_url", STS_URL);
+    json.put("token_info_url", "tokenInfoUrl");
+
+    Map<String, Map<String, Object>> credentialSource = new HashMap<>();
+
+    Map<String, Object> executableConfig = new HashMap<>();
+    executableConfig.put("command", "command");
+
+    credentialSource.put("executable", executableConfig);
+    json.put("credential_source", credentialSource);
 
     return json;
   }
