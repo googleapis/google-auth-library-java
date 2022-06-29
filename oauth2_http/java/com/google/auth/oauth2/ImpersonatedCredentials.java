@@ -55,6 +55,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -109,6 +110,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
   private final String transportFactoryClassName;
 
   private transient HttpTransportFactory transportFactory;
+
+  @VisibleForTesting transient Calendar calendar = Calendar.getInstance();
 
   /**
    * @param sourceCredentials the source credential used to acquire the impersonated credentials. It
@@ -512,6 +515,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
         OAuth2Utils.validateString(responseData, "expireTime", "Expected to find an expireTime");
 
     DateFormat format = new SimpleDateFormat(RFC3339);
+    format.setCalendar(calendar);
     try {
       Date date = format.parse(expireTime);
       return new AccessToken(accessToken, date);

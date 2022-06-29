@@ -582,24 +582,22 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             IMMUTABLE_SCOPES_LIST,
             VALID_LIFETIME,
             mockTransportFactory);
-
-    assertEquals(ACCESS_TOKEN, targetCredentials.refreshAccessToken().getTokenValue());
+    // Set system timezone to GMT
+    targetCredentials.calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
     assertEquals(
         c.getTime().toInstant().truncatedTo(ChronoUnit.SECONDS).toEpochMilli(),
         targetCredentials.refreshAccessToken().getExpirationTimeMillis());
-    assertEquals(DEFAULT_IMPERSONATION_URL, mockTransportFactory.transport.getRequest().getUrl());
   }
 
   @Test
-  void refreshAccessToken_PDT_dateParsedCorrectly() throws IOException, IllegalStateException {
+  void refreshAccessToken_nonGMT_dateParsedCorrectly() throws IOException, IllegalStateException {
 
     Calendar c = Calendar.getInstance();
     c.add(Calendar.SECOND, VALID_LIFETIME);
 
     mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
-    mockTransportFactory.transport.setExpireTime(
-        getFormattedTime(c.getTime(), TimeZone.getTimeZone("PDT")));
+    mockTransportFactory.transport.setExpireTime(getFormattedTime(c.getTime()));
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
             sourceCredentials,
@@ -608,12 +606,11 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             IMMUTABLE_SCOPES_LIST,
             VALID_LIFETIME,
             mockTransportFactory);
-
-    assertEquals(ACCESS_TOKEN, targetCredentials.refreshAccessToken().getTokenValue());
+    // Set system timezone to one different than GMT
+    targetCredentials.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/Los_Angeles"));
     assertEquals(
         c.getTime().toInstant().truncatedTo(ChronoUnit.SECONDS).toEpochMilli(),
         targetCredentials.refreshAccessToken().getExpirationTimeMillis());
-    assertEquals(DEFAULT_IMPERSONATION_URL, mockTransportFactory.transport.getRequest().getUrl());
   }
 
   @Test
