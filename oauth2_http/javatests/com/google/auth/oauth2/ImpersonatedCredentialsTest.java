@@ -584,6 +584,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             mockTransportFactory);
     // Set system timezone to GMT
     targetCredentials.calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+
     assertEquals(
         c.getTime().toInstant().truncatedTo(ChronoUnit.SECONDS).toEpochMilli(),
         targetCredentials.refreshAccessToken().getExpirationTimeMillis());
@@ -608,6 +609,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             mockTransportFactory);
     // Set system timezone to one different than GMT
     targetCredentials.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/Los_Angeles"));
+
     assertEquals(
         c.getTime().toInstant().truncatedTo(ChronoUnit.SECONDS).toEpochMilli(),
         targetCredentials.refreshAccessToken().getExpirationTimeMillis());
@@ -987,17 +989,8 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
   private static String getFormattedTime(final Date date) {
     // Set timezone to GMT since that's the TZ used in the response from the service impersonation
     // token exchange
-    return getFormattedTime(date, TimeZone.getTimeZone("GMT"));
-  }
-
-  /**
-   * Given a {@link Date} and a desired {@link TimeZone}, it will return a string of the date
-   * formatted like <b>yyyy-MM-dd'T'HH:mm:ssX'</b> where X represents a timezone code following
-   * RFC3339 standard
-   */
-  private static String getFormattedTime(final Date date, final TimeZone timeZone) {
     final DateFormat formatter = new SimpleDateFormat(RFC3339);
-    formatter.setTimeZone(timeZone);
+    formatter.setTimeZone(TimeZone.getTimeZone("GMT"));
     return formatter.format(date);
   }
 
