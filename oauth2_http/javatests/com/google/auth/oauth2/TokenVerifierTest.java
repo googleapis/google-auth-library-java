@@ -43,6 +43,7 @@ import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
 import com.google.common.io.CharStreams;
 import java.io.IOException;
 import java.io.InputStream;
@@ -177,6 +178,42 @@ class TokenVerifierTest {
         TokenVerifier.newBuilder()
             .setClock(FIXED_CLOCK)
             .setHttpTransportFactory(httpTransportFactory)
+            .build();
+    TokenVerifier.VerificationException exception =
+        assertThrows(
+            TokenVerifier.VerificationException.class,
+            () -> tokenVerifier.verify(ES256_TOKEN),
+            "Should have failed verification");
+    assertTrue(exception.getMessage().contains("Error fetching PublicKey"));
+  }
+
+  @Test
+  void verifyPublicKeyStoreIntermittentError() throws IOException {
+    // mock responses
+    MockLowLevelHttpResponse response404 = new MockLowLevelHttpResponse()
+        .setStatusCode(404)
+        .setContentType("application/json")
+        .setContent("");
+
+    MockLowLevelHttpResponse responseEmpty = new MockLowLevelHttpResponse()
+        .setStatusCode(200)
+        .setContentType("application/json")
+        .setContent("{\"keys\":[]}");
+
+    MockLowLevelHttpResponse responseGood = new MockLowLevelHttpResponse()
+        .setStatusCode(200)
+        .setContentType("application/json")
+        .setContent(readResourceAsString("iap_keys.json"));
+
+    // Mock HTTP requests
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+
+    transportFactory.transport.addResponseSequence(response404, responseEmpty, responseGood);
+
+    TokenVerifier tokenVerifier =
+        TokenVerifier.newBuilder()
+            .setClock(FIXED_CLOCK)
+            .setHttpTransportFactory(transportFactory)
             .build();
     TokenVerifier.VerificationException exception =
         assertThrows(

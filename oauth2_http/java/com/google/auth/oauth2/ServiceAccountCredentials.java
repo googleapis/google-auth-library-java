@@ -181,6 +181,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     } catch (URISyntaxException e) {
       throw new IOException("Token server URI specified in 'token_uri' could not be parsed.");
     }
+
     if (clientId == null
         || clientEmail == null
         || privateKeyPkcs8 == null
