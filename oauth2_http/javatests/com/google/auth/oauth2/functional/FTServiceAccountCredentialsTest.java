@@ -42,14 +42,28 @@ import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
+import com.google.api.client.util.Clock;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.IdToken;
 import com.google.auth.oauth2.IdTokenCredentials;
 import com.google.auth.oauth2.IdTokenProvider;
+import com.google.auth.oauth2.ServiceAccountCredentials;
+
+import java.util.Optional;
+import java.util.Properties;
+import java.util.concurrent.Callable;
+import java.util.jar.JarEntry;
+import java.util.jar.JarInputStream;
+
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.security.CodeSource;
+import java.security.ProtectionDomain;
+
 import org.junit.jupiter.api.Test;
 
 class FTServiceAccountCredentialsTest {
@@ -58,7 +72,7 @@ class FTServiceAccountCredentialsTest {
   private final String cloudTasksUrl =
       "https://cloudtasks.googleapis.com/v2/projects/gcloud-devel/locations";
   private final String storageUrl =
-      "https://storage.googleapis.com/storage/v1/b?project=gcloud-devel";
+      "https://storage.googleapis.com/storage/v1/b?project=api-6404308174320967819-640900";
   private final String bigQueryUrl =
       "https://bigquery.googleapis.com/bigquery/v2/projects/gcloud-devel/datasets";
   private final String computeUrl =
@@ -107,9 +121,72 @@ class FTServiceAccountCredentialsTest {
 
   @Test
   void ScopeSetNoAudienceStorageTest() throws Exception {
+    System.out.println(extractVersion(com.google.auth.oauth2.ServiceAccountCredentials.class));
+    System.out.println(extractVersion(org.apache.http.client.HttpClient.class));
     HttpResponse response = executeRequestWithCredentialsWithScope(storageUrl, cloudPlatformScope);
     assertEquals(200, response.getStatusCode());
   }
+
+  
+/**
+ * Reads a library's version if the library contains a Maven pom.properties
+ * file. You probably want to cache the output or write it to a constant.
+ *
+ * @param referenceClass any class from the library to check
+ * @return an Optional containing the version String, if present
+ */
+public static Optional<String> extractVersion(
+  final Class<?> referenceClass) {
+  return Optional.ofNullable(referenceClass)
+                 .map(cls -> unthrow(cls::getProtectionDomain))
+                 .map(ProtectionDomain::getCodeSource)
+                 .map(CodeSource::getLocation)
+                 .map(url -> unthrow(url::openStream))
+                 .map(is -> unthrow(() -> new JarInputStream(is)))
+                 .map(jis -> readPomProperties(jis, referenceClass))
+                 .map(props -> props.getProperty("version"));
+}
+
+/**
+* Locate the pom.properties file in the Jar, if present, and return a
+* Properties object representing the properties in that file.
+*
+* @param jarInputStream the jar stream to read from
+* @param referenceClass the reference class, whose ClassLoader we'll be
+* using
+* @return the Properties object, if present, otherwise null
+*/
+private static Properties readPomProperties(
+  final JarInputStream jarInputStream,
+  final Class<?> referenceClass) {
+
+  try {
+      JarEntry jarEntry;
+      while ((jarEntry = jarInputStream.getNextJarEntry()) != null) {
+          String entryName = jarEntry.getName();
+          if (entryName.startsWith("META-INF")
+              && entryName.endsWith("pom.properties")) {
+
+              Properties properties = new Properties();
+              ClassLoader classLoader = referenceClass.getClassLoader();
+              properties.load(classLoader.getResourceAsStream(entryName));
+              return properties;
+          }
+      }
+  } catch (IOException ignored) { }
+  return null;
+}
+
+/**
+* Wrap a Callable with code that returns null when an exception occurs, so
+* it can be used in an Optional.map() chain.
+*/
+private static <T> T unthrow(final Callable<T> code) {
+  try {
+      return code.call();
+  } catch (Exception ignored) { return null; }
+}
+
 
   @Test
   void ScopeSetNoAudienceComputeTest() throws Exception {

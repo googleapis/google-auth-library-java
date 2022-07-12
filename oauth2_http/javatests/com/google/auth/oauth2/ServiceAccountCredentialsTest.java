@@ -43,6 +43,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
@@ -54,11 +59,13 @@ import com.google.api.client.util.Clock;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.TestUtils;
 import com.google.auth.http.AuthHttpConstants;
+import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
 import com.google.common.collect.ImmutableSet;
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -75,6 +82,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.junit.jupiter.api.Test;
 
 /** Test case for {@link ServiceAccountCredentials}. */
@@ -255,6 +263,49 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(USER, payload.getSubject());
     assertEquals(String.join(" ", scopes), payload.get("scope"));
   }
+
+  
+ // If Service account key has custom URL - it still works, aud is set to default token url
+ @Test
+ void ScopeSetNoAudienceCustomEndpointStorageTest() throws Exception {
+   String storageUrl =
+       "https://storage.googleapis.com/storage/v1/b?project=api-6404308174320967819-640900";
+   String cloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform";
+   final ServiceAccountCredentials sac = ServiceAccountCredentials
+   .fromStream(new FileInputStream("C:\\Users\\timur\\Documents\\Work\\keys\\api-6404308174320967819-640900-00c7a213d705.json"));
+   final GoogleCredentials credentials = sac.createScoped(cloudPlatformScope);
+
+   JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
+   long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
+   String assertion = sac.createAssertion(jsonFactory, currentTimeMillis);
+
+   JsonWebSignature signature = JsonWebSignature.parse(jsonFactory, assertion);
+   JsonWebToken.Payload payload = signature.getPayload();
+   //assertEquals(CLIENT_EMAIL, payload.getIssuer());
+   assertEquals(OAuth2Utils.TOKEN_SERVER_URI.toString(), payload.getAudience());
+
+   printVersion(com.google.auth.oauth2.ServiceAccountCredentials.class);
+   printVersion(org.apache.http.client.HttpClient.class);
+
+   GenericUrl genericUrl = new GenericUrl(storageUrl);
+   HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
+   HttpTransport transport = new NetHttpTransport();
+   HttpRequest request = transport.createRequestFactory(adapter).buildGetRequest(genericUrl);
+
+   // check url is custom
+   //assertEquals("oauth2-testy.o.googleapis.com", request.getUrl().getHost());
+   HttpResponse response = request.execute();
+   assertEquals(200, response.getStatusCode());
+ }
+
+ public static void printVersion(Class<?> clazz) {
+  Package p = clazz.getPackage();
+  System.out.printf("%s%n  Title: %s%n  Version: %s%n  Vendor: %s%n",
+                    clazz.getName(),
+                    p.getImplementationTitle(),
+                    p.getImplementationVersion(),
+                    p.getImplementationVendor());
+}
 
   @Test
   void createAssertion_defaultScopes_correct() throws IOException {

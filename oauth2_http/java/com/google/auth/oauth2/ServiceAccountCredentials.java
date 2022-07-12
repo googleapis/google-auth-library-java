@@ -831,6 +831,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         && Objects.equals(this.defaultRetriesEnabled, other.defaultRetriesEnabled);
   }
 
+  @VisibleForTesting
   String createAssertion(JsonFactory jsonFactory, long currentTime) throws IOException {
     JsonWebSignature.Header header = new JsonWebSignature.Header();
     header.setAlgorithm("RS256");
