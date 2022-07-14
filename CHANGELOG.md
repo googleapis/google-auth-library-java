@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1](https://github.com/googleapis/google-auth-library-java/compare/v1.8.0...v1.8.1) (2022-07-13)
+
+
+### Bug Fixes
+
+* enable longpaths support for windows test ([#1485](https://github.com/googleapis/google-auth-library-java/issues/1485)) ([#943](https://github.com/googleapis/google-auth-library-java/issues/943)) ([c21ec6c](https://github.com/googleapis/google-auth-library-java/commit/c21ec6c952b8bb8fb8bc2e2f1b260beb330a3cd2))
+
 ## [1.8.0](https://github.com/googleapis/google-auth-library-java/compare/v1.7.0...v1.8.0) (2022-06-27)
 
 
