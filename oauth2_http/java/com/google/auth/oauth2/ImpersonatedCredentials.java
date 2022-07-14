@@ -111,7 +111,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
   private transient HttpTransportFactory transportFactory;
 
-  @VisibleForTesting transient Calendar calendar = Calendar.getInstance();
+  private transient Calendar calendar;
 
   /**
    * @param sourceCredentials the source credential used to acquire the impersonated credentials. It
@@ -432,6 +432,25 @@ public class ImpersonatedCredentials extends GoogleCredentials
         .build();
   }
 
+  /**
+   * Clones the impersonated credentials with a new calendar.
+   *
+   * @param calendar the calendar that will be used by the new ImpersonatedCredentials instance when
+   *     parsing the received expiration time of the refreshed access token
+   * @return the cloned impersonated credentials with the given custom calendar
+   */
+  public ImpersonatedCredentials createWithCustomCalendar(Calendar calendar) {
+    return toBuilder()
+        .setScopes(this.scopes)
+        .setLifetime(this.lifetime)
+        .setDelegates(this.delegates)
+        .setHttpTransportFactory(this.transportFactory)
+        .setQuotaProjectId(this.quotaProjectId)
+        .setIamEndpointOverride(this.iamEndpointOverride)
+        .setCalendar(calendar)
+        .build();
+  }
+
   @Override
   protected Map<String, List<String>> getAdditionalHeaders() {
     Map<String, List<String>> headers = super.getAdditionalHeaders();
@@ -454,6 +473,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     this.quotaProjectId = builder.quotaProjectId;
     this.iamEndpointOverride = builder.iamEndpointOverride;
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
+    this.calendar = builder.getCalendar();
     if (this.delegates == null) {
       this.delegates = new ArrayList<String>();
     }
@@ -610,6 +630,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     private HttpTransportFactory transportFactory;
     private String quotaProjectId;
     private String iamEndpointOverride;
+    private Calendar calendar = Calendar.getInstance();
 
     protected Builder() {}
 
@@ -680,6 +701,15 @@ public class ImpersonatedCredentials extends GoogleCredentials
     public Builder setIamEndpointOverride(String iamEndpointOverride) {
       this.iamEndpointOverride = iamEndpointOverride;
       return this;
+    }
+
+    public Builder setCalendar(Calendar calendar) {
+      this.calendar = calendar;
+      return this;
+    }
+
+    public Calendar getCalendar() {
+      return this.calendar;
     }
 
     public ImpersonatedCredentials build() {

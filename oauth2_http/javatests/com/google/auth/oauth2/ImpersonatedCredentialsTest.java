@@ -567,7 +567,6 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
   @Test
   void refreshAccessToken_GMT_dateParsedCorrectly() throws IOException, IllegalStateException {
-
     Calendar c = Calendar.getInstance();
     c.add(Calendar.SECOND, VALID_LIFETIME);
 
@@ -576,14 +575,15 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
     mockTransportFactory.transport.setExpireTime(getFormattedTime(c.getTime()));
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
-            sourceCredentials,
-            IMPERSONATED_CLIENT_EMAIL,
-            null,
-            IMMUTABLE_SCOPES_LIST,
-            VALID_LIFETIME,
-            mockTransportFactory);
-    // Set system timezone to GMT
-    targetCredentials.calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+                sourceCredentials,
+                IMPERSONATED_CLIENT_EMAIL,
+                null,
+                IMMUTABLE_SCOPES_LIST,
+                VALID_LIFETIME,
+                mockTransportFactory)
+            .createWithCustomCalendar(
+                // Set system timezone to GMT
+                Calendar.getInstance(TimeZone.getTimeZone("GMT")));
 
     assertEquals(
         c.getTime().toInstant().truncatedTo(ChronoUnit.SECONDS).toEpochMilli(),
@@ -592,7 +592,6 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
   @Test
   void refreshAccessToken_nonGMT_dateParsedCorrectly() throws IOException, IllegalStateException {
-
     Calendar c = Calendar.getInstance();
     c.add(Calendar.SECOND, VALID_LIFETIME);
 
@@ -601,14 +600,15 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
     mockTransportFactory.transport.setExpireTime(getFormattedTime(c.getTime()));
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
-            sourceCredentials,
-            IMPERSONATED_CLIENT_EMAIL,
-            null,
-            IMMUTABLE_SCOPES_LIST,
-            VALID_LIFETIME,
-            mockTransportFactory);
-    // Set system timezone to one different than GMT
-    targetCredentials.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/Los_Angeles"));
+                sourceCredentials,
+                IMPERSONATED_CLIENT_EMAIL,
+                null,
+                IMMUTABLE_SCOPES_LIST,
+                VALID_LIFETIME,
+                mockTransportFactory)
+            .createWithCustomCalendar(
+                // Set system timezone to one different than GMT
+                Calendar.getInstance(TimeZone.getTimeZone("America/Los_Angeles")));
 
     assertEquals(
         c.getTime().toInstant().truncatedTo(ChronoUnit.SECONDS).toEpochMilli(),
