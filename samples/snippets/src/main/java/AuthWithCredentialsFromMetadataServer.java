@@ -34,15 +34,7 @@ public class AuthWithCredentialsFromMetadataServer {
     authWithCredentialsFromMetadataServer(projectId);
   }
 
-  // Authenticating using Client libraries can be done in one of the following ways:
-  // 1. Implicit authentication with ADC (Application Default Credentials)
-  // 2. Explicit authentication by specifying the service account
-  // 3. Authentication with service account credentials obtained from a metadata server, like,
-  // Compute Engine or App Engine etc.,
-  // 4. Bring your own (BYO) access token
-  // 5. Using API keys (for libraries that support)
-  //
-  // In this snippet, we demonstrate "Authentication with service account credentials
+  // In this snippet, we demonstrate "Authentication with account credentials
   // obtained from a metadata server".
   public static void authWithCredentialsFromMetadataServer(String project) {
 
@@ -58,10 +50,10 @@ public class AuthWithCredentialsFromMetadataServer {
     System.out.println("Authentication complete.");
   }
 
-  // Initialize the Storage client by getting the Service account credentials
+  // Initialize the Storage client by getting the credentials
   // from a Metadata server.
   private static Storage initService(String projectId) {
-    // Explicitly request the service account credentials from the ComputeEngine metadata server.
+    // Explicitly request the credentials from the ComputeEngine metadata server.
     GoogleCredentials credentials = ComputeEngineCredentials.create();
 
     // Alternately, if executing within AppEngine, you can get credentials as follows:

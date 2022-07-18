@@ -23,17 +23,11 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.google.auth.oauth2.IdToken;
-import com.google.auth.oauth2.IdTokenProvider.Option;
-import com.google.auth.oauth2.ServiceAccountCredentials;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.security.interfaces.RSAPublicKey;
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class VerifyNonGoogleIdToken {
@@ -41,14 +35,8 @@ public class VerifyNonGoogleIdToken {
   public static void main(String[] args)
       throws IOException, ExecutionException, InterruptedException, GeneralSecurityException, JwkException {
     // TODO(Developer): Replace the below variables before running the code.
-    // Path to the service account json credential file.
-    String jsonCredentialPath = "path-to-json-credential-file";
-
-    // Provide the scopes that you might need to request to access Google APIs,
-    // depending on the level of access you need.
-    // Example: The following scope lets you view and manage Pub/Sub topics and subscriptions.
-    // For more information, see: https://developers.google.com/identity/protocols/oauth2/scopes
-    String scope = "https://www.googleapis.com/auth/pubsub";
+    // The non-Google ID token to verify.
+    String idToken = "id-token";
 
     // The service name for which the id token is requested. Service name refers to the
     // logical identifier of an API service, such as "pubsub.googleapis.com".
@@ -64,19 +52,14 @@ public class VerifyNonGoogleIdToken {
     // For more information on jwk,see: https://auth0.com/docs/secure/tokens/json-web-tokens/json-web-key-sets
     String jwkUrl = "https://www.googleapis.com/oauth2/v3/certs";
 
-    verifyNonGoogleIdToken(jsonCredentialPath, targetAudience, scope, jwkUrl);
+    verifyNonGoogleIdToken(idToken, targetAudience, jwkUrl);
   }
 
   // Verify a non-google id token. Here, we are using the Google's jwk. The procedure is the same
   // even if the jwk is from a different provider.
-  public static void verifyNonGoogleIdToken(String jsonCredentialPath, String targetAudience,
-      String scope, String jwkUrl)
-      throws IOException, JwkException, GeneralSecurityException {
-    // Create an id token from the given service account.
-    // Since we are using Google's jwk, we are creating an id token from a Google service account.
-    // If a different provider is used, then generate an id token accordingly.
-    String idToken = getIdTokenFromServiceAccount(jsonCredentialPath, scope,
-        targetAudience).getTokenValue();
+  public static void verifyNonGoogleIdToken(String idToken, String targetAudience,
+      String jwkUrl)
+      throws IOException, JwkException {
 
     // Start verification.
     DecodedJWT jwt = JWT.decode(idToken);
@@ -109,30 +92,7 @@ public class VerifyNonGoogleIdToken {
       System.out.println("Id token verified.");
       return;
     }
-    System.out.println("Unable to verify id token.");
-  }
-
-  // Get an id token from a Google service account.
-  private static IdToken getIdTokenFromServiceAccount(String jsonCredentialPath, String scope,
-      String targetAudience)
-      throws IOException, GeneralSecurityException, JwkException {
-
-    // Initialize the Service Account Credentials class with the path to the json file.
-    ServiceAccountCredentials serviceAccountCredentials = ServiceAccountCredentials.fromStream(
-        new FileInputStream(jsonCredentialPath));
-    // Restrict the scope of the service account.
-    serviceAccountCredentials = (ServiceAccountCredentials) serviceAccountCredentials.createScoped(
-        Arrays.asList(scope));
-
-    // Obtain the id token by providing the target audience.
-    // tokenOption: Enum of various credential-specific options to apply to the token. Applicable
-    // only for credentials obtained through Compute Engine or Impersonation.
-    List<Option> tokenOption = Arrays.asList();
-    IdToken idToken = serviceAccountCredentials.idTokenWithAudience(
-        targetAudience,
-        tokenOption);
-
-    return idToken;
+    System.out.println("Unable to verify ID token.");
   }
 
 }

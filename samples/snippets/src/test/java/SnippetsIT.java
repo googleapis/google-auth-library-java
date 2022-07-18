@@ -18,11 +18,16 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.auth0.jwk.JwkException;
+import com.google.auth.oauth2.IdToken;
+import com.google.auth.oauth2.IdTokenProvider.Option;
+import com.google.auth.oauth2.ServiceAccountCredentials;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.security.GeneralSecurityException;
-import java.util.concurrent.ExecutionException;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -72,31 +77,46 @@ public class SnippetsIT {
     System.setOut(null);
   }
 
+  // Get an id token from a Google service account.
+  private static String getIdTokenFromServiceAccount(String jsonCredentialPath, String scope,
+      String targetAudience)
+      throws IOException, GeneralSecurityException, JwkException {
+
+    // Initialize the Service Account Credentials class with the path to the json file.
+    ServiceAccountCredentials serviceAccountCredentials = ServiceAccountCredentials.fromStream(
+        new FileInputStream(jsonCredentialPath));
+    // Restrict the scope of the service account.
+    serviceAccountCredentials = (ServiceAccountCredentials) serviceAccountCredentials.createScoped(
+        Arrays.asList(scope));
+
+    // Obtain the id token by providing the target audience.
+    // tokenOption: Enum of various credential-specific options to apply to the token. Applicable
+    // only for credentials obtained through Compute Engine or Impersonation.
+    List<Option> tokenOption = Arrays.asList();
+    IdToken idToken = serviceAccountCredentials.idTokenWithAudience(
+        targetAudience,
+        tokenOption);
+
+    return idToken.getTokenValue();
+  }
+
   @Test
-  public void testIdTokenFromServiceAccount() throws GeneralSecurityException, IOException {
+  public void testIdTokenFromServiceAccount() throws IOException {
     IdTokenFromServiceAccount.getIdTokenFromServiceAccount(
         CREDENTIALS,
         "https://www.googleapis.com/auth/pubsub",
         "pubsub.googleapis.com");
-    assertThat(stdOut.toString()).contains("Id token verified.");
-  }
-
-  @Test
-  public void testIdTokenFromServiceAccountRest()
-      throws GeneralSecurityException, IOException, ExecutionException, InterruptedException {
-    IdTokenFromServiceAccountREST.getIdTokenFromServiceAccountREST(
-        CREDENTIALS,
-        "https://www.googleapis.com/auth/pubsub",
-        "pubsub.googleapis.com");
-    assertThat(stdOut.toString()).contains("Id token verified.");
+    assertThat(stdOut.toString()).contains("Generated ID token");
   }
 
   @Test
   public void testVerifyNonGoogleIdToken()
       throws GeneralSecurityException, IOException, JwkException {
+    String idToken = getIdTokenFromServiceAccount(CREDENTIALS,
+        "https://www.googleapis.com/auth/cloud-platform", "pubsub.googleapis.com");
+
     VerifyNonGoogleIdToken.verifyNonGoogleIdToken(
-        CREDENTIALS,
-        "https://www.googleapis.com/auth/pubsub",
+        idToken,
         "pubsub.googleapis.com",
         "https://www.googleapis.com/oauth2/v3/certs");
     assertThat(stdOut.toString()).contains("Id token verified.");
@@ -104,8 +124,8 @@ public class SnippetsIT {
 
   @Test
   public void testIdTokenFromMetadataServer() throws GeneralSecurityException, IOException {
-    IdTokenFromMetadataServer.getIdTokenFromMetadataServer("pubsub.googleapis.com");
-    assertThat(stdOut.toString()).contains("Id token verified.");
+    IdTokenFromMetadataServer.getIdTokenFromMetadataServer("https://www.google.com");
+    assertThat(stdOut.toString()).contains("Generated ID token:");
   }
 
   @Test
@@ -118,8 +138,7 @@ public class SnippetsIT {
   public void testAuthenticateExplicit() throws IOException {
     AuthenticateExplicit.authenticateExplicit(
         PROJECT_ID,
-        CREDENTIALS,
-        "https://www.googleapis.com/auth/devstorage.full_control");
+        "https://www.googleapis.com/auth/cloud-platform");
     assertThat(stdOut.toString()).contains("Authentication complete.");
   }
 

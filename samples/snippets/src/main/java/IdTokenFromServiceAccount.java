@@ -14,11 +14,6 @@
  * limitations under the License.
  */
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.json.gson.GsonFactory;
 import com.google.auth.oauth2.IdToken;
 import com.google.auth.oauth2.IdTokenProvider.Option;
 import com.google.auth.oauth2.ServiceAccountCredentials;
@@ -26,7 +21,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -35,25 +29,27 @@ public class IdTokenFromServiceAccount {
   public static void main(String[] args)
       throws IOException, ExecutionException, InterruptedException, GeneralSecurityException {
     // TODO(Developer): Replace the below variables before running the code.
+    //  Using Service account key is discouraged. Please consider alternate approaches first.
     // Path to the service account json credential file.
     String jsonCredentialPath = "path-to-json-credential-file";
 
     // Provide the scopes that you might need to request to access Google APIs,
     // depending on the level of access you need.
-    // Example: The following scope lets you view and manage Pub/Sub topics and subscriptions.
     // For more information, see: https://developers.google.com/identity/protocols/oauth2/scopes
-    String scope = "https://www.googleapis.com/auth/pubsub";
+    // The best practice is to use the cloud-wide scope and use IAM to narrow the permissions.
+    // https://cloud.google.com/docs/authentication#authorization_for_services
+    String scope = "https://www.googleapis.com/auth/cloud-platform";
 
     // The service name for which the id token is requested. Service name refers to the
     // logical identifier of an API service, such as "pubsub.googleapis.com".
-    String targetAudience = "pubsub.googleapis.com";
+    String targetAudience = "iap.googleapis.com";
 
     getIdTokenFromServiceAccount(jsonCredentialPath, scope, targetAudience);
   }
 
   public static void getIdTokenFromServiceAccount(String jsonCredentialPath, String scope,
       String targetAudience)
-      throws IOException, GeneralSecurityException {
+      throws IOException {
 
     // Initialize the Service Account Credentials class with the path to the json file.
     ServiceAccountCredentials serviceAccountCredentials = ServiceAccountCredentials.fromStream(
@@ -70,40 +66,12 @@ public class IdTokenFromServiceAccount {
         targetAudience,
         tokenOption);
 
-    // Verify the obtained id token. This is done at the receiving end of the OIDC endpoint.
-    boolean isVerified = verifyGoogleIdToken(idToken.getTokenValue(), targetAudience);
-    if (isVerified) {
-      System.out.println("Id token verified.");
-      return;
-    }
-    System.out.println("Unable to verify id token.");
+    // The following method can also be used to generate the ID token.
+    // IdTokenCredentials idTokenCredentials = IdTokenCredentials.newBuilder()
+    //     .setIdTokenProvider(serviceAccountCredentials)
+    //     .setTargetAudience(targetAudience)
+    //     .build();
+
+    System.out.printf("Generated ID token %s", idToken.getTokenValue());
   }
-
-
-  // Verifies the obtained Google id token.
-  private static boolean verifyGoogleIdToken(String idTokenString, String audience)
-      throws GeneralSecurityException, IOException {
-    // Initialize the Google id token verifier and set the audience.
-    GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
-        GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance())
-        .setAudience(Collections.singletonList(audience))
-        .build();
-
-    // Verify the id token.
-    GoogleIdToken idToken = verifier.verify(idTokenString);
-    if (idToken != null) {
-      Payload payload = idToken.getPayload();
-      // Get the user id.
-      String userId = payload.getSubject();
-      System.out.println("User ID: " + userId);
-
-      // Optionally, if "INCLUDE_EMAIL" was set in the "IdTokenProvider.Option", check if the
-      // email was verified.
-      // String email = payload.getEmail();
-      // boolean emailVerified = Boolean.valueOf(payload.getEmailVerified());
-      return true;
-    }
-    return false;
-  }
-
 }
