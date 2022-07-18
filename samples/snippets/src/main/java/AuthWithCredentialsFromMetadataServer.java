@@ -28,7 +28,8 @@ public class AuthWithCredentialsFromMetadataServer {
   public static void main(String[] args) throws IOException, GeneralSecurityException {
     // TODO(Developer):
     //  1. Replace the below variable.
-    //  2. Make sure you have the necessary permission to list storage buckets "storage.buckets.list"
+    //  2. Make sure you have the necessary permission to list storage buckets
+    // "storage.buckets.list"
     String projectId = "your-google-cloud-project-id";
 
     authWithCredentialsFromMetadataServer(projectId);
