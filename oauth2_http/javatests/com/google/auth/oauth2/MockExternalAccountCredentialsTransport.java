@@ -84,6 +84,8 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
   static final String SERVICE_ACCOUNT_IMPERSONATION_URL =
       "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/testn@test.iam.gserviceaccount.com:generateAccessToken";
 
+  static final String IAM_ENDPOINT = "https://iamcredentials.googleapis.com";
+
   private Queue<Boolean> responseSequence = new ArrayDeque<>();
   private Queue<IOException> responseErrorSequence = new ArrayDeque<>();
   private Queue<String> refreshTokenSequence = new ArrayDeque<>();
@@ -193,7 +195,8 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
                   .setContentType(Json.MEDIA_TYPE)
                   .setContent(response.toPrettyString());
             }
-            if (SERVICE_ACCOUNT_IMPERSONATION_URL.equals(url)) {
+
+            if (url.contains(IAM_ENDPOINT)) {
               GenericJson query =
                   OAuth2Utils.JSON_FACTORY
                       .createJsonParser(getContentAsString())
