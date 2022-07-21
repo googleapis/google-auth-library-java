@@ -376,6 +376,12 @@ public class AwsCredentials extends ExternalAccountCredentials {
     return new AwsCredentials.Builder(awsCredentials);
   }
 
+  public static class SecurityCredentials extends AwsSecurityCredentials {
+    public SecurityCredentials(String accessKeyId, String secretAccessKey, @Nullable String token) {
+      super(accessKeyId, secretAccessKey, token);
+    }
+  }
+
   public static class Builder extends ExternalAccountCredentials.Builder {
 
     protected AwsSecurityCredentials awsSecurityCredentials;
@@ -392,7 +398,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
       return new AwsCredentials(this);
     }
 
-    public Builder setAwsSecurityCredentials(AwsSecurityCredentials awsSecurityCredentials) {
+    public Builder setAwsSecurityCredentials(SecurityCredentials awsSecurityCredentials) {
       this.awsSecurityCredentials = awsSecurityCredentials;
       return this;
     }

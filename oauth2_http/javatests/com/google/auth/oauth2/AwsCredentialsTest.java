@@ -43,6 +43,7 @@ import com.google.api.client.json.JsonParser;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.auth.TestUtils;
 import com.google.auth.oauth2.AwsCredentials.AwsCredentialSource;
+import com.google.auth.oauth2.AwsCredentials.SecurityCredentials;
 import com.google.auth.oauth2.ExternalAccountCredentialsTest.MockExternalAccountCredentialsTransportFactory;
 import java.io.IOException;
 import java.io.InputStream;
@@ -378,14 +379,13 @@ class AwsCredentialsTest {
 
   @Test
   void getAwsSecurityCredentials_fromBuilderVariable() throws IOException {
-    AwsSecurityCredentials testAwsSecurityCredentials = new AwsSecurityCredentials(
+    SecurityCredentials testAwsSecurityCredentials = new SecurityCredentials(
         "awsAccessKeyId", "awsSecretAccessKey", null);
 
     AwsCredentials testAwsCredentials =
-        (AwsCredentials)
-            AwsCredentials.newBuilder(AWS_CREDENTIAL)
-                .setAwsSecurityCredentials(testAwsSecurityCredentials)
-                .build();
+        AwsCredentials.newBuilder(AWS_CREDENTIAL)
+            .setAwsSecurityCredentials(testAwsSecurityCredentials)
+            .build();
 
     AwsSecurityCredentials credentials =
         testAwsCredentials.getAwsSecurityCredentials(EMPTY_METADATA_HEADERS);
