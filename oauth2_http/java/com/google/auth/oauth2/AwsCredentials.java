@@ -130,10 +130,18 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
   private final AwsCredentialSource awsCredentialSource;
 
+  /**
+   * Optional.
+   * The AWS security credentials. Can be set manually to bypass fetching from environment variables,
+   * or metadata endpoint.
+   */
+  private final AwsSecurityCredentials awsSecurityCredentials;
+
   /** Internal constructor. See {@link AwsCredentials.Builder}. */
   AwsCredentials(Builder builder) {
     super(builder);
     this.awsCredentialSource = (AwsCredentialSource) builder.credentialSource;
+    this.awsSecurityCredentials = builder.awsSecurityCredentials;
   }
 
   @Override
@@ -300,7 +308,12 @@ public class AwsCredentials extends ExternalAccountCredentials {
   @VisibleForTesting
   AwsSecurityCredentials getAwsSecurityCredentials(Map<String, Object> metadataRequestHeaders)
       throws IOException {
-    // Check environment variables for credentials first.
+    // Check if credentials set through builder first.
+    if (this.awsSecurityCredentials != null) {
+      return this.awsSecurityCredentials;
+    }
+
+    // Check environment variables for credentials.
     String accessKeyId = getEnvironmentProvider().getEnv("AWS_ACCESS_KEY_ID");
     String secretAccessKey = getEnvironmentProvider().getEnv("AWS_SECRET_ACCESS_KEY");
     String token = getEnvironmentProvider().getEnv("AWS_SESSION_TOKEN");
@@ -365,15 +378,23 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
   public static class Builder extends ExternalAccountCredentials.Builder {
 
+    protected AwsSecurityCredentials awsSecurityCredentials;
+
     Builder() {}
 
     Builder(AwsCredentials credentials) {
       super(credentials);
+      this.awsSecurityCredentials = credentials.awsSecurityCredentials;
     }
 
     @Override
     public AwsCredentials build() {
       return new AwsCredentials(this);
+    }
+
+    public Builder setAwsSecurityCredentials(AwsSecurityCredentials awsSecurityCredentials) {
+      this.awsSecurityCredentials = awsSecurityCredentials;
+      return this;
     }
   }
 }

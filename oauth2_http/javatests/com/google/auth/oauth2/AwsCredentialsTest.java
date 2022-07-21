@@ -34,6 +34,7 @@ package com.google.auth.oauth2;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -373,6 +374,23 @@ class AwsCredentialsTest {
     // No requests because the credential source does not contain region URL.
     List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
     assertTrue(requests.isEmpty());
+  }
+
+  @Test
+  void getAwsSecurityCredentials_fromBuilderVariable() throws IOException {
+    AwsSecurityCredentials testAwsSecurityCredentials = new AwsSecurityCredentials(
+        "awsAccessKeyId", "awsSecretAccessKey", null);
+
+    AwsCredentials testAwsCredentials =
+        (AwsCredentials)
+            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+                .setAwsSecurityCredentials(testAwsSecurityCredentials)
+                .build();
+
+    AwsSecurityCredentials credentials =
+        testAwsCredentials.getAwsSecurityCredentials(EMPTY_METADATA_HEADERS);
+
+    assertSame(testAwsSecurityCredentials, credentials);
   }
 
   @Test
