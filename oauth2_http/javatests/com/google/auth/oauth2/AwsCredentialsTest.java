@@ -42,6 +42,7 @@ import com.google.api.client.json.JsonParser;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.auth.TestUtils;
 import com.google.auth.oauth2.AwsCredentials.AwsCredentialSource;
+import com.google.auth.oauth2.AwsCredentials.SecurityCredentials;
 import com.google.auth.oauth2.ExternalAccountCredentialsTest.MockExternalAccountCredentialsTransportFactory;
 import java.io.IOException;
 import java.io.InputStream;
@@ -417,6 +418,22 @@ public class AwsCredentialsTest {
     // No requests because the credential source does not contain region URL.
     List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
     assertTrue(requests.isEmpty());
+  }
+
+  @Test
+  public void getAwsSecurityCredentials_fromBuilderVariable() throws IOException {
+    SecurityCredentials testAwsSecurityCredentials = new SecurityCredentials(
+        "awsAccessKeyId", "awsSecretAccessKey", null);
+
+    AwsCredentials testAwsCredentials =
+        AwsCredentials.newBuilder(AWS_CREDENTIAL)
+            .setAwsSecurityCredentials(testAwsSecurityCredentials)
+            .build();
+
+    AwsSecurityCredentials credentials =
+        testAwsCredentials.getAwsSecurityCredentials(EMPTY_METADATA_HEADERS);
+
+    assertEquals(testAwsSecurityCredentials, credentials);
   }
 
   @Test
