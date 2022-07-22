@@ -261,6 +261,29 @@ public class GoogleCredentialsTest {
   }
 
   @Test
+  void fromStream_pluggableAuthCredentials_providesToken() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    InputStream stream =
+        PluggableAuthCredentialsTest.writeCredentialsStream(transportFactory.transport.getStsUrl());
+
+    GoogleCredentials credentials = GoogleCredentials.fromStream(stream, transportFactory);
+
+    assertNotNull(credentials);
+
+    // Create copy with mock executable handler.
+    PluggableAuthCredentials copy =
+        PluggableAuthCredentials.newBuilder((PluggableAuthCredentials) credentials)
+            .setExecutableHandler(options -> "pluggableAuthToken")
+            .build();
+
+    copy = copy.createScoped(SCOPES);
+    Map<String, List<String>> metadata = copy.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, transportFactory.transport.getAccessToken());
+  }
+
+  @Test
   void fromStream_Impersonation_providesToken_WithQuotaProject() throws IOException {
     MockTokenServerTransportFactory transportFactoryForSource =
         new MockTokenServerTransportFactory();

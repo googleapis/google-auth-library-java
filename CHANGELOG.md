@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.8.1](https://github.com/googleapis/google-auth-library-java/compare/v1.8.0...v1.8.1) (2022-07-13)
+
+
+### Bug Fixes
+
+* enable longpaths support for windows test ([#1485](https://github.com/googleapis/google-auth-library-java/issues/1485)) ([#943](https://github.com/googleapis/google-auth-library-java/issues/943)) ([c21ec6c](https://github.com/googleapis/google-auth-library-java/commit/c21ec6c952b8bb8fb8bc2e2f1b260beb330a3cd2))
+
+## [1.8.0](https://github.com/googleapis/google-auth-library-java/compare/v1.7.0...v1.8.0) (2022-06-27)
+
+
+### Features
+
+* add build scripts for native image testing in Java 17 ([#1440](https://github.com/googleapis/google-auth-library-java/issues/1440)) ([#923](https://github.com/googleapis/google-auth-library-java/issues/923)) ([bbb51ce](https://github.com/googleapis/google-auth-library-java/commit/bbb51ce7a9265cb991739cd90e1ccf65675d05dc))
+* Adds Pluggable Auth support (WIF) ([#908](https://github.com/googleapis/google-auth-library-java/issues/908)) ([c3e8d16](https://github.com/googleapis/google-auth-library-java/commit/c3e8d169704943735c6b3df7bd0187f04fdd9aa5))
+
+
+### Documentation
+
+* updates README for Pluggable Auth  ([#921](https://github.com/googleapis/google-auth-library-java/issues/921)) ([23716b8](https://github.com/googleapis/google-auth-library-java/commit/23716b82fb3000f5210bb5604127aad7ef52cb76))
+
 ## [1.7.0](https://github.com/googleapis/google-auth-library-java/compare/v1.6.0...v1.7.0) (2022-05-12)
 
 

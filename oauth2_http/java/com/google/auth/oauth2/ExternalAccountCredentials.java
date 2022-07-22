@@ -39,6 +39,7 @@ import com.google.auth.RequestMetadataCallback;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.AwsCredentials.AwsCredentialSource;
 import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSource;
+import com.google.auth.oauth2.PluggableAuthCredentials.PluggableAuthCredentialSource;
 import com.google.common.base.MoreObjects;
 import java.io.IOException;
 import java.io.InputStream;
@@ -76,6 +77,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       "https://www.googleapis.com/auth/cloud-platform";
 
   static final String EXTERNAL_ACCOUNT_FILE_TYPE = "external_account";
+  static final String EXECUTABLE_SOURCE_KEY = "executable";
 
   private final String transportFactoryClassName;
   private final String audience;
@@ -98,6 +100,10 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   protected transient HttpTransportFactory transportFactory;
 
   @Nullable protected final ImpersonatedCredentials impersonatedCredentials;
+
+  // Internal override for impersonated credentials. This is done to keep
+  // impersonatedCredentials final.
+  @Nullable private ImpersonatedCredentials impersonatedCredentialsOverride;
 
   private EnvironmentProvider environmentProvider;
 
@@ -194,7 +200,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       validateServiceAccountImpersonationInfoUrl(serviceAccountImpersonationUrl);
     }
 
-    this.impersonatedCredentials = initializeImpersonatedCredentials();
+    this.impersonatedCredentials = buildImpersonatedCredentials();
   }
 
   /**
@@ -236,10 +242,10 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       validateServiceAccountImpersonationInfoUrl(serviceAccountImpersonationUrl);
     }
 
-    this.impersonatedCredentials = initializeImpersonatedCredentials();
+    this.impersonatedCredentials = buildImpersonatedCredentials();
   }
 
-  private ImpersonatedCredentials initializeImpersonatedCredentials() {
+  ImpersonatedCredentials buildImpersonatedCredentials() {
     if (serviceAccountImpersonationUrl == null) {
       return null;
     }
@@ -248,6 +254,11 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     if (this instanceof AwsCredentials) {
       sourceCredentials =
           AwsCredentials.newBuilder((AwsCredentials) this)
+              .setServiceAccountImpersonationUrl(null)
+              .build();
+    } else if (this instanceof PluggableAuthCredentials) {
+      sourceCredentials =
+          PluggableAuthCredentials.newBuilder((PluggableAuthCredentials) this)
               .setServiceAccountImpersonationUrl(null)
               .build();
     } else {
@@ -267,6 +278,10 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
         .setLifetime(3600) // 1 hour in seconds
         .setIamEndpointOverride(serviceAccountImpersonationUrl)
         .build();
+  }
+
+  void overrideImpersonatedCredentials(ImpersonatedCredentials credentials) {
+    this.impersonatedCredentialsOverride = credentials;
   }
 
   @Override
@@ -374,8 +389,20 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
           .setClientId(clientId)
           .setClientSecret(clientSecret)
           .build();
+    } else if (isPluggableAuthCredential(credentialSourceMap)) {
+      return PluggableAuthCredentials.newBuilder()
+          .setHttpTransportFactory(transportFactory)
+          .setAudience(audience)
+          .setSubjectTokenType(subjectTokenType)
+          .setTokenUrl(tokenUrl)
+          .setTokenInfoUrl(tokenInfoUrl)
+          .setCredentialSource(new PluggableAuthCredentialSource(credentialSourceMap))
+          .setServiceAccountImpersonationUrl(serviceAccountImpersonationUrl)
+          .setQuotaProjectId(quotaProjectId)
+          .setClientId(clientId)
+          .setClientSecret(clientSecret)
+          .build();
     }
-
     return IdentityPoolCredentials.newBuilder()
         .setHttpTransportFactory(transportFactory)
         .setAudience(audience)
@@ -389,6 +416,11 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
         .setClientSecret(clientSecret)
         .setWorkforcePoolUserProject(userProject)
         .build();
+  }
+
+  private static boolean isPluggableAuthCredential(Map<String, Object> credentialSource) {
+    // Pluggable Auth is enabled via a nested executable field in the credential source.
+    return credentialSource.containsKey(EXECUTABLE_SOURCE_KEY);
   }
 
   private static boolean isAwsCredential(Map<String, Object> credentialSource) {
@@ -406,7 +438,10 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   protected AccessToken exchangeExternalCredentialForAccessToken(
       StsTokenExchangeRequest stsTokenExchangeRequest) throws IOException {
     // Handle service account impersonation if necessary.
-    if (impersonatedCredentials != null) {
+    // Internal override takes priority.
+    if (impersonatedCredentialsOverride != null) {
+      return impersonatedCredentialsOverride.refreshAccessToken();
+    } else if (impersonatedCredentials != null) {
       return impersonatedCredentials.refreshAccessToken();
     }
 
@@ -468,6 +503,15 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     return serviceAccountImpersonationUrl;
   }
 
+  /** The service account email to be impersonated, if available. */
+  @Nullable
+  public String getServiceAccountEmail() {
+    if (serviceAccountImpersonationUrl == null || serviceAccountImpersonationUrl.isEmpty()) {
+      return null;
+    }
+    return ImpersonatedCredentials.extractTargetPrincipal(serviceAccountImpersonationUrl);
+  }
+
   @Override
   @Nullable
   public String getQuotaProjectId() {
@@ -499,7 +543,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   }
 
   /**
-   * Returns whether or not the current configuration is for Workforce Pools (which enable 3p user
+   * Returns whether the current configuration is for Workforce Pools (which enable 3p user
    * identities, rather than workloads).
    */
   public boolean isWorkforcePoolConfiguration() {
