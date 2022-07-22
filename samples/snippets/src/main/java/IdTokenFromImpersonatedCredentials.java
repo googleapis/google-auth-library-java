@@ -14,25 +14,20 @@
  * limitations under the License.
  */
 
-import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpResponse;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.auth.http.HttpCredentialsAdapter;
+// [auth_cloud_idtoken_impersonated_credentials]
+
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.IdTokenCredentials;
 import com.google.auth.oauth2.IdTokenProvider.Option;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.List;
 
-public class IdTokenFromImpersonatedCredentials_OAuth {
+public class IdTokenFromImpersonatedCredentials {
 
   public static void main(String[] args)
-      throws IOException, GeneralSecurityException {
+      throws IOException {
     // TODO(Developer): Replace the below variables before running the code.
 
     // Provide the scopes that you might need to request to access Google APIs,
@@ -62,8 +57,7 @@ public class IdTokenFromImpersonatedCredentials_OAuth {
 
     // Construct the GoogleCredentials object which obtains the default configuration from your
     // working environment.
-    GoogleCredentials googleCredentials = GoogleCredentials.getApplicationDefault()
-        .createScoped(scope);
+    GoogleCredentials googleCredentials = GoogleCredentials.getApplicationDefault();
 
     // delegates: The chained list of delegates required to grant the final accessToken.
     //
@@ -93,21 +87,10 @@ public class IdTokenFromImpersonatedCredentials_OAuth {
         .build();
 
     // Get the ID token.
+    // Once you've obtained the ID token, use it to make an authenticated call
+    // to the target audience.
     System.out.printf("ID token: %s", idTokenCredentials.refreshAccessToken().getTokenValue());
 
-    String url = "url-to-make-authenticated-request";
-    makeAuthenticatedRequest(idTokenCredentials, url);
-  }
-
-  // Makes a simple HTTP call.
-  private static void makeAuthenticatedRequest(IdTokenCredentials idTokenCredentials, String url)
-      throws IOException {
-    GenericUrl genericUrl = new GenericUrl(url);
-    HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(idTokenCredentials);
-    HttpTransport transport = new NetHttpTransport();
-    HttpRequest request = transport.createRequestFactory(adapter).buildGetRequest(genericUrl);
-    request.setThrowExceptionOnExecuteError(false);
-    HttpResponse response = request.execute();
-    System.out.println(response.parseAsString());
   }
 }
+// [auth_cloud_idtoken_impersonated_credentials]

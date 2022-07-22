@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+// [START auth_cloud_verify_google_idtoken]
+
 import com.auth0.jwk.JwkException;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
@@ -64,5 +66,5 @@ public class VerifyGoogleIdToken {
     }
     System.out.println("Unable to verify the token!");
   }
-
 }
+// [END auth_cloud_verify_google_idtoken]

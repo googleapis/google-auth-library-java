@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+// [START auth_cloud_idtoken_service_account]
+
 import com.google.auth.oauth2.IdToken;
 import com.google.auth.oauth2.IdTokenProvider.Option;
 import com.google.auth.oauth2.ServiceAccountCredentials;
@@ -29,34 +31,31 @@ public class IdTokenFromServiceAccount {
   public static void main(String[] args)
       throws IOException, ExecutionException, InterruptedException, GeneralSecurityException {
     // TODO(Developer): Replace the below variables before running the code.
-    //  Using Service account key is discouraged. Please consider alternate approaches first.
+
+    // *NOTE*:
+    // Using service account keys introduces risk; they are long-lived, and can be used by anyone
+    // that obtains the key. Proper rotation and storage reduce this risk but do not eliminate it.
+    // For these reasons, you should consider an alternative approach that
+    // does not use a service account key. Several alternatives to service account keys
+    // are described here:
+    // https://cloud.google.com/docs/authentication/external/set-up-adc
+
     // Path to the service account json credential file.
     String jsonCredentialPath = "path-to-json-credential-file";
 
-    // Provide the scopes that you might need to request to access Google APIs,
-    // depending on the level of access you need.
-    // For more information, see: https://developers.google.com/identity/protocols/oauth2/scopes
-    // The best practice is to use the cloud-wide scope and use IAM to narrow the permissions.
-    // https://cloud.google.com/docs/authentication#authorization_for_services
-    String scope = "https://www.googleapis.com/auth/cloud-platform";
+    // The url or target audience to obtain the ID token for.
+    String targetAudience = "http://www.abc.com";
 
-    // The service name for which the id token is requested. Service name refers to the
-    // logical identifier of an API service, such as "pubsub.googleapis.com".
-    String targetAudience = "iap.googleapis.com";
-
-    getIdTokenFromServiceAccount(jsonCredentialPath, scope, targetAudience);
+    getIdTokenFromServiceAccount(jsonCredentialPath, targetAudience);
   }
 
-  public static void getIdTokenFromServiceAccount(String jsonCredentialPath, String scope,
+  public static void getIdTokenFromServiceAccount(String jsonCredentialPath,
       String targetAudience)
       throws IOException {
 
     // Initialize the Service Account Credentials class with the path to the json file.
     ServiceAccountCredentials serviceAccountCredentials = ServiceAccountCredentials.fromStream(
         new FileInputStream(jsonCredentialPath));
-    // Restrict the scope of the service account.
-    serviceAccountCredentials = (ServiceAccountCredentials) serviceAccountCredentials.createScoped(
-        Arrays.asList(scope));
 
     // Obtain the id token by providing the target audience.
     // tokenOption: Enum of various credential-specific options to apply to the token. Applicable
@@ -75,3 +74,4 @@ public class IdTokenFromServiceAccount {
     System.out.printf("Generated ID token %s", idToken.getTokenValue());
   }
 }
+// [END auth_cloud_idtoken_service_account]

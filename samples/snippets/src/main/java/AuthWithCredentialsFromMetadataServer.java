@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+// [START auth_cloud_metadata_server]
+
 import com.google.api.gax.paging.Page;
 import com.google.auth.oauth2.ComputeEngineCredentials;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -27,9 +29,9 @@ public class AuthWithCredentialsFromMetadataServer {
 
   public static void main(String[] args) throws IOException, GeneralSecurityException {
     // TODO(Developer):
-    //  1. Replace the below variable.
+    //  1. Replace the project variable below.
     //  2. Make sure you have the necessary permission to list storage buckets
-    // "storage.buckets.list"
+    //  "storage.buckets.list"
     String projectId = "your-google-cloud-project-id";
 
     authWithCredentialsFromMetadataServer(projectId);
@@ -69,3 +71,4 @@ public class AuthWithCredentialsFromMetadataServer {
         .getService();
   }
 }
+// [END auth_cloud_metadata_server]

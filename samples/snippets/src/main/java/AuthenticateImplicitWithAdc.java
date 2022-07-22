@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+// [START auth_cloud_implicit_adc]
+
 import com.google.cloud.compute.v1.Instance;
 import com.google.cloud.compute.v1.InstancesClient;
 import java.io.IOException;
@@ -22,22 +24,23 @@ public class AuthenticateImplicitWithAdc {
 
   public static void main(String[] args) throws IOException {
     // TODO(Developer):
-    //  1. Before running this sample, authenticate using ADC as mentioned in:
-    //  https://cloud.google.com/docs/authentication/provide-credentials-adc#how_to_provide_credentials_to_adc
-    //  2. Replace the projectId variable.
-    //  3. Make sure you have the necessary permission "compute.instances.list"
+    //  1. Before running this sample,
+    //  set up ADC as described in https://cloud.google.com/docs/authentication/external/set-up-adc
+    //  2. Replace the project variable below.
+    //  3. Make sure that the user account or service account that you are using
+    //  has the required permissions. For this sample, you must have "compute.instances.list".
     String projectId = "your-google-cloud-project-id";
     authenticateImplicitWithAdc(projectId);
   }
 
   // When interacting with Google Cloud Client libraries, the library can auto-detect the
   // credentials to use.
-  // ADC detection is independent of the client library and language and works with all Cloud Client
-  // libraries.
   public static void authenticateImplicitWithAdc(String project) throws IOException {
 
     String zone = "us-central1-a";
-    // This snippet demonstrates how to initialize Cloud Compute Engine and list instances.
+    // This snippet demonstrates how to list instances.
+    // *NOTE*: Replace the client created below with the client required for your application.
+    //
     // Note that the credentials are not specified when constructing the client.
     // Hence, the client library will look for credentials using ADC.
     try (InstancesClient instancesClient = InstancesClient.create()) {
@@ -50,3 +53,4 @@ public class AuthenticateImplicitWithAdc {
     }
   }
 }
+// [END auth_cloud_implicit_adc]

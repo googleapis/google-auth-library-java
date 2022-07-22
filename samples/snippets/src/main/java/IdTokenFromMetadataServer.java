@@ -14,12 +14,8 @@
  * limitations under the License.
  */
 
-import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpResponse;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.auth.http.HttpCredentialsAdapter;
+// [START auth_cloud_idtoken_metadata_server]
+
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.IdTokenCredentials;
 import com.google.auth.oauth2.IdTokenProvider;
@@ -47,7 +43,6 @@ public class IdTokenFromMetadataServer {
       throws IOException {
     // Construct the GoogleCredentials object which obtains the default configuration from your
     // working environment.
-    // Optionally, you can also set scopes.
     GoogleCredentials googleCredentials = GoogleCredentials.getApplicationDefault();
 
     IdTokenCredentials idTokenCredentials = IdTokenCredentials.newBuilder()
@@ -58,22 +53,11 @@ public class IdTokenFromMetadataServer {
         .build();
 
     // Get the ID token.
-    System.out.printf("Generated ID token: %s", idTokenCredentials.refreshAccessToken().getTokenValue());
+    // Once you've obtained the ID token, use it to make an authenticated call
+    // to the target audience.
+    System.out.printf("Generated ID token: %s",
+        idTokenCredentials.refreshAccessToken().getTokenValue());
 
-    // Make an authenticated HTTP request with the idTokenCredentials.
-    makeAuthenticatedRequest(idTokenCredentials, url);
-  }
-
-  // Create a new HTTP request authenticated by a JSON Web Tokens (JWT)
-  // retrieved from Application Default Credentials.
-  private static void makeAuthenticatedRequest(IdTokenCredentials idTokenCredentials, String url)
-      throws IOException {
-    GenericUrl genericUrl = new GenericUrl(url);
-    HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(idTokenCredentials);
-    HttpTransport transport = new NetHttpTransport();
-    HttpRequest request = transport.createRequestFactory(adapter).buildGetRequest(genericUrl);
-    request.setThrowExceptionOnExecuteError(false);
-    HttpResponse response = request.execute();
-    System.out.println(response.parseAsString());
   }
 }
+// [END auth_cloud_idtoken_metadata_server]

@@ -78,16 +78,13 @@ public class SnippetsIT {
   }
 
   // Get an id token from a Google service account.
-  private static String getIdTokenFromServiceAccount(String jsonCredentialPath, String scope,
+  private static String getIdTokenFromServiceAccount(String jsonCredentialPath,
       String targetAudience)
       throws IOException, GeneralSecurityException, JwkException {
 
     // Initialize the Service Account Credentials class with the path to the json file.
     ServiceAccountCredentials serviceAccountCredentials = ServiceAccountCredentials.fromStream(
         new FileInputStream(jsonCredentialPath));
-    // Restrict the scope of the service account.
-    serviceAccountCredentials = (ServiceAccountCredentials) serviceAccountCredentials.createScoped(
-        Arrays.asList(scope));
 
     // Obtain the id token by providing the target audience.
     // tokenOption: Enum of various credential-specific options to apply to the token. Applicable
@@ -104,7 +101,6 @@ public class SnippetsIT {
   public void testIdTokenFromServiceAccount() throws IOException {
     IdTokenFromServiceAccount.getIdTokenFromServiceAccount(
         CREDENTIALS,
-        "https://www.googleapis.com/auth/pubsub",
         "pubsub.googleapis.com");
     assertThat(stdOut.toString()).contains("Generated ID token");
   }
@@ -113,7 +109,7 @@ public class SnippetsIT {
   public void testVerifyNonGoogleIdToken()
       throws GeneralSecurityException, IOException, JwkException {
     String idToken = getIdTokenFromServiceAccount(CREDENTIALS,
-        "https://www.googleapis.com/auth/cloud-platform", "pubsub.googleapis.com");
+        "pubsub.googleapis.com");
 
     VerifyNonGoogleIdToken.verifyNonGoogleIdToken(
         idToken,

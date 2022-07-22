@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+// [START auth_cloud_verify_non_google_idtoken]
+
 import com.auth0.jwk.Jwk;
 import com.auth0.jwk.JwkException;
 import com.auth0.jwk.JwkProvider;
@@ -94,5 +96,5 @@ public class VerifyNonGoogleIdToken {
     }
     System.out.println("Unable to verify ID token.");
   }
-
 }
+// [END auth_cloud_verify_non_google_idtoken]

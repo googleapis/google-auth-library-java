@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+// [START auth_cloud_explicit_adc]
+
 import com.google.api.gax.paging.Page;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.Bucket;
@@ -26,16 +28,18 @@ public class AuthenticateExplicit {
 
   public static void main(String[] args) throws IOException, GeneralSecurityException {
     // TODO(Developer):
-    //  1. Replace the below variable.
+    //  1. Replace the project variable below.
     //  2. Make sure you have the necessary permission to list storage buckets "storage.buckets.list"
+
     String projectId = "your-google-cloud-project-id";
 
-    // Provide the scopes that you might need to request to access Google APIs,
-    // depending on the level of access you need.
-    // For more information, see: https://developers.google.com/identity/protocols/oauth2/scopes
-    // The best practice is to use the cloud-wide scope and use IAM to narrow the permissions.
-    // https://cloud.google.com/docs/authentication#authorization_for_services
-    String scope = "https://www.googleapis.com/auth/cloud-platform";
+    // If you are authenticating to a Cloud API, you do not need to specify a scope;
+    // use Application Default Credentials as described in
+    // https://cloud.google.com/docs/authentication/external/set-up-adc.
+    // If you need to provide a scope, specify it here.
+    // For more information on scopes to use,
+    // see: https://developers.google.com/identity/protocols/oauth2/scopes
+    String scope = "https://www.googleapis.com/auth/PRODUCT_NAME";
 
     authenticateExplicit(projectId, scope);
   }
@@ -70,3 +74,4 @@ public class AuthenticateExplicit {
         .getService();
   }
 }
+// [END auth_cloud_explicit_adc]
