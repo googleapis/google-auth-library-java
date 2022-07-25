@@ -422,8 +422,8 @@ public class AwsCredentialsTest {
 
   @Test
   public void getAwsSecurityCredentials_fromBuilderVariable() throws IOException {
-    SecurityCredentials testAwsSecurityCredentials = new SecurityCredentials(
-        "awsAccessKeyId", "awsSecretAccessKey", null);
+    SecurityCredentials testAwsSecurityCredentials =
+        new SecurityCredentials("awsAccessKeyId", "awsSecretAccessKey", null);
 
     AwsCredentials testAwsCredentials =
         AwsCredentials.newBuilder(AWS_CREDENTIAL)

@@ -131,9 +131,8 @@ public class AwsCredentials extends ExternalAccountCredentials {
   private final AwsCredentialSource awsCredentialSource;
 
   /**
-   * Optional.
-   * The AWS security credentials. Can be set manually to bypass fetching from environment variables,
-   * or metadata endpoint.
+   * Optional. The AWS security credentials. Can be set manually to bypass fetching from environment
+   * variables, or metadata endpoint.
    */
   private final AwsSecurityCredentials awsSecurityCredentials;
 
