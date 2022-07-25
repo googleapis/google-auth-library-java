@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/googleapis/google-auth-library-java/compare/v1.8.1...v1.9.0) (2022-07-25)
+
+
+### Features
+
+* Add googleapis-auth as codeowner team ([#950](https://github.com/googleapis/google-auth-library-java/issues/950)) ([ef17ed8](https://github.com/googleapis/google-auth-library-java/commit/ef17ed8bf2c91e7bd66d26f039f029de6af3814a))
+
 ## [1.8.1](https://github.com/googleapis/google-auth-library-java/compare/v1.8.0...v1.8.1) (2022-07-13)
 
 
