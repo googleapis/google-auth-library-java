@@ -50,7 +50,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.StringWriter;
+import java.lang.StringBuilder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
@@ -88,7 +88,7 @@ class ITWorkloadIdentityFederationTest {
    * using the iamcredentials generateIdToken API. This will use the service account client ID as
    * the sub field of the token. This OIDC token will be used as the external subject token to be
    * exchanged for a GCP access token via GCP STS endpoint and then to impersonate the original
-   * service account key. Retrieves the OIDC token from an output file.
+   * service account key. Retrieves the OIDC token from a file.
    */
   @Test
   void identityPoolCredentials() throws IOException {
@@ -210,7 +210,7 @@ class ITWorkloadIdentityFederationTest {
     executableJson.put("token_type", "urn:ietf:params:oauth:token-type:jwt");
     executableJson.put("id_token", idToken);
 
-    StringWriter fileContents = new StringWriter();
+    StringBuilder fileContents = new StringBuilder();
     fileContents.append("#!/bin/bash\n");
     fileContents.append("echo \"");
     fileContents.append(executableJson.toPrettyString().replace("\"", "\\\""));
