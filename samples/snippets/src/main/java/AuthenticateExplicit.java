@@ -29,7 +29,8 @@ public class AuthenticateExplicit {
   public static void main(String[] args) throws IOException, GeneralSecurityException {
     // TODO(Developer):
     //  1. Replace the project variable below.
-    //  2. Make sure you have the necessary permission to list storage buckets "storage.buckets.list"
+    //  2. Make sure you have the necessary permission to list storage buckets
+    // "storage.buckets.list"
 
     String projectId = "your-google-cloud-project-id";
 
@@ -37,8 +38,7 @@ public class AuthenticateExplicit {
   }
 
   // List storage buckets by authenticating with ADC.
-  public static void authenticateExplicit(String projectId)
-      throws IOException {
+  public static void authenticateExplicit(String projectId) throws IOException {
     // Construct the GoogleCredentials object which obtains the default configuration from your
     // working environment.
     // GoogleCredentials.getApplicationDefault() will give you ComputeEngineCredentials
@@ -54,11 +54,12 @@ public class AuthenticateExplicit {
     // see: https://developers.google.com/identity/protocols/oauth2/scopes
 
     // Construct the Storage client.
-    Storage storage = StorageOptions.newBuilder()
-        .setCredentials(credentials)
-        .setProjectId(projectId)
-        .build()
-        .getService();
+    Storage storage =
+        StorageOptions.newBuilder()
+            .setCredentials(credentials)
+            .setProjectId(projectId)
+            .build()
+            .getService();
 
     System.out.println("Buckets:");
     Page<Bucket> buckets = storage.list();

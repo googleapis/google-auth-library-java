@@ -46,7 +46,8 @@ public class SnippetsIT {
   // Check if the required environment variables are set.
   public static void requireEnvVar(String envVarName) {
     assertWithMessage(String.format("Missing environment variable '%s' ", envVarName))
-        .that(System.getenv(envVarName)).isNotEmpty();
+        .that(System.getenv(envVarName))
+        .isNotEmpty();
   }
 
   @BeforeClass
@@ -62,8 +63,7 @@ public class SnippetsIT {
   }
 
   @AfterClass
-  public static void cleanup() {
-  }
+  public static void cleanup() {}
 
   @Before
   public void beforeEach() {
@@ -78,43 +78,36 @@ public class SnippetsIT {
   }
 
   // Get an id token from a Google service account.
-  private static String getIdTokenFromServiceAccount(String jsonCredentialPath,
-      String targetAudience)
+  private static String getIdTokenFromServiceAccount(
+      String jsonCredentialPath, String targetAudience)
       throws IOException, GeneralSecurityException, JwkException {
 
     // Initialize the Service Account Credentials class with the path to the json file.
-    ServiceAccountCredentials serviceAccountCredentials = ServiceAccountCredentials.fromStream(
-        new FileInputStream(jsonCredentialPath));
+    ServiceAccountCredentials serviceAccountCredentials =
+        ServiceAccountCredentials.fromStream(new FileInputStream(jsonCredentialPath));
 
     // Obtain the id token by providing the target audience.
     // tokenOption: Enum of various credential-specific options to apply to the token. Applicable
     // only for credentials obtained through Compute Engine or Impersonation.
     List<Option> tokenOption = Arrays.asList();
-    IdToken idToken = serviceAccountCredentials.idTokenWithAudience(
-        targetAudience,
-        tokenOption);
+    IdToken idToken = serviceAccountCredentials.idTokenWithAudience(targetAudience, tokenOption);
 
     return idToken.getTokenValue();
   }
 
   @Test
   public void testIdTokenFromServiceAccount() throws IOException {
-    IdTokenFromServiceAccount.getIdTokenFromServiceAccount(
-        CREDENTIALS,
-        "pubsub.googleapis.com");
+    IdTokenFromServiceAccount.getIdTokenFromServiceAccount(CREDENTIALS, "pubsub.googleapis.com");
     assertThat(stdOut.toString()).contains("Generated ID token.");
   }
 
   @Test
   public void testVerifyNonGoogleIdToken()
       throws GeneralSecurityException, IOException, JwkException {
-    String idToken = getIdTokenFromServiceAccount(CREDENTIALS,
-        "pubsub.googleapis.com");
+    String idToken = getIdTokenFromServiceAccount(CREDENTIALS, "pubsub.googleapis.com");
 
     VerifyNonGoogleIdToken.verifyNonGoogleIdToken(
-        idToken,
-        "pubsub.googleapis.com",
-        "https://www.googleapis.com/oauth2/v3/certs");
+        idToken, "pubsub.googleapis.com", "https://www.googleapis.com/oauth2/v3/certs");
     assertThat(stdOut.toString()).contains("Id token verified.");
   }
 
@@ -132,9 +125,7 @@ public class SnippetsIT {
 
   @Test
   public void testAuthenticateExplicit() throws IOException {
-    AuthenticateExplicit.authenticateExplicit(
-        PROJECT_ID);
+    AuthenticateExplicit.authenticateExplicit(PROJECT_ID);
     assertThat(stdOut.toString()).contains("Listed all storage buckets.");
   }
-
 }

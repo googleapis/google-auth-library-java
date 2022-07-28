@@ -26,8 +26,7 @@ import java.util.Arrays;
 
 public class IdTokenFromMetadataServer {
 
-  public static void main(String[] args)
-      throws IOException, GeneralSecurityException {
+  public static void main(String[] args) throws IOException, GeneralSecurityException {
     // TODO(Developer): Replace the below variables before running the code.
 
     // The url or target audience to obtain the ID token for.
@@ -39,18 +38,18 @@ public class IdTokenFromMetadataServer {
   // Use the Google Cloud metadata server in the Cloud Run (or AppEngine or Kubernetes etc.,)
   // environment to create an identity token and add it to the HTTP request as part of an
   // Authorization header.
-  public static void getIdTokenFromMetadataServer(String url)
-      throws IOException {
+  public static void getIdTokenFromMetadataServer(String url) throws IOException {
     // Construct the GoogleCredentials object which obtains the default configuration from your
     // working environment.
     GoogleCredentials googleCredentials = GoogleCredentials.getApplicationDefault();
 
-    IdTokenCredentials idTokenCredentials = IdTokenCredentials.newBuilder()
-        .setIdTokenProvider((IdTokenProvider) googleCredentials)
-        .setTargetAudience(url)
-        // Setting the ID token options.
-        .setOptions(Arrays.asList(Option.FORMAT_FULL, Option.LICENSES_TRUE))
-        .build();
+    IdTokenCredentials idTokenCredentials =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider((IdTokenProvider) googleCredentials)
+            .setTargetAudience(url)
+            // Setting the ID token options.
+            .setOptions(Arrays.asList(Option.FORMAT_FULL, Option.LICENSES_TRUE))
+            .build();
 
     // Get the ID token.
     // Once you've obtained the ID token, use it to make an authenticated call

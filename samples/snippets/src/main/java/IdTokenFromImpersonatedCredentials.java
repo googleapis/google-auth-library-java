@@ -26,8 +26,7 @@ import java.util.List;
 
 public class IdTokenFromImpersonatedCredentials {
 
-  public static void main(String[] args)
-      throws IOException {
+  public static void main(String[] args) throws IOException {
     // TODO(Developer): Replace the below variables before running the code.
 
     // Provide the scopes that you might need to request to access Google APIs,
@@ -42,8 +41,7 @@ public class IdTokenFromImpersonatedCredentials {
     String targetAudience = "iap.googleapis.com";
 
     // The name of the privilege-bearing service account for whom the credential is created.
-    String impersonatedServiceAccount =
-        "name@project.service.gserviceaccount.com";
+    String impersonatedServiceAccount = "name@project.service.gserviceaccount.com";
 
     getIdTokenUsingOAuth2(impersonatedServiceAccount, scope, targetAudience);
   }
@@ -52,8 +50,8 @@ public class IdTokenFromImpersonatedCredentials {
   // for the impersonated account.
   // To obtain token for SA2, SA1 should have the "roles/iam.serviceAccountTokenCreator" permission
   // on SA2.
-  public static void getIdTokenUsingOAuth2(String impersonatedServiceAccount, String scope,
-      String targetAudience) throws IOException {
+  public static void getIdTokenUsingOAuth2(
+      String impersonatedServiceAccount, String scope, String targetAudience) throws IOException {
 
     // Construct the GoogleCredentials object which obtains the default configuration from your
     // working environment.
@@ -66,27 +64,24 @@ public class IdTokenFromImpersonatedCredentials {
     List<String> delegates = null;
 
     // Create the impersonated credential.
-    ImpersonatedCredentials impersonatedCredentials = ImpersonatedCredentials.create(
-        googleCredentials,
-        impersonatedServiceAccount,
-        delegates,
-        Arrays.asList(scope),
-        300);
+    ImpersonatedCredentials impersonatedCredentials =
+        ImpersonatedCredentials.create(
+            googleCredentials, impersonatedServiceAccount, delegates, Arrays.asList(scope), 300);
 
     // Set the impersonated credential, target audience and token options.
-    IdTokenCredentials idTokenCredentials = IdTokenCredentials.newBuilder()
-        .setIdTokenProvider(impersonatedCredentials)
-        .setTargetAudience(targetAudience)
-        // Setting this will include email in the id token.
-        .setOptions(Arrays.asList(Option.INCLUDE_EMAIL))
-        .build();
+    IdTokenCredentials idTokenCredentials =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(impersonatedCredentials)
+            .setTargetAudience(targetAudience)
+            // Setting this will include email in the id token.
+            .setOptions(Arrays.asList(Option.INCLUDE_EMAIL))
+            .build();
 
     // Get the ID token.
     // Once you've obtained the ID token, use it to make an authenticated call
     // to the target audience.
     String idToken = idTokenCredentials.refreshAccessToken().getTokenValue();
     System.out.println("Generated ID token.");
-
   }
 }
 // [auth_cloud_idtoken_impersonated_credentials]
