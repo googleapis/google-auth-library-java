@@ -30,7 +30,8 @@ import java.util.concurrent.ExecutionException;
 public class VerifyGoogleIdToken {
 
   public static void main(String[] args)
-      throws IOException, ExecutionException, InterruptedException, GeneralSecurityException, JwkException {
+      throws IOException, ExecutionException, InterruptedException, GeneralSecurityException,
+          JwkException {
     // TODO(Developer): Replace the below variables before running the code.
     // The Google ID token to verify.
     String idToken = "id-token";
@@ -46,10 +47,11 @@ public class VerifyGoogleIdToken {
   public static void verifyGoogleIdToken(String idTokenString, String audience)
       throws GeneralSecurityException, IOException {
     // Initialize the Google id token verifier and set the audience.
-    GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
-        GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance())
-        .setAudience(Collections.singletonList(audience))
-        .build();
+    GoogleIdTokenVerifier verifier =
+        new GoogleIdTokenVerifier.Builder(
+                GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance())
+            .setAudience(Collections.singletonList(audience))
+            .build();
 
     // Verify the id token.
     GoogleIdToken idToken = verifier.verify(idTokenString);

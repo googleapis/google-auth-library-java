@@ -35,7 +35,8 @@ import java.util.concurrent.ExecutionException;
 public class VerifyNonGoogleIdToken {
 
   public static void main(String[] args)
-      throws IOException, ExecutionException, InterruptedException, GeneralSecurityException, JwkException {
+      throws IOException, ExecutionException, InterruptedException, GeneralSecurityException,
+          JwkException {
     // TODO(Developer): Replace the below variables before running the code.
     // The non-Google ID token to verify.
     String idToken = "id-token";
@@ -48,10 +49,12 @@ public class VerifyNonGoogleIdToken {
     // OpenID Connect allows the use of a "Discovery document," a JSON document found at a
     // well-known location containing key-value pairs which provide details about the
     // OpenID Connect provider's configuration.
-    // For more information on validating the jwt, see: https://developers.google.com/identity/protocols/oauth2/openid-connect#validatinganidtoken
+    // For more information on validating the jwt, see:
+    // https://developers.google.com/identity/protocols/oauth2/openid-connect#validatinganidtoken
     //
     // Here, we validate Google's token using Google's OpenID Connect service (jwkUrl).
-    // For more information on jwk,see: https://auth0.com/docs/secure/tokens/json-web-tokens/json-web-key-sets
+    // For more information on jwk,see:
+    // https://auth0.com/docs/secure/tokens/json-web-tokens/json-web-key-sets
     String jwkUrl = "https://www.googleapis.com/oauth2/v3/certs";
 
     verifyNonGoogleIdToken(idToken, targetAudience, jwkUrl);
@@ -59,8 +62,7 @@ public class VerifyNonGoogleIdToken {
 
   // Verify a non-google id token. Here, we are using the Google's jwk. The procedure is the same
   // even if the jwk is from a different provider.
-  public static void verifyNonGoogleIdToken(String idToken, String targetAudience,
-      String jwkUrl)
+  public static void verifyNonGoogleIdToken(String idToken, String targetAudience, String jwkUrl)
       throws IOException, JwkException {
 
     // Start verification.
