@@ -102,7 +102,7 @@ public class SnippetsIT {
     IdTokenFromServiceAccount.getIdTokenFromServiceAccount(
         CREDENTIALS,
         "pubsub.googleapis.com");
-    assertThat(stdOut.toString()).contains("Generated ID token");
+    assertThat(stdOut.toString()).contains("Generated ID token.");
   }
 
   @Test
@@ -121,7 +121,7 @@ public class SnippetsIT {
   @Test
   public void testIdTokenFromMetadataServer() throws GeneralSecurityException, IOException {
     IdTokenFromMetadataServer.getIdTokenFromMetadataServer("https://www.google.com");
-    assertThat(stdOut.toString()).contains("Generated ID token:");
+    assertThat(stdOut.toString()).contains("Generated ID token.");
   }
 
   @Test
@@ -133,15 +133,8 @@ public class SnippetsIT {
   @Test
   public void testAuthenticateExplicit() throws IOException {
     AuthenticateExplicit.authenticateExplicit(
-        PROJECT_ID,
-        "https://www.googleapis.com/auth/cloud-platform");
-    assertThat(stdOut.toString()).contains("Authentication complete.");
-  }
-
-  @Test
-  public void testAuthWithCredentialsFromMetadataServer() {
-    AuthWithCredentialsFromMetadataServer.authWithCredentialsFromMetadataServer(PROJECT_ID);
-    assertThat(stdOut.toString()).contains("Authentication complete.");
+        PROJECT_ID);
+    assertThat(stdOut.toString()).contains("Listed all storage buckets.");
   }
 
 }

@@ -55,9 +55,8 @@ public class IdTokenFromMetadataServer {
     // Get the ID token.
     // Once you've obtained the ID token, use it to make an authenticated call
     // to the target audience.
-    System.out.printf("Generated ID token: %s",
-        idTokenCredentials.refreshAccessToken().getTokenValue());
-
+    String idToken = idTokenCredentials.refreshAccessToken().getTokenValue();
+    System.out.println("Generated ID token.");
   }
 }
 // [END auth_cloud_idtoken_metadata_server]

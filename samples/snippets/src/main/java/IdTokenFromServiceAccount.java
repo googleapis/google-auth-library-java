@@ -71,7 +71,8 @@ public class IdTokenFromServiceAccount {
     //     .setTargetAudience(targetAudience)
     //     .build();
 
-    System.out.printf("Generated ID token %s", idToken.getTokenValue());
+    String token = idToken.getTokenValue();
+    System.out.println("Generated ID token.");
   }
 }
 // [END auth_cloud_idtoken_service_account]

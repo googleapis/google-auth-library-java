@@ -40,9 +40,13 @@ public class AuthenticateImplicitWithAdc {
     String zone = "us-central1-a";
     // This snippet demonstrates how to list instances.
     // *NOTE*: Replace the client created below with the client required for your application.
-    //
     // Note that the credentials are not specified when constructing the client.
     // Hence, the client library will look for credentials using ADC.
+    //
+    // Initialize client that will be used to send requests. This client only needs to be created
+    // once, and can be reused for multiple requests. After completing all of your requests, call
+    // the `instancesClient.close()` method on the client to safely
+    // clean up any remaining background resources.
     try (InstancesClient instancesClient = InstancesClient.create()) {
       // Set the project and zone to retrieve instances present in the zone.
       System.out.printf("Listing instances from %s in %s:", project, zone);

@@ -41,7 +41,7 @@ public class IdTokenFromImpersonatedCredentials {
     // logical identifier of an API service, such as "pubsub.googleapis.com".
     String targetAudience = "iap.googleapis.com";
 
-    // The service account name of the limited-privilege account for whom the credential is created.
+    // The name of the privilege-bearing service account for whom the credential is created.
     String impersonatedServiceAccount =
         "name@project.service.gserviceaccount.com";
 
@@ -89,7 +89,8 @@ public class IdTokenFromImpersonatedCredentials {
     // Get the ID token.
     // Once you've obtained the ID token, use it to make an authenticated call
     // to the target audience.
-    System.out.printf("ID token: %s", idTokenCredentials.refreshAccessToken().getTokenValue());
+    String idToken = idTokenCredentials.refreshAccessToken().getTokenValue();
+    System.out.println("Generated ID token.");
 
   }
 }

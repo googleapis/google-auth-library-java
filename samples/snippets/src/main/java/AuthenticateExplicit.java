@@ -33,45 +33,39 @@ public class AuthenticateExplicit {
 
     String projectId = "your-google-cloud-project-id";
 
-    // If you are authenticating to a Cloud API, you do not need to specify a scope;
-    // use Application Default Credentials as described in
-    // https://cloud.google.com/docs/authentication/external/set-up-adc.
-    // If you need to provide a scope, specify it here.
-    // For more information on scopes to use,
-    // see: https://developers.google.com/identity/protocols/oauth2/scopes
-    String scope = "https://www.googleapis.com/auth/PRODUCT_NAME";
-
-    authenticateExplicit(projectId, scope);
+    authenticateExplicit(projectId);
   }
 
   // List storage buckets by authenticating with ADC.
-  public static void authenticateExplicit(String project, String scope)
+  public static void authenticateExplicit(String projectId)
       throws IOException {
+    // Construct the GoogleCredentials object which obtains the default configuration from your
+    // working environment.
+    // GoogleCredentials.getApplicationDefault() will give you ComputeEngineCredentials
+    // if you are on a GCE (or other metadata server supported environments).
+    GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
+    // If you are authenticating to a Cloud API, you can let the library include the default scope,
+    // https://www.googleapis.com/auth/cloud-platform, because IAM is used to provide fine-grained
+    // permissions for Cloud.
+    // If you need to provide a scope, specify it as follows:
+    // GoogleCredentials credentials = GoogleCredentials.getApplicationDefault()
+    //     .createScoped(scope);
+    // For more information on scopes to use,
+    // see: https://developers.google.com/identity/protocols/oauth2/scopes
 
-    // Initialize the storage client.
-    Storage storage = initService(project, scope);
+    // Construct the Storage client.
+    Storage storage = StorageOptions.newBuilder()
+        .setCredentials(credentials)
+        .setProjectId(projectId)
+        .build()
+        .getService();
 
     System.out.println("Buckets:");
     Page<Bucket> buckets = storage.list();
     for (Bucket bucket : buckets.iterateAll()) {
       System.out.println(bucket.toString());
     }
-    System.out.println("Authentication complete.");
-  }
-
-  // Initialize the Storage client using ADC (Application Default Credentials).
-  private static Storage initService(String projectId, String scope)
-      throws IOException {
-    // Construct the GoogleCredentials object which obtains the default configuration from your
-    // working environment.
-    GoogleCredentials credentials = GoogleCredentials.getApplicationDefault().createScoped(scope);
-
-    // Construct the Storage client.
-    return StorageOptions.newBuilder()
-        .setCredentials(credentials)
-        .setProjectId(projectId)
-        .build()
-        .getService();
+    System.out.println("Listed all storage buckets.");
   }
 }
 // [END auth_cloud_explicit_adc]
