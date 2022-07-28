@@ -60,14 +60,9 @@ public class IdTokenFromImpersonatedCredentials {
     GoogleCredentials googleCredentials = GoogleCredentials.getApplicationDefault();
 
     // delegates: The chained list of delegates required to grant the final accessToken.
-    //
-    // If set, the sequence of identities must have "Service Account Token Creator" capability
-    // granted to the preceding identity.
-    // For example, if set to [serviceAccountB, serviceAccountC], the source credential must have
-    // the Token Creator role on serviceAccountB. serviceAccountB must have the Token Creator on
-    // serviceAccountC. Finally, C must have Token Creator on impersonatedServiceAccount.
-    //
-    // If left unset, source credential must have that role on impersonatedServiceAccount.
+    // For more information, see:
+    // https://cloud.google.com/iam/docs/create-short-lived-credentials-direct#sa-credentials-permissions
+    // Delegate is NOT USED here.
     List<String> delegates = null;
 
     // Create the impersonated credential.
