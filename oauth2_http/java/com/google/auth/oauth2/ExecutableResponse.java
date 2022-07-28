@@ -75,14 +75,11 @@ class ExecutableResponse {
             "The executable response is missing the `token_type` field.");
       }
 
-      if (!json.containsKey("expiration_time")) {
-        throw new PluggableAuthException(
-            "INVALID_EXECUTABLE_RESPONSE",
-            "The executable response is missing the `expiration_time` field.");
-      }
-
       this.tokenType = (String) json.get("token_type");
-      this.expirationTime = parseLongField(json.get("expiration_time"));
+
+      if (json.containsKey("expiration_time")) {
+        this.expirationTime = parseLongField(json.get("expiration_time"));
+      }
 
       if (SAML_SUBJECT_TOKEN_TYPE.equals(tokenType)) {
         this.subjectToken = (String) json.get("saml_response");
@@ -132,9 +129,9 @@ class ExecutableResponse {
     return this.success;
   }
 
-  /** Returns true if the subject token is expired or not present, false otherwise. */
+  /** Returns true if the subject token is expired, false otherwise. */
   boolean isExpired() {
-    return this.expirationTime == null || this.expirationTime <= Instant.now().getEpochSecond();
+    return this.expirationTime != null && this.expirationTime <= Instant.now().getEpochSecond();
   }
 
   /** Returns whether the execution was successful and returned an unexpired token. */
