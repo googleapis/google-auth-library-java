@@ -210,11 +210,10 @@ class ITWorkloadIdentityFederationTest {
     executableJson.put("token_type", "urn:ietf:params:oauth:token-type:jwt");
     executableJson.put("id_token", idToken);
 
-    StringBuilder fileContents = new StringBuilder();
-    fileContents.append("#!/bin/bash\n");
-    fileContents.append("echo \"");
-    fileContents.append(executableJson.toPrettyString().replace("\"", "\\\""));
-    fileContents.append("\"\n");
+    String fileContents = "#!/bin/bash\n"
+        + "echo \""
+        + executableJson.toPrettyString().replace("\"", "\\\"")
+        + "\"\n";
 
     File file =
         File.createTempFile(
@@ -224,7 +223,7 @@ class ITWorkloadIdentityFederationTest {
       throw new IOException("Unable to make script executable");
     }
     OAuth2Utils.writeInputStreamToFile(
-        new ByteArrayInputStream(fileContents.toString().getBytes(StandardCharsets.UTF_8)),
+        new ByteArrayInputStream(fileContents.getBytes(StandardCharsets.UTF_8)),
         file.getAbsolutePath());
 
     GenericJson config = new GenericJson();
