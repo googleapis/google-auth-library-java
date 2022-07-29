@@ -51,6 +51,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -86,7 +87,7 @@ class ITWorkloadIdentityFederationTest {
    * using the iamcredentials generateIdToken API. This will use the service account client ID as
    * the sub field of the token. This OIDC token will be used as the external subject token to be
    * exchanged for a GCP access token via GCP STS endpoint and then to impersonate the original
-   * service account key.
+   * service account key. Retrieves the OIDC token from a file.
    */
   @Test
   void identityPoolCredentials() throws IOException {
@@ -150,6 +151,23 @@ class ITWorkloadIdentityFederationTest {
     callGcs(awsCredential);
   }
 
+  /**
+   * PluggableCredential (OIDC provider): Uses the service account to generate a Google ID token
+   * using the iamcredentials generateIdToken API. This will use the service account client ID as
+   * the sub field of the token. This OIDC token will be used as the external subject token to be
+   * exchanged for a GCP access token via GCP STS endpoint and then to impersonate the original
+   * service account key. Runs an executable to get the OIDC token.
+   */
+  @Test
+  void pluggableAuthCredentials() throws IOException {
+    PluggableAuthCredentials pluggableAuthCredentials =
+        (PluggableAuthCredentials)
+            ExternalAccountCredentials.fromJson(
+                buildPluggableCredentialConfig(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+
+    callGcs(pluggableAuthCredentials);
+  }
+
   private GenericJson buildIdentityPoolCredentialConfig() throws IOException {
     String idToken = generateGoogleIdToken(OIDC_AUDIENCE);
 
@@ -174,6 +192,57 @@ class ITWorkloadIdentityFederationTest {
     GenericJson credentialSource = new GenericJson();
     credentialSource.put("file", file.getAbsolutePath());
     config.put("credential_source", credentialSource);
+
+    return config;
+  }
+
+  private GenericJson buildPluggableCredentialConfig() throws IOException {
+    String idToken = generateGoogleIdToken(OIDC_AUDIENCE);
+
+    Instant expiration_time = Instant.now().plusSeconds(60 * 60);
+
+    GenericJson executableJson = new GenericJson();
+    executableJson.setFactory(OAuth2Utils.JSON_FACTORY);
+    executableJson.put("success", true);
+    executableJson.put("version", 1);
+    executableJson.put("expiration_time", expiration_time.toEpochMilli());
+    executableJson.put("token_type", "urn:ietf:params:oauth:token-type:jwt");
+    executableJson.put("id_token", idToken);
+
+    String fileContents =
+        "#!/bin/bash\n"
+            + "echo \""
+            + executableJson.toPrettyString().replace("\"", "\\\"")
+            + "\"\n";
+
+    File file =
+        File.createTempFile(
+            "ITWorkloadIdentityFederation", /* suffix= */ null, /* directory= */ null);
+    file.deleteOnExit();
+    if (!file.setExecutable(true, true)) {
+      throw new IOException("Unable to make script executable");
+    }
+    OAuth2Utils.writeInputStreamToFile(
+        new ByteArrayInputStream(fileContents.getBytes(StandardCharsets.UTF_8)),
+        file.getAbsolutePath());
+
+    GenericJson config = new GenericJson();
+    config.put("type", "external_account");
+    config.put("audience", OIDC_AUDIENCE);
+    config.put("subject_token_type", "urn:ietf:params:oauth:token-type:jwt");
+    config.put("token_url", "https://sts.googleapis.com/v1/token");
+    config.put(
+        "service_account_impersonation_url",
+        String.format(
+            "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken",
+            clientEmail));
+
+    GenericJson credentialSource = new GenericJson();
+    config.put("credential_source", credentialSource);
+
+    GenericJson executableConfig = new GenericJson();
+    credentialSource.put("executable", executableConfig);
+    executableConfig.put("command", file.getAbsolutePath());
 
     return config;
   }
