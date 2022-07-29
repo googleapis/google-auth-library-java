@@ -49,10 +49,7 @@ public class VerifyGoogleIdToken {
   public static void verifyGoogleIdToken(String idToken, String audience, String jwkUrl) {
     // Initialize the Token verifier and set the audience.
     TokenVerifier tokenVerifier =
-        TokenVerifier.newBuilder()
-            .setAudience(audience)
-            .setIssuer(jwkUrl)
-            .build();
+        TokenVerifier.newBuilder().setAudience(audience).setIssuer(jwkUrl).build();
 
     try {
       // Verify the token.
@@ -73,6 +70,5 @@ public class VerifyGoogleIdToken {
       System.out.printf("Unable to verify the token: %s", e.getMessage());
     }
   }
-
 }
 // [END auth_cloud_verify_google_idtoken]

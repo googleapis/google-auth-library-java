@@ -78,8 +78,7 @@ public class SnippetsIT {
 
   // Get an id token from a Google service account.
   private static String getIdTokenFromServiceAccount(
-      String jsonCredentialPath, String targetAudience)
-      throws IOException {
+      String jsonCredentialPath, String targetAudience) throws IOException {
 
     // Initialize the Service Account Credentials class with the path to the json file.
     ServiceAccountCredentials serviceAccountCredentials =
@@ -101,12 +100,11 @@ public class SnippetsIT {
   }
 
   @Test
-  public void testVerifyGoogleIdToken()
-      throws IOException {
+  public void testVerifyGoogleIdToken() throws IOException {
     String idToken = getIdTokenFromServiceAccount(CREDENTIALS, "iap.googleapis.com");
 
-    VerifyGoogleIdToken.verifyGoogleIdToken(idToken, "iap.googleapis.com",
-        "https://www.googleapis.com/oauth2/v3/certs");
+    VerifyGoogleIdToken.verifyGoogleIdToken(
+        idToken, "iap.googleapis.com", "https://www.googleapis.com/oauth2/v3/certs");
   }
 
   @Test
