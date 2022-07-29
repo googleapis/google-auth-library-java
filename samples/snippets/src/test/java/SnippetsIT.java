@@ -17,7 +17,6 @@
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import com.auth0.jwk.JwkException;
 import com.google.auth.oauth2.IdToken;
 import com.google.auth.oauth2.IdTokenProvider.Option;
 import com.google.auth.oauth2.ServiceAccountCredentials;
@@ -80,7 +79,7 @@ public class SnippetsIT {
   // Get an id token from a Google service account.
   private static String getIdTokenFromServiceAccount(
       String jsonCredentialPath, String targetAudience)
-      throws IOException, GeneralSecurityException, JwkException {
+      throws IOException {
 
     // Initialize the Service Account Credentials class with the path to the json file.
     ServiceAccountCredentials serviceAccountCredentials =
@@ -97,18 +96,17 @@ public class SnippetsIT {
 
   @Test
   public void testIdTokenFromServiceAccount() throws IOException {
-    IdTokenFromServiceAccount.getIdTokenFromServiceAccount(CREDENTIALS, "pubsub.googleapis.com");
+    IdTokenFromServiceAccount.getIdTokenFromServiceAccount(CREDENTIALS, "iap.googleapis.com");
     assertThat(stdOut.toString()).contains("Generated ID token.");
   }
 
   @Test
-  public void testVerifyNonGoogleIdToken()
-      throws GeneralSecurityException, IOException, JwkException {
-    String idToken = getIdTokenFromServiceAccount(CREDENTIALS, "pubsub.googleapis.com");
+  public void testVerifyGoogleIdToken()
+      throws IOException {
+    String idToken = getIdTokenFromServiceAccount(CREDENTIALS, "iap.googleapis.com");
 
-    VerifyNonGoogleIdToken.verifyNonGoogleIdToken(
-        idToken, "pubsub.googleapis.com", "https://www.googleapis.com/oauth2/v3/certs");
-    assertThat(stdOut.toString()).contains("Id token verified.");
+    VerifyGoogleIdToken.verifyGoogleIdToken(idToken, "iap.googleapis.com",
+        "https://www.googleapis.com/oauth2/v3/certs");
   }
 
   @Test

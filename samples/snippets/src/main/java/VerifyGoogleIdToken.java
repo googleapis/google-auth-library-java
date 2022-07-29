@@ -16,22 +16,12 @@
 
 // [START auth_cloud_verify_google_idtoken]
 
-import com.auth0.jwk.JwkException;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.json.gson.GsonFactory;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.util.Collections;
-import java.util.concurrent.ExecutionException;
+import com.google.api.client.json.webtoken.JsonWebToken;
+import com.google.auth.oauth2.TokenVerifier;
 
 public class VerifyGoogleIdToken {
 
-  public static void main(String[] args)
-      throws IOException, ExecutionException, InterruptedException, GeneralSecurityException,
-          JwkException {
+  public static void main(String[] args) {
     // TODO(Developer): Replace the below variables before running the code.
     // The Google ID token to verify.
     String idToken = "id-token";
@@ -40,33 +30,49 @@ public class VerifyGoogleIdToken {
     // logical identifier of an API service, such as "pubsub.googleapis.com".
     String targetAudience = "pubsub.googleapis.com";
 
-    verifyGoogleIdToken(idToken, targetAudience);
+    // To verify id tokens, get the Json Web Key endpoint (jwk).
+    // OpenID Connect allows the use of a "Discovery document," a JSON document found at a
+    // well-known location containing key-value pairs which provide details about the
+    // OpenID Connect provider's configuration.
+    // For more information on validating the jwt, see:
+    // https://developers.google.com/identity/protocols/oauth2/openid-connect#validatinganidtoken
+    //
+    // Here, we validate Google's token using Google's OpenID Connect service (jwkUrl).
+    // For more information on jwk,see:
+    // https://auth0.com/docs/secure/tokens/json-web-tokens/json-web-key-sets
+    String jwkUrl = "https://www.googleapis.com/oauth2/v3/certs";
+
+    verifyGoogleIdToken(idToken, targetAudience, jwkUrl);
   }
 
   // Verifies the obtained Google id token. This is done at the receiving end of the OIDC endpoint.
-  public static void verifyGoogleIdToken(String idTokenString, String audience)
-      throws GeneralSecurityException, IOException {
-    // Initialize the Google id token verifier and set the audience.
-    GoogleIdTokenVerifier verifier =
-        new GoogleIdTokenVerifier.Builder(
-                GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance())
-            .setAudience(Collections.singletonList(audience))
+  public static void verifyGoogleIdToken(String idToken, String audience, String jwkUrl) {
+    // Initialize the Token verifier and set the audience.
+    TokenVerifier tokenVerifier =
+        TokenVerifier.newBuilder()
+            .setAudience(audience)
+            .setIssuer(jwkUrl)
             .build();
 
-    // Verify the id token.
-    GoogleIdToken idToken = verifier.verify(idTokenString);
-    if (idToken != null) {
-      Payload payload = idToken.getPayload();
+    try {
+      // Verify the token.
+      JsonWebToken jsonWebToken = tokenVerifier.verify(idToken);
+
+      // Verify that the token contains subject and email claims.
+      JsonWebToken.Payload payload = jsonWebToken.getPayload();
       // Get the user id.
       String userId = payload.getSubject();
       System.out.println("User ID: " + userId);
 
-      // Optionally, if "INCLUDE_EMAIL" was set in the "IdTokenProvider.Option", check if the
+      // Optionally, if "INCLUDE_EMAIL" was set in the token options, check if the
       // email was verified.
-      boolean emailVerified = payload.getEmailVerified();
-      System.out.printf("Email verified: %s", emailVerified);
+      if (payload.get("email") != null) {
+        System.out.printf("Email verified: %s", payload.get("email"));
+      }
+    } catch (TokenVerifier.VerificationException e) {
+      System.out.printf("Unable to verify the token: %s", e.getMessage());
     }
-    System.out.println("Unable to verify the token!");
   }
+
 }
 // [END auth_cloud_verify_google_idtoken]
