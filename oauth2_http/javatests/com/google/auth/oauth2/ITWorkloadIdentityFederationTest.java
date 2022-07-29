@@ -209,10 +209,11 @@ class ITWorkloadIdentityFederationTest {
     executableJson.put("token_type", "urn:ietf:params:oauth:token-type:jwt");
     executableJson.put("id_token", idToken);
 
-    String fileContents = "#!/bin/bash\n"
-        + "echo \""
-        + executableJson.toPrettyString().replace("\"", "\\\"")
-        + "\"\n";
+    String fileContents =
+        "#!/bin/bash\n"
+            + "echo \""
+            + executableJson.toPrettyString().replace("\"", "\\\"")
+            + "\"\n";
 
     File file =
         File.createTempFile(
