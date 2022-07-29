@@ -53,18 +53,6 @@
       <version>1.2.1</version>
     </dependency>
 
-<!--    JWT dependency-->
-    <dependency>
-      <groupId>com.auth0</groupId>
-      <artifactId>java-jwt</artifactId>
-      <version>3.16.0</version>
-    </dependency>
-    <dependency>
-      <groupId>com.auth0</groupId>
-      <artifactId>jwks-rsa</artifactId>
-      <version>0.18.0</version>
-    </dependency>
-
 <!--    GCloud dependency-->
     <dependency>
       <groupId>com.google.cloud</groupId>
