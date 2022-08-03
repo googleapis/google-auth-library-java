@@ -55,6 +55,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -91,7 +92,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     implements ServiceAccountSigner, IdTokenProvider, QuotaProjectIdProvider {
 
   private static final long serialVersionUID = -2133257318957488431L;
-  private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+  private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ssX";
   private static final int TWELVE_HOURS_IN_SECONDS = 43200;
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
   private static final String CLOUD_PLATFORM_SCOPE =
@@ -109,6 +110,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
   private final String transportFactoryClassName;
 
   private transient HttpTransportFactory transportFactory;
+
+  private transient Calendar calendar;
 
   /**
    * @param sourceCredentials the source credential used to acquire the impersonated credentials. It
@@ -429,6 +432,25 @@ public class ImpersonatedCredentials extends GoogleCredentials
         .build();
   }
 
+  /**
+   * Clones the impersonated credentials with a new calendar.
+   *
+   * @param calendar the calendar that will be used by the new ImpersonatedCredentials instance when
+   *     parsing the received expiration time of the refreshed access token
+   * @return the cloned impersonated credentials with the given custom calendar
+   */
+  public ImpersonatedCredentials createWithCustomCalendar(Calendar calendar) {
+    return toBuilder()
+        .setScopes(this.scopes)
+        .setLifetime(this.lifetime)
+        .setDelegates(this.delegates)
+        .setHttpTransportFactory(this.transportFactory)
+        .setQuotaProjectId(this.quotaProjectId)
+        .setIamEndpointOverride(this.iamEndpointOverride)
+        .setCalendar(calendar)
+        .build();
+  }
+
   @Override
   protected Map<String, List<String>> getAdditionalHeaders() {
     Map<String, List<String>> headers = super.getAdditionalHeaders();
@@ -451,6 +473,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     this.quotaProjectId = builder.quotaProjectId;
     this.iamEndpointOverride = builder.iamEndpointOverride;
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
+    this.calendar = builder.getCalendar();
     if (this.delegates == null) {
       this.delegates = new ArrayList<String>();
     }
@@ -512,6 +535,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
         OAuth2Utils.validateString(responseData, "expireTime", "Expected to find an expireTime");
 
     DateFormat format = new SimpleDateFormat(RFC3339);
+    format.setCalendar(calendar);
     try {
       Date date = format.parse(expireTime);
       return new AccessToken(accessToken, date);
@@ -606,6 +630,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     private HttpTransportFactory transportFactory;
     private String quotaProjectId;
     private String iamEndpointOverride;
+    private Calendar calendar = Calendar.getInstance();
 
     protected Builder() {}
 
@@ -676,6 +701,15 @@ public class ImpersonatedCredentials extends GoogleCredentials
     public Builder setIamEndpointOverride(String iamEndpointOverride) {
       this.iamEndpointOverride = iamEndpointOverride;
       return this;
+    }
+
+    public Builder setCalendar(Calendar calendar) {
+      this.calendar = calendar;
+      return this;
+    }
+
+    public Calendar getCalendar() {
+      return this.calendar;
     }
 
     public ImpersonatedCredentials build() {
