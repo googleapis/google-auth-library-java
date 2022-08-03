@@ -55,8 +55,8 @@ import javax.annotation.Nullable;
  * defined below.
  *
  * <p>The executable must print out the 3rd party token to STDOUT in JSON format. When an
- * output_file is specified in the credential configuration, the executable must also handle writing the
- * JSON response to this file.
+ * output_file is specified in the credential configuration, the executable must also handle writing
+ * the JSON response to this file.
  *
  * <pre>
  * OIDC response sample:
