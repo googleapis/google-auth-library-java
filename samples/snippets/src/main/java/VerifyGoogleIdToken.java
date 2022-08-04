@@ -77,6 +77,5 @@ public class VerifyGoogleIdToken {
       System.out.printf("Unable to verify the token: %s", e.getMessage());
     }
   }
-
 }
 // [END auth_cloud_verify_google_idtoken]
