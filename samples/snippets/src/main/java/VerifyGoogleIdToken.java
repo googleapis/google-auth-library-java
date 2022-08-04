@@ -46,11 +46,15 @@ public class VerifyGoogleIdToken {
   }
 
   // Verifies the obtained Google id token. This is done at the receiving end of the OIDC endpoint.
+  // The most common use case for verifying the ID token is when you are protecting
+  // your own APIs with IAP. Google services already verify credentials as a platform,
+  // so verifying ID tokens before making Google API calls is usually unnecessary.
   public static void verifyGoogleIdToken(String idToken, String audience, String jwkUrl) {
     // Initialize the Token verifier and set the audience.
     TokenVerifier tokenVerifier =
         TokenVerifier.newBuilder()
             .setAudience(audience)
+            // Optional, when verifying a Google ID token, the jwk url is set by default.
             .setIssuer(jwkUrl)
             .build();
 
