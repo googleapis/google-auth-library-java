@@ -421,11 +421,15 @@ A sample executable error response:
 These are all required fields for an error response. The code and message
 fields will be used by the library as part of the thrown exception.
 
+For successful responses, the `expiration_time` field is only required
+when an output file is specified in the credential configuration. 
+
 Response format fields summary:
   * `version`: The version of the JSON output. Currently only version 1 is supported.
-  * `success`: The status of the response. When true, the response must contain the 3rd party token, 
-    token type, and expiration. The executable must also exit with exit code 0.
-    When false, the response must contain the error code and message fields and exit with a non-zero value.
+  * `success`: When true, the response must contain the 3rd party token and token type. The response must also contain
+    the expiration_time field if an output file was specified in the credential configuration. The executable must also 
+    exit with exit code 0. When false, the response must contain the error code and message fields and exit with a
+    non-zero value.
   * `token_type`: The 3rd party subject token type. Must be *urn:ietf:params:oauth:token-type:jwt*, 
      *urn:ietf:params:oauth:token-type:id_token*, or *urn:ietf:params:oauth:token-type:saml2*.
   * `id_token`: The 3rd party OIDC token.
@@ -435,8 +439,9 @@ Response format fields summary:
   * `message`: The error message.
 
 All response types must include both the `version` and `success` fields.
- * Successful responses must include the `token_type`, `expiration_time`, and one of
-   `id_token` or `saml_response`.
+ * Successful responses must include the `token_type` and one of
+   `id_token` or `saml_response`. The `expiration_time` field must also be present if an output file was specified in
+    the credential configuration. 
  * Error responses must include both the `code` and `message` fields.
 
 The library will populate the following environment variables when the executable is run:

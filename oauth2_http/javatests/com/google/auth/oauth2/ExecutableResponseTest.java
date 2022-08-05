@@ -60,12 +60,27 @@ class ExecutableResponseTest {
 
     assertTrue(response.isSuccessful());
     assertTrue(response.isValid());
-    assertEquals(1, response.getVersion());
+    assertEquals(EXECUTABLE_SUPPORTED_MAX_VERSION, response.getVersion());
     assertEquals(TOKEN_TYPE_OIDC, response.getTokenType());
     assertEquals(ID_TOKEN, response.getSubjectToken());
     assertEquals(
         Instant.now().getEpochSecond() + EXPIRATION_DURATION, response.getExpirationTime());
-    assertEquals(1, response.getVersion());
+  }
+
+  @Test
+  void constructor_successOidcResponseMissingExpirationTimeField_notExpired() throws IOException {
+    GenericJson jsonResponse = buildOidcResponse();
+    jsonResponse.remove("expiration_time");
+
+    ExecutableResponse response = new ExecutableResponse(jsonResponse);
+
+    assertTrue(response.isSuccessful());
+    assertTrue(response.isValid());
+    assertFalse(response.isExpired());
+    assertEquals(EXECUTABLE_SUPPORTED_MAX_VERSION, response.getVersion());
+    assertEquals(TOKEN_TYPE_OIDC, response.getTokenType());
+    assertEquals(ID_TOKEN, response.getSubjectToken());
+    assertNull(response.getExpirationTime());
   }
 
   @Test
@@ -82,16 +97,32 @@ class ExecutableResponseTest {
   }
 
   @Test
+  void constructor_successSamlResponseMissingExpirationTimeField_notExpired() throws IOException {
+    GenericJson jsonResponse = buildSamlResponse();
+    jsonResponse.remove("expiration_time");
+
+    ExecutableResponse response = new ExecutableResponse(jsonResponse);
+
+    assertTrue(response.isSuccessful());
+    assertTrue(response.isValid());
+    assertFalse(response.isExpired());
+    assertEquals(EXECUTABLE_SUPPORTED_MAX_VERSION, response.getVersion());
+    assertEquals(TOKEN_TYPE_SAML, response.getTokenType());
+    assertEquals(SAML_RESPONSE, response.getSubjectToken());
+    assertNull(response.getExpirationTime());
+  }
+
+  @Test
   void constructor_validErrorResponse() throws IOException {
     ExecutableResponse response = new ExecutableResponse(buildErrorResponse());
 
     assertFalse(response.isSuccessful());
     assertFalse(response.isValid());
-    assertTrue(response.isExpired());
+    assertFalse(response.isExpired());
     assertNull(response.getSubjectToken());
     assertNull(response.getTokenType());
     assertNull(response.getExpirationTime());
-    assertEquals(1, response.getVersion());
+    assertEquals(EXECUTABLE_SUPPORTED_MAX_VERSION, response.getVersion());
     assertEquals("401", response.getErrorCode());
     assertEquals("Caller not authorized.", response.getErrorMessage());
   }
@@ -186,23 +217,6 @@ class ExecutableResponseTest {
     assertEquals(
         "Error code INVALID_EXECUTABLE_RESPONSE: The executable response is missing the "
             + "`token_type` field.",
-        exception.getMessage());
-  }
-
-  @Test
-  void constructor_successResponseMissingExpirationTimeField_throws() {
-    GenericJson jsonResponse = buildOidcResponse();
-    jsonResponse.remove("expiration_time");
-
-    PluggableAuthException exception =
-        assertThrows(
-            PluggableAuthException.class,
-            () -> new ExecutableResponse(jsonResponse),
-            "Exception should be thrown.");
-
-    assertEquals(
-        "Error code INVALID_EXECUTABLE_RESPONSE: The executable response is missing the "
-            + "`expiration_time` field.",
         exception.getMessage());
   }
 
