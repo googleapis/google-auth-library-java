@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.10.0](https://github.com/googleapis/google-auth-library-java/compare/v1.9.0...v1.10.0) (2022-08-05)
+
+
+### Features
+
+* workforce identity federation for pluggable auth ([#959](https://github.com/googleapis/google-auth-library-java/issues/959)) ([7f2c535](https://github.com/googleapis/google-auth-library-java/commit/7f2c535ab7c842a672d6761f4cd80df88e1a37ed))
+
+
+### Bug Fixes
+
+* updates executable response spec for executable-sourced credentials ([#955](https://github.com/googleapis/google-auth-library-java/issues/955)) ([48ff83d](https://github.com/googleapis/google-auth-library-java/commit/48ff83dc68e29dcae07fdea963cbbe5525f86a89))
+
+
+### Documentation
+
+* **samples:** added auth samples and tests ([#927](https://github.com/googleapis/google-auth-library-java/issues/927)) ([32c717f](https://github.com/googleapis/google-auth-library-java/commit/32c717fdf1a721f3e7ca3d75f03fcc229923689c))
+
 ## [1.9.0](https://github.com/googleapis/google-auth-library-java/compare/v1.8.1...v1.9.0) (2022-08-02)
 
 
