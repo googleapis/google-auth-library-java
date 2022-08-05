@@ -401,6 +401,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
           .setQuotaProjectId(quotaProjectId)
           .setClientId(clientId)
           .setClientSecret(clientSecret)
+          .setWorkforcePoolUserProject(userProject)
           .build();
     }
     return IdentityPoolCredentials.newBuilder()

@@ -196,8 +196,7 @@ public class ExternalAccountCredentialsTest {
     assertEquals("subjectTokenType", credential.getSubjectTokenType());
     assertEquals(STS_URL, credential.getTokenUrl());
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
-    assertEquals(
-        "userProject", ((IdentityPoolCredentials) credential).getWorkforcePoolUserProject());
+    assertEquals("userProject", credential.getWorkforcePoolUserProject());
     assertNotNull(credential.getCredentialSource());
   }
 
@@ -226,6 +225,30 @@ public class ExternalAccountCredentialsTest {
     assertEquals("subjectTokenType", credential.getSubjectTokenType());
     assertEquals(STS_URL, credential.getTokenUrl());
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
+    assertNotNull(credential.getCredentialSource());
+
+    PluggableAuthCredentialSource source =
+        (PluggableAuthCredentialSource) credential.getCredentialSource();
+    assertEquals("command", source.getCommand());
+    assertEquals(30000, source.getTimeoutMs()); // Default timeout is 30s.
+    assertNull(source.getOutputFilePath());
+  }
+
+  @Test
+  void fromJson_pluggableAuthCredentialsWorkforce() {
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(
+            buildJsonPluggableAuthWorkforceCredential(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+
+    assertTrue(credential instanceof PluggableAuthCredentials);
+    assertEquals(
+        "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider",
+        credential.getAudience());
+    assertEquals("subjectTokenType", credential.getSubjectTokenType());
+    assertEquals(STS_URL, credential.getTokenUrl());
+    assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
+    assertEquals("userProject", credential.getWorkforcePoolUserProject());
+
     assertNotNull(credential.getCredentialSource());
 
     PluggableAuthCredentialSource source =
@@ -502,25 +525,35 @@ public class ExternalAccountCredentialsTest {
   @Test
   void exchangeExternalCredentialForAccessToken_workforceCred_expectUserProjectPassedToSts()
       throws IOException {
-    ExternalAccountCredentials credential =
+    ExternalAccountCredentials identityPoolCredential =
         ExternalAccountCredentials.fromJson(
             buildJsonIdentityPoolWorkforceCredential(), transportFactory);
 
-    StsTokenExchangeRequest stsTokenExchangeRequest =
-        StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
+    ExternalAccountCredentials pluggableAuthCredential =
+        ExternalAccountCredentials.fromJson(
+            buildJsonPluggableAuthWorkforceCredential(), transportFactory);
 
-    AccessToken accessToken =
-        credential.exchangeExternalCredentialForAccessToken(stsTokenExchangeRequest);
+    List<ExternalAccountCredentials> credentials =
+        Arrays.asList(identityPoolCredential, pluggableAuthCredential);
 
-    assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
+    for (int i = 0; i < credentials.size(); i++) {
+      StsTokenExchangeRequest stsTokenExchangeRequest =
+          StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
 
-    // Validate internal options set.
-    Map<String, String> query =
-        TestUtils.parseQuery(transportFactory.transport.getLastRequest().getContentAsString());
-    GenericJson internalOptions = new GenericJson();
-    internalOptions.setFactory(OAuth2Utils.JSON_FACTORY);
-    internalOptions.put("userProject", "userProject");
-    assertEquals(internalOptions.toString(), query.get("options"));
+      AccessToken accessToken =
+          credentials.get(i).exchangeExternalCredentialForAccessToken(stsTokenExchangeRequest);
+
+      assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
+
+      // Validate internal options set.
+      Map<String, String> query =
+          TestUtils.parseQuery(transportFactory.transport.getLastRequest().getContentAsString());
+      GenericJson internalOptions = new GenericJson();
+      internalOptions.setFactory(OAuth2Utils.JSON_FACTORY);
+      internalOptions.put("userProject", "userProject");
+      assertEquals(internalOptions.toString(), query.get("options"));
+      assertEquals(i + 1, transportFactory.transport.getRequests().size());
+    }
   }
 
   @Test
@@ -810,6 +843,14 @@ public class ExternalAccountCredentialsTest {
     credentialSource.put("executable", executableConfig);
     json.put("credential_source", credentialSource);
 
+    return json;
+  }
+
+  private GenericJson buildJsonPluggableAuthWorkforceCredential() {
+    GenericJson json = buildJsonPluggableAuthCredential();
+    json.put(
+        "audience", "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider");
+    json.put("workforce_pool_user_project", "userProject");
     return json;
   }
 
