@@ -5,6 +5,7 @@ target/
 .classpath
 .project
 .settings
+.factorypath
 
 # Intellij
 *.iml
