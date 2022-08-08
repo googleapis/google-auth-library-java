@@ -31,20 +31,19 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import com.google.api.client.json.GenericJson;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Instant;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 /** Tests for {@link ExecutableResponse}. */
-class ExecutableResponseTest {
+public class ExecutableResponseTest {
 
   private static final String TOKEN_TYPE_OIDC = "urn:ietf:params:oauth:token-type:id_token";
   private static final String TOKEN_TYPE_SAML = "urn:ietf:params:oauth:token-type:saml2";
@@ -55,7 +54,7 @@ class ExecutableResponseTest {
   private static final int EXPIRATION_DURATION = 3600;
 
   @Test
-  void constructor_successOidcResponse() throws IOException {
+  public void constructor_successOidcResponse() throws IOException {
     ExecutableResponse response = new ExecutableResponse(buildOidcResponse());
 
     assertTrue(response.isSuccessful());
@@ -63,12 +62,13 @@ class ExecutableResponseTest {
     assertEquals(EXECUTABLE_SUPPORTED_MAX_VERSION, response.getVersion());
     assertEquals(TOKEN_TYPE_OIDC, response.getTokenType());
     assertEquals(ID_TOKEN, response.getSubjectToken());
-    assertEquals(
-        Instant.now().getEpochSecond() + EXPIRATION_DURATION, response.getExpirationTime());
+    assertTrue(
+        Instant.now().getEpochSecond() + EXPIRATION_DURATION == response.getExpirationTime());
   }
 
   @Test
-  void constructor_successOidcResponseMissingExpirationTimeField_notExpired() throws IOException {
+  public void constructor_successOidcResponseMissingExpirationTimeField_notExpired()
+      throws IOException {
     GenericJson jsonResponse = buildOidcResponse();
     jsonResponse.remove("expiration_time");
 
@@ -84,7 +84,7 @@ class ExecutableResponseTest {
   }
 
   @Test
-  void constructor_successSamlResponse() throws IOException {
+  public void constructor_successSamlResponse() throws IOException {
     ExecutableResponse response = new ExecutableResponse(buildSamlResponse());
 
     assertTrue(response.isSuccessful());
@@ -92,12 +92,13 @@ class ExecutableResponseTest {
     assertEquals(EXECUTABLE_SUPPORTED_MAX_VERSION, response.getVersion());
     assertEquals(TOKEN_TYPE_SAML, response.getTokenType());
     assertEquals(SAML_RESPONSE, response.getSubjectToken());
-    assertEquals(
-        Instant.now().getEpochSecond() + EXPIRATION_DURATION, response.getExpirationTime());
+    assertTrue(
+        Instant.now().getEpochSecond() + EXPIRATION_DURATION == response.getExpirationTime());
   }
 
   @Test
-  void constructor_successSamlResponseMissingExpirationTimeField_notExpired() throws IOException {
+  public void constructor_successSamlResponseMissingExpirationTimeField_notExpired()
+      throws IOException {
     GenericJson jsonResponse = buildSamlResponse();
     jsonResponse.remove("expiration_time");
 
@@ -113,7 +114,7 @@ class ExecutableResponseTest {
   }
 
   @Test
-  void constructor_validErrorResponse() throws IOException {
+  public void constructor_validErrorResponse() throws IOException {
     ExecutableResponse response = new ExecutableResponse(buildErrorResponse());
 
     assertFalse(response.isSuccessful());
@@ -128,142 +129,135 @@ class ExecutableResponseTest {
   }
 
   @Test
-  void constructor_errorResponseMissingCode_throws() {
+  public void constructor_errorResponseMissingCode_throws() {
     GenericJson jsonResponse = buildErrorResponse();
 
     Object[] values = new Object[] {null, ""};
     for (Object value : values) {
       jsonResponse.put("code", value);
+      try {
+        new ExecutableResponse(jsonResponse);
+      } catch (PluggableAuthException exception) {
+        assertEquals(
+            "Error code INVALID_EXECUTABLE_RESPONSE: The executable response must contain "
+                + "`error` and `message` fields when unsuccessful.",
+            exception.getMessage());
+      } catch (IOException ex) {
 
-      PluggableAuthException exception =
-          assertThrows(
-              PluggableAuthException.class,
-              () -> new ExecutableResponse(jsonResponse),
-              "Exception should be thrown.");
-
-      assertEquals(
-          "Error code INVALID_EXECUTABLE_RESPONSE: The executable response must contain "
-              + "`error` and `message` fields when unsuccessful.",
-          exception.getMessage());
+      }
     }
   }
 
   @Test
-  void constructor_errorResponseMissingMessage_throws() {
+  public void constructor_errorResponseMissingMessage_throws() {
     GenericJson jsonResponse = buildErrorResponse();
 
     Object[] values = new Object[] {null, ""};
     for (Object value : values) {
       jsonResponse.put("message", value);
 
-      PluggableAuthException exception =
-          assertThrows(
-              PluggableAuthException.class,
-              () -> new ExecutableResponse(jsonResponse),
-              "Exception should be thrown.");
-
-      assertEquals(
-          "Error code INVALID_EXECUTABLE_RESPONSE: The executable response must contain "
-              + "`error` and `message` fields when unsuccessful.",
-          exception.getMessage());
+      try {
+        new ExecutableResponse(jsonResponse);
+      } catch (PluggableAuthException exception) {
+        assertEquals(
+            "Error code INVALID_EXECUTABLE_RESPONSE: The executable response must contain "
+                + "`error` and `message` fields when unsuccessful.",
+            exception.getMessage());
+      } catch (IOException ex) {
+      }
     }
   }
 
   @Test
-  void constructor_successResponseMissingVersionField_throws() {
+  public void constructor_successResponseMissingVersionField_throws() {
     GenericJson jsonResponse = buildOidcResponse();
     jsonResponse.remove("version");
 
-    PluggableAuthException exception =
-        assertThrows(
-            PluggableAuthException.class,
-            () -> new ExecutableResponse(jsonResponse),
-            "Exception should be thrown.");
-
-    assertEquals(
-        "Error code INVALID_EXECUTABLE_RESPONSE: The executable response is missing the "
-            + "`version` field.",
-        exception.getMessage());
+    try {
+      new ExecutableResponse(jsonResponse);
+    } catch (PluggableAuthException exception) {
+      assertEquals(
+          "Error code INVALID_EXECUTABLE_RESPONSE: The executable response is missing the "
+              + "`version` field.",
+          exception.getMessage());
+    } catch (IOException ex) {
+    }
   }
 
   @Test
-  void constructor_successResponseMissingSuccessField_throws() {
+  public void constructor_successResponseMissingSuccessField_throws() {
     GenericJson jsonResponse = buildOidcResponse();
     jsonResponse.remove("success");
 
-    PluggableAuthException exception =
-        assertThrows(
-            PluggableAuthException.class,
-            () -> new ExecutableResponse(jsonResponse),
-            "Exception should be thrown.");
-
-    assertEquals(
-        "Error code INVALID_EXECUTABLE_RESPONSE: The executable response is missing the "
-            + "`success` field.",
-        exception.getMessage());
+    try {
+      new ExecutableResponse(jsonResponse);
+    } catch (PluggableAuthException exception) {
+      assertEquals(
+          "Error code INVALID_EXECUTABLE_RESPONSE: The executable response is missing the "
+              + "`success` field.",
+          exception.getMessage());
+    } catch (IOException ex) {
+    }
   }
 
   @Test
-  void constructor_successResponseMissingTokenTypeField_throws() {
+  public void constructor_successResponseMissingTokenTypeField_throws() {
     GenericJson jsonResponse = buildOidcResponse();
     jsonResponse.remove("token_type");
 
-    PluggableAuthException exception =
-        assertThrows(
-            PluggableAuthException.class,
-            () -> new ExecutableResponse(jsonResponse),
-            "Exception should be thrown.");
-
-    assertEquals(
-        "Error code INVALID_EXECUTABLE_RESPONSE: The executable response is missing the "
-            + "`token_type` field.",
-        exception.getMessage());
+    try {
+      new ExecutableResponse(jsonResponse);
+    } catch (PluggableAuthException exception) {
+      assertEquals(
+          "Error code INVALID_EXECUTABLE_RESPONSE: The executable response is missing the "
+              + "`token_type` field.",
+          exception.getMessage());
+    } catch (IOException ex) {
+    }
   }
 
   @Test
-  void constructor_samlResponseMissingSubjectToken_throws() {
+  public void constructor_samlResponseMissingSubjectToken_throws() {
     GenericJson jsonResponse = buildSamlResponse();
 
     Object[] values = new Object[] {null, ""};
     for (Object value : values) {
       jsonResponse.put("saml_response", value);
 
-      PluggableAuthException exception =
-          assertThrows(
-              PluggableAuthException.class,
-              () -> new ExecutableResponse(jsonResponse),
-              "Exception should be thrown.");
-
-      assertEquals(
-          "Error code INVALID_EXECUTABLE_RESPONSE: The executable response does not "
-              + "contain a valid token.",
-          exception.getMessage());
+      try {
+        new ExecutableResponse(jsonResponse);
+      } catch (PluggableAuthException exception) {
+        assertEquals(
+            "Error code INVALID_EXECUTABLE_RESPONSE: The executable response does not "
+                + "contain a valid token.",
+            exception.getMessage());
+      } catch (IOException ex) {
+      }
     }
   }
 
   @Test
-  void constructor_oidcResponseMissingSubjectToken_throws() {
+  public void constructor_oidcResponseMissingSubjectToken_throws() {
     GenericJson jsonResponse = buildOidcResponse();
 
     Object[] values = new Object[] {null, ""};
     for (Object value : values) {
       jsonResponse.put("id_token", value);
 
-      PluggableAuthException exception =
-          assertThrows(
-              PluggableAuthException.class,
-              () -> new ExecutableResponse(jsonResponse),
-              "Exception should be thrown.");
-
-      assertEquals(
-          "Error code INVALID_EXECUTABLE_RESPONSE: The executable response does not "
-              + "contain a valid token.",
-          exception.getMessage());
+      try {
+        new ExecutableResponse(jsonResponse);
+      } catch (PluggableAuthException exception) {
+        assertEquals(
+            "Error code INVALID_EXECUTABLE_RESPONSE: The executable response does not "
+                + "contain a valid token.",
+            exception.getMessage());
+      } catch (IOException ex) {
+      }
     }
   }
 
   @Test
-  void isExpired() throws IOException {
+  public void isExpired() throws IOException {
     GenericJson jsonResponse = buildOidcResponse();
 
     BigDecimal[] values =

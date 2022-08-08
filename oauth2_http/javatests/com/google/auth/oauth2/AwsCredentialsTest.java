@@ -31,11 +31,11 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonParser;
@@ -52,10 +52,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Tests for {@link AwsCredentials}. */
-class AwsCredentialsTest {
+@RunWith(JUnit4.class)
+public class AwsCredentialsTest {
 
   private static final String STS_URL = "https://sts.googleapis.com";
   private static final String AWS_CREDENTIALS_URL = "https://www.aws-credentials.com";
@@ -99,7 +102,7 @@ class AwsCredentialsTest {
               .build();
 
   @Test
-  void refreshAccessToken_withoutServiceAccountImpersonation() throws IOException {
+  public void refreshAccessToken_withoutServiceAccountImpersonation() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -117,7 +120,7 @@ class AwsCredentialsTest {
   }
 
   @Test
-  void refreshAccessToken_withServiceAccountImpersonation() throws IOException {
+  public void refreshAccessToken_withServiceAccountImpersonation() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -140,7 +143,7 @@ class AwsCredentialsTest {
   }
 
   @Test
-  void retrieveSubjectToken() throws IOException {
+  public void retrieveSubjectToken() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -184,7 +187,7 @@ class AwsCredentialsTest {
   }
 
   @Test
-  void retrieveSubjectTokenWithSessionTokenUrl() throws IOException {
+  public void retrieveSubjectTokenWithSessionTokenUrl() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -255,7 +258,7 @@ class AwsCredentialsTest {
   }
 
   @Test
-  void retrieveSubjectToken_noRegion_expectThrows() {
+  public void retrieveSubjectToken_noRegion_expectThrows() {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -269,10 +272,11 @@ class AwsCredentialsTest {
                 .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .build();
 
-    IOException exception =
-        assertThrows(
-            IOException.class, awsCredential::retrieveSubjectToken, "Exception should be thrown.");
-    assertEquals("Failed to retrieve AWS region.", exception.getMessage());
+    try {
+      awsCredential.retrieveSubjectToken();
+    } catch (IOException exception) {
+      assertEquals("Failed to retrieve AWS region.", exception.getMessage());
+    }
 
     List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
     assertEquals(1, requests.size());
@@ -282,7 +286,7 @@ class AwsCredentialsTest {
   }
 
   @Test
-  void retrieveSubjectToken_noRole_expectThrows() {
+  public void retrieveSubjectToken_noRole_expectThrows() {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -297,10 +301,11 @@ class AwsCredentialsTest {
                 .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .build();
 
-    IOException exception =
-        assertThrows(
-            IOException.class, awsCredential::retrieveSubjectToken, "Exception should be thrown.");
-    assertEquals("Failed to retrieve AWS IAM role.", exception.getMessage());
+    try {
+      awsCredential.retrieveSubjectToken();
+    } catch (IOException exception) {
+      assertEquals("Failed to retrieve AWS IAM role.", exception.getMessage());
+    }
 
     List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
     assertEquals(2, requests.size());
@@ -313,7 +318,7 @@ class AwsCredentialsTest {
   }
 
   @Test
-  void retrieveSubjectToken_noCredentials_expectThrows() {
+  public void retrieveSubjectToken_noCredentials_expectThrows() {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -328,10 +333,11 @@ class AwsCredentialsTest {
                 .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .build();
 
-    IOException exception =
-        assertThrows(
-            IOException.class, awsCredential::retrieveSubjectToken, "Exception should be thrown.");
-    assertEquals("Failed to retrieve AWS credentials.", exception.getMessage());
+    try {
+      awsCredential.retrieveSubjectToken();
+    } catch (IOException exception) {
+      assertEquals("Failed to retrieve AWS credentials.", exception.getMessage());
+    }
 
     List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
     assertEquals(3, requests.size());
@@ -347,7 +353,7 @@ class AwsCredentialsTest {
   }
 
   @Test
-  void retrieveSubjectToken_noRegionUrlProvided() {
+  public void retrieveSubjectToken_noRegionUrlProvided() {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -362,13 +368,14 @@ class AwsCredentialsTest {
                 .setCredentialSource(new AwsCredentialSource(credentialSource))
                 .build();
 
-    IOException exception =
-        assertThrows(
-            IOException.class, awsCredential::retrieveSubjectToken, "Exception should be thrown.");
-    assertEquals(
-        "Unable to determine the AWS region. The credential source does not "
-            + "contain the region URL.",
-        exception.getMessage());
+    try {
+      awsCredential.retrieveSubjectToken();
+    } catch (IOException exception) {
+      assertEquals(
+          "Unable to determine the AWS region. The credential source does not "
+              + "contain the region URL.",
+          exception.getMessage());
+    }
 
     // No requests because the credential source does not contain region URL.
     List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
@@ -376,7 +383,7 @@ class AwsCredentialsTest {
   }
 
   @Test
-  void getAwsSecurityCredentials_fromEnvironmentVariablesNoToken() throws IOException {
+  public void getAwsSecurityCredentials_fromEnvironmentVariablesNoToken() throws IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider
         .setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId")
@@ -397,7 +404,7 @@ class AwsCredentialsTest {
   }
 
   @Test
-  void getAwsSecurityCredentials_fromEnvironmentVariablesWithToken() throws IOException {
+  public void getAwsSecurityCredentials_fromEnvironmentVariablesWithToken() throws IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider
         .setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId")
@@ -419,7 +426,7 @@ class AwsCredentialsTest {
   }
 
   @Test
-  void getAwsSecurityCredentials_fromMetadataServer() throws IOException {
+  public void getAwsSecurityCredentials_fromMetadataServer() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -448,7 +455,7 @@ class AwsCredentialsTest {
   }
 
   @Test
-  void getAwsSecurityCredentials_fromMetadataServer_noUrlProvided() {
+  public void getAwsSecurityCredentials_fromMetadataServer_noUrlProvided() {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -463,16 +470,13 @@ class AwsCredentialsTest {
                 .setCredentialSource(new AwsCredentialSource(credentialSource))
                 .build();
 
-    IOException exception =
-        assertThrows(
-            IOException.class,
-            () -> {
-              awsCredential.getAwsSecurityCredentials(EMPTY_METADATA_HEADERS);
-            },
-            "Exception should be thrown.");
-    assertEquals(
-        "Unable to determine the AWS IAM role name. The credential source does not contain the url field.",
-        exception.getMessage());
+    try {
+      awsCredential.getAwsSecurityCredentials(EMPTY_METADATA_HEADERS);
+    } catch (IOException exception) {
+      assertEquals(
+          "Unable to determine the AWS IAM role name. The credential source does not contain the url field.",
+          exception.getMessage());
+    }
 
     // No requests because url field is not present in credential source.
     List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
@@ -480,7 +484,7 @@ class AwsCredentialsTest {
   }
 
   @Test
-  void getAwsRegion_awsRegionEnvironmentVariable() throws IOException {
+  public void getAwsRegion_awsRegionEnvironmentVariable() throws IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("AWS_REGION", "region");
     environmentProvider.setEnv("AWS_DEFAULT_REGION", "defaultRegion");
@@ -507,7 +511,7 @@ class AwsCredentialsTest {
   }
 
   @Test
-  void getAwsRegion_awsDefaultRegionEnvironmentVariable() throws IOException {
+  public void getAwsRegion_awsDefaultRegionEnvironmentVariable() throws IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("AWS_DEFAULT_REGION", "defaultRegion");
 
@@ -533,7 +537,7 @@ class AwsCredentialsTest {
   }
 
   @Test
-  void getAwsRegion_metadataServer() throws IOException {
+  public void getAwsRegion_metadataServer() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
     AwsCredentials awsCredentials =
@@ -561,7 +565,7 @@ class AwsCredentialsTest {
   }
 
   @Test
-  void createdScoped_clonedCredentialWithAddedScopes() {
+  public void createdScoped_clonedCredentialWithAddedScopes() {
     AwsCredentials credentials =
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
@@ -590,46 +594,47 @@ class AwsCredentialsTest {
   }
 
   @Test
-  void credentialSource_invalidAwsEnvironmentId() {
+  public void credentialSource_invalidAwsEnvironmentId() {
     Map<String, Object> credentialSource = new HashMap<>();
     credentialSource.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
     credentialSource.put("environment_id", "azure1");
 
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> new AwsCredentialSource(credentialSource),
-            "Exception should be thrown.");
-    assertEquals("Invalid AWS environment ID.", exception.getMessage());
+    try {
+      new AwsCredentialSource(credentialSource);
+      fail("Exception should be thrown.");
+    } catch (IllegalArgumentException e) {
+      assertEquals("Invalid AWS environment ID.", e.getMessage());
+    }
   }
 
   @Test
-  void credentialSource_invalidAwsEnvironmentVersion() {
+  public void credentialSource_invalidAwsEnvironmentVersion() {
     Map<String, Object> credentialSource = new HashMap<>();
     int environmentVersion = 2;
     credentialSource.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
     credentialSource.put("environment_id", "aws" + environmentVersion);
 
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> new AwsCredentialSource(credentialSource),
-            "Exception should be thrown.");
-    assertEquals(
-        String.format("AWS version %s is not supported in the current build.", environmentVersion),
-        exception.getMessage());
+    try {
+      new AwsCredentialSource(credentialSource);
+      fail("Exception should be thrown.");
+    } catch (IllegalArgumentException e) {
+      assertEquals(
+          String.format(
+              "AWS version %s is not supported in the current build.", environmentVersion),
+          e.getMessage());
+    }
   }
 
   @Test
-  void credentialSource_missingRegionalCredVerificationUrl() {
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> new AwsCredentialSource(new HashMap<>()),
-            "Exception should be thrown.");
-    assertEquals(
-        "A regional_cred_verification_url representing the GetCallerIdentity action URL must be specified.",
-        exception.getMessage());
+  public void credentialSource_missingRegionalCredVerificationUrl() {
+    try {
+      new AwsCredentialSource(new HashMap<String, Object>());
+      fail("Exception should be thrown.");
+    } catch (IllegalArgumentException e) {
+      assertEquals(
+          "A regional_cred_verification_url representing the GetCallerIdentity action URL must be specified.",
+          e.getMessage());
+    }
   }
 
   @Test

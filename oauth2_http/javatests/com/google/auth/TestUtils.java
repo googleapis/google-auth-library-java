@@ -31,9 +31,8 @@
 
 package com.google.auth;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpResponseException;
@@ -46,8 +45,8 @@ import com.google.common.collect.Lists;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -64,31 +63,35 @@ public class TestUtils {
   public static void assertContainsBearerToken(Map<String, List<String>> metadata, String token) {
     assertNotNull(metadata);
     assertNotNull(token);
-    assertTrue(hasBearerToken(metadata, token), "Bearer token not found");
+    assertTrue("Bearer token not found", hasBearerToken(metadata, token));
   }
 
   public static void assertNotContainsBearerToken(
       Map<String, List<String>> metadata, String token) {
     assertNotNull(metadata);
     assertNotNull(token);
-    assertFalse(hasBearerToken(metadata, token), "Bearer token found");
+    assertTrue("Bearer token found", !hasBearerToken(metadata, token));
   }
 
   private static boolean hasBearerToken(Map<String, List<String>> metadata, String token) {
     String expectedValue = AuthHttpConstants.BEARER + " " + token;
     List<String> authorizations = metadata.get(AuthHttpConstants.AUTHORIZATION);
-    assertNotNull(authorizations, "Authorization headers not found");
+    assertNotNull("Authorization headers not found", authorizations);
     return authorizations.contains(expectedValue);
   }
 
   public static InputStream jsonToInputStream(GenericJson json) throws IOException {
     json.setFactory(JSON_FACTORY);
     String text = json.toPrettyString();
-    return new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8));
+    return new ByteArrayInputStream(text.getBytes("UTF-8"));
   }
 
   public static InputStream stringToInputStream(String text) {
-    return new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8));
+    try {
+      return new ByteArrayInputStream(text.getBytes("UTF-8"));
+    } catch (UnsupportedEncodingException e) {
+      throw new RuntimeException("Unexpected encoding exception", e);
+    }
   }
 
   public static Map<String, String> parseQuery(String query) throws IOException {

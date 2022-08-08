@@ -32,9 +32,8 @@
 package com.google.auth.oauth2;
 
 import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
@@ -51,10 +50,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 /** Tests for {@link PluggableAuthCredentials}. */
-class PluggableAuthCredentialsTest {
+public class PluggableAuthCredentialsTest {
   // The default timeout for waiting for the executable to finish (30 seconds).
   private static final int DEFAULT_EXECUTABLE_TIMEOUT_MS = 30 * 1000;
   // The minimum timeout for waiting for the executable to finish (5 seconds).
@@ -87,7 +86,7 @@ class PluggableAuthCredentialsTest {
   }
 
   @Test
-  void retrieveSubjectToken_shouldDelegateToHandler() throws IOException {
+  public void retrieveSubjectToken_shouldDelegateToHandler() throws IOException {
     PluggableAuthCredentials credential =
         PluggableAuthCredentials.newBuilder(CREDENTIAL)
             .setExecutableHandler(options -> "pluggableAuthToken")
@@ -97,7 +96,7 @@ class PluggableAuthCredentialsTest {
   }
 
   @Test
-  void retrieveSubjectToken_shouldPassAllOptionsToHandler() throws IOException {
+  public void retrieveSubjectToken_shouldPassAllOptionsToHandler() throws IOException {
     String command = "/path/to/executable";
     String timeout = "5000";
     String outputFile = "/path/to/output/file";
@@ -140,7 +139,7 @@ class PluggableAuthCredentialsTest {
   }
 
   @Test
-  void retrieveSubjectToken_shouldPassMinimalOptionsToHandler() throws IOException {
+  public void retrieveSubjectToken_shouldPassMinimalOptionsToHandler() throws IOException {
     String command = "/path/to/executable";
 
     final ExecutableOptions[] providedOptions = {null};
@@ -179,7 +178,7 @@ class PluggableAuthCredentialsTest {
   }
 
   @Test
-  void refreshAccessToken_withoutServiceAccountImpersonation() throws IOException {
+  public void refreshAccessToken_withoutServiceAccountImpersonation() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -204,7 +203,7 @@ class PluggableAuthCredentialsTest {
   }
 
   @Test
-  void refreshAccessToken_withServiceAccountImpersonation() throws IOException {
+  public void refreshAccessToken_withServiceAccountImpersonation() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -232,7 +231,7 @@ class PluggableAuthCredentialsTest {
   }
 
   @Test
-  void pluggableAuthCredentialSource_allFields() {
+  public void pluggableAuthCredentialSource_allFields() {
     Map<String, Object> source = new HashMap<>();
     Map<String, Object> executable = new HashMap<>();
     source.put("executable", executable);
@@ -248,7 +247,7 @@ class PluggableAuthCredentialsTest {
   }
 
   @Test
-  void pluggableAuthCredentialSource_noTimeoutProvided_setToDefault() {
+  public void pluggableAuthCredentialSource_noTimeoutProvided_setToDefault() {
     Map<String, Object> source = new HashMap<>();
     Map<String, Object> executable = new HashMap<>();
     source.put("executable", executable);
@@ -261,7 +260,7 @@ class PluggableAuthCredentialsTest {
   }
 
   @Test
-  void pluggableAuthCredentialSource_timeoutProvidedOutOfRange_throws() {
+  public void pluggableAuthCredentialSource_timeoutProvidedOutOfRange_throws() {
     Map<String, Object> source = new HashMap<>();
     Map<String, Object> executable = new HashMap<>();
     source.put("executable", executable);
@@ -273,23 +272,20 @@ class PluggableAuthCredentialsTest {
     for (int value : possibleOutOfRangeValues) {
       executable.put("timeout_millis", value);
 
-      IllegalArgumentException exception =
-          assertThrows(
-              IllegalArgumentException.class,
-              () -> {
-                new PluggableAuthCredentialSource(source);
-              },
-              "Exception should be thrown.");
-      assertEquals(
-          String.format(
-              "The executable timeout must be between %s and %s milliseconds.",
-              MINIMUM_EXECUTABLE_TIMEOUT_MS, MAXIMUM_EXECUTABLE_TIMEOUT_MS),
-          exception.getMessage());
+      try {
+        new PluggableAuthCredentialSource(source);
+      } catch (IllegalArgumentException exception) {
+        assertEquals(
+            String.format(
+                "The executable timeout must be between %s and %s milliseconds.",
+                MINIMUM_EXECUTABLE_TIMEOUT_MS, MAXIMUM_EXECUTABLE_TIMEOUT_MS),
+            exception.getMessage());
+      }
     }
   }
 
   @Test
-  void pluggableAuthCredentialSource_validTimeoutProvided() {
+  public void pluggableAuthCredentialSource_validTimeoutProvided() {
     Map<String, Object> source = new HashMap<>();
     Map<String, Object> executable = new HashMap<>();
     source.put("executable", executable);
@@ -309,34 +305,32 @@ class PluggableAuthCredentialsTest {
   }
 
   @Test
-  void pluggableAuthCredentialSource_missingExecutableField_throws() {
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> new PluggableAuthCredentialSource(new HashMap<>()),
-            "Exception should be thrown.");
-    assertEquals(
-        "Invalid credential source for PluggableAuth credentials.", exception.getMessage());
+  public void pluggableAuthCredentialSource_missingExecutableField_throws() {
+    try {
+      new PluggableAuthCredentialSource(new HashMap<>());
+    } catch (IllegalArgumentException exception) {
+      assertEquals(
+          "Invalid credential source for PluggableAuth credentials.", exception.getMessage());
+    }
   }
 
   @Test
-  void pluggableAuthCredentialSource_missingExecutableCommandField_throws() {
+  public void pluggableAuthCredentialSource_missingExecutableCommandField_throws() {
     Map<String, Object> source = new HashMap<>();
     Map<String, Object> executable = new HashMap<>();
     source.put("executable", executable);
 
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> new PluggableAuthCredentialSource(source),
-            "Exception should be thrown.");
-    assertEquals(
-        "The PluggableAuthCredentialSource is missing the required 'command' field.",
-        exception.getMessage());
+    try {
+      new PluggableAuthCredentialSource(source);
+    } catch (IllegalArgumentException exception) {
+      assertEquals(
+          "The PluggableAuthCredentialSource is missing the required 'command' field.",
+          exception.getMessage());
+    }
   }
 
   @Test
-  void builder_allFields() {
+  public void builder_allFields() {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     CredentialSource source = buildCredentialSource();
@@ -375,7 +369,7 @@ class PluggableAuthCredentialsTest {
   }
 
   @Test
-  void createdScoped_clonedCredentialWithAddedScopes() {
+  public void createdScoped_clonedCredentialWithAddedScopes() {
     PluggableAuthCredentials credentials =
         (PluggableAuthCredentials)
             PluggableAuthCredentials.newBuilder(CREDENTIAL)
