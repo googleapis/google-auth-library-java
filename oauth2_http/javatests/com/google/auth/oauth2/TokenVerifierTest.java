@@ -44,6 +44,7 @@ import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
+import com.google.auth.oauth2.TokenVerifier.VerificationException;
 import com.google.common.io.CharStreams;
 import java.io.IOException;
 import java.io.InputStream;
@@ -188,7 +189,7 @@ class TokenVerifierTest {
   }
 
   @Test
-  void verifyPublicKeyStoreIntermittentError() throws IOException {
+  void verifyPublicKeyStoreIntermittentError() throws IOException, VerificationException {
     // mock responses
     MockLowLevelHttpResponse response404 = new MockLowLevelHttpResponse()
         .setStatusCode(404)
@@ -221,6 +222,15 @@ class TokenVerifierTest {
             () -> tokenVerifier.verify(ES256_TOKEN),
             "Should have failed verification");
     assertTrue(exception.getMessage().contains("Error fetching PublicKey"));
+
+    exception =
+        assertThrows(
+            TokenVerifier.VerificationException.class,
+            () -> tokenVerifier.verify(ES256_TOKEN),
+            "Should have failed verification");
+    assertTrue(exception.getCause().getMessage().contains("No valid public key"));
+
+    assertNotNull(tokenVerifier.verify(ES256_TOKEN));
   }
 
   @Test

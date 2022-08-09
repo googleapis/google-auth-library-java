@@ -314,17 +314,13 @@ public class TokenVerifier {
     public Map<String, PublicKey> load(String certificateUrl) throws Exception {
       HttpTransport httpTransport = httpTransportFactory.create();
       JsonWebKeySet jwks;
-      try {
-        HttpRequest request =
-            httpTransport
-                .createRequestFactory()
-                .buildGetRequest(new GenericUrl(certificateUrl))
-                .setParser(OAuth2Utils.JSON_FACTORY.createJsonObjectParser());
-        HttpResponse response = request.execute();
-        jwks = response.parseAs(JsonWebKeySet.class);
-      } catch (IOException io) {
-        return ImmutableMap.of();
-      }
+      HttpRequest request =
+          httpTransport
+              .createRequestFactory()
+              .buildGetRequest(new GenericUrl(certificateUrl))
+              .setParser(OAuth2Utils.JSON_FACTORY.createJsonObjectParser());
+      HttpResponse response = request.execute();
+      jwks = response.parseAs(JsonWebKeySet.class);
 
       ImmutableMap.Builder<String, PublicKey> keyCacheBuilder = new ImmutableMap.Builder<>();
       if (jwks.keys == null) {
@@ -345,7 +341,14 @@ public class TokenVerifier {
         }
       }
 
-      return keyCacheBuilder.build();
+      ImmutableMap<String, PublicKey> keyCache = keyCacheBuilder.build();
+
+      if (keyCache.isEmpty()) {
+        throw new VerificationException(
+            "No valid public key returned by the keystore: " + certificateUrl);
+      }
+
+      return keyCache;
     }
 
     private PublicKey buildPublicKey(JsonWebKey key)
