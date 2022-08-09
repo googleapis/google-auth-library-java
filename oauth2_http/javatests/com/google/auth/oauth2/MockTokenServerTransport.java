@@ -135,9 +135,9 @@ public class MockTokenServerTransport extends MockHttpTransport {
     final String query = (questionMarkPos > 0) ? url.substring(questionMarkPos + 1) : "";
 
     if (!responseSequence.isEmpty()) {
-    return new MockLowLevelHttpRequest(url) {
-      @Override
-      public LowLevelHttpResponse execute() throws IOException {
+      return new MockLowLevelHttpRequest(url) {
+        @Override
+        public LowLevelHttpResponse execute() throws IOException {
           try {
             return responseSequence.poll().get();
           } catch (ExecutionException e) {

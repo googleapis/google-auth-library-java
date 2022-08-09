@@ -191,20 +191,23 @@ class TokenVerifierTest {
   @Test
   void verifyPublicKeyStoreIntermittentError() throws IOException, VerificationException {
     // mock responses
-    MockLowLevelHttpResponse response404 = new MockLowLevelHttpResponse()
-        .setStatusCode(404)
-        .setContentType("application/json")
-        .setContent("");
+    MockLowLevelHttpResponse response404 =
+        new MockLowLevelHttpResponse()
+            .setStatusCode(404)
+            .setContentType("application/json")
+            .setContent("");
 
-    MockLowLevelHttpResponse responseEmpty = new MockLowLevelHttpResponse()
-        .setStatusCode(200)
-        .setContentType("application/json")
-        .setContent("{\"keys\":[]}");
+    MockLowLevelHttpResponse responseEmpty =
+        new MockLowLevelHttpResponse()
+            .setStatusCode(200)
+            .setContentType("application/json")
+            .setContent("{\"keys\":[]}");
 
-    MockLowLevelHttpResponse responseGood = new MockLowLevelHttpResponse()
-        .setStatusCode(200)
-        .setContentType("application/json")
-        .setContent(readResourceAsString("iap_keys.json"));
+    MockLowLevelHttpResponse responseGood =
+        new MockLowLevelHttpResponse()
+            .setStatusCode(200)
+            .setContentType("application/json")
+            .setContent(readResourceAsString("iap_keys.json"));
 
     // Mock HTTP requests
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
