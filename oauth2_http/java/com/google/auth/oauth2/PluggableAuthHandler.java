@@ -112,6 +112,18 @@ final class PluggableAuthHandler implements ExecutableHandler {
       executableResponse = getExecutableResponse(options);
     }
 
+    // If an output file is specified, successful responses must contain the `expiration_time`
+    // field.
+    if (options.getOutputFilePath() != null
+        && !options.getOutputFilePath().isEmpty()
+        && executableResponse.isSuccessful()
+        && executableResponse.getExpirationTime() == null) {
+      throw new PluggableAuthException(
+          "INVALID_EXECUTABLE_RESPONSE",
+          "The executable response must contain the `expiration_time` field for successful responses when an "
+              + "output_file has been specified in the configuration.");
+    }
+
     // The executable response includes a version. Validate that the version is compatible
     // with the library.
     if (executableResponse.getVersion() > EXECUTABLE_SUPPORTED_MAX_VERSION) {

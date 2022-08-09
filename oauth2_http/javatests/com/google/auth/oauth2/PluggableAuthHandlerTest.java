@@ -51,7 +51,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
@@ -216,6 +218,216 @@ class PluggableAuthHandlerTest {
 
     assertEquals("401", e.getErrorCode());
     assertEquals("Caller not authorized.", e.getErrorDescription());
+  }
+
+  @Test
+  void retrieveTokenFromExecutable_successResponseWithoutExpirationTimeField()
+      throws InterruptedException, IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
+
+    // Expected environment mappings.
+    HashMap<String, String> expectedMap = new HashMap<>();
+    expectedMap.putAll(DEFAULT_OPTIONS.getEnvironmentMap());
+
+    Map<String, String> currentEnv = new HashMap<>();
+
+    // Mock executable handling.
+    Process mockProcess = Mockito.mock(Process.class);
+    when(mockProcess.waitFor(anyLong(), any(TimeUnit.class))).thenReturn(true);
+    when(mockProcess.exitValue()).thenReturn(EXIT_CODE_SUCCESS);
+
+    // Remove expiration_time from the executable responses.
+    GenericJson oidcResponse = buildOidcResponse();
+    oidcResponse.remove("expiration_time");
+
+    GenericJson samlResponse = buildSamlResponse();
+    samlResponse.remove("expiration_time");
+
+    List<GenericJson> responses = Arrays.asList(oidcResponse, samlResponse);
+    for (int i = 0; i < responses.size(); i++) {
+      when(mockProcess.getInputStream())
+          .thenReturn(
+              new ByteArrayInputStream(
+                  responses.get(i).toString().getBytes(StandardCharsets.UTF_8)));
+
+      InternalProcessBuilder processBuilder =
+          buildInternalProcessBuilder(
+              currentEnv, mockProcess, DEFAULT_OPTIONS.getExecutableCommand());
+
+      PluggableAuthHandler handler = new PluggableAuthHandler(environmentProvider, processBuilder);
+
+      // Call retrieveTokenFromExecutable().
+      String token = handler.retrieveTokenFromExecutable(DEFAULT_OPTIONS);
+
+      verify(mockProcess, times(i + 1)).destroy();
+      verify(mockProcess, times(i + 1))
+          .waitFor(
+              eq(Long.valueOf(DEFAULT_OPTIONS.getExecutableTimeoutMs())),
+              eq(TimeUnit.MILLISECONDS));
+
+      if (responses.get(i).equals(oidcResponse)) {
+        assertEquals(ID_TOKEN, token);
+      } else {
+        assertEquals(SAML_RESPONSE, token);
+      }
+
+      // Current env map should have the mappings from options.
+      assertEquals(2, currentEnv.size());
+      assertEquals(expectedMap, currentEnv);
+    }
+  }
+
+  @Test
+  void
+      retrieveTokenFromExecutable_successResponseWithoutExpirationTimeFieldWithOutputFileSpecified_throws()
+          throws InterruptedException, IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
+
+    // Options with output file specified.
+    ExecutableOptions options =
+        new ExecutableOptions() {
+          @Override
+          public String getExecutableCommand() {
+            return "/path/to/executable";
+          }
+
+          @Override
+          public Map<String, String> getEnvironmentMap() {
+            return ImmutableMap.of();
+          }
+
+          @Override
+          public int getExecutableTimeoutMs() {
+            return 30000;
+          }
+
+          @Override
+          public String getOutputFilePath() {
+            return "/path/to/output/file";
+          }
+        };
+
+    // Mock executable handling.
+    Process mockProcess = Mockito.mock(Process.class);
+    when(mockProcess.waitFor(anyLong(), any(TimeUnit.class))).thenReturn(true);
+    when(mockProcess.exitValue()).thenReturn(EXIT_CODE_SUCCESS);
+
+    // Remove expiration_time from the executable responses.
+    GenericJson oidcResponse = buildOidcResponse();
+    oidcResponse.remove("expiration_time");
+
+    GenericJson samlResponse = buildSamlResponse();
+    samlResponse.remove("expiration_time");
+
+    List<GenericJson> responses = Arrays.asList(oidcResponse, samlResponse);
+    for (int i = 0; i < responses.size(); i++) {
+      when(mockProcess.getInputStream())
+          .thenReturn(
+              new ByteArrayInputStream(
+                  responses.get(i).toString().getBytes(StandardCharsets.UTF_8)));
+
+      InternalProcessBuilder processBuilder =
+          buildInternalProcessBuilder(new HashMap<>(), mockProcess, options.getExecutableCommand());
+
+      PluggableAuthHandler handler = new PluggableAuthHandler(environmentProvider, processBuilder);
+
+      // Call retrieveTokenFromExecutable() should throw an exception as the STDOUT response
+      // is missing
+      // the `expiration_time` field and an output file was specified in the configuration.
+      PluggableAuthException exception =
+          assertThrows(
+              PluggableAuthException.class,
+              () -> handler.retrieveTokenFromExecutable(options),
+              "Exception should be thrown.");
+
+      assertEquals(
+          "Error code INVALID_EXECUTABLE_RESPONSE: The executable response must contain the "
+              + "`expiration_time` field for successful responses when an output_file has been specified in the"
+              + " configuration.",
+          exception.getMessage());
+
+      verify(mockProcess, times(i + 1)).destroy();
+      verify(mockProcess, times(i + 1))
+          .waitFor(eq(Long.valueOf(options.getExecutableTimeoutMs())), eq(TimeUnit.MILLISECONDS));
+    }
+  }
+
+  @Test
+  void retrieveTokenFromExecutable_successResponseInOutputFileMissingExpirationTimeField_throws()
+      throws InterruptedException, IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
+
+    // Build output_file.
+    File file = File.createTempFile("output_file", /* suffix= */ null, /* directory= */ null);
+    file.deleteOnExit();
+
+    // Options with output file specified.
+    ExecutableOptions options =
+        new ExecutableOptions() {
+          @Override
+          public String getExecutableCommand() {
+            return "/path/to/executable";
+          }
+
+          @Override
+          public Map<String, String> getEnvironmentMap() {
+            return ImmutableMap.of();
+          }
+
+          @Override
+          public int getExecutableTimeoutMs() {
+            return 30000;
+          }
+
+          @Override
+          public String getOutputFilePath() {
+            return file.getAbsolutePath();
+          }
+        };
+
+    // Mock executable handling that does nothing since we are using the output file.
+    Process mockProcess = Mockito.mock(Process.class);
+    InternalProcessBuilder processBuilder =
+        buildInternalProcessBuilder(new HashMap<>(), mockProcess, options.getExecutableCommand());
+
+    // Remove expiration_time from the executable responses.
+    GenericJson oidcResponse = buildOidcResponse();
+    oidcResponse.remove("expiration_time");
+
+    GenericJson samlResponse = buildSamlResponse();
+    samlResponse.remove("expiration_time");
+
+    List<GenericJson> responses = Arrays.asList(oidcResponse, samlResponse);
+    for (GenericJson json : responses) {
+      OAuth2Utils.writeInputStreamToFile(
+          new ByteArrayInputStream(json.toString().getBytes(StandardCharsets.UTF_8)),
+          file.getAbsolutePath());
+
+      PluggableAuthHandler handler = new PluggableAuthHandler(environmentProvider, processBuilder);
+
+      // Call retrieveTokenFromExecutable() which should throw an exception as the output file
+      // response is missing
+      // the `expiration_time` field.
+      PluggableAuthException exception =
+          assertThrows(
+              PluggableAuthException.class,
+              () -> handler.retrieveTokenFromExecutable(options),
+              "Exception should be thrown.");
+
+      assertEquals(
+          "Error code INVALID_EXECUTABLE_RESPONSE: The executable response must contain the "
+              + "`expiration_time` field for successful responses when an output_file has been specified in the"
+              + " configuration.",
+          exception.getMessage());
+
+      // Validate executable not invoked.
+      verify(mockProcess, times(0)).destroyForcibly();
+      verify(mockProcess, times(0))
+          .waitFor(eq(Long.valueOf(options.getExecutableTimeoutMs())), eq(TimeUnit.MILLISECONDS));
+    }
   }
 
   @Test

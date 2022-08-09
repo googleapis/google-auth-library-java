@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.9.0](https://github.com/googleapis/google-auth-library-java/compare/v1.8.1...v1.9.0) (2022-08-02)
+
+
+### Features
+
+* integration tests for pluggable auth ([#939](https://github.com/googleapis/google-auth-library-java/issues/939)) ([22f37aa](https://github.com/googleapis/google-auth-library-java/commit/22f37aa687b7ffb4209a131860ccdd02f6fc4d42))
+
+
+### Bug Fixes
+
+* expiration time of the ImpersonatedCredentials token depending on the current host's timezone ([#932](https://github.com/googleapis/google-auth-library-java/issues/932)) ([73af08a](https://github.com/googleapis/google-auth-library-java/commit/73af08a1c5f14e18936e9dbd3d1ba29c2675961d))
+
+
+### Documentation
+
+* update wif documentation with enable-imdsv2 flag ([#940](https://github.com/googleapis/google-auth-library-java/issues/940)) ([acc1ce3](https://github.com/googleapis/google-auth-library-java/commit/acc1ce3603435f1c0cf23b8606af71b05e566f2f))
+
+## [1.8.1](https://github.com/googleapis/google-auth-library-java/compare/v1.8.0...v1.8.1) (2022-07-13)
+
+
+### Bug Fixes
+
+* enable longpaths support for windows test ([#1485](https://github.com/googleapis/google-auth-library-java/issues/1485)) ([#943](https://github.com/googleapis/google-auth-library-java/issues/943)) ([c21ec6c](https://github.com/googleapis/google-auth-library-java/commit/c21ec6c952b8bb8fb8bc2e2f1b260beb330a3cd2))
+
 ## [1.8.0](https://github.com/googleapis/google-auth-library-java/compare/v1.7.0...v1.8.0) (2022-06-27)
 
 
