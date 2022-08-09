@@ -34,6 +34,7 @@ package com.google.auth.oauth2;
 import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
@@ -274,6 +275,7 @@ public class PluggableAuthCredentialsTest {
 
       try {
         new PluggableAuthCredentialSource(source);
+        fail("Should not be able to continue without exception.");
       } catch (IllegalArgumentException exception) {
         assertEquals(
             String.format(
@@ -308,6 +310,7 @@ public class PluggableAuthCredentialsTest {
   public void pluggableAuthCredentialSource_missingExecutableField_throws() {
     try {
       new PluggableAuthCredentialSource(new HashMap<>());
+      fail("Should not be able to continue without exception.");
     } catch (IllegalArgumentException exception) {
       assertEquals(
           "Invalid credential source for PluggableAuth credentials.", exception.getMessage());
@@ -322,6 +325,7 @@ public class PluggableAuthCredentialsTest {
 
     try {
       new PluggableAuthCredentialSource(source);
+      fail("Should not be able to continue without exception.");
     } catch (IllegalArgumentException exception) {
       assertEquals(
           "The PluggableAuthCredentialSource is missing the required 'command' field.",

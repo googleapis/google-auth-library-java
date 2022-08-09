@@ -34,6 +34,7 @@ package com.google.auth.oauth2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
@@ -212,6 +213,7 @@ public class PluggableAuthHandlerTest {
     // Call retrieveTokenFromExecutable().
     try {
       handler.retrieveTokenFromExecutable(DEFAULT_OPTIONS);
+      fail("Should not be able to continue without exception.");
     } catch (PluggableAuthException e) {
       assertEquals("401", e.getErrorCode());
       assertEquals("Caller not authorized.", e.getErrorDescription());
@@ -337,6 +339,7 @@ public class PluggableAuthHandlerTest {
       // the `expiration_time` field and an output file was specified in the configuration.
       try {
         handler.retrieveTokenFromExecutable(options);
+        fail("Should not be able to continue without exception.");
       } catch (PluggableAuthException exception) {
         assertEquals(
             "Error code INVALID_EXECUTABLE_RESPONSE: The executable response must contain the "
@@ -411,6 +414,7 @@ public class PluggableAuthHandlerTest {
       // the `expiration_time` field.
       try {
         handler.retrieveTokenFromExecutable(options);
+        fail("Should not be able to continue without exception.");
       } catch (PluggableAuthException exception) {
         assertEquals(
             "Error code INVALID_EXECUTABLE_RESPONSE: The executable response must contain the "
@@ -530,6 +534,7 @@ public class PluggableAuthHandlerTest {
     // Call retrieveTokenFromExecutable().
     try {
       handler.retrieveTokenFromExecutable(options);
+      fail("Should not be able to continue without exception.");
     } catch (PluggableAuthException e) {
       assertEquals("INVALID_OUTPUT_FILE", e.getErrorCode());
     }
@@ -627,6 +632,7 @@ public class PluggableAuthHandlerTest {
     // Call retrieveTokenFromExecutable().
     try {
       handler.retrieveTokenFromExecutable(DEFAULT_OPTIONS);
+      fail("Should not be able to continue without exception.");
     } catch (PluggableAuthException e) {
       assertEquals("INVALID_RESPONSE", e.getErrorCode());
       assertEquals("The executable response is expired.", e.getErrorDescription());
@@ -660,6 +666,7 @@ public class PluggableAuthHandlerTest {
     // Call retrieveTokenFromExecutable().
     try {
       handler.retrieveTokenFromExecutable(DEFAULT_OPTIONS);
+      fail("Should not be able to continue without exception.");
     } catch (PluggableAuthException e) {
       assertEquals("UNSUPPORTED_VERSION", e.getErrorCode());
       assertEquals(
@@ -683,6 +690,7 @@ public class PluggableAuthHandlerTest {
 
     try {
       handler.retrieveTokenFromExecutable(DEFAULT_OPTIONS);
+      fail("Should not be able to continue without exception.");
     } catch (PluggableAuthException e) {
       assertEquals("PLUGGABLE_AUTH_DISABLED", e.getErrorCode());
       assertEquals(
@@ -856,6 +864,7 @@ public class PluggableAuthHandlerTest {
     // Call getExecutableResponse().
     try {
       handler.getExecutableResponse(DEFAULT_OPTIONS);
+      fail("Should not be able to continue without exception.");
     } catch (PluggableAuthException e) {
       assertEquals("TIMEOUT_EXCEEDED", e.getErrorCode());
       assertEquals(
@@ -888,6 +897,7 @@ public class PluggableAuthHandlerTest {
     // Call getExecutableResponse().
     try {
       handler.getExecutableResponse(DEFAULT_OPTIONS);
+      fail("Should not be able to continue without exception.");
     } catch (PluggableAuthException e) {
       assertEquals("EXIT_CODE", e.getErrorCode());
       assertEquals(
@@ -920,6 +930,7 @@ public class PluggableAuthHandlerTest {
     // Call getExecutableResponse().
     try {
       handler.getExecutableResponse(DEFAULT_OPTIONS);
+      fail("Should not be able to continue without exception.");
     } catch (PluggableAuthException e) {
       assertEquals("INTERRUPTED", e.getErrorCode());
       assertEquals(
@@ -959,6 +970,7 @@ public class PluggableAuthHandlerTest {
     // Call getExecutableResponse().
     try {
       handler.getExecutableResponse(DEFAULT_OPTIONS);
+      fail("Should not be able to continue without exception.");
     } catch (PluggableAuthException e) {
       assertEquals("INVALID_RESPONSE", e.getErrorCode());
       assertEquals(

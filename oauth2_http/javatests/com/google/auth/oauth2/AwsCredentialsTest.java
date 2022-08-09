@@ -274,6 +274,7 @@ public class AwsCredentialsTest {
 
     try {
       awsCredential.retrieveSubjectToken();
+      fail("Should not be able to use credential without exception.");
     } catch (IOException exception) {
       assertEquals("Failed to retrieve AWS region.", exception.getMessage());
     }
@@ -303,6 +304,7 @@ public class AwsCredentialsTest {
 
     try {
       awsCredential.retrieveSubjectToken();
+      fail("Should not be able to use credential without exception.");
     } catch (IOException exception) {
       assertEquals("Failed to retrieve AWS IAM role.", exception.getMessage());
     }
@@ -335,6 +337,7 @@ public class AwsCredentialsTest {
 
     try {
       awsCredential.retrieveSubjectToken();
+      fail("Should not be able to use credential without exception.");
     } catch (IOException exception) {
       assertEquals("Failed to retrieve AWS credentials.", exception.getMessage());
     }
@@ -370,6 +373,7 @@ public class AwsCredentialsTest {
 
     try {
       awsCredential.retrieveSubjectToken();
+      fail("Should not be able to use credential without exception.");
     } catch (IOException exception) {
       assertEquals(
           "Unable to determine the AWS region. The credential source does not "
@@ -472,6 +476,7 @@ public class AwsCredentialsTest {
 
     try {
       awsCredential.getAwsSecurityCredentials(EMPTY_METADATA_HEADERS);
+      fail("Should not be able to use credential without exception.");
     } catch (IOException exception) {
       assertEquals(
           "Unable to determine the AWS IAM role name. The credential source does not contain the url field.",

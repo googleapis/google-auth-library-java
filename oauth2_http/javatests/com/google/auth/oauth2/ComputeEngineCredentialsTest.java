@@ -444,7 +444,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
     try {
       credentials.sign(expectedSignature);
-      fail();
+      fail("Should not be able to use credential without exception.");
     } catch (SigningException ex) {
       assertNotNull(ex.getMessage());
       assertNotNull(ex.getCause());

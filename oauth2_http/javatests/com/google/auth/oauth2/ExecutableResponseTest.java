@@ -35,6 +35,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.google.api.client.json.GenericJson;
 import java.io.IOException;
@@ -137,6 +138,7 @@ public class ExecutableResponseTest {
       jsonResponse.put("code", value);
       try {
         new ExecutableResponse(jsonResponse);
+        fail("Should not be able to continue without exception.");
       } catch (PluggableAuthException exception) {
         assertEquals(
             "Error code INVALID_EXECUTABLE_RESPONSE: The executable response must contain "
@@ -158,6 +160,7 @@ public class ExecutableResponseTest {
 
       try {
         new ExecutableResponse(jsonResponse);
+        fail("Should not be able to continue without exception.");
       } catch (PluggableAuthException exception) {
         assertEquals(
             "Error code INVALID_EXECUTABLE_RESPONSE: The executable response must contain "
@@ -175,6 +178,7 @@ public class ExecutableResponseTest {
 
     try {
       new ExecutableResponse(jsonResponse);
+      fail("Should not be able to continue without exception.");
     } catch (PluggableAuthException exception) {
       assertEquals(
           "Error code INVALID_EXECUTABLE_RESPONSE: The executable response is missing the "
@@ -191,6 +195,7 @@ public class ExecutableResponseTest {
 
     try {
       new ExecutableResponse(jsonResponse);
+      fail("Should not be able to continue without exception.");
     } catch (PluggableAuthException exception) {
       assertEquals(
           "Error code INVALID_EXECUTABLE_RESPONSE: The executable response is missing the "
@@ -207,6 +212,7 @@ public class ExecutableResponseTest {
 
     try {
       new ExecutableResponse(jsonResponse);
+      fail("Should not be able to continue without exception.");
     } catch (PluggableAuthException exception) {
       assertEquals(
           "Error code INVALID_EXECUTABLE_RESPONSE: The executable response is missing the "
@@ -226,6 +232,7 @@ public class ExecutableResponseTest {
 
       try {
         new ExecutableResponse(jsonResponse);
+        fail("Should not be able to continue without exception.");
       } catch (PluggableAuthException exception) {
         assertEquals(
             "Error code INVALID_EXECUTABLE_RESPONSE: The executable response does not "
@@ -246,6 +253,7 @@ public class ExecutableResponseTest {
 
       try {
         new ExecutableResponse(jsonResponse);
+        fail("Should not be able to continue without exception.");
       } catch (PluggableAuthException exception) {
         assertEquals(
             "Error code INVALID_EXECUTABLE_RESPONSE: The executable response does not "

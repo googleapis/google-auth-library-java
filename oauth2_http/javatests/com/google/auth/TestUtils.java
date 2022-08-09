@@ -31,6 +31,7 @@
 
 package com.google.auth;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -70,7 +71,7 @@ public class TestUtils {
       Map<String, List<String>> metadata, String token) {
     assertNotNull(metadata);
     assertNotNull(token);
-    assertTrue("Bearer token found", !hasBearerToken(metadata, token));
+    assertFalse("Bearer token found", hasBearerToken(metadata, token));
   }
 
   private static boolean hasBearerToken(Map<String, List<String>> metadata, String token) {

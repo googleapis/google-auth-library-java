@@ -659,6 +659,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
       transport.addResponseErrorSequence(new IOException());
       transport.addServiceAccount(CLIENT_EMAIL, accessToken2);
       credentials.refresh();
+      fail("Should not be able to use credential without exception.");
     } catch (IOException ex) {
     }
   }
@@ -744,6 +745,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     try {
       transport.addResponseSequence(response408, response429);
       credentials.refresh();
+      fail("Should not be able to use credential without exception.");
     } catch (GoogleAuthException ex) {
       assertTrue(ex.getMessage().contains("Error getting access token for service account: 408"));
       assertTrue(ex.isRetryable());
@@ -779,6 +781,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     try {
       transport.addResponseSequence(response408, response429, response500, response503);
       credentials.refresh();
+      fail("Should not be able to use credential without exception.");
     } catch (GoogleAuthException ex) {
       Instant finish = Instant.now();
       long timeElapsed = Duration.between(start, finish).toMillis();
@@ -820,6 +823,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
         transport.addResponseSequence(mockResponse);
         transport.addServiceAccount(CLIENT_EMAIL, accessToken2);
         credentials.refresh();
+        fail("Should not be able to use credential without exception.");
       } catch (GoogleAuthException ex) {
         assertFalse(ex.isRetryable());
         assertEquals(0, ex.getRetryCount());
@@ -1269,6 +1273,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
     try {
       tokenCredential.refresh();
+      fail("Should not be able to use credential without exception.");
     } catch (IOException expected) {
       assertTrue(expected.getMessage().contains(expectedErrorMessage));
     }

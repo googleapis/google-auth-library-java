@@ -897,6 +897,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             .build();
     try {
       tokenCredential.refresh();
+      fail("Should not be able to use credential without exception.");
     } catch (IOException e) {
       assertTrue(e.getMessage().contains("Error code 500 trying to getIDToken"));
     }
@@ -929,6 +930,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             .build();
     try {
       tokenCredential.refresh();
+      fail("Should not be able to use credential without exception.");
     } catch (IOException e) {
       assertTrue(e.getMessage().contains("Unexpected Error code 301 trying to getIDToken"));
     }

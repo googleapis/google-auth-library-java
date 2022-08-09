@@ -751,6 +751,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     try {
       transportFactory.transport.addResponseSequence(response408, response429);
       credentials.refresh();
+      fail("Should not be able to use credential without exception.");
     } catch (GoogleAuthException ex) {
       assertTrue(ex.getMessage().contains("com.google.api.client.http.HttpResponseException: 408"));
       assertTrue(ex.isRetryable());
@@ -766,6 +767,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     // trigger the refresh like it would happen during a request build
     try {
       tokenCredential.getRequestMetadata(CALL_URI);
+      fail("Should not be able to use credential without exception.");
     } catch (GoogleAuthException ex) {
       assertTrue(ex.getMessage().contains("com.google.api.client.http.HttpResponseException: 429"));
       assertTrue(ex.isRetryable());
@@ -793,6 +795,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
       try {
         transportFactory.transport.addResponseSequence(mockResponse);
         credentials.refresh();
+        fail("Should not be able to use credential without exception.");
       } catch (GoogleAuthException ex) {
         assertFalse(ex.isRetryable());
         assertEquals(0, ex.getRetryCount());
@@ -821,6 +824,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
 
     try {
       tokenCredential.refresh();
+      fail("Should not be able to use credential without exception.");
     } catch (IOException expected) {
       assertTrue(expected.getMessage().equals(expectedMessageContent));
     }

@@ -153,6 +153,7 @@ public class TokenVerifierTest {
             .build();
     try {
       tokenVerifier.verify(ES256_TOKEN);
+      fail("Should have failed verification");
     } catch (TokenVerifier.VerificationException e) {
       assertTrue(e.getMessage().contains("Could not find PublicKey"));
     }

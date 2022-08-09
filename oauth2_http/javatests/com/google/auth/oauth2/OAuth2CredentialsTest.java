@@ -712,6 +712,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     AtomicReference<Exception> actualError = new AtomicReference<>();
     try {
       creds.getRequestMetadata(CALL_URI);
+      fail("Should not be able to use credential without exception.");
     } catch (Exception refreshError) {
       actualError.set(refreshError);
     }
