@@ -38,7 +38,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.lang.String;
 import java.util.Date;
 import java.util.Objects;
 
@@ -78,7 +77,7 @@ public class IdToken extends AccessToken implements Serializable {
    * @return returns com.google.auth.oauth2.IdToken
    */
   public static IdToken create(String tokenValue, JsonFactory jsonFactory) throws IOException {
-    tokenValue = tokenValue.trim();
+    // tokenValue = tokenValue.trim().replaceAll("^0x20", "");
     return new IdToken(tokenValue, JsonWebSignature.parse(jsonFactory, tokenValue));
   }
 
