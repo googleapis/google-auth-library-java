@@ -147,7 +147,7 @@ class TokenVerifierTest {
     TokenVerifier.VerificationException exception =
         assertThrows(
             TokenVerifier.VerificationException.class, () -> tokenVerifier.verify(ES256_TOKEN));
-    assertTrue(exception.getMessage().contains("Could not find PublicKey"));
+    assertTrue(exception.getMessage().contains("Error fetching PublicKey from certificate location"));
   }
 
   @Test
