@@ -77,7 +77,6 @@ public class IdToken extends AccessToken implements Serializable {
    * @return returns com.google.auth.oauth2.IdToken
    */
   public static IdToken create(String tokenValue, JsonFactory jsonFactory) throws IOException {
-    // tokenValue = tokenValue.trim().replaceAll("^0x20", "");
     return new IdToken(tokenValue, JsonWebSignature.parse(jsonFactory, tokenValue));
   }
 
