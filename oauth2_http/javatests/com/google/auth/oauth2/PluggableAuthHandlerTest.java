@@ -912,7 +912,8 @@ public class PluggableAuthHandlerTest {
   }
 
   @Test
-  public void getExecutableResponse_processInterrupted_throws() throws InterruptedException {
+  public void getExecutableResponse_processInterrupted_throws()
+      throws InterruptedException, IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 
@@ -935,8 +936,6 @@ public class PluggableAuthHandlerTest {
       assertEquals(
           String.format("The execution was interrupted: %s.", new InterruptedException()),
           e.getErrorDescription());
-
-    } catch (IOException e) {
     }
 
     verify(mockProcess, times(1))
@@ -946,7 +945,8 @@ public class PluggableAuthHandlerTest {
   }
 
   @Test
-  public void getExecutableResponse_invalidResponse_throws() throws InterruptedException {
+  public void getExecutableResponse_invalidResponse_throws()
+      throws InterruptedException, IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 
@@ -975,7 +975,6 @@ public class PluggableAuthHandlerTest {
       assertEquals(
           String.format("The executable returned an invalid response: %s.", badResponse),
           e.getErrorDescription());
-    } catch (IOException e) {
     }
 
     verify(mockProcess, times(1))

@@ -130,7 +130,7 @@ public class ExecutableResponseTest {
   }
 
   @Test
-  public void constructor_errorResponseMissingCode_throws() {
+  public void constructor_errorResponseMissingCode_throws() throws IOException {
     GenericJson jsonResponse = buildErrorResponse();
 
     Object[] values = new Object[] {null, ""};
@@ -144,14 +144,12 @@ public class ExecutableResponseTest {
             "Error code INVALID_EXECUTABLE_RESPONSE: The executable response must contain "
                 + "`error` and `message` fields when unsuccessful.",
             exception.getMessage());
-      } catch (IOException ex) {
-
       }
     }
   }
 
   @Test
-  public void constructor_errorResponseMissingMessage_throws() {
+  public void constructor_errorResponseMissingMessage_throws() throws IOException {
     GenericJson jsonResponse = buildErrorResponse();
 
     Object[] values = new Object[] {null, ""};
@@ -166,13 +164,12 @@ public class ExecutableResponseTest {
             "Error code INVALID_EXECUTABLE_RESPONSE: The executable response must contain "
                 + "`error` and `message` fields when unsuccessful.",
             exception.getMessage());
-      } catch (IOException ex) {
       }
     }
   }
 
   @Test
-  public void constructor_successResponseMissingVersionField_throws() {
+  public void constructor_successResponseMissingVersionField_throws() throws IOException {
     GenericJson jsonResponse = buildOidcResponse();
     jsonResponse.remove("version");
 
@@ -184,12 +181,11 @@ public class ExecutableResponseTest {
           "Error code INVALID_EXECUTABLE_RESPONSE: The executable response is missing the "
               + "`version` field.",
           exception.getMessage());
-    } catch (IOException ex) {
     }
   }
 
   @Test
-  public void constructor_successResponseMissingSuccessField_throws() {
+  public void constructor_successResponseMissingSuccessField_throws() throws Exception {
     GenericJson jsonResponse = buildOidcResponse();
     jsonResponse.remove("success");
 
@@ -201,12 +197,11 @@ public class ExecutableResponseTest {
           "Error code INVALID_EXECUTABLE_RESPONSE: The executable response is missing the "
               + "`success` field.",
           exception.getMessage());
-    } catch (IOException ex) {
     }
   }
 
   @Test
-  public void constructor_successResponseMissingTokenTypeField_throws() {
+  public void constructor_successResponseMissingTokenTypeField_throws() throws IOException {
     GenericJson jsonResponse = buildOidcResponse();
     jsonResponse.remove("token_type");
 
@@ -218,12 +213,11 @@ public class ExecutableResponseTest {
           "Error code INVALID_EXECUTABLE_RESPONSE: The executable response is missing the "
               + "`token_type` field.",
           exception.getMessage());
-    } catch (IOException ex) {
     }
   }
 
   @Test
-  public void constructor_samlResponseMissingSubjectToken_throws() {
+  public void constructor_samlResponseMissingSubjectToken_throws() throws IOException {
     GenericJson jsonResponse = buildSamlResponse();
 
     Object[] values = new Object[] {null, ""};
@@ -238,13 +232,12 @@ public class ExecutableResponseTest {
             "Error code INVALID_EXECUTABLE_RESPONSE: The executable response does not "
                 + "contain a valid token.",
             exception.getMessage());
-      } catch (IOException ex) {
       }
     }
   }
 
   @Test
-  public void constructor_oidcResponseMissingSubjectToken_throws() {
+  public void constructor_oidcResponseMissingSubjectToken_throws() throws IOException {
     GenericJson jsonResponse = buildOidcResponse();
 
     Object[] values = new Object[] {null, ""};
@@ -259,7 +252,6 @@ public class ExecutableResponseTest {
             "Error code INVALID_EXECUTABLE_RESPONSE: The executable response does not "
                 + "contain a valid token.",
             exception.getMessage());
-      } catch (IOException ex) {
       }
     }
   }

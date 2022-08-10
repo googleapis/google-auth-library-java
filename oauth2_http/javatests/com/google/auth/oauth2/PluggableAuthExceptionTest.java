@@ -32,8 +32,6 @@
 package com.google.auth.oauth2;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
@@ -49,20 +47,14 @@ public class PluggableAuthExceptionTest {
     assertEquals("errorDescription", e.getErrorDescription());
   }
 
-  @Test
+  @Test(expected = NullPointerException.class)
   public void constructor_nullErrorCode_throws() {
-    try {
-      new PluggableAuthException(/* errorCode= */ null, "errorDescription");
-      fail("Exepected a NullPointerException.");
-    } catch (NullPointerException e) {
-    }
+    new PluggableAuthException(/* errorCode= */ null, "errorDescription");
   }
 
-  @Test
+  @Test(expected = NullPointerException.class)
   public void constructor_nullErrorDescription_throws() {
-    assertThrows(
-        NullPointerException.class,
-        () -> new PluggableAuthException("errorCode", /* errorDescription= */ null));
+    new PluggableAuthException("errorCode", /* errorDescription= */ null);
   }
 
   @Test
