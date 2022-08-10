@@ -43,6 +43,7 @@ import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
 import com.google.common.io.CharStreams;
 import java.io.IOException;
 import java.io.InputStream;
@@ -153,9 +154,10 @@ public class TokenVerifierTest {
             .build();
     try {
       tokenVerifier.verify(ES256_TOKEN);
-      fail("Should have failed verification");
-    } catch (TokenVerifier.VerificationException e) {
-      assertTrue(e.getMessage().contains("Could not find PublicKey"));
+      fail("Should not be able to continue without exception.");
+    } catch (TokenVerifier.VerificationException exception) {
+      assertTrue(
+          exception.getMessage().contains("Error fetching PublicKey from certificate location"));
     }
   }
 
@@ -195,6 +197,55 @@ public class TokenVerifierTest {
     } catch (TokenVerifier.VerificationException e) {
       assertTrue(e.getMessage().contains("Error fetching PublicKey"));
     }
+  }
+
+  @Test
+  public void verifyPublicKeyStoreIntermittentError()
+      throws TokenVerifier.VerificationException, IOException {
+    // mock responses
+    MockLowLevelHttpResponse response404 =
+        new MockLowLevelHttpResponse()
+            .setStatusCode(404)
+            .setContentType("application/json")
+            .setContent("");
+
+    MockLowLevelHttpResponse responseEmpty =
+        new MockLowLevelHttpResponse()
+            .setStatusCode(200)
+            .setContentType("application/json")
+            .setContent("{\"keys\":[]}");
+
+    MockLowLevelHttpResponse responseGood =
+        new MockLowLevelHttpResponse()
+            .setStatusCode(200)
+            .setContentType("application/json")
+            .setContent(readResourceAsString("iap_keys.json"));
+
+    // Mock HTTP requests
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+
+    transportFactory.transport.addResponseSequence(response404, responseEmpty, responseGood);
+
+    TokenVerifier tokenVerifier =
+        TokenVerifier.newBuilder()
+            .setClock(FIXED_CLOCK)
+            .setHttpTransportFactory(transportFactory)
+            .build();
+    try {
+      tokenVerifier.verify(ES256_TOKEN);
+      fail("Should not be able to continue without exception.");
+    } catch (TokenVerifier.VerificationException exception) {
+      assertTrue(exception.getMessage().contains("Error fetching PublicKey"));
+    }
+
+    try {
+      tokenVerifier.verify(ES256_TOKEN);
+      fail("Should not be able to continue without exception.");
+    } catch (TokenVerifier.VerificationException exception) {
+      assertTrue(exception.getCause().getMessage().contains("No valid public key"));
+    }
+
+    assertNotNull(tokenVerifier.verify(ES256_TOKEN));
   }
 
   @Test

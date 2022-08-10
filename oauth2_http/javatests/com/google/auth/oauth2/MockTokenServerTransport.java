@@ -133,6 +133,24 @@ public class MockTokenServerTransport extends MockHttpTransport {
     int questionMarkPos = url.indexOf('?');
     final String urlWithoutQuery = (questionMarkPos > 0) ? url.substring(0, questionMarkPos) : url;
     final String query = (questionMarkPos > 0) ? url.substring(questionMarkPos + 1) : "";
+
+    if (!responseSequence.isEmpty()) {
+      return new MockLowLevelHttpRequest(url) {
+        @Override
+        public LowLevelHttpResponse execute() throws IOException {
+          try {
+            return responseSequence.poll().get();
+          } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            throw (IOException) cause;
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Unexpectedly interrupted");
+          }
+        }
+      };
+    }
+
     if (urlWithoutQuery.equals(tokenServerUri.toString())) {
       return new MockLowLevelHttpRequest(url) {
         @Override
