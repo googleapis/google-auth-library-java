@@ -636,7 +636,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(3600 * 1000 * 1000L, accessToken.getExpirationTimeMillis().longValue());
   }
 
-  @Test
+  @Test(expected = IOException.class)
   public void refreshAccessToken_IOException_NoRetry() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
@@ -655,13 +655,9 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
 
-    try {
-      transport.addResponseErrorSequence(new IOException());
-      transport.addServiceAccount(CLIENT_EMAIL, accessToken2);
-      credentials.refresh();
-      fail("Should not be able to use credential without exception.");
-    } catch (IOException ex) {
-    }
+    transport.addResponseErrorSequence(new IOException());
+    transport.addServiceAccount(CLIENT_EMAIL, accessToken2);
+    credentials.refresh();
   }
 
   @Test

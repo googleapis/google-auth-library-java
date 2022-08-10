@@ -189,7 +189,8 @@ public class PluggableAuthHandlerTest {
   }
 
   @Test
-  public void retrieveTokenFromExecutable_errorResponse_throws() throws InterruptedException {
+  public void retrieveTokenFromExecutable_errorResponse_throws()
+      throws InterruptedException, IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 
@@ -217,7 +218,6 @@ public class PluggableAuthHandlerTest {
     } catch (PluggableAuthException e) {
       assertEquals("401", e.getErrorCode());
       assertEquals("Caller not authorized.", e.getErrorDescription());
-    } catch (IOException e) {
     }
   }
 
@@ -608,7 +608,8 @@ public class PluggableAuthHandlerTest {
   }
 
   @Test
-  public void retrieveTokenFromExecutable_expiredResponse_throws() throws InterruptedException {
+  public void retrieveTokenFromExecutable_expiredResponse_throws()
+      throws InterruptedException, IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 
@@ -636,12 +637,12 @@ public class PluggableAuthHandlerTest {
     } catch (PluggableAuthException e) {
       assertEquals("INVALID_RESPONSE", e.getErrorCode());
       assertEquals("The executable response is expired.", e.getErrorDescription());
-    } catch (IOException e) {
     }
   }
 
   @Test
-  public void retrieveTokenFromExecutable_invalidVersion_throws() throws InterruptedException {
+  public void retrieveTokenFromExecutable_invalidVersion_throws()
+      throws InterruptedException, IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 
@@ -675,12 +676,11 @@ public class PluggableAuthHandlerTest {
                   "The maximum version currently supported is %s.",
                   EXECUTABLE_SUPPORTED_MAX_VERSION),
           e.getErrorDescription());
-    } catch (IOException e) {
     }
   }
 
   @Test
-  public void retrieveTokenFromExecutable_allowExecutablesDisabled_throws() {
+  public void retrieveTokenFromExecutable_allowExecutablesDisabled_throws() throws IOException {
     // In order to use Pluggable Auth, GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES must be set to 1.
     // If set to 0, a runtime exception should be thrown.
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
@@ -697,7 +697,6 @@ public class PluggableAuthHandlerTest {
           "Pluggable Auth executables need to be explicitly allowed to run by "
               + "setting the GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES environment variable to 1.",
           e.getErrorDescription());
-    } catch (IOException e) {
     }
   }
 
@@ -848,7 +847,8 @@ public class PluggableAuthHandlerTest {
   }
 
   @Test
-  public void getExecutableResponse_timeoutExceeded_throws() throws InterruptedException {
+  public void getExecutableResponse_timeoutExceeded_throws()
+      throws InterruptedException, IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 
@@ -869,7 +869,6 @@ public class PluggableAuthHandlerTest {
       assertEquals("TIMEOUT_EXCEEDED", e.getErrorCode());
       assertEquals(
           "The executable failed to finish within the timeout specified.", e.getErrorDescription());
-    } catch (IOException e) {
     }
 
     verify(mockProcess, times(1))
@@ -879,7 +878,8 @@ public class PluggableAuthHandlerTest {
   }
 
   @Test
-  public void getExecutableResponse_nonZeroExitCode_throws() throws InterruptedException {
+  public void getExecutableResponse_nonZeroExitCode_throws()
+      throws InterruptedException, IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 
@@ -903,7 +903,6 @@ public class PluggableAuthHandlerTest {
       assertEquals(
           String.format("The executable failed with exit code %s.", EXIT_CODE_FAIL),
           e.getErrorDescription());
-    } catch (IOException e) {
     }
 
     verify(mockProcess, times(1))

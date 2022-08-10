@@ -401,6 +401,7 @@ public class ExternalAccountCredentialsTest {
               .setTokenUrl("tokenUrl")
               .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP));
       new TestExternalAccountCredentials(builder);
+      fail("Should not be able to continue without exception.");
     } catch (IllegalArgumentException exception) {
       assertEquals("The provided token URL is invalid.", exception.getMessage());
     }
@@ -418,6 +419,7 @@ public class ExternalAccountCredentialsTest {
               .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
               .setServiceAccountImpersonationUrl("serviceAccountImpersonationUrl");
       new TestExternalAccountCredentials(builder);
+      fail("Should not be able to continue without exception.");
     } catch (IllegalArgumentException exception) {
       assertEquals("The provided token URL is invalid.", exception.getMessage());
     }
@@ -449,6 +451,7 @@ public class ExternalAccountCredentialsTest {
             .setTokenUrl(STS_URL)
             .setCredentialSource(new TestCredentialSource(credentialSource))
             .build();
+        fail("Should not be able to continue without exception.");
       } catch (IllegalArgumentException exception) {
         assertEquals(
             "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.",

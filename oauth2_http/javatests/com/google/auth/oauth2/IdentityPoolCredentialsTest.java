@@ -509,6 +509,18 @@ public class IdentityPoolCredentialsTest {
   }
 
   @Test
+  public void identityPoolCredentialSource_invalidSourceType() {
+    try {
+      new IdentityPoolCredentialSource(new HashMap<>());
+      fail("Should not be able to continue without exception.");
+    } catch (IllegalArgumentException exception) {
+      assertEquals(
+          "Missing credential source file location or URL. At least one must be specified.",
+          exception.getMessage());
+    }
+  }
+
+  @Test
   public void identityPoolCredentialSource_invalidFormatType() {
     Map<String, Object> credentialSourceMap = new HashMap<>();
     credentialSourceMap.put("url", "url");
