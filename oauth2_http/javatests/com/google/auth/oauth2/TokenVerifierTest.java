@@ -30,10 +30,10 @@
  */
 package com.google.auth.oauth2;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.LowLevelHttpRequest;
@@ -44,7 +44,6 @@ import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
-import com.google.auth.oauth2.TokenVerifier.VerificationException;
 import com.google.common.io.CharStreams;
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,9 +51,12 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Arrays;
 import java.util.List;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-class TokenVerifierTest {
+@RunWith(JUnit4.class)
+public class TokenVerifierTest {
   private static final String ES256_TOKEN =
       "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Im1wZjBEQSJ9.eyJhdWQiOiIvcHJvamVjdHMvNjUyNTYyNzc2Nzk4L2FwcHMvY2xvdWQtc2FtcGxlcy10ZXN0cy1waHAtaWFwIiwiZW1haWwiOiJjaGluZ29yQGdvb2dsZS5jb20iLCJleHAiOjE1ODQwNDc2MTcsImdvb2dsZSI6eyJhY2Nlc3NfbGV2ZWxzIjpbImFjY2Vzc1BvbGljaWVzLzUxODU1MTI4MDkyNC9hY2Nlc3NMZXZlbHMvcmVjZW50U2VjdXJlQ29ubmVjdERhdGEiLCJhY2Nlc3NQb2xpY2llcy81MTg1NTEyODA5MjQvYWNjZXNzTGV2ZWxzL3Rlc3ROb09wIiwiYWNjZXNzUG9saWNpZXMvNTE4NTUxMjgwOTI0L2FjY2Vzc0xldmVscy9ldmFwb3JhdGlvblFhRGF0YUZ1bGx5VHJ1c3RlZCJdfSwiaGQiOiJnb29nbGUuY29tIiwiaWF0IjoxNTg0MDQ3MDE3LCJpc3MiOiJodHRwczovL2Nsb3VkLmdvb2dsZS5jb20vaWFwIiwic3ViIjoiYWNjb3VudHMuZ29vZ2xlLmNvbToxMTIxODE3MTI3NzEyMDE5NzI4OTEifQ.yKNtdFY5EKkRboYNexBdfugzLhC3VuGyFcuFYA8kgpxMqfyxa41zkML68hYKrWu2kOBTUW95UnbGpsIi_u1fiA";
 
@@ -72,50 +74,56 @@ class TokenVerifierTest {
       Arrays.asList(ES256_TOKEN, FEDERATED_SIGNON_RS256_TOKEN, SERVICE_ACCOUNT_RS256_TOKEN);
 
   // Fixed to 2020-02-26 08:00:00 to allow expiration tests to pass
-  private static final Clock FIXED_CLOCK = () -> 1582704000000L;
+  private static final Clock FIXED_CLOCK =
+      new Clock() {
+        @Override
+        public long currentTimeMillis() {
+          return 1582704000000L;
+        }
+      };
 
   @Test
-  void verifyExpiredToken() {
+  public void verifyExpiredToken() {
     for (String token : ALL_TOKENS) {
       TokenVerifier tokenVerifier = TokenVerifier.newBuilder().build();
-      TokenVerifier.VerificationException exception =
-          assertThrows(
-              TokenVerifier.VerificationException.class,
-              () -> tokenVerifier.verify(token),
-              "Should have thrown a VerificationException");
-      assertTrue(exception.getMessage().contains("expired"));
+      try {
+        tokenVerifier.verify(token);
+        fail("Should have thrown a VerificationException");
+      } catch (TokenVerifier.VerificationException e) {
+        assertTrue(e.getMessage().contains("expired"));
+      }
     }
   }
 
   @Test
-  void verifyExpectedAudience() {
+  public void verifyExpectedAudience() {
     TokenVerifier tokenVerifier =
         TokenVerifier.newBuilder().setAudience("expected audience").build();
     for (String token : ALL_TOKENS) {
-      TokenVerifier.VerificationException exception =
-          assertThrows(
-              TokenVerifier.VerificationException.class,
-              () -> tokenVerifier.verify(token),
-              "Should have thrown a VerificationException");
-      assertTrue(exception.getMessage().contains("audience does not match"));
+      try {
+        tokenVerifier.verify(token);
+        fail("Should have thrown a VerificationException");
+      } catch (TokenVerifier.VerificationException e) {
+        assertTrue(e.getMessage().contains("audience does not match"));
+      }
     }
   }
 
   @Test
-  void verifyExpectedIssuer() {
+  public void verifyExpectedIssuer() {
     TokenVerifier tokenVerifier = TokenVerifier.newBuilder().setIssuer("expected issuer").build();
     for (String token : ALL_TOKENS) {
-      TokenVerifier.VerificationException exception =
-          assertThrows(
-              TokenVerifier.VerificationException.class,
-              () -> tokenVerifier.verify(token),
-              "Should have thrown a VerificationException");
-      assertTrue(exception.getMessage().contains("issuer does not match"));
+      try {
+        tokenVerifier.verify(token);
+        fail("Should have thrown a VerificationException");
+      } catch (TokenVerifier.VerificationException e) {
+        assertTrue(e.getMessage().contains("issuer does not match"));
+      }
     }
   }
 
   @Test
-  void verifyEs256Token404CertificateUrl() {
+  public void verifyEs256Token404CertificateUrl() {
     // Mock HTTP requests
     HttpTransportFactory httpTransportFactory =
         new HttpTransportFactory() {
@@ -144,15 +152,17 @@ class TokenVerifierTest {
             .setClock(FIXED_CLOCK)
             .setHttpTransportFactory(httpTransportFactory)
             .build();
-    TokenVerifier.VerificationException exception =
-        assertThrows(
-            TokenVerifier.VerificationException.class, () -> tokenVerifier.verify(ES256_TOKEN));
-    assertTrue(
-        exception.getMessage().contains("Error fetching PublicKey from certificate location"));
+    try {
+      tokenVerifier.verify(ES256_TOKEN);
+      fail("Should not be able to continue without exception.");
+    } catch (TokenVerifier.VerificationException exception) {
+      assertTrue(
+          exception.getMessage().contains("Error fetching PublicKey from certificate location"));
+    }
   }
 
   @Test
-  void verifyEs256TokenPublicKeyMismatch() {
+  public void verifyEs256TokenPublicKeyMismatch() {
     // Mock HTTP requests
     HttpTransportFactory httpTransportFactory =
         new HttpTransportFactory() {
@@ -181,16 +191,17 @@ class TokenVerifierTest {
             .setClock(FIXED_CLOCK)
             .setHttpTransportFactory(httpTransportFactory)
             .build();
-    TokenVerifier.VerificationException exception =
-        assertThrows(
-            TokenVerifier.VerificationException.class,
-            () -> tokenVerifier.verify(ES256_TOKEN),
-            "Should have failed verification");
-    assertTrue(exception.getMessage().contains("Error fetching PublicKey"));
+    try {
+      tokenVerifier.verify(ES256_TOKEN);
+      fail("Should have failed verification");
+    } catch (TokenVerifier.VerificationException e) {
+      assertTrue(e.getMessage().contains("Error fetching PublicKey"));
+    }
   }
 
   @Test
-  void verifyPublicKeyStoreIntermittentError() throws IOException, VerificationException {
+  public void verifyPublicKeyStoreIntermittentError()
+      throws TokenVerifier.VerificationException, IOException {
     // mock responses
     MockLowLevelHttpResponse response404 =
         new MockLowLevelHttpResponse()
@@ -220,25 +231,25 @@ class TokenVerifierTest {
             .setClock(FIXED_CLOCK)
             .setHttpTransportFactory(transportFactory)
             .build();
-    TokenVerifier.VerificationException exception =
-        assertThrows(
-            TokenVerifier.VerificationException.class,
-            () -> tokenVerifier.verify(ES256_TOKEN),
-            "Should have failed verification");
-    assertTrue(exception.getMessage().contains("Error fetching PublicKey"));
+    try {
+      tokenVerifier.verify(ES256_TOKEN);
+      fail("Should not be able to continue without exception.");
+    } catch (TokenVerifier.VerificationException exception) {
+      assertTrue(exception.getMessage().contains("Error fetching PublicKey"));
+    }
 
-    exception =
-        assertThrows(
-            TokenVerifier.VerificationException.class,
-            () -> tokenVerifier.verify(ES256_TOKEN),
-            "Should have failed verification");
-    assertTrue(exception.getCause().getMessage().contains("No valid public key"));
+    try {
+      tokenVerifier.verify(ES256_TOKEN);
+      fail("Should not be able to continue without exception.");
+    } catch (TokenVerifier.VerificationException exception) {
+      assertTrue(exception.getCause().getMessage().contains("No valid public key"));
+    }
 
     assertNotNull(tokenVerifier.verify(ES256_TOKEN));
   }
 
   @Test
-  void verifyEs256Token() throws TokenVerifier.VerificationException, IOException {
+  public void verifyEs256Token() throws TokenVerifier.VerificationException, IOException {
     HttpTransportFactory httpTransportFactory =
         mockTransport(
             "https://www.gstatic.com/iap/verify/public_key-jwk",
@@ -252,7 +263,7 @@ class TokenVerifierTest {
   }
 
   @Test
-  void verifyRs256Token() throws TokenVerifier.VerificationException, IOException {
+  public void verifyRs256Token() throws TokenVerifier.VerificationException, IOException {
     HttpTransportFactory httpTransportFactory =
         mockTransport(
             "https://www.googleapis.com/oauth2/v3/certs",
@@ -266,7 +277,7 @@ class TokenVerifierTest {
   }
 
   @Test
-  void verifyRs256TokenWithLegacyCertificateUrlFormat()
+  public void verifyRs256TokenWithLegacyCertificateUrlFormat()
       throws TokenVerifier.VerificationException, IOException {
     HttpTransportFactory httpTransportFactory =
         mockTransport(
@@ -281,7 +292,8 @@ class TokenVerifierTest {
   }
 
   @Test
-  void verifyServiceAccountRs256Token() throws TokenVerifier.VerificationException, IOException {
+  public void verifyServiceAccountRs256Token()
+      throws TokenVerifier.VerificationException, IOException {
     TokenVerifier tokenVerifier =
         TokenVerifier.newBuilder()
             .setClock(FIXED_CLOCK)

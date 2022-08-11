@@ -31,11 +31,11 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
 
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
@@ -47,9 +47,12 @@ import java.security.PrivateKey;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-class JwtCredentialsTest extends BaseSerializationTest {
+@RunWith(JUnit4.class)
+public class JwtCredentialsTest extends BaseSerializationTest {
   private static final String PRIVATE_KEY_ID = "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
   private static final String PRIVATE_KEY =
       "-----BEGIN PRIVATE KEY-----\n"
@@ -77,7 +80,7 @@ class JwtCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void serialize() throws IOException, ClassNotFoundException {
+  public void serialize() throws IOException, ClassNotFoundException {
     JwtClaims claims =
         JwtClaims.newBuilder()
             .setAudience("some-audience")
@@ -99,51 +102,51 @@ class JwtCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void builder_requiresPrivateKey() {
-    assertThrows(
-        NullPointerException.class,
-        () -> {
-          JwtClaims claims =
-              JwtClaims.newBuilder()
-                  .setAudience("some-audience")
-                  .setIssuer("some-issuer")
-                  .setSubject("some-subject")
-                  .build();
-          JwtCredentials.newBuilder().setJwtClaims(claims).setPrivateKeyId(PRIVATE_KEY_ID).build();
-        },
-        "Should throw exception");
-  }
-
-  @Test
-  void builder_requiresClaims() {
-    assertThrows(
-        NullPointerException.class,
-        () -> {
-          JwtCredentials.newBuilder()
-              .setPrivateKeyId(PRIVATE_KEY_ID)
-              .setPrivateKey(getPrivateKey())
+  public void builder_requiresPrivateKey() {
+    try {
+      JwtClaims claims =
+          JwtClaims.newBuilder()
+              .setAudience("some-audience")
+              .setIssuer("some-issuer")
+              .setSubject("some-subject")
               .build();
-        },
-        "Should throw exception");
+      JwtCredentials.newBuilder().setJwtClaims(claims).setPrivateKeyId(PRIVATE_KEY_ID).build();
+      fail("Should throw exception");
+    } catch (NullPointerException ex) {
+      // expected
+    }
   }
 
   @Test
-  void builder_requiresCompleteClaims() {
-    assertThrows(
-        IllegalStateException.class,
-        () -> {
-          JwtClaims claims = JwtClaims.newBuilder().build();
-          JwtCredentials.newBuilder()
-              .setJwtClaims(claims)
-              .setPrivateKeyId(PRIVATE_KEY_ID)
-              .setPrivateKey(getPrivateKey())
-              .build();
-        },
-        "Should throw exception");
+  public void builder_requiresClaims() {
+    try {
+      JwtCredentials.newBuilder()
+          .setPrivateKeyId(PRIVATE_KEY_ID)
+          .setPrivateKey(getPrivateKey())
+          .build();
+      fail("Should throw exception");
+    } catch (NullPointerException ex) {
+      // expected
+    }
   }
 
   @Test
-  void jwtWithClaims_overwritesClaims() throws IOException {
+  public void builder_requiresCompleteClaims() {
+    try {
+      JwtClaims claims = JwtClaims.newBuilder().build();
+      JwtCredentials.newBuilder()
+          .setJwtClaims(claims)
+          .setPrivateKeyId(PRIVATE_KEY_ID)
+          .setPrivateKey(getPrivateKey())
+          .build();
+      fail("Should throw exception");
+    } catch (IllegalStateException ex) {
+      // expected
+    }
+  }
+
+  @Test
+  public void jwtWithClaims_overwritesClaims() throws IOException {
     JwtClaims claims =
         JwtClaims.newBuilder()
             .setAudience("some-audience")
@@ -168,7 +171,7 @@ class JwtCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void jwtWithClaims_defaultsClaims() throws IOException {
+  public void jwtWithClaims_defaultsClaims() throws IOException {
     JwtClaims claims =
         JwtClaims.newBuilder()
             .setAudience("some-audience")
@@ -188,7 +191,7 @@ class JwtCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void getRequestMetadata_hasJwtAccess() throws IOException {
+  public void getRequestMetadata_hasJwtAccess() throws IOException {
     JwtClaims claims =
         JwtClaims.newBuilder()
             .setAudience("some-audience")
@@ -207,7 +210,7 @@ class JwtCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void getRequestMetadata_withAdditionalClaims_hasJwtAccess() throws IOException {
+  public void getRequestMetadata_withAdditionalClaims_hasJwtAccess() throws IOException {
     JwtClaims claims =
         JwtClaims.newBuilder()
             .setAudience("some-audience")
@@ -233,7 +236,7 @@ class JwtCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void privateKeyIdNull() throws IOException {
+  public void privateKeyIdNull() throws IOException {
     JwtClaims claims =
         JwtClaims.newBuilder()
             .setAudience("some-audience")
@@ -252,7 +255,7 @@ class JwtCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void privateKeyIdNotSpecified() throws IOException {
+  public void privateKeyIdNotSpecified() throws IOException {
     JwtClaims claims =
         JwtClaims.newBuilder()
             .setAudience("some-audience")
@@ -279,7 +282,7 @@ class JwtCredentialsTest extends BaseSerializationTest {
         expectedIssuer,
         expectedSubject,
         expectedKeyId,
-        Collections.emptyMap());
+        Collections.<String, String>emptyMap());
   }
 
   private void verifyJwtAccess(
@@ -292,15 +295,15 @@ class JwtCredentialsTest extends BaseSerializationTest {
       throws IOException {
     assertNotNull(metadata);
     List<String> authorizations = metadata.get(AuthHttpConstants.AUTHORIZATION);
-    assertNotNull(authorizations, "Authorization headers not found");
+    assertNotNull("Authorization headers not found", authorizations);
     String assertion = null;
     for (String authorization : authorizations) {
       if (authorization.startsWith(JWT_ACCESS_PREFIX)) {
-        assertNull(assertion, "Multiple bearer assertions found");
+        assertNull("Multiple bearer assertions found", assertion);
         assertion = authorization.substring(JWT_ACCESS_PREFIX.length());
       }
     }
-    assertNotNull(assertion, "Bearer assertion not found");
+    assertNotNull("Bearer assertion not found", assertion);
     JsonWebSignature signature = JsonWebSignature.parse(JSON_FACTORY, assertion);
     assertEquals(expectedIssuer, signature.getPayload().getIssuer());
     assertEquals(expectedSubject, signature.getPayload().getSubject());

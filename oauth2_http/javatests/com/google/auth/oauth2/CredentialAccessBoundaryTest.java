@@ -31,22 +31,25 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import com.google.auth.oauth2.CredentialAccessBoundary.AccessBoundaryRule;
 import com.google.auth.oauth2.CredentialAccessBoundary.AccessBoundaryRule.AvailabilityCondition;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Tests for {@link CredentialAccessBoundary} and encompassing classes. */
-class CredentialAccessBoundaryTest {
+@RunWith(JUnit4.class)
+public class CredentialAccessBoundaryTest {
 
   @Test
-  void credentialAccessBoundary() {
+  public void credentialAccessBoundary() {
     AvailabilityCondition availabilityCondition =
         AvailabilityCondition.newBuilder().setExpression("expression").build();
 
@@ -89,25 +92,27 @@ class CredentialAccessBoundaryTest {
   }
 
   @Test
-  void credentialAccessBoundary_nullRules_throws() {
-    assertThrows(
-        NullPointerException.class,
-        () -> CredentialAccessBoundary.newBuilder().build(),
-        "Should fail.");
+  public void credentialAccessBoundary_nullRules_throws() {
+    try {
+      CredentialAccessBoundary.newBuilder().build();
+      fail("Should fail.");
+    } catch (NullPointerException e) {
+      // Expected.
+    }
   }
 
   @Test
-  void credentialAccessBoundary_withoutRules_throws() {
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> CredentialAccessBoundary.newBuilder().setRules(new ArrayList<>()).build(),
-            "Should fail.");
-    assertEquals("At least one access boundary rule must be provided.", exception.getMessage());
+  public void credentialAccessBoundary_withoutRules_throws() {
+    try {
+      CredentialAccessBoundary.newBuilder().setRules(new ArrayList<AccessBoundaryRule>()).build();
+      fail("Should fail.");
+    } catch (IllegalArgumentException e) {
+      assertEquals("At least one access boundary rule must be provided.", e.getMessage());
+    }
   }
 
   @Test
-  void credentialAccessBoundary_ruleCountExceeded_throws() {
+  public void credentialAccessBoundary_ruleCountExceeded_throws() {
     AccessBoundaryRule rule =
         AccessBoundaryRule.newBuilder()
             .setAvailableResource("resource")
@@ -119,14 +124,16 @@ class CredentialAccessBoundaryTest {
       builder.addRule(rule);
     }
 
-    IllegalArgumentException exception =
-        assertThrows(IllegalArgumentException.class, builder::build, "Should fail.");
-    assertEquals(
-        "The provided list has more than 10 access boundary rules.", exception.getMessage());
+    try {
+      builder.build();
+      fail("Should fail.");
+    } catch (IllegalArgumentException e) {
+      assertEquals("The provided list has more than 10 access boundary rules.", e.getMessage());
+    }
   }
 
   @Test
-  void credentialAccessBoundary_toJson() {
+  public void credentialAccessBoundary_toJson() {
     AvailabilityCondition availabilityCondition =
         AvailabilityCondition.newBuilder()
             .setExpression("expression")
@@ -165,7 +172,7 @@ class CredentialAccessBoundaryTest {
   }
 
   @Test
-  void accessBoundaryRule_allFields() {
+  public void accessBoundaryRule_allFields() {
     AvailabilityCondition availabilityCondition =
         AvailabilityCondition.newBuilder().setExpression("expression").build();
 
@@ -185,7 +192,7 @@ class CredentialAccessBoundaryTest {
   }
 
   @Test
-  void accessBoundaryRule_requiredFields() {
+  public void accessBoundaryRule_requiredFields() {
     AccessBoundaryRule rule =
         AccessBoundaryRule.newBuilder()
             .setAvailableResource("resource")
@@ -199,83 +206,79 @@ class CredentialAccessBoundaryTest {
   }
 
   @Test
-  void accessBoundaryRule_withEmptyAvailableResource_throws() {
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> {
-              AccessBoundaryRule.newBuilder()
-                  .setAvailableResource("")
-                  .addAvailablePermission("permission")
-                  .build();
-            },
-            "Should fail.");
-    assertEquals("The provided availableResource is empty.", exception.getMessage());
+  public void accessBoundaryRule_withEmptyAvailableResource_throws() {
+    try {
+      AccessBoundaryRule.newBuilder()
+          .setAvailableResource("")
+          .addAvailablePermission("permission")
+          .build();
+      fail("Should fail.");
+    } catch (IllegalArgumentException e) {
+      assertEquals("The provided availableResource is empty.", e.getMessage());
+    }
   }
 
   @Test
-  void accessBoundaryRule_withoutAvailableResource_throws() {
-    assertThrows(
-        NullPointerException.class,
-        () -> AccessBoundaryRule.newBuilder().addAvailablePermission("permission").build(),
-        "Should fail.");
+  public void accessBoundaryRule_withoutAvailableResource_throws() {
+    try {
+      AccessBoundaryRule.newBuilder().addAvailablePermission("permission").build();
+      fail("Should fail.");
+    } catch (NullPointerException e) {
+      // Expected.
+    }
   }
 
   @Test
-  void accessBoundaryRule_withoutAvailablePermissions_throws() {
-    assertThrows(
-        NullPointerException.class,
-        () -> AccessBoundaryRule.newBuilder().setAvailableResource("resource").build(),
-        "Should fail.");
+  public void accessBoundaryRule_withoutAvailablePermissions_throws() {
+    try {
+      AccessBoundaryRule.newBuilder().setAvailableResource("resource").build();
+      fail("Should fail.");
+    } catch (NullPointerException e) {
+      // Expected.
+    }
   }
 
   @Test
-  void accessBoundaryRule_withEmptyAvailablePermissions_throws() {
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> {
-              AccessBoundaryRule.newBuilder()
-                  .setAvailableResource("resource")
-                  .setAvailablePermissions(new ArrayList<String>())
-                  .build();
-            },
-            "Should fail.");
-    assertEquals("The list of provided availablePermissions is empty.", exception.getMessage());
+  public void accessBoundaryRule_withEmptyAvailablePermissions_throws() {
+    try {
+      AccessBoundaryRule.newBuilder()
+          .setAvailableResource("resource")
+          .setAvailablePermissions(new ArrayList<String>())
+          .build();
+      fail("Should fail.");
+    } catch (IllegalArgumentException e) {
+      assertEquals("The list of provided availablePermissions is empty.", e.getMessage());
+    }
   }
 
   @Test
-  void accessBoundaryRule_withNullAvailablePermissions_throws() {
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> {
-              AccessBoundaryRule.newBuilder()
-                  .setAvailableResource("resource")
-                  .addAvailablePermission(null)
-                  .build();
-            },
-            "Should fail.");
-    assertEquals("One of the provided available permissions is null.", exception.getMessage());
+  public void accessBoundaryRule_withNullAvailablePermissions_throws() {
+    try {
+      AccessBoundaryRule.newBuilder()
+          .setAvailableResource("resource")
+          .addAvailablePermission(null)
+          .build();
+      fail("Should fail.");
+    } catch (IllegalArgumentException e) {
+      assertEquals("One of the provided available permissions is null.", e.getMessage());
+    }
   }
 
   @Test
-  void accessBoundaryRule_withEmptyAvailablePermission_throws() {
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> {
-              AccessBoundaryRule.newBuilder()
-                  .setAvailableResource("resource")
-                  .addAvailablePermission("")
-                  .build();
-            },
-            "Should fail.");
-    assertEquals("One of the provided available permissions is empty.", exception.getMessage());
+  public void accessBoundaryRule_withEmptyAvailablePermission_throws() {
+    try {
+      AccessBoundaryRule.newBuilder()
+          .setAvailableResource("resource")
+          .addAvailablePermission("")
+          .build();
+      fail("Should fail.");
+    } catch (IllegalArgumentException e) {
+      assertEquals("One of the provided available permissions is empty.", e.getMessage());
+    }
   }
 
   @Test
-  void availabilityCondition_allFields() {
+  public void availabilityCondition_allFields() {
     AvailabilityCondition availabilityCondition =
         AvailabilityCondition.newBuilder()
             .setExpression("expression")
@@ -289,7 +292,7 @@ class CredentialAccessBoundaryTest {
   }
 
   @Test
-  void availabilityCondition_expressionOnly() {
+  public void availabilityCondition_expressionOnly() {
     AvailabilityCondition availabilityCondition =
         AvailabilityCondition.newBuilder().setExpression("expression").build();
 
@@ -299,20 +302,22 @@ class CredentialAccessBoundaryTest {
   }
 
   @Test
-  void availabilityCondition_nullExpression_throws() {
-    assertThrows(
-        NullPointerException.class,
-        () -> AvailabilityCondition.newBuilder().setExpression(null).build(),
-        "Should fail.");
+  public void availabilityCondition_nullExpression_throws() {
+    try {
+      AvailabilityCondition.newBuilder().setExpression(null).build();
+      fail("Should fail.");
+    } catch (NullPointerException e) {
+      // Expected.
+    }
   }
 
   @Test
-  void availabilityCondition_emptyExpression_throws() {
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> AvailabilityCondition.newBuilder().setExpression("").build(),
-            "Should fail.");
-    assertEquals("The provided expression is empty.", exception.getMessage());
+  public void availabilityCondition_emptyExpression_throws() {
+    try {
+      AvailabilityCondition.newBuilder().setExpression("").build();
+      fail("Should fail.");
+    } catch (IllegalArgumentException e) {
+      assertEquals("The provided expression is empty.", e.getMessage());
+    }
   }
 }
