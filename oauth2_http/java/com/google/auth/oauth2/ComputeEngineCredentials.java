@@ -269,9 +269,12 @@ public class ComputeEngineCredentials extends GoogleCredentials
     request.setParser(parser);
     request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
     request.setThrowExceptionOnExecuteError(false);
+    request.setLoggingEnabled(false);
+
     HttpResponse response;
     try {
       response = request.execute();
+      response.setLoggingEnabled(false);
     } catch (UnknownHostException exception) {
       throw new IOException(
           "ComputeEngineCredentials cannot find the metadata server. This is"
@@ -296,8 +299,10 @@ public class ComputeEngineCredentials extends GoogleCredentials
             transportFactory.create().createRequestFactory().buildGetRequest(tokenUrl);
         request.setConnectTimeout(COMPUTE_PING_CONNECTION_TIMEOUT_MS);
         request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
+        request.setLoggingEnabled(false);
 
         HttpResponse response = request.execute();
+        response.setLoggingEnabled(false);
         try {
           // Internet providers can return a generic response to all requests, so it is necessary
           // to check that metadata header is present also.

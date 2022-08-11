@@ -318,8 +318,11 @@ public class TokenVerifier {
           httpTransport
               .createRequestFactory()
               .buildGetRequest(new GenericUrl(certificateUrl))
+              .setLoggingEnabled(false)
               .setParser(OAuth2Utils.JSON_FACTORY.createJsonObjectParser());
       HttpResponse response = request.execute();
+      response.setLoggingEnabled(false);
+
       jwks = response.parseAs(JsonWebKeySet.class);
 
       ImmutableMap.Builder<String, PublicKey> keyCacheBuilder = new ImmutableMap.Builder<>();

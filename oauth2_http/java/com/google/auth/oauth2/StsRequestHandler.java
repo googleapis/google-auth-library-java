@@ -98,12 +98,15 @@ final class StsRequestHandler {
     HttpRequest httpRequest =
         httpRequestFactory.buildPostRequest(new GenericUrl(tokenExchangeEndpoint), content);
     httpRequest.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
+    httpRequest.setLoggingEnabled(false);
     if (headers != null) {
       httpRequest.setHeaders(headers);
     }
 
     try {
       HttpResponse response = httpRequest.execute();
+      response.setLoggingEnabled(false);
+
       GenericData responseData = response.parseAs(GenericData.class);
       return buildResponse(responseData);
     } catch (HttpResponseException e) {

@@ -539,6 +539,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
       request.setNumberOfRetries(0);
     }
     request.setParser(new JsonObjectParser(jsonFactory));
+    request.setLoggingEnabled(false);
 
     ExponentialBackOff backoff =
         new ExponentialBackOff.Builder()
@@ -563,6 +564,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
     try {
       response = request.execute();
+      response.setLoggingEnabled(false);
     } catch (HttpResponseException re) {
       String message = String.format(errorTemplate, re.getMessage(), getIssuer());
       throw GoogleAuthException.createWithTokenEndpointResponseException(re, message);
@@ -606,9 +608,11 @@ public class ServiceAccountCredentials extends GoogleCredentials
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
     request.setParser(new JsonObjectParser(jsonFactory));
+    request.setLoggingEnabled(false);
     HttpResponse response;
     try {
       response = request.execute();
+      response.setLoggingEnabled(false);
     } catch (IOException e) {
       throw new IOException(
           String.format(

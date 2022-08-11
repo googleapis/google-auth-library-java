@@ -200,6 +200,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
       HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
       HttpRequest request =
           requestFactory.buildRequest(requestMethod, new GenericUrl(url), content);
+      request.setLoggingEnabled(false);
 
       HttpHeaders requestHeaders = request.getHeaders();
       for (Map.Entry<String, Object> header : headers.entrySet()) {
@@ -207,6 +208,8 @@ public class AwsCredentials extends ExternalAccountCredentials {
       }
 
       HttpResponse response = request.execute();
+      response.setLoggingEnabled(false);
+
       return response.parseAsString();
     } catch (IOException e) {
       throw new IOException(String.format("Failed to retrieve AWS %s.", resourceName), e);

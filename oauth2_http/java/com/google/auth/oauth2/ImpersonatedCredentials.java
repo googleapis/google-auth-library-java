@@ -518,10 +518,12 @@ public class ImpersonatedCredentials extends GoogleCredentials
     HttpRequest request = requestFactory.buildPostRequest(url, requestContent);
     adapter.initialize(request);
     request.setParser(parser);
+    request.setLoggingEnabled(false);
 
     HttpResponse response = null;
     try {
       response = request.execute();
+      response.setLoggingEnabled(false);
     } catch (IOException e) {
       throw new IOException("Error requesting access token", e);
     }

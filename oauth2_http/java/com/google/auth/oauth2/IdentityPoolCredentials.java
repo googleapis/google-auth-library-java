@@ -227,6 +227,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
             .createRequestFactory()
             .buildGetRequest(new GenericUrl(identityPoolCredentialSource.credentialLocation));
     request.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
+    request.setLoggingEnabled(false);
 
     if (identityPoolCredentialSource.hasHeaders()) {
       HttpHeaders headers = new HttpHeaders();
@@ -236,6 +237,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
     try {
       HttpResponse response = request.execute();
+      response.setLoggingEnabled(false);
       return parseToken(response.getContent());
     } catch (IOException e) {
       throw new IOException(

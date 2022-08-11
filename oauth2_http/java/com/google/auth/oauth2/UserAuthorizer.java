@@ -243,8 +243,10 @@ public class UserAuthorizer {
     HttpRequest tokenRequest =
         requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), tokenContent);
     tokenRequest.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
+    tokenRequest.setLoggingEnabled(false);
 
     HttpResponse tokenResponse = tokenRequest.execute();
+    tokenResponse.setLoggingEnabled(false);
 
     GenericJson parsedTokens = tokenResponse.parseAs(GenericJson.class);
     String accessTokenValue =
@@ -319,6 +321,8 @@ public class UserAuthorizer {
     revokeUrl.put("token", revokeToken);
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest tokenRequest = requestFactory.buildGetRequest(revokeUrl);
+    tokenRequest.setLoggingEnabled(false);
+
     tokenRequest.execute();
 
     if (deleteTokenException != null) {

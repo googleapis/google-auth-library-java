@@ -271,10 +271,12 @@ public class UserCredentials extends GoogleCredentials
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
     request.setParser(new JsonObjectParser(JSON_FACTORY));
+    request.setLoggingEnabled(false);
     HttpResponse response;
 
     try {
       response = request.execute();
+      response.setLoggingEnabled(false);
     } catch (HttpResponseException re) {
       throw GoogleAuthException.createWithTokenEndpointResponseException(re);
     }

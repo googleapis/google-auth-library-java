@@ -113,8 +113,10 @@ class IamUtils {
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     request.setParser(parser);
     request.setThrowExceptionOnExecuteError(false);
+    request.setLoggingEnabled(false);
 
     HttpResponse response = request.execute();
+    response.setLoggingEnabled(false);
     int statusCode = response.getStatusCode();
     if (statusCode >= 400 && statusCode < HttpStatusCodes.STATUS_CODE_SERVER_ERROR) {
       GenericData responseError = response.parseAs(GenericData.class);
@@ -182,8 +184,10 @@ class IamUtils {
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     request.setParser(parser);
     request.setThrowExceptionOnExecuteError(false);
+    request.setLoggingEnabled(false);
 
     HttpResponse response = request.execute();
+    response.setLoggingEnabled(false);
     int statusCode = response.getStatusCode();
     if (statusCode >= 400 && statusCode < HttpStatusCodes.STATUS_CODE_SERVER_ERROR) {
       GenericData responseError = response.parseAs(GenericData.class);
