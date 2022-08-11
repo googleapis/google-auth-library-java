@@ -103,7 +103,7 @@ public class IdTokenTest extends BaseSerializationTest {
   }
 
   @Test
-  void token_with_0x20() throws IOException {
+  public void token_with_0x20() throws IOException {
     IdToken accessToken = IdToken.create(TOKEN_WITH_0x20);
     assertEquals(TOKEN_WITH_0x20, accessToken.getTokenValue());
   }
