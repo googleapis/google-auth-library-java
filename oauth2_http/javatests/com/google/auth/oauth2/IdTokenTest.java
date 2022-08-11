@@ -49,6 +49,8 @@ public class IdTokenTest extends BaseSerializationTest {
       "eyJhbGciOiJSUzI1NiIsImtpZCI6IjM0OTRiMWU3ODZjZGFkMDkyZTQyMzc2NmJiZTM3ZjU0ZWQ4N2IyMmQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhdWQiOiJodHRwczovL2Zvby5iYXIiLCJhenAiOiJzdmMtMi00MjlAbWluZXJhbC1taW51dGlhLTgyMC5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsInN1YiI6IjEwMDE0NzEwNjk5Njc2NDQ3OTA4NSIsImVtYWlsIjoic3ZjLTItNDI5QG1pbmVyYWwtbWludXRpYS04MjAuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiaWF0IjoxNTY1Mzg3NTM4LCJleHAiOjE1NjUzOTExMzh9.foo";
   private static final String TOKEN_2 =
       "eyJhbGciOiJSUzI1NiIsImtpZCI6IjM0OTRiMWU3ODZjZGFkMDkyZTQyMzc2NmJiZTM3ZjU0ZWQ4N2IyMmQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhdWQiOiJodHRwczovL2Jhci5mb28iLCJhenAiOiJzdmMtMi00MjlAbWluZXJhbC1taW51dGlhLTgyMC5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsInN1YiI6IjEwMDE0NzEwNjk5Njc2NDQ3OTA4NSIsImVtYWlsIjoic3ZjLTItNDI5QG1pbmVyYWwtbWludXRpYS04MjAuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiaWF0IjoxNTY1Mzg4NjM0LCJleHAiOjE1NjUzOTIyMzR9.foo";
+  private static final String TOKEN_WITH_0x20 =
+      "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2NjAxNjMxNjAsImV4cCI6MTY5MTY5OTE2MCwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsIkdpdmVuTmFtZSI6ImFibTHag3M0x20ifQ.foo";
   private static final Date EXPIRATION_DATE = new Date((long) 1565391138 * 1000);
 
   @Test
@@ -98,5 +100,11 @@ public class IdTokenTest extends BaseSerializationTest {
     assertEquals(accessToken, deserializedAccessToken);
     assertEquals(accessToken.hashCode(), deserializedAccessToken.hashCode());
     assertEquals(accessToken.toString(), deserializedAccessToken.toString());
+  }
+
+  @Test
+  public void token_with_0x20() throws IOException {
+    IdToken accessToken = IdToken.create(TOKEN_WITH_0x20);
+    assertEquals(TOKEN_WITH_0x20, accessToken.getTokenValue());
   }
 }
