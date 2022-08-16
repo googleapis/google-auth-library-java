@@ -60,10 +60,10 @@ public class MockTokenServerTransport extends MockHttpTransport {
   static final String EXPECTED_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
   static final JsonFactory JSON_FACTORY = new GsonFactory();
   int buildRequestCount;
-  final Map<String, String> clients = new HashMap<>();
-  final Map<String, String> refreshTokens = new HashMap<>();
-  final Map<String, String> serviceAccounts = new HashMap<>();
-  final Map<String, String> codes = new HashMap<>();
+  final Map<String, String> clients = new HashMap<String, String>();
+  final Map<String, String> refreshTokens = new HashMap<String, String>();
+  final Map<String, String> serviceAccounts = new HashMap<String, String>();
+  final Map<String, String> codes = new HashMap<String, String>();
   URI tokenServerUri = OAuth2Utils.TOKEN_SERVER_URI;
   private IOException error;
   private final Queue<Future<LowLevelHttpResponse>> responseSequence = new ArrayDeque<>();
@@ -106,7 +106,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
 
   public void addResponseErrorSequence(IOException... errors) {
     for (IOException error : errors) {
-      responseSequence.add(Futures.immediateFailedFuture(error));
+      responseSequence.add(Futures.<LowLevelHttpResponse>immediateFailedFuture(error));
     }
   }
 
@@ -133,6 +133,24 @@ public class MockTokenServerTransport extends MockHttpTransport {
     int questionMarkPos = url.indexOf('?');
     final String urlWithoutQuery = (questionMarkPos > 0) ? url.substring(0, questionMarkPos) : url;
     final String query = (questionMarkPos > 0) ? url.substring(questionMarkPos + 1) : "";
+
+    if (!responseSequence.isEmpty()) {
+      return new MockLowLevelHttpRequest(url) {
+        @Override
+        public LowLevelHttpResponse execute() throws IOException {
+          try {
+            return responseSequence.poll().get();
+          } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            throw (IOException) cause;
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Unexpectedly interrupted");
+          }
+        }
+      };
+    }
+
     if (urlWithoutQuery.equals(tokenServerUri.toString())) {
       return new MockLowLevelHttpRequest(url) {
         @Override

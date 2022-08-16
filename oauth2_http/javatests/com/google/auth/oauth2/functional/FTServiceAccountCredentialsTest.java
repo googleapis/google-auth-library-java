@@ -31,11 +31,11 @@
 
 package com.google.auth.oauth2.functional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
@@ -49,10 +49,11 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.IdToken;
 import com.google.auth.oauth2.IdTokenCredentials;
 import com.google.auth.oauth2.IdTokenProvider;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
-class FTServiceAccountCredentialsTest {
+public final class FTServiceAccountCredentialsTest {
   private final String cloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform";
 
   private final String cloudTasksUrl =
@@ -65,19 +66,19 @@ class FTServiceAccountCredentialsTest {
       "https://compute.googleapis.com/compute/v1/projects/gcloud-devel/zones/us-central1-a/instances";
 
   @Test
-  void NoScopeNoAudienceComputeTest() throws Exception {
+  public void NoScopeNoAudienceComputeTest() throws Exception {
     HttpResponse response = executeRequestWithCredentialsWithoutScope(computeUrl);
     assertEquals(200, response.getStatusCode());
   }
 
   @Test
-  void NoScopeNoAudienceBigQueryTest() throws Exception {
+  public void NoScopeNoAudienceBigQueryTest() throws Exception {
     HttpResponse response = executeRequestWithCredentialsWithoutScope(bigQueryUrl);
     assertEquals(200, response.getStatusCode());
   }
 
   @Test
-  void NoScopeNoAudienceOnePlatformTest() throws Exception {
+  public void NoScopeNoAudienceOnePlatformTest() throws Exception {
     HttpResponse response = executeRequestWithCredentialsWithoutScope(cloudTasksUrl);
     assertEquals(200, response.getStatusCode());
   }
@@ -85,7 +86,7 @@ class FTServiceAccountCredentialsTest {
   // TODO: add Storage case
 
   @Test
-  void AudienceSetNoScopeTest() throws Exception {
+  public void AudienceSetNoScopeTest() throws Exception {
     final GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
 
     IdTokenCredentials tokenCredential =
@@ -106,62 +107,62 @@ class FTServiceAccountCredentialsTest {
   }
 
   @Test
-  void ScopeSetNoAudienceStorageTest() throws Exception {
+  public void ScopeSetNoAudienceStorageTest() throws Exception {
     HttpResponse response = executeRequestWithCredentialsWithScope(storageUrl, cloudPlatformScope);
     assertEquals(200, response.getStatusCode());
   }
 
   @Test
-  void ScopeSetNoAudienceComputeTest() throws Exception {
+  public void ScopeSetNoAudienceComputeTest() throws Exception {
 
     HttpResponse response = executeRequestWithCredentialsWithScope(computeUrl, cloudPlatformScope);
     assertEquals(200, response.getStatusCode());
   }
 
   @Test
-  void ScopeSetNoAudienceBigQueryTest() throws Exception {
+  public void ScopeSetNoAudienceBigQueryTest() throws Exception {
     HttpResponse response = executeRequestWithCredentialsWithScope(bigQueryUrl, cloudPlatformScope);
     assertEquals(200, response.getStatusCode());
   }
 
   @Test
-  void ScopeSetNoAudienceOnePlatformTest() throws Exception {
+  public void ScopeSetNoAudienceOnePlatformTest() throws Exception {
     HttpResponse response =
         executeRequestWithCredentialsWithScope(cloudTasksUrl, cloudPlatformScope);
     assertEquals(200, response.getStatusCode());
   }
 
   @Test
-  void WrongScopeComputeTest() throws Exception {
+  public void WrongScopeComputeTest() throws Exception {
     executeRequestWrongScope(computeUrl);
   }
 
   @Test
-  void WrongScopeStorageTest() throws Exception {
+  public void WrongScopeStorageTest() throws Exception {
     executeRequestWrongScope(storageUrl);
   }
 
   @Test
-  void WrongScopeBigQueryTest() throws Exception {
+  public void WrongScopeBigQueryTest() throws Exception {
     executeRequestWrongScope(bigQueryUrl);
   }
 
   @Test
-  void WrongScopeOnePlatformTest() throws Exception {
+  public void WrongScopeOnePlatformTest() throws Exception {
     executeRequestWrongScope(cloudTasksUrl);
   }
 
-  private void executeRequestWrongScope(String serviceUri) {
+  private void executeRequestWrongScope(String serviceUri)
+      throws FileNotFoundException, IOException {
     String expectedMessage = "403 Forbidden";
 
-    IOException exception =
-        assertThrows(
-            IOException.class,
-            () ->
-                executeRequestWithCredentialsWithScope(
-                    serviceUri, "https://www.googleapis.com/auth/adexchange.buyer"),
-            "Should throw exception: " + expectedMessage);
-    assertTrue(exception.getMessage().contains(expectedMessage));
+    try {
+      executeRequestWithCredentialsWithScope(
+          serviceUri, "https://www.googleapis.com/auth/adexchange.buyer");
+      fail("Should throw exception: " + expectedMessage);
+    } catch (IOException expected) {
+      assertTrue(expected.getMessage().contains(expectedMessage));
+    }
   }
 
   private HttpResponse executeRequestWithCredentialsWithoutScope(String serviceUrl)

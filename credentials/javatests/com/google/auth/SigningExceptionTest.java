@@ -31,28 +31,29 @@
 
 package com.google.auth;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import com.google.auth.ServiceAccountSigner.SigningException;
-import org.junit.jupiter.api.Test;
+import java.io.IOException;
+import org.junit.Test;
 
-class SigningExceptionTest {
+public class SigningExceptionTest {
 
   private static final String EXPECTED_MESSAGE = "message";
   private static final RuntimeException EXPECTED_CAUSE = new RuntimeException();
 
   @Test
-  void constructor() {
+  public void constructor() {
     SigningException signingException = new SigningException(EXPECTED_MESSAGE, EXPECTED_CAUSE);
     assertEquals(EXPECTED_MESSAGE, signingException.getMessage());
     assertSame(EXPECTED_CAUSE, signingException.getCause());
   }
 
   @Test
-  void equals_true() {
+  public void equals_true() throws IOException {
     SigningException signingException = new SigningException(EXPECTED_MESSAGE, EXPECTED_CAUSE);
     SigningException otherSigningException = new SigningException(EXPECTED_MESSAGE, EXPECTED_CAUSE);
     assertTrue(signingException.equals(otherSigningException));
@@ -60,7 +61,7 @@ class SigningExceptionTest {
   }
 
   @Test
-  void equals_false_message() {
+  public void equals_false_message() throws IOException {
     SigningException signingException = new SigningException(EXPECTED_MESSAGE, EXPECTED_CAUSE);
     SigningException otherSigningException = new SigningException("otherMessage", EXPECTED_CAUSE);
     assertFalse(signingException.equals(otherSigningException));
@@ -68,7 +69,7 @@ class SigningExceptionTest {
   }
 
   @Test
-  void equals_false_cause() {
+  public void equals_false_cause() throws IOException {
     SigningException signingException = new SigningException(EXPECTED_MESSAGE, EXPECTED_CAUSE);
     SigningException otherSigningException =
         new SigningException("otherMessage", new RuntimeException());
@@ -77,7 +78,7 @@ class SigningExceptionTest {
   }
 
   @Test
-  void hashCode_equals() {
+  public void hashCode_equals() throws IOException {
     SigningException signingException = new SigningException(EXPECTED_MESSAGE, EXPECTED_CAUSE);
     SigningException otherSigningException = new SigningException(EXPECTED_MESSAGE, EXPECTED_CAUSE);
     assertEquals(signingException.hashCode(), otherSigningException.hashCode());

@@ -36,7 +36,7 @@ import java.util.concurrent.Executor;
 
 /** Mock thread-less executor. */
 public final class MockExecutor implements Executor {
-  private LinkedList<Runnable> tasks = new LinkedList<>();
+  private LinkedList<Runnable> tasks = new LinkedList<Runnable>();
 
   @Override
   public void execute(Runnable task) {
@@ -45,7 +45,7 @@ public final class MockExecutor implements Executor {
 
   int runTasks() {
     LinkedList<Runnable> savedTasks = tasks;
-    tasks = new LinkedList<>();
+    tasks = new LinkedList<Runnable>();
     for (Runnable task : savedTasks) {
       task.run();
     }

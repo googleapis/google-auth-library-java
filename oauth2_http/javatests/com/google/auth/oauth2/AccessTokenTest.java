@@ -31,22 +31,25 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Date;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Unit tests for AccessToken */
-class AccessTokenTest extends BaseSerializationTest {
+@RunWith(JUnit4.class)
+public class AccessTokenTest extends BaseSerializationTest {
 
   private static final String TOKEN = "AccessToken";
   private static final Date EXPIRATION_DATE = new Date();
 
   @Test
-  void constructor() {
+  public void constructor() {
     AccessToken accessToken = new AccessToken(TOKEN, EXPIRATION_DATE);
     assertEquals(TOKEN, accessToken.getTokenValue());
     assertEquals(EXPIRATION_DATE, accessToken.getExpirationTime());
@@ -54,7 +57,7 @@ class AccessTokenTest extends BaseSerializationTest {
   }
 
   @Test
-  void equals_true() {
+  public void equals_true() throws IOException {
     AccessToken accessToken = new AccessToken(TOKEN, EXPIRATION_DATE);
     AccessToken otherAccessToken = new AccessToken(TOKEN, EXPIRATION_DATE);
     assertTrue(accessToken.equals(otherAccessToken));
@@ -62,7 +65,7 @@ class AccessTokenTest extends BaseSerializationTest {
   }
 
   @Test
-  void equals_false_token() {
+  public void equals_false_token() throws IOException {
     AccessToken accessToken = new AccessToken(TOKEN, EXPIRATION_DATE);
     AccessToken otherAccessToken = new AccessToken("otherToken", EXPIRATION_DATE);
     assertFalse(accessToken.equals(otherAccessToken));
@@ -70,7 +73,7 @@ class AccessTokenTest extends BaseSerializationTest {
   }
 
   @Test
-  void equals_false_expirationDate() {
+  public void equals_false_expirationDate() throws IOException {
     AccessToken accessToken = new AccessToken(TOKEN, EXPIRATION_DATE);
     AccessToken otherAccessToken = new AccessToken(TOKEN, new Date(EXPIRATION_DATE.getTime() + 42));
     assertFalse(accessToken.equals(otherAccessToken));
@@ -78,7 +81,7 @@ class AccessTokenTest extends BaseSerializationTest {
   }
 
   @Test
-  void toString_containsFields() {
+  public void toString_containsFields() {
     AccessToken accessToken = new AccessToken(TOKEN, EXPIRATION_DATE);
     String expectedToString =
         String.format(
@@ -88,14 +91,14 @@ class AccessTokenTest extends BaseSerializationTest {
   }
 
   @Test
-  void hashCode_equals() throws IOException {
+  public void hashCode_equals() throws IOException {
     AccessToken accessToken = new AccessToken(TOKEN, EXPIRATION_DATE);
     AccessToken otherAccessToken = new AccessToken(TOKEN, EXPIRATION_DATE);
     assertEquals(accessToken.hashCode(), otherAccessToken.hashCode());
   }
 
   @Test
-  void serialize() throws IOException, ClassNotFoundException {
+  public void serialize() throws IOException, ClassNotFoundException {
     AccessToken accessToken = new AccessToken(TOKEN, EXPIRATION_DATE);
     AccessToken deserializedAccessToken = serializeAndDeserialize(accessToken);
     assertEquals(accessToken, deserializedAccessToken);

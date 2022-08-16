@@ -31,19 +31,22 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
 import java.util.Map;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class JwtClaimsTest {
 
   @Test
-  void testMergeOverwritesFields() {
+  public void testMergeOverwritesFields() {
     JwtClaims claims1 =
         JwtClaims.newBuilder()
             .setAudience("audience-1")
@@ -64,7 +67,7 @@ public class JwtClaimsTest {
   }
 
   @Test
-  void testMergeDefaultValues() {
+  public void testMergeDefaultValues() {
     JwtClaims claims1 =
         JwtClaims.newBuilder()
             .setAudience("audience-1")
@@ -80,7 +83,7 @@ public class JwtClaimsTest {
   }
 
   @Test
-  void testMergeNull() {
+  public void testMergeNull() {
     JwtClaims claims1 = JwtClaims.newBuilder().build();
     JwtClaims claims2 = JwtClaims.newBuilder().build();
     JwtClaims merged = claims1.merge(claims2);
@@ -93,7 +96,7 @@ public class JwtClaimsTest {
   }
 
   @Test
-  void testEquals() {
+  public void testEquals() {
     JwtClaims claims1 =
         JwtClaims.newBuilder()
             .setAudience("audience-1")
@@ -111,14 +114,14 @@ public class JwtClaimsTest {
   }
 
   @Test
-  void testAdditionalClaimsDefaults() {
+  public void testAdditionalClaimsDefaults() {
     JwtClaims claims = JwtClaims.newBuilder().build();
     assertNotNull(claims.getAdditionalClaims());
     assertTrue(claims.getAdditionalClaims().isEmpty());
   }
 
   @Test
-  void testMergeAdditionalClaims() {
+  public void testMergeAdditionalClaims() {
     JwtClaims claims1 =
         JwtClaims.newBuilder().setAdditionalClaims(Collections.singletonMap("foo", "bar")).build();
     JwtClaims claims2 =
@@ -138,7 +141,7 @@ public class JwtClaimsTest {
   }
 
   @Test
-  void testIsComplete() {
+  public void testIsComplete() {
     // Test JwtClaim is complete if audience is not set but scope is provided.
     JwtClaims claims =
         JwtClaims.newBuilder()
