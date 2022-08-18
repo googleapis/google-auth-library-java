@@ -79,8 +79,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
    * Encapsulates the service account impersonation options portion of the configuration for
    * ExternalAccountCredentials.
    *
-   * <p>If token_lifetime_seconds is not specified, the library will
-   * default to a 1-hour lifetime.
+   * <p>If token_lifetime_seconds is not specified, the library will default to a 1-hour lifetime.
    *
    * <pre>
    * Sample credential source for Pluggable Auth credentials:
@@ -100,13 +99,13 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
         Object timeout = serviceAccountImpersonationOptionsMap.get(TOKEN_LIFETIME_SECONDS_KEY);
         if (timeout instanceof BigDecimal) {
           lifetime = ((BigDecimal) timeout).intValue();
-        } else if (serviceAccountImpersonationOptionsMap.get(TOKEN_LIFETIME_SECONDS_KEY) instanceof Integer) {
+        } else if (serviceAccountImpersonationOptionsMap.get(TOKEN_LIFETIME_SECONDS_KEY)
+            instanceof Integer) {
           lifetime = (int) timeout;
         } else {
           lifetime = Integer.parseInt((String) timeout);
         }
-      }
-      else{
+      } else {
         lifetime = DEFAULT_TOKEN_LIFETIME_SECONDS;
       }
     }
@@ -181,7 +180,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       @Nullable String quotaProjectId,
       @Nullable String clientId,
       @Nullable String clientSecret,
-      @Nullable Collection<String> scopes){
+      @Nullable Collection<String> scopes) {
     this(
         transportFactory,
         audience,
@@ -236,10 +235,11 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
 
   /**
    * See {@link ExternalAccountCredentials#ExternalAccountCredentials(HttpTransportFactory, String,
-   * String, String, CredentialSource, String, String, String, String, String, Collection, EnvironmentProvider)}
+   * String, String, CredentialSource, String, String, String, String, String, Collection,
+   * EnvironmentProvider)}
    *
    * @param serviceAccountImpersonationOptions additional options for service account impersonation,
-   *    may be null.
+   *     may be null.
    */
   protected ExternalAccountCredentials(
       HttpTransportFactory transportFactory,
@@ -316,8 +316,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
             : builder.environmentProvider;
     this.serviceAccountImpersonationOptions =
         builder.serviceAccountImpersonationOptions == null
-        ? new ServiceAccountImpersonationOptions(new HashMap<String, Object>())
-        : builder.serviceAccountImpersonationOptions;
+            ? new ServiceAccountImpersonationOptions(new HashMap<String, Object>())
+            : builder.serviceAccountImpersonationOptions;
 
     this.workforcePoolUserProject = builder.workforcePoolUserProject;
     if (workforcePoolUserProject != null && !isWorkforcePoolConfiguration()) {
@@ -463,11 +463,13 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     String clientSecret = (String) json.get("client_secret");
     String quotaProjectId = (String) json.get("quota_project_id");
     String userProject = (String) json.get("workforce_pool_user_project");
-    Map<String, Object> impersonationOptionsMap = (Map<String, Object>) json.get("service_account_impersonation");
+    Map<String, Object> impersonationOptionsMap =
+        (Map<String, Object>) json.get("service_account_impersonation");
 
     ServiceAccountImpersonationOptions serviceAccountImpersonationOptions = null;
-    if (impersonationOptionsMap != null){
-      serviceAccountImpersonationOptions = new ServiceAccountImpersonationOptions(impersonationOptionsMap);
+    if (impersonationOptionsMap != null) {
+      serviceAccountImpersonationOptions =
+          new ServiceAccountImpersonationOptions(impersonationOptionsMap);
     }
 
     if (isAwsCredential(credentialSourceMap)) {
@@ -842,7 +844,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       return this;
     }
 
-    Builder setServiceAccountImpersonationOptions(ServiceAccountImpersonationOptions serviceAccountImpersonationOptions) {
+    Builder setServiceAccountImpersonationOptions(
+        ServiceAccountImpersonationOptions serviceAccountImpersonationOptions) {
       this.serviceAccountImpersonationOptions = serviceAccountImpersonationOptions;
       return this;
     }
