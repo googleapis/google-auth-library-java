@@ -663,7 +663,10 @@ public class IdentityPoolCredentialsTest {
   }
 
   static InputStream writeIdentityPoolCredentialsStream(
-      String tokenUrl, String url, @Nullable String serviceAccountImpersonationUrl)
+      String tokenUrl,
+      String url,
+      @Nullable String serviceAccountImpersonationUrl,
+      @Nullable Map<String, Object> serviceAccountImpersonationOptionsMap)
       throws IOException {
     GenericJson json = new GenericJson();
     json.put("audience", "audience");
@@ -674,6 +677,10 @@ public class IdentityPoolCredentialsTest {
 
     if (serviceAccountImpersonationUrl != null) {
       json.put("service_account_impersonation_url", serviceAccountImpersonationUrl);
+    }
+
+    if (serviceAccountImpersonationOptionsMap != null) {
+      json.put("service_account_impersonation", serviceAccountImpersonationOptionsMap);
     }
 
     GenericJson credentialSource = new GenericJson();

@@ -203,6 +203,27 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
+  public void fromJson_identityPoolCredentialsWithServiceAccountImpersonationOptions() {
+    GenericJson identityPoolCredentialJson = buildJsonIdentityPoolCredential();
+    identityPoolCredentialJson.set("service_account_impersonation", buildServiceAccountImpersonationOptions(2800));
+
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(identityPoolCredentialJson, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+
+    assertTrue(credential instanceof IdentityPoolCredentials);
+    assertEquals(
+        "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider",
+        credential.getAudience());
+    assertEquals("subjectTokenType", credential.getSubjectTokenType());
+    assertEquals(STS_URL, credential.getTokenUrl());
+    assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
+    assertNotNull(credential.getCredentialSource());
+    assertEquals(
+        2800,
+        credential.getServiceAccountImpersonationOptions().lifetime);
+  }
+
+  @Test
   public void fromJson_awsCredentials() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
@@ -214,6 +235,25 @@ public class ExternalAccountCredentialsTest {
     assertEquals(STS_URL, credential.getTokenUrl());
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
     assertNotNull(credential.getCredentialSource());
+  }
+
+  @Test
+  public void fromJson_awsCredentialsWithServiceAccountImpersonationOptions() throws IOException {
+    GenericJson awsCredentialJson = buildJsonAwsCredential();
+    awsCredentialJson.set("service_account_impersonation", buildServiceAccountImpersonationOptions(2800));
+
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(awsCredentialJson, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+
+    assertTrue(credential instanceof AwsCredentials);
+    assertEquals("audience", credential.getAudience());
+    assertEquals("subjectTokenType", credential.getSubjectTokenType());
+    assertEquals(STS_URL, credential.getTokenUrl());
+    assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
+    assertNotNull(credential.getCredentialSource());
+    assertEquals(
+        2800,
+        credential.getServiceAccountImpersonationOptions().lifetime);
   }
 
   @Test
@@ -285,6 +325,31 @@ public class ExternalAccountCredentialsTest {
     assertEquals("command", source.getCommand());
     assertEquals("path/to/output/file", source.getOutputFilePath());
     assertEquals(5000, source.getTimeoutMs());
+  }
+
+  @Test
+  public void fromJson_pluggableAuthCredentialsWithServiceAccountImpersonation() {
+    GenericJson pluggableAuthCredentialJson = buildJsonPluggableAuthCredential();
+    pluggableAuthCredentialJson.set("service_account_impersonation", buildServiceAccountImpersonationOptions(2800));
+
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(pluggableAuthCredentialJson, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+
+    assertTrue(credential instanceof PluggableAuthCredentials);
+    assertEquals("audience", credential.getAudience());
+    assertEquals("subjectTokenType", credential.getSubjectTokenType());
+    assertEquals(STS_URL, credential.getTokenUrl());
+    assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
+    assertNotNull(credential.getCredentialSource());
+    assertEquals(
+        2800,
+        credential.getServiceAccountImpersonationOptions().lifetime);
+
+    PluggableAuthCredentialSource source =
+        (PluggableAuthCredentialSource) credential.getCredentialSource();
+    assertEquals("command", source.getCommand());
+    assertEquals(30000, source.getTimeoutMs()); // Default timeout is 30s.
+    assertNull(source.getOutputFilePath());
   }
 
   @Test
@@ -590,7 +655,8 @@ public class ExternalAccountCredentialsTest {
             IdentityPoolCredentialsTest.writeIdentityPoolCredentialsStream(
                 transportFactory.transport.getStsUrl(),
                 transportFactory.transport.getMetadataUrl(),
-                transportFactory.transport.getServiceAccountImpersonationUrl()),
+                transportFactory.transport.getServiceAccountImpersonationUrl(),
+                /* serviceAccountImpersonationOptionsMap= */ null),
             transportFactory);
 
     StsTokenExchangeRequest stsTokenExchangeRequest =
@@ -601,6 +667,46 @@ public class ExternalAccountCredentialsTest {
 
     assertEquals(
         transportFactory.transport.getServiceAccountAccessToken(), returnedToken.getTokenValue());
+
+    // Validate that default lifetime was set correctly on the request.
+    GenericJson query =
+        OAuth2Utils.JSON_FACTORY
+            .createJsonParser(transportFactory.transport.getLastRequest().getContentAsString())
+            .parseAndClose(GenericJson.class);
+
+    assertEquals("3600s", query.get("lifetime"));
+  }
+
+  @Test
+  public void exchangeExternalCredentialForAccessToken_withServiceAccountImpersonationOptions()
+      throws IOException {
+    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
+
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromStream(
+            IdentityPoolCredentialsTest.writeIdentityPoolCredentialsStream(
+                transportFactory.transport.getStsUrl(),
+                transportFactory.transport.getMetadataUrl(),
+                transportFactory.transport.getServiceAccountImpersonationUrl(),
+                buildServiceAccountImpersonationOptions(2800)),
+            transportFactory);
+
+    StsTokenExchangeRequest stsTokenExchangeRequest =
+        StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
+
+    AccessToken returnedToken =
+        credential.exchangeExternalCredentialForAccessToken(stsTokenExchangeRequest);
+
+    assertEquals(
+        transportFactory.transport.getServiceAccountAccessToken(), returnedToken.getTokenValue());
+
+    // Validate that lifetime was set correctly on the request.
+    GenericJson query =
+        OAuth2Utils.JSON_FACTORY
+            .createJsonParser(transportFactory.transport.getLastRequest().getContentAsString())
+            .parseAndClose(GenericJson.class);
+
+    assertEquals("2800s", query.get("lifetime"));
   }
 
   @Test
@@ -614,7 +720,8 @@ public class ExternalAccountCredentialsTest {
             IdentityPoolCredentialsTest.writeIdentityPoolCredentialsStream(
                 transportFactory.transport.getStsUrl(),
                 transportFactory.transport.getMetadataUrl(),
-                transportFactory.transport.getServiceAccountImpersonationUrl()),
+                transportFactory.transport.getServiceAccountImpersonationUrl(),
+                /* serviceAccountImpersonationOptionsMap= */ null),
             transportFactory);
 
     // Override impersonated credentials.
@@ -849,6 +956,13 @@ public class ExternalAccountCredentialsTest {
         "audience", "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider");
     json.put("workforce_pool_user_project", "userProject");
     return json;
+  }
+
+  private Map<String, Object> buildServiceAccountImpersonationOptions(Integer lifetime) {
+    Map<String, Object> map = new HashMap<String, Object>();
+    map.put("token_lifetime_seconds", lifetime);
+
+    return map;
   }
 
   static class TestExternalAccountCredentials extends ExternalAccountCredentials {
