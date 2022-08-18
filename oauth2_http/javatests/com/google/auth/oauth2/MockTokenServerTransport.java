@@ -257,7 +257,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
       return new MockLowLevelHttpRequest(url) {
         @Override
         public LowLevelHttpResponse execute() throws IOException {
-          Map<String, String> parameters = TestUtils.parseQuery(query);
+          Map<String, String> parameters = TestUtils.parseQuery(this.getContentAsString());
           String token = parameters.get("token");
           if (token == null) {
             throw new IOException("Token to revoke not found.");
