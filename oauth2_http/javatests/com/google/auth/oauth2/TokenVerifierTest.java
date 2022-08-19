@@ -224,7 +224,8 @@ public class TokenVerifierTest {
     // Mock HTTP requests
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
 
-    transportFactory.transport.addResponseSequence(response404, response404, response404, responseEmpty, responseGood);
+    transportFactory.transport.addResponseSequence(
+        response404, response404, response404, responseEmpty, responseGood);
 
     TokenVerifier tokenVerifier =
         TokenVerifier.newBuilder()
