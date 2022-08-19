@@ -679,6 +679,7 @@ public class IdentityPoolCredentialsTest {
     GenericJson credentialSource = new GenericJson();
     GenericJson headers = new GenericJson();
     headers.put("Metadata-Flavor", "Google");
+    headers.put("Authorization", "Bearer token");
     credentialSource.put("url", url);
     credentialSource.put("headers", headers);
 
@@ -695,6 +696,7 @@ public class IdentityPoolCredentialsTest {
     Map<String, Object> credentialSourceMap = new HashMap<>();
     Map<String, String> headers = new HashMap<>();
     headers.put("Metadata-Flavor", "Google");
+    headers.put("Authorization", "Bearer token");
     credentialSourceMap.put("url", url);
     credentialSourceMap.put("headers", headers);
     credentialSourceMap.put("format", formatMap);

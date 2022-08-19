@@ -51,7 +51,9 @@ import java.nio.file.LinkOption;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -230,7 +232,10 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
     if (identityPoolCredentialSource.hasHeaders()) {
       HttpHeaders headers = new HttpHeaders();
-      headers.putAll(identityPoolCredentialSource.headers);
+      for (Map.Entry<String, String> entry : identityPoolCredentialSource.headers.entrySet()) {
+        // HttpHeaders expects List<String> instead of String.
+        headers.put(entry.getKey(), Collections.singletonList(entry.getValue()));
+      }
       request.setHeaders(headers);
     }
 
