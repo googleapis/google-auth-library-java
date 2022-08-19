@@ -44,10 +44,7 @@ import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
-<<<<<<< HEAD
 import com.google.auth.oauth2.TokenVerifier.VerificationException;
-=======
->>>>>>> origin/main
 import com.google.common.io.CharStreams;
 import java.io.IOException;
 import java.io.InputStream;
@@ -175,8 +172,7 @@ public class TokenVerifierTest {
           public HttpTransport create() {
             return new MockHttpTransport() {
               @Override
-              public LowLevelHttpRequest buildRequest(String method, String url)
-                  throws IOException {
+              public LowLevelHttpRequest buildRequest(String method, String url) {
                 return new MockLowLevelHttpRequest() {
                   @Override
                   public LowLevelHttpResponse execute() throws IOException {
@@ -205,7 +201,7 @@ public class TokenVerifierTest {
   }
 
   @Test
-  public void verifyPublicKeyStoreIntermittentError() throws VerificationException {
+  public void verifyPublicKeyStoreIntermittentError() throws VerificationException, IOException {
     // mock responses
     MockLowLevelHttpResponse response404 =
         new MockLowLevelHttpResponse()
@@ -228,7 +224,7 @@ public class TokenVerifierTest {
     // Mock HTTP requests
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
 
-    transportFactory.transport.addResponseSequence(response404, responseEmpty, responseGood);
+    transportFactory.transport.addResponseSequence(response404, response404, response404, responseEmpty, responseGood);
 
     TokenVerifier tokenVerifier =
         TokenVerifier.newBuilder()
