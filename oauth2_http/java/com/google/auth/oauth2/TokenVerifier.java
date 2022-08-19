@@ -338,6 +338,7 @@ public class TokenVerifier {
       request.setUnsuccessfulResponseHandler(
           new HttpBackOffUnsuccessfulResponseHandler(backoff)
               .setBackOffRequired(BackOffRequired.ALWAYS));
+
       HttpResponse response = request.execute();
       jwks = response.parseAs(JsonWebKeySet.class);
 
