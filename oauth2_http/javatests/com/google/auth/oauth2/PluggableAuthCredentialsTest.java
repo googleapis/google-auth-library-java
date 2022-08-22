@@ -42,6 +42,7 @@ import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.ExecutableHandler.ExecutableOptions;
 import com.google.auth.oauth2.ExternalAccountCredentials.CredentialSource;
+import com.google.auth.oauth2.ExternalAccountCredentials.ServiceAccountImpersonationOptions;
 import com.google.auth.oauth2.PluggableAuthCredentials.PluggableAuthCredentialSource;
 import java.io.IOException;
 import java.io.InputStream;
@@ -229,6 +230,41 @@ public class PluggableAuthCredentialsTest {
     Map<String, String> query =
         TestUtils.parseQuery(transportFactory.transport.getRequests().get(0).getContentAsString());
     assertEquals(query.get("subject_token"), "pluggableAuthToken");
+  }
+
+  @Test
+  public void refreshAccessToken_withServiceAccountImpersonationOptions() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
+
+    PluggableAuthCredentials credential =
+        (PluggableAuthCredentials)
+            PluggableAuthCredentials.newBuilder(CREDENTIAL)
+                .setExecutableHandler(options -> "pluggableAuthToken")
+                .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setServiceAccountImpersonationUrl(
+                    transportFactory.transport.getServiceAccountImpersonationUrl())
+                .setHttpTransportFactory(transportFactory)
+                .setServiceAccountImpersonationOptions(
+                    new ServiceAccountImpersonationOptions(
+                        ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(
+                            2800)))
+                .build();
+
+    AccessToken accessToken = credential.refreshAccessToken();
+
+    assertEquals(
+        transportFactory.transport.getServiceAccountAccessToken(), accessToken.getTokenValue());
+
+    // Validate that default lifetime was set correctly on the request.
+    GenericJson query =
+        OAuth2Utils.JSON_FACTORY
+            .createJsonParser(transportFactory.transport.getLastRequest().getContentAsString())
+            .parseAndClose(GenericJson.class);
+
+    assertEquals("2800s", query.get("lifetime"));
   }
 
   @Test

@@ -82,7 +82,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
    * <p>If token_lifetime_seconds is not specified, the library will default to a 1-hour lifetime.
    *
    * <pre>
-   * Sample credential source for Pluggable Auth credentials:
+   * Sample configuration:
    * {
    *   ...
    *   "service_account_impersonation": {
@@ -92,29 +92,30 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
    * </pre>
    */
   static class ServiceAccountImpersonationOptions {
+    private static final int DEFAULT_TOKEN_LIFETIME_SECONDS = 3600;
+    private static final String TOKEN_LIFETIME_SECONDS_KEY = "token_lifetime_seconds";
+
     public final int lifetime;
 
-    ServiceAccountImpersonationOptions(Map<String, Object> serviceAccountImpersonationOptionsMap) {
-      if (serviceAccountImpersonationOptionsMap.containsKey(TOKEN_LIFETIME_SECONDS_KEY)) {
-        Object timeout = serviceAccountImpersonationOptionsMap.get(TOKEN_LIFETIME_SECONDS_KEY);
-        if (timeout instanceof BigDecimal) {
-          lifetime = ((BigDecimal) timeout).intValue();
-        } else if (serviceAccountImpersonationOptionsMap.get(TOKEN_LIFETIME_SECONDS_KEY)
-            instanceof Integer) {
-          lifetime = (int) timeout;
-        } else {
-          lifetime = Integer.parseInt((String) timeout);
-        }
-      } else {
+    ServiceAccountImpersonationOptions(Map<String, Object> optionsMap) {
+      if (!optionsMap.containsKey(TOKEN_LIFETIME_SECONDS_KEY)) {
         lifetime = DEFAULT_TOKEN_LIFETIME_SECONDS;
+        return;
+      }
+
+      Object timeout = optionsMap.get(TOKEN_LIFETIME_SECONDS_KEY);
+      if (timeout instanceof BigDecimal) {
+        lifetime = ((BigDecimal) timeout).intValue();
+      } else if (optionsMap.get(TOKEN_LIFETIME_SECONDS_KEY) instanceof Integer) {
+        lifetime = (int) timeout;
+      } else {
+        lifetime = Integer.parseInt((String) timeout);
       }
     }
   }
 
   private static final String CLOUD_PLATFORM_SCOPE =
       "https://www.googleapis.com/auth/cloud-platform";
-  private static final int DEFAULT_TOKEN_LIFETIME_SECONDS = 3600;
-  private static final String TOKEN_LIFETIME_SECONDS_KEY = "token_lifetime_seconds";
 
   static final String EXTERNAL_ACCOUNT_FILE_TYPE = "external_account";
   static final String EXECUTABLE_SOURCE_KEY = "executable";
@@ -193,8 +194,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
         clientId,
         clientSecret,
         scopes,
-        /* environmentProvider= */ null,
-        /* serviceAccountImpersonationOptions= */ null);
+        /* environmentProvider= */ null);
   }
 
   /**
@@ -217,44 +217,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       @Nullable String clientSecret,
       @Nullable Collection<String> scopes,
       @Nullable EnvironmentProvider environmentProvider) {
-    this(
-        transportFactory,
-        audience,
-        subjectTokenType,
-        tokenUrl,
-        credentialSource,
-        tokenInfoUrl,
-        serviceAccountImpersonationUrl,
-        quotaProjectId,
-        clientId,
-        clientSecret,
-        scopes,
-        environmentProvider,
-        /* serviceAccountImpersonationOptions= */ null);
-  }
-
-  /**
-   * See {@link ExternalAccountCredentials#ExternalAccountCredentials(HttpTransportFactory, String,
-   * String, String, CredentialSource, String, String, String, String, String, Collection,
-   * EnvironmentProvider)}
-   *
-   * @param serviceAccountImpersonationOptions additional options for service account impersonation,
-   *     may be null.
-   */
-  protected ExternalAccountCredentials(
-      HttpTransportFactory transportFactory,
-      String audience,
-      String subjectTokenType,
-      String tokenUrl,
-      CredentialSource credentialSource,
-      @Nullable String tokenInfoUrl,
-      @Nullable String serviceAccountImpersonationUrl,
-      @Nullable String quotaProjectId,
-      @Nullable String clientId,
-      @Nullable String clientSecret,
-      @Nullable Collection<String> scopes,
-      @Nullable EnvironmentProvider environmentProvider,
-      @Nullable ServiceAccountImpersonationOptions serviceAccountImpersonationOptions) {
     this.transportFactory =
         MoreObjects.firstNonNull(
             transportFactory,
@@ -266,10 +228,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     this.credentialSource = checkNotNull(credentialSource);
     this.tokenInfoUrl = tokenInfoUrl;
     this.serviceAccountImpersonationUrl = serviceAccountImpersonationUrl;
-    this.serviceAccountImpersonationOptions =
-        serviceAccountImpersonationOptions == null
-            ? new ServiceAccountImpersonationOptions(new HashMap<String, Object>())
-            : serviceAccountImpersonationOptions;
     this.quotaProjectId = quotaProjectId;
     this.clientId = clientId;
     this.clientSecret = clientSecret;
@@ -278,6 +236,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     this.environmentProvider =
         environmentProvider == null ? SystemEnvironmentProvider.getInstance() : environmentProvider;
     this.workforcePoolUserProject = null;
+    this.serviceAccountImpersonationOptions =
+        new ServiceAccountImpersonationOptions(new HashMap<String, Object>());
 
     validateTokenUrl(tokenUrl);
     if (serviceAccountImpersonationUrl != null) {
@@ -844,6 +804,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       return this;
     }
 
+    /** Sets the optional service account impersonation options. */
     Builder setServiceAccountImpersonationOptions(
         ServiceAccountImpersonationOptions serviceAccountImpersonationOptions) {
       this.serviceAccountImpersonationOptions = serviceAccountImpersonationOptions;

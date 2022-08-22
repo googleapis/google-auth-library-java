@@ -175,7 +175,7 @@ public final class ITWorkloadIdentityFederationTest {
    * for token_lifetime_seconds and validates that the lifetime is used for the access token.
    */
   @Test
-  public void IdentityPoolCredentialsWithServiceAccountImpersonationOptions() throws IOException {
+  public void identityPoolCredentials_withServiceAccountImpersonationOptions() throws IOException {
     GenericJson identityPoolCredentialConfig = buildIdentityPoolCredentialConfig();
     Map<String, Object> map = new HashMap<String, Object>();
     map.put("token_lifetime_seconds", 2800);

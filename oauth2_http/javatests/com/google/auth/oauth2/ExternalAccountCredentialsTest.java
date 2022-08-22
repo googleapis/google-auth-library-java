@@ -957,7 +957,7 @@ public class ExternalAccountCredentialsTest {
     return json;
   }
 
-  private Map<String, Object> buildServiceAccountImpersonationOptions(Integer lifetime) {
+  static Map<String, Object> buildServiceAccountImpersonationOptions(Integer lifetime) {
     Map<String, Object> map = new HashMap<String, Object>();
     map.put("token_lifetime_seconds", lifetime);
 

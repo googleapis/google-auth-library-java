@@ -42,6 +42,7 @@ import com.google.api.client.json.JsonParser;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.auth.TestUtils;
 import com.google.auth.oauth2.AwsCredentials.AwsCredentialSource;
+import com.google.auth.oauth2.ExternalAccountCredentials.ServiceAccountImpersonationOptions;
 import com.google.auth.oauth2.ExternalAccountCredentialsTest.MockExternalAccountCredentialsTransportFactory;
 import java.io.IOException;
 import java.io.InputStream;
@@ -140,6 +141,41 @@ public class AwsCredentialsTest {
 
     assertEquals(
         transportFactory.transport.getServiceAccountAccessToken(), accessToken.getTokenValue());
+  }
+
+  @Test
+  public void refreshAccessToken_withServiceAccountImpersonationOptions() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
+
+    AwsCredentials awsCredential =
+        (AwsCredentials)
+            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+                .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setServiceAccountImpersonationUrl(
+                    transportFactory.transport.getServiceAccountImpersonationUrl())
+                .setHttpTransportFactory(transportFactory)
+                .setCredentialSource(buildAwsCredentialSource(transportFactory))
+                .setServiceAccountImpersonationOptions(
+                    new ServiceAccountImpersonationOptions(
+                        ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(
+                            2800)))
+                .build();
+
+    AccessToken accessToken = awsCredential.refreshAccessToken();
+
+    assertEquals(
+        transportFactory.transport.getServiceAccountAccessToken(), accessToken.getTokenValue());
+
+    // Validate that default lifetime was set correctly on the request.
+    GenericJson query =
+        OAuth2Utils.JSON_FACTORY
+            .createJsonParser(transportFactory.transport.getLastRequest().getContentAsString())
+            .parseAndClose(GenericJson.class);
+
+    assertEquals("2800s", query.get("lifetime"));
   }
 
   @Test
