@@ -91,7 +91,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
    * }
    * </pre>
    */
-  static final class ServiceAccountImpersonationOptions {
+  public static final class ServiceAccountImpersonationOptions {
     private static final int DEFAULT_TOKEN_LIFETIME_SECONDS = 3600;
     private static final String TOKEN_LIFETIME_SECONDS_KEY = "token_lifetime_seconds";
 
