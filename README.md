@@ -469,9 +469,9 @@ You can now [use the Auth library](#using-external-identities) to call Google Cl
 resources from an OIDC or SAML provider.
 
 #### Configurable Token Lifetime
-When creating a credential configuration with workload identity federation using service account impersonation, you can provide an optional argument to configure the access token lifetime.
+When creating a credential configuration with workload identity federation using service account impersonation, you can provide an optional argument to configure the service account access token lifetime.
 
-To generate the configuration with configurable token lifetime, run the following command (This example uses an AWS configuration, but the token lifetime can be configured for all workload identity federation providers):
+To generate the configuration with configurable token lifetime, run the following command (this example uses an AWS configuration, but the token lifetime can be configured for all workload identity federation providers):
   ```bash
   # Generate an AWS configuration file with configurable token lifetime.
   gcloud iam workload-identity-pools create-cred-config \
@@ -492,9 +492,8 @@ Where the following variables need to be substituted:
 The `service-account-token-lifetime-seconds` flag is optional. If not provided, this defaults to one hour.
 The minimum allowed value is 600 (10 minutes) and the maximum allowed value is 43200 (12 hours).
 If a lifetime greater than one hour is required, the service account must be added as an allowed value in an Organization Policy that enforces the `constraints/iam.allowServiceAccountCredentialLifetimeExtension` constraint.
+
 Note that configuring a short lifetime (e.g. 10 minutes) will result in the library initiating the entire token exchange flow every 10 minutes, which will call the 3rd party token provider even if the 3rd party token is not expired.
-
-
 
 ###  Workforce Identity Federation
 

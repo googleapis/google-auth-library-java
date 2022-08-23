@@ -91,11 +91,11 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
    * }
    * </pre>
    */
-  static class ServiceAccountImpersonationOptions {
+  static final class ServiceAccountImpersonationOptions {
     private static final int DEFAULT_TOKEN_LIFETIME_SECONDS = 3600;
     private static final String TOKEN_LIFETIME_SECONDS_KEY = "token_lifetime_seconds";
 
-    public final int lifetime;
+    private final int lifetime;
 
     ServiceAccountImpersonationOptions(Map<String, Object> optionsMap) {
       if (!optionsMap.containsKey(TOKEN_LIFETIME_SECONDS_KEY)) {
@@ -111,6 +111,10 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       } else {
         lifetime = Integer.parseInt((String) timeout);
       }
+    }
+
+    int getLifetime() {
+      return lifetime;
     }
   }
 
@@ -799,15 +803,15 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       return this;
     }
 
-    Builder setEnvironmentProvider(EnvironmentProvider environmentProvider) {
-      this.environmentProvider = environmentProvider;
+    /** Sets the optional service account impersonation options. */
+    public Builder setServiceAccountImpersonationOptions(
+        ServiceAccountImpersonationOptions serviceAccountImpersonationOptions) {
+      this.serviceAccountImpersonationOptions = serviceAccountImpersonationOptions;
       return this;
     }
 
-    /** Sets the optional service account impersonation options. */
-    Builder setServiceAccountImpersonationOptions(
-        ServiceAccountImpersonationOptions serviceAccountImpersonationOptions) {
-      this.serviceAccountImpersonationOptions = serviceAccountImpersonationOptions;
+    Builder setEnvironmentProvider(EnvironmentProvider environmentProvider) {
+      this.environmentProvider = environmentProvider;
       return this;
     }
 

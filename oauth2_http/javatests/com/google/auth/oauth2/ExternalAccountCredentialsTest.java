@@ -220,7 +220,7 @@ public class ExternalAccountCredentialsTest {
     assertEquals(STS_URL, credential.getTokenUrl());
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
     assertNotNull(credential.getCredentialSource());
-    assertEquals(2800, credential.getServiceAccountImpersonationOptions().lifetime);
+    assertEquals(2800, credential.getServiceAccountImpersonationOptions().getLifetime());
   }
 
   @Test
@@ -252,7 +252,7 @@ public class ExternalAccountCredentialsTest {
     assertEquals(STS_URL, credential.getTokenUrl());
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
     assertNotNull(credential.getCredentialSource());
-    assertEquals(2800, credential.getServiceAccountImpersonationOptions().lifetime);
+    assertEquals(2800, credential.getServiceAccountImpersonationOptions().getLifetime());
   }
 
   @Test
@@ -342,7 +342,7 @@ public class ExternalAccountCredentialsTest {
     assertEquals(STS_URL, credential.getTokenUrl());
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
     assertNotNull(credential.getCredentialSource());
-    assertEquals(2800, credential.getServiceAccountImpersonationOptions().lifetime);
+    assertEquals(2800, credential.getServiceAccountImpersonationOptions().getLifetime());
 
     PluggableAuthCredentialSource source =
         (PluggableAuthCredentialSource) credential.getCredentialSource();
