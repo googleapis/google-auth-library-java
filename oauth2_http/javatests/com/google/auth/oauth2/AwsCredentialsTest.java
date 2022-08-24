@@ -42,7 +42,6 @@ import com.google.api.client.json.JsonParser;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.auth.TestUtils;
 import com.google.auth.oauth2.AwsCredentials.AwsCredentialSource;
-import com.google.auth.oauth2.ExternalAccountCredentials.ServiceAccountImpersonationOptions;
 import com.google.auth.oauth2.ExternalAccountCredentialsTest.MockExternalAccountCredentialsTransportFactory;
 import java.io.IOException;
 import java.io.InputStream;
@@ -159,9 +158,7 @@ public class AwsCredentialsTest {
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .setServiceAccountImpersonationOptions(
-                    new ServiceAccountImpersonationOptions(
-                        ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(
-                            2800)))
+                    ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(2800))
                 .build();
 
     AccessToken accessToken = awsCredential.refreshAccessToken();

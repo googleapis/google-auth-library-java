@@ -42,7 +42,6 @@ import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.ExecutableHandler.ExecutableOptions;
 import com.google.auth.oauth2.ExternalAccountCredentials.CredentialSource;
-import com.google.auth.oauth2.ExternalAccountCredentials.ServiceAccountImpersonationOptions;
 import com.google.auth.oauth2.PluggableAuthCredentials.PluggableAuthCredentialSource;
 import java.io.IOException;
 import java.io.InputStream;
@@ -248,9 +247,7 @@ public class PluggableAuthCredentialsTest {
                     transportFactory.transport.getServiceAccountImpersonationUrl())
                 .setHttpTransportFactory(transportFactory)
                 .setServiceAccountImpersonationOptions(
-                    new ServiceAccountImpersonationOptions(
-                        ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(
-                            2800)))
+                    ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(2800))
                 .build();
 
     AccessToken accessToken = credential.refreshAccessToken();

@@ -42,7 +42,6 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
-import com.google.auth.oauth2.ExternalAccountCredentials.ServiceAccountImpersonationOptions;
 import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSource;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -403,9 +402,7 @@ public class IdentityPoolCredentialsTest {
                 .setCredentialSource(
                     buildUrlBasedCredentialSource(transportFactory.transport.getMetadataUrl()))
                 .setServiceAccountImpersonationOptions(
-                    new ServiceAccountImpersonationOptions(
-                        ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(
-                            2800)))
+                    ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(2800))
                 .build();
 
     AccessToken accessToken = credential.refreshAccessToken();
@@ -478,9 +475,7 @@ public class IdentityPoolCredentialsTest {
                     buildUrlBasedCredentialSource(transportFactory.transport.getMetadataUrl()))
                 .setWorkforcePoolUserProject("userProject")
                 .setServiceAccountImpersonationOptions(
-                    new ServiceAccountImpersonationOptions(
-                        ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(
-                            2800)))
+                    ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(2800))
                 .build();
 
     AccessToken accessToken = credential.refreshAccessToken();

@@ -75,49 +75,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     }
   }
 
-  /**
-   * Encapsulates the service account impersonation options portion of the configuration for
-   * ExternalAccountCredentials.
-   *
-   * <p>If token_lifetime_seconds is not specified, the library will default to a 1-hour lifetime.
-   *
-   * <pre>
-   * Sample configuration:
-   * {
-   *   ...
-   *   "service_account_impersonation": {
-   *     "token_lifetime_seconds": 2800
-   *    }
-   * }
-   * </pre>
-   */
-  public static final class ServiceAccountImpersonationOptions {
-    private static final int DEFAULT_TOKEN_LIFETIME_SECONDS = 3600;
-    private static final String TOKEN_LIFETIME_SECONDS_KEY = "token_lifetime_seconds";
-
-    private final int lifetime;
-
-    ServiceAccountImpersonationOptions(Map<String, Object> optionsMap) {
-      if (!optionsMap.containsKey(TOKEN_LIFETIME_SECONDS_KEY)) {
-        lifetime = DEFAULT_TOKEN_LIFETIME_SECONDS;
-        return;
-      }
-
-      Object timeout = optionsMap.get(TOKEN_LIFETIME_SECONDS_KEY);
-      if (timeout instanceof BigDecimal) {
-        lifetime = ((BigDecimal) timeout).intValue();
-      } else if (optionsMap.get(TOKEN_LIFETIME_SECONDS_KEY) instanceof Integer) {
-        lifetime = (int) timeout;
-      } else {
-        lifetime = Integer.parseInt((String) timeout);
-      }
-    }
-
-    int getLifetime() {
-      return lifetime;
-    }
-  }
-
   private static final String CLOUD_PLATFORM_SCOPE =
       "https://www.googleapis.com/auth/cloud-platform";
 
@@ -430,10 +387,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     Map<String, Object> impersonationOptionsMap =
         (Map<String, Object>) json.get("service_account_impersonation");
 
-    ServiceAccountImpersonationOptions serviceAccountImpersonationOptions = null;
-    if (impersonationOptionsMap != null) {
-      serviceAccountImpersonationOptions =
-          new ServiceAccountImpersonationOptions(impersonationOptionsMap);
+    if (impersonationOptionsMap == null) {
+      impersonationOptionsMap = new HashMap<String, Object>();
     }
 
     if (isAwsCredential(credentialSourceMap)) {
@@ -448,7 +403,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
           .setQuotaProjectId(quotaProjectId)
           .setClientId(clientId)
           .setClientSecret(clientSecret)
-          .setServiceAccountImpersonationOptions(serviceAccountImpersonationOptions)
+          .setServiceAccountImpersonationOptions(impersonationOptionsMap)
           .build();
     } else if (isPluggableAuthCredential(credentialSourceMap)) {
       return PluggableAuthCredentials.newBuilder()
@@ -463,7 +418,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
           .setClientId(clientId)
           .setClientSecret(clientSecret)
           .setWorkforcePoolUserProject(userProject)
-          .setServiceAccountImpersonationOptions(serviceAccountImpersonationOptions)
+          .setServiceAccountImpersonationOptions(impersonationOptionsMap)
           .build();
     }
     return IdentityPoolCredentials.newBuilder()
@@ -478,7 +433,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
         .setClientId(clientId)
         .setClientSecret(clientSecret)
         .setWorkforcePoolUserProject(userProject)
-        .setServiceAccountImpersonationOptions(serviceAccountImpersonationOptions)
+        .setServiceAccountImpersonationOptions(impersonationOptionsMap)
         .build();
   }
 
@@ -676,6 +631,54 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     return false;
   }
 
+  /**
+   * Encapsulates the service account impersonation options portion of the configuration for
+   * ExternalAccountCredentials.
+   *
+   * <p>If token_lifetime_seconds is not specified, the library will default to a 1-hour lifetime.
+   *
+   * <pre>
+   * Sample configuration:
+   * {
+   *   ...
+   *   "service_account_impersonation": {
+   *     "token_lifetime_seconds": 2800
+   *    }
+   * }
+   * </pre>
+   */
+  static final class ServiceAccountImpersonationOptions {
+    private static final int DEFAULT_TOKEN_LIFETIME_SECONDS = 3600;
+    private static final String TOKEN_LIFETIME_SECONDS_KEY = "token_lifetime_seconds";
+
+    private final int lifetime;
+
+    ServiceAccountImpersonationOptions(Map<String, Object> optionsMap) {
+      if (!optionsMap.containsKey(TOKEN_LIFETIME_SECONDS_KEY)) {
+        lifetime = DEFAULT_TOKEN_LIFETIME_SECONDS;
+        return;
+      }
+
+      try {
+        Object lifetimeValue = optionsMap.get(TOKEN_LIFETIME_SECONDS_KEY);
+        if (lifetimeValue instanceof BigDecimal) {
+          lifetime = ((BigDecimal) lifetimeValue).intValue();
+        } else if (optionsMap.get(TOKEN_LIFETIME_SECONDS_KEY) instanceof Integer) {
+          lifetime = (int) lifetimeValue;
+        } else {
+          lifetime = Integer.parseInt((String) lifetimeValue);
+        }
+      } catch (NumberFormatException | ArithmeticException e) {
+        throw new IllegalArgumentException(
+            "Value of \"token_lifetime_seconds\" field could not be parsed into an integer.", e);
+      }
+    }
+
+    int getLifetime() {
+      return lifetime;
+    }
+  }
+
   /** Base builder for external account credentials. */
   public abstract static class Builder extends GoogleCredentials.Builder {
 
@@ -804,9 +807,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     }
 
     /** Sets the optional service account impersonation options. */
-    public Builder setServiceAccountImpersonationOptions(
-        ServiceAccountImpersonationOptions serviceAccountImpersonationOptions) {
-      this.serviceAccountImpersonationOptions = serviceAccountImpersonationOptions;
+    public Builder setServiceAccountImpersonationOptions(Map<String, Object> optionsMap) {
+      this.serviceAccountImpersonationOptions = new ServiceAccountImpersonationOptions(optionsMap);
       return this;
     }
 
