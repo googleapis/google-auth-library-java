@@ -44,6 +44,7 @@ import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
+import com.google.auth.oauth2.TokenVerifier.VerificationException;
 import com.google.common.io.CharStreams;
 import java.io.IOException;
 import java.io.InputStream;
@@ -66,9 +67,9 @@ public class TokenVerifierTest {
       "https://www.googleapis.com/oauth2/v1/certs";
 
   private static final String SERVICE_ACCOUNT_RS256_TOKEN =
-      "eyJhbGciOiJSUzI1NiIsImtpZCI6IjJlZjc3YjM4YTFiMDM3MDQ4NzA0MzkxNmFjYmYyN2Q3NGVkZDA4YjEiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJodHRwczovL2V4YW1wbGUuY29tL2F1ZGllbmNlIiwiZXhwIjoxNTg3NjMwNTQzLCJpYXQiOjE1ODc2MjY5NDMsImlzcyI6InNvbWUgaXNzdWVyIiwic3ViIjoic29tZSBzdWJqZWN0In0.gGOQW0qQgs4jGUmCsgRV83RqsJLaEy89-ZOG6p1u0Y26FyY06b6Odgd7xXLsSTiiSnch62dl0Lfi9D0x2ByxvsGOCbovmBl2ZZ0zHr1wpc4N0XS9lMUq5RJQbonDibxXG4nC2zroDfvD0h7i-L8KMXeJb9pYwW7LkmrM_YwYfJnWnZ4bpcsDjojmPeUBlACg7tjjOgBFbyQZvUtaERJwSRlaWibvNjof7eCVfZChE0PwBpZc_cGqSqKXv544L4ttqdCnmONjqrTATXwC4gYxruevkjHfYI5ojcQmXoWDJJ0-_jzfyPE4MFFdCFgzLgnfIOwe5ve0MtquKuv2O0pgvg";
+      "eyJhbGciOiJSUzI1NiIsImtpZCI6IjE3MjdiNmI0OTQwMmI5Y2Y5NWJlNGU4ZmQzOGFhN2U3YzExNjQ0YjEiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJodHRwczovL2Nsb3VkdGFza3MuZ29vZ2xlYXBpcy5jb20vdjIvcHJvamVjdHMvZ2Nsb3VkLWRldmVsL2xvY2F0aW9ucyIsImF6cCI6InN0aW0tdGVzdEBzdGVsbGFyLWRheS0yNTQyMjIuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLCJlbWFpbCI6InN0aW0tdGVzdEBzdGVsbGFyLWRheS0yNTQyMjIuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiZXhwIjoxNjYwODgwNjczLCJpYXQiOjE2NjA4NzcwNzMsImlzcyI6Imh0dHBzOi8vYWNjb3VudHMuZ29vZ2xlLmNvbSIsInN1YiI6IjExMjgxMDY3Mjk2MzcyODM2NjQwNiJ9.Q2tG-hN6UHecbzaCIlg58K9msp58nLZWs03CBGO_D6F3cI4LKQEUzsbcztZqmNGWd0ld4zkrKzIP9cQosa_xold4hEzSX_ORRHYQLimLYaQmP3rKqWPMsbIupPdpnGqBDzAYjc7Pw9pQBzuZJj8e3FEG6a5tblDfMcgeklXZIkwzN7ypWCbFDoDP2STSYJYZ-LQIB0-Zlex7dm2KhyB8QSkMQK60YvpXz4L1OtwG7spk3yUCWxul6hYF76klST0iS6DH03YdaDpt4gRXkTUKyTRfB10h-WhCAKKRzmT6d_IT9ApIyqPhimkgkBHhLNyjK8lgAJdk9CLriSEOgVpsow";
   private static final String SERVICE_ACCOUNT_CERT_URL =
-      "https://www.googleapis.com/robot/v1/metadata/x509/integration-tests%40chingor-test.iam.gserviceaccount.com";
+      "https://www.googleapis.com/oauth2/v3/certs";
 
   private static final List<String> ALL_TOKENS =
       Arrays.asList(ES256_TOKEN, FEDERATED_SIGNON_RS256_TOKEN, SERVICE_ACCOUNT_RS256_TOKEN);
@@ -152,6 +153,7 @@ public class TokenVerifierTest {
             .setClock(FIXED_CLOCK)
             .setHttpTransportFactory(httpTransportFactory)
             .build();
+
     try {
       tokenVerifier.verify(ES256_TOKEN);
       fail("Should not be able to continue without exception.");
@@ -170,8 +172,7 @@ public class TokenVerifierTest {
           public HttpTransport create() {
             return new MockHttpTransport() {
               @Override
-              public LowLevelHttpRequest buildRequest(String method, String url)
-                  throws IOException {
+              public LowLevelHttpRequest buildRequest(String method, String url) {
                 return new MockLowLevelHttpRequest() {
                   @Override
                   public LowLevelHttpResponse execute() throws IOException {
@@ -200,8 +201,7 @@ public class TokenVerifierTest {
   }
 
   @Test
-  public void verifyPublicKeyStoreIntermittentError()
-      throws TokenVerifier.VerificationException, IOException {
+  public void verifyPublicKeyStoreIntermittentError() throws VerificationException, IOException {
     // mock responses
     MockLowLevelHttpResponse response404 =
         new MockLowLevelHttpResponse()
@@ -224,13 +224,15 @@ public class TokenVerifierTest {
     // Mock HTTP requests
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
 
-    transportFactory.transport.addResponseSequence(response404, responseEmpty, responseGood);
+    transportFactory.transport.addResponseSequence(
+        response404, response404, response404, responseEmpty, responseGood);
 
     TokenVerifier tokenVerifier =
         TokenVerifier.newBuilder()
             .setClock(FIXED_CLOCK)
             .setHttpTransportFactory(transportFactory)
             .build();
+
     try {
       tokenVerifier.verify(ES256_TOKEN);
       fail("Should not be able to continue without exception.");
@@ -249,7 +251,7 @@ public class TokenVerifierTest {
   }
 
   @Test
-  public void verifyEs256Token() throws TokenVerifier.VerificationException, IOException {
+  public void verifyEs256Token() throws VerificationException, IOException {
     HttpTransportFactory httpTransportFactory =
         mockTransport(
             "https://www.gstatic.com/iap/verify/public_key-jwk",
@@ -263,7 +265,7 @@ public class TokenVerifierTest {
   }
 
   @Test
-  public void verifyRs256Token() throws TokenVerifier.VerificationException, IOException {
+  public void verifyRs256Token() throws VerificationException, IOException {
     HttpTransportFactory httpTransportFactory =
         mockTransport(
             "https://www.googleapis.com/oauth2/v3/certs",
@@ -292,11 +294,17 @@ public class TokenVerifierTest {
   }
 
   @Test
-  public void verifyServiceAccountRs256Token()
-      throws TokenVerifier.VerificationException, IOException {
+  public void verifyServiceAccountRs256Token() throws TokenVerifier.VerificationException {
+    final Clock clock =
+        new Clock() {
+          @Override
+          public long currentTimeMillis() {
+            return 1660880573000L;
+          }
+        };
     TokenVerifier tokenVerifier =
         TokenVerifier.newBuilder()
-            .setClock(FIXED_CLOCK)
+            .setClock(clock)
             .setCertificatesLocation(SERVICE_ACCOUNT_CERT_URL)
             .build();
     assertNotNull(tokenVerifier.verify(SERVICE_ACCOUNT_RS256_TOKEN));
