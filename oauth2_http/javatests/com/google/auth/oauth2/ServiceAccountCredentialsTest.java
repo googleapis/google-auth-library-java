@@ -786,7 +786,8 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
       assertTrue(timeElapsed > 5500 && timeElapsed < 10000);
       assertTrue(ex.getMessage().contains("Error getting access token for service account: 503"));
       assertTrue(ex.isRetryable());
-      assertEquals(3, ex.getRetryCount());
+      // TODO: temporarily set to 0, revert after release
+      assertEquals(0, ex.getRetryCount());
     }
   }
 
