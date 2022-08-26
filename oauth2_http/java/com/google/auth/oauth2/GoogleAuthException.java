@@ -121,7 +121,8 @@ class GoogleAuthException extends IOException implements Retryable {
     int responseStatus = responseException.getStatusCode();
     boolean isRetryable =
         OAuth2Utils.TOKEN_ENDPOINT_RETRYABLE_STATUS_CODES.contains(responseStatus);
-    // TODO: temporarily setting to default to remove a direct dependency, to be reverted after release
+    // TODO: temporarily setting to default to remove a direct dependency, to be reverted after
+    // release
     int retryCount = ServiceAccountCredentials.DEFAULT_NUMBER_OF_RETRIES;
 
     if (message == null) {
@@ -145,8 +146,7 @@ class GoogleAuthException extends IOException implements Retryable {
   }
 
   /**
-   * Creates an instance of the exception based on {@link IOException} and a custom error
-   * message.
+   * Creates an instance of the exception based on {@link IOException} and a custom error message.
    *
    * @see #createWithTokenEndpointIOException(IOException)
    * @param ioException an instance of {@link IOException}
@@ -154,20 +154,24 @@ class GoogleAuthException extends IOException implements Retryable {
    *     #getMessage()} method)
    * @return new instance of {@link GoogleAuthException}
    */
-  static GoogleAuthException createWithTokenEndpointIOException(IOException ioException, String message) {
+  static GoogleAuthException createWithTokenEndpointIOException(
+      IOException ioException, String message) {
 
     if (message == null) {
-      // TODO: temporarily setting retry Count to service account default to remove a direct dependency,
+      // TODO: temporarily setting retry Count to service account default to remove a direct
+      // dependency,
       // to be reverted after release
-      return new GoogleAuthException(true, ServiceAccountCredentials.DEFAULT_NUMBER_OF_RETRIES, ioException);
+      return new GoogleAuthException(
+          true, ServiceAccountCredentials.DEFAULT_NUMBER_OF_RETRIES, ioException);
     } else {
-      return new GoogleAuthException(true, ServiceAccountCredentials.DEFAULT_NUMBER_OF_RETRIES, message, ioException);
+      return new GoogleAuthException(
+          true, ServiceAccountCredentials.DEFAULT_NUMBER_OF_RETRIES, message, ioException);
     }
   }
 
   /**
-   * Creates an instance of the exception based on {@link IOException} returned by Google
-   * token endpoint. It uses response status code information to populate the {@code #isRetryable}
+   * Creates an instance of the exception based on {@link IOException} returned by Google token
+   * endpoint. It uses response status code information to populate the {@code #isRetryable}
    * property and a number of performed attempts to populate the {@code #retryCount} property
    *
    * @see #createWithTokenEndpointIOException(IOException)

@@ -823,7 +823,9 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
       // we expect max retry time of 7 sec +/- jitter
       assertTrue(timeElapsed > 5500 && timeElapsed < 10000);
-      assertTrue(ex.getMessage().contains("Error getting access token for service account: Invalid grant"));
+      assertTrue(
+          ex.getMessage()
+              .contains("Error getting access token for service account: Invalid grant"));
       assertTrue(ex.isRetryable());
       assertEquals(3, ex.getRetryCount());
       assertTrue(ex.getCause() instanceof IOException);

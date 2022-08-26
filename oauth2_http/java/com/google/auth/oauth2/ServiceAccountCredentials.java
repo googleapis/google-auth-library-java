@@ -36,8 +36,6 @@ import static com.google.common.base.MoreObjects.firstNonNull;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpBackOffIOExceptionHandler;
 import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler;
-import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler.BackOffRequired;
-import com.google.api.client.http.HttpIOExceptionHandler;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
@@ -568,7 +566,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
       String message = String.format(errorTemplate, re.getMessage(), getIssuer());
       throw GoogleAuthException.createWithTokenEndpointResponseException(re, message);
     } catch (IOException e) {
-      throw GoogleAuthException.createWithTokenEndpointIOException(e, String.format(errorTemplate, e.getMessage(), getIssuer()));
+      throw GoogleAuthException.createWithTokenEndpointIOException(
+          e, String.format(errorTemplate, e.getMessage(), getIssuer()));
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
