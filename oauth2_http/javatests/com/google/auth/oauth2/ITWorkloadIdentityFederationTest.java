@@ -31,8 +31,8 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
@@ -51,8 +51,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import java.time.Instant;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Integration tests for Workload Identity Federation.
@@ -62,7 +63,7 @@ import org.junit.jupiter.api.Test;
  * (workloadidentityfederation-setup). These tests call GCS to get bucket information. The bucket
  * name must be provided through the GCS_BUCKET environment variable.
  */
-class ITWorkloadIdentityFederationTest {
+public final class ITWorkloadIdentityFederationTest {
 
   // Copy output from workloadidentityfederation-setup.
   private static final String AUDIENCE_PREFIX =
@@ -75,8 +76,8 @@ class ITWorkloadIdentityFederationTest {
 
   private String clientEmail;
 
-  @BeforeEach
-  void setup() throws IOException {
+  @Before
+  public void setup() throws IOException {
     GenericJson keys = getServiceAccountKeyFileAsJson();
     clientEmail = (String) keys.get("client_email");
   }
@@ -86,10 +87,10 @@ class ITWorkloadIdentityFederationTest {
    * using the iamcredentials generateIdToken API. This will use the service account client ID as
    * the sub field of the token. This OIDC token will be used as the external subject token to be
    * exchanged for a GCP access token via GCP STS endpoint and then to impersonate the original
-   * service account key.
+   * service account key. Retrieves the OIDC token from a file.
    */
   @Test
-  void identityPoolCredentials() throws IOException {
+  public void identityPoolCredentials() throws IOException {
     IdentityPoolCredentials identityPoolCredentials =
         (IdentityPoolCredentials)
             ExternalAccountCredentials.fromJson(
@@ -108,7 +109,7 @@ class ITWorkloadIdentityFederationTest {
    * service account key.
    */
   @Test
-  void awsCredentials() throws Exception {
+  public void awsCredentials() throws Exception {
     String idToken = generateGoogleIdToken(AWS_AUDIENCE);
 
     String url =
@@ -150,6 +151,23 @@ class ITWorkloadIdentityFederationTest {
     callGcs(awsCredential);
   }
 
+  /**
+   * PluggableCredential (OIDC provider): Uses the service account to generate a Google ID token
+   * using the iamcredentials generateIdToken API. This will use the service account client ID as
+   * the sub field of the token. This OIDC token will be used as the external subject token to be
+   * exchanged for a GCP access token via GCP STS endpoint and then to impersonate the original
+   * service account key. Runs an executable to get the OIDC token.
+   */
+  @Test
+  public void pluggableAuthCredentials() throws IOException {
+    PluggableAuthCredentials pluggableAuthCredentials =
+        (PluggableAuthCredentials)
+            ExternalAccountCredentials.fromJson(
+                buildPluggableCredentialConfig(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+
+    callGcs(pluggableAuthCredentials);
+  }
+
   private GenericJson buildIdentityPoolCredentialConfig() throws IOException {
     String idToken = generateGoogleIdToken(OIDC_AUDIENCE);
 
@@ -178,6 +196,57 @@ class ITWorkloadIdentityFederationTest {
     return config;
   }
 
+  private GenericJson buildPluggableCredentialConfig() throws IOException {
+    String idToken = generateGoogleIdToken(OIDC_AUDIENCE);
+
+    Instant expiration_time = Instant.now().plusSeconds(60 * 60);
+
+    GenericJson executableJson = new GenericJson();
+    executableJson.setFactory(OAuth2Utils.JSON_FACTORY);
+    executableJson.put("success", true);
+    executableJson.put("version", 1);
+    executableJson.put("expiration_time", expiration_time.toEpochMilli());
+    executableJson.put("token_type", "urn:ietf:params:oauth:token-type:jwt");
+    executableJson.put("id_token", idToken);
+
+    String fileContents =
+        "#!/bin/bash\n"
+            + "echo \""
+            + executableJson.toPrettyString().replace("\"", "\\\"")
+            + "\"\n";
+
+    File file =
+        File.createTempFile(
+            "ITWorkloadIdentityFederation", /* suffix= */ null, /* directory= */ null);
+    file.deleteOnExit();
+    if (!file.setExecutable(true, true)) {
+      throw new IOException("Unable to make script executable");
+    }
+    OAuth2Utils.writeInputStreamToFile(
+        new ByteArrayInputStream(fileContents.getBytes(StandardCharsets.UTF_8)),
+        file.getAbsolutePath());
+
+    GenericJson config = new GenericJson();
+    config.put("type", "external_account");
+    config.put("audience", OIDC_AUDIENCE);
+    config.put("subject_token_type", "urn:ietf:params:oauth:token-type:jwt");
+    config.put("token_url", "https://sts.googleapis.com/v1/token");
+    config.put(
+        "service_account_impersonation_url",
+        String.format(
+            "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken",
+            clientEmail));
+
+    GenericJson credentialSource = new GenericJson();
+    config.put("credential_source", credentialSource);
+
+    GenericJson executableConfig = new GenericJson();
+    credentialSource.put("executable", executableConfig);
+    executableConfig.put("command", file.getAbsolutePath());
+
+    return config;
+  }
+
   private GenericJson buildAwsCredentialConfig() {
     GenericJson config = new GenericJson();
     config.put("type", "external_account");
@@ -202,7 +271,9 @@ class ITWorkloadIdentityFederationTest {
 
   private void callGcs(GoogleCredentials credentials) throws IOException {
     String bucketName = System.getenv("GCS_BUCKET");
-    assertNotNull(bucketName, "GCS bucket name not set through GCS_BUCKET env variable.");
+    if (bucketName == null) {
+      fail("GCS bucket name not set through GCS_BUCKET env variable.");
+    }
 
     String url = "https://storage.googleapis.com/storage/v1/b/" + bucketName;
 
