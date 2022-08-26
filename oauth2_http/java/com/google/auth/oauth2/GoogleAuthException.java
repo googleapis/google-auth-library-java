@@ -121,13 +121,35 @@ class GoogleAuthException extends IOException implements Retryable {
     int responseStatus = responseException.getStatusCode();
     boolean isRetryable =
         OAuth2Utils.TOKEN_ENDPOINT_RETRYABLE_STATUS_CODES.contains(responseStatus);
-    // TODO: temporarily setting to 0 to remove a direct dependency, to be reverted after release
-    int retryCount = 0;
+    // TODO: temporarily setting to default to remove a direct dependency, to be reverted after release
+    int retryCount = ServiceAccountCredentials.DEFAULT_NUMBER_OF_RETRIES;
 
     if (message == null) {
       return new GoogleAuthException(isRetryable, retryCount, responseException);
     } else {
       return new GoogleAuthException(isRetryable, retryCount, message, responseException);
+    }
+  }
+
+  /**
+   * Creates an instance of the exception based on {@link IOException} and a custom error
+   * message.
+   *
+   * @see #createWithTokenEndpointIOException(IOException, String)
+   * @param ioException an instance of {@link IOException}
+   * @param message The detail message (which is saved for later retrieval by the {@link
+   *     #getMessage()} method)
+   * @return new instance of {@link GoogleAuthException}
+   */
+  static GoogleAuthException createWithTokenEndpointIOException(
+      IOException ioException, String message) {
+
+    if (message == null) {
+      // TODO: temporarily setting retry Count to service account default to remove a direct dependency,
+      // to be reverted after release
+      return new GoogleAuthException(true, ServiceAccountCredentials.DEFAULT_NUMBER_OF_RETRIES, ioException);
+    } else {
+      return new GoogleAuthException(true, ServiceAccountCredentials.DEFAULT_NUMBER_OF_RETRIES, message, ioException);
     }
   }
 

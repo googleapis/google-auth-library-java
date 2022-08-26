@@ -41,6 +41,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
@@ -752,7 +753,6 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void refreshAccessToken_maxRetries_maxDelay() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
-    final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
     ServiceAccountCredentials credentials =
@@ -786,8 +786,47 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
       assertTrue(timeElapsed > 5500 && timeElapsed < 10000);
       assertTrue(ex.getMessage().contains("Error getting access token for service account: 503"));
       assertTrue(ex.isRetryable());
-      // TODO: temporarily set to 0, revert after release
-      assertEquals(0, ex.getRetryCount());
+      assertEquals(3, ex.getRetryCount());
+      assertTrue(ex.getCause() instanceof HttpResponseException);
+    }
+  }
+
+  @Test
+  public void refreshAccessToken_RequestFailure_retried() throws IOException {
+    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    MockTokenServerTransport transport = transportFactory.transport;
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.fromPkcs8(
+            CLIENT_ID,
+            CLIENT_EMAIL,
+            PRIVATE_KEY_PKCS8,
+            PRIVATE_KEY_ID,
+            SCOPES,
+            transportFactory,
+            null);
+
+    transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
+
+    transport.setExecuteError(new IOException("Invalid grant: Account not found"));
+    MockLowLevelHttpResponse response503 = new MockLowLevelHttpResponse().setStatusCode(503);
+
+    Instant start = Instant.now();
+    try {
+      transport.addResponseSequence(response503);
+      credentials.refresh();
+      fail("Should not be able to use credential without exception.");
+    } catch (GoogleAuthException ex) {
+      Instant finish = Instant.now();
+      long timeElapsed = Duration.between(start, finish).toMillis();
+
+      // we expect max retry time of 7 sec +/- jitter
+      assertTrue(timeElapsed > 5500 && timeElapsed < 10000);
+      assertTrue(ex.getMessage().contains("Error getting access token for service account: Invalid grant"));
+      assertTrue(ex.isRetryable());
+      assertEquals(3, ex.getRetryCount());
+      assertTrue(ex.getCause() instanceof IOException);
     }
   }
 
