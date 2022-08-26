@@ -40,6 +40,7 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSource.CredentialFormatType;
 import com.google.common.io.CharStreams;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -52,8 +53,10 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -71,7 +74,8 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
     enum IdentityPoolCredentialSourceType {
       FILE,
-      URL
+      URL,
+      TEXT
     }
 
     enum CredentialFormatType {
@@ -105,12 +109,16 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
     IdentityPoolCredentialSource(Map<String, Object> credentialSourceMap) {
       super(credentialSourceMap);
 
-      if (credentialSourceMap.containsKey("file") && credentialSourceMap.containsKey("url")) {
-        throw new IllegalArgumentException(
-            "Only one credential source type can be set, either file or url.");
+      Set<String> definedCredentialSourceKeys = new HashSet<>(Set.of("text", "file", "url"));
+      definedCredentialSourceKeys.removeAll(credentialSourceMap.keySet()); // only one should be removed
+      if (definedCredentialSourceKeys.size() != 2) {
+        throw new IllegalArgumentException("Only one credential source type can be set, either text, file or url.");
       }
 
-      if (credentialSourceMap.containsKey("file")) {
+      if (credentialSourceMap.containsKey("text")) {
+        credentialLocation = (String) credentialSourceMap.get("text");
+        credentialSourceType = IdentityPoolCredentialSourceType.TEXT;
+      } else if (credentialSourceMap.containsKey("file")) {
         credentialLocation = (String) credentialSourceMap.get("file");
         credentialSourceType = IdentityPoolCredentialSourceType.FILE;
       } else if (credentialSourceMap.containsKey("url")) {
@@ -181,6 +189,12 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   @Override
   public String retrieveSubjectToken() throws IOException {
+    if (identityPoolCredentialSource.credentialSourceType
+        == IdentityPoolCredentialSource.IdentityPoolCredentialSourceType.TEXT) {
+      return parseToken(
+        new ByteArrayInputStream(identityPoolCredentialSource.credentialLocation.getBytes())
+      );
+    }
     if (identityPoolCredentialSource.credentialSourceType
         == IdentityPoolCredentialSource.IdentityPoolCredentialSourceType.FILE) {
       return retrieveSubjectTokenFromCredentialFile();
