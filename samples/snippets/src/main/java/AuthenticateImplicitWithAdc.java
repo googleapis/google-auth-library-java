@@ -47,11 +47,7 @@ public class AuthenticateImplicitWithAdc {
     //
     // Initialize client that will be used to send requests. This client only needs to be created
     // once, and can be reused for multiple requests.
-    Storage storage =
-        StorageOptions.newBuilder()
-            .setProjectId(project)
-            .build()
-            .getService();
+    Storage storage = StorageOptions.newBuilder().setProjectId(project).build().getService();
 
     System.out.println("Buckets:");
     Page<Bucket> buckets = storage.list();
