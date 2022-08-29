@@ -637,8 +637,8 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(3600 * 1000 * 1000L, accessToken.getExpirationTimeMillis().longValue());
   }
 
-  @Test(expected = IOException.class)
-  public void refreshAccessToken_IOException_NoRetry() throws IOException {
+  @Test
+  public void refreshAccessToken_IOException_Retry() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -659,6 +659,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     transport.addResponseErrorSequence(new IOException());
     transport.addServiceAccount(CLIENT_EMAIL, accessToken2);
     credentials.refresh();
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken2);
   }
 
   @Test
@@ -746,7 +747,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     } catch (GoogleAuthException ex) {
       assertTrue(ex.getMessage().contains("Error getting access token for service account: 408"));
       assertTrue(ex.isRetryable());
-      assertEquals(0, ex.getRetryCount());
+      assertEquals(3, ex.getRetryCount());
     }
   }
 
@@ -809,12 +810,13 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
 
-    transport.setExecuteError(new IOException("Invalid grant: Account not found"));
+    IOException error = new IOException("Invalid grant: Account not found");
     MockLowLevelHttpResponse response503 = new MockLowLevelHttpResponse().setStatusCode(503);
 
     Instant start = Instant.now();
     try {
       transport.addResponseSequence(response503);
+      transport.addResponseErrorSequence(error, error, error);
       credentials.refresh();
       fail("Should not be able to use credential without exception.");
     } catch (GoogleAuthException ex) {
@@ -864,7 +866,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
         fail("Should not be able to use credential without exception.");
       } catch (GoogleAuthException ex) {
         assertFalse(ex.isRetryable());
-        assertEquals(0, ex.getRetryCount());
+        assertEquals(3, ex.getRetryCount());
       }
     }
   }

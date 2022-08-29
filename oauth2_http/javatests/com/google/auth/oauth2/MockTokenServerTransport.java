@@ -66,7 +66,6 @@ public class MockTokenServerTransport extends MockHttpTransport {
   final Map<String, String> codes = new HashMap<String, String>();
   URI tokenServerUri = OAuth2Utils.TOKEN_SERVER_URI;
   private IOException error;
-  private IOException executeError;
   private final Queue<Future<LowLevelHttpResponse>> responseSequence = new ArrayDeque<>();
   private int expiresInSeconds = 3600;
 
@@ -105,10 +104,6 @@ public class MockTokenServerTransport extends MockHttpTransport {
     this.error = error;
   }
 
-  public void setExecuteError(IOException error) {
-    this.executeError = error;
-  }
-
   public void addResponseErrorSequence(IOException... errors) {
     for (IOException error : errors) {
       responseSequence.add(Futures.<LowLevelHttpResponse>immediateFailedFuture(error));
@@ -144,9 +139,6 @@ public class MockTokenServerTransport extends MockHttpTransport {
         @Override
         public LowLevelHttpResponse execute() throws IOException {
           try {
-            if (executeError != null) {
-              throw executeError;
-            }
             return responseSequence.poll().get();
           } catch (ExecutionException e) {
             Throwable cause = e.getCause();
