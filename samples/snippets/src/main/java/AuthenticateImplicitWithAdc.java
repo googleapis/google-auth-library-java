@@ -40,7 +40,6 @@ public class AuthenticateImplicitWithAdc {
   // credentials to use.
   public static void authenticateImplicitWithAdc(String project) throws IOException {
 
-    // This snippet demonstrates how to list storage buckets.
     // *NOTE*: Replace the client created below with the client required for your application.
     // Note that the credentials are not specified when constructing the client.
     // Hence, the client library will look for credentials using ADC.

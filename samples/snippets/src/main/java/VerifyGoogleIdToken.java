@@ -26,7 +26,7 @@ public class VerifyGoogleIdToken {
     // The Google ID token to verify.
     String idToken = "id-token";
 
-    // The service name for which the id token is requested.
+    // The service name for which the id token was requested.
     String targetAudience = "https://example.com";
 
     // To verify id tokens, get the Json Web Key endpoint (jwk).
