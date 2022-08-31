@@ -100,7 +100,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   private static final int INITIAL_RETRY_INTERVAL_MILLIS = 1000;
   private static final double RETRY_RANDOMIZATION_FACTOR = 0.1;
   private static final double RETRY_MULTIPLIER = 2;
-  public static final int DEFAULT_NUMBER_OF_RETRIES = 3;
+  static final int DEFAULT_NUMBER_OF_RETRIES = 3;
 
   private final String clientId;
   private final String clientEmail;
