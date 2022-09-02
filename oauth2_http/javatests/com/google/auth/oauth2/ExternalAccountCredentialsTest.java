@@ -328,7 +328,7 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  public void fromJson_pluggableAuthCredentialsWithServiceAccountImpersonation() {
+  public void fromJson_pluggableAuthCredentialsWithServiceAccountImpersonationOptions() {
     GenericJson pluggableAuthCredentialJson = buildJsonPluggableAuthCredential();
     pluggableAuthCredentialJson.set(
         "service_account_impersonation", buildServiceAccountImpersonationOptions(2800));
@@ -541,7 +541,7 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  public void constructor_builder_invalidTokenLifetime() {
+  public void constructor_builder_invalidTokenLifetime_throws() {
     Map<String, Object> invalidOptionsMap = new HashMap<String, Object>();
     invalidOptionsMap.put("token_lifetime_seconds", "thisIsAString");
 
@@ -647,6 +647,66 @@ public class ExternalAccountCredentialsTest {
             .build();
 
     assertEquals(2800, credentials.getServiceAccountImpersonationOptions().getLifetime());
+  }
+
+  @Test
+  public void constructor_builder_lowTokenLifetime_throws() {
+    Map<String, Object> optionsMap = new HashMap<String, Object>();
+    optionsMap.put("token_lifetime_seconds", 599);
+
+    try {
+      ExternalAccountCredentials credentials =
+          IdentityPoolCredentials.newBuilder()
+              .setHttpTransportFactory(transportFactory)
+              .setAudience(
+                  "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+              .setSubjectTokenType("subjectTokenType")
+              .setTokenUrl(STS_URL)
+              .setTokenInfoUrl("https://tokeninfo.com")
+              .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+              .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+              .setScopes(Arrays.asList("scope1", "scope2"))
+              .setQuotaProjectId("projectId")
+              .setClientId("clientId")
+              .setClientSecret("clientSecret")
+              .setWorkforcePoolUserProject("workforcePoolUserProject")
+              .setServiceAccountImpersonationOptions(optionsMap)
+              .build();
+    } catch (IllegalArgumentException e) {
+      assertEquals(
+          "The \"token_lifetime_seconds\" field must be between 600 and 43200 seconds.",
+          e.getMessage());
+    }
+  }
+
+  @Test
+  public void constructor_builder_highTokenLifetime_throws() {
+    Map<String, Object> optionsMap = new HashMap<String, Object>();
+    optionsMap.put("token_lifetime_seconds", 43201);
+
+    try {
+      ExternalAccountCredentials credentials =
+          IdentityPoolCredentials.newBuilder()
+              .setHttpTransportFactory(transportFactory)
+              .setAudience(
+                  "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+              .setSubjectTokenType("subjectTokenType")
+              .setTokenUrl(STS_URL)
+              .setTokenInfoUrl("https://tokeninfo.com")
+              .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+              .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+              .setScopes(Arrays.asList("scope1", "scope2"))
+              .setQuotaProjectId("projectId")
+              .setClientId("clientId")
+              .setClientSecret("clientSecret")
+              .setWorkforcePoolUserProject("workforcePoolUserProject")
+              .setServiceAccountImpersonationOptions(optionsMap)
+              .build();
+    } catch (IllegalArgumentException e) {
+      assertEquals(
+          "The \"token_lifetime_seconds\" field must be between 600 and 43200 seconds.",
+          e.getMessage());
+    }
   }
 
   @Test

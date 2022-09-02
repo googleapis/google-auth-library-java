@@ -649,6 +649,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
    */
   static final class ServiceAccountImpersonationOptions {
     private static final int DEFAULT_TOKEN_LIFETIME_SECONDS = 3600;
+    private static final int MAXIMUM_TOKEN_LIFETIME_SECONDS = 43200;
+    private static final int MINIMUM_TOKEN_LIFETIME_SECONDS = 600;
     private static final String TOKEN_LIFETIME_SECONDS_KEY = "token_lifetime_seconds";
 
     private final int lifetime;
@@ -671,6 +673,13 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       } catch (NumberFormatException | ArithmeticException e) {
         throw new IllegalArgumentException(
             "Value of \"token_lifetime_seconds\" field could not be parsed into an integer.", e);
+      }
+
+      if (lifetime < MINIMUM_TOKEN_LIFETIME_SECONDS || lifetime > MAXIMUM_TOKEN_LIFETIME_SECONDS) {
+        throw new IllegalArgumentException(
+            String.format(
+                "The \"token_lifetime_seconds\" field must be between %s and %s seconds.",
+                MINIMUM_TOKEN_LIFETIME_SECONDS, MAXIMUM_TOKEN_LIFETIME_SECONDS));
       }
     }
 
