@@ -337,7 +337,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
       credentials.getRequestMetadata(CALL_URI);
       fail("Should throw");
     } catch (IOException e) {
-      assertSame(error, e);
+      assertSame(error, e.getCause());
       assertEquals(1, transportFactory.transport.buildRequestCount--);
     }
 
@@ -402,7 +402,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     assertNull(callback.exception);
 
     assertEquals(1, executor.runTasksExhaustively());
-    assertSame(error, callback.exception);
+    assertSame(error, callback.exception.getCause());
     assertEquals(1, transportFactory.transport.buildRequestCount--);
 
     // Reset the error and try again
