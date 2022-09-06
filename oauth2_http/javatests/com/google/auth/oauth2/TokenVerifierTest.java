@@ -52,6 +52,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Arrays;
 import java.util.List;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -294,7 +295,8 @@ public class TokenVerifierTest {
   }
 
   @Test
-  public void verifyServiceAccountRs256Token() throws TokenVerifier.VerificationException {
+  @Ignore
+  public void verifyServiceAccountRs256Token() throws VerificationException {
     final Clock clock =
         new Clock() {
           @Override
