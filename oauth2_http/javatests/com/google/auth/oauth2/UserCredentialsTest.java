@@ -830,6 +830,27 @@ public class UserCredentialsTest extends BaseSerializationTest {
     }
   }
 
+  @Test
+  public void toBuilder() throws IOException {
+    final URI tokenServer1 = URI.create("https://foo1.com/bar");
+    AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
+    MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
+    UserCredentials credentials =
+            UserCredentials.newBuilder()
+                    .setClientId(CLIENT_ID)
+                    .setClientSecret(CLIENT_SECRET)
+                    .setRefreshToken(REFRESH_TOKEN)
+                    .setAccessToken(accessToken)
+                    .setHttpTransportFactory(httpTransportFactory)
+                    .setTokenServerUri(tokenServer1)
+                    .build();
+
+    credentials.toBuilder().build();
+    UserCredentials otherCredentials = credentials.toBuilder().build();
+    assertEquals(credentials, otherCredentials);
+  }
+
+
   static GenericJson writeUserJson(
       String clientId, String clientSecret, String refreshToken, String quotaProjectId) {
     GenericJson json = new GenericJson();

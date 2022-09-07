@@ -402,6 +402,7 @@ public class UserCredentials extends GoogleCredentials
     protected Builder() {}
 
     protected Builder(UserCredentials credentials) {
+      super(credentials);
       this.clientId = credentials.clientId;
       this.clientSecret = credentials.clientSecret;
       this.refreshToken = credentials.refreshToken;
