@@ -55,8 +55,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -831,25 +834,23 @@ public class UserCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void toBuilder() throws IOException {
-    final URI tokenServer1 = URI.create("https://foo1.com/bar");
-    AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
+  public void UserCredentials_ToBuilder_CopyEveryAttributes() {
     MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
-    UserCredentials credentials =
-            UserCredentials.newBuilder()
-                    .setClientId(CLIENT_ID)
-                    .setClientSecret(CLIENT_SECRET)
-                    .setRefreshToken(REFRESH_TOKEN)
-                    .setAccessToken(accessToken)
-                    .setHttpTransportFactory(httpTransportFactory)
-                    .setTokenServerUri(tokenServer1)
-                    .build();
+    UserCredentials credentials = UserCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setAccessToken(new AccessToken(ACCESS_TOKEN, new Date()))
+            .setHttpTransportFactory(httpTransportFactory)
+            .setTokenServerUri(URI.create("https://foo1.com/bar"))
+            .setQuotaProjectId(QUOTA_PROJECT)
+            .setExpirationMargin(Duration.of(10, ChronoUnit.SECONDS))
+            .setRefreshMargin(Duration.of(12, ChronoUnit.MINUTES))
+            .build();
 
-    credentials.toBuilder().build();
     UserCredentials otherCredentials = credentials.toBuilder().build();
     assertEquals(credentials, otherCredentials);
   }
-
 
   static GenericJson writeUserJson(
       String clientId, String clientSecret, String refreshToken, String quotaProjectId) {

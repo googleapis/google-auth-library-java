@@ -53,6 +53,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -438,6 +439,16 @@ public class UserCredentials extends GoogleCredentials
 
     public Builder setAccessToken(AccessToken token) {
       super.setAccessToken(token);
+      return this;
+    }
+
+    public Builder setExpirationMargin(Duration expirationMargin) {
+      super.setExpirationMargin(expirationMargin);
+      return this;
+    }
+
+    public Builder setRefreshMargin(Duration refreshMargin) {
+      super.setRefreshMargin(refreshMargin);
       return this;
     }
 
