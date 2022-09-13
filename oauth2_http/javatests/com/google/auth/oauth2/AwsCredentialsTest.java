@@ -143,6 +143,39 @@ public class AwsCredentialsTest {
   }
 
   @Test
+  public void refreshAccessToken_withServiceAccountImpersonationOptions() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
+
+    AwsCredentials awsCredential =
+        (AwsCredentials)
+            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+                .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setServiceAccountImpersonationUrl(
+                    transportFactory.transport.getServiceAccountImpersonationUrl())
+                .setHttpTransportFactory(transportFactory)
+                .setCredentialSource(buildAwsCredentialSource(transportFactory))
+                .setServiceAccountImpersonationOptions(
+                    ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(2800))
+                .build();
+
+    AccessToken accessToken = awsCredential.refreshAccessToken();
+
+    assertEquals(
+        transportFactory.transport.getServiceAccountAccessToken(), accessToken.getTokenValue());
+
+    // Validate that default lifetime was set correctly on the request.
+    GenericJson query =
+        OAuth2Utils.JSON_FACTORY
+            .createJsonParser(transportFactory.transport.getLastRequest().getContentAsString())
+            .parseAndClose(GenericJson.class);
+
+    assertEquals("2800s", query.get("lifetime"));
+  }
+
+  @Test
   public void retrieveSubjectToken() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();

@@ -387,6 +387,39 @@ public class IdentityPoolCredentialsTest {
   }
 
   @Test
+  public void refreshAccessToken_withServiceAccountImpersonationOptions() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
+    IdentityPoolCredentials credential =
+        (IdentityPoolCredentials)
+            IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+                .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setServiceAccountImpersonationUrl(
+                    transportFactory.transport.getServiceAccountImpersonationUrl())
+                .setHttpTransportFactory(transportFactory)
+                .setCredentialSource(
+                    buildUrlBasedCredentialSource(transportFactory.transport.getMetadataUrl()))
+                .setServiceAccountImpersonationOptions(
+                    ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(2800))
+                .build();
+
+    AccessToken accessToken = credential.refreshAccessToken();
+
+    assertEquals(
+        transportFactory.transport.getServiceAccountAccessToken(), accessToken.getTokenValue());
+
+    // Validate that default lifetime was set correctly on the request.
+    GenericJson query =
+        OAuth2Utils.JSON_FACTORY
+            .createJsonParser(transportFactory.transport.getLastRequest().getContentAsString())
+            .parseAndClose(GenericJson.class);
+
+    assertEquals("2800s", query.get("lifetime"));
+  }
+
+  @Test
   public void refreshAccessToken_workforceWithServiceAccountImpersonation() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
@@ -420,6 +453,43 @@ public class IdentityPoolCredentialsTest {
 
     assertNotNull(query.get("options"));
     assertEquals(expectedInternalOptions.toString(), query.get("options"));
+  }
+
+  @Test
+  public void refreshAccessToken_workforceWithServiceAccountImpersonationOptions()
+      throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
+    IdentityPoolCredentials credential =
+        (IdentityPoolCredentials)
+            IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+                .setAudience(
+                    "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+                .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setServiceAccountImpersonationUrl(
+                    transportFactory.transport.getServiceAccountImpersonationUrl())
+                .setHttpTransportFactory(transportFactory)
+                .setCredentialSource(
+                    buildUrlBasedCredentialSource(transportFactory.transport.getMetadataUrl()))
+                .setWorkforcePoolUserProject("userProject")
+                .setServiceAccountImpersonationOptions(
+                    ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(2800))
+                .build();
+
+    AccessToken accessToken = credential.refreshAccessToken();
+
+    // Validate that default lifetime was set correctly on the request.
+    assertEquals(
+        transportFactory.transport.getServiceAccountAccessToken(), accessToken.getTokenValue());
+
+    GenericJson query =
+        OAuth2Utils.JSON_FACTORY
+            .createJsonParser(transportFactory.transport.getLastRequest().getContentAsString())
+            .parseAndClose(GenericJson.class);
+
+    assertEquals("2800s", query.get("lifetime"));
   }
 
   @Test
@@ -663,7 +733,10 @@ public class IdentityPoolCredentialsTest {
   }
 
   static InputStream writeIdentityPoolCredentialsStream(
-      String tokenUrl, String url, @Nullable String serviceAccountImpersonationUrl)
+      String tokenUrl,
+      String url,
+      @Nullable String serviceAccountImpersonationUrl,
+      @Nullable Map<String, Object> serviceAccountImpersonationOptionsMap)
       throws IOException {
     GenericJson json = new GenericJson();
     json.put("audience", "audience");
@@ -674,6 +747,10 @@ public class IdentityPoolCredentialsTest {
 
     if (serviceAccountImpersonationUrl != null) {
       json.put("service_account_impersonation_url", serviceAccountImpersonationUrl);
+    }
+
+    if (serviceAccountImpersonationOptionsMap != null) {
+      json.put("service_account_impersonation", serviceAccountImpersonationOptionsMap);
     }
 
     GenericJson credentialSource = new GenericJson();

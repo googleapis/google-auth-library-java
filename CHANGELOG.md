@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.11.0](https://github.com/googleapis/google-auth-library-java/compare/v1.10.0...v1.11.0) (2022-09-08)
+
+
+### Features
+
+* Adds configurable token lifetime support ([#982](https://github.com/googleapis/google-auth-library-java/issues/982)) ([0198733](https://github.com/googleapis/google-auth-library-java/commit/0198733b9d294cbee95f1170f814fbfe94baa6fc))
+
+
+### Bug Fixes
+
+* Add retries to public key fetch ([#983](https://github.com/googleapis/google-auth-library-java/issues/983)) ([1200a39](https://github.com/googleapis/google-auth-library-java/commit/1200a39361e2a1767ef95306ba3ece1b749e82a8))
+* Add Test to validate 0x20 in token ([#971](https://github.com/googleapis/google-auth-library-java/issues/971)) ([612db0a](https://github.com/googleapis/google-auth-library-java/commit/612db0af3afa70b5400891ba3c7eab18ea5eb6bf))
+* Change revoke request from get to post ([#979](https://github.com/googleapis/google-auth-library-java/issues/979)) ([ead58b2](https://github.com/googleapis/google-auth-library-java/commit/ead58b22e04c00ece9f0ea55cbec20d2953f5460))
+* Setting the retry count to default value and enabling ioexceptions to retry ([#988](https://github.com/googleapis/google-auth-library-java/issues/988)) ([257071a](https://github.com/googleapis/google-auth-library-java/commit/257071aeb39c4441bd152813d727f83d433f346f))
+* Updates IdTokenVerifier so that it does not cache a failed public key response  ([#967](https://github.com/googleapis/google-auth-library-java/issues/967)) ([1f4c9c7](https://github.com/googleapis/google-auth-library-java/commit/1f4c9c77a38fb6dfb751447361af9cf00964f96b))
+
 ## [1.10.0](https://github.com/googleapis/google-auth-library-java/compare/v1.9.0...v1.10.0) (2022-08-05)
 
 

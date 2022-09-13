@@ -29,6 +29,7 @@ credentials as well as utility methods to create them and to get Application Def
       * [Accessing resources from Azure](#access-resources-from-microsoft-azure)
       * [Accessing resources from an OIDC identity provider](#accessing-resources-from-an-oidc-identity-provider)
       * [Accessing resources using Executable-sourced credentials](#using-executable-sourced-credentials-with-oidc-and-saml)
+      * [Configurable Token Lifetime](#configurable-token-lifetime)
   * [Workforce Identity Federation](#workforce-identity-federation)
       * [Accessing resources using an OIDC or SAML 2.0 identity provider](#accessing-resources-using-an-oidc-or-saml-20-identity-provider)
       * [Accessing resources using Executable-sourced credentials](#using-executable-sourced-workforce-credentials-with-oidc-and-saml)
@@ -466,6 +467,33 @@ credentials unless they do not meet your specific requirements.
 
 You can now [use the Auth library](#using-external-identities) to call Google Cloud
 resources from an OIDC or SAML provider.
+
+#### Configurable Token Lifetime
+When creating a credential configuration with workload identity federation using service account impersonation, you can provide an optional argument to configure the service account access token lifetime.
+
+To generate the configuration with configurable token lifetime, run the following command (this example uses an AWS configuration, but the token lifetime can be configured for all workload identity federation providers):
+  ```bash
+  # Generate an AWS configuration file with configurable token lifetime.
+  gcloud iam workload-identity-pools create-cred-config \
+      projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$POOL_ID/providers/$AWS_PROVIDER_ID \
+      --service-account $SERVICE_ACCOUNT_EMAIL \
+      --aws \
+      --output-file /path/to/generated/config.json \
+      --service-account-token-lifetime-seconds $TOKEN_LIFETIME
+  ```
+
+Where the following variables need to be substituted:
+- `$PROJECT_NUMBER`: The Google Cloud project number.
+- `$POOL_ID`: The workload identity pool ID.
+- `$AWS_PROVIDER_ID`: The AWS provider ID.
+- `$SERVICE_ACCOUNT_EMAIL`: The email of the service account to impersonate.
+- `$TOKEN_LIFETIME`: The desired lifetime duration of the service account access token in seconds.
+
+The `service-account-token-lifetime-seconds` flag is optional. If not provided, this defaults to one hour.
+The minimum allowed value is 600 (10 minutes) and the maximum allowed value is 43200 (12 hours).
+If a lifetime greater than one hour is required, the service account must be added as an allowed value in an Organization Policy that enforces the `constraints/iam.allowServiceAccountCredentialLifetimeExtension` constraint.
+
+Note that configuring a short lifetime (e.g. 10 minutes) will result in the library initiating the entire token exchange flow every 10 minutes, which will call the 3rd party token provider even if the 3rd party token is not expired.
 
 ###  Workforce Identity Federation
 
