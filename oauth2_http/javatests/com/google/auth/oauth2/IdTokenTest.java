@@ -31,32 +31,37 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Date;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Unit tests for AccessToken */
-class IdTokenTest extends BaseSerializationTest {
+@RunWith(JUnit4.class)
+public class IdTokenTest extends BaseSerializationTest {
 
   private static final String TOKEN_1 =
       "eyJhbGciOiJSUzI1NiIsImtpZCI6IjM0OTRiMWU3ODZjZGFkMDkyZTQyMzc2NmJiZTM3ZjU0ZWQ4N2IyMmQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhdWQiOiJodHRwczovL2Zvby5iYXIiLCJhenAiOiJzdmMtMi00MjlAbWluZXJhbC1taW51dGlhLTgyMC5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsInN1YiI6IjEwMDE0NzEwNjk5Njc2NDQ3OTA4NSIsImVtYWlsIjoic3ZjLTItNDI5QG1pbmVyYWwtbWludXRpYS04MjAuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiaWF0IjoxNTY1Mzg3NTM4LCJleHAiOjE1NjUzOTExMzh9.foo";
   private static final String TOKEN_2 =
       "eyJhbGciOiJSUzI1NiIsImtpZCI6IjM0OTRiMWU3ODZjZGFkMDkyZTQyMzc2NmJiZTM3ZjU0ZWQ4N2IyMmQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhdWQiOiJodHRwczovL2Jhci5mb28iLCJhenAiOiJzdmMtMi00MjlAbWluZXJhbC1taW51dGlhLTgyMC5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsInN1YiI6IjEwMDE0NzEwNjk5Njc2NDQ3OTA4NSIsImVtYWlsIjoic3ZjLTItNDI5QG1pbmVyYWwtbWludXRpYS04MjAuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiaWF0IjoxNTY1Mzg4NjM0LCJleHAiOjE1NjUzOTIyMzR9.foo";
+  private static final String TOKEN_WITH_0x20 =
+      "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2NjAxNjMxNjAsImV4cCI6MTY5MTY5OTE2MCwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsIkdpdmVuTmFtZSI6ImFibTHag3M0x20ifQ.foo";
   private static final Date EXPIRATION_DATE = new Date((long) 1565391138 * 1000);
 
   @Test
-  void constructor() throws IOException {
+  public void constructor() throws IOException {
     IdToken idToken = IdToken.create(TOKEN_1);
     assertEquals(TOKEN_1, idToken.getTokenValue());
     assertEquals(EXPIRATION_DATE, idToken.getExpirationTime());
   }
 
   @Test
-  void equals_true() throws IOException {
+  public void equals_true() throws IOException {
     IdToken accessToken = IdToken.create(TOKEN_1);
     IdToken otherAccessToken = IdToken.create(TOKEN_1);
     assertTrue(accessToken.equals(otherAccessToken));
@@ -64,7 +69,7 @@ class IdTokenTest extends BaseSerializationTest {
   }
 
   @Test
-  void equals_false_token() throws IOException {
+  public void equals_false_token() throws IOException {
     IdToken accessToken = IdToken.create(TOKEN_1);
     IdToken otherAccessToken = IdToken.create(TOKEN_2);
     assertFalse(accessToken.equals(otherAccessToken));
@@ -72,7 +77,7 @@ class IdTokenTest extends BaseSerializationTest {
   }
 
   @Test
-  void toString_test() throws IOException {
+  public void toString_test() throws IOException {
     IdToken accessToken = IdToken.create(TOKEN_1);
     String expectedToString =
         String.format(
@@ -82,18 +87,24 @@ class IdTokenTest extends BaseSerializationTest {
   }
 
   @Test
-  void hashCode_equals() throws IOException {
+  public void hashCode_equals() throws IOException {
     IdToken accessToken = IdToken.create(TOKEN_1);
     IdToken otherAccessToken = IdToken.create(TOKEN_1);
     assertEquals(accessToken.hashCode(), otherAccessToken.hashCode());
   }
 
   @Test
-  void serialize() throws IOException, ClassNotFoundException {
+  public void serialize() throws IOException, ClassNotFoundException {
     IdToken accessToken = IdToken.create(TOKEN_1);
     IdToken deserializedAccessToken = serializeAndDeserialize(accessToken);
     assertEquals(accessToken, deserializedAccessToken);
     assertEquals(accessToken.hashCode(), deserializedAccessToken.hashCode());
     assertEquals(accessToken.toString(), deserializedAccessToken.toString());
+  }
+
+  @Test
+  public void token_with_0x20() throws IOException {
+    IdToken accessToken = IdToken.create(TOKEN_WITH_0x20);
+    assertEquals(TOKEN_WITH_0x20, accessToken.getTokenValue());
   }
 }

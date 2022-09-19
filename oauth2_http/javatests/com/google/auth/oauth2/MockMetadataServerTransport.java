@@ -166,7 +166,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
       }
 
       // https://cloud.google.com/compute/docs/instances/verifying-instance-identity#token_format
-      Map<String, String> queryPairs = new HashMap<>();
+      Map<String, String> queryPairs = new HashMap<String, String>();
       String query = (new URL(url)).getQuery();
       String[] pairs = query.split("&");
       for (String pair : pairs) {

@@ -31,9 +31,9 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import com.google.api.client.http.LowLevelHttpRequest;
 import com.google.api.client.http.LowLevelHttpResponse;
@@ -67,12 +67,14 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
   private static final String ISSUED_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:access_token";
   private static final String AWS_CREDENTIALS_URL = "https://www.aws-credentials.com";
   private static final String AWS_REGION_URL = "https://www.aws-region.com";
+  private static final String AWS_IMDSV2_SESSION_TOKEN_URL = "https://www.aws-session-token.com";
   private static final String METADATA_SERVER_URL = "https://www.metadata.google.com";
   private static final String STS_URL = "https://sts.googleapis.com";
 
   private static final String SUBJECT_TOKEN = "subjectToken";
   private static final String TOKEN_TYPE = "Bearer";
   private static final String ACCESS_TOKEN = "accessToken";
+  private static final String AWS_IMDSV2_SESSION_TOKEN = "sessiontoken";
   private static final String SERVICE_ACCOUNT_ACCESS_TOKEN = "serviceAccountAccessToken";
   private static final String AWS_REGION = "us-east-1b";
   private static final Long EXPIRES_IN = 3600L;
@@ -82,11 +84,13 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
   static final String SERVICE_ACCOUNT_IMPERSONATION_URL =
       "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/testn@test.iam.gserviceaccount.com:generateAccessToken";
 
+  static final String IAM_ENDPOINT = "https://iamcredentials.googleapis.com";
+
   private Queue<Boolean> responseSequence = new ArrayDeque<>();
   private Queue<IOException> responseErrorSequence = new ArrayDeque<>();
   private Queue<String> refreshTokenSequence = new ArrayDeque<>();
   private Queue<List<String>> scopeSequence = new ArrayDeque<>();
-  private MockLowLevelHttpRequest request;
+  private List<MockLowLevelHttpRequest> requests = new ArrayList<>();
   private String expireTime;
   private String metadataServerContentType;
   private String stsContent;
@@ -109,7 +113,7 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
 
   @Override
   public LowLevelHttpRequest buildRequest(final String method, final String url) {
-    this.request =
+    MockLowLevelHttpRequest request =
         new MockLowLevelHttpRequest(url) {
           @Override
           public LowLevelHttpResponse execute() throws IOException {
@@ -119,6 +123,11 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
               throw responseErrorSequence.poll();
             }
 
+            if (AWS_IMDSV2_SESSION_TOKEN_URL.equals(url)) {
+              return new MockLowLevelHttpResponse()
+                  .setContentType("text/html")
+                  .setContent(AWS_IMDSV2_SESSION_TOKEN);
+            }
             if (AWS_REGION_URL.equals(url)) {
               return new MockLowLevelHttpResponse()
                   .setContentType("text/html")
@@ -186,7 +195,8 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
                   .setContentType(Json.MEDIA_TYPE)
                   .setContent(response.toPrettyString());
             }
-            if (SERVICE_ACCOUNT_IMPERSONATION_URL.equals(url)) {
+
+            if (url.contains(IAM_ENDPOINT)) {
               GenericJson query =
                   OAuth2Utils.JSON_FACTORY
                       .createJsonParser(getContentAsString())
@@ -208,15 +218,25 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
             return null;
           }
         };
-    return this.request;
+
+    this.requests.add(request);
+    return request;
   }
 
   public String getStsContent() {
     return stsContent;
   }
 
-  public MockLowLevelHttpRequest getRequest() {
-    return request;
+  public MockLowLevelHttpRequest getLastRequest() {
+    if (requests.isEmpty()) {
+      return null;
+    }
+
+    return requests.get(requests.size() - 1);
+  }
+
+  public List<MockLowLevelHttpRequest> getRequests() {
+    return Collections.unmodifiableList(requests);
   }
 
   public String getTokenType() {
@@ -253,6 +273,10 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
 
   public String getAwsRegionUrl() {
     return AWS_REGION_URL;
+  }
+
+  public String getAwsImdsv2SessionTokenUrl() {
+    return AWS_IMDSV2_SESSION_TOKEN_URL;
   }
 
   public String getAwsRegion() {

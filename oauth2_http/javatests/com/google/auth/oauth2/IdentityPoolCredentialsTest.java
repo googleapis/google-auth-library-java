@@ -33,10 +33,10 @@ package com.google.auth.oauth2;
 
 import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
 import static com.google.auth.oauth2.OAuth2Utils.JSON_FACTORY;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
@@ -53,10 +53,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Tests for {@link IdentityPoolCredentials}. */
-class IdentityPoolCredentialsTest {
+@RunWith(JUnit4.class)
+public class IdentityPoolCredentialsTest {
 
   private static final String STS_URL = "https://sts.googleapis.com";
 
@@ -94,7 +97,7 @@ class IdentityPoolCredentialsTest {
   }
 
   @Test
-  void createdScoped_clonedCredentialWithAddedScopes() {
+  public void createdScoped_clonedCredentialWithAddedScopes() {
     IdentityPoolCredentials credentials =
         (IdentityPoolCredentials)
             IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
@@ -123,7 +126,7 @@ class IdentityPoolCredentialsTest {
   }
 
   @Test
-  void retrieveSubjectToken_fileSourced() throws IOException {
+  public void retrieveSubjectToken_fileSourced() throws IOException {
     File file =
         File.createTempFile("RETRIEVE_SUBJECT_TOKEN", /* suffix= */ null, /* directory= */ null);
     file.deleteOnExit();
@@ -150,7 +153,7 @@ class IdentityPoolCredentialsTest {
   }
 
   @Test
-  void retrieveSubjectToken_fileSourcedWithJsonFormat() throws IOException {
+  public void retrieveSubjectToken_fileSourcedWithJsonFormat() throws IOException {
     File file =
         File.createTempFile("RETRIEVE_SUBJECT_TOKEN", /* suffix= */ null, /* directory= */ null);
     file.deleteOnExit();
@@ -192,7 +195,7 @@ class IdentityPoolCredentialsTest {
   }
 
   @Test
-  void retrieveSubjectToken_fileSourcedWithNullFormat_throws() throws IOException {
+  public void retrieveSubjectToken_fileSourcedWithNullFormat_throws() throws IOException {
     File file =
         File.createTempFile("RETRIEVE_SUBJECT_TOKEN", /* suffix= */ null, /* directory= */ null);
     file.deleteOnExit();
@@ -204,16 +207,16 @@ class IdentityPoolCredentialsTest {
     credentialSourceMap.put("file", file.getAbsolutePath());
     credentialSourceMap.put("format", formatMap);
 
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> new IdentityPoolCredentialSource(credentialSourceMap),
-            "Exception should be thrown due to null format.");
-    assertEquals("Invalid credential source format type: null.", exception.getMessage());
+    try {
+      new IdentityPoolCredentialSource(credentialSourceMap);
+      fail("Exception should be thrown due to null format.");
+    } catch (IllegalArgumentException e) {
+      assertEquals("Invalid credential source format type: null.", e.getMessage());
+    }
   }
 
   @Test
-  void retrieveSubjectToken_noFile_throws() {
+  public void retrieveSubjectToken_noFile_throws() {
     Map<String, Object> credentialSourceMap = new HashMap<>();
     String path = "badPath";
     credentialSourceMap.put("file", path);
@@ -226,16 +229,18 @@ class IdentityPoolCredentialsTest {
                 .setCredentialSource(credentialSource)
                 .build();
 
-    IOException exception =
-        assertThrows(
-            IOException.class, credentials::retrieveSubjectToken, "Exception should be thrown.");
-    assertEquals(
-        String.format("Invalid credential location. The file at %s does not exist.", path),
-        exception.getMessage());
+    try {
+      credentials.retrieveSubjectToken();
+      fail("Exception should be thrown.");
+    } catch (IOException e) {
+      assertEquals(
+          String.format("Invalid credential location. The file at %s does not exist.", path),
+          e.getMessage());
+    }
   }
 
   @Test
-  void retrieveSubjectToken_urlSourced() throws IOException {
+  public void retrieveSubjectToken_urlSourced() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -253,7 +258,7 @@ class IdentityPoolCredentialsTest {
   }
 
   @Test
-  void retrieveSubjectToken_urlSourcedWithJsonFormat() throws IOException {
+  public void retrieveSubjectToken_urlSourcedWithJsonFormat() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -279,7 +284,7 @@ class IdentityPoolCredentialsTest {
   }
 
   @Test
-  void retrieveSubjectToken_urlSourcedCredential_throws() {
+  public void retrieveSubjectToken_urlSourcedCredential_throws() {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -294,17 +299,19 @@ class IdentityPoolCredentialsTest {
                     buildUrlBasedCredentialSource(transportFactory.transport.getMetadataUrl()))
                 .build();
 
-    IOException exception =
-        assertThrows(
-            IOException.class, credential::retrieveSubjectToken, "Exception should be thrown.");
-    assertEquals(
-        String.format(
-            "Error getting subject token from metadata server: %s", response.getMessage()),
-        exception.getMessage());
+    try {
+      credential.retrieveSubjectToken();
+      fail("Exception should be thrown.");
+    } catch (IOException e) {
+      assertEquals(
+          String.format(
+              "Error getting subject token from metadata server: %s", response.getMessage()),
+          e.getMessage());
+    }
   }
 
   @Test
-  void refreshAccessToken_withoutServiceAccountImpersonation() throws IOException {
+  public void refreshAccessToken_withoutServiceAccountImpersonation() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -323,7 +330,7 @@ class IdentityPoolCredentialsTest {
   }
 
   @Test
-  void refreshAccessToken_internalOptionsSet() throws IOException {
+  public void refreshAccessToken_internalOptionsSet() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -346,7 +353,7 @@ class IdentityPoolCredentialsTest {
     // If the IdentityPoolCredential is initialized with a userProject, it must be passed
     // to STS via internal options.
     Map<String, String> query =
-        TestUtils.parseQuery(transportFactory.transport.getRequest().getContentAsString());
+        TestUtils.parseQuery(transportFactory.transport.getLastRequest().getContentAsString());
     assertNotNull(query.get("options"));
 
     GenericJson expectedInternalOptions = new GenericJson();
@@ -357,7 +364,7 @@ class IdentityPoolCredentialsTest {
   }
 
   @Test
-  void refreshAccessToken_withServiceAccountImpersonation() throws IOException {
+  public void refreshAccessToken_withServiceAccountImpersonation() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -380,7 +387,40 @@ class IdentityPoolCredentialsTest {
   }
 
   @Test
-  void refreshAccessToken_workforceWithServiceAccountImpersonation() throws IOException {
+  public void refreshAccessToken_withServiceAccountImpersonationOptions() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
+    IdentityPoolCredentials credential =
+        (IdentityPoolCredentials)
+            IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+                .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setServiceAccountImpersonationUrl(
+                    transportFactory.transport.getServiceAccountImpersonationUrl())
+                .setHttpTransportFactory(transportFactory)
+                .setCredentialSource(
+                    buildUrlBasedCredentialSource(transportFactory.transport.getMetadataUrl()))
+                .setServiceAccountImpersonationOptions(
+                    ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(2800))
+                .build();
+
+    AccessToken accessToken = credential.refreshAccessToken();
+
+    assertEquals(
+        transportFactory.transport.getServiceAccountAccessToken(), accessToken.getTokenValue());
+
+    // Validate that default lifetime was set correctly on the request.
+    GenericJson query =
+        OAuth2Utils.JSON_FACTORY
+            .createJsonParser(transportFactory.transport.getLastRequest().getContentAsString())
+            .parseAndClose(GenericJson.class);
+
+    assertEquals("2800s", query.get("lifetime"));
+  }
+
+  @Test
+  public void refreshAccessToken_workforceWithServiceAccountImpersonation() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -416,7 +456,44 @@ class IdentityPoolCredentialsTest {
   }
 
   @Test
-  void identityPoolCredentialSource_validFormats() {
+  public void refreshAccessToken_workforceWithServiceAccountImpersonationOptions()
+      throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
+    IdentityPoolCredentials credential =
+        (IdentityPoolCredentials)
+            IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+                .setAudience(
+                    "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+                .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setServiceAccountImpersonationUrl(
+                    transportFactory.transport.getServiceAccountImpersonationUrl())
+                .setHttpTransportFactory(transportFactory)
+                .setCredentialSource(
+                    buildUrlBasedCredentialSource(transportFactory.transport.getMetadataUrl()))
+                .setWorkforcePoolUserProject("userProject")
+                .setServiceAccountImpersonationOptions(
+                    ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(2800))
+                .build();
+
+    AccessToken accessToken = credential.refreshAccessToken();
+
+    // Validate that default lifetime was set correctly on the request.
+    assertEquals(
+        transportFactory.transport.getServiceAccountAccessToken(), accessToken.getTokenValue());
+
+    GenericJson query =
+        OAuth2Utils.JSON_FACTORY
+            .createJsonParser(transportFactory.transport.getLastRequest().getContentAsString())
+            .parseAndClose(GenericJson.class);
+
+    assertEquals("2800s", query.get("lifetime"));
+  }
+
+  @Test
+  public void identityPoolCredentialSource_validFormats() {
     Map<String, Object> credentialSourceMapWithFileTextSource = new HashMap<>();
     Map<String, Object> credentialSourceMapWithFileJsonTextSource = new HashMap<>();
     Map<String, Object> credentialSourceMapWithUrlTextSource = new HashMap<>();
@@ -459,7 +536,7 @@ class IdentityPoolCredentialsTest {
   }
 
   @Test
-  void identityPoolCredentialSource_caseInsensitive() {
+  public void identityPoolCredentialSource_caseInsensitive() {
     Map<String, Object> credentialSourceMapWithFileTextSource = new HashMap<>();
     Map<String, Object> credentialSourceMapWithFileJsonTextSource = new HashMap<>();
     Map<String, Object> credentialSourceMapWithUrlTextSource = new HashMap<>();
@@ -502,19 +579,19 @@ class IdentityPoolCredentialsTest {
   }
 
   @Test
-  void identityPoolCredentialSource_invalidSourceType() {
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> new IdentityPoolCredentialSource(new HashMap<>()),
-            "Exception should be thrown.");
-    assertEquals(
-        "Missing credential source file location or URL. At least one must be specified.",
-        exception.getMessage());
+  public void identityPoolCredentialSource_invalidSourceType() {
+    try {
+      new IdentityPoolCredentialSource(new HashMap<>());
+      fail("Should not be able to continue without exception.");
+    } catch (IllegalArgumentException exception) {
+      assertEquals(
+          "Missing credential source file location or URL. At least one must be specified.",
+          exception.getMessage());
+    }
   }
 
   @Test
-  void identityPoolCredentialSource_invalidFormatType() {
+  public void identityPoolCredentialSource_invalidFormatType() {
     Map<String, Object> credentialSourceMap = new HashMap<>();
     credentialSourceMap.put("url", "url");
 
@@ -522,16 +599,16 @@ class IdentityPoolCredentialsTest {
     format.put("type", "unsupportedType");
     credentialSourceMap.put("format", format);
 
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> new IdentityPoolCredentialSource(credentialSourceMap),
-            "Exception should be thrown.");
-    assertEquals("Invalid credential source format type: unsupportedType.", exception.getMessage());
+    try {
+      new IdentityPoolCredentialSource(credentialSourceMap);
+      fail("Exception should be thrown.");
+    } catch (IllegalArgumentException e) {
+      assertEquals("Invalid credential source format type: unsupportedType.", e.getMessage());
+    }
   }
 
   @Test
-  void identityPoolCredentialSource_nullFormatType() {
+  public void identityPoolCredentialSource_nullFormatType() {
     Map<String, Object> credentialSourceMap = new HashMap<>();
     credentialSourceMap.put("url", "url");
 
@@ -539,16 +616,16 @@ class IdentityPoolCredentialsTest {
     format.put("type", null);
     credentialSourceMap.put("format", format);
 
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> new IdentityPoolCredentialSource(credentialSourceMap),
-            "Exception should be thrown.");
-    assertEquals("Invalid credential source format type: null.", exception.getMessage());
+    try {
+      new IdentityPoolCredentialSource(credentialSourceMap);
+      fail("Exception should be thrown.");
+    } catch (IllegalArgumentException e) {
+      assertEquals("Invalid credential source format type: null.", e.getMessage());
+    }
   }
 
   @Test
-  void identityPoolCredentialSource_subjectTokenFieldNameUnset() {
+  public void identityPoolCredentialSource_subjectTokenFieldNameUnset() {
     Map<String, Object> credentialSourceMap = new HashMap<>();
     credentialSourceMap.put("url", "url");
 
@@ -556,18 +633,18 @@ class IdentityPoolCredentialsTest {
     format.put("type", "json");
     credentialSourceMap.put("format", format);
 
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> new IdentityPoolCredentialSource(credentialSourceMap),
-            "Exception should be thrown.");
-    assertEquals(
-        "When specifying a JSON credential type, the subject_token_field_name must be set.",
-        exception.getMessage());
+    try {
+      new IdentityPoolCredentialSource(credentialSourceMap);
+      fail("Exception should be thrown.");
+    } catch (IllegalArgumentException e) {
+      assertEquals(
+          "When specifying a JSON credential type, the subject_token_field_name must be set.",
+          e.getMessage());
+    }
   }
 
   @Test
-  void builder() {
+  public void builder() {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     IdentityPoolCredentials credentials =
@@ -601,7 +678,7 @@ class IdentityPoolCredentialsTest {
   }
 
   @Test
-  void builder_invalidWorkforceAudiences_throws() {
+  public void builder_invalidWorkforceAudiences_throws() {
     List<String> invalidAudiences =
         Arrays.asList(
             "",
@@ -615,30 +692,28 @@ class IdentityPoolCredentialsTest {
             "//iam.googleapis.com/locations/global/workforce/providers");
 
     for (String audience : invalidAudiences) {
-      IllegalArgumentException exception =
-          assertThrows(
-              IllegalArgumentException.class,
-              () -> {
-                IdentityPoolCredentials.newBuilder()
-                    .setWorkforcePoolUserProject("workforcePoolUserProject")
-                    .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-                    .setAudience(audience)
-                    .setSubjectTokenType("subjectTokenType")
-                    .setTokenUrl(STS_URL)
-                    .setTokenInfoUrl("tokenInfoUrl")
-                    .setCredentialSource(FILE_CREDENTIAL_SOURCE)
-                    .setQuotaProjectId("quotaProjectId")
-                    .build();
-              },
-              "Exception should be thrown.");
-      assertEquals(
-          "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.",
-          exception.getMessage());
+      try {
+        IdentityPoolCredentials.newBuilder()
+            .setWorkforcePoolUserProject("workforcePoolUserProject")
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .setAudience(audience)
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+            .setQuotaProjectId("quotaProjectId")
+            .build();
+        fail("Exception should be thrown.");
+      } catch (IllegalArgumentException e) {
+        assertEquals(
+            "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.",
+            e.getMessage());
+      }
     }
   }
 
   @Test
-  void builder_emptyWorkforceUserProjectWithWorkforceAudience() {
+  public void builder_emptyWorkforceUserProjectWithWorkforceAudience() {
     // No exception should be thrown.
     IdentityPoolCredentials credentials =
         (IdentityPoolCredentials)
@@ -658,7 +733,10 @@ class IdentityPoolCredentialsTest {
   }
 
   static InputStream writeIdentityPoolCredentialsStream(
-      String tokenUrl, String url, @Nullable String serviceAccountImpersonationUrl)
+      String tokenUrl,
+      String url,
+      @Nullable String serviceAccountImpersonationUrl,
+      @Nullable Map<String, Object> serviceAccountImpersonationOptionsMap)
       throws IOException {
     GenericJson json = new GenericJson();
     json.put("audience", "audience");
@@ -669,6 +747,10 @@ class IdentityPoolCredentialsTest {
 
     if (serviceAccountImpersonationUrl != null) {
       json.put("service_account_impersonation_url", serviceAccountImpersonationUrl);
+    }
+
+    if (serviceAccountImpersonationOptionsMap != null) {
+      json.put("service_account_impersonation", serviceAccountImpersonationOptionsMap);
     }
 
     GenericJson credentialSource = new GenericJson();

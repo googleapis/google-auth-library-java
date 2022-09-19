@@ -31,13 +31,13 @@
 
 package com.google.auth.appengine;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNotSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.google.auth.Credentials;
 import com.google.auth.oauth2.AccessToken;
@@ -51,10 +51,13 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Unit tests for AppEngineCredentials */
-class AppEngineCredentialsTest extends BaseSerializationTest {
+@RunWith(JUnit4.class)
+public class AppEngineCredentialsTest extends BaseSerializationTest {
 
   private static Collection<String> SCOPES =
       Collections.unmodifiableCollection(Arrays.asList("scope1", "scope2"));
@@ -62,7 +65,7 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
   private static final String EXPECTED_ACCOUNT = "serviceAccount";
 
   @Test
-  void constructor_usesAppIdentityService() throws IOException {
+  public void constructor_usesAppIdentityService() throws IOException {
     String expectedAccessToken = "ExpectedAccessToken";
 
     MockAppIdentityService appIdentity = new MockAppIdentityService();
@@ -80,7 +83,7 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void refreshAccessToken_sameAs() throws IOException {
+  public void refreshAccessToken_sameAs() throws IOException {
     String expectedAccessToken = "ExpectedAccessToken";
 
     MockAppIdentityService appIdentity = new MockAppIdentityService();
@@ -97,7 +100,7 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void getAccount_sameAs() {
+  public void getAccount_sameAs() throws IOException {
     MockAppIdentityService appIdentity = new MockAppIdentityService();
     appIdentity.setServiceAccountName(EXPECTED_ACCOUNT);
     AppEngineCredentials credentials =
@@ -109,7 +112,7 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void sign_sameAs() {
+  public void sign_sameAs() throws IOException {
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
     MockAppIdentityService appIdentity = new MockAppIdentityService();
     appIdentity.setSignature(expectedSignature);
@@ -122,7 +125,7 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void createScoped_clonesWithScopes() throws IOException {
+  public void createScoped_clonesWithScopes() throws IOException {
     String expectedAccessToken = "ExpectedAccessToken";
     Collection<String> emptyScopes = Collections.emptyList();
 
@@ -135,10 +138,11 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
             .setAppIdentityService(appIdentity)
             .build();
     assertTrue(credentials.createScopedRequired());
-    assertThrows(
-        Exception.class,
-        () -> credentials.getRequestMetadata(CALL_URI),
-        "Should not be able to use credential without scopes.");
+    try {
+      credentials.getRequestMetadata(CALL_URI);
+      fail("Should not be able to use credential without scopes.");
+    } catch (Exception expected) {
+    }
     assertEquals(0, appIdentity.getGetAccessTokenCallCount());
 
     GoogleCredentials scopedCredentials = credentials.createScoped(SCOPES);
@@ -151,7 +155,7 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void equals_true() {
+  public void equals_true() throws IOException {
     Collection<String> emptyScopes = Collections.emptyList();
     MockAppIdentityService appIdentity = new MockAppIdentityService();
 
@@ -171,7 +175,7 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void equals_false_scopes() {
+  public void equals_false_scopes() throws IOException {
     Collection<String> emptyScopes = Collections.emptyList();
     Collection<String> scopes = Collections.singleton("SomeScope");
     MockAppIdentityService appIdentity = new MockAppIdentityService();
@@ -191,7 +195,7 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void toString_containsFields() {
+  public void toString_containsFields() throws IOException {
     String expectedToString =
         String.format(
             "AppEngineCredentials{scopes=[%s], scopesRequired=%b, appIdentityServiceClassName=%s}",
@@ -209,7 +213,7 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void hashCode_equals() {
+  public void hashCode_equals() throws IOException {
     Collection<String> emptyScopes = Collections.emptyList();
     MockAppIdentityService appIdentity = new MockAppIdentityService();
     AppEngineCredentials credentials =
@@ -226,7 +230,7 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void serialize() throws IOException, ClassNotFoundException {
+  public void serialize() throws IOException, ClassNotFoundException {
     Collection<String> scopes = Collections.singleton("SomeScope");
     MockAppIdentityService appIdentity = new MockAppIdentityService();
     AppEngineCredentials credentials =
@@ -245,7 +249,7 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
     assertNotNull(token);
     String expectedValue = "Bearer " + token;
     List<String> authorizations = metadata.get("Authorization");
-    assertNotNull(authorizations, "Authorization headers not found");
-    assertTrue(authorizations.contains(expectedValue), "Bearer token not found");
+    assertNotNull("Authorization headers not found", authorizations);
+    assertTrue("Bearer token not found", authorizations.contains(expectedValue));
   }
 }

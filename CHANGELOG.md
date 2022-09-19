@@ -1,5 +1,122 @@
 # Changelog
 
+## [1.11.0](https://github.com/googleapis/google-auth-library-java/compare/v1.10.0...v1.11.0) (2022-09-08)
+
+
+### Features
+
+* Adds configurable token lifetime support ([#982](https://github.com/googleapis/google-auth-library-java/issues/982)) ([0198733](https://github.com/googleapis/google-auth-library-java/commit/0198733b9d294cbee95f1170f814fbfe94baa6fc))
+
+
+### Bug Fixes
+
+* Add retries to public key fetch ([#983](https://github.com/googleapis/google-auth-library-java/issues/983)) ([1200a39](https://github.com/googleapis/google-auth-library-java/commit/1200a39361e2a1767ef95306ba3ece1b749e82a8))
+* Add Test to validate 0x20 in token ([#971](https://github.com/googleapis/google-auth-library-java/issues/971)) ([612db0a](https://github.com/googleapis/google-auth-library-java/commit/612db0af3afa70b5400891ba3c7eab18ea5eb6bf))
+* Change revoke request from get to post ([#979](https://github.com/googleapis/google-auth-library-java/issues/979)) ([ead58b2](https://github.com/googleapis/google-auth-library-java/commit/ead58b22e04c00ece9f0ea55cbec20d2953f5460))
+* Setting the retry count to default value and enabling ioexceptions to retry ([#988](https://github.com/googleapis/google-auth-library-java/issues/988)) ([257071a](https://github.com/googleapis/google-auth-library-java/commit/257071aeb39c4441bd152813d727f83d433f346f))
+* Updates IdTokenVerifier so that it does not cache a failed public key response  ([#967](https://github.com/googleapis/google-auth-library-java/issues/967)) ([1f4c9c7](https://github.com/googleapis/google-auth-library-java/commit/1f4c9c77a38fb6dfb751447361af9cf00964f96b))
+
+## [1.10.0](https://github.com/googleapis/google-auth-library-java/compare/v1.9.0...v1.10.0) (2022-08-05)
+
+
+### Features
+
+* workforce identity federation for pluggable auth ([#959](https://github.com/googleapis/google-auth-library-java/issues/959)) ([7f2c535](https://github.com/googleapis/google-auth-library-java/commit/7f2c535ab7c842a672d6761f4cd80df88e1a37ed))
+
+
+### Bug Fixes
+
+* updates executable response spec for executable-sourced credentials ([#955](https://github.com/googleapis/google-auth-library-java/issues/955)) ([48ff83d](https://github.com/googleapis/google-auth-library-java/commit/48ff83dc68e29dcae07fdea963cbbe5525f86a89))
+
+
+### Documentation
+
+* **samples:** added auth samples and tests ([#927](https://github.com/googleapis/google-auth-library-java/issues/927)) ([32c717f](https://github.com/googleapis/google-auth-library-java/commit/32c717fdf1a721f3e7ca3d75f03fcc229923689c))
+
+## [1.9.0](https://github.com/googleapis/google-auth-library-java/compare/v1.8.1...v1.9.0) (2022-08-02)
+
+
+### Features
+
+* integration tests for pluggable auth ([#939](https://github.com/googleapis/google-auth-library-java/issues/939)) ([22f37aa](https://github.com/googleapis/google-auth-library-java/commit/22f37aa687b7ffb4209a131860ccdd02f6fc4d42))
+
+
+### Bug Fixes
+
+* expiration time of the ImpersonatedCredentials token depending on the current host's timezone ([#932](https://github.com/googleapis/google-auth-library-java/issues/932)) ([73af08a](https://github.com/googleapis/google-auth-library-java/commit/73af08a1c5f14e18936e9dbd3d1ba29c2675961d))
+
+
+### Documentation
+
+* update wif documentation with enable-imdsv2 flag ([#940](https://github.com/googleapis/google-auth-library-java/issues/940)) ([acc1ce3](https://github.com/googleapis/google-auth-library-java/commit/acc1ce3603435f1c0cf23b8606af71b05e566f2f))
+
+## [1.8.1](https://github.com/googleapis/google-auth-library-java/compare/v1.8.0...v1.8.1) (2022-07-13)
+
+
+### Bug Fixes
+
+* enable longpaths support for windows test ([#1485](https://github.com/googleapis/google-auth-library-java/issues/1485)) ([#943](https://github.com/googleapis/google-auth-library-java/issues/943)) ([c21ec6c](https://github.com/googleapis/google-auth-library-java/commit/c21ec6c952b8bb8fb8bc2e2f1b260beb330a3cd2))
+
+## [1.8.0](https://github.com/googleapis/google-auth-library-java/compare/v1.7.0...v1.8.0) (2022-06-27)
+
+
+### Features
+
+* add build scripts for native image testing in Java 17 ([#1440](https://github.com/googleapis/google-auth-library-java/issues/1440)) ([#923](https://github.com/googleapis/google-auth-library-java/issues/923)) ([bbb51ce](https://github.com/googleapis/google-auth-library-java/commit/bbb51ce7a9265cb991739cd90e1ccf65675d05dc))
+* Adds Pluggable Auth support (WIF) ([#908](https://github.com/googleapis/google-auth-library-java/issues/908)) ([c3e8d16](https://github.com/googleapis/google-auth-library-java/commit/c3e8d169704943735c6b3df7bd0187f04fdd9aa5))
+
+
+### Documentation
+
+* updates README for Pluggable Auth  ([#921](https://github.com/googleapis/google-auth-library-java/issues/921)) ([23716b8](https://github.com/googleapis/google-auth-library-java/commit/23716b82fb3000f5210bb5604127aad7ef52cb76))
+
+## [1.7.0](https://github.com/googleapis/google-auth-library-java/compare/v1.6.0...v1.7.0) (2022-05-12)
+
+
+### Features
+
+* Add ability to provide PrivateKey as Pkcs8 encoded string [#883](https://github.com/googleapis/google-auth-library-java/issues/883) ([#889](https://github.com/googleapis/google-auth-library-java/issues/889)) ([e0d6996](https://github.com/googleapis/google-auth-library-java/commit/e0d6996ac0db1bf75d92e5aba3eaab512affafe4))
+* Add iam endpoint override to ImpersonatedCredentials ([#910](https://github.com/googleapis/google-auth-library-java/issues/910)) ([97bfc4c](https://github.com/googleapis/google-auth-library-java/commit/97bfc4c8ceb199e775784ac3ed4fa992d4d2dcbf))
+
+
+### Bug Fixes
+
+* update branding in ExternalAccountCredentials ([#893](https://github.com/googleapis/google-auth-library-java/issues/893)) ([0200dbb](https://github.com/googleapis/google-auth-library-java/commit/0200dbb05cff06a333879cf99bac64adaada3239))
+
+## [1.6.0](https://github.com/googleapis/google-auth-library-java/compare/v1.5.3...v1.6.0) (2022-03-15)
+
+
+### Features
+
+* Add AWS Session Token to Metadata Requests ([#850](https://github.com/googleapis/google-auth-library-java/issues/850)) ([577e9a5](https://github.com/googleapis/google-auth-library-java/commit/577e9a52204b0d6026a302bb7efe2c6162d57945))
+
+
+### Bug Fixes
+
+* ImmutableSet converted to List for Impersonated Credentials ([#732](https://github.com/googleapis/google-auth-library-java/issues/732)) ([7dcd549](https://github.com/googleapis/google-auth-library-java/commit/7dcd549c4ef0617e657315b7a718368fbd162997))
+* update library docs ([#868](https://github.com/googleapis/google-auth-library-java/issues/868)) ([a081015](https://github.com/googleapis/google-auth-library-java/commit/a081015cb72ade91c022b58261c8d253e46a7793))
+
+### [1.5.3](https://github.com/googleapis/google-auth-library-java/compare/v1.5.2...v1.5.3) (2022-02-24)
+
+
+### Bug Fixes
+
+* **ci:** downgrade nexus-staging-maven-plugin to 1.6.8 ([#874](https://github.com/googleapis/google-auth-library-java/issues/874)) ([fc331d4](https://github.com/googleapis/google-auth-library-java/commit/fc331d466286d99cb3c6aa8977d34fd5f224eff7))
+
+### [1.5.2](https://github.com/googleapis/google-auth-library-java/compare/v1.5.1...v1.5.2) (2022-02-24)
+
+
+### Bug Fixes
+
+* downgrading nexus staging plugin 1.6.8 ([#871](https://github.com/googleapis/google-auth-library-java/issues/871)) ([e87224c](https://github.com/googleapis/google-auth-library-java/commit/e87224cca10d5d24523a5c3ac1e829fd51089f0c))
+
+### [1.5.1](https://github.com/googleapis/google-auth-library-java/compare/v1.5.0...v1.5.1) (2022-02-22)
+
+
+### Bug Fixes
+
+* **deps:** update dependency org.apache.maven.plugins:maven-javadoc-plugin to v3.3.2 ([#852](https://github.com/googleapis/google-auth-library-java/issues/852)) ([aa557c7](https://github.com/googleapis/google-auth-library-java/commit/aa557c7545941d712339b4b62a413997a54bcccc))
+
 ## [1.5.0](https://github.com/googleapis/google-auth-library-java/compare/v1.4.0...v1.5.0) (2022-02-14)
 
 

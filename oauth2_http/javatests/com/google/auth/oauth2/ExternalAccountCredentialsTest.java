@@ -32,30 +32,36 @@
 package com.google.auth.oauth2;
 
 import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.ExternalAccountCredentialsTest.TestExternalAccountCredentials.TestCredentialSource;
+import com.google.auth.oauth2.PluggableAuthCredentials.PluggableAuthCredentialSource;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Tests for {@link ExternalAccountCredentials}. */
+@RunWith(JUnit4.class)
 public class ExternalAccountCredentialsTest {
 
   private static final String STS_URL = "https://sts.googleapis.com";
@@ -80,13 +86,13 @@ public class ExternalAccountCredentialsTest {
 
   private MockExternalAccountCredentialsTransportFactory transportFactory;
 
-  @BeforeEach
-  void setup() {
+  @Before
+  public void setup() {
     transportFactory = new MockExternalAccountCredentialsTransportFactory();
   }
 
   @Test
-  void fromStream_identityPoolCredentials() throws IOException {
+  public void fromStream_identityPoolCredentials() throws IOException {
     GenericJson json = buildJsonIdentityPoolCredential();
 
     ExternalAccountCredentials credential =
@@ -96,7 +102,7 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  void fromStream_awsCredentials() throws IOException {
+  public void fromStream_awsCredentials() throws IOException {
     GenericJson json = buildJsonAwsCredential();
 
     ExternalAccountCredentials credential =
@@ -106,57 +112,66 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  void fromStream_invalidStream_throws() {
+  public void fromStream_pluggableAuthCredentials() throws IOException {
+    GenericJson json = buildJsonPluggableAuthCredential();
+
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromStream(TestUtils.jsonToInputStream(json));
+
+    assertTrue(credential instanceof PluggableAuthCredentials);
+  }
+
+  @Test
+  public void fromStream_invalidStream_throws() throws IOException {
     GenericJson json = buildJsonAwsCredential();
 
     json.put("audience", new HashMap<>());
 
-    CredentialFormatException exception =
-        assertThrows(
-            CredentialFormatException.class,
-            () -> ExternalAccountCredentials.fromStream(TestUtils.jsonToInputStream(json)),
-            "Should fail.");
-    assertEquals("An invalid input stream was provided.", exception.getMessage());
+    try {
+      ExternalAccountCredentials.fromStream(TestUtils.jsonToInputStream(json));
+      fail("Should fail.");
+    } catch (CredentialFormatException e) {
+      assertEquals("An invalid input stream was provided.", e.getMessage());
+    }
   }
 
   @Test
-  void fromStream_nullTransport_throws() {
-    assertThrows(
-        NullPointerException.class,
-        () -> {
-          ExternalAccountCredentials.fromStream(
-              new ByteArrayInputStream("foo".getBytes()), /* transportFactory= */ null);
-        },
-        "NullPointerException should be thrown.");
+  public void fromStream_nullTransport_throws() throws IOException {
+    try {
+      ExternalAccountCredentials.fromStream(
+          new ByteArrayInputStream("foo".getBytes()), /* transportFactory= */ null);
+      fail("NullPointerException should be thrown.");
+    } catch (NullPointerException e) {
+      // Expected.
+    }
   }
 
   @Test
-  void fromStream_nullStream_throws() {
-    assertThrows(
-        NullPointerException.class,
-        () -> {
-          ExternalAccountCredentials.fromStream(
-              /* credentialsStream= */ null, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
-        },
-        "NullPointerException should be thrown.");
+  public void fromStream_nullStream_throws() throws IOException {
+    try {
+      ExternalAccountCredentials.fromStream(
+          /* credentialsStream= */ null, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+      fail("NullPointerException should be thrown.");
+    } catch (NullPointerException e) {
+      // Expected.
+    }
   }
 
   @Test
-  void fromStream_invalidWorkloadAudience_throws() throws IOException {
-    CredentialFormatException exception =
-        assertThrows(
-            CredentialFormatException.class,
-            () -> {
-              GenericJson json = buildJsonIdentityPoolWorkforceCredential();
-              json.put("audience", "invalidAudience");
-              ExternalAccountCredentials.fromStream(TestUtils.jsonToInputStream(json));
-            },
-            "CredentialFormatException should be thrown.");
-    assertEquals("An invalid input stream was provided.", exception.getMessage());
+  public void fromStream_invalidWorkloadAudience_throws() throws IOException {
+    try {
+      GenericJson json = buildJsonIdentityPoolWorkforceCredential();
+      json.put("audience", "invalidAudience");
+      ExternalAccountCredentials credential =
+          ExternalAccountCredentials.fromStream(TestUtils.jsonToInputStream(json));
+      fail("CredentialFormatException should be thrown.");
+    } catch (CredentialFormatException e) {
+      assertEquals("An invalid input stream was provided.", e.getMessage());
+    }
   }
 
   @Test
-  void fromJson_identityPoolCredentialsWorkload() {
+  public void fromJson_identityPoolCredentialsWorkload() {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
             buildJsonIdentityPoolCredential(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
@@ -172,7 +187,7 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  void fromJson_identityPoolCredentialsWorkforce() {
+  public void fromJson_identityPoolCredentialsWorkforce() {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
             buildJsonIdentityPoolWorkforceCredential(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
@@ -184,13 +199,33 @@ public class ExternalAccountCredentialsTest {
     assertEquals("subjectTokenType", credential.getSubjectTokenType());
     assertEquals(STS_URL, credential.getTokenUrl());
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
-    assertEquals(
-        "userProject", ((IdentityPoolCredentials) credential).getWorkforcePoolUserProject());
+    assertEquals("userProject", credential.getWorkforcePoolUserProject());
     assertNotNull(credential.getCredentialSource());
   }
 
   @Test
-  void fromJson_awsCredentials() {
+  public void fromJson_identityPoolCredentialsWithServiceAccountImpersonationOptions() {
+    GenericJson identityPoolCredentialJson = buildJsonIdentityPoolCredential();
+    identityPoolCredentialJson.set(
+        "service_account_impersonation", buildServiceAccountImpersonationOptions(2800));
+
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(
+            identityPoolCredentialJson, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+
+    assertTrue(credential instanceof IdentityPoolCredentials);
+    assertEquals(
+        "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider",
+        credential.getAudience());
+    assertEquals("subjectTokenType", credential.getSubjectTokenType());
+    assertEquals(STS_URL, credential.getTokenUrl());
+    assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
+    assertNotNull(credential.getCredentialSource());
+    assertEquals(2800, credential.getServiceAccountImpersonationOptions().getLifetime());
+  }
+
+  @Test
+  public void fromJson_awsCredentials() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
             buildJsonAwsCredential(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
@@ -204,40 +239,157 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  void fromJson_nullJson_throws() {
-    assertThrows(
-        NullPointerException.class,
-        () ->
-            ExternalAccountCredentials.fromJson(
-                /* json= */ null, OAuth2Utils.HTTP_TRANSPORT_FACTORY),
-        "Exception should be thrown.");
+  public void fromJson_awsCredentialsWithServiceAccountImpersonationOptions() throws IOException {
+    GenericJson awsCredentialJson = buildJsonAwsCredential();
+    awsCredentialJson.set(
+        "service_account_impersonation", buildServiceAccountImpersonationOptions(2800));
+
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(awsCredentialJson, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+
+    assertTrue(credential instanceof AwsCredentials);
+    assertEquals("audience", credential.getAudience());
+    assertEquals("subjectTokenType", credential.getSubjectTokenType());
+    assertEquals(STS_URL, credential.getTokenUrl());
+    assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
+    assertNotNull(credential.getCredentialSource());
+    assertEquals(2800, credential.getServiceAccountImpersonationOptions().getLifetime());
   }
 
   @Test
-  void fromJson_invalidServiceAccountImpersonationUrl_throws() {
+  public void fromJson_pluggableAuthCredentials() {
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(
+            buildJsonPluggableAuthCredential(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+
+    assertTrue(credential instanceof PluggableAuthCredentials);
+    assertEquals("audience", credential.getAudience());
+    assertEquals("subjectTokenType", credential.getSubjectTokenType());
+    assertEquals(STS_URL, credential.getTokenUrl());
+    assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
+    assertNotNull(credential.getCredentialSource());
+
+    PluggableAuthCredentialSource source =
+        (PluggableAuthCredentialSource) credential.getCredentialSource();
+    assertEquals("command", source.getCommand());
+    assertEquals(30000, source.getTimeoutMs()); // Default timeout is 30s.
+    assertNull(source.getOutputFilePath());
+  }
+
+  @Test
+  public void fromJson_pluggableAuthCredentialsWorkforce() {
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(
+            buildJsonPluggableAuthWorkforceCredential(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+
+    assertTrue(credential instanceof PluggableAuthCredentials);
+    assertEquals(
+        "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider",
+        credential.getAudience());
+    assertEquals("subjectTokenType", credential.getSubjectTokenType());
+    assertEquals(STS_URL, credential.getTokenUrl());
+    assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
+    assertEquals("userProject", credential.getWorkforcePoolUserProject());
+
+    assertNotNull(credential.getCredentialSource());
+
+    PluggableAuthCredentialSource source =
+        (PluggableAuthCredentialSource) credential.getCredentialSource();
+    assertEquals("command", source.getCommand());
+    assertEquals(30000, source.getTimeoutMs()); // Default timeout is 30s.
+    assertNull(source.getOutputFilePath());
+  }
+
+  @Test
+  public void fromJson_pluggableAuthCredentials_allExecutableOptionsSet() {
+    GenericJson json = buildJsonPluggableAuthCredential();
+    Map<String, Object> credentialSourceMap = (Map<String, Object>) json.get("credential_source");
+    // Add optional params to the executable config (timeout, output file path).
+    Map<String, Object> executableConfig =
+        (Map<String, Object>) credentialSourceMap.get("executable");
+    executableConfig.put("timeout_millis", 5000);
+    executableConfig.put("output_file", "path/to/output/file");
+
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+
+    assertTrue(credential instanceof PluggableAuthCredentials);
+    assertEquals("audience", credential.getAudience());
+    assertEquals("subjectTokenType", credential.getSubjectTokenType());
+    assertEquals(STS_URL, credential.getTokenUrl());
+    assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
+    assertNotNull(credential.getCredentialSource());
+
+    PluggableAuthCredentialSource source =
+        (PluggableAuthCredentialSource) credential.getCredentialSource();
+    assertEquals("command", source.getCommand());
+    assertEquals("path/to/output/file", source.getOutputFilePath());
+    assertEquals(5000, source.getTimeoutMs());
+  }
+
+  @Test
+  public void fromJson_pluggableAuthCredentialsWithServiceAccountImpersonationOptions() {
+    GenericJson pluggableAuthCredentialJson = buildJsonPluggableAuthCredential();
+    pluggableAuthCredentialJson.set(
+        "service_account_impersonation", buildServiceAccountImpersonationOptions(2800));
+
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(
+            pluggableAuthCredentialJson, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+
+    assertTrue(credential instanceof PluggableAuthCredentials);
+    assertEquals("audience", credential.getAudience());
+    assertEquals("subjectTokenType", credential.getSubjectTokenType());
+    assertEquals(STS_URL, credential.getTokenUrl());
+    assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
+    assertNotNull(credential.getCredentialSource());
+    assertEquals(2800, credential.getServiceAccountImpersonationOptions().getLifetime());
+
+    PluggableAuthCredentialSource source =
+        (PluggableAuthCredentialSource) credential.getCredentialSource();
+    assertEquals("command", source.getCommand());
+    assertEquals(30000, source.getTimeoutMs()); // Default timeout is 30s.
+    assertNull(source.getOutputFilePath());
+  }
+
+  @Test
+  public void fromJson_nullJson_throws() {
+    try {
+      ExternalAccountCredentials.fromJson(/* json= */ null, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+      fail("Exception should be thrown.");
+    } catch (NullPointerException e) {
+      // Expected.
+    }
+  }
+
+  @Test
+  public void fromJson_invalidServiceAccountImpersonationUrl_throws() {
     GenericJson json = buildJsonIdentityPoolCredential();
     json.put("service_account_impersonation_url", "https://iamcredentials.googleapis.com");
 
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> ExternalAccountCredentials.fromJson(json, OAuth2Utils.HTTP_TRANSPORT_FACTORY),
-            "Exception should be thrown.");
-    assertEquals(
-        "Unable to determine target principal from service account impersonation URL.",
-        exception.getMessage());
+    try {
+      ExternalAccountCredentials.fromJson(json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+      fail("Exception should be thrown.");
+    } catch (IllegalArgumentException e) {
+      assertEquals(
+          "Unable to determine target principal from service account impersonation URL.",
+          e.getMessage());
+    }
   }
 
   @Test
-  void fromJson_nullTransport_throws() {
-    assertThrows(
-        NullPointerException.class,
-        () -> ExternalAccountCredentials.fromJson(new HashMap<>(), /* transportFactory= */ null),
-        "Exception should be thrown.");
+  public void fromJson_nullTransport_throws() {
+    try {
+      ExternalAccountCredentials.fromJson(
+          new HashMap<String, Object>(), /* transportFactory= */ null);
+      fail("Exception should be thrown.");
+    } catch (NullPointerException e) {
+      // Expected.
+    }
   }
 
   @Test
-  void fromJson_invalidWorkforceAudiences_throws() {
+  public void fromJson_invalidWorkforceAudiences_throws() {
     List<String> invalidAudiences =
         Arrays.asList(
             "//iam.googleapis.com/locations/global/workloadIdentityPools/pool/providers/provider",
@@ -250,25 +402,23 @@ public class ExternalAccountCredentialsTest {
             "//iam.googleapis.com/locations/global/workforce/providers");
 
     for (String audience : invalidAudiences) {
-      IllegalArgumentException exception =
-          assertThrows(
-              IllegalArgumentException.class,
-              () -> {
-                GenericJson json = buildJsonIdentityPoolCredential();
-                json.put("audience", audience);
-                json.put("workforce_pool_user_project", "userProject");
+      try {
+        GenericJson json = buildJsonIdentityPoolCredential();
+        json.put("audience", audience);
+        json.put("workforce_pool_user_project", "userProject");
 
-                ExternalAccountCredentials.fromJson(json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
-              },
-              "Exception should be thrown.");
-      assertEquals(
-          "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.",
-          exception.getMessage());
+        ExternalAccountCredentials.fromJson(json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+        fail("Exception should be thrown.");
+      } catch (IllegalArgumentException e) {
+        assertEquals(
+            "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.",
+            e.getMessage());
+      }
     }
   }
 
   @Test
-  void constructor_builder() {
+  public void constructor_builder() {
     HashMap<String, Object> credentialSource = new HashMap<>();
     credentialSource.put("file", "file");
 
@@ -306,46 +456,42 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  void constructor_builder_invalidTokenUrl() {
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> {
-              ExternalAccountCredentials.Builder builder =
-                  TestExternalAccountCredentials.newBuilder()
-                      .setHttpTransportFactory(transportFactory)
-                      .setAudience("audience")
-                      .setSubjectTokenType("subjectTokenType")
-                      .setTokenUrl("tokenUrl")
-                      .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP));
-              new TestExternalAccountCredentials(builder);
-            },
-            "Should have failed since an invalid token URL was passed.");
-    assertEquals("The provided token URL is invalid.", exception.getMessage());
+  public void constructor_builder_invalidTokenUrl() {
+    try {
+      ExternalAccountCredentials.Builder builder =
+          TestExternalAccountCredentials.newBuilder()
+              .setHttpTransportFactory(transportFactory)
+              .setAudience("audience")
+              .setSubjectTokenType("subjectTokenType")
+              .setTokenUrl("tokenUrl")
+              .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP));
+      new TestExternalAccountCredentials(builder);
+      fail("Should not be able to continue without exception.");
+    } catch (IllegalArgumentException exception) {
+      assertEquals("The provided token URL is invalid.", exception.getMessage());
+    }
   }
 
   @Test
-  void constructor_builder_invalidServiceAccountImpersonationUrl() {
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> {
-              ExternalAccountCredentials.Builder builder =
-                  TestExternalAccountCredentials.newBuilder()
-                      .setHttpTransportFactory(transportFactory)
-                      .setAudience("audience")
-                      .setSubjectTokenType("subjectTokenType")
-                      .setTokenUrl("tokenUrl")
-                      .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
-                      .setServiceAccountImpersonationUrl("serviceAccountImpersonationUrl");
-              new TestExternalAccountCredentials(builder);
-            },
-            "Should have failed since an invalid token URL was passed.");
-    assertEquals("The provided token URL is invalid.", exception.getMessage());
+  public void constructor_builder_invalidServiceAccountImpersonationUrl() {
+    try {
+      ExternalAccountCredentials.Builder builder =
+          TestExternalAccountCredentials.newBuilder()
+              .setHttpTransportFactory(transportFactory)
+              .setAudience("audience")
+              .setSubjectTokenType("subjectTokenType")
+              .setTokenUrl("tokenUrl")
+              .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+              .setServiceAccountImpersonationUrl("serviceAccountImpersonationUrl");
+      new TestExternalAccountCredentials(builder);
+      fail("Should not be able to continue without exception.");
+    } catch (IllegalArgumentException exception) {
+      assertEquals("The provided token URL is invalid.", exception.getMessage());
+    }
   }
 
   @Test
-  void constructor_builderWithInvalidWorkforceAudiences_throws() {
+  public void constructor_builderWithInvalidWorkforceAudiences_throws() {
     List<String> invalidAudiences =
         Arrays.asList(
             "",
@@ -361,28 +507,26 @@ public class ExternalAccountCredentialsTest {
     HashMap<String, Object> credentialSource = new HashMap<>();
     credentialSource.put("file", "file");
     for (String audience : invalidAudiences) {
-      IllegalArgumentException exception =
-          assertThrows(
-              IllegalArgumentException.class,
-              () -> {
-                TestExternalAccountCredentials.newBuilder()
-                    .setWorkforcePoolUserProject("workforcePoolUserProject")
-                    .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-                    .setAudience(audience)
-                    .setSubjectTokenType("subjectTokenType")
-                    .setTokenUrl(STS_URL)
-                    .setCredentialSource(new TestCredentialSource(credentialSource))
-                    .build();
-              },
-              "Exception should be thrown.");
-      assertEquals(
-          "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.",
-          exception.getMessage());
+      try {
+        TestExternalAccountCredentials.newBuilder()
+            .setWorkforcePoolUserProject("workforcePoolUserProject")
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .setAudience(audience)
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setCredentialSource(new TestCredentialSource(credentialSource))
+            .build();
+        fail("Should not be able to continue without exception.");
+      } catch (IllegalArgumentException exception) {
+        assertEquals(
+            "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.",
+            exception.getMessage());
+      }
     }
   }
 
   @Test
-  void constructor_builderWithEmptyWorkforceUserProjectAndWorkforceAudience() {
+  public void constructor_builderWithEmptyWorkforceUserProjectAndWorkforceAudience() {
     HashMap<String, Object> credentialSource = new HashMap<>();
     credentialSource.put("file", "file");
     // No exception should be thrown.
@@ -397,7 +541,176 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  void exchangeExternalCredentialForAccessToken() throws IOException {
+  public void constructor_builder_invalidTokenLifetime_throws() {
+    Map<String, Object> invalidOptionsMap = new HashMap<String, Object>();
+    invalidOptionsMap.put("token_lifetime_seconds", "thisIsAString");
+
+    try {
+      IdentityPoolCredentials.newBuilder()
+          .setHttpTransportFactory(transportFactory)
+          .setAudience(
+              "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+          .setSubjectTokenType("subjectTokenType")
+          .setTokenUrl(STS_URL)
+          .setTokenInfoUrl("https://tokeninfo.com")
+          .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+          .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+          .setScopes(Arrays.asList("scope1", "scope2"))
+          .setQuotaProjectId("projectId")
+          .setClientId("clientId")
+          .setClientSecret("clientSecret")
+          .setWorkforcePoolUserProject("workforcePoolUserProject")
+          .setServiceAccountImpersonationOptions(invalidOptionsMap)
+          .build();
+      fail("Should not be able to continue without exception.");
+    } catch (IllegalArgumentException exception) {
+      assertEquals(
+          "Value of \"token_lifetime_seconds\" field could not be parsed into an integer.",
+          exception.getMessage());
+      assertEquals(NumberFormatException.class, exception.getCause().getClass());
+    }
+  }
+
+  @Test
+  public void constructor_builder_stringTokenLifetime() {
+    Map<String, Object> optionsMap = new HashMap<String, Object>();
+    optionsMap.put("token_lifetime_seconds", "2800");
+
+    ExternalAccountCredentials credentials =
+        IdentityPoolCredentials.newBuilder()
+            .setHttpTransportFactory(transportFactory)
+            .setAudience(
+                "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setTokenInfoUrl("https://tokeninfo.com")
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+            .setScopes(Arrays.asList("scope1", "scope2"))
+            .setQuotaProjectId("projectId")
+            .setClientId("clientId")
+            .setClientSecret("clientSecret")
+            .setWorkforcePoolUserProject("workforcePoolUserProject")
+            .setServiceAccountImpersonationOptions(optionsMap)
+            .build();
+
+    assertEquals(2800, credentials.getServiceAccountImpersonationOptions().getLifetime());
+  }
+
+  @Test
+  public void constructor_builder_bigDecimalTokenLifetime() {
+    Map<String, Object> optionsMap = new HashMap<String, Object>();
+    optionsMap.put("token_lifetime_seconds", new BigDecimal("2800"));
+
+    ExternalAccountCredentials credentials =
+        IdentityPoolCredentials.newBuilder()
+            .setHttpTransportFactory(transportFactory)
+            .setAudience(
+                "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setTokenInfoUrl("https://tokeninfo.com")
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+            .setScopes(Arrays.asList("scope1", "scope2"))
+            .setQuotaProjectId("projectId")
+            .setClientId("clientId")
+            .setClientSecret("clientSecret")
+            .setWorkforcePoolUserProject("workforcePoolUserProject")
+            .setServiceAccountImpersonationOptions(optionsMap)
+            .build();
+
+    assertEquals(2800, credentials.getServiceAccountImpersonationOptions().getLifetime());
+  }
+
+  @Test
+  public void constructor_builder_integerTokenLifetime() {
+    Map<String, Object> optionsMap = new HashMap<String, Object>();
+    optionsMap.put("token_lifetime_seconds", Integer.valueOf(2800));
+
+    ExternalAccountCredentials credentials =
+        IdentityPoolCredentials.newBuilder()
+            .setHttpTransportFactory(transportFactory)
+            .setAudience(
+                "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setTokenInfoUrl("https://tokeninfo.com")
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+            .setScopes(Arrays.asList("scope1", "scope2"))
+            .setQuotaProjectId("projectId")
+            .setClientId("clientId")
+            .setClientSecret("clientSecret")
+            .setWorkforcePoolUserProject("workforcePoolUserProject")
+            .setServiceAccountImpersonationOptions(optionsMap)
+            .build();
+
+    assertEquals(2800, credentials.getServiceAccountImpersonationOptions().getLifetime());
+  }
+
+  @Test
+  public void constructor_builder_lowTokenLifetime_throws() {
+    Map<String, Object> optionsMap = new HashMap<String, Object>();
+    optionsMap.put("token_lifetime_seconds", 599);
+
+    try {
+      ExternalAccountCredentials credentials =
+          IdentityPoolCredentials.newBuilder()
+              .setHttpTransportFactory(transportFactory)
+              .setAudience(
+                  "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+              .setSubjectTokenType("subjectTokenType")
+              .setTokenUrl(STS_URL)
+              .setTokenInfoUrl("https://tokeninfo.com")
+              .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+              .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+              .setScopes(Arrays.asList("scope1", "scope2"))
+              .setQuotaProjectId("projectId")
+              .setClientId("clientId")
+              .setClientSecret("clientSecret")
+              .setWorkforcePoolUserProject("workforcePoolUserProject")
+              .setServiceAccountImpersonationOptions(optionsMap)
+              .build();
+    } catch (IllegalArgumentException e) {
+      assertEquals(
+          "The \"token_lifetime_seconds\" field must be between 600 and 43200 seconds.",
+          e.getMessage());
+    }
+  }
+
+  @Test
+  public void constructor_builder_highTokenLifetime_throws() {
+    Map<String, Object> optionsMap = new HashMap<String, Object>();
+    optionsMap.put("token_lifetime_seconds", 43201);
+
+    try {
+      ExternalAccountCredentials credentials =
+          IdentityPoolCredentials.newBuilder()
+              .setHttpTransportFactory(transportFactory)
+              .setAudience(
+                  "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+              .setSubjectTokenType("subjectTokenType")
+              .setTokenUrl(STS_URL)
+              .setTokenInfoUrl("https://tokeninfo.com")
+              .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+              .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+              .setScopes(Arrays.asList("scope1", "scope2"))
+              .setQuotaProjectId("projectId")
+              .setClientId("clientId")
+              .setClientSecret("clientSecret")
+              .setWorkforcePoolUserProject("workforcePoolUserProject")
+              .setServiceAccountImpersonationOptions(optionsMap)
+              .build();
+    } catch (IllegalArgumentException e) {
+      assertEquals(
+          "The \"token_lifetime_seconds\" field must be between 600 and 43200 seconds.",
+          e.getMessage());
+    }
+  }
+
+  @Test
+  public void exchangeExternalCredentialForAccessToken() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(buildJsonIdentityPoolCredential(), transportFactory);
 
@@ -411,12 +724,12 @@ public class ExternalAccountCredentialsTest {
 
     // Validate no internal options set.
     Map<String, String> query =
-        TestUtils.parseQuery(transportFactory.transport.getRequest().getContentAsString());
+        TestUtils.parseQuery(transportFactory.transport.getLastRequest().getContentAsString());
     assertNull(query.get("options"));
   }
 
   @Test
-  void exchangeExternalCredentialForAccessToken_withInternalOptions() throws IOException {
+  public void exchangeExternalCredentialForAccessToken_withInternalOptions() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(buildJsonIdentityPoolCredential(), transportFactory);
 
@@ -435,38 +748,49 @@ public class ExternalAccountCredentialsTest {
 
     // Validate internal options set.
     Map<String, String> query =
-        TestUtils.parseQuery(transportFactory.transport.getRequest().getContentAsString());
+        TestUtils.parseQuery(transportFactory.transport.getLastRequest().getContentAsString());
     assertNotNull(query.get("options"));
     assertEquals(internalOptions.toString(), query.get("options"));
   }
 
   @Test
-  void exchangeExternalCredentialForAccessToken_workforceCred_expectUserProjectPassedToSts()
+  public void exchangeExternalCredentialForAccessToken_workforceCred_expectUserProjectPassedToSts()
       throws IOException {
-    ExternalAccountCredentials credential =
+    ExternalAccountCredentials identityPoolCredential =
         ExternalAccountCredentials.fromJson(
             buildJsonIdentityPoolWorkforceCredential(), transportFactory);
 
-    StsTokenExchangeRequest stsTokenExchangeRequest =
-        StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
+    ExternalAccountCredentials pluggableAuthCredential =
+        ExternalAccountCredentials.fromJson(
+            buildJsonPluggableAuthWorkforceCredential(), transportFactory);
 
-    AccessToken accessToken =
-        credential.exchangeExternalCredentialForAccessToken(stsTokenExchangeRequest);
+    List<ExternalAccountCredentials> credentials =
+        Arrays.asList(identityPoolCredential, pluggableAuthCredential);
 
-    assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
+    for (int i = 0; i < credentials.size(); i++) {
+      StsTokenExchangeRequest stsTokenExchangeRequest =
+          StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
 
-    // Validate internal options set.
-    Map<String, String> query =
-        TestUtils.parseQuery(transportFactory.transport.getRequest().getContentAsString());
-    GenericJson internalOptions = new GenericJson();
-    internalOptions.setFactory(OAuth2Utils.JSON_FACTORY);
-    internalOptions.put("userProject", "userProject");
-    assertEquals(internalOptions.toString(), query.get("options"));
+      AccessToken accessToken =
+          credentials.get(i).exchangeExternalCredentialForAccessToken(stsTokenExchangeRequest);
+
+      assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
+
+      // Validate internal options set.
+      Map<String, String> query =
+          TestUtils.parseQuery(transportFactory.transport.getLastRequest().getContentAsString());
+      GenericJson internalOptions = new GenericJson();
+      internalOptions.setFactory(OAuth2Utils.JSON_FACTORY);
+      internalOptions.put("userProject", "userProject");
+      assertEquals(internalOptions.toString(), query.get("options"));
+      assertEquals(i + 1, transportFactory.transport.getRequests().size());
+    }
   }
 
   @Test
-  void exchangeExternalCredentialForAccessToken_workforceCredWithInternalOptions_expectOverridden()
-      throws IOException {
+  public void
+      exchangeExternalCredentialForAccessToken_workforceCredWithInternalOptions_expectOverridden()
+          throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
             buildJsonIdentityPoolWorkforceCredential(), transportFactory);
@@ -485,13 +809,13 @@ public class ExternalAccountCredentialsTest {
 
     // Validate internal options set.
     Map<String, String> query =
-        TestUtils.parseQuery(transportFactory.transport.getRequest().getContentAsString());
+        TestUtils.parseQuery(transportFactory.transport.getLastRequest().getContentAsString());
     assertNotNull(query.get("options"));
     assertEquals(internalOptions.toString(), query.get("options"));
   }
 
   @Test
-  void exchangeExternalCredentialForAccessToken_withServiceAccountImpersonation()
+  public void exchangeExternalCredentialForAccessToken_withServiceAccountImpersonation()
       throws IOException {
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
 
@@ -500,7 +824,8 @@ public class ExternalAccountCredentialsTest {
             IdentityPoolCredentialsTest.writeIdentityPoolCredentialsStream(
                 transportFactory.transport.getStsUrl(),
                 transportFactory.transport.getMetadataUrl(),
-                transportFactory.transport.getServiceAccountImpersonationUrl()),
+                transportFactory.transport.getServiceAccountImpersonationUrl(),
+                /* serviceAccountImpersonationOptionsMap= */ null),
             transportFactory);
 
     StsTokenExchangeRequest stsTokenExchangeRequest =
@@ -511,10 +836,83 @@ public class ExternalAccountCredentialsTest {
 
     assertEquals(
         transportFactory.transport.getServiceAccountAccessToken(), returnedToken.getTokenValue());
+
+    // Validate that default lifetime was set correctly on the request.
+    GenericJson query =
+        OAuth2Utils.JSON_FACTORY
+            .createJsonParser(transportFactory.transport.getLastRequest().getContentAsString())
+            .parseAndClose(GenericJson.class);
+
+    assertEquals("3600s", query.get("lifetime"));
   }
 
   @Test
-  void exchangeExternalCredentialForAccessToken_throws() throws IOException {
+  public void exchangeExternalCredentialForAccessToken_withServiceAccountImpersonationOptions()
+      throws IOException {
+    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
+
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromStream(
+            IdentityPoolCredentialsTest.writeIdentityPoolCredentialsStream(
+                transportFactory.transport.getStsUrl(),
+                transportFactory.transport.getMetadataUrl(),
+                transportFactory.transport.getServiceAccountImpersonationUrl(),
+                buildServiceAccountImpersonationOptions(2800)),
+            transportFactory);
+
+    StsTokenExchangeRequest stsTokenExchangeRequest =
+        StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
+
+    AccessToken returnedToken =
+        credential.exchangeExternalCredentialForAccessToken(stsTokenExchangeRequest);
+
+    assertEquals(
+        transportFactory.transport.getServiceAccountAccessToken(), returnedToken.getTokenValue());
+
+    // Validate that lifetime was set correctly on the request.
+    GenericJson query =
+        OAuth2Utils.JSON_FACTORY
+            .createJsonParser(transportFactory.transport.getLastRequest().getContentAsString())
+            .parseAndClose(GenericJson.class);
+
+    assertEquals("2800s", query.get("lifetime"));
+  }
+
+  @Test
+  public void exchangeExternalCredentialForAccessToken_withServiceAccountImpersonationOverride()
+      throws IOException {
+    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
+
+    String serviceAccountEmail = "different@different.iam.gserviceaccount.com";
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromStream(
+            IdentityPoolCredentialsTest.writeIdentityPoolCredentialsStream(
+                transportFactory.transport.getStsUrl(),
+                transportFactory.transport.getMetadataUrl(),
+                transportFactory.transport.getServiceAccountImpersonationUrl(),
+                /* serviceAccountImpersonationOptionsMap= */ null),
+            transportFactory);
+
+    // Override impersonated credentials.
+    ExternalAccountCredentials sourceCredentials =
+        IdentityPoolCredentials.newBuilder((IdentityPoolCredentials) credential)
+            .setServiceAccountImpersonationUrl(null)
+            .build();
+    credential.overrideImpersonatedCredentials(
+        new ImpersonatedCredentials.Builder(sourceCredentials, serviceAccountEmail)
+            .setScopes(new ArrayList<>(sourceCredentials.getScopes()))
+            .setHttpTransportFactory(transportFactory)
+            .build());
+
+    credential.exchangeExternalCredentialForAccessToken(
+        StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build());
+
+    assertTrue(
+        transportFactory.transport.getRequests().get(2).getUrl().contains(serviceAccountEmail));
+  }
+
+  @Test
+  public void exchangeExternalCredentialForAccessToken_throws() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(buildJsonIdentityPoolCredential(), transportFactory);
 
@@ -527,18 +925,18 @@ public class ExternalAccountCredentialsTest {
     StsTokenExchangeRequest stsTokenExchangeRequest =
         StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
 
-    OAuthException exception =
-        assertThrows(
-            OAuthException.class,
-            () -> credential.exchangeExternalCredentialForAccessToken(stsTokenExchangeRequest),
-            "Exception should be thrown.");
-    assertEquals(errorCode, exception.getErrorCode());
-    assertEquals(errorDescription, exception.getErrorDescription());
-    assertEquals(errorUri, exception.getErrorUri());
+    try {
+      credential.exchangeExternalCredentialForAccessToken(stsTokenExchangeRequest);
+      fail("Exception should be thrown.");
+    } catch (OAuthException e) {
+      assertEquals(errorCode, e.getErrorCode());
+      assertEquals(errorDescription, e.getErrorDescription());
+      assertEquals(errorUri, e.getErrorUri());
+    }
   }
 
   @Test
-  void getRequestMetadata_withQuotaProjectId() throws IOException {
+  public void getRequestMetadata_withQuotaProjectId() throws IOException {
     TestExternalAccountCredentials testCredentials =
         (TestExternalAccountCredentials)
             TestExternalAccountCredentials.newBuilder()
@@ -557,7 +955,7 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  void validateTokenUrl_validUrls() {
+  public void validateTokenUrl_validUrls() {
     List<String> validUrls =
         Arrays.asList(
             "https://sts.googleapis.com",
@@ -576,7 +974,7 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  void validateTokenUrl_invalidUrls() {
+  public void validateTokenUrl_invalidUrls() {
     List<String> invalidUrls =
         Arrays.asList(
             "https://iamcredentials.googleapis.com",
@@ -600,17 +998,17 @@ public class ExternalAccountCredentialsTest {
             "https://us-east-1.sts.googleapis.com.evil.com");
 
     for (String url : invalidUrls) {
-      IllegalArgumentException exception =
-          assertThrows(
-              IllegalArgumentException.class,
-              () -> ExternalAccountCredentials.validateTokenUrl(url),
-              "Should have failed since an invalid URL was passed.");
-      assertEquals("The provided token URL is invalid.", exception.getMessage());
+      try {
+        ExternalAccountCredentials.validateTokenUrl(url);
+        fail("Should have failed since an invalid URL was passed.");
+      } catch (IllegalArgumentException e) {
+        assertEquals("The provided token URL is invalid.", e.getMessage());
+      }
     }
   }
 
   @Test
-  void validateServiceAccountImpersonationUrls_validUrls() {
+  public void validateServiceAccountImpersonationUrls_validUrls() {
     List<String> validUrls =
         Arrays.asList(
             "https://iamcredentials.googleapis.com",
@@ -630,7 +1028,7 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
-  void validateServiceAccountImpersonationUrls_invalidUrls() {
+  public void validateServiceAccountImpersonationUrls_invalidUrls() {
     List<String> invalidUrls =
         Arrays.asList(
             "https://sts.googleapis.com",
@@ -654,13 +1052,12 @@ public class ExternalAccountCredentialsTest {
             "https://us-east-1.iamcredentials.googleapis.com.evil.com");
 
     for (String url : invalidUrls) {
-      IllegalArgumentException exception =
-          assertThrows(
-              IllegalArgumentException.class,
-              () -> ExternalAccountCredentials.validateServiceAccountImpersonationInfoUrl(url),
-              "Should have failed since an invalid URL was passed.");
-      assertEquals(
-          "The provided service account impersonation URL is invalid.", exception.getMessage());
+      try {
+        ExternalAccountCredentials.validateServiceAccountImpersonationInfoUrl(url);
+        fail("Should have failed since an invalid URL was passed.");
+      } catch (IllegalArgumentException e) {
+        assertEquals("The provided service account impersonation URL is invalid.", e.getMessage());
+      }
     }
   }
 
@@ -702,6 +1099,39 @@ public class ExternalAccountCredentialsTest {
     json.put("credential_source", map);
 
     return json;
+  }
+
+  private GenericJson buildJsonPluggableAuthCredential() {
+    GenericJson json = new GenericJson();
+    json.put("audience", "audience");
+    json.put("subject_token_type", "subjectTokenType");
+    json.put("token_url", STS_URL);
+    json.put("token_info_url", "tokenInfoUrl");
+
+    Map<String, Map<String, Object>> credentialSource = new HashMap<>();
+
+    Map<String, Object> executableConfig = new HashMap<>();
+    executableConfig.put("command", "command");
+
+    credentialSource.put("executable", executableConfig);
+    json.put("credential_source", credentialSource);
+
+    return json;
+  }
+
+  private GenericJson buildJsonPluggableAuthWorkforceCredential() {
+    GenericJson json = buildJsonPluggableAuthCredential();
+    json.put(
+        "audience", "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider");
+    json.put("workforce_pool_user_project", "userProject");
+    return json;
+  }
+
+  static Map<String, Object> buildServiceAccountImpersonationOptions(Integer lifetime) {
+    Map<String, Object> map = new HashMap<String, Object>();
+    map.put("token_lifetime_seconds", lifetime);
+
+    return map;
   }
 
   static class TestExternalAccountCredentials extends ExternalAccountCredentials {

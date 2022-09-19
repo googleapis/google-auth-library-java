@@ -46,7 +46,7 @@ import java.io.IOException;
 /** Transport that simulates the IAMCredentials server for access tokens. */
 public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
 
-  private static final String IAM_ACCESS_TOKEN_ENDPOINT =
+  private static final String DEFAULT_IAM_ACCESS_TOKEN_ENDPOINT =
       "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken";
   private static final String IAM_ID_TOKEN_ENDPOINT =
       "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateIdToken";
@@ -58,6 +58,7 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
   private byte[] signedBlob;
   private int responseCode = HttpStatusCodes.STATUS_CODE_OK;
   private String errorMessage;
+  private String iamAccessTokenEndpoint;
 
   private String accessToken;
   private String expireTime;
@@ -101,6 +102,10 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
     this.idToken = idToken;
   }
 
+  public void setAccessTokenEndpoint(String accessTokenEndpoint) {
+    this.iamAccessTokenEndpoint = accessTokenEndpoint;
+  }
+
   public MockLowLevelHttpRequest getRequest() {
     return request;
   }
@@ -109,7 +114,9 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
   public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
 
     String iamAccesssTokenformattedUrl =
-        String.format(IAM_ACCESS_TOKEN_ENDPOINT, this.targetPrincipal);
+        iamAccessTokenEndpoint != null
+            ? iamAccessTokenEndpoint
+            : String.format(DEFAULT_IAM_ACCESS_TOKEN_ENDPOINT, this.targetPrincipal);
     String iamSignBlobformattedUrl = String.format(IAM_SIGN_ENDPOINT, this.targetPrincipal);
     String iamIdTokenformattedUrl = String.format(IAM_ID_TOKEN_ENDPOINT, this.targetPrincipal);
     if (url.equals(iamAccesssTokenformattedUrl)) {
