@@ -26,9 +26,8 @@ public class VerifyGoogleIdToken {
     // The Google ID token to verify.
     String idToken = "id-token";
 
-    // The service name for which the id token is requested. Service name refers to the
-    // logical identifier of an API service, such as "pubsub.googleapis.com".
-    String targetAudience = "pubsub.googleapis.com";
+    // The service name for which the id token was requested.
+    String targetAudience = "https://example.com";
 
     // To verify id tokens, get the Json Web Key endpoint (jwk).
     // OpenID Connect allows the use of a "Discovery document," a JSON document found at a

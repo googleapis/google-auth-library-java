@@ -52,6 +52,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -166,6 +168,29 @@ public final class ITWorkloadIdentityFederationTest {
                 buildPluggableCredentialConfig(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
 
     callGcs(pluggableAuthCredentials);
+  }
+
+  /**
+   * Sets the service account impersonation object in configuration JSON with a non-default value
+   * for token_lifetime_seconds and validates that the lifetime is used for the access token.
+   */
+  @Test
+  public void identityPoolCredentials_withServiceAccountImpersonationOptions() throws IOException {
+    GenericJson identityPoolCredentialConfig = buildIdentityPoolCredentialConfig();
+    Map<String, Object> map = new HashMap<String, Object>();
+    map.put("token_lifetime_seconds", 2800);
+    identityPoolCredentialConfig.put("service_account_impersonation", map);
+
+    IdentityPoolCredentials identityPoolCredentials =
+        (IdentityPoolCredentials)
+            ExternalAccountCredentials.fromJson(
+                identityPoolCredentialConfig, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+    long maxExpirationTime = Instant.now().plusSeconds(2800 + 5).toEpochMilli();
+    long minExpirationtime = Instant.now().plusSeconds(2800 - 5).toEpochMilli();
+
+    callGcs(identityPoolCredentials);
+    long tokenExpiry = identityPoolCredentials.getAccessToken().getExpirationTimeMillis();
+    assertTrue(minExpirationtime <= tokenExpiry && tokenExpiry <= maxExpirationTime);
   }
 
   private GenericJson buildIdentityPoolCredentialConfig() throws IOException {

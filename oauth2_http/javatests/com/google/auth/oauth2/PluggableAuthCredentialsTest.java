@@ -232,6 +232,39 @@ public class PluggableAuthCredentialsTest {
   }
 
   @Test
+  public void refreshAccessToken_withServiceAccountImpersonationOptions() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
+
+    PluggableAuthCredentials credential =
+        (PluggableAuthCredentials)
+            PluggableAuthCredentials.newBuilder(CREDENTIAL)
+                .setExecutableHandler(options -> "pluggableAuthToken")
+                .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setServiceAccountImpersonationUrl(
+                    transportFactory.transport.getServiceAccountImpersonationUrl())
+                .setHttpTransportFactory(transportFactory)
+                .setServiceAccountImpersonationOptions(
+                    ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(2800))
+                .build();
+
+    AccessToken accessToken = credential.refreshAccessToken();
+
+    assertEquals(
+        transportFactory.transport.getServiceAccountAccessToken(), accessToken.getTokenValue());
+
+    // Validate that default lifetime was set correctly on the request.
+    GenericJson query =
+        OAuth2Utils.JSON_FACTORY
+            .createJsonParser(transportFactory.transport.getLastRequest().getContentAsString())
+            .parseAndClose(GenericJson.class);
+
+    assertEquals("2800s", query.get("lifetime"));
+  }
+
+  @Test
   public void pluggableAuthCredentialSource_allFields() {
     Map<String, Object> source = new HashMap<>();
     Map<String, Object> executable = new HashMap<>();

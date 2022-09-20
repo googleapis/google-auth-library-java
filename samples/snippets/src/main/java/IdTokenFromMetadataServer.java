@@ -30,14 +30,13 @@ public class IdTokenFromMetadataServer {
     // TODO(Developer): Replace the below variables before running the code.
 
     // The url or target audience to obtain the ID token for.
-    String url = "http://www.abc.com";
+    String url = "https://example.com";
 
     getIdTokenFromMetadataServer(url);
   }
 
-  // Use the Google Cloud metadata server in the Cloud Run (or AppEngine or Kubernetes etc.,)
-  // environment to create an identity token and add it to the HTTP request as part of an
-  // Authorization header.
+  // Use the Google Cloud metadata server to create an identity token and add it to the
+  // HTTP request as part of an Authorization header.
   public static void getIdTokenFromMetadataServer(String url) throws IOException {
     // Construct the GoogleCredentials object which obtains the default configuration from your
     // working environment.
@@ -52,8 +51,8 @@ public class IdTokenFromMetadataServer {
             .build();
 
     // Get the ID token.
-    // Once you've obtained the ID token, use it to make an authenticated call
-    // to the target audience.
+    // Once you've obtained the ID token, you can use it to make an authenticated call to the
+    // target audience.
     String idToken = idTokenCredentials.refreshAccessToken().getTokenValue();
     System.out.println("Generated ID token.");
   }

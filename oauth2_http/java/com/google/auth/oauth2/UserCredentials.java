@@ -277,6 +277,8 @@ public class UserCredentials extends GoogleCredentials
       response = request.execute();
     } catch (HttpResponseException re) {
       throw GoogleAuthException.createWithTokenEndpointResponseException(re);
+    } catch (IOException e) {
+      throw GoogleAuthException.createWithTokenEndpointIOException(e);
     }
 
     return response.parseAs(GenericData.class);

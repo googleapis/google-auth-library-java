@@ -34,8 +34,8 @@ package com.google.auth.oauth2;
 import static com.google.common.base.MoreObjects.firstNonNull;
 
 import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpBackOffIOExceptionHandler;
 import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler;
-import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler.BackOffRequired;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
@@ -97,10 +97,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final int TWELVE_HOURS_IN_SECONDS = 43200;
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
-  private static final int DEFAULT_NUMBER_OF_RETRIES = 3;
   private static final int INITIAL_RETRY_INTERVAL_MILLIS = 1000;
   private static final double RETRY_RANDOMIZATION_FACTOR = 0.1;
   private static final double RETRY_MULTIPLIER = 2;
+  static final int DEFAULT_NUMBER_OF_RETRIES = 3;
 
   private final String clientId;
   private final String clientEmail;
@@ -550,15 +550,14 @@ public class ServiceAccountCredentials extends GoogleCredentials
     request.setUnsuccessfulResponseHandler(
         new HttpBackOffUnsuccessfulResponseHandler(backoff)
             .setBackOffRequired(
-                new BackOffRequired() {
-                  public boolean isRequired(HttpResponse response) {
-                    int code = response.getStatusCode();
-
-                    return OAuth2Utils.TOKEN_ENDPOINT_RETRYABLE_STATUS_CODES.contains(code);
-                  }
+                response -> {
+                  int code = response.getStatusCode();
+                  return OAuth2Utils.TOKEN_ENDPOINT_RETRYABLE_STATUS_CODES.contains(code);
                 }));
 
+    request.setIOExceptionHandler(new HttpBackOffIOExceptionHandler(backoff));
     HttpResponse response;
+
     String errorTemplate = "Error getting access token for service account: %s, iss: %s";
 
     try {
@@ -567,7 +566,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
       String message = String.format(errorTemplate, re.getMessage(), getIssuer());
       throw GoogleAuthException.createWithTokenEndpointResponseException(re, message);
     } catch (IOException e) {
-      throw new IOException(String.format(errorTemplate, e.getMessage(), getIssuer()), e);
+      throw GoogleAuthException.createWithTokenEndpointIOException(
+          e, String.format(errorTemplate, e.getMessage(), getIssuer()));
     }
 
     GenericData responseData = response.parseAs(GenericData.class);

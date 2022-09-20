@@ -121,7 +121,9 @@ class GoogleAuthException extends IOException implements Retryable {
     int responseStatus = responseException.getStatusCode();
     boolean isRetryable =
         OAuth2Utils.TOKEN_ENDPOINT_RETRYABLE_STATUS_CODES.contains(responseStatus);
-    int retryCount = responseException.getAttemptCount() - 1;
+    // TODO: temporarily setting to default to remove a direct dependency, to be reverted after
+    // release
+    int retryCount = ServiceAccountCredentials.DEFAULT_NUMBER_OF_RETRIES;
 
     if (message == null) {
       return new GoogleAuthException(isRetryable, retryCount, responseException);
@@ -141,6 +143,42 @@ class GoogleAuthException extends IOException implements Retryable {
   static GoogleAuthException createWithTokenEndpointResponseException(
       HttpResponseException responseException) {
     return GoogleAuthException.createWithTokenEndpointResponseException(responseException, null);
+  }
+
+  /**
+   * Creates an instance of the exception based on {@link IOException} and a custom error message.
+   *
+   * @see #createWithTokenEndpointIOException(IOException)
+   * @param ioException an instance of {@link IOException}
+   * @param message The detail message (which is saved for later retrieval by the {@link
+   *     #getMessage()} method)
+   * @return new instance of {@link GoogleAuthException}
+   */
+  static GoogleAuthException createWithTokenEndpointIOException(
+      IOException ioException, String message) {
+
+    if (message == null) {
+      // TODO: temporarily setting retry Count to service account default to remove a direct
+      // dependency, to be reverted after release
+      return new GoogleAuthException(
+          true, ServiceAccountCredentials.DEFAULT_NUMBER_OF_RETRIES, ioException);
+    } else {
+      return new GoogleAuthException(
+          true, ServiceAccountCredentials.DEFAULT_NUMBER_OF_RETRIES, message, ioException);
+    }
+  }
+
+  /**
+   * Creates an instance of the exception based on {@link IOException} returned by Google token
+   * endpoint. It uses response status code information to populate the {@code #isRetryable}
+   * property and a number of performed attempts to populate the {@code #retryCount} property
+   *
+   * @see #createWithTokenEndpointIOException(IOException)
+   * @param ioException an instance of {@link IOException}
+   * @return new instance of {@link GoogleAuthException}
+   */
+  static GoogleAuthException createWithTokenEndpointIOException(IOException ioException) {
+    return GoogleAuthException.createWithTokenEndpointIOException(ioException, null);
   }
 
   /** Returns true if the error is retryable, false otherwise */
