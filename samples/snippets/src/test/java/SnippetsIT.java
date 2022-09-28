@@ -17,6 +17,7 @@
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import com.google.api.apikeys.v2.Key;
 import com.google.auth.oauth2.IdToken;
 import com.google.auth.oauth2.IdTokenProvider.Option;
 import com.google.auth.oauth2.ServiceAccountCredentials;
@@ -27,6 +28,8 @@ import java.io.PrintStream;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -40,6 +43,7 @@ public class SnippetsIT {
 
   private static final String PROJECT_ID = System.getenv("GOOGLE_CLOUD_PROJECT");
   private static final String CREDENTIALS = System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
+  private static Key API_KEY;
   private ByteArrayOutputStream stdOut;
 
   // Check if the required environment variables are set.
@@ -50,19 +54,35 @@ public class SnippetsIT {
   }
 
   @BeforeClass
-  public static void setup() throws IOException {
+  public static void setup()
+      throws IOException, ExecutionException, InterruptedException, TimeoutException {
     final PrintStream out = System.out;
     ByteArrayOutputStream stdOut = new ByteArrayOutputStream();
     System.setOut(new PrintStream(stdOut));
     requireEnvVar("GOOGLE_APPLICATION_CREDENTIALS");
     requireEnvVar("GOOGLE_CLOUD_PROJECT");
 
+    API_KEY = CreateApiKey.createApiKey(PROJECT_ID, "global");
+
     stdOut.close();
     System.setOut(out);
   }
 
   @AfterClass
-  public static void cleanup() {}
+  public static void cleanup()
+      throws IOException, ExecutionException, InterruptedException, TimeoutException {
+    final PrintStream out = System.out;
+    ByteArrayOutputStream stdOut = new ByteArrayOutputStream();
+    System.setOut(new PrintStream(stdOut));
+
+    String apiKeyId = API_KEY.getName().split("/")[5];
+    DeleteApiKey.deleteApiKey(PROJECT_ID, "global", apiKeyId);
+    assertThat(stdOut.toString()).contains(
+        String.format("Successfully deleted the API key: %s", API_KEY.getName()));
+
+    stdOut.close();
+    System.setOut(out);
+  }
 
   @Before
   public void beforeEach() {
@@ -123,5 +143,12 @@ public class SnippetsIT {
   public void testAuthenticateExplicit() throws IOException {
     AuthenticateExplicit.authenticateExplicit(PROJECT_ID);
     assertThat(stdOut.toString()).contains("Listed all storage buckets.");
+  }
+
+  @Test
+  public void testLookupApiKey() throws IOException {
+    LookupApiKey.lookupApiKey(API_KEY.getKeyString());
+    assertThat(stdOut.toString()).contains(
+        String.format("Successfully retrieved the API key name: %s", API_KEY.getName()));
   }
 }
