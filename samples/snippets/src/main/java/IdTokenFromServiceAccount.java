@@ -44,7 +44,7 @@ public class IdTokenFromServiceAccount {
     String jsonCredentialPath = "path-to-json-credential-file";
 
     // The url or target audience to obtain the ID token for.
-    String targetAudience = "http://www.abc.com";
+    String targetAudience = "https://example.com";
 
     getIdTokenFromServiceAccount(jsonCredentialPath, targetAudience);
   }
