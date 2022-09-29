@@ -620,6 +620,12 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     creds.getRequestMetadata(CALL_URI, realExecutor, callback);
     TestUtils.assertContainsBearerToken(callback.awaitResult(), refreshedToken.getTokenValue());
 
+    // Sleep this thread to give the refresh task a chance to complete.
+    // If this test is flaky consider increasing the sleep time.
+    // 10 is selected because simply sleeping should yield control to the refresh task (If it is
+    // still running).
+    Thread.sleep(10);
+
     // The refresh slot should be cleared
     synchronized (creds.lock) {
       assertNull(creds.refreshTask);
