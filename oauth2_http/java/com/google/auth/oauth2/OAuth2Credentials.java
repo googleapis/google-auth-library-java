@@ -254,9 +254,12 @@ public class OAuth2Credentials extends Credentials {
               new Callable<OAuthValue>() {
                 @Override
                 public OAuthValue call() throws Exception {
-                  OAuthValue result =
-                      OAuthValue.create(refreshAccessToken(), getAdditionalHeaders());
-                  value = result;
+                  OAuthValue result = OAuthValue.create(refreshAccessToken(), getAdditionalHeaders());
+
+                  synchronized (lock) {
+                    value = result;
+                  }
+
                   return result;
                 }
               });
@@ -284,18 +287,9 @@ public class OAuth2Credentials extends Credentials {
   private void finishRefreshAsync(ListenableFuture<OAuthValue> finishedTask) {
     synchronized (lock) {
       try {
-        // The future MUST be polled to make sure the credential is still valid before
-        // invoking the listeners. If the credential has been revoked we expect an exception to
-        // occur here and NOOP. Without this task MAY revive revoked credentials.
-        //
-        // We do not care to get the Future's value. The value should be updated in the Future
-        // itself.
-        finishedTask.get();
         for (CredentialsChangedListener listener : changeListeners) {
           listener.onChanged(this);
         }
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
       } catch (Exception e) {
         // noop
       } finally {
