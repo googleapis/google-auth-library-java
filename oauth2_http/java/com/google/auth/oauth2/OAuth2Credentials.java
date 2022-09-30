@@ -254,13 +254,7 @@ public class OAuth2Credentials extends Credentials {
               new Callable<OAuthValue>() {
                 @Override
                 public OAuthValue call() throws Exception {
-                  OAuthValue result = OAuthValue.create(refreshAccessToken(), getAdditionalHeaders());
-
-                  synchronized (lock) {
-                    value = result;
-                  }
-
-                  return result;
+                  return OAuthValue.create(refreshAccessToken(), getAdditionalHeaders());
                 }
               });
 
@@ -287,9 +281,12 @@ public class OAuth2Credentials extends Credentials {
   private void finishRefreshAsync(ListenableFuture<OAuthValue> finishedTask) {
     synchronized (lock) {
       try {
+        this.value = finishedTask.get();
         for (CredentialsChangedListener listener : changeListeners) {
           listener.onChanged(this);
         }
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
       } catch (Exception e) {
         // noop
       } finally {
