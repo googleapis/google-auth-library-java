@@ -583,7 +583,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     patterns.add(Pattern.compile("^sts\\.googleapis\\.com$"));
     patterns.add(Pattern.compile("^sts\\.[^\\.\\s\\/\\\\]+\\.googleapis\\.com$"));
     patterns.add(Pattern.compile("^[^\\.\\s\\/\\\\]+\\-sts\\.googleapis\\.com$"));
-    patterns.add(Pattern.compile("^sts-[^\\.\\s\\/\\\\]+\\.p\\.googleapis\\.com$"));
+    patterns.add(Pattern.compile("^sts\\-[^\\.\\s\\/\\\\]+\\.p\\.googleapis\\.com$"));
 
     if (!isValidUrl(patterns, tokenUrl)) {
       throw new IllegalArgumentException("The provided token URL is invalid.");
