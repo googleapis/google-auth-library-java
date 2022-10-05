@@ -967,7 +967,8 @@ public class ExternalAccountCredentialsTest {
             "https://US-WEST-1-sts.googleapis.com",
             "https://us-west-1-sts.googleapis.com/path?query",
             "https://sts-xyz123.p.googleapis.com/path?query",
-            "https://sts-xyz123.p.googleapis.com");
+            "https://sts-xyz123.p.googleapis.com",
+            "https://sts-xyz-123.p.googleapis.com");
 
     for (String url : validUrls) {
       ExternalAccountCredentials.validateTokenUrl(url);
@@ -1028,7 +1029,8 @@ public class ExternalAccountCredentialsTest {
             "https://US-WEST-1-iamcredentials.googleapis.com",
             "https://us-west-1-iamcredentials.googleapis.com/path?query",
             "https://iamcredentials-xyz123.p.googleapis.com/path?query",
-            "https://iamcredentials-xyz123.p.googleapis.com");
+            "https://iamcredentials-xyz123.p.googleapis.com",
+            "https://iamcredentials-xyz-123.p.googleapis.com");
 
     for (String url : validUrls) {
       ExternalAccountCredentials.validateServiceAccountImpersonationInfoUrl(url);
