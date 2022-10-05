@@ -965,7 +965,9 @@ public class ExternalAccountCredentialsTest {
             "https://sts.US-WEST-1.googleapis.com",
             "https://us-east-1-sts.googleapis.com",
             "https://US-WEST-1-sts.googleapis.com",
-            "https://us-west-1-sts.googleapis.com/path?query");
+            "https://us-west-1-sts.googleapis.com/path?query",
+            "https://sts-xyz123.p.googleapis.com/path?query",
+            "https://sts-xyz123.p.googleapis.com");
 
     for (String url : validUrls) {
       ExternalAccountCredentials.validateTokenUrl(url);
@@ -995,7 +997,13 @@ public class ExternalAccountCredentialsTest {
             "hhttps://us-east-1.sts.googleapis.com",
             "https://us- -1.sts.googleapis.com",
             "https://-sts.googleapis.com",
-            "https://us-east-1.sts.googleapis.com.evil.com");
+            "https://us-east-1.sts.googleapis.com.evil.com",
+            "https://sts.pgoogleapis.com",
+            "https://p.googleapis.com",
+            "https://sts.p.com",
+            "http://sts.p.googleapis.com",
+            "https://xyz-sts.p.googleapis.com",
+            "https://sts-xyz.123.p.googleapis.com");
 
     for (String url : invalidUrls) {
       try {
@@ -1018,7 +1026,9 @@ public class ExternalAccountCredentialsTest {
             "https://iamcredentials.US-WEST-1.googleapis.com",
             "https://us-east-1-iamcredentials.googleapis.com",
             "https://US-WEST-1-iamcredentials.googleapis.com",
-            "https://us-west-1-iamcredentials.googleapis.com/path?query");
+            "https://us-west-1-iamcredentials.googleapis.com/path?query",
+            "https://iamcredentials-xyz123.p.googleapis.com/path?query",
+            "https://iamcredentials-xyz123.p.googleapis.com");
 
     for (String url : validUrls) {
       ExternalAccountCredentials.validateServiceAccountImpersonationInfoUrl(url);
@@ -1049,7 +1059,13 @@ public class ExternalAccountCredentialsTest {
             "hhttps://us-east-1.iamcredentials.googleapis.com",
             "https://us- -1.iamcredentials.googleapis.com",
             "https://-iamcredentials.googleapis.com",
-            "https://us-east-1.iamcredentials.googleapis.com.evil.com");
+            "https://us-east-1.iamcredentials.googleapis.com.evil.com",
+            "https://iamcredentials.pgoogleapis.com",
+            "https://p.googleapis.com",
+            "https://iamcredentials.p.com",
+            "http://iamcredentials.p.googleapis.com",
+            "https://xyz-iamcredentials.p.googleapis.com",
+            "https://iamcredentials-xyz.123.p.googleapis.com");
 
     for (String url : invalidUrls) {
       try {
