@@ -31,11 +31,11 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.testing.http.MockHttpTransport;
@@ -54,9 +54,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Test case for {@link GoogleCredentials}. */
+@RunWith(JUnit4.class)
 public class GoogleCredentialsTest {
 
   private static final String SA_CLIENT_EMAIL =
@@ -101,30 +104,39 @@ public class GoogleCredentialsTest {
   }
 
   @Test
-  void getApplicationDefault_nullTransport_throws() {
-    assertThrows(NullPointerException.class, () -> GoogleCredentials.getApplicationDefault(null));
+  public void getApplicationDefault_nullTransport_throws() throws IOException {
+    try {
+      GoogleCredentials.getApplicationDefault(null);
+      fail();
+    } catch (NullPointerException expected) {
+      // Expected
+    }
   }
 
   @Test
-  void fromStream_nullTransport_throws() {
+  public void fromStream_nullTransport_throws() throws IOException {
     InputStream stream = new ByteArrayInputStream("foo".getBytes());
-    assertThrows(
-        NullPointerException.class,
-        () -> GoogleCredentials.fromStream(stream, null),
-        "Should throw if HttpTransportFactory is null");
+    try {
+      GoogleCredentials.fromStream(stream, null);
+      fail("Should throw if HttpTransportFactory is null");
+    } catch (NullPointerException expected) {
+      // Expected
+    }
   }
 
   @Test
-  void fromStream_nullStream_throws() {
+  public void fromStream_nullStream_throws() throws IOException {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
-    assertThrows(
-        NullPointerException.class,
-        () -> GoogleCredentials.fromStream(null, transportFactory),
-        "Should throw if InputStream is null");
+    try {
+      GoogleCredentials.fromStream(null, transportFactory);
+      fail("Should throw if InputStream is null");
+    } catch (NullPointerException expected) {
+      // Expected
+    }
   }
 
   @Test
-  void fromStream_serviceAccount_providesToken() throws IOException {
+  public void fromStream_serviceAccount_providesToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     InputStream serviceAccountStream =
@@ -145,7 +157,7 @@ public class GoogleCredentialsTest {
   }
 
   @Test
-  void fromStream_serviceAccountNoClientId_throws() throws IOException {
+  public void fromStream_serviceAccountNoClientId_throws() throws IOException {
     InputStream serviceAccountStream =
         ServiceAccountCredentialsTest.writeServiceAccountStream(
             null, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
@@ -154,7 +166,7 @@ public class GoogleCredentialsTest {
   }
 
   @Test
-  void fromStream_serviceAccountNoClientEmail_throws() throws IOException {
+  public void fromStream_serviceAccountNoClientEmail_throws() throws IOException {
     InputStream serviceAccountStream =
         ServiceAccountCredentialsTest.writeServiceAccountStream(
             SA_CLIENT_ID, null, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
@@ -163,7 +175,7 @@ public class GoogleCredentialsTest {
   }
 
   @Test
-  void fromStream_serviceAccountNoPrivateKey_throws() throws IOException {
+  public void fromStream_serviceAccountNoPrivateKey_throws() throws IOException {
     InputStream serviceAccountStream =
         ServiceAccountCredentialsTest.writeServiceAccountStream(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, null, SA_PRIVATE_KEY_ID);
@@ -172,7 +184,7 @@ public class GoogleCredentialsTest {
   }
 
   @Test
-  void fromStream_serviceAccountNoPrivateKeyId_throws() throws IOException {
+  public void fromStream_serviceAccountNoPrivateKeyId_throws() throws IOException {
     InputStream serviceAccountStream =
         ServiceAccountCredentialsTest.writeServiceAccountStream(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, null);
@@ -181,7 +193,7 @@ public class GoogleCredentialsTest {
   }
 
   @Test
-  void fromStream_user_providesToken() throws IOException {
+  public void fromStream_user_providesToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(USER_CLIENT_ID, USER_CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
@@ -197,7 +209,7 @@ public class GoogleCredentialsTest {
   }
 
   @Test
-  void fromStream_userNoClientId_throws() throws IOException {
+  public void fromStream_userNoClientId_throws() throws IOException {
     InputStream userStream =
         UserCredentialsTest.writeUserStream(null, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
 
@@ -205,7 +217,7 @@ public class GoogleCredentialsTest {
   }
 
   @Test
-  void fromStream_userNoClientSecret_throws() throws IOException {
+  public void fromStream_userNoClientSecret_throws() throws IOException {
     InputStream userStream =
         UserCredentialsTest.writeUserStream(USER_CLIENT_ID, null, REFRESH_TOKEN, QUOTA_PROJECT);
 
@@ -213,7 +225,7 @@ public class GoogleCredentialsTest {
   }
 
   @Test
-  void fromStream_userNoRefreshToken_throws() throws IOException {
+  public void fromStream_userNoRefreshToken_throws() throws IOException {
     InputStream userStream =
         UserCredentialsTest.writeUserStream(
             USER_CLIENT_ID, USER_CLIENT_SECRET, null, QUOTA_PROJECT);
@@ -222,14 +234,15 @@ public class GoogleCredentialsTest {
   }
 
   @Test
-  void fromStream_identityPoolCredentials_providesToken() throws IOException {
+  public void fromStream_identityPoolCredentials_providesToken() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
     InputStream identityPoolCredentialStream =
         IdentityPoolCredentialsTest.writeIdentityPoolCredentialsStream(
             transportFactory.transport.getStsUrl(),
             transportFactory.transport.getMetadataUrl(),
-            /* serviceAccountImpersonationUrl= */ null);
+            /* serviceAccountImpersonationUrl= */ null,
+            /* serviceAccountImpersonationOptionsMap= */ null);
 
     GoogleCredentials credentials =
         GoogleCredentials.fromStream(identityPoolCredentialStream, transportFactory);
@@ -241,7 +254,7 @@ public class GoogleCredentialsTest {
   }
 
   @Test
-  void fromStream_awsCredentials_providesToken() throws IOException {
+  public void fromStream_awsCredentials_providesToken() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -261,7 +274,7 @@ public class GoogleCredentialsTest {
   }
 
   @Test
-  void fromStream_pluggableAuthCredentials_providesToken() throws IOException {
+  public void fromStream_pluggableAuthCredentials_providesToken() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -284,7 +297,7 @@ public class GoogleCredentialsTest {
   }
 
   @Test
-  void fromStream_Impersonation_providesToken_WithQuotaProject() throws IOException {
+  public void fromStream_Impersonation_providesToken_WithQuotaProject() throws IOException {
     MockTokenServerTransportFactory transportFactoryForSource =
         new MockTokenServerTransportFactory();
     transportFactoryForSource.transport.addServiceAccount(
@@ -320,7 +333,7 @@ public class GoogleCredentialsTest {
   }
 
   @Test
-  void fromStream_Impersonation_providesToken_WithoutQuotaProject() throws IOException {
+  public void fromStream_Impersonation_providesToken_WithoutQuotaProject() throws IOException {
     MockTokenServerTransportFactory transportFactoryForSource =
         new MockTokenServerTransportFactory();
     transportFactoryForSource.transport.addServiceAccount(
@@ -353,7 +366,7 @@ public class GoogleCredentialsTest {
   }
 
   @Test
-  void createScoped_overloadCallsImplementation() {
+  public void createScoped_overloadCallsImplementation() {
     final AtomicReference<Collection<String>> called = new AtomicReference<>();
     final GoogleCredentials expectedScopedCredentials = new GoogleCredentials();
 
@@ -373,12 +386,13 @@ public class GoogleCredentialsTest {
   }
 
   private static void testFromStreamException(InputStream stream, String expectedMessageContent) {
-    IOException exception =
-        assertThrows(
-            IOException.class,
-            () -> GoogleCredentials.fromStream(stream, DUMMY_TRANSPORT_FACTORY),
-            String.format(
-                "Should throw exception with message containing '%s'", expectedMessageContent));
-    assertTrue(exception.getMessage().contains(expectedMessageContent));
+    try {
+      GoogleCredentials.fromStream(stream, DUMMY_TRANSPORT_FACTORY);
+      fail(
+          String.format(
+              "Should throw exception with message containing '%s'", expectedMessageContent));
+    } catch (IOException expected) {
+      assertTrue(expected.getMessage().contains(expectedMessageContent));
+    }
   }
 }

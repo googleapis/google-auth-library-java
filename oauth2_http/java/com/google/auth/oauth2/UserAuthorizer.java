@@ -315,10 +315,14 @@ public class UserAuthorizer {
         OAuth2Utils.validateOptionalString(tokenJson, "refresh_token", TOKEN_STORE_ERROR);
     // If both tokens are present, either can be used
     String revokeToken = (refreshToken != null) ? refreshToken : accessTokenValue;
+
     GenericUrl revokeUrl = new GenericUrl(OAuth2Utils.TOKEN_REVOKE_URI);
-    revokeUrl.put("token", revokeToken);
+    GenericData genericData = new GenericData();
+    genericData.put("token", revokeToken);
+    UrlEncodedContent content = new UrlEncodedContent(genericData);
+
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
-    HttpRequest tokenRequest = requestFactory.buildGetRequest(revokeUrl);
+    HttpRequest tokenRequest = requestFactory.buildPostRequest(revokeUrl, content);
     tokenRequest.execute();
 
     if (deleteTokenException != null) {

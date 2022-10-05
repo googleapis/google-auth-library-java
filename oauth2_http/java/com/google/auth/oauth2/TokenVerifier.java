@@ -32,6 +32,8 @@
 package com.google.auth.oauth2;
 
 import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler;
+import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler.BackOffRequired;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpTransport;
@@ -39,6 +41,7 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.util.Base64;
 import com.google.api.client.util.Clock;
+import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.client.util.Key;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.Preconditions;
@@ -275,6 +278,10 @@ public class TokenVerifier {
 
   /** Custom CacheLoader for mapping certificate urls to the contained public keys. */
   static class PublicKeyLoader extends CacheLoader<String, Map<String, PublicKey>> {
+    private static final int DEFAULT_NUMBER_OF_RETRIES = 2;
+    private static final int INITIAL_RETRY_INTERVAL_MILLIS = 1000;
+    private static final double RETRY_RANDOMIZATION_FACTOR = 0.1;
+    private static final double RETRY_MULTIPLIER = 2;
     private final HttpTransportFactory httpTransportFactory;
 
     /**
@@ -314,17 +321,26 @@ public class TokenVerifier {
     public Map<String, PublicKey> load(String certificateUrl) throws Exception {
       HttpTransport httpTransport = httpTransportFactory.create();
       JsonWebKeySet jwks;
-      try {
-        HttpRequest request =
-            httpTransport
-                .createRequestFactory()
-                .buildGetRequest(new GenericUrl(certificateUrl))
-                .setParser(OAuth2Utils.JSON_FACTORY.createJsonObjectParser());
-        HttpResponse response = request.execute();
-        jwks = response.parseAs(JsonWebKeySet.class);
-      } catch (IOException io) {
-        return ImmutableMap.of();
-      }
+      HttpRequest request =
+          httpTransport
+              .createRequestFactory()
+              .buildGetRequest(new GenericUrl(certificateUrl))
+              .setParser(OAuth2Utils.JSON_FACTORY.createJsonObjectParser());
+      request.setNumberOfRetries(DEFAULT_NUMBER_OF_RETRIES);
+
+      ExponentialBackOff backoff =
+          new ExponentialBackOff.Builder()
+              .setInitialIntervalMillis(INITIAL_RETRY_INTERVAL_MILLIS)
+              .setRandomizationFactor(RETRY_RANDOMIZATION_FACTOR)
+              .setMultiplier(RETRY_MULTIPLIER)
+              .build();
+
+      request.setUnsuccessfulResponseHandler(
+          new HttpBackOffUnsuccessfulResponseHandler(backoff)
+              .setBackOffRequired(BackOffRequired.ALWAYS));
+
+      HttpResponse response = request.execute();
+      jwks = response.parseAs(JsonWebKeySet.class);
 
       ImmutableMap.Builder<String, PublicKey> keyCacheBuilder = new ImmutableMap.Builder<>();
       if (jwks.keys == null) {
@@ -345,7 +361,14 @@ public class TokenVerifier {
         }
       }
 
-      return keyCacheBuilder.build();
+      ImmutableMap<String, PublicKey> keyCache = keyCacheBuilder.build();
+
+      if (keyCache.isEmpty()) {
+        throw new VerificationException(
+            "No valid public key returned by the keystore: " + certificateUrl);
+      }
+
+      return keyCache;
     }
 
     private PublicKey buildPublicKey(JsonWebKey key)

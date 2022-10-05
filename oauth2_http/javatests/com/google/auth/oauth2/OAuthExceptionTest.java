@@ -31,20 +31,23 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Tests for {@link OAuthException}. */
-class OAuthExceptionTest {
+@RunWith(JUnit4.class)
+public final class OAuthExceptionTest {
 
   private static final String FULL_MESSAGE_FORMAT = "Error code %s: %s - %s";
   private static final String ERROR_DESCRIPTION_FORMAT = "Error code %s: %s";
   private static final String BASE_MESSAGE_FORMAT = "Error code %s";
 
   @Test
-  void getMessage_fullFormat() {
+  public void getMessage_fullFormat() {
     OAuthException e = new OAuthException("errorCode", "errorDescription", "errorUri");
 
     assertEquals("errorCode", e.getErrorCode());
@@ -57,7 +60,7 @@ class OAuthExceptionTest {
   }
 
   @Test
-  void getMessage_descriptionFormat() {
+  public void getMessage_descriptionFormat() {
     OAuthException e = new OAuthException("errorCode", "errorDescription", /* errorUri= */ null);
 
     assertEquals("errorCode", e.getErrorCode());
@@ -70,7 +73,7 @@ class OAuthExceptionTest {
   }
 
   @Test
-  void getMessage_baseFormat() {
+  public void getMessage_baseFormat() {
     OAuthException e =
         new OAuthException("errorCode", /* errorDescription= */ null, /* errorUri= */ null);
 

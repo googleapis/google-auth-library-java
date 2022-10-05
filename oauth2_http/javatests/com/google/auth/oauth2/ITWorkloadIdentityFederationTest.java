@@ -31,8 +31,8 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
@@ -52,8 +52,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import java.util.HashMap;
+import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Integration tests for Workload Identity Federation.
@@ -63,7 +65,7 @@ import org.junit.jupiter.api.Test;
  * (workloadidentityfederation-setup). These tests call GCS to get bucket information. The bucket
  * name must be provided through the GCS_BUCKET environment variable.
  */
-class ITWorkloadIdentityFederationTest {
+public final class ITWorkloadIdentityFederationTest {
 
   // Copy output from workloadidentityfederation-setup.
   private static final String AUDIENCE_PREFIX =
@@ -76,8 +78,8 @@ class ITWorkloadIdentityFederationTest {
 
   private String clientEmail;
 
-  @BeforeEach
-  void setup() throws IOException {
+  @Before
+  public void setup() throws IOException {
     GenericJson keys = getServiceAccountKeyFileAsJson();
     clientEmail = (String) keys.get("client_email");
   }
@@ -90,7 +92,7 @@ class ITWorkloadIdentityFederationTest {
    * service account key. Retrieves the OIDC token from a file.
    */
   @Test
-  void identityPoolCredentials() throws IOException {
+  public void identityPoolCredentials() throws IOException {
     IdentityPoolCredentials identityPoolCredentials =
         (IdentityPoolCredentials)
             ExternalAccountCredentials.fromJson(
@@ -109,7 +111,7 @@ class ITWorkloadIdentityFederationTest {
    * service account key.
    */
   @Test
-  void awsCredentials() throws Exception {
+  public void awsCredentials() throws Exception {
     String idToken = generateGoogleIdToken(AWS_AUDIENCE);
 
     String url =
@@ -159,13 +161,36 @@ class ITWorkloadIdentityFederationTest {
    * service account key. Runs an executable to get the OIDC token.
    */
   @Test
-  void pluggableAuthCredentials() throws IOException {
+  public void pluggableAuthCredentials() throws IOException {
     PluggableAuthCredentials pluggableAuthCredentials =
         (PluggableAuthCredentials)
             ExternalAccountCredentials.fromJson(
                 buildPluggableCredentialConfig(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
 
     callGcs(pluggableAuthCredentials);
+  }
+
+  /**
+   * Sets the service account impersonation object in configuration JSON with a non-default value
+   * for token_lifetime_seconds and validates that the lifetime is used for the access token.
+   */
+  @Test
+  public void identityPoolCredentials_withServiceAccountImpersonationOptions() throws IOException {
+    GenericJson identityPoolCredentialConfig = buildIdentityPoolCredentialConfig();
+    Map<String, Object> map = new HashMap<String, Object>();
+    map.put("token_lifetime_seconds", 2800);
+    identityPoolCredentialConfig.put("service_account_impersonation", map);
+
+    IdentityPoolCredentials identityPoolCredentials =
+        (IdentityPoolCredentials)
+            ExternalAccountCredentials.fromJson(
+                identityPoolCredentialConfig, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+    long maxExpirationTime = Instant.now().plusSeconds(2800 + 5).toEpochMilli();
+    long minExpirationtime = Instant.now().plusSeconds(2800 - 5).toEpochMilli();
+
+    callGcs(identityPoolCredentials);
+    long tokenExpiry = identityPoolCredentials.getAccessToken().getExpirationTimeMillis();
+    assertTrue(minExpirationtime <= tokenExpiry && tokenExpiry <= maxExpirationTime);
   }
 
   private GenericJson buildIdentityPoolCredentialConfig() throws IOException {
@@ -271,7 +296,9 @@ class ITWorkloadIdentityFederationTest {
 
   private void callGcs(GoogleCredentials credentials) throws IOException {
     String bucketName = System.getenv("GCS_BUCKET");
-    assertNotNull(bucketName, "GCS bucket name not set through GCS_BUCKET env variable.");
+    if (bucketName == null) {
+      fail("GCS bucket name not set through GCS_BUCKET env variable.");
+    }
 
     String url = "https://storage.googleapis.com/storage/v1/b/" + bucketName;
 

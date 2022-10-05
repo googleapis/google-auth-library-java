@@ -54,9 +54,9 @@ import javax.annotation.Nullable;
  * <p>Both OIDC and SAML are supported. The executable must adhere to a specific response format
  * defined below.
  *
- * <p>The executable should print out the 3rd party token to STDOUT in JSON format. This is not
- * required when an output_file is specified in the credential source, with the expectation being
- * that the output file will contain the JSON response instead.
+ * <p>The executable must print out the 3rd party token to STDOUT in JSON format. When an
+ * output_file is specified in the credential configuration, the executable must also handle writing
+ * the JSON response to this file.
  *
  * <pre>
  * OIDC response sample:
@@ -85,6 +85,9 @@ import javax.annotation.Nullable;
  *   "message": "Error message."
  * }
  * </pre>
+ *
+ * <p> The `expiration_time` field in the JSON response is only required for successful
+ *  responses when an output file was specified in the credential configuration.
  *
  * The auth libraries will populate certain environment variables that will be accessible by the
  * executable, such as: GOOGLE_EXTERNAL_ACCOUNT_AUDIENCE, GOOGLE_EXTERNAL_ACCOUNT_TOKEN_TYPE,
