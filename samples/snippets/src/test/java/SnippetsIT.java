@@ -95,16 +95,16 @@ public class SnippetsIT {
 
   @Test
   public void testIdTokenFromServiceAccount() throws IOException {
-    IdTokenFromServiceAccount.getIdTokenFromServiceAccount(CREDENTIALS, "iap.googleapis.com");
+    IdTokenFromServiceAccount.getIdTokenFromServiceAccount(CREDENTIALS, "https://example.com");
     assertThat(stdOut.toString()).contains("Generated ID token.");
   }
 
   @Test
   public void testVerifyGoogleIdToken() throws IOException {
-    String idToken = getIdTokenFromServiceAccount(CREDENTIALS, "iap.googleapis.com");
+    String idToken = getIdTokenFromServiceAccount(CREDENTIALS, "https://example.com");
 
     VerifyGoogleIdToken.verifyGoogleIdToken(
-        idToken, "iap.googleapis.com", "https://www.googleapis.com/oauth2/v3/certs");
+        idToken, "https://example.com", "https://www.googleapis.com/oauth2/v3/certs");
   }
 
   @Test
