@@ -47,6 +47,8 @@ import com.google.auth.TestUtils;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
 import com.google.auth.oauth2.OAuth2Credentials.OAuthValue;
+import com.google.auth.oauth2.OAuth2Credentials.RefreshTask;
+import com.google.auth.oauth2.OAuth2Credentials.RefreshTaskListener;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListenableFutureTask;
@@ -58,6 +60,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -590,7 +593,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     creds.getRequestMetadata(CALL_URI, realExecutor, callback);
     TestUtils.assertContainsBearerToken(callback.metadata, ACCESS_TOKEN);
     assertNotNull(creds.refreshTask);
-    ListenableFutureTask<OAuthValue> refreshTask = creds.refreshTask;
+    RefreshTask refreshTask = creds.refreshTask;
 
     // Fast forward to expiration, which will hang cause the callback to hang
     testClock.setCurrentTime(clientExpired.toEpochMilli());
@@ -871,6 +874,82 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     assertEquals(credentials.hashCode(), deserializedCredentials.hashCode());
     assertEquals(credentials.toString(), deserializedCredentials.toString());
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
+  }
+
+  @Test
+  public void UpdateTokenValueBeforeWake() throws IOException, InterruptedException {
+    final SettableFuture<AccessToken> refreshedTokenFuture = SettableFuture.create();
+    AccessToken refreshedToken = new AccessToken("2/MkSJoj1xsli0AccessToken_NKPY2", null);
+    refreshedTokenFuture.set(refreshedToken);
+
+    final ListenableFutureTask<OAuthValue> task =
+        ListenableFutureTask.create(
+            new Callable<OAuthValue>() {
+              @Override
+              public OAuthValue call() throws Exception {
+                return OAuthValue.create(refreshedToken, new HashMap<>());
+              }
+            });
+
+    OAuth2Credentials creds =
+        new OAuth2Credentials() {
+          @Override
+          public AccessToken refreshAccessToken() {
+            synchronized (this) {
+              // Wake up parent thread so it will perform refresh.
+              this.notify();
+            }
+            RefreshTaskListener listener =
+                new RefreshTaskListener(task) {
+                  @Override
+                  public void run() {
+                    try {
+                      // Sleep before setting accessToken to new accessToken. Refresh should not
+                      // complete before this, and the accessToken is `null` until it is.
+                      Thread.sleep(500);
+                      super.run();
+                    } catch (Exception e) {
+                      fail("Unexpected error.");
+                    }
+                  }
+                };
+
+            this.refreshTask = new RefreshTask(task, listener);
+
+            try {
+              // Sleep for 500 milliseconds to give parent thread time to create a refresh future.
+              Thread.sleep(500);
+              return refreshedTokenFuture.get();
+            } catch (Exception e) {
+              throw new RuntimeException(e);
+            }
+          }
+        };
+
+    Thread t =
+        new Thread(
+            new Runnable() {
+              @Override
+              public void run() {
+                try {
+                  creds.refresh();
+                  assertNotNull(creds.getAccessToken());
+                } catch (Exception e) {
+                  fail("Unexpected error.");
+                }
+              }
+            });
+    t.start();
+
+    synchronized (creds) {
+      // Wait for child thread to be responsible for refresh.
+      creds.wait();
+    }
+
+    creds.refresh();
+    AccessToken token = creds.getAccessToken();
+    // Token should never be NULL after a refresh that succeeded.
+    assertNotNull(token);
   }
 
   private void waitForRefreshTaskCompletion(OAuth2Credentials credentials)
