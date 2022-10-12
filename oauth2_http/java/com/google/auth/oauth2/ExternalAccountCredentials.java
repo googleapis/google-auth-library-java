@@ -541,9 +541,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     return serviceAccountImpersonationUrl;
   }
 
-  /**
-   * @return The service account email to be impersonated, if available
-   */
+  /** @return The service account email to be impersonated, if available */
   @Nullable
   public String getServiceAccountEmail() {
     if (serviceAccountImpersonationUrl == null || serviceAccountImpersonationUrl.isEmpty()) {
@@ -589,7 +587,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
 
   /**
    * @return whether the current configuration is for Workforce Pools (which enable 3p user
-   * identities, rather than workloads)
+   *     identities, rather than workloads)
    */
   public boolean isWorkforcePoolConfiguration() {
     Pattern workforceAudiencePattern =
@@ -809,7 +807,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
      * APIs. If this URL is not available, the access token from the Security Token Service is used
      * directly.
      *
-     * @param serviceAccountImpersonationUrl  the service account impersonation url to set
+     * @param serviceAccountImpersonationUrl the service account impersonation url to set
      * @return this {@code Builder} object
      */
     public Builder setServiceAccountImpersonationUrl(String serviceAccountImpersonationUrl) {
@@ -886,7 +884,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       return this;
     }
 
-    /** Sets the optional service account impersonation options.
+    /**
+     * Sets the optional service account impersonation options.
      *
      * @param optionsMap the service account impersonation options to set
      * @return this {@code Builder} object
