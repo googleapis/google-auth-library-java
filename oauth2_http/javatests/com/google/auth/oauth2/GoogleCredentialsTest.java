@@ -37,10 +37,12 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.http.TimeoutInitializer;
 import com.google.auth.oauth2.IdentityPoolCredentialsTest.MockExternalAccountCredentialsTransportFactory;
 import com.google.auth.oauth2.ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory;
 import com.google.common.collect.ImmutableList;
@@ -106,7 +108,7 @@ public class GoogleCredentialsTest {
   @Test
   public void getApplicationDefault_nullTransport_throws() throws IOException {
     try {
-      GoogleCredentials.getApplicationDefault(null);
+      GoogleCredentials.getApplicationDefault(null, null);
       fail();
     } catch (NullPointerException expected) {
       // Expected
@@ -117,7 +119,7 @@ public class GoogleCredentialsTest {
   public void fromStream_nullTransport_throws() throws IOException {
     InputStream stream = new ByteArrayInputStream("foo".getBytes());
     try {
-      GoogleCredentials.fromStream(stream, null);
+      GoogleCredentials.fromStream(stream, null, null);
       fail("Should throw if HttpTransportFactory is null");
     } catch (NullPointerException expected) {
       // Expected
@@ -128,7 +130,7 @@ public class GoogleCredentialsTest {
   public void fromStream_nullStream_throws() throws IOException {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     try {
-      GoogleCredentials.fromStream(null, transportFactory);
+      GoogleCredentials.fromStream(null, transportFactory, null);
       fail("Should throw if InputStream is null");
     } catch (NullPointerException expected) {
       // Expected
@@ -142,9 +144,10 @@ public class GoogleCredentialsTest {
     InputStream serviceAccountStream =
         ServiceAccountCredentialsTest.writeServiceAccountStream(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
+    HttpRequestInitializer requestInitializer = new TimeoutInitializer(3000, 30000);
 
     GoogleCredentials credentials =
-        GoogleCredentials.fromStream(serviceAccountStream, transportFactory);
+        GoogleCredentials.fromStream(serviceAccountStream, transportFactory, requestInitializer);
 
     assertNotNull(credentials);
     credentials = credentials.createScoped(SCOPES);
@@ -200,8 +203,9 @@ public class GoogleCredentialsTest {
     InputStream userStream =
         UserCredentialsTest.writeUserStream(
             USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, null);
+    HttpRequestInitializer requestInitializer = new TimeoutInitializer(3000, 30000);
 
-    GoogleCredentials credentials = GoogleCredentials.fromStream(userStream, transportFactory);
+    GoogleCredentials credentials = GoogleCredentials.fromStream(userStream, transportFactory, requestInitializer);
 
     assertNotNull(credentials);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
@@ -243,9 +247,10 @@ public class GoogleCredentialsTest {
             transportFactory.transport.getMetadataUrl(),
             /* serviceAccountImpersonationUrl= */ null,
             /* serviceAccountImpersonationOptionsMap= */ null);
+    HttpRequestInitializer requestInitializer = new TimeoutInitializer(3000, 30000);
 
     GoogleCredentials credentials =
-        GoogleCredentials.fromStream(identityPoolCredentialStream, transportFactory);
+        GoogleCredentials.fromStream(identityPoolCredentialStream, transportFactory, requestInitializer);
 
     assertNotNull(credentials);
     credentials = credentials.createScoped(SCOPES);
@@ -264,8 +269,10 @@ public class GoogleCredentialsTest {
             transportFactory.transport.getAwsRegionUrl(),
             transportFactory.transport.getAwsCredentialsUrl());
 
+    HttpRequestInitializer requestInitializer = new TimeoutInitializer(3000, 30000);
+
     GoogleCredentials credentials =
-        GoogleCredentials.fromStream(awsCredentialStream, transportFactory);
+        GoogleCredentials.fromStream(awsCredentialStream, transportFactory, requestInitializer);
 
     assertNotNull(credentials);
     credentials = credentials.createScoped(SCOPES);
@@ -281,15 +288,17 @@ public class GoogleCredentialsTest {
     InputStream stream =
         PluggableAuthCredentialsTest.writeCredentialsStream(transportFactory.transport.getStsUrl());
 
-    GoogleCredentials credentials = GoogleCredentials.fromStream(stream, transportFactory);
+    HttpRequestInitializer requestInitializer = new TimeoutInitializer(3000, 30000);
+
+    GoogleCredentials credentials = GoogleCredentials.fromStream(stream, transportFactory, requestInitializer);
 
     assertNotNull(credentials);
 
     // Create copy with mock executable handler.
     PluggableAuthCredentials copy =
         PluggableAuthCredentials.newBuilder((PluggableAuthCredentials) credentials)
-            .setExecutableHandler(options -> "pluggableAuthToken")
-            .build();
+                                .setExecutableHandler(options -> "pluggableAuthToken")
+                                .build();
 
     copy = copy.createScoped(SCOPES);
     Map<String, List<String>> metadata = copy.getRequestMetadata(CALL_URI);
@@ -318,9 +327,11 @@ public class GoogleCredentialsTest {
             ImpersonatedCredentialsTest.DELEGATES,
             ImpersonatedCredentialsTest.QUOTA_PROJECT_ID);
 
+    HttpRequestInitializer requestInitializer = new TimeoutInitializer(3000, 30000);
+
     ImpersonatedCredentials credentials =
         (ImpersonatedCredentials)
-            GoogleCredentials.fromStream(impersonationCredentialsStream, transportFactoryForSource);
+            GoogleCredentials.fromStream(impersonationCredentialsStream, transportFactoryForSource, requestInitializer);
     credentials.setTransportFactory(transportFactory);
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
@@ -354,9 +365,11 @@ public class GoogleCredentialsTest {
             ImpersonatedCredentialsTest.DELEGATES,
             null);
 
+    HttpRequestInitializer requestInitializer = new TimeoutInitializer(3000, 30000);
+
     ImpersonatedCredentials credentials =
         (ImpersonatedCredentials)
-            GoogleCredentials.fromStream(impersonationCredentialsStream, transportFactoryForSource);
+            GoogleCredentials.fromStream(impersonationCredentialsStream, transportFactoryForSource, requestInitializer);
     credentials.setTransportFactory(transportFactory);
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
@@ -387,7 +400,7 @@ public class GoogleCredentialsTest {
 
   private static void testFromStreamException(InputStream stream, String expectedMessageContent) {
     try {
-      GoogleCredentials.fromStream(stream, DUMMY_TRANSPORT_FACTORY);
+      GoogleCredentials.fromStream(stream, DUMMY_TRANSPORT_FACTORY, null);
       fail(
           String.format(
               "Should throw exception with message containing '%s'", expectedMessageContent));

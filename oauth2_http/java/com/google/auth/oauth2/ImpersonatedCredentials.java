@@ -38,6 +38,7 @@ import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
+import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.json.JsonHttpContent;
@@ -143,13 +144,13 @@ public class ImpersonatedCredentials extends GoogleCredentials
       int lifetime,
       HttpTransportFactory transportFactory) {
     return ImpersonatedCredentials.newBuilder()
-        .setSourceCredentials(sourceCredentials)
-        .setTargetPrincipal(targetPrincipal)
-        .setDelegates(delegates)
-        .setScopes(scopes)
-        .setLifetime(lifetime)
-        .setHttpTransportFactory(transportFactory)
-        .build();
+                                  .setSourceCredentials(sourceCredentials)
+                                  .setTargetPrincipal(targetPrincipal)
+                                  .setDelegates(delegates)
+                                  .setScopes(scopes)
+                                  .setLifetime(lifetime)
+                                  .setHttpTransportFactory(transportFactory)
+                                  .build();
   }
 
   /**
@@ -186,14 +187,14 @@ public class ImpersonatedCredentials extends GoogleCredentials
       HttpTransportFactory transportFactory,
       String quotaProjectId) {
     return ImpersonatedCredentials.newBuilder()
-        .setSourceCredentials(sourceCredentials)
-        .setTargetPrincipal(targetPrincipal)
-        .setDelegates(delegates)
-        .setScopes(scopes)
-        .setLifetime(lifetime)
-        .setHttpTransportFactory(transportFactory)
-        .setQuotaProjectId(quotaProjectId)
-        .build();
+                                  .setSourceCredentials(sourceCredentials)
+                                  .setTargetPrincipal(targetPrincipal)
+                                  .setDelegates(delegates)
+                                  .setScopes(scopes)
+                                  .setLifetime(lifetime)
+                                  .setHttpTransportFactory(transportFactory)
+                                  .setQuotaProjectId(quotaProjectId)
+                                  .build();
   }
 
   /**
@@ -233,15 +234,15 @@ public class ImpersonatedCredentials extends GoogleCredentials
       String quotaProjectId,
       String iamEndpointOverride) {
     return ImpersonatedCredentials.newBuilder()
-        .setSourceCredentials(sourceCredentials)
-        .setTargetPrincipal(targetPrincipal)
-        .setDelegates(delegates)
-        .setScopes(scopes)
-        .setLifetime(lifetime)
-        .setHttpTransportFactory(transportFactory)
-        .setQuotaProjectId(quotaProjectId)
-        .setIamEndpointOverride(iamEndpointOverride)
-        .build();
+                                  .setSourceCredentials(sourceCredentials)
+                                  .setTargetPrincipal(targetPrincipal)
+                                  .setDelegates(delegates)
+                                  .setScopes(scopes)
+                                  .setLifetime(lifetime)
+                                  .setHttpTransportFactory(transportFactory)
+                                  .setQuotaProjectId(quotaProjectId)
+                                  .setIamEndpointOverride(iamEndpointOverride)
+                                  .build();
   }
 
   /**
@@ -273,12 +274,12 @@ public class ImpersonatedCredentials extends GoogleCredentials
       List<String> scopes,
       int lifetime) {
     return ImpersonatedCredentials.newBuilder()
-        .setSourceCredentials(sourceCredentials)
-        .setTargetPrincipal(targetPrincipal)
-        .setDelegates(delegates)
-        .setScopes(scopes)
-        .setLifetime(lifetime)
-        .build();
+                                  .setSourceCredentials(sourceCredentials)
+                                  .setTargetPrincipal(targetPrincipal)
+                                  .setDelegates(delegates)
+                                  .setScopes(scopes)
+                                  .setLifetime(lifetime)
+                                  .build();
   }
 
   static String extractTargetPrincipal(String serviceAccountImpersonationUrl) {
@@ -367,7 +368,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
    * @throws IOException if the credential cannot be created from the JSON.
    */
   static ImpersonatedCredentials fromJson(
-      Map<String, Object> json, HttpTransportFactory transportFactory) throws IOException {
+      Map<String, Object> json, HttpTransportFactory transportFactory, HttpRequestInitializer httpRequestInitializer) throws IOException {
 
     checkNotNull(json);
     checkNotNull(transportFactory);
@@ -396,7 +397,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
       sourceCredentials = UserCredentials.fromJson(sourceCredentialsJson, transportFactory);
     } else if (GoogleCredentials.SERVICE_ACCOUNT_FILE_TYPE.equals(sourceCredentialsType)) {
       sourceCredentials =
-          ServiceAccountCredentials.fromJson(sourceCredentialsJson, transportFactory);
+          ServiceAccountCredentials.fromJson(sourceCredentialsJson, transportFactory, httpRequestInitializer);
     } else {
       throw new IOException(
           String.format(
@@ -404,15 +405,15 @@ public class ImpersonatedCredentials extends GoogleCredentials
               sourceCredentialsType));
     }
     return ImpersonatedCredentials.newBuilder()
-        .setSourceCredentials(sourceCredentials)
-        .setTargetPrincipal(targetPrincipal)
-        .setDelegates(delegates)
-        .setScopes(new ArrayList<String>())
-        .setLifetime(DEFAULT_LIFETIME_IN_SECONDS)
-        .setHttpTransportFactory(transportFactory)
-        .setQuotaProjectId(quotaProjectId)
-        .setIamEndpointOverride(serviceAccountImpersonationUrl)
-        .build();
+                                  .setSourceCredentials(sourceCredentials)
+                                  .setTargetPrincipal(targetPrincipal)
+                                  .setDelegates(delegates)
+                                  .setScopes(new ArrayList<String>())
+                                  .setLifetime(DEFAULT_LIFETIME_IN_SECONDS)
+                                  .setHttpTransportFactory(transportFactory)
+                                  .setQuotaProjectId(quotaProjectId)
+                                  .setIamEndpointOverride(serviceAccountImpersonationUrl)
+                                  .build();
   }
 
   @Override
@@ -585,15 +586,15 @@ public class ImpersonatedCredentials extends GoogleCredentials
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
-        .add("sourceCredentials", sourceCredentials)
-        .add("targetPrincipal", targetPrincipal)
-        .add("delegates", delegates)
-        .add("scopes", scopes)
-        .add("lifetime", lifetime)
-        .add("transportFactoryClassName", transportFactoryClassName)
-        .add("quotaProjectId", quotaProjectId)
-        .add("iamEndpointOverride", iamEndpointOverride)
-        .toString();
+                      .add("sourceCredentials", sourceCredentials)
+                      .add("targetPrincipal", targetPrincipal)
+                      .add("delegates", delegates)
+                      .add("scopes", scopes)
+                      .add("lifetime", lifetime)
+                      .add("transportFactoryClassName", transportFactoryClassName)
+                      .add("quotaProjectId", quotaProjectId)
+                      .add("iamEndpointOverride", iamEndpointOverride)
+                      .toString();
   }
 
   @Override

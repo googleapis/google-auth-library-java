@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
@@ -94,7 +95,7 @@ public class GoogleCredentials extends OAuth2Credentials {
    * @throws IOException if the credentials cannot be created in the current environment.
    */
   public static GoogleCredentials getApplicationDefault() throws IOException {
-    return getApplicationDefault(OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+    return getApplicationDefault(OAuth2Utils.HTTP_TRANSPORT_FACTORY, null);
   }
 
   /**
@@ -119,10 +120,10 @@ public class GoogleCredentials extends OAuth2Credentials {
    * @return the credentials instance.
    * @throws IOException if the credentials cannot be created in the current environment.
    */
-  public static GoogleCredentials getApplicationDefault(HttpTransportFactory transportFactory)
+  public static GoogleCredentials getApplicationDefault(HttpTransportFactory transportFactory, HttpRequestInitializer httpRequestInitializer)
       throws IOException {
     Preconditions.checkNotNull(transportFactory);
-    return defaultCredentialsProvider.getDefaultCredentials(transportFactory);
+    return defaultCredentialsProvider.getDefaultCredentials(transportFactory, httpRequestInitializer);
   }
 
   /**
@@ -136,7 +137,7 @@ public class GoogleCredentials extends OAuth2Credentials {
    * @throws IOException if the credential cannot be created from the stream.
    */
   public static GoogleCredentials fromStream(InputStream credentialsStream) throws IOException {
-    return fromStream(credentialsStream, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+    return fromStream(credentialsStream, OAuth2Utils.HTTP_TRANSPORT_FACTORY, null);
   }
 
   /**
@@ -152,7 +153,7 @@ public class GoogleCredentials extends OAuth2Credentials {
    * @throws IOException if the credential cannot be created from the stream.
    */
   public static GoogleCredentials fromStream(
-      InputStream credentialsStream, HttpTransportFactory transportFactory) throws IOException {
+      InputStream credentialsStream, HttpTransportFactory transportFactory, HttpRequestInitializer httpRequestInitializer) throws IOException {
     Preconditions.checkNotNull(credentialsStream);
     Preconditions.checkNotNull(transportFactory);
 
@@ -169,13 +170,13 @@ public class GoogleCredentials extends OAuth2Credentials {
       return UserCredentials.fromJson(fileContents, transportFactory);
     }
     if (SERVICE_ACCOUNT_FILE_TYPE.equals(fileType)) {
-      return ServiceAccountCredentials.fromJson(fileContents, transportFactory);
+      return ServiceAccountCredentials.fromJson(fileContents, transportFactory, httpRequestInitializer);
     }
     if (ExternalAccountCredentials.EXTERNAL_ACCOUNT_FILE_TYPE.equals(fileType)) {
       return ExternalAccountCredentials.fromJson(fileContents, transportFactory);
     }
     if ("impersonated_service_account".equals(fileType)) {
-      return ImpersonatedCredentials.fromJson(fileContents, transportFactory);
+      return ImpersonatedCredentials.fromJson(fileContents, transportFactory, httpRequestInitializer);
     }
     throw new IOException(
         String.format(

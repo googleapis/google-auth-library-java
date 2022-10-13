@@ -41,6 +41,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
@@ -55,6 +56,7 @@ import com.google.auth.RequestMetadataCallback;
 import com.google.auth.TestUtils;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.http.TimeoutInitializer;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
 import com.google.common.collect.ImmutableSet;
@@ -126,13 +128,13 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   private ServiceAccountCredentials.Builder createDefaultBuilder() throws IOException {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     return ServiceAccountCredentials.newBuilder()
-        .setClientId(CLIENT_ID)
-        .setClientEmail(CLIENT_EMAIL)
-        .setPrivateKey(privateKey)
-        .setPrivateKeyId(PRIVATE_KEY_ID)
-        .setScopes(SCOPES)
-        .setServiceAccountUser(USER)
-        .setProjectId(PROJECT_ID);
+                                    .setClientId(CLIENT_ID)
+                                    .setClientEmail(CLIENT_EMAIL)
+                                    .setPrivateKey(privateKey)
+                                    .setPrivateKeyId(PRIVATE_KEY_ID)
+                                    .setScopes(SCOPES)
+                                    .setServiceAccountUser(USER)
+                                    .setProjectId(PROJECT_ID);
   }
 
   @Test
@@ -174,14 +176,14 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials =
         ServiceAccountCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientEmail(CLIENT_EMAIL)
-            .setPrivateKey(privateKey)
-            .setPrivateKeyId(PRIVATE_KEY_ID)
-            .setScopes(SCOPES)
-            .setServiceAccountUser(USER)
-            .setProjectId(PROJECT_ID)
-            .build();
+                                 .setClientId(CLIENT_ID)
+                                 .setClientEmail(CLIENT_EMAIL)
+                                 .setPrivateKey(privateKey)
+                                 .setPrivateKeyId(PRIVATE_KEY_ID)
+                                 .setScopes(SCOPES)
+                                 .setServiceAccountUser(USER)
+                                 .setProjectId(PROJECT_ID)
+                                 .build();
     List<String> newScopes = Arrays.asList("scope1", "scope2");
 
     ServiceAccountCredentials newCredentials =
@@ -204,15 +206,15 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientEmail(CLIENT_EMAIL)
-            .setPrivateKey(privateKey)
-            .setPrivateKeyId(PRIVATE_KEY_ID)
-            .setScopes(SCOPES)
-            .setServiceAccountUser(USER)
-            .setProjectId(PROJECT_ID)
-            .setQuotaProjectId(QUOTA_PROJECT)
-            .build();
+                                 .setClientId(CLIENT_ID)
+                                 .setClientEmail(CLIENT_EMAIL)
+                                 .setPrivateKey(privateKey)
+                                 .setPrivateKeyId(PRIVATE_KEY_ID)
+                                 .setScopes(SCOPES)
+                                 .setServiceAccountUser(USER)
+                                 .setProjectId(PROJECT_ID)
+                                 .setQuotaProjectId(QUOTA_PROJECT)
+                                 .build();
     String newServiceAccountUser = "stranger@other.org";
 
     ServiceAccountCredentials newCredentials =
@@ -236,14 +238,14 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     List<String> scopes = Arrays.asList("scope1", "scope2");
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientEmail(CLIENT_EMAIL)
-            .setPrivateKey(privateKey)
-            .setPrivateKeyId(PRIVATE_KEY_ID)
-            .setScopes(scopes)
-            .setServiceAccountUser(USER)
-            .setProjectId(PROJECT_ID)
-            .build();
+                                 .setClientId(CLIENT_ID)
+                                 .setClientEmail(CLIENT_EMAIL)
+                                 .setPrivateKey(privateKey)
+                                 .setPrivateKeyId(PRIVATE_KEY_ID)
+                                 .setScopes(scopes)
+                                 .setServiceAccountUser(USER)
+                                 .setProjectId(PROJECT_ID)
+                                 .build();
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
@@ -265,13 +267,13 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     List<String> scopes = Arrays.asList("scope1", "scope2");
     ServiceAccountCredentials.Builder builder =
         ServiceAccountCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientEmail(CLIENT_EMAIL)
-            .setPrivateKey(privateKey)
-            .setPrivateKeyId(PRIVATE_KEY_ID)
-            .setScopes(null, scopes)
-            .setServiceAccountUser(USER)
-            .setProjectId(PROJECT_ID);
+                                 .setClientId(CLIENT_ID)
+                                 .setClientEmail(CLIENT_EMAIL)
+                                 .setPrivateKey(privateKey)
+                                 .setPrivateKeyId(PRIVATE_KEY_ID)
+                                 .setScopes(null, scopes)
+                                 .setServiceAccountUser(USER)
+                                 .setProjectId(PROJECT_ID);
     assertEquals(2, builder.getDefaultScopes().size());
     ServiceAccountCredentials credentials = builder.build();
 
@@ -308,13 +310,13 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientEmail(CLIENT_EMAIL)
-            .setPrivateKey(privateKey)
-            .setPrivateKeyId(PRIVATE_KEY_ID)
-            .setServiceAccountUser(USER)
-            .setProjectId(PROJECT_ID)
-            .build();
+                                 .setClientId(CLIENT_ID)
+                                 .setClientEmail(CLIENT_EMAIL)
+                                 .setPrivateKey(privateKey)
+                                 .setPrivateKeyId(PRIVATE_KEY_ID)
+                                 .setServiceAccountUser(USER)
+                                 .setProjectId(PROJECT_ID)
+                                 .build();
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
@@ -353,13 +355,13 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientEmail(CLIENT_EMAIL)
-            .setPrivateKey(privateKey)
-            .setPrivateKeyId(PRIVATE_KEY_ID)
-            .setServiceAccountUser(USER)
-            .setProjectId(PROJECT_ID)
-            .build();
+                                 .setClientId(CLIENT_ID)
+                                 .setClientEmail(CLIENT_EMAIL)
+                                 .setPrivateKey(privateKey)
+                                 .setPrivateKeyId(PRIVATE_KEY_ID)
+                                 .setServiceAccountUser(USER)
+                                 .setProjectId(PROJECT_ID)
+                                 .build();
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
@@ -480,9 +482,10 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     GenericJson json =
         writeServiceAccountJson(
             CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, PROJECT_ID, null);
+    HttpRequestInitializer requestInitializer = new TimeoutInitializer(3000, 30000);
 
     ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.fromJson(json, transportFactory);
+        ServiceAccountCredentials.fromJson(json, transportFactory, requestInitializer);
     assertEquals(PROJECT_ID, credentials.getProjectId());
   }
 
@@ -493,9 +496,10 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     GenericJson json =
         writeServiceAccountJson(
             CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, null, null);
+    HttpRequestInitializer requestInitializer = new TimeoutInitializer(3000, 30000);
 
     ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.fromJson(json, transportFactory);
+        ServiceAccountCredentials.fromJson(json, transportFactory, requestInitializer);
     assertNull(credentials.getProjectId());
   }
 
@@ -506,8 +510,9 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     GenericJson json =
         writeServiceAccountJson(
             CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, PROJECT_ID, null);
+    HttpRequestInitializer requestInitializer = new TimeoutInitializer(3000, 30000);
 
-    GoogleCredentials credentials = ServiceAccountCredentials.fromJson(json, transportFactory);
+    GoogleCredentials credentials = ServiceAccountCredentials.fromJson(json, transportFactory, requestInitializer);
 
     credentials = credentials.createScoped(SCOPES);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
@@ -523,8 +528,9 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
         writeServiceAccountJson(
             CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, PROJECT_ID, null);
     json.put("token_uri", tokenServerUri);
+    HttpRequestInitializer requestInitializer = new TimeoutInitializer(3000, 30000);
     ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.fromJson(json, transportFactory);
+        ServiceAccountCredentials.fromJson(json, transportFactory, requestInitializer);
     assertEquals(URI.create(tokenServerUri), credentials.getTokenServerUri());
   }
 
@@ -535,7 +541,8 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     GenericJson json =
         writeServiceAccountJson(
             CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, PROJECT_ID, QUOTA_PROJECT);
-    GoogleCredentials credentials = ServiceAccountCredentials.fromJson(json, transportFactory);
+    HttpRequestInitializer requestInitializer = new TimeoutInitializer(3000, 30000);
+    GoogleCredentials credentials = ServiceAccountCredentials.fromJson(json, transportFactory, requestInitializer);
     credentials = credentials.createScoped(SCOPES);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
@@ -724,14 +731,14 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     MockTokenServerTransport transport = transportFactory.transport;
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.fromPkcs8(
-                CLIENT_ID,
-                CLIENT_EMAIL,
-                PRIVATE_KEY_PKCS8,
-                PRIVATE_KEY_ID,
-                SCOPES,
-                transportFactory,
-                null)
-            .createWithCustomRetryStrategy(false);
+                                     CLIENT_ID,
+                                     CLIENT_EMAIL,
+                                     PRIVATE_KEY_PKCS8,
+                                     PRIVATE_KEY_ID,
+                                     SCOPES,
+                                     transportFactory,
+                                     null)
+                                 .createWithCustomRetryStrategy(false);
 
     transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
@@ -827,7 +834,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
       assertTrue(timeElapsed > 5500 && timeElapsed < 10000);
       assertTrue(
           ex.getMessage()
-              .contains("Error getting access token for service account: Invalid grant"));
+            .contains("Error getting access token for service account: Invalid grant"));
       assertTrue(ex.isRetryable());
       assertEquals(3, ex.getRetryCount());
       assertTrue(ex.getCause() instanceof IOException);
@@ -892,9 +899,9 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     String targetAudience = "https://foo.bar";
     IdTokenCredentials tokenCredential =
         IdTokenCredentials.newBuilder()
-            .setIdTokenProvider(credentials)
-            .setTargetAudience(targetAudience)
-            .build();
+                          .setIdTokenProvider(credentials)
+                          .setTargetAudience(targetAudience)
+                          .build();
     tokenCredential.refresh();
     assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getAccessToken().getTokenValue());
     assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getIdToken().getTokenValue());
@@ -924,9 +931,9 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     String targetAudience = "https://bar";
     IdTokenCredentials tokenCredential =
         IdTokenCredentials.newBuilder()
-            .setIdTokenProvider(credentials)
-            .setTargetAudience(targetAudience)
-            .build();
+                          .setIdTokenProvider(credentials)
+                          .setTargetAudience(targetAudience)
+                          .build();
     tokenCredential.refresh();
     assertNotEquals(
         targetAudience,
@@ -1158,14 +1165,14 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
     ServiceAccountCredentials.Builder builder =
         ServiceAccountCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientEmail(CLIENT_EMAIL)
-            .setPrivateKeyId(PRIVATE_KEY_ID)
-            .setScopes(SCOPES, DEFAULT_SCOPES)
-            .setHttpTransportFactory(transportFactory)
-            .setTokenServerUri(tokenServer)
-            .setServiceAccountUser(USER)
-            .setQuotaProjectId(QUOTA_PROJECT);
+                                 .setClientId(CLIENT_ID)
+                                 .setClientEmail(CLIENT_EMAIL)
+                                 .setPrivateKeyId(PRIVATE_KEY_ID)
+                                 .setScopes(SCOPES, DEFAULT_SCOPES)
+                                 .setHttpTransportFactory(transportFactory)
+                                 .setTokenServerUri(tokenServer)
+                                 .setServiceAccountUser(USER)
+                                 .setQuotaProjectId(QUOTA_PROJECT);
 
     OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(PRIVATE_KEY_PKCS8, builder);
     String expectedToString =
@@ -1237,7 +1244,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   public void fromStream_nullTransport_throws() throws IOException {
     InputStream stream = new ByteArrayInputStream("foo".getBytes());
     try {
-      ServiceAccountCredentials.fromStream(stream, null);
+      ServiceAccountCredentials.fromStream(stream, null, null);
       fail("Should throw if HttpTransportFactory is null");
     } catch (NullPointerException expected) {
       // Expected
@@ -1248,7 +1255,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   public void fromStream_nullStream_throws() throws IOException {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     try {
-      ServiceAccountCredentials.fromStream(null, transportFactory);
+      ServiceAccountCredentials.fromStream(null, transportFactory, null);
       fail("Should throw if InputStream is null");
     } catch (NullPointerException expected) {
       // Expected
@@ -1261,9 +1268,10 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
     InputStream serviceAccountStream =
         writeServiceAccountStream(CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID);
+    HttpRequestInitializer requestInitializer = new TimeoutInitializer(3000, 30000);
 
     GoogleCredentials credentials =
-        ServiceAccountCredentials.fromStream(serviceAccountStream, transportFactory);
+        ServiceAccountCredentials.fromStream(serviceAccountStream, transportFactory, null);
 
     assertNotNull(credentials);
     credentials = credentials.createScoped(SCOPES);
@@ -1305,9 +1313,9 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     String targetAudience = "https://bar";
     IdTokenCredentials tokenCredential =
         IdTokenCredentials.newBuilder()
-            .setIdTokenProvider(credentials)
-            .setTargetAudience(targetAudience)
-            .build();
+                          .setIdTokenProvider(credentials)
+                          .setTargetAudience(targetAudience)
+                          .build();
 
     String expectedErrorMessage = String.format("iss: %s", CLIENT_EMAIL);
 
@@ -1367,16 +1375,16 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials =
         ServiceAccountCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientEmail(CLIENT_EMAIL)
-            .setPrivateKey(privateKey)
-            .setPrivateKeyId(PRIVATE_KEY_ID)
-            .setScopes(SCOPES)
-            .setServiceAccountUser(USER)
-            .setProjectId(PROJECT_ID)
-            .setQuotaProjectId("my-quota-project-id")
-            .setHttpTransportFactory(transportFactory)
-            .build();
+                                 .setClientId(CLIENT_ID)
+                                 .setClientEmail(CLIENT_EMAIL)
+                                 .setPrivateKey(privateKey)
+                                 .setPrivateKeyId(PRIVATE_KEY_ID)
+                                 .setScopes(SCOPES)
+                                 .setServiceAccountUser(USER)
+                                 .setProjectId(PROJECT_ID)
+                                 .setQuotaProjectId("my-quota-project-id")
+                                 .setHttpTransportFactory(transportFactory)
+                                 .build();
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     assertTrue(metadata.containsKey("x-goog-user-project"));
@@ -1394,15 +1402,15 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials =
         ServiceAccountCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientEmail(CLIENT_EMAIL)
-            .setPrivateKey(privateKey)
-            .setPrivateKeyId(PRIVATE_KEY_ID)
-            .setScopes(SCOPES)
-            .setServiceAccountUser(USER)
-            .setProjectId(PROJECT_ID)
-            .setHttpTransportFactory(transportFactory)
-            .build();
+                                 .setClientId(CLIENT_ID)
+                                 .setClientEmail(CLIENT_EMAIL)
+                                 .setPrivateKey(privateKey)
+                                 .setPrivateKeyId(PRIVATE_KEY_ID)
+                                 .setScopes(SCOPES)
+                                 .setServiceAccountUser(USER)
+                                 .setProjectId(PROJECT_ID)
+                                 .setHttpTransportFactory(transportFactory)
+                                 .build();
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     assertFalse(metadata.containsKey("x-goog-user-project"));
@@ -1417,16 +1425,16 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials =
         ServiceAccountCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientEmail(CLIENT_EMAIL)
-            .setPrivateKey(privateKey)
-            .setPrivateKeyId(PRIVATE_KEY_ID)
-            .setScopes(SCOPES)
-            .setServiceAccountUser(USER)
-            .setProjectId(PROJECT_ID)
-            .setQuotaProjectId("my-quota-project-id")
-            .setHttpTransportFactory(transportFactory)
-            .build();
+                                 .setClientId(CLIENT_ID)
+                                 .setClientEmail(CLIENT_EMAIL)
+                                 .setPrivateKey(privateKey)
+                                 .setPrivateKeyId(PRIVATE_KEY_ID)
+                                 .setScopes(SCOPES)
+                                 .setServiceAccountUser(USER)
+                                 .setProjectId(PROJECT_ID)
+                                 .setQuotaProjectId("my-quota-project-id")
+                                 .setHttpTransportFactory(transportFactory)
+                                 .build();
 
     final Map<String, List<String>> plainMetadata = credentials.getRequestMetadata();
     final AtomicBoolean success = new AtomicBoolean(false);
@@ -1454,15 +1462,15 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials =
         ServiceAccountCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientEmail(CLIENT_EMAIL)
-            .setPrivateKey(privateKey)
-            .setPrivateKeyId(PRIVATE_KEY_ID)
-            .setScopes(SCOPES)
-            .setProjectId(PROJECT_ID)
-            .setHttpTransportFactory(new MockTokenServerTransportFactory())
-            .setUseJwtAccessWithScope(true)
-            .build();
+                                 .setClientId(CLIENT_ID)
+                                 .setClientEmail(CLIENT_EMAIL)
+                                 .setPrivateKey(privateKey)
+                                 .setPrivateKeyId(PRIVATE_KEY_ID)
+                                 .setScopes(SCOPES)
+                                 .setProjectId(PROJECT_ID)
+                                 .setHttpTransportFactory(new MockTokenServerTransportFactory())
+                                 .setUseJwtAccessWithScope(true)
+                                 .build();
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     verifyJwtAccess(metadata, "dummy.scope");
@@ -1477,16 +1485,16 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials =
         ServiceAccountCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientEmail(CLIENT_EMAIL)
-            .setPrivateKey(privateKey)
-            .setPrivateKeyId(PRIVATE_KEY_ID)
-            .setScopes(SCOPES)
-            .setServiceAccountUser(USER)
-            .setProjectId(PROJECT_ID)
-            .setHttpTransportFactory(transportFactory)
-            .setUseJwtAccessWithScope(true)
-            .build();
+                                 .setClientId(CLIENT_ID)
+                                 .setClientEmail(CLIENT_EMAIL)
+                                 .setPrivateKey(privateKey)
+                                 .setPrivateKeyId(PRIVATE_KEY_ID)
+                                 .setScopes(SCOPES)
+                                 .setServiceAccountUser(USER)
+                                 .setProjectId(PROJECT_ID)
+                                 .setHttpTransportFactory(transportFactory)
+                                 .setUseJwtAccessWithScope(true)
+                                 .build();
 
     transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
@@ -1509,13 +1517,13 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials =
         ServiceAccountCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientEmail(CLIENT_EMAIL)
-            .setPrivateKey(privateKey)
-            .setPrivateKeyId(PRIVATE_KEY_ID)
-            .setProjectId(PROJECT_ID)
-            .setHttpTransportFactory(new MockTokenServerTransportFactory())
-            .build();
+                                 .setClientId(CLIENT_ID)
+                                 .setClientEmail(CLIENT_EMAIL)
+                                 .setPrivateKey(privateKey)
+                                 .setPrivateKeyId(PRIVATE_KEY_ID)
+                                 .setProjectId(PROJECT_ID)
+                                 .setHttpTransportFactory(new MockTokenServerTransportFactory())
+                                 .build();
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     verifyJwtAccess(metadata, null);
@@ -1526,15 +1534,15 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials =
         ServiceAccountCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientEmail(CLIENT_EMAIL)
-            .setPrivateKey(privateKey)
-            .setPrivateKeyId(PRIVATE_KEY_ID)
-            .setScopes(null, SCOPES)
-            .setProjectId(PROJECT_ID)
-            .setHttpTransportFactory(new MockTokenServerTransportFactory())
-            .setUseJwtAccessWithScope(true)
-            .build();
+                                 .setClientId(CLIENT_ID)
+                                 .setClientEmail(CLIENT_EMAIL)
+                                 .setPrivateKey(privateKey)
+                                 .setPrivateKeyId(PRIVATE_KEY_ID)
+                                 .setScopes(null, SCOPES)
+                                 .setProjectId(PROJECT_ID)
+                                 .setHttpTransportFactory(new MockTokenServerTransportFactory())
+                                 .setUseJwtAccessWithScope(true)
+                                 .build();
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata(null);
     verifyJwtAccess(metadata, "dummy.scope");
@@ -1545,16 +1553,16 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials =
         ServiceAccountCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientEmail(CLIENT_EMAIL)
-            .setPrivateKey(privateKey)
-            .setPrivateKeyId(PRIVATE_KEY_ID)
-            .setProjectId(PROJECT_ID)
-            .setQuotaProjectId("my-quota-project-id")
-            .setHttpTransportFactory(new MockTokenServerTransportFactory())
-            .setUseJwtAccessWithScope(true)
-            .setScopes(SCOPES)
-            .build();
+                                 .setClientId(CLIENT_ID)
+                                 .setClientEmail(CLIENT_EMAIL)
+                                 .setPrivateKey(privateKey)
+                                 .setPrivateKeyId(PRIVATE_KEY_ID)
+                                 .setProjectId(PROJECT_ID)
+                                 .setQuotaProjectId("my-quota-project-id")
+                                 .setHttpTransportFactory(new MockTokenServerTransportFactory())
+                                 .setUseJwtAccessWithScope(true)
+                                 .setScopes(SCOPES)
+                                 .build();
 
     final AtomicBoolean success = new AtomicBoolean(false);
     credentials.getRequestMetadata(
@@ -1647,7 +1655,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   private static void testFromStreamException(InputStream stream, String expectedMessageContent) {
     try {
-      ServiceAccountCredentials.fromStream(stream, DUMMY_TRANSPORT_FACTORY);
+      ServiceAccountCredentials.fromStream(stream, DUMMY_TRANSPORT_FACTORY, null);
       fail(
           String.format(
               "Should throw exception with message containing '%s'", expectedMessageContent));
