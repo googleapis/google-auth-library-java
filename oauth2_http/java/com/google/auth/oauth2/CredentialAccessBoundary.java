@@ -121,7 +121,7 @@ public final class CredentialAccessBoundary {
      *
      * <p>This list must not exceed 10 rules.
      *
-     * @param rule the rules to be set.
+     * @param rule the collection of rules to be set, should not be null
      * @return this {@code Builder} object
      */
     public Builder setRules(List<AccessBoundaryRule> rule) {
@@ -229,7 +229,7 @@ public final class CredentialAccessBoundary {
        *
        * <p>For example: {"inRole:roles/storage.objectViewer"}.
        *
-       * @param availablePermissions the permissions to set
+       * @param availablePermissions the collection of permissions to set, should not be null
        * @return this {@code Builder} object
        */
       public Builder setAvailablePermissions(List<String> availablePermissions) {
@@ -243,7 +243,7 @@ public final class CredentialAccessBoundary {
        *
        * <p>For example: "inRole:roles/storage.objectViewer".
        *
-       * @param availablePermission the permission to add.
+       * @param availablePermission a permission to add, should not be null
        * @return this {@code Builder} object
        */
       public Builder addAvailablePermission(String availablePermission) {
