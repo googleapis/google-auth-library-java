@@ -300,8 +300,6 @@ public class OAuth2Credentials extends Credentials {
    * extremely unlikely.
    */
   private static <T> T unwrapDirectFuture(ListenableFuture<T> future) throws IOException {
-    future = Futures.transform(future, Functions.identity(), MoreExecutors.directExecutor());
-
     try {
       return future.get();
     } catch (InterruptedException e) {
