@@ -946,8 +946,11 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
       creds.wait();
     }
 
-    creds.refresh();
     AccessToken token = creds.getAccessToken();
+    assertNull(token);
+
+    creds.refresh();
+    token = creds.getAccessToken();
     // Token should never be NULL after a refresh that succeeded.
     assertNotNull(token);
     t.join();
