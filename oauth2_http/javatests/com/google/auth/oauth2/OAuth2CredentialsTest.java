@@ -877,7 +877,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void UpdateTokenValueBeforeWake() throws IOException, InterruptedException {
+  public void updateTokenValueBeforeWake() throws IOException, InterruptedException {
     final SettableFuture<AccessToken> refreshedTokenFuture = SettableFuture.create();
     AccessToken refreshedToken = new AccessToken("2/MkSJoj1xsli0AccessToken_NKPY2", null);
     refreshedTokenFuture.set(refreshedToken);
@@ -909,7 +909,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
                       Thread.sleep(500);
                       super.run();
                     } catch (Exception e) {
-                      fail("Unexpected error.");
+                      fail("Unexpected error. Exception: " + e);
                     }
                   }
                 };
@@ -935,7 +935,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
                   creds.refresh();
                   assertNotNull(creds.getAccessToken());
                 } catch (Exception e) {
-                  fail("Unexpected error.");
+                  fail("Unexpected error. Exception: " + e);
                 }
               }
             });
