@@ -282,7 +282,7 @@ public class OAuth2Credentials extends Credentials {
       } catch (Exception e) {
         // noop
       } finally {
-        if (this.refreshTask != null && this.refreshTask.task == finishedTask) {
+        if (this.refreshTask != null && this.refreshTask.getTask() == finishedTask) {
           this.refreshTask = null;
         }
       }
@@ -616,6 +616,10 @@ public class OAuth2Credentials extends Credentials {
             }
           },
           MoreExecutors.directExecutor());
+    }
+
+    public ListenableFutureTask<OAuthValue> getTask() {
+      return this.task;
     }
 
     public void run() {
