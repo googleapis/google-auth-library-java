@@ -89,6 +89,8 @@ public class DefaultCredentialsProviderTest {
   private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
   private static final String QUOTA_PROJECT = "sample-quota-project-id";
+  private static final String QUOTA_PROJECT_FROM_ENVIRONMENT = "environment-quota-project-id";
+  private static final String QUOTA_PROJECT_EXPLICIT = "explicit-quota-project-id";
 
   static class MockRequestCountingTransportFactory implements HttpTransportFactory {
 
@@ -323,7 +325,8 @@ public class DefaultCredentialsProviderTest {
     testProvider.addFile(userPath, userStream);
     testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, userPath);
 
-    testUserProvidesToken(testProvider, USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+    testUserProvidesToken(
+        testProvider, USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, null, QUOTA_PROJECT);
   }
 
   @Test
@@ -362,17 +365,42 @@ public class DefaultCredentialsProviderTest {
 
   @Test
   public void getDefaultCredentials_wellKnownFileEnv_providesToken() throws IOException {
-    File cloudConfigDir = getTempDirectory();
-    InputStream userStream =
-        UserCredentialsTest.writeUserStream(
-            USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
-    File wellKnownFile =
-        new File(cloudConfigDir, DefaultCredentialsProvider.WELL_KNOWN_CREDENTIALS_FILE);
-    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
-    testProvider.setEnv("CLOUDSDK_CONFIG", cloudConfigDir.getAbsolutePath());
-    testProvider.addFile(wellKnownFile.getAbsolutePath(), userStream);
+    TestDefaultCredentialsProvider testProvider = createWellKnownFileTestProvider();
 
-    testUserProvidesToken(testProvider, USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+    testUserProvidesToken(
+        testProvider, USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, null, QUOTA_PROJECT);
+  }
+
+  @Test
+  public void getDefaultCredentials_quotaProjectId_fromEnvironment() throws IOException {
+    TestDefaultCredentialsProvider testProvider = createWellKnownFileTestProvider();
+    testProvider.setEnv(OAuth2Utils.GOOGLE_CLOUD_QUOTA_PROJECT, QUOTA_PROJECT_FROM_ENVIRONMENT);
+
+    // When environment variable is set and no explicit value is provided, quota from environment is
+    // used
+    testUserProvidesToken(
+        testProvider,
+        USER_CLIENT_ID,
+        USER_CLIENT_SECRET,
+        REFRESH_TOKEN,
+        null,
+        QUOTA_PROJECT_FROM_ENVIRONMENT);
+  }
+
+  @Test
+  public void getDefaultCredentials_quotaProjectId_explicit() throws IOException {
+    TestDefaultCredentialsProvider testProvider = createWellKnownFileTestProvider();
+    testProvider.setEnv(OAuth2Utils.GOOGLE_CLOUD_QUOTA_PROJECT, QUOTA_PROJECT_FROM_ENVIRONMENT);
+
+    // When environment variable is set and an explicit value is provided, quota from the explicit
+    // value is used
+    testUserProvidesToken(
+        testProvider,
+        USER_CLIENT_ID,
+        USER_CLIENT_SECRET,
+        REFRESH_TOKEN,
+        QUOTA_PROJECT_EXPLICIT,
+        QUOTA_PROJECT_EXPLICIT);
   }
 
   @Test
@@ -390,7 +418,8 @@ public class DefaultCredentialsProviderTest {
     testProvider.setProperty("user.home", homeDir.getAbsolutePath());
     testProvider.addFile(wellKnownFile.getAbsolutePath(), userStream);
 
-    testUserProvidesToken(testProvider, USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+    testUserProvidesToken(
+        testProvider, USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, null, QUOTA_PROJECT);
   }
 
   @Test
@@ -407,7 +436,8 @@ public class DefaultCredentialsProviderTest {
     testProvider.setEnv("APPDATA", homeDir.getAbsolutePath());
     testProvider.addFile(wellKnownFile.getAbsolutePath(), userStream);
 
-    testUserProvidesToken(testProvider, USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+    testUserProvidesToken(
+        testProvider, USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, null, QUOTA_PROJECT);
   }
 
   @Test
@@ -442,7 +472,7 @@ public class DefaultCredentialsProviderTest {
     transportFactory.transport.addRefreshToken(refreshTokenWkf, accessTokenWkf);
     transportFactory.transport.addRefreshToken(refreshTokenEnv, accessTokenEnv);
 
-    testUserProvidesToken(testProvider, transportFactory, accessTokenEnv);
+    testUserProvidesToken(testProvider, transportFactory, null, accessTokenEnv, QUOTA_PROJECT);
   }
 
   private String tempFilePath(String filename) {
@@ -499,7 +529,8 @@ public class DefaultCredentialsProviderTest {
     testProvider.setProperty("os.name", "linux");
     testProvider.setProperty("user.home", homeDir.getAbsolutePath());
     testProvider.addFile(wellKnownFile.getAbsolutePath(), userStream);
-    testUserProvidesToken(testProvider, GCLOUDSDK_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+    testUserProvidesToken(
+        testProvider, GCLOUDSDK_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, null, QUOTA_PROJECT);
     return handler.getRecord();
   }
 
@@ -511,24 +542,48 @@ public class DefaultCredentialsProviderTest {
       TestDefaultCredentialsProvider testProvider,
       String clientId,
       String clientSecret,
-      String refreshToken)
+      String refreshToken,
+      String quotaProjectId,
+      String expectedQuotaProjectId)
       throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(clientId, clientSecret);
     transportFactory.transport.addRefreshToken(refreshToken, ACCESS_TOKEN);
-    testUserProvidesToken(testProvider, transportFactory, ACCESS_TOKEN);
+    testUserProvidesToken(
+        testProvider, transportFactory, quotaProjectId, ACCESS_TOKEN, expectedQuotaProjectId);
   }
 
   private void testUserProvidesToken(
       TestDefaultCredentialsProvider testProvider,
       HttpTransportFactory transportFactory,
-      String accessToken)
+      String quotaProjectId,
+      String expectedAccessToken,
+      String expectedQuotaProjectId)
       throws IOException {
-    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory);
+    GoogleCredentials defaultCredentials =
+        testProvider.getDefaultCredentials(transportFactory, quotaProjectId);
 
     assertNotNull(defaultCredentials);
     Map<String, List<String>> metadata = defaultCredentials.getRequestMetadata(CALL_URI);
-    TestUtils.assertContainsBearerToken(metadata, accessToken);
+    TestUtils.assertContainsBearerToken(metadata, expectedAccessToken);
+
+    assertTrue(defaultCredentials instanceof UserCredentials);
+    UserCredentials userCredentials = (UserCredentials) defaultCredentials;
+    assertEquals(expectedQuotaProjectId, userCredentials.getQuotaProjectId());
+  }
+
+  private TestDefaultCredentialsProvider createWellKnownFileTestProvider() throws IOException {
+    File cloudConfigDir = getTempDirectory();
+    InputStream userStream =
+        UserCredentialsTest.writeUserStream(
+            USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
+    File wellKnownFile =
+        new File(cloudConfigDir, DefaultCredentialsProvider.WELL_KNOWN_CREDENTIALS_FILE);
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setEnv("CLOUDSDK_CONFIG", cloudConfigDir.getAbsolutePath());
+    testProvider.addFile(wellKnownFile.getAbsolutePath(), userStream);
+
+    return testProvider;
   }
 
   public static class MockAppEngineCredentials extends GoogleCredentials {
@@ -676,6 +731,14 @@ public class DefaultCredentialsProviderTest {
 
     void setFileSandbox(boolean fileSandbox) {
       this.fileSandbox = fileSandbox;
+    }
+
+    @Override
+    void setQuotaProjectIdFromEnvironment(QuotaProjectIdBuilder builder) {
+      String quotaFromEnvironment = variables.get(OAuth2Utils.GOOGLE_CLOUD_QUOTA_PROJECT);
+      if (quotaFromEnvironment != null) {
+        builder.setQuotaProjectId(quotaFromEnvironment);
+      }
     }
   }
 }

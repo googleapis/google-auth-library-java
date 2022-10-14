@@ -145,7 +145,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         (builder.tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : builder.tokenServerUri;
     this.serviceAccountUser = builder.serviceAccountUser;
     this.projectId = builder.projectId;
-    this.quotaProjectId = builder.quotaProjectId;
+    this.quotaProjectId = builder.getEffectiveQuotaProjectId(builder.quotaProjectId);
     if (builder.lifetime > TWELVE_HOURS_IN_SECONDS) {
       throw new IllegalStateException("lifetime must be less than or equal to 43200");
     }
@@ -1002,7 +1002,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     return quotaProjectId;
   }
 
-  public static class Builder extends GoogleCredentials.Builder {
+  public static class Builder extends GoogleCredentials.Builder implements QuotaProjectIdBuilder {
 
     private String clientId;
     private String clientEmail;
@@ -1095,8 +1095,14 @@ public class ServiceAccountCredentials extends GoogleCredentials
       return this;
     }
 
+    @Override
     public Builder setQuotaProjectId(String quotaProjectId) {
       this.quotaProjectId = quotaProjectId;
+      return this;
+    }
+
+    @Override
+    public Builder getBuilder() {
       return this;
     }
 

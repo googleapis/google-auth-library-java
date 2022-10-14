@@ -58,6 +58,9 @@ import java.util.Set;
 
 /** Internal utilities for the com.google.auth.oauth2 namespace. */
 class OAuth2Utils {
+  // Environment variable defining the project to be used for quota and billing.
+  static final String GOOGLE_CLOUD_QUOTA_PROJECT = "GOOGLE_CLOUD_QUOTA_PROJECT";
+
   static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
 
   static final String TOKEN_TYPE_ACCESS_TOKEN = "urn:ietf:params:oauth:token-type:access_token";
@@ -200,6 +203,10 @@ class OAuth2Utils {
       throw new IOException(String.format(VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "Map", key));
     }
     return (Map) value;
+  }
+
+  static String getQuotaProjectIdFromEnvironment() {
+    return System.getenv(GOOGLE_CLOUD_QUOTA_PROJECT);
   }
 
   private OAuth2Utils() {}

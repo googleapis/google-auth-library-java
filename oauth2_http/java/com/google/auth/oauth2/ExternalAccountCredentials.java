@@ -224,7 +224,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     this.credentialSource = checkNotNull(builder.credentialSource);
     this.tokenInfoUrl = builder.tokenInfoUrl;
     this.serviceAccountImpersonationUrl = builder.serviceAccountImpersonationUrl;
-    this.quotaProjectId = builder.quotaProjectId;
+    this.quotaProjectId = builder.getEffectiveQuotaProjectId(builder.quotaProjectId);
     this.clientId = builder.clientId;
     this.clientSecret = builder.clientSecret;
     this.scopes =
@@ -691,7 +691,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   }
 
   /** Base builder for external account credentials. */
-  public abstract static class Builder extends GoogleCredentials.Builder {
+  public abstract static class Builder extends GoogleCredentials.Builder
+      implements QuotaProjectIdBuilder {
 
     protected String audience;
     protected String subjectTokenType;
@@ -784,8 +785,14 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     }
 
     /** Sets the optional project used for quota and billing purposes. */
+    @Override
     public Builder setQuotaProjectId(String quotaProjectId) {
       this.quotaProjectId = quotaProjectId;
+      return this;
+    }
+
+    @Override
+    public Builder getBuilder() {
       return this;
     }
 

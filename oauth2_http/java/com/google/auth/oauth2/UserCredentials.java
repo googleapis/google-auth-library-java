@@ -390,7 +390,7 @@ public class UserCredentials extends GoogleCredentials
     return quotaProjectId;
   }
 
-  public static class Builder extends GoogleCredentials.Builder {
+  public static class Builder extends GoogleCredentials.Builder implements QuotaProjectIdBuilder {
 
     private String clientId;
     private String clientSecret;
@@ -440,8 +440,14 @@ public class UserCredentials extends GoogleCredentials
       return this;
     }
 
+    @Override
     public Builder setQuotaProjectId(String quotaProjectId) {
       this.quotaProjectId = quotaProjectId;
+      return this;
+    }
+
+    @Override
+    public Builder getBuilder() {
       return this;
     }
 
@@ -477,7 +483,7 @@ public class UserCredentials extends GoogleCredentials
           getAccessToken(),
           transportFactory,
           tokenServerUri,
-          quotaProjectId);
+          getEffectiveQuotaProjectId(quotaProjectId));
     }
   }
 }

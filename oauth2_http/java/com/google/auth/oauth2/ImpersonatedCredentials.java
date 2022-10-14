@@ -470,7 +470,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
         firstNonNull(
             builder.getHttpTransportFactory(),
             getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
-    this.quotaProjectId = builder.quotaProjectId;
+    this.quotaProjectId = builder.getEffectiveQuotaProjectId(builder.quotaProjectId);
     this.iamEndpointOverride = builder.iamEndpointOverride;
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
     this.calendar = builder.getCalendar();
@@ -620,7 +620,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     return new Builder();
   }
 
-  public static class Builder extends GoogleCredentials.Builder {
+  public static class Builder extends GoogleCredentials.Builder implements QuotaProjectIdBuilder {
 
     private GoogleCredentials sourceCredentials;
     private String targetPrincipal;
@@ -693,8 +693,14 @@ public class ImpersonatedCredentials extends GoogleCredentials
       return transportFactory;
     }
 
+    @Override
     public Builder setQuotaProjectId(String quotaProjectId) {
       this.quotaProjectId = quotaProjectId;
+      return this;
+    }
+
+    @Override
+    public Builder getBuilder() {
       return this;
     }
 

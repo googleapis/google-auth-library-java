@@ -116,14 +116,15 @@ class DefaultCredentialsProvider {
    *
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *     tokens.
+   * @param quotaProjectId The project to be used for billing and quota
    * @return the credentials instance.
    * @throws IOException if the credentials cannot be created in the current environment.
    */
-  final GoogleCredentials getDefaultCredentials(HttpTransportFactory transportFactory)
-      throws IOException {
+  final GoogleCredentials getDefaultCredentials(
+      HttpTransportFactory transportFactory, String quotaProjectId) throws IOException {
     synchronized (this) {
       if (cachedCredentials == null) {
-        cachedCredentials = getDefaultCredentialsUnsynchronized(transportFactory);
+        cachedCredentials = getDefaultCredentialsUnsynchronized(transportFactory, quotaProjectId);
       }
       if (cachedCredentials != null) {
         return cachedCredentials;
@@ -138,8 +139,35 @@ class DefaultCredentialsProvider {
             CREDENTIAL_ENV_VAR, HELP_PERMALINK));
   }
 
+  /**
+   * Returns the Application Default Credentials.
+   *
+   * <p>Returns the Application Default Credentials which are used to identify and authorize the
+   * whole application. The following are searched (in order) to find the Application Default
+   * Credentials:
+   *
+   * <ol>
+   *   <li>Credentials file pointed to by the {@code GOOGLE_APPLICATION_CREDENTIALS} environment
+   *       variable
+   *   <li>Credentials provided by the Google Cloud SDK {@code gcloud auth application-default
+   *       login} command
+   *   <li>Google App Engine built-in credentials
+   *   <li>Google Cloud Shell built-in credentials
+   *   <li>Google Compute Engine built-in credentials
+   * </ol>
+   *
+   * @param transportFactory HTTP transport factory, creates the transport used to get access
+   *     tokens.
+   * @return the credentials instance.
+   * @throws IOException if the credentials cannot be created in the current environment.
+   */
+  final GoogleCredentials getDefaultCredentials(HttpTransportFactory transportFactory)
+      throws IOException {
+    return getDefaultCredentials(transportFactory, null);
+  }
+
   private final GoogleCredentials getDefaultCredentialsUnsynchronized(
-      HttpTransportFactory transportFactory) throws IOException {
+      HttpTransportFactory transportFactory, String quotaProjectId) throws IOException {
 
     // First try the environment variable
     GoogleCredentials credentials = null;
@@ -221,6 +249,20 @@ class DefaultCredentialsProvider {
     if (credentials == null) {
       LOGGER.log(Level.FINE, "Attempting to load credentials from GCE");
       credentials = tryGetComputeCredentials(transportFactory);
+    }
+
+    if (credentials != null) {
+      GoogleCredentials.Builder builder = credentials.toBuilder();
+      if (builder instanceof QuotaProjectIdBuilder) {
+        QuotaProjectIdBuilder quotaProjectIdBuilder = (QuotaProjectIdBuilder) builder;
+        if (quotaProjectId != null) {
+          quotaProjectIdBuilder.setQuotaProjectId(quotaProjectId);
+        } else {
+          setQuotaProjectIdFromEnvironment(quotaProjectIdBuilder);
+        }
+
+        credentials = builder.build();
+      }
     }
 
     return credentials;
@@ -359,6 +401,10 @@ class DefaultCredentialsProvider {
 
   InputStream readStream(File file) throws FileNotFoundException {
     return new FileInputStream(file);
+  }
+
+  void setQuotaProjectIdFromEnvironment(QuotaProjectIdBuilder quotaProjectIdBuilder) {
+    quotaProjectIdBuilder.setQuotaProjectIdFromEnvironment();
   }
 
   /*
