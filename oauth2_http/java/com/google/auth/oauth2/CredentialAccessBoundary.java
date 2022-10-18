@@ -120,6 +120,9 @@ public final class CredentialAccessBoundary {
      * Sets the list of {@link AccessBoundaryRule}'s.
      *
      * <p>This list must not exceed 10 rules.
+     *
+     * @param rule the collection of rules to be set, should not be null
+     * @return this {@code Builder} object
      */
     public Builder setRules(List<AccessBoundaryRule> rule) {
       accessBoundaryRules = new ArrayList<>(checkNotNull(rule));
@@ -211,6 +214,9 @@ public final class CredentialAccessBoundary {
        * access to.
        *
        * <p>For example: "//storage.googleapis.com/projects/_/buckets/example".
+       *
+       * @param availableResource the resource name to set
+       * @return this {@code Builder} object
        */
       public Builder setAvailableResource(String availableResource) {
         this.availableResource = availableResource;
@@ -222,6 +228,9 @@ public final class CredentialAccessBoundary {
        * roles prefixed by inRole.
        *
        * <p>For example: {"inRole:roles/storage.objectViewer"}.
+       *
+       * @param availablePermissions the collection of permissions to set, should not be null
+       * @return this {@code Builder} object
        */
       public Builder setAvailablePermissions(List<String> availablePermissions) {
         this.availablePermissions = new ArrayList<>(checkNotNull(availablePermissions));
@@ -233,6 +242,9 @@ public final class CredentialAccessBoundary {
        * inRole.
        *
        * <p>For example: "inRole:roles/storage.objectViewer".
+       *
+       * @param availablePermission a permission to add, should not be null
+       * @return this {@code Builder} object
        */
       public Builder addAvailablePermission(String availablePermission) {
         if (availablePermissions == null) {
@@ -245,6 +257,9 @@ public final class CredentialAccessBoundary {
       /**
        * Sets the availability condition which is an IAM condition that defines constraints to apply
        * to the token expressed in CEL format.
+       *
+       * @param availabilityCondition the {@code AvailabilityCondition} to set
+       * @return this {@code Builder} object
        */
       public Builder setAvailabilityCondition(AvailabilityCondition availabilityCondition) {
         this.availabilityCondition = availabilityCondition;
@@ -318,19 +333,32 @@ public final class CredentialAccessBoundary {
          * <p>This expression specifies the Cloud Storage object where permissions are available.
          * See <a href='https://cloud.google.com/iam/docs/conditions-overview#cel'>for more
          * information.</a>
+         *
+         * @param expression the expression to set
+         * @return this {@code Builder} object
          */
         public Builder setExpression(String expression) {
           this.expression = expression;
           return this;
         }
 
-        /** Sets the optional title that identifies the purpose of the condition. */
+        /**
+         * Sets the optional title that identifies the purpose of the condition.
+         *
+         * @param title the title to set
+         * @return this {@code Builder} object
+         */
         public Builder setTitle(String title) {
           this.title = title;
           return this;
         }
 
-        /** Sets the description that details the purpose of the condition. */
+        /**
+         * Sets the description that details the purpose of the condition.
+         *
+         * @param description the description to set
+         * @return this {@code Builder} object
+         */
         public Builder setDescription(String description) {
           this.description = description;
           return this;
