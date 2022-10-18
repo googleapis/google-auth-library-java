@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.1](https://github.com/googleapis/google-auth-library-java/compare/v1.12.0...v1.12.1) (2022-10-18)
+
+
+### Bug Fixes
+
+* Resolve race condition reported in [#692](https://github.com/googleapis/google-auth-library-java/issues/692) ([#1031](https://github.com/googleapis/google-auth-library-java/issues/1031)) ([87a6606](https://github.com/googleapis/google-auth-library-java/commit/87a66067dff49d68f5b01cfe4c3f755fbf6b44fb))
+
 ## [1.12.0](https://github.com/googleapis/google-auth-library-java/compare/v1.11.0...v1.12.0) (2022-10-14)
 
 
