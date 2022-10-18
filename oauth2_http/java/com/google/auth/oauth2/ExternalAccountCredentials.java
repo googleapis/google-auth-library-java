@@ -224,7 +224,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     this.credentialSource = checkNotNull(builder.credentialSource);
     this.tokenInfoUrl = builder.tokenInfoUrl;
     this.serviceAccountImpersonationUrl = builder.serviceAccountImpersonationUrl;
-    this.quotaProjectId = builder.getEffectiveQuotaProjectId(builder.quotaProjectId);
+    this.quotaProjectId = builder.quotaProjectId;
     this.clientId = builder.clientId;
     this.clientSecret = builder.clientSecret;
     this.scopes =

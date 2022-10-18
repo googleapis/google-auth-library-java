@@ -41,34 +41,31 @@ public class QuotaProjectIdTest {
   private final String ENVIRONMENT_QUOTA_PROJECT = "environment_quota_project";
 
   @Test
-  public void getEffectiveQuotaProjectId_fromEnvironment() {
-    TestQuotaProjectIdBuilder testQuotaProjectIdBuilder =
+  public void setQuotaProjectIdFromEnvironment_fromEnvironment() {
+    TestQuotaProjectIdBuilder testBuilder =
         new TestQuotaProjectIdBuilder(ENVIRONMENT_QUOTA_PROJECT);
-    assertEquals(
-        ENVIRONMENT_QUOTA_PROJECT, testQuotaProjectIdBuilder.getEffectiveQuotaProjectId(null));
-    assertEquals(
-        ENVIRONMENT_QUOTA_PROJECT, testQuotaProjectIdBuilder.getEffectiveQuotaProjectId(""));
+    testBuilder.setQuotaProjectId(EXPLICIT_QUOTA_PROJECT);
+    assertEquals(EXPLICIT_QUOTA_PROJECT, testBuilder.getQuotaProjectId());
+
+    testBuilder.setQuotaProjectIdFromEnvironment();
+    assertEquals(ENVIRONMENT_QUOTA_PROJECT, testBuilder.getQuotaProjectId());
   }
 
   @Test
-  public void getEffectiveQuotaProjectId_explicit() {
-    TestQuotaProjectIdBuilder testQuotaProjectIdBuilder =
-        new TestQuotaProjectIdBuilder(ENVIRONMENT_QUOTA_PROJECT);
-    assertEquals(
-        EXPLICIT_QUOTA_PROJECT,
-        testQuotaProjectIdBuilder.getEffectiveQuotaProjectId(EXPLICIT_QUOTA_PROJECT));
-  }
+  public void setQuotaProjectIdFromEnvironment_notFromEnvironment() {
+    TestQuotaProjectIdBuilder testBuilder = new TestQuotaProjectIdBuilder(null);
+    testBuilder.setQuotaProjectId(EXPLICIT_QUOTA_PROJECT);
+    assertEquals(EXPLICIT_QUOTA_PROJECT, testBuilder.getQuotaProjectId());
 
-  @Test
-  public void getEffectiveQuotaProjectId_noQuotaProjectId() {
-    TestQuotaProjectIdBuilder testQuotaProjectIdBuilder = new TestQuotaProjectIdBuilder(null);
-    assertEquals(null, testQuotaProjectIdBuilder.getEffectiveQuotaProjectId(null));
+    testBuilder.setQuotaProjectIdFromEnvironment();
+    assertEquals(EXPLICIT_QUOTA_PROJECT, testBuilder.getQuotaProjectId());
   }
 }
 
-class TestQuotaProjectIdBuilder implements QuotaProjectIdBuilder {
+class TestQuotaProjectIdBuilder extends GoogleCredentials.Builder implements QuotaProjectIdBuilder {
 
   private String quotaProjectIdFromEnvironment;
+  private String quotaProjectId;
 
   TestQuotaProjectIdBuilder(String quotaProjectIdFromEnvironment) {
     this.quotaProjectIdFromEnvironment = quotaProjectIdFromEnvironment;
@@ -76,14 +73,17 @@ class TestQuotaProjectIdBuilder implements QuotaProjectIdBuilder {
 
   @Override
   public Builder getBuilder() {
-    // TODO Auto-generated method stub
-    return null;
+    return this;
+  }
+
+  public String getQuotaProjectId() {
+    return this.quotaProjectId;
   }
 
   @Override
   public Builder setQuotaProjectId(String quotaProjectId) {
-    // TODO Auto-generated method stub
-    return null;
+    this.quotaProjectId = quotaProjectId;
+    return this;
   }
 
   @Override

@@ -483,7 +483,7 @@ public class UserCredentials extends GoogleCredentials
           getAccessToken(),
           transportFactory,
           tokenServerUri,
-          getEffectiveQuotaProjectId(quotaProjectId));
+          quotaProjectId);
     }
   }
 }

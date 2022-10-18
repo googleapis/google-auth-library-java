@@ -145,7 +145,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         (builder.tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : builder.tokenServerUri;
     this.serviceAccountUser = builder.serviceAccountUser;
     this.projectId = builder.projectId;
-    this.quotaProjectId = builder.getEffectiveQuotaProjectId(builder.quotaProjectId);
+    this.quotaProjectId = builder.quotaProjectId;
     if (builder.lifetime > TWELVE_HOURS_IN_SECONDS) {
       throw new IllegalStateException("lifetime must be less than or equal to 43200");
     }

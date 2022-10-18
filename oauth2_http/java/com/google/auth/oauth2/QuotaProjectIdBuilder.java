@@ -38,14 +38,6 @@ public interface QuotaProjectIdBuilder {
   /** Sets the quota project ID used for quota and billing purposes */
   GoogleCredentials.Builder setQuotaProjectId(String quotaProjectId);
 
-  default String getEffectiveQuotaProjectId(String quotaProjectId) {
-    if (quotaProjectId == null || quotaProjectId.isEmpty()) {
-      quotaProjectId = getQuotaProjectIdFromEnvironment();
-    }
-
-    return quotaProjectId;
-  }
-
   /**
    * Reads from environment variable and sets the quota project ID used for quota and billing
    * purposes

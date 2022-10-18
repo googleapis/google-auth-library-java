@@ -470,7 +470,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
         firstNonNull(
             builder.getHttpTransportFactory(),
             getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
-    this.quotaProjectId = builder.getEffectiveQuotaProjectId(builder.quotaProjectId);
+    this.quotaProjectId = builder.quotaProjectId;
     this.iamEndpointOverride = builder.iamEndpointOverride;
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
     this.calendar = builder.getCalendar();
