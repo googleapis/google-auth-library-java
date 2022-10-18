@@ -896,7 +896,9 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
           @Override
           public AccessToken refreshAccessToken() {
             synchronized (this) {
-              // Wake up parent thread so it will perform refresh.
+              // Wake up the main thread. This is done now because the child thread (t) is known to
+              // have the refresh task. Now we want the main thread to wake up and create a future
+              // in order to wait for the refresh to complete.
               this.notify();
             }
             RefreshTaskListener listener =
@@ -906,7 +908,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
                     try {
                       // Sleep before setting accessToken to new accessToken. Refresh should not
                       // complete before this, and the accessToken is `null` until it is.
-                      Thread.sleep(500);
+                      Thread.sleep(300);
                       super.run();
                     } catch (Exception e) {
                       fail("Unexpected error. Exception: " + e);
@@ -917,8 +919,8 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
             this.refreshTask = new RefreshTask(task, listener);
 
             try {
-              // Sleep for 500 milliseconds to give parent thread time to create a refresh future.
-              Thread.sleep(500);
+              // Sleep for 100 milliseconds to give parent thread time to create a refresh future.
+              Thread.sleep(100);
               return refreshedTokenFuture.get();
             } catch (Exception e) {
               throw new RuntimeException(e);
@@ -942,7 +944,8 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     t.start();
 
     synchronized (creds) {
-      // Wait for child thread to be responsible for refresh.
+      // Grab a lock on creds object. This thread (the main thread) will wait here until the child
+      // thread (t) calls `notify` on the creds object.
       creds.wait();
     }
 
@@ -952,6 +955,8 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     creds.refresh();
     token = creds.getAccessToken();
     // Token should never be NULL after a refresh that succeeded.
+    // Previously the token could be NULL due to an internal race condition between the future
+    // completing and the task listener updating the value of the access token.
     assertNotNull(token);
     t.join();
   }
