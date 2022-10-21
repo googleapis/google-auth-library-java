@@ -89,13 +89,13 @@ public class UserCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void constructor() {
-    UserCredentials credentials =
+    UserCredentials.Builder builder =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
             .setClientSecret(CLIENT_SECRET)
-            .setRefreshToken(REFRESH_TOKEN)
-            .setQuotaProjectId(QUOTA_PROJECT)
-            .build();
+            .setRefreshToken(REFRESH_TOKEN);
+    builder.setQuotaProjectId(QUOTA_PROJECT);
+    UserCredentials credentials = builder.build();
     assertEquals(CLIENT_ID, credentials.getClientId());
     assertEquals(CLIENT_SECRET, credentials.getClientSecret());
     assertEquals(REFRESH_TOKEN, credentials.getRefreshToken());
@@ -236,26 +236,26 @@ public class UserCredentialsTest extends BaseSerializationTest {
     final URI tokenServer = URI.create("https://foo.com/bar");
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
-    UserCredentials credentials =
+    UserCredentials.Builder builder =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
             .setClientSecret(CLIENT_SECRET)
             .setRefreshToken(REFRESH_TOKEN)
             .setAccessToken(accessToken)
             .setHttpTransportFactory(transportFactory)
-            .setTokenServerUri(tokenServer)
-            .setQuotaProjectId(QUOTA_PROJECT)
-            .build();
-    UserCredentials otherCredentials =
+            .setTokenServerUri(tokenServer);
+    builder.setQuotaProjectId(QUOTA_PROJECT);
+    UserCredentials credentials = builder.build();
+    UserCredentials.Builder otherBuilder =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
             .setClientSecret(CLIENT_SECRET)
             .setRefreshToken(REFRESH_TOKEN)
             .setAccessToken(accessToken)
             .setHttpTransportFactory(transportFactory)
-            .setTokenServerUri(tokenServer)
-            .setQuotaProjectId(QUOTA_PROJECT)
-            .build();
+            .setTokenServerUri(tokenServer);
+    otherBuilder.setQuotaProjectId(QUOTA_PROJECT);
+    UserCredentials otherCredentials = otherBuilder.build();
     assertTrue(credentials.equals(otherCredentials));
     assertTrue(otherCredentials.equals(credentials));
   }
@@ -431,24 +431,24 @@ public class UserCredentialsTest extends BaseSerializationTest {
     final String quotaProject2 = "sample-id-2";
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
     MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
-    UserCredentials credentials =
+    UserCredentials.Builder builder =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
             .setClientSecret(CLIENT_SECRET)
             .setRefreshToken(REFRESH_TOKEN)
             .setAccessToken(accessToken)
-            .setHttpTransportFactory(httpTransportFactory)
-            .setQuotaProjectId(quotaProject1)
-            .build();
-    UserCredentials otherCredentials =
+            .setHttpTransportFactory(httpTransportFactory);
+    builder.setQuotaProjectId(quotaProject1);
+    UserCredentials credentials = builder.build();
+    UserCredentials.Builder otherBuilder =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
             .setClientSecret(CLIENT_SECRET)
             .setRefreshToken(REFRESH_TOKEN)
             .setAccessToken(accessToken)
-            .setHttpTransportFactory(httpTransportFactory)
-            .setQuotaProjectId(quotaProject2)
-            .build();
+            .setHttpTransportFactory(httpTransportFactory);
+    otherBuilder.setQuotaProjectId(quotaProject2);
+    UserCredentials otherCredentials = otherBuilder.build();
     assertFalse(credentials.equals(otherCredentials));
     assertFalse(otherCredentials.equals(credentials));
   }
@@ -458,16 +458,16 @@ public class UserCredentialsTest extends BaseSerializationTest {
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
     final URI tokenServer = URI.create("https://foo.com/bar");
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    UserCredentials credentials =
+    UserCredentials.Builder builder =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
             .setClientSecret(CLIENT_SECRET)
             .setRefreshToken(REFRESH_TOKEN)
             .setAccessToken(accessToken)
             .setHttpTransportFactory(transportFactory)
-            .setTokenServerUri(tokenServer)
-            .setQuotaProjectId(QUOTA_PROJECT)
-            .build();
+            .setTokenServerUri(tokenServer);
+    builder.setQuotaProjectId(QUOTA_PROJECT);
+    UserCredentials credentials = builder.build();
 
     String expectedToString =
         String.format(
@@ -490,26 +490,26 @@ public class UserCredentialsTest extends BaseSerializationTest {
     final URI tokenServer = URI.create("https://foo.com/bar");
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
-    UserCredentials credentials =
+    UserCredentials.Builder builder =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
             .setClientSecret(CLIENT_SECRET)
             .setRefreshToken(REFRESH_TOKEN)
             .setAccessToken(accessToken)
             .setHttpTransportFactory(transportFactory)
-            .setTokenServerUri(tokenServer)
-            .setQuotaProjectId(QUOTA_PROJECT)
-            .build();
-    UserCredentials otherCredentials =
+            .setTokenServerUri(tokenServer);
+    builder.setQuotaProjectId(QUOTA_PROJECT);
+    UserCredentials credentials = builder.build();
+    UserCredentials.Builder otherBuilder =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
             .setClientSecret(CLIENT_SECRET)
             .setRefreshToken(REFRESH_TOKEN)
             .setAccessToken(accessToken)
             .setHttpTransportFactory(transportFactory)
-            .setTokenServerUri(tokenServer)
-            .setQuotaProjectId(QUOTA_PROJECT)
-            .build();
+            .setTokenServerUri(tokenServer);
+    otherBuilder.setQuotaProjectId(QUOTA_PROJECT);
+    UserCredentials otherCredentials = otherBuilder.build();
     assertEquals(credentials.hashCode(), otherCredentials.hashCode());
   }
 
@@ -638,14 +638,14 @@ public class UserCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
 
-    UserCredentials userCredentials =
+    UserCredentials.Builder builder =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
             .setClientSecret(CLIENT_SECRET)
             .setRefreshToken(REFRESH_TOKEN)
-            .setQuotaProjectId("my-quota-project-id")
-            .setHttpTransportFactory(transportFactory)
-            .build();
+            .setHttpTransportFactory(transportFactory);
+    builder.setQuotaProjectId("my-quota-project-id");
+    UserCredentials userCredentials = builder.build();
 
     Map<String, List<String>> metadata = userCredentials.getRequestMetadata(CALL_URI);
     assertTrue(metadata.containsKey("x-goog-user-project"));
@@ -678,14 +678,14 @@ public class UserCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
 
-    UserCredentials userCredentials =
+    UserCredentials.Builder builder =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
             .setClientSecret(CLIENT_SECRET)
             .setRefreshToken(REFRESH_TOKEN)
-            .setQuotaProjectId("my-quota-project-id")
-            .setHttpTransportFactory(transportFactory)
-            .build();
+            .setHttpTransportFactory(transportFactory);
+    builder.setQuotaProjectId("my-quota-project-id");
+    UserCredentials userCredentials = builder.build();
     final Map<String, List<String>> plainMetadata = userCredentials.getRequestMetadata(CALL_URI);
     final AtomicBoolean success = new AtomicBoolean(false);
     userCredentials.getRequestMetadata(

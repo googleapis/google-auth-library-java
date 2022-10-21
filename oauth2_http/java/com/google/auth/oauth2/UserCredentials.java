@@ -71,42 +71,28 @@ public class UserCredentials extends GoogleCredentials
   private final String refreshToken;
   private final URI tokenServerUri;
   private final String transportFactoryClassName;
-  private final String quotaProjectId;
 
   private transient HttpTransportFactory transportFactory;
 
   /**
-   * Constructor with all parameters allowing custom transport and server URL.
+   * Constructor that builds from the builder
    *
-   * @param clientId Client ID of the credential from the console.
-   * @param clientSecret Client ID of the credential from the console.
-   * @param refreshToken A refresh token resulting from a OAuth2 consent flow.
-   * @param accessToken Initial or temporary access token.
-   * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *     tokens.
-   * @param tokenServerUri URI of the end point that provides tokens
+   * @param builder A builder for {@link UserCredentials} See {@link
+   *     UserCredntials.Builder}
    */
-  private UserCredentials(
-      String clientId,
-      String clientSecret,
-      String refreshToken,
-      AccessToken accessToken,
-      HttpTransportFactory transportFactory,
-      URI tokenServerUri,
-      String quotaProjectId) {
-    super(accessToken);
-    this.clientId = Preconditions.checkNotNull(clientId);
-    this.clientSecret = Preconditions.checkNotNull(clientSecret);
-    this.refreshToken = refreshToken;
+  private UserCredentials(Builder builder){
+    super(builder);
+    this.clientId = Preconditions.checkNotNull(builder.getClientId());
+    this.clientSecret = Preconditions.checkNotNull(builder.getClientSecret());
+    this.refreshToken = builder.getRefreshToken();
     this.transportFactory =
         firstNonNull(
-            transportFactory,
+            builder.getHttpTransportFactory(),
             getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
-    this.tokenServerUri = (tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : tokenServerUri;
+    this.tokenServerUri = (builder.getTokenServerUri() == null) ? OAuth2Utils.TOKEN_SERVER_URI : builder.getTokenServerUri();
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
-    this.quotaProjectId = quotaProjectId;
     Preconditions.checkState(
-        accessToken != null || refreshToken != null,
+        builder.getAccessToken() != null || this.refreshToken != null,
         "Either accessToken or refreshToken must not be null");
   }
 
@@ -130,15 +116,16 @@ public class UserCredentials extends GoogleCredentials
           "Error reading user credential from JSON, "
               + " expecting 'client_id', 'client_secret' and 'refresh_token'.");
     }
-    return UserCredentials.newBuilder()
+    Builder builder = UserCredentials.newBuilder()
         .setClientId(clientId)
         .setClientSecret(clientSecret)
         .setRefreshToken(refreshToken)
         .setAccessToken(null)
         .setHttpTransportFactory(transportFactory)
-        .setTokenServerUri(null)
-        .setQuotaProjectId(quotaProjectId)
-        .build();
+        .setTokenServerUri(null);
+
+    builder.setQuotaProjectId(quotaProjectId);
+    return builder.build();
   }
 
   /**
@@ -324,15 +311,6 @@ public class UserCredentials extends GoogleCredentials
   }
 
   @Override
-  protected Map<String, List<String>> getAdditionalHeaders() {
-    Map<String, List<String>> headers = super.getAdditionalHeaders();
-    if (quotaProjectId != null) {
-      return addQuotaProjectIdToRequestMetadata(quotaProjectId, headers);
-    }
-    return headers;
-  }
-
-  @Override
   public int hashCode() {
     return Objects.hash(
         super.hashCode(),
@@ -340,8 +318,7 @@ public class UserCredentials extends GoogleCredentials
         clientSecret,
         refreshToken,
         tokenServerUri,
-        transportFactoryClassName,
-        quotaProjectId);
+        transportFactoryClassName);
   }
 
   @Override
@@ -369,7 +346,6 @@ public class UserCredentials extends GoogleCredentials
         && Objects.equals(this.refreshToken, other.refreshToken)
         && Objects.equals(this.tokenServerUri, other.tokenServerUri)
         && Objects.equals(this.transportFactoryClassName, other.transportFactoryClassName)
-        && Objects.equals(this.quotaProjectId, other.quotaProjectId);
   }
 
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
@@ -385,11 +361,6 @@ public class UserCredentials extends GoogleCredentials
     return new Builder(this);
   }
 
-  @Override
-  public String getQuotaProjectId() {
-    return quotaProjectId;
-  }
-
   public static class Builder extends GoogleCredentials.Builder {
 
     private String clientId;
@@ -397,17 +368,16 @@ public class UserCredentials extends GoogleCredentials
     private String refreshToken;
     private URI tokenServerUri;
     private HttpTransportFactory transportFactory;
-    private String quotaProjectId;
 
     protected Builder() {}
 
     protected Builder(UserCredentials credentials) {
+      super(credentials);
       this.clientId = credentials.clientId;
       this.clientSecret = credentials.clientSecret;
       this.refreshToken = credentials.refreshToken;
       this.transportFactory = credentials.transportFactory;
       this.tokenServerUri = credentials.tokenServerUri;
-      this.quotaProjectId = credentials.quotaProjectId;
     }
 
     public Builder setClientId(String clientId) {
@@ -440,11 +410,6 @@ public class UserCredentials extends GoogleCredentials
       return this;
     }
 
-    public Builder setQuotaProjectId(String quotaProjectId) {
-      this.quotaProjectId = quotaProjectId;
-      return this;
-    }
-
     public String getClientId() {
       return clientId;
     }
@@ -465,19 +430,8 @@ public class UserCredentials extends GoogleCredentials
       return transportFactory;
     }
 
-    public String getQuotaProjectId() {
-      return quotaProjectId;
-    }
-
     public UserCredentials build() {
-      return new UserCredentials(
-          clientId,
-          clientSecret,
-          refreshToken,
-          getAccessToken(),
-          transportFactory,
-          tokenServerUri,
-          quotaProjectId);
+      return new UserCredentials(this);
     }
   }
 }

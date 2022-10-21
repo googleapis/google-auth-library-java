@@ -46,6 +46,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /** Base type for credentials for authorizing calls to Google APIs using OAuth2. */
 public class GoogleCredentials extends OAuth2Credentials {
@@ -58,6 +59,8 @@ public class GoogleCredentials extends OAuth2Credentials {
 
   private static final DefaultCredentialsProvider defaultCredentialsProvider =
       new DefaultCredentialsProvider();
+
+  protected String quotaProjectId;
 
   /**
    * Returns the credentials instance from the given access token.
@@ -200,9 +203,23 @@ public class GoogleCredentials extends OAuth2Credentials {
     return Collections.unmodifiableMap(newRequestMetadata);
   }
 
+  @Override
+  protected Map<String, List<String>> getAdditionalHeaders() {
+    Map<String, List<String>> headers = super.getAdditionalHeaders();
+    if (quotaProjectId != null) {
+      return addQuotaProjectIdToRequestMetadata(quotaProjectId, headers);
+    }
+    return headers;
+  }
+
   /** Default constructor. */
   protected GoogleCredentials() {
-    this(null);
+    this(new Builder());
+  }
+
+  protected GoogleCredentials(Builder builder) {
+    super(builder.getAccessToken());
+    this.quotaProjectId = builder.getQuotaProjectId();
   }
 
   /**
@@ -230,6 +247,27 @@ public class GoogleCredentials extends OAuth2Credentials {
 
   public Builder toBuilder() {
     return new Builder(this);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(
+        super.hashCode(),
+        quotaProjectId);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof GoogleCredentials)) {
+      return false;
+    }
+    GoogleCredentials other = (GoogleCredentials)obj;
+    return super.equals(other)
+        && Objects.equals(this.quotaProjectId, other.quotaProjectId);
+  }
+
+  public String getQuotaProjectId() {
+    return quotaProjectId;
   }
 
   /**
@@ -299,21 +337,52 @@ public class GoogleCredentials extends OAuth2Credentials {
     return this;
   }
 
-  public static class Builder extends OAuth2Credentials.Builder {
+  public static class Builder extends OAuth2Credentials.Builder{
+    private String quotaProjectId;
+
     protected Builder() {}
 
     protected Builder(GoogleCredentials credentials) {
       setAccessToken(credentials.getAccessToken());
+      setQuotaProjectId(credentials.quotaProjectId);
     }
 
     public GoogleCredentials build() {
-      return new GoogleCredentials(getAccessToken());
+      return new GoogleCredentials(this);
     }
 
     @Override
     public Builder setAccessToken(AccessToken token) {
       super.setAccessToken(token);
       return this;
+    }
+
+    /** Sets the quota project ID used for quota and billing purposes */
+    Builder setQuotaProjectId(String quotaProjectId){
+      this.quotaProjectId = quotaProjectId;
+      return this;
+    }
+
+    /**
+     * Reads from environment variable and sets the quota project ID used for quota and billing
+     * purposes
+     */
+    Builder setQuotaProjectIdFromEnvironment() {
+      String quotaFromEnvironment = getQuotaProjectIdFromEnvironment();
+
+      if (quotaFromEnvironment == null || quotaFromEnvironment.isEmpty()) {
+        return this;
+      }
+
+      return this.setQuotaProjectId(quotaFromEnvironment);
+    }
+
+    String getQuotaProjectIdFromEnvironment() {
+      return OAuth2Utils.getQuotaProjectIdFromEnvironment();
+    }
+
+    public String getQuotaProjectId() {
+      return quotaProjectId;
     }
   }
 }

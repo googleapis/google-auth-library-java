@@ -72,6 +72,8 @@ class OAuth2Utils {
 
   static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
+  static final String GOOGLE_CLOUD_QUOTA_PROJECT = "GOOGLE_CLOUD_QUOTA_PROJECT";
+
   private static String VALUE_NOT_FOUND_MESSAGE = "%sExpected value %s not found.";
   private static String VALUE_WRONG_TYPE_MESSAGE = "%sExpected %s value %s of wrong type.";
 
@@ -200,6 +202,10 @@ class OAuth2Utils {
       throw new IOException(String.format(VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "Map", key));
     }
     return (Map) value;
+  }
+
+  static String getQuotaProjectIdFromEnvironment() {
+    return System.getenv(GOOGLE_CLOUD_QUOTA_PROJECT);
   }
 
   private OAuth2Utils() {}

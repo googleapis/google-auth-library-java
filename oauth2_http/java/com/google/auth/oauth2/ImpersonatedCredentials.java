@@ -105,7 +105,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
   private List<String> delegates;
   private List<String> scopes;
   private int lifetime;
-  private String quotaProjectId;
   private String iamEndpointOverride;
   private final String transportFactoryClassName;
 
@@ -185,15 +184,15 @@ public class ImpersonatedCredentials extends GoogleCredentials
       int lifetime,
       HttpTransportFactory transportFactory,
       String quotaProjectId) {
-    return ImpersonatedCredentials.newBuilder()
+      Builder builder =  ImpersonatedCredentials.newBuilder()
         .setSourceCredentials(sourceCredentials)
         .setTargetPrincipal(targetPrincipal)
         .setDelegates(delegates)
         .setScopes(scopes)
         .setLifetime(lifetime)
-        .setHttpTransportFactory(transportFactory)
-        .setQuotaProjectId(quotaProjectId)
-        .build();
+        .setHttpTransportFactory(transportFactory);
+      builder.setQuotaProjectId(quotaProjectId);
+      return builder.build();
   }
 
   /**
@@ -232,16 +231,16 @@ public class ImpersonatedCredentials extends GoogleCredentials
       HttpTransportFactory transportFactory,
       String quotaProjectId,
       String iamEndpointOverride) {
-    return ImpersonatedCredentials.newBuilder()
+      Builder builder = ImpersonatedCredentials.newBuilder()
         .setSourceCredentials(sourceCredentials)
         .setTargetPrincipal(targetPrincipal)
         .setDelegates(delegates)
         .setScopes(scopes)
         .setLifetime(lifetime)
         .setHttpTransportFactory(transportFactory)
-        .setQuotaProjectId(quotaProjectId)
-        .setIamEndpointOverride(iamEndpointOverride)
-        .build();
+        .setIamEndpointOverride(iamEndpointOverride);
+      builder.setQuotaProjectId(quotaProjectId);
+      return builder.build();
   }
 
   /**
@@ -302,11 +301,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
   @Override
   public String getAccount() {
     return this.targetPrincipal;
-  }
-
-  @Override
-  public String getQuotaProjectId() {
-    return this.quotaProjectId;
   }
 
   @VisibleForTesting
@@ -403,16 +397,16 @@ public class ImpersonatedCredentials extends GoogleCredentials
               "A credential of type %s is not supported as source credential for impersonation.",
               sourceCredentialsType));
     }
-    return ImpersonatedCredentials.newBuilder()
+    Builder builder = ImpersonatedCredentials.newBuilder()
         .setSourceCredentials(sourceCredentials)
         .setTargetPrincipal(targetPrincipal)
         .setDelegates(delegates)
         .setScopes(new ArrayList<String>())
         .setLifetime(DEFAULT_LIFETIME_IN_SECONDS)
         .setHttpTransportFactory(transportFactory)
-        .setQuotaProjectId(quotaProjectId)
-        .setIamEndpointOverride(serviceAccountImpersonationUrl)
-        .build();
+        .setIamEndpointOverride(serviceAccountImpersonationUrl);
+    builder.setQuotaProjectId(quotaProjectId);
+    return builder.build();
   }
 
   @Override
@@ -422,14 +416,14 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
   @Override
   public GoogleCredentials createScoped(Collection<String> scopes) {
-    return toBuilder()
+    Builder builder =  toBuilder()
         .setScopes(new ArrayList(scopes))
         .setLifetime(this.lifetime)
         .setDelegates(this.delegates)
         .setHttpTransportFactory(this.transportFactory)
-        .setQuotaProjectId(this.quotaProjectId)
-        .setIamEndpointOverride(this.iamEndpointOverride)
-        .build();
+        .setIamEndpointOverride(this.iamEndpointOverride);
+      builder.setQuotaProjectId(quotaProjectId);
+      return builder.build();
   }
 
   /**
@@ -440,27 +434,19 @@ public class ImpersonatedCredentials extends GoogleCredentials
    * @return the cloned impersonated credentials with the given custom calendar
    */
   public ImpersonatedCredentials createWithCustomCalendar(Calendar calendar) {
-    return toBuilder()
+    Builder builder = toBuilder()
         .setScopes(this.scopes)
         .setLifetime(this.lifetime)
         .setDelegates(this.delegates)
         .setHttpTransportFactory(this.transportFactory)
-        .setQuotaProjectId(this.quotaProjectId)
         .setIamEndpointOverride(this.iamEndpointOverride)
-        .setCalendar(calendar)
-        .build();
-  }
-
-  @Override
-  protected Map<String, List<String>> getAdditionalHeaders() {
-    Map<String, List<String>> headers = super.getAdditionalHeaders();
-    if (quotaProjectId != null) {
-      return addQuotaProjectIdToRequestMetadata(quotaProjectId, headers);
-    }
-    return headers;
+        .setCalendar(calendar);
+    builder.setQuotaProjectId(quotaProjectId);
+    return builder.build();
   }
 
   private ImpersonatedCredentials(Builder builder) {
+    super(builder);
     this.sourceCredentials = builder.getSourceCredentials();
     this.targetPrincipal = builder.getTargetPrincipal();
     this.delegates = builder.getDelegates();
@@ -470,7 +456,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
         firstNonNull(
             builder.getHttpTransportFactory(),
             getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
-    this.quotaProjectId = builder.quotaProjectId;
     this.iamEndpointOverride = builder.iamEndpointOverride;
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
     this.calendar = builder.getCalendar();
@@ -573,12 +558,12 @@ public class ImpersonatedCredentials extends GoogleCredentials
   @Override
   public int hashCode() {
     return Objects.hash(
+        super.hashCode(),
         sourceCredentials,
         targetPrincipal,
         delegates,
         scopes,
         lifetime,
-        quotaProjectId,
         iamEndpointOverride);
   }
 
@@ -602,13 +587,13 @@ public class ImpersonatedCredentials extends GoogleCredentials
       return false;
     }
     ImpersonatedCredentials other = (ImpersonatedCredentials) obj;
-    return Objects.equals(this.sourceCredentials, other.sourceCredentials)
+    return super.equals(other)
+        && Objects.equals(this.sourceCredentials, other.sourceCredentials)
         && Objects.equals(this.targetPrincipal, other.targetPrincipal)
         && Objects.equals(this.delegates, other.delegates)
         && Objects.equals(this.scopes, other.scopes)
         && Objects.equals(this.lifetime, other.lifetime)
         && Objects.equals(this.transportFactoryClassName, other.transportFactoryClassName)
-        && Objects.equals(this.quotaProjectId, other.quotaProjectId)
         && Objects.equals(this.iamEndpointOverride, other.iamEndpointOverride);
   }
 
@@ -628,7 +613,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
     private List<String> scopes;
     private int lifetime = DEFAULT_LIFETIME_IN_SECONDS;
     private HttpTransportFactory transportFactory;
-    private String quotaProjectId;
     private String iamEndpointOverride;
     private Calendar calendar = Calendar.getInstance();
 
@@ -691,11 +675,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
     public HttpTransportFactory getHttpTransportFactory() {
       return transportFactory;
-    }
-
-    public Builder setQuotaProjectId(String quotaProjectId) {
-      this.quotaProjectId = quotaProjectId;
-      return this;
     }
 
     public Builder setIamEndpointOverride(String iamEndpointOverride) {

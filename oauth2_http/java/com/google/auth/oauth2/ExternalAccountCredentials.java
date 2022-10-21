@@ -91,7 +91,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
 
   @Nullable private final String tokenInfoUrl;
   @Nullable private final String serviceAccountImpersonationUrl;
-  @Nullable private final String quotaProjectId;
   @Nullable private final String clientId;
   @Nullable private final String clientSecret;
 
@@ -231,6 +230,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
    * @param builder the {@code Builder} object used to construct the credentials.
    */
   protected ExternalAccountCredentials(ExternalAccountCredentials.Builder builder) {
+    super(builder);
     this.transportFactory =
         MoreObjects.firstNonNull(
             builder.transportFactory,
@@ -242,7 +242,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     this.credentialSource = checkNotNull(builder.credentialSource);
     this.tokenInfoUrl = builder.tokenInfoUrl;
     this.serviceAccountImpersonationUrl = builder.serviceAccountImpersonationUrl;
-    this.quotaProjectId = builder.quotaProjectId;
     this.clientId = builder.clientId;
     this.clientSecret = builder.clientSecret;
     this.scopes =
@@ -331,12 +330,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
         });
   }
 
-  @Override
-  public Map<String, List<String>> getRequestMetadata(URI uri) throws IOException {
-    Map<String, List<String>> requestMetadata = super.getRequestMetadata(uri);
-    return addQuotaProjectIdToRequestMetadata(quotaProjectId, requestMetadata);
-  }
-
   /**
    * Returns credentials defined by a JSON file stream.
    *
@@ -410,7 +403,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     }
 
     if (isAwsCredential(credentialSourceMap)) {
-      return AwsCredentials.newBuilder()
+      Builder builder = AwsCredentials.newBuilder()
           .setHttpTransportFactory(transportFactory)
           .setAudience(audience)
           .setSubjectTokenType(subjectTokenType)
@@ -418,13 +411,13 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
           .setTokenInfoUrl(tokenInfoUrl)
           .setCredentialSource(new AwsCredentialSource(credentialSourceMap))
           .setServiceAccountImpersonationUrl(serviceAccountImpersonationUrl)
-          .setQuotaProjectId(quotaProjectId)
           .setClientId(clientId)
           .setClientSecret(clientSecret)
-          .setServiceAccountImpersonationOptions(impersonationOptionsMap)
-          .build();
+          .setServiceAccountImpersonationOptions(impersonationOptionsMap);
+      builder.setQuotaProjectId(quotaProjectId);
+      return builder.build();
     } else if (isPluggableAuthCredential(credentialSourceMap)) {
-      return PluggableAuthCredentials.newBuilder()
+      Builder builder = PluggableAuthCredentials.newBuilder()
           .setHttpTransportFactory(transportFactory)
           .setAudience(audience)
           .setSubjectTokenType(subjectTokenType)
@@ -432,14 +425,14 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
           .setTokenInfoUrl(tokenInfoUrl)
           .setCredentialSource(new PluggableAuthCredentialSource(credentialSourceMap))
           .setServiceAccountImpersonationUrl(serviceAccountImpersonationUrl)
-          .setQuotaProjectId(quotaProjectId)
           .setClientId(clientId)
           .setClientSecret(clientSecret)
           .setWorkforcePoolUserProject(userProject)
-          .setServiceAccountImpersonationOptions(impersonationOptionsMap)
-          .build();
+          .setServiceAccountImpersonationOptions(impersonationOptionsMap);
+      builder.setQuotaProjectId(quotaProjectId);
+      return builder.build();
     }
-    return IdentityPoolCredentials.newBuilder()
+    Builder builder = IdentityPoolCredentials.newBuilder()
         .setHttpTransportFactory(transportFactory)
         .setAudience(audience)
         .setSubjectTokenType(subjectTokenType)
@@ -447,12 +440,12 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
         .setTokenInfoUrl(tokenInfoUrl)
         .setCredentialSource(new IdentityPoolCredentialSource(credentialSourceMap))
         .setServiceAccountImpersonationUrl(serviceAccountImpersonationUrl)
-        .setQuotaProjectId(quotaProjectId)
         .setClientId(clientId)
         .setClientSecret(clientSecret)
         .setWorkforcePoolUserProject(userProject)
-        .setServiceAccountImpersonationOptions(impersonationOptionsMap)
-        .build();
+        .setServiceAccountImpersonationOptions(impersonationOptionsMap);
+      builder.setQuotaProjectId(quotaProjectId);
+      return builder.build();
   }
 
   private static boolean isPluggableAuthCredential(Map<String, Object> credentialSource) {
@@ -548,12 +541,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       return null;
     }
     return ImpersonatedCredentials.extractTargetPrincipal(serviceAccountImpersonationUrl);
-  }
-
-  @Override
-  @Nullable
-  public String getQuotaProjectId() {
-    return quotaProjectId;
   }
 
   @Nullable
@@ -721,7 +708,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     protected HttpTransportFactory transportFactory;
 
     @Nullable protected String serviceAccountImpersonationUrl;
-    @Nullable protected String quotaProjectId;
     @Nullable protected String clientId;
     @Nullable protected String clientSecret;
     @Nullable protected Collection<String> scopes;
@@ -731,6 +717,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     protected Builder() {}
 
     protected Builder(ExternalAccountCredentials credentials) {
+      super(credentials);
       this.transportFactory = credentials.transportFactory;
       this.audience = credentials.audience;
       this.subjectTokenType = credentials.subjectTokenType;
@@ -738,7 +725,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       this.tokenInfoUrl = credentials.tokenInfoUrl;
       this.serviceAccountImpersonationUrl = credentials.serviceAccountImpersonationUrl;
       this.credentialSource = credentials.credentialSource;
-      this.quotaProjectId = credentials.quotaProjectId;
       this.clientId = credentials.clientId;
       this.clientSecret = credentials.clientSecret;
       this.scopes = credentials.scopes;
@@ -826,17 +812,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
      */
     public Builder setTokenInfoUrl(String tokenInfoUrl) {
       this.tokenInfoUrl = tokenInfoUrl;
-      return this;
-    }
-
-    /**
-     * Sets the optional project used for quota and billing purposes.
-     *
-     * @param quotaProjectId the quota and billing project id to set
-     * @return this {@code Builder} object
-     */
-    public Builder setQuotaProjectId(String quotaProjectId) {
-      this.quotaProjectId = quotaProjectId;
       return this;
     }
 
