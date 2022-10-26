@@ -49,10 +49,13 @@ import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.ComputeEngineCredentialsTest.MockMetadataServerTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.net.URI;
 import java.nio.file.Paths;
 import java.security.AccessControlException;
@@ -97,20 +100,6 @@ public class DefaultCredentialsProviderTest {
     @Override
     public HttpTransport create() {
       return transport;
-    }
-  }
-
-  @Test
-  public void getDefaultCredentials_noCredentials_throws() throws Exception {
-    MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
-    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
-
-    try {
-      testProvider.getDefaultCredentials(transportFactory);
-      fail("No credential expected.");
-    } catch (IOException e) {
-      String message = e.getMessage();
-      assertTrue(message.contains(DefaultCredentialsProvider.HELP_PERMALINK));
     }
   }
 
@@ -160,7 +149,8 @@ public class DefaultCredentialsProviderTest {
       testProvider.getDefaultCredentials(transportFactory);
       fail("No credential expected.");
     } catch (IOException expected) {
-      // Expected
+      String message = expected.getMessage();
+      assertTrue(message.contains(DefaultCredentialsProvider.HELP_PERMALINK));
     }
     assertEquals(
         transportFactory.transport.getRequestCount(),
@@ -174,6 +164,63 @@ public class DefaultCredentialsProviderTest {
     assertEquals(
         transportFactory.transport.getRequestCount(),
         ComputeEngineCredentials.MAX_COMPUTE_PING_TRIES);
+  }
+
+  @Test
+  public void getDefaultCredentials_noCredentials_linuxNotGce() throws IOException {
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setEnv("os.name", "Linux");
+    String productFilePath = "/sys/class/dmi/id/product_name";
+    InputStream productStream = new ByteArrayInputStream("test".getBytes());
+    testProvider.addFile(productFilePath, productStream);
+
+    assertFalse(ComputeEngineCredentials.checkStaticGceDetection(testProvider));
+  }
+
+  @Test
+  public void getDefaultCredentials_static_linux() throws IOException {
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setEnv("os.name", "Linux");
+    String productFilePath = "/sys/class/dmi/id/product_name";
+    InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
+    testProvider.addFile(productFilePath, productStream);
+
+    assertTrue(ComputeEngineCredentials.checkStaticGceDetection(testProvider));
+  }
+
+  @Test
+  public void getDefaultCredentials_static_windows_skipsLinuxPath() throws IOException {
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setEnv("os.name", "windows");
+    String productFilePath = "/sys/class/dmi/id/product_name";
+    InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
+    testProvider.addFile(productFilePath, productStream);
+
+    assertFalse(ComputeEngineCredentials.checkStaticGceDetection(testProvider));
+  }
+
+  @Test
+  public void getDefaultCredentials_static_unsupportedPlatform_notGce() throws IOException {
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setEnv("os.name", "macos");
+    String productFilePath = "/sys/class/dmi/id/product_name";
+    InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
+    testProvider.addFile(productFilePath, productStream);
+
+    assertFalse(ComputeEngineCredentials.checkStaticGceDetection(testProvider));
+  }
+
+  @Test
+  public void checkGcpLinuxPlatformData() throws Exception {
+    BufferedReader reader;
+    reader = new BufferedReader(new StringReader("HP Z440 Workstation"));
+    assertFalse(ComputeEngineCredentials.checkProductNameOnLinux(reader));
+    reader = new BufferedReader(new StringReader("Google"));
+    assertTrue(ComputeEngineCredentials.checkProductNameOnLinux(reader));
+    reader = new BufferedReader(new StringReader("Google Compute Engine"));
+    assertTrue(ComputeEngineCredentials.checkProductNameOnLinux(reader));
+    reader = new BufferedReader(new StringReader("Google Compute Engine    "));
+    assertTrue(ComputeEngineCredentials.checkProductNameOnLinux(reader));
   }
 
   @Test
@@ -615,6 +662,10 @@ public class DefaultCredentialsProviderTest {
 
     void addFile(String file, InputStream stream) {
       files.put(file, stream);
+    }
+
+    void removeFile(String file) {
+      files.remove(file);
     }
 
     void addType(String className, Class<?> type) {
