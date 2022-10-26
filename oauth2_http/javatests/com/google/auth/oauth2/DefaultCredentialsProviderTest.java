@@ -169,7 +169,7 @@ public class DefaultCredentialsProviderTest {
   @Test
   public void getDefaultCredentials_noCredentials_linuxNotGce() throws IOException {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
-    testProvider.setEnv("os.name", "Linux");
+    testProvider.setProperty("os.name", "Linux");
     String productFilePath = "/sys/class/dmi/id/product_name";
     InputStream productStream = new ByteArrayInputStream("test".getBytes());
     testProvider.addFile(productFilePath, productStream);
@@ -180,7 +180,7 @@ public class DefaultCredentialsProviderTest {
   @Test
   public void getDefaultCredentials_static_linux() throws IOException {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
-    testProvider.setEnv("os.name", "Linux");
+    testProvider.setProperty("os.name", "Linux");
     String productFilePath = "/sys/class/dmi/id/product_name";
     InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
     testProvider.addFile(productFilePath, productStream);
@@ -191,7 +191,7 @@ public class DefaultCredentialsProviderTest {
   @Test
   public void getDefaultCredentials_static_windows_skipsLinuxPath() throws IOException {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
-    testProvider.setEnv("os.name", "windows");
+    testProvider.setProperty("os.name", "windows");
     String productFilePath = "/sys/class/dmi/id/product_name";
     InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
     testProvider.addFile(productFilePath, productStream);
@@ -202,7 +202,7 @@ public class DefaultCredentialsProviderTest {
   @Test
   public void getDefaultCredentials_static_unsupportedPlatform_notGce() throws IOException {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
-    testProvider.setEnv("os.name", "macos");
+    testProvider.setProperty("os.name", "macos");
     String productFilePath = "/sys/class/dmi/id/product_name";
     InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
     testProvider.addFile(productFilePath, productStream);
@@ -662,10 +662,6 @@ public class DefaultCredentialsProviderTest {
 
     void addFile(String file, InputStream stream) {
       files.put(file, stream);
-    }
-
-    void removeFile(String file) {
-      files.remove(file);
     }
 
     void addType(String className, Class<?> type) {

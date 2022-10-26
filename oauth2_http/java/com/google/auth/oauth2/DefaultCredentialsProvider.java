@@ -236,11 +236,10 @@ class DefaultCredentialsProvider {
 
   private final File getWellKnownCredentialsFile() {
     File cloudConfigPath;
-    String os = getProperty("os.name", "").toLowerCase(Locale.US);
     String envPath = getEnv("CLOUDSDK_CONFIG");
     if (envPath != null) {
       cloudConfigPath = new File(envPath);
-    } else if (os.indexOf("windows") >= 0) {
+    } else if (getOsName().indexOf("windows") >= 0) {
       File appDataPath = new File(getEnv("APPDATA"));
       cloudConfigPath = new File(appDataPath, CLOUDSDK_CONFIG_DIRECTORY);
     } else {
@@ -335,6 +334,10 @@ class DefaultCredentialsProvider {
   protected boolean isOnGAEStandard7() {
     return GAE_RUNTIME_VERSION != null
         && (SPECIFICATION_VERSION.equals("1.7") || RUNTIME_JETTY_LOGGER == null);
+  }
+
+  String getOsName() {
+    return getProperty("os.name", "").toLowerCase(Locale.US);
   }
 
   /*

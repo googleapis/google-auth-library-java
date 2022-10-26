@@ -336,7 +336,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
   @VisibleForTesting
   static boolean checkStaticGceDetection(DefaultCredentialsProvider provider) {
-    String osName = provider.getEnv("os.name").toLowerCase(Locale.ENGLISH);
+    String osName = provider.getOsName();
     try {
       if (osName.startsWith("linux")) {
         // Checks GCE residency on Linux platform.
