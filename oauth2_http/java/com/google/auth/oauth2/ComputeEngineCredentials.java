@@ -32,7 +32,6 @@
 package com.google.auth.oauth2;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpHeaders;
@@ -53,11 +52,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
-import java.io.StringReader;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -65,7 +61,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
@@ -290,27 +285,25 @@ public class ComputeEngineCredentials extends GoogleCredentials
     return response;
   }
 
-  /** Implements an algorithm to detect whether the code is running on Google Compute
-   * Environment (GCE) or equivalent runtime.
-   * <a href="https://google.aip.dev/auth/4115">See AIP-4115 for more details</a>
-   * The algorithm consists of active and passive checks:
-   * <br>
-   * <b>Active:</b> to check that GCE Metadata service is present by sending a http request to
-   * send a request to {@code ComputeEngineCredentials.DEFAULT_METADATA_SERVER_URL}
-   * <p>
-   * <b>Passive:</b> to check if SMBIOS variable is present and contains expected value. This
+  /**
+   * Implements an algorithm to detect whether the code is running on Google Compute Environment
+   * (GCE) or equivalent runtime. <a href="https://google.aip.dev/auth/4115">See AIP-4115 for more
+   * details</a> The algorithm consists of active and passive checks: <br>
+   * <b>Active:</b> to check that GCE Metadata service is present by sending a http request to send
+   * a request to {@code ComputeEngineCredentials.DEFAULT_METADATA_SERVER_URL}
+   *
+   * <p><b>Passive:</b> to check if SMBIOS variable is present and contains expected value. This
    * step is platform specific:
-   * </p><p>
-   * <b>For Linux:</b> check if the file "/sys/class/dmi/id/product_name" exists and contains a
+   *
+   * <p><b>For Linux:</b> check if the file "/sys/class/dmi/id/product_name" exists and contains a
    * line that starts with Google.
-   * </p><p>
-   * <b>For Windows:</b> to be implemented
-   * </p><p>
-   * This algorithm overall can be disabled with environment variable
-   * {@code DefaultCredentialsProvider.NO_GCE_CHECK_ENV_VAR} set to true.
-   * </p>
-   * Returns {@code true} if currently running on Google Compute Environment (GCE)
-   * or equivalent runtime. */
+   *
+   * <p><b>For Windows:</b> to be implemented
+   *
+   * <p>This algorithm overall can be disabled with environment variable {@code
+   * DefaultCredentialsProvider.NO_GCE_CHECK_ENV_VAR} set to true. Returns {@code true} if currently
+   * running on Google Compute Environment (GCE) or equivalent runtime.
+   */
   static synchronized boolean isOnGce(
       HttpTransportFactory transportFactory, DefaultCredentialsProvider provider) {
     // If the environment has requested that we do no GCE checks, return immediately.
@@ -341,17 +334,15 @@ public class ComputeEngineCredentials extends GoogleCredentials
       if (osName.startsWith("linux")) {
         // Checks GCE residency on Linux platform.
         File linuxFile = new File("/sys/class/dmi/id/product_name");
-        return checkProductNameOnLinux(new BufferedReader(new InputStreamReader(provider.readStream(linuxFile))));
+        return checkProductNameOnLinux(
+            new BufferedReader(new InputStreamReader(provider.readStream(linuxFile))));
       } else if (osName.startsWith("windows")) {
         // Checks GCE residency on Windows platform.
         // TODO: implement registry check via FFI
         return false;
       }
     } catch (IOException e) {
-      LOGGER.log(
-        Level.FINE,
-        "Encountered an unexpected exception when checking SMBIOS value",
-        e);
+      LOGGER.log(Level.FINE, "Encountered an unexpected exception when checking SMBIOS value", e);
       return false;
     }
     // Platforms other than Linux and Windows are not supported.

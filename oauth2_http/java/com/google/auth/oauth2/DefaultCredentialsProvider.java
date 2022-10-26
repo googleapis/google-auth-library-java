@@ -309,8 +309,7 @@ class DefaultCredentialsProvider {
     if (checkedComputeEngine) {
       return null;
     }
-    boolean runningOnComputeEngine =
-        ComputeEngineCredentials.isOnGce(transportFactory, this);
+    boolean runningOnComputeEngine = ComputeEngineCredentials.isOnGce(transportFactory, this);
     checkedComputeEngine = true;
     if (runningOnComputeEngine) {
       return ComputeEngineCredentials.newBuilder()
