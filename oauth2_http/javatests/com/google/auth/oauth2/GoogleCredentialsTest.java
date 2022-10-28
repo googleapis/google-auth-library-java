@@ -241,7 +241,8 @@ public class GoogleCredentialsTest {
         IdentityPoolCredentialsTest.writeIdentityPoolCredentialsStream(
             transportFactory.transport.getStsUrl(),
             transportFactory.transport.getMetadataUrl(),
-            /* serviceAccountImpersonationUrl= */ null);
+            /* serviceAccountImpersonationUrl= */ null,
+            /* serviceAccountImpersonationOptionsMap= */ null);
 
     GoogleCredentials credentials =
         GoogleCredentials.fromStream(identityPoolCredentialStream, transportFactory);

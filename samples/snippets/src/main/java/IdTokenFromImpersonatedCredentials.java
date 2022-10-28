@@ -31,14 +31,13 @@ public class IdTokenFromImpersonatedCredentials {
 
     // Provide the scopes that you might need to request to access Google APIs,
     // depending on the level of access you need.
-    // The best practice is to use the cloud-wide scope and use IAM to narrow the permissions.
-    // https://cloud.google.com/docs/authentication#authorization_for_services
+    // This example uses the cloud-wide scope and uses IAM to narrow the permissions.
+    // https://cloud.google.com/docs/authentication/external/authorization-gcp
     // For more information, see: https://developers.google.com/identity/protocols/oauth2/scopes
     String scope = "https://www.googleapis.com/auth/cloud-platform";
 
-    // The service name for which the id token is requested. Service name refers to the
-    // logical identifier of an API service, such as "pubsub.googleapis.com".
-    String targetAudience = "iap.googleapis.com";
+    // The service name for which the id token is requested.
+    String targetAudience = "https://example.com";
 
     // The name of the privilege-bearing service account for whom the credential is created.
     String impersonatedServiceAccount = "name@project.service.gserviceaccount.com";
@@ -78,8 +77,8 @@ public class IdTokenFromImpersonatedCredentials {
             .build();
 
     // Get the ID token.
-    // Once you've obtained the ID token, use it to make an authenticated call
-    // to the target audience.
+    // Once you've obtained the ID token, you can use it to make an authenticated call to the
+    // target audience.
     String idToken = idTokenCredentials.refreshAccessToken().getTokenValue();
     System.out.println("Generated ID token.");
   }
