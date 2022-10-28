@@ -834,7 +834,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void UserCredentials_ToBuilder_CopyEveryAttributes() {
+  public void userCredentials_toBuilder_copyEveryAttribute() {
     MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
     UserCredentials credentials = UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
