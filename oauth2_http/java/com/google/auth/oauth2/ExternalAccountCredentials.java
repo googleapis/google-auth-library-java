@@ -159,9 +159,25 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   }
 
   /**
-   * See {@link ExternalAccountCredentials#ExternalAccountCredentials(HttpTransportFactory, String,
-   * String, String, CredentialSource, String, String, String, String, String, Collection)}
+   * Constructor with minimum identifying information and custom HTTP transport. Does not support
+   * workforce credentials.
    *
+   * @param transportFactory HTTP transport factory, creates the transport used to get access tokens
+   * @param audience the Security Token Service audience, which is usually the fully specified
+   *     resource name of the workload/workforce pool provider
+   * @param subjectTokenType the Security Token Service subject token type based on the OAuth 2.0
+   *     token exchange spec. Indicates the type of the security token in the credential file
+   * @param tokenUrl the Security Token Service token exchange endpoint
+   * @param tokenInfoUrl the endpoint used to retrieve account related information. Required for
+   *     gCloud session account identification.
+   * @param credentialSource the external credential source
+   * @param serviceAccountImpersonationUrl the URL for the service account impersonation request.
+   *     This URL is required for some APIs. If this URL is not available, the access token from the
+   *     Security Token Service is used directly. May be null.
+   * @param quotaProjectId the project used for quota and billing purposes. May be null.
+   * @param clientId client ID of the service account from the console. May be null.
+   * @param clientSecret client secret of the service account from the console. May be null.
+   * @param scopes the scopes to request during the authorization grant. May be null.
    * @param environmentProvider the environment provider. May be null. Defaults to {@link
    *     SystemEnvironmentProvider}.
    */
@@ -211,6 +227,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   /**
    * Internal constructor with minimum identifying information and custom HTTP transport. See {@link
    * ExternalAccountCredentials.Builder}.
+   *
+   * @param builder the {@code Builder} object used to construct the credentials.
    */
   protected ExternalAccountCredentials(ExternalAccountCredentials.Builder builder) {
     this.transportFactory =
@@ -494,6 +512,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
    * source.
    *
    * @return the external subject token
+   * @throws IOException if the subject token cannot be retrieved
    */
   public abstract String retrieveSubjectToken() throws IOException;
 
@@ -522,7 +541,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     return serviceAccountImpersonationUrl;
   }
 
-  /** The service account email to be impersonated, if available. */
+  /** @return The service account email to be impersonated, if available */
   @Nullable
   public String getServiceAccountEmail() {
     if (serviceAccountImpersonationUrl == null || serviceAccountImpersonationUrl.isEmpty()) {
@@ -567,8 +586,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   }
 
   /**
-   * Returns whether the current configuration is for Workforce Pools (which enable 3p user
-   * identities, rather than workloads).
+   * @return whether the current configuration is for Workforce Pools (which enable 3p user
+   *     identities, rather than workloads)
    */
   public boolean isWorkforcePoolConfiguration() {
     Pattern workforceAudiencePattern =
@@ -583,6 +602,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     patterns.add(Pattern.compile("^sts\\.googleapis\\.com$"));
     patterns.add(Pattern.compile("^sts\\.[^\\.\\s\\/\\\\]+\\.googleapis\\.com$"));
     patterns.add(Pattern.compile("^[^\\.\\s\\/\\\\]+\\-sts\\.googleapis\\.com$"));
+    patterns.add(Pattern.compile("^sts\\-[^\\.\\s\\/\\\\]+\\.p\\.googleapis\\.com$"));
 
     if (!isValidUrl(patterns, tokenUrl)) {
       throw new IllegalArgumentException("The provided token URL is invalid.");
@@ -595,6 +615,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     patterns.add(Pattern.compile("^iamcredentials\\.googleapis\\.com$"));
     patterns.add(Pattern.compile("^iamcredentials\\.[^\\.\\s\\/\\\\]+\\.googleapis\\.com$"));
     patterns.add(Pattern.compile("^[^\\.\\s\\/\\\\]+\\-iamcredentials\\.googleapis\\.com$"));
+    patterns.add(Pattern.compile("^iamcredentials-[^\\.\\s\\/\\\\]+\\.p\\.googleapis\\.com$"));
 
     if (!isValidUrl(patterns, serviceAccountImpersonationUrl)) {
       throw new IllegalArgumentException(
@@ -726,7 +747,12 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       this.serviceAccountImpersonationOptions = credentials.serviceAccountImpersonationOptions;
     }
 
-    /** Sets the HTTP transport factory, creates the transport used to get access tokens. */
+    /**
+     * Sets the HTTP transport factory, creates the transport used to get access tokens.
+     *
+     * @param transportFactory the {@code HttpTransportFactory} to set
+     * @return this {@code Builder} object
+     */
     public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
       this.transportFactory = transportFactory;
       return this;
@@ -735,6 +761,9 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     /**
      * Sets the Security Token Service audience, which is usually the fully specified resource name
      * of the workload/workforce pool provider.
+     *
+     * @param audience the Security Token Service audience to set
+     * @return this {@code Builder} object
      */
     public Builder setAudience(String audience) {
       this.audience = audience;
@@ -744,19 +773,32 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     /**
      * Sets the Security Token Service subject token type based on the OAuth 2.0 token exchange
      * spec. Indicates the type of the security token in the credential file.
+     *
+     * @param subjectTokenType the Security Token Service subject token type to set
+     * @return this {@code Builder} object
      */
     public Builder setSubjectTokenType(String subjectTokenType) {
       this.subjectTokenType = subjectTokenType;
       return this;
     }
 
-    /** Sets the Security Token Service token exchange endpoint. */
+    /**
+     * Sets the Security Token Service token exchange endpoint.
+     *
+     * @param tokenUrl the Security Token Service token exchange url to set
+     * @return this {@code Builder} object
+     */
     public Builder setTokenUrl(String tokenUrl) {
       this.tokenUrl = tokenUrl;
       return this;
     }
 
-    /** Sets the external credential source. */
+    /**
+     * Sets the external credential source.
+     *
+     * @param credentialSource the {@code CredentialSource} to set
+     * @return this {@code Builder} object
+     */
     public Builder setCredentialSource(CredentialSource credentialSource) {
       this.credentialSource = credentialSource;
       return this;
@@ -766,6 +808,9 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
      * Sets the optional URL used for service account impersonation, which is required for some
      * APIs. If this URL is not available, the access token from the Security Token Service is used
      * directly.
+     *
+     * @param serviceAccountImpersonationUrl the service account impersonation url to set
+     * @return this {@code Builder} object
      */
     public Builder setServiceAccountImpersonationUrl(String serviceAccountImpersonationUrl) {
       this.serviceAccountImpersonationUrl = serviceAccountImpersonationUrl;
@@ -775,31 +820,54 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     /**
      * Sets the optional endpoint used to retrieve account related information. Required for gCloud
      * session account identification.
+     *
+     * @param tokenInfoUrl the token info url to set
+     * @return this {@code Builder} object
      */
     public Builder setTokenInfoUrl(String tokenInfoUrl) {
       this.tokenInfoUrl = tokenInfoUrl;
       return this;
     }
 
-    /** Sets the optional project used for quota and billing purposes. */
+    /**
+     * Sets the optional project used for quota and billing purposes.
+     *
+     * @param quotaProjectId the quota and billing project id to set
+     * @return this {@code Builder} object
+     */
     public Builder setQuotaProjectId(String quotaProjectId) {
       this.quotaProjectId = quotaProjectId;
       return this;
     }
 
-    /** Sets the optional client ID of the service account from the console. */
+    /**
+     * Sets the optional client ID of the service account from the console.
+     *
+     * @param clientId the service account client id to set
+     * @return this {@code Builder} object
+     */
     public Builder setClientId(String clientId) {
       this.clientId = clientId;
       return this;
     }
 
-    /** Sets the optional client secret of the service account from the console. */
+    /**
+     * Sets the optional client secret of the service account from the console.
+     *
+     * @param clientSecret the service account client secret to set
+     * @return this {@code Builder} object
+     */
     public Builder setClientSecret(String clientSecret) {
       this.clientSecret = clientSecret;
       return this;
     }
 
-    /** Sets the optional scopes to request during the authorization grant. */
+    /**
+     * Sets the optional scopes to request during the authorization grant.
+     *
+     * @param scopes the request scopes to set
+     * @return this {@code Builder} object
+     */
     public Builder setScopes(Collection<String> scopes) {
       this.scopes = scopes;
       return this;
@@ -809,18 +877,32 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
      * Sets the optional workforce pool user project number when the credential corresponds to a
      * workforce pool and not a workload identity pool. The underlying principal must still have
      * serviceusage.services.use IAM permission to use the project for billing/quota.
+     *
+     * @param workforcePoolUserProject the workforce pool user project number to set
+     * @return this {@code Builder} object
      */
     public Builder setWorkforcePoolUserProject(String workforcePoolUserProject) {
       this.workforcePoolUserProject = workforcePoolUserProject;
       return this;
     }
 
-    /** Sets the optional service account impersonation options. */
+    /**
+     * Sets the optional service account impersonation options.
+     *
+     * @param optionsMap the service account impersonation options to set
+     * @return this {@code Builder} object
+     */
     public Builder setServiceAccountImpersonationOptions(Map<String, Object> optionsMap) {
       this.serviceAccountImpersonationOptions = new ServiceAccountImpersonationOptions(optionsMap);
       return this;
     }
 
+    /**
+     * Sets the optional Environment Provider.
+     *
+     * @param environmentProvider the {@code EnvironmentProvider} to set
+     * @return this {@code Builder} object
+     */
     Builder setEnvironmentProvider(EnvironmentProvider environmentProvider) {
       this.environmentProvider = environmentProvider;
       return this;

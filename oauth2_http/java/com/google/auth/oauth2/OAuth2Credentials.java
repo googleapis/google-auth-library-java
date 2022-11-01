@@ -41,6 +41,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.AbstractFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -60,7 +61,6 @@ import java.util.ServiceLoader;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Future;
 import javax.annotation.Nullable;
 
 /** Base type for Credentials using OAuth2. */
@@ -77,7 +77,7 @@ public class OAuth2Credentials extends Credentials {
   // byte[] is serializable, so the lock variable can be final
   @VisibleForTesting final Object lock = new byte[0];
   private volatile OAuthValue value = null;
-  @VisibleForTesting transient ListenableFutureTask<OAuthValue> refreshTask;
+  @VisibleForTesting transient RefreshTask refreshTask;
 
   // Change listeners are not serialized
   private transient List<CredentialsChangedListener> changeListeners;
@@ -258,16 +258,7 @@ public class OAuth2Credentials extends Credentials {
                 }
               });
 
-      task.addListener(
-          new Runnable() {
-            @Override
-            public void run() {
-              finishRefreshAsync(task);
-            }
-          },
-          MoreExecutors.directExecutor());
-
-      refreshTask = task;
+      refreshTask = new RefreshTask(task, new RefreshTaskListener(task));
 
       return new AsyncRefreshResult(refreshTask, true);
     }
@@ -290,7 +281,7 @@ public class OAuth2Credentials extends Credentials {
       } catch (Exception e) {
         // noop
       } finally {
-        if (this.refreshTask == finishedTask) {
+        if (this.refreshTask != null && this.refreshTask.getTask() == finishedTask) {
           this.refreshTask = null;
         }
       }
@@ -307,7 +298,7 @@ public class OAuth2Credentials extends Credentials {
    * thread of whatever executor the async call used. This doesn't affect correctness and is
    * extremely unlikely.
    */
-  private static <T> T unwrapDirectFuture(Future<T> future) throws IOException {
+  private static <T> T unwrapDirectFuture(ListenableFuture<T> future) throws IOException {
     try {
       return future.get();
     } catch (InterruptedException e) {
@@ -567,10 +558,10 @@ public class OAuth2Credentials extends Credentials {
    * task is newly created, it is the caller's responsibility to execute it.
    */
   static class AsyncRefreshResult {
-    private final ListenableFutureTask<OAuthValue> task;
+    private final RefreshTask task;
     private final boolean isNew;
 
-    AsyncRefreshResult(ListenableFutureTask<OAuthValue> task, boolean isNew) {
+    AsyncRefreshResult(RefreshTask task, boolean isNew) {
       this.task = task;
       this.isNew = isNew;
     }
@@ -579,6 +570,57 @@ public class OAuth2Credentials extends Credentials {
       if (isNew) {
         executor.execute(task);
       }
+    }
+  }
+
+  @VisibleForTesting
+  class RefreshTaskListener implements Runnable {
+    private ListenableFutureTask<OAuthValue> task;
+
+    RefreshTaskListener(ListenableFutureTask<OAuthValue> task) {
+      this.task = task;
+    }
+
+    @Override
+    public void run() {
+      finishRefreshAsync(task);
+    }
+  }
+
+  class RefreshTask extends AbstractFuture<OAuthValue> implements Runnable {
+    private final ListenableFutureTask<OAuthValue> task;
+    private final RefreshTaskListener listener;
+
+    RefreshTask(ListenableFutureTask<OAuthValue> task, RefreshTaskListener listener) {
+      this.task = task;
+      this.listener = listener;
+
+      // Update Credential state first
+      task.addListener(listener, MoreExecutors.directExecutor());
+
+      // Then notify the world
+      Futures.addCallback(
+          task,
+          new FutureCallback<OAuthValue>() {
+            @Override
+            public void onSuccess(OAuthValue result) {
+              RefreshTask.this.set(result);
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+              RefreshTask.this.setException(t);
+            }
+          },
+          MoreExecutors.directExecutor());
+    }
+
+    public ListenableFutureTask<OAuthValue> getTask() {
+      return this.task;
+    }
+
+    public void run() {
+      task.run();
     }
   }
 

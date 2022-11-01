@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.12.1](https://github.com/googleapis/google-auth-library-java/compare/v1.12.0...v1.12.1) (2022-10-18)
+
+
+### Bug Fixes
+
+* Resolve race condition reported in [#692](https://github.com/googleapis/google-auth-library-java/issues/692) ([#1031](https://github.com/googleapis/google-auth-library-java/issues/1031)) ([87a6606](https://github.com/googleapis/google-auth-library-java/commit/87a66067dff49d68f5b01cfe4c3f755fbf6b44fb))
+
+## [1.12.0](https://github.com/googleapis/google-auth-library-java/compare/v1.11.0...v1.12.0) (2022-10-14)
+
+
+### Features
+
+* Adding validation for psc endpoints ([#1042](https://github.com/googleapis/google-auth-library-java/issues/1042)) ([b37a565](https://github.com/googleapis/google-auth-library-java/commit/b37a565c6c1e7acb44baf2307c862c9df8be9345))
+
+
+### Bug Fixes
+
+* Fixed javadoc errors ([#945](https://github.com/googleapis/google-auth-library-java/issues/945)) ([1ddc994](https://github.com/googleapis/google-auth-library-java/commit/1ddc99481ae8b0f0eceb4cb442d5c6614ec8a411))
+
+
+### Documentation
+
+* **samples:** Modified comments in the samples and minor refactor ([#990](https://github.com/googleapis/google-auth-library-java/issues/990)) ([669ab04](https://github.com/googleapis/google-auth-library-java/commit/669ab042844e46d0503bbd31fd2da92a7963bad5))
+
 ## [1.11.0](https://github.com/googleapis/google-auth-library-java/compare/v1.10.0...v1.11.0) (2022-09-08)
 
 
