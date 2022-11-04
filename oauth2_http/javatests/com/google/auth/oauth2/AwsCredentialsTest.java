@@ -34,6 +34,7 @@ package com.google.auth.oauth2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -53,6 +54,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
+import org.junit.function.ThrowingRunnable;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -61,11 +63,10 @@ import org.junit.runners.JUnit4;
 public class AwsCredentialsTest {
 
   private static final String STS_URL = "https://sts.googleapis.com";
-  private static final String AWS_CREDENTIALS_URL = "https://www.aws-credentials.com";
-  private static final String AWS_CREDENTIALS_URL_WITH_ROLE =
-      "https://www.aws-credentials.com/roleName";
-  private static final String AWS_REGION_URL = "https://www.aws-region.com";
-  private static final String AWS_IMDSV2_SESSION_TOKEN_URL = "https://www.aws-session-token.com";
+  private static final String AWS_CREDENTIALS_URL = "https://169.254.169.254";
+  private static final String AWS_CREDENTIALS_URL_WITH_ROLE = "https://169.254.169.254/roleName";
+  private static final String AWS_REGION_URL = "https://169.254.169.254/region";
+  private static final String AWS_IMDSV2_SESSION_TOKEN_URL = "https://169.254.169.254/imdsv2";
   private static final String AWS_IMDSV2_SESSION_TOKEN = "sessiontoken";
 
   private static final String GET_CALLER_IDENTITY_URL =
@@ -78,8 +79,8 @@ public class AwsCredentialsTest {
       new HashMap<String, Object>() {
         {
           put("environment_id", "aws1");
-          put("region_url", "regionUrl");
-          put("url", "url");
+          put("region_url", AWS_REGION_URL);
+          put("url", AWS_CREDENTIALS_URL);
           put("regional_cred_verification_url", "regionalCredVerificationUrl");
         }
       };
@@ -100,6 +101,39 @@ public class AwsCredentialsTest {
               .setTokenInfoUrl("tokenInfoUrl")
               .setCredentialSource(AWS_CREDENTIAL_SOURCE)
               .build();
+
+  @Test
+  public void test_awsCredentialSource() {
+    String regionUrl = "http://[fd00:ec2::254]/region";
+    String url = "http://[fd00:ec2::254]";
+    String imdsv2SessionTokenUrl = "http://[fd00:ec2::254]/imdsv2";
+    Map<String, Object> credentialSourceMap = new HashMap<>();
+    credentialSourceMap.put("environment_id", "aws1");
+    credentialSourceMap.put("region_url", regionUrl);
+    credentialSourceMap.put("url", url);
+    credentialSourceMap.put("imdsv2_session_token_url", imdsv2SessionTokenUrl);
+    credentialSourceMap.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
+
+    // If no exception is thrown, it means the urls were valid
+    new AwsCredentialSource(credentialSourceMap);
+
+    String keys[] = {"region_url", "url", "imdsv2_session_token_url"};
+    for (String key : keys) {
+      Map<String, Object> credentialSourceWithInvalidUrl = new HashMap<>(credentialSourceMap);
+      credentialSourceWithInvalidUrl.put(key, "https://badhost.com/fake");
+      IllegalArgumentException e =
+          assertThrows(
+              IllegalArgumentException.class,
+              new ThrowingRunnable() {
+                @Override
+                public void run() throws Throwable {
+                  new AwsCredentialSource(credentialSourceWithInvalidUrl);
+                }
+              });
+
+      assertEquals(String.format("Invalid host %s for %s", "badhost.com", key), e.getMessage());
+    }
+  }
 
   @Test
   public void refreshAccessToken_withoutServiceAccountImpersonation() throws IOException {
