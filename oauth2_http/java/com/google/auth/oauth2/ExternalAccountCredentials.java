@@ -91,7 +91,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
 
   @Nullable private final String tokenInfoUrl;
   @Nullable private final String serviceAccountImpersonationUrl;
-  @Nullable private final String quotaProjectId;
   @Nullable private final String clientId;
   @Nullable private final String clientSecret;
 
@@ -194,6 +193,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       @Nullable String clientSecret,
       @Nullable Collection<String> scopes,
       @Nullable EnvironmentProvider environmentProvider) {
+    super(null, quotaProjectId);
     this.transportFactory =
         MoreObjects.firstNonNull(
             transportFactory,
@@ -205,7 +205,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     this.credentialSource = checkNotNull(credentialSource);
     this.tokenInfoUrl = tokenInfoUrl;
     this.serviceAccountImpersonationUrl = serviceAccountImpersonationUrl;
-    this.quotaProjectId = quotaProjectId;
     this.clientId = clientId;
     this.clientSecret = clientSecret;
     this.scopes =
@@ -231,6 +230,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
    * @param builder the {@code Builder} object used to construct the credentials.
    */
   protected ExternalAccountCredentials(ExternalAccountCredentials.Builder builder) {
+    super(null, builder.getQuotaProjectId());
     this.transportFactory =
         MoreObjects.firstNonNull(
             builder.transportFactory,
@@ -242,7 +242,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     this.credentialSource = checkNotNull(builder.credentialSource);
     this.tokenInfoUrl = builder.tokenInfoUrl;
     this.serviceAccountImpersonationUrl = builder.serviceAccountImpersonationUrl;
-    this.quotaProjectId = builder.quotaProjectId;
     this.clientId = builder.clientId;
     this.clientSecret = builder.clientSecret;
     this.scopes =
@@ -721,7 +720,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     protected HttpTransportFactory transportFactory;
 
     @Nullable protected String serviceAccountImpersonationUrl;
-    @Nullable protected String quotaProjectId;
     @Nullable protected String clientId;
     @Nullable protected String clientSecret;
     @Nullable protected Collection<String> scopes;
@@ -731,6 +729,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     protected Builder() {}
 
     protected Builder(ExternalAccountCredentials credentials) {
+      super(credentials);
       this.transportFactory = credentials.transportFactory;
       this.audience = credentials.audience;
       this.subjectTokenType = credentials.subjectTokenType;
@@ -738,7 +737,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       this.tokenInfoUrl = credentials.tokenInfoUrl;
       this.serviceAccountImpersonationUrl = credentials.serviceAccountImpersonationUrl;
       this.credentialSource = credentials.credentialSource;
-      this.quotaProjectId = credentials.quotaProjectId;
       this.clientId = credentials.clientId;
       this.clientSecret = credentials.clientSecret;
       this.scopes = credentials.scopes;
@@ -836,7 +834,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
      * @return this {@code Builder} object
      */
     public Builder setQuotaProjectId(String quotaProjectId) {
-      this.quotaProjectId = quotaProjectId;
+      super.setQuotaProjectId(quotaProjectId);
       return this;
     }
 

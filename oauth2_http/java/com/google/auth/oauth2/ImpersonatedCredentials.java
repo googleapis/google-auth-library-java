@@ -105,7 +105,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
   private List<String> delegates;
   private List<String> scopes;
   private int lifetime;
-  private String quotaProjectId;
   private String iamEndpointOverride;
   private final String transportFactoryClassName;
 
@@ -451,16 +450,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
         .build();
   }
 
-  @Override
-  protected Map<String, List<String>> getAdditionalHeaders() {
-    Map<String, List<String>> headers = super.getAdditionalHeaders();
-    if (quotaProjectId != null) {
-      return addQuotaProjectIdToRequestMetadata(quotaProjectId, headers);
-    }
-    return headers;
-  }
-
   private ImpersonatedCredentials(Builder builder) {
+    super(null, builder.getQuotaProjectId());
     this.sourceCredentials = builder.getSourceCredentials();
     this.targetPrincipal = builder.getTargetPrincipal();
     this.delegates = builder.getDelegates();
@@ -470,7 +461,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
         firstNonNull(
             builder.getHttpTransportFactory(),
             getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
-    this.quotaProjectId = builder.quotaProjectId;
     this.iamEndpointOverride = builder.iamEndpointOverride;
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
     this.calendar = builder.getCalendar();
@@ -628,7 +618,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
     private List<String> scopes;
     private int lifetime = DEFAULT_LIFETIME_IN_SECONDS;
     private HttpTransportFactory transportFactory;
-    private String quotaProjectId;
     private String iamEndpointOverride;
     private Calendar calendar = Calendar.getInstance();
 
@@ -694,7 +683,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     }
 
     public Builder setQuotaProjectId(String quotaProjectId) {
-      this.quotaProjectId = quotaProjectId;
+      super.setQuotaProjectId(quotaProjectId);
       return this;
     }
 

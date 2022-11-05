@@ -71,7 +71,6 @@ public class UserCredentials extends GoogleCredentials
   private final String refreshToken;
   private final URI tokenServerUri;
   private final String transportFactoryClassName;
-  private final String quotaProjectId;
 
   private transient HttpTransportFactory transportFactory;
 
@@ -94,7 +93,7 @@ public class UserCredentials extends GoogleCredentials
       HttpTransportFactory transportFactory,
       URI tokenServerUri,
       String quotaProjectId) {
-    super(accessToken);
+    super(accessToken, quotaProjectId);
     this.clientId = Preconditions.checkNotNull(clientId);
     this.clientSecret = Preconditions.checkNotNull(clientSecret);
     this.refreshToken = refreshToken;
@@ -104,7 +103,6 @@ public class UserCredentials extends GoogleCredentials
             getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     this.tokenServerUri = (tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : tokenServerUri;
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
-    this.quotaProjectId = quotaProjectId;
     Preconditions.checkState(
         accessToken != null || refreshToken != null,
         "Either accessToken or refreshToken must not be null");
@@ -324,15 +322,6 @@ public class UserCredentials extends GoogleCredentials
   }
 
   @Override
-  protected Map<String, List<String>> getAdditionalHeaders() {
-    Map<String, List<String>> headers = super.getAdditionalHeaders();
-    if (quotaProjectId != null) {
-      return addQuotaProjectIdToRequestMetadata(quotaProjectId, headers);
-    }
-    return headers;
-  }
-
-  @Override
   public int hashCode() {
     return Objects.hash(
         super.hashCode(),
@@ -397,7 +386,6 @@ public class UserCredentials extends GoogleCredentials
     private String refreshToken;
     private URI tokenServerUri;
     private HttpTransportFactory transportFactory;
-    private String quotaProjectId;
 
     protected Builder() {}
 
@@ -407,7 +395,6 @@ public class UserCredentials extends GoogleCredentials
       this.refreshToken = credentials.refreshToken;
       this.transportFactory = credentials.transportFactory;
       this.tokenServerUri = credentials.tokenServerUri;
-      this.quotaProjectId = credentials.quotaProjectId;
     }
 
     public Builder setClientId(String clientId) {
@@ -441,7 +428,7 @@ public class UserCredentials extends GoogleCredentials
     }
 
     public Builder setQuotaProjectId(String quotaProjectId) {
-      this.quotaProjectId = quotaProjectId;
+      super.setQuotaProjectId(quotaProjectId);
       return this;
     }
 
@@ -465,10 +452,6 @@ public class UserCredentials extends GoogleCredentials
       return transportFactory;
     }
 
-    public String getQuotaProjectId() {
-      return quotaProjectId;
-    }
-
     public UserCredentials build() {
       return new UserCredentials(
           clientId,
@@ -477,7 +460,7 @@ public class UserCredentials extends GoogleCredentials
           getAccessToken(),
           transportFactory,
           tokenServerUri,
-          quotaProjectId);
+          getQuotaProjectId());
     }
   }
 }
