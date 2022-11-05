@@ -213,11 +213,21 @@ public class GoogleCredentials extends OAuth2Credentials {
 
   /** Default constructor. */
   protected GoogleCredentials() {
-    this(null, null);
+    this(null);
   }
 
   /**
    * Constructor with explicit access token.
+   *
+   * @param accessToken initial or temporary access token
+   */
+  public GoogleCredentials(AccessToken accessToken) {
+    super(accessToken);
+    this.quotaProjectId = null;
+  }
+
+  /**
+   * Constructor with explicit access token and quota project.
    *
    * @param accessToken initial or temporary access token
    */
