@@ -137,14 +137,14 @@ public class AwsCredentials extends ExternalAccountCredentials {
       validateMetadataServerUrlIfAny(this.imdsv2SessionTokenUrl, "imdsv2_session_token_url");
     }
 
-    private static void validateMetadataServerUrlIfAny(String urlString, String nameOfData) {
+    private static void validateMetadataServerUrlIfAny(String urlString, String nameInConfig) {
       if (urlString != null) {
         try {
           URL url = new URL(urlString);
           String host = url.getHost();
           if (!host.equals("169.254.169.254") && !host.equals("[fd00:ec2::254]")) {
             throw new IllegalArgumentException(
-                String.format("Invalid host %s for %s.", host, nameOfData));
+                String.format("Invalid host %s for %s.", host, nameInConfig));
           }
         } catch (MalformedURLException malformedURLException) {
           throw new IllegalArgumentException(malformedURLException);
