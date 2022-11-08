@@ -103,23 +103,16 @@ public class AwsCredentialsTest {
               .build();
 
   @Test
-  public void test_awsCredentialSource() {
-    String regionUrl = "http://[fd00:ec2::254]/region";
-    String url = "http://[fd00:ec2::254]";
-    String imdsv2SessionTokenUrl = "http://[fd00:ec2::254]/imdsv2";
-    Map<String, Object> credentialSourceMap = new HashMap<>();
-    credentialSourceMap.put("environment_id", "aws1");
-    credentialSourceMap.put("region_url", regionUrl);
-    credentialSourceMap.put("url", url);
-    credentialSourceMap.put("imdsv2_session_token_url", imdsv2SessionTokenUrl);
-    credentialSourceMap.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
+  public void test_awsCredentialSource_ipv6() {
+    // If no exception is thrown, it means the urls were valid.
+    new AwsCredentialSource(buildAwsIpv6CredentialSourceMap());
+  }
 
-    // If no exception is thrown, it means the urls were valid
-    new AwsCredentialSource(credentialSourceMap);
-
+  @Test
+  public void test_awsCredentialSource_invalid_urls() {
     String keys[] = {"region_url", "url", "imdsv2_session_token_url"};
     for (String key : keys) {
-      Map<String, Object> credentialSourceWithInvalidUrl = new HashMap<>(credentialSourceMap);
+      Map<String, Object> credentialSourceWithInvalidUrl = buildAwsIpv6CredentialSourceMap();
       credentialSourceWithInvalidUrl.put(key, "https://badhost.com/fake");
       IllegalArgumentException e =
           assertThrows(
@@ -131,7 +124,7 @@ public class AwsCredentialsTest {
                 }
               });
 
-      assertEquals(String.format("Invalid host %s for %s", "badhost.com", key), e.getMessage());
+      assertEquals(String.format("Invalid host badhost.com for %s.", key), e.getMessage());
     }
   }
 
@@ -766,6 +759,20 @@ public class AwsCredentialsTest {
     credentialSourceMap.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
 
     return new AwsCredentialSource(credentialSourceMap);
+  }
+
+  private static Map<String, Object> buildAwsIpv6CredentialSourceMap() {
+    String regionUrl = "http://[fd00:ec2::254]/region";
+    String url = "http://[fd00:ec2::254]";
+    String imdsv2SessionTokenUrl = "http://[fd00:ec2::254]/imdsv2";
+    Map<String, Object> credentialSourceMap = new HashMap<>();
+    credentialSourceMap.put("environment_id", "aws1");
+    credentialSourceMap.put("region_url", regionUrl);
+    credentialSourceMap.put("url", url);
+    credentialSourceMap.put("imdsv2_session_token_url", imdsv2SessionTokenUrl);
+    credentialSourceMap.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
+
+    return credentialSourceMap;
   }
 
   static InputStream writeAwsCredentialsStream(String stsUrl, String regionUrl, String metadataUrl)
