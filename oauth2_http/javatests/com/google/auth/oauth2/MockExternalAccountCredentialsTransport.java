@@ -65,9 +65,9 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
   private static final String CLOUD_PLATFORM_SCOPE =
       "https://www.googleapis.com/auth/cloud-platform";
   private static final String ISSUED_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:access_token";
-  private static final String AWS_CREDENTIALS_URL = "https://www.aws-credentials.com";
-  private static final String AWS_REGION_URL = "https://www.aws-region.com";
-  private static final String AWS_IMDSV2_SESSION_TOKEN_URL = "https://www.aws-session-token.com";
+  private static final String AWS_CREDENTIALS_URL = "https://169.254.169.254";
+  private static final String AWS_REGION_URL = "https://169.254.169.254/region";
+  private static final String AWS_IMDSV2_SESSION_TOKEN_URL = "https://169.254.169.254/imdsv2";
   private static final String METADATA_SERVER_URL = "https://www.metadata.google.com";
   private static final String STS_URL = "https://sts.googleapis.com";
 
