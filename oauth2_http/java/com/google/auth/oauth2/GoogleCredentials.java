@@ -55,6 +55,7 @@ public class GoogleCredentials extends OAuth2Credentials {
   static final String QUOTA_PROJECT_ID_HEADER_KEY = "x-goog-user-project";
   static final String USER_FILE_TYPE = "authorized_user";
   static final String SERVICE_ACCOUNT_FILE_TYPE = "service_account";
+  static final String GDCH_SERVICE_ACCOUNT_FILE_TYPE = "gdch_service_account";
 
   private static final DefaultCredentialsProvider defaultCredentialsProvider =
       new DefaultCredentialsProvider();
@@ -170,6 +171,9 @@ public class GoogleCredentials extends OAuth2Credentials {
     }
     if (SERVICE_ACCOUNT_FILE_TYPE.equals(fileType)) {
       return ServiceAccountCredentials.fromJson(fileContents, transportFactory);
+    }
+    if (GDCH_SERVICE_ACCOUNT_FILE_TYPE.equals(fileType)) {
+      return GdchCredentials.fromJson(fileContents, transportFactory);
     }
     if (ExternalAccountCredentials.EXTERNAL_ACCOUNT_FILE_TYPE.equals(fileType)) {
       return ExternalAccountCredentials.fromJson(fileContents, transportFactory);
