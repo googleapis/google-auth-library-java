@@ -190,29 +190,26 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   /**
    * Creates a credential with quota project from environment if present
    *
-   * @param credentials the credential to update quota project
    * @param environmentProvider a provider used to get environment values
    * @return credential with quota project from envoronment
    */
-  public static GoogleCredentials createWithQuotaProject(
-      GoogleCredentials credentials, EnvironmentProvider environmentProvider) {
+  public GoogleCredentials createWithQuotaProject(EnvironmentProvider environmentProvider) {
     String quotaProjectFromEnv = environmentProvider.getEnv(QUOTA_PROJECT_ENV_VAR);
 
     if (quotaProjectFromEnv != null && !quotaProjectFromEnv.isEmpty()) {
-      credentials = credentials.toBuilder().setQuotaProjectId(quotaProjectFromEnv).build();
+      return this.toBuilder().setQuotaProjectId(quotaProjectFromEnv).build();
     }
 
-    return credentials;
+    return this;
   }
 
   /**
    * Creates a credential with quota project from environment if present
    *
-   * @param credentials
    * @return credential with quota project from envoronment
    */
-  public static GoogleCredentials createWithQuotaProject(GoogleCredentials credentials) {
-    return createWithQuotaProject(credentials, SystemEnvironmentProvider.getInstance());
+  public GoogleCredentials createWithQuotaProject() {
+    return this.createWithQuotaProject(SystemEnvironmentProvider.getInstance());
   }
 
   /**

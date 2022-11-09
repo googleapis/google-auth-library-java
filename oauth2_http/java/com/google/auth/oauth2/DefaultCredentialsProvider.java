@@ -221,7 +221,9 @@ class DefaultCredentialsProvider implements EnvironmentProvider {
       credentials = tryGetComputeCredentials(transportFactory);
     }
 
-    credentials = GoogleCredentials.createWithQuotaProject(credentials, this);
+    if (credentials != null) {
+      credentials = credentials.createWithQuotaProject(this);
+    }
 
     return credentials;
   }
