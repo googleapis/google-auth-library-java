@@ -64,8 +64,7 @@ import javax.annotation.Nullable;
  * <p>Handles initializing external credentials, calls to the Security Token Service, and service
  * account impersonation.
  */
-public abstract class ExternalAccountCredentials extends GoogleCredentials
-    implements QuotaProjectIdProvider {
+public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
   /** Base credential source class. Dictates the retrieval method of the external credential. */
   abstract static class CredentialSource {

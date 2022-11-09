@@ -48,10 +48,11 @@ import java.util.List;
 import java.util.Map;
 
 /** Base type for credentials for authorizing calls to Google APIs using OAuth2. */
-public class GoogleCredentials extends OAuth2Credentials {
+public class GoogleCredentials extends OAuth2Credentials implements QuotaProjectIdProvider {
 
   private static final long serialVersionUID = -1522852442442473691L;
 
+  static final String QUOTA_PROJECT_ENV_VAR = "GOOGLE_CLOUD_QUOTA_PROJECT";
   static final String QUOTA_PROJECT_ID_HEADER_KEY = "x-goog-user-project";
   static final String USER_FILE_TYPE = "authorized_user";
   static final String SERVICE_ACCOUNT_FILE_TYPE = "service_account";
@@ -184,6 +185,34 @@ public class GoogleCredentials extends OAuth2Credentials {
             "Error reading credentials from stream, 'type' value '%s' not recognized."
                 + " Expecting '%s' or '%s'.",
             fileType, USER_FILE_TYPE, SERVICE_ACCOUNT_FILE_TYPE));
+  }
+
+  /**
+   * Creates a credential with quota project from environment if present
+   *
+   * @param credentials the credential to update quota project
+   * @param environmentProvider a provider used to get environment values
+   * @return credential with quota project from envoronment
+   */
+  public static GoogleCredentials createWithQuotaProject(
+      GoogleCredentials credentials, EnvironmentProvider environmentProvider) {
+    String quotaProjectFromEnv = environmentProvider.getEnv(QUOTA_PROJECT_ENV_VAR);
+
+    if (quotaProjectFromEnv != null && !quotaProjectFromEnv.isEmpty()) {
+      credentials = credentials.toBuilder().setQuotaProjectId(quotaProjectFromEnv).build();
+    }
+
+    return credentials;
+  }
+
+  /**
+   * Creates a credential with quota project from environment if present
+   *
+   * @param credentials
+   * @return credential with quota project from envoronment
+   */
+  public static GoogleCredentials createWithQuotaProject(GoogleCredentials credentials) {
+    return createWithQuotaProject(credentials, SystemEnvironmentProvider.getInstance());
   }
 
   /**

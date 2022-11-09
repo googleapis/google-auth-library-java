@@ -52,7 +52,8 @@ import java.util.logging.Logger;
  * <p>An instance represents the per-process state used to get and cache the credential and allows
  * overriding the state and environment for testing purposes.
  */
-class DefaultCredentialsProvider {
+class DefaultCredentialsProvider implements EnvironmentProvider {
+
   static final DefaultCredentialsProvider DEFAULT = new DefaultCredentialsProvider();
   static final String CREDENTIAL_ENV_VAR = "GOOGLE_APPLICATION_CREDENTIALS";
   static final String QUOTA_PROJECT_ENV_VAR = "GOOGLE_CLOUD_QUOTA_PROJECT";
@@ -87,6 +88,10 @@ class DefaultCredentialsProvider {
   private GoogleCredentials cachedCredentials = null;
   private boolean checkedAppEngine = false;
   private boolean checkedComputeEngine = false;
+
+  public String getEnv(String name) {
+    return System.getenv(name);
+  }
 
   DefaultCredentialsProvider() {}
 
@@ -216,11 +221,7 @@ class DefaultCredentialsProvider {
       credentials = tryGetComputeCredentials(transportFactory);
     }
 
-    String quotaProjectFromEnv = this.getEnv(QUOTA_PROJECT_ENV_VAR);
-
-    if (quotaProjectFromEnv != null && !quotaProjectFromEnv.isEmpty()) {
-      credentials = credentials.toBuilder().setQuotaProjectId(quotaProjectFromEnv).build();
-    }
+    credentials = GoogleCredentials.createWithQuotaProject(credentials, this);
 
     return credentials;
   }
@@ -344,10 +345,6 @@ class DefaultCredentialsProvider {
 
   Class<?> forName(String className) throws ClassNotFoundException {
     return Class.forName(className);
-  }
-
-  String getEnv(String name) {
-    return System.getenv(name);
   }
 
   String getProperty(String property, String def) {

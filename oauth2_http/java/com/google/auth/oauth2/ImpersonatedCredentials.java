@@ -89,7 +89,7 @@ import java.util.Objects;
  * </pre>
  */
 public class ImpersonatedCredentials extends GoogleCredentials
-    implements ServiceAccountSigner, IdTokenProvider, QuotaProjectIdProvider {
+    implements ServiceAccountSigner, IdTokenProvider {
 
   private static final long serialVersionUID = -2133257318957488431L;
   private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ssX";
