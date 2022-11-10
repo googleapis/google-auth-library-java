@@ -191,7 +191,8 @@ public class DefaultCredentialsProviderTest {
   }
 
   @Test
-  public void getDefaultCredentials_static_windows_configuredAsLinux_notGce() throws IOException {    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+  public void getDefaultCredentials_static_windows_configuredAsLinux_notGce() throws IOException {
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setProperty("os.name", "windows");
     String productFilePath = SMBIOS_PATH_LINUX;
     InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
@@ -551,7 +552,7 @@ public class DefaultCredentialsProviderTest {
     return handler.getRecord();
   }
 
-private static File getTempDirectory() {
+  private static File getTempDirectory() {
     return new File(System.getProperty("java.io.tmpdir"));
   }
 
