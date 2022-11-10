@@ -475,6 +475,40 @@ public class AwsCredentialsTest {
         .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey")
         .setEnv("AWS_SESSION_TOKEN", "awsSessionToken");
 
+    AwsCredentialSource credSource = new AwsCredentialSource(
+      new HashMap<String, Object>() {
+        {
+          put("environment_id", "aws1");
+          put("region_url", "");
+          put("url", "");
+          put("regional_cred_verification_url", "regionalCredVerificationUrl");
+        }
+      }
+    );
+
+    AwsCredentials testAwsCredentials =
+        (AwsCredentials)
+            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+                .setEnvironmentProvider(environmentProvider)
+                .setCredentialSource(credSource)
+                .build();
+
+    AwsSecurityCredentials credentials =
+        testAwsCredentials.getAwsSecurityCredentials(EMPTY_METADATA_HEADERS);
+
+    assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
+    assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
+    assertEquals("awsSessionToken", credentials.getToken());
+  }
+
+  @Test
+  public void getAwsSecurityCredentials_fromEnvironmentVariables_noMetadataServerCall() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    environmentProvider
+        .setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId")
+        .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey")
+        .setEnv("AWS_SESSION_TOKEN", "awsSessionToken");
+
     AwsCredentials testAwsCredentials =
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)

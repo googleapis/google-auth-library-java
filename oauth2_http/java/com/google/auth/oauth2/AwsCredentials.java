@@ -138,7 +138,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
     }
 
     private static void validateMetadataServerUrlIfAny(String urlString, String nameInConfig) {
-      if (urlString != null) {
+      if (urlString != null && !urlString.isEmpty()) {
         try {
           URL url = new URL(urlString);
           String host = url.getHost();
