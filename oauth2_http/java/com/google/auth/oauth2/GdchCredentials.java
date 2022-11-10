@@ -85,8 +85,7 @@ public class GdchCredentials extends GoogleCredentials implements JwtProvider {
   /**
    * Internal constructor.
    *
-   * @param builder A builder for {@link GdchCredentials} See {@link
-   *     GdchCredentials.Builder}.
+   * @param builder A builder for {@link GdchCredentials} See {@link GdchCredentials.Builder}.
    */
   GdchCredentials(GdchCredentials.Builder builder) {
 
@@ -113,8 +112,8 @@ public class GdchCredentials extends GoogleCredentials implements JwtProvider {
    * @return the GDCH service account credentials defined by the JSON.
    * @throws IOException if the credential cannot be created from the JSON.
    */
-  static GdchCredentials fromJson(Map<String, Object> json,
-      HttpTransportFactory transportFactory) throws IOException {
+  static GdchCredentials fromJson(Map<String, Object> json, HttpTransportFactory transportFactory)
+      throws IOException {
 
     String formatVersion = (String) json.get("format_version");
     String projectId = (String) json.get("project");
@@ -147,12 +146,13 @@ public class GdchCredentials extends GoogleCredentials implements JwtProvider {
       throw new IOException("Token server URI specified in 'token_uri' could not be parsed.");
     }
 
-    GdchCredentials.Builder builder = GdchCredentials.newBuilder()
-        .setProjectId(projectId)
-        .setPrivateKeyId(privateKeyId)
-        .setTokenServerUri(tokenServerUriFromCreds)
-        .setServiceIdentityName(serviceIdentityName)
-        .setHttpTransportFactory(transportFactory);
+    GdchCredentials.Builder builder =
+        GdchCredentials.newBuilder()
+            .setProjectId(projectId)
+            .setPrivateKeyId(privateKeyId)
+            .setTokenServerUri(tokenServerUriFromCreds)
+            .setServiceIdentityName(serviceIdentityName)
+            .setHttpTransportFactory(transportFactory);
 
     return fromPkcs8(privateKeyPkcs8, builder);
   }
@@ -164,9 +164,8 @@ public class GdchCredentials extends GoogleCredentials implements JwtProvider {
    * @param builder A builder for GdchCredentials.
    * @return an instance of GdchCredentials.
    */
-  static GdchCredentials fromPkcs8(
-      String privateKeyPkcs8,
-      GdchCredentials.Builder builder) throws IOException {
+  static GdchCredentials fromPkcs8(String privateKeyPkcs8, GdchCredentials.Builder builder)
+      throws IOException {
     PrivateKey privateKey = privateKeyFromPkcs8(privateKeyPkcs8);
     builder.setPrivateKey(privateKey);
 
@@ -189,28 +188,23 @@ public class GdchCredentials extends GoogleCredentials implements JwtProvider {
     } catch (NoSuchAlgorithmException | InvalidKeySpecException exception) {
       unexpectedException = exception;
     }
-    throw new IOException("Unexpected exception reading PKCS#8 data",
-        unexpectedException);
+    throw new IOException("Unexpected exception reading PKCS#8 data", unexpectedException);
   }
 
   /**
    * Create a copy of GDCH credentials with the specified audience.
+   *
    * @param apiAudience The intended audience for GDCH credentials.
    */
   public GdchCredentials createWithGdchAudience(URI apiAudience) throws IOException {
 
     if (apiAudience == null) {
-      throw new IOException(
-          "Audience are not configured for GDCH service account credentials.");
+      throw new IOException("Audience are not configured for GDCH service account credentials.");
     }
-    return this.toBuilder()
-        .setGdchAudience(apiAudience).build();
+    return this.toBuilder().setGdchAudience(apiAudience).build();
   }
 
-  /**
-   * Refresh the OAuth2 access token by getting a new access
-   * token using a JSON Web Token (JWT).
-   */
+  /** Refresh the OAuth2 access token by getting a new access token using a JSON Web Token (JWT). */
   @Override
   public AccessToken refreshAccessToken() throws IOException {
 
@@ -256,11 +250,9 @@ public class GdchCredentials extends GoogleCredentials implements JwtProvider {
     return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
   }
 
-  /**
-   * Create a self-signed JWT.
-   *
-   */
-  String createAssertion(JsonFactory jsonFactory, long currentTime, URI apiAudience) throws IOException {
+  /** Create a self-signed JWT. */
+  String createAssertion(JsonFactory jsonFactory, long currentTime, URI apiAudience)
+      throws IOException {
 
     // Set JWT header.
     JsonWebSignature.Header header = new JsonWebSignature.Header();
@@ -289,10 +281,7 @@ public class GdchCredentials extends GoogleCredentials implements JwtProvider {
     return assertion;
   }
 
-  /**
-   * Get the issuer and subject value in the format GDCH token server required.
-   *
-   */
+  /** Get the issuer and subject value in the format GDCH token server required. */
   @VisibleForTesting
   String getIssSubValue() {
     return String.format("system:serviceaccount:%s:%s", getProjectId(), getServiceIdentityName());
@@ -309,9 +298,7 @@ public class GdchCredentials extends GoogleCredentials implements JwtProvider {
   public JwtCredentials jwtWithClaims(JwtClaims newClaims) {
 
     JwtClaims.Builder claimsBuilder =
-        JwtClaims.newBuilder()
-            .setIssuer(getIssSubValue())
-            .setSubject(getIssSubValue());
+        JwtClaims.newBuilder().setIssuer(getIssSubValue()).setSubject(getIssSubValue());
     return JwtCredentials.newBuilder()
         .setPrivateKey(privateKey)
         .setPrivateKeyId(privateKeyId)
@@ -492,6 +479,5 @@ public class GdchCredentials extends GoogleCredentials implements JwtProvider {
     public GdchCredentials build() {
       return new GdchCredentials(this);
     }
-
   }
 }

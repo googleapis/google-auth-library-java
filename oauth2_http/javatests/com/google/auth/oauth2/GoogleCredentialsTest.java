@@ -203,7 +203,12 @@ public class GoogleCredentialsTest {
   public void fromStream_gdchServiceAccountInvalidFormatVersion_throws() throws IOException {
     InputStream gdchServiceAccountStream =
         GdchCredentialsTest.writeGdchServiceAccountStream(
-            "2", GDCH_SA_PROJECT_ID, GDCH_SA_PRIVATE_KEY_ID, GDCH_SA_PRIVATE_KEY_PKC8, GDCH_SA_SERVICE_IDENTITY_NAME, GDCH_SA_TOKEN_SERVER_URI);
+            "2",
+            GDCH_SA_PROJECT_ID,
+            GDCH_SA_PRIVATE_KEY_ID,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_TOKEN_SERVER_URI);
 
     testFromStreamException(gdchServiceAccountStream, "Only format version 1 is supported");
   }
@@ -212,7 +217,12 @@ public class GoogleCredentialsTest {
   public void fromStream_gdchServiceAccountNoFormatVersion_throws() throws IOException {
     InputStream gdchServiceAccountStream =
         GdchCredentialsTest.writeGdchServiceAccountStream(
-            null, GDCH_SA_PROJECT_ID, GDCH_SA_PRIVATE_KEY_ID, GDCH_SA_PRIVATE_KEY_PKC8, GDCH_SA_SERVICE_IDENTITY_NAME, GDCH_SA_TOKEN_SERVER_URI);
+            null,
+            GDCH_SA_PROJECT_ID,
+            GDCH_SA_PRIVATE_KEY_ID,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_TOKEN_SERVER_URI);
 
     testFromStreamException(gdchServiceAccountStream, "format_version");
   }
@@ -221,7 +231,12 @@ public class GoogleCredentialsTest {
   public void fromStream_gdchServiceAccountNoProjectId_throws() throws IOException {
     InputStream gdchServiceAccountStream =
         GdchCredentialsTest.writeGdchServiceAccountStream(
-            GDCH_SA_FORMAT_VERSION, null, GDCH_SA_PRIVATE_KEY_ID, GDCH_SA_PRIVATE_KEY_PKC8, GDCH_SA_SERVICE_IDENTITY_NAME, GDCH_SA_TOKEN_SERVER_URI);
+            GDCH_SA_FORMAT_VERSION,
+            null,
+            GDCH_SA_PRIVATE_KEY_ID,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_TOKEN_SERVER_URI);
 
     testFromStreamException(gdchServiceAccountStream, "project");
   }
@@ -230,7 +245,12 @@ public class GoogleCredentialsTest {
   public void fromStream_gdchServiceAccountNoPrivateKeyId_throws() throws IOException {
     InputStream gdchServiceAccountStream =
         GdchCredentialsTest.writeGdchServiceAccountStream(
-            GDCH_SA_FORMAT_VERSION, GDCH_SA_PROJECT_ID, null, GDCH_SA_PRIVATE_KEY_PKC8, GDCH_SA_SERVICE_IDENTITY_NAME, GDCH_SA_TOKEN_SERVER_URI);
+            GDCH_SA_FORMAT_VERSION,
+            GDCH_SA_PROJECT_ID,
+            null,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_TOKEN_SERVER_URI);
 
     testFromStreamException(gdchServiceAccountStream, "private_key_id");
   }
@@ -239,7 +259,12 @@ public class GoogleCredentialsTest {
   public void fromStream_gdchServiceAccountNoPrivateKey_throws() throws IOException {
     InputStream gdchServiceAccountStream =
         GdchCredentialsTest.writeGdchServiceAccountStream(
-            GDCH_SA_FORMAT_VERSION, GDCH_SA_PROJECT_ID, GDCH_SA_PRIVATE_KEY_ID, null, GDCH_SA_SERVICE_IDENTITY_NAME, GDCH_SA_TOKEN_SERVER_URI);
+            GDCH_SA_FORMAT_VERSION,
+            GDCH_SA_PROJECT_ID,
+            GDCH_SA_PRIVATE_KEY_ID,
+            null,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_TOKEN_SERVER_URI);
 
     testFromStreamException(gdchServiceAccountStream, "private_key");
   }
@@ -248,7 +273,12 @@ public class GoogleCredentialsTest {
   public void fromStream_gdchServiceAccountNoServiceIdentityName_throws() throws IOException {
     InputStream gdchServiceAccountStream =
         GdchCredentialsTest.writeGdchServiceAccountStream(
-            GDCH_SA_FORMAT_VERSION, GDCH_SA_PROJECT_ID, GDCH_SA_PRIVATE_KEY_ID, GDCH_SA_PRIVATE_KEY_PKC8, null, GDCH_SA_TOKEN_SERVER_URI);
+            GDCH_SA_FORMAT_VERSION,
+            GDCH_SA_PROJECT_ID,
+            GDCH_SA_PRIVATE_KEY_ID,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            null,
+            GDCH_SA_TOKEN_SERVER_URI);
 
     testFromStreamException(gdchServiceAccountStream, "name");
   }
@@ -257,7 +287,12 @@ public class GoogleCredentialsTest {
   public void fromStream_gdchServiceAccountNoTokenServerUri_throws() throws IOException {
     InputStream gdchServiceAccountStream =
         GdchCredentialsTest.writeGdchServiceAccountStream(
-            GDCH_SA_FORMAT_VERSION, GDCH_SA_PROJECT_ID, GDCH_SA_PRIVATE_KEY_ID, GDCH_SA_PRIVATE_KEY_PKC8, GDCH_SA_SERVICE_IDENTITY_NAME, null);
+            GDCH_SA_FORMAT_VERSION,
+            GDCH_SA_PROJECT_ID,
+            GDCH_SA_PRIVATE_KEY_ID,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            null);
 
     testFromStreamException(gdchServiceAccountStream, "token_uri");
   }

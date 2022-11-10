@@ -236,7 +236,8 @@ public class MockTokenServerTransport extends MockHttpTransport {
             } else if (!gdchServiceAccounts.isEmpty()) {
               String foundServiceIdentityName = signature.getPayload().getIssuer();
               if (!gdchServiceAccounts.containsKey(foundServiceIdentityName)) {
-                throw new IOException("GDCH Service Account Service Identity Name not found as issuer.");
+                throw new IOException(
+                    "GDCH Service Account Service Identity Name not found as issuer.");
               }
               accessToken = gdchServiceAccounts.get(foundServiceIdentityName);
               String foundApiAudience = (String) signature.getPayload().get("api_audience");
