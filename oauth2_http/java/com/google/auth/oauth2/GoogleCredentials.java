@@ -47,6 +47,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 /** Base type for credentials for authorizing calls to Google APIs using OAuth2. */
 public class GoogleCredentials extends OAuth2Credentials implements QuotaProjectIdProvider {
 
@@ -56,6 +58,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   static final String QUOTA_PROJECT_ID_HEADER_KEY = "x-goog-user-project";
   static final String USER_FILE_TYPE = "authorized_user";
   static final String SERVICE_ACCOUNT_FILE_TYPE = "service_account";
+
+  private final EnvironmentProvider environmentProvider;
 
   protected final String quotaProjectId;
 
@@ -248,8 +252,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    * @param accessToken initial or temporary access token
    */
   public GoogleCredentials(AccessToken accessToken) {
-    super(accessToken);
-    this.quotaProjectId = null;
+    this(accessToken, null, null);
   }
 
   /**
@@ -257,9 +260,11 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    *
    * @param accessToken initial or temporary access token
    */
-  public GoogleCredentials(AccessToken accessToken, String quotaProjectId) {
+  public GoogleCredentials(AccessToken accessToken, @Nullable String quotaProjectId, @Nullable EnvironmentProvider environmentProvider) {
     super(accessToken);
     this.quotaProjectId = quotaProjectId;
+    this.environmentProvider =
+        environmentProvider == null ? SystemEnvironmentProvider.getInstance() : environmentProvider;
   }
 
   /**
@@ -271,9 +276,12 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       AccessToken accessToken,
       Duration refreshMargin,
       Duration expirationMargin,
-      String quotaProjectId) {
+      String quotaProjectId,
+      EnvironmentProvider environmentProvider) {
     super(accessToken, refreshMargin, expirationMargin);
     this.quotaProjectId = quotaProjectId;
+    this.environmentProvider =
+        environmentProvider == null ? SystemEnvironmentProvider.getInstance() : environmentProvider;
   }
 
   public static Builder newBuilder() {
@@ -356,13 +364,15 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   public static class Builder extends OAuth2Credentials.Builder {
-    private String quotaProjectId = null;
+    protected String quotaProjectId = null;
+    protected EnvironmentProvider environmentProvider;
 
     protected Builder() {}
 
     protected Builder(GoogleCredentials credentials) {
       setAccessToken(credentials.getAccessToken());
       this.quotaProjectId = credentials.quotaProjectId;
+      this.environmentProvider = credentials.environmentProvider;
     }
 
     public GoogleCredentials build() {
@@ -376,6 +386,11 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
 
     public String getQuotaProjectId() {
       return this.quotaProjectId;
+    }
+    
+    Builder setEnvironmentProvider(EnvironmentProvider environmentProvider) {
+      this.environmentProvider = environmentProvider;
+      return this;
     }
 
     @Override
