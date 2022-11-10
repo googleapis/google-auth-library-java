@@ -46,12 +46,9 @@ import com.google.auth.TestClock;
 import com.google.auth.TestUtils;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
-import com.google.auth.oauth2.OAuth2Credentials.OAuthValue;
 import com.google.auth.oauth2.OAuth2Credentials.RefreshTask;
-import com.google.auth.oauth2.OAuth2Credentials.RefreshTaskListener;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.net.URI;
@@ -60,7 +57,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -882,15 +878,6 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     AccessToken refreshedToken = new AccessToken("2/MkSJoj1xsli0AccessToken_NKPY2", null);
     refreshedTokenFuture.set(refreshedToken);
 
-    final ListenableFutureTask<OAuthValue> task =
-        ListenableFutureTask.create(
-            new Callable<OAuthValue>() {
-              @Override
-              public OAuthValue call() throws Exception {
-                return OAuthValue.create(refreshedToken, new HashMap<>());
-              }
-            });
-
     OAuth2Credentials creds =
         new OAuth2Credentials() {
           @Override
@@ -901,22 +888,6 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
               // in order to wait for the refresh to complete.
               this.notify();
             }
-            RefreshTaskListener listener =
-                new RefreshTaskListener(task) {
-                  @Override
-                  public void run() {
-                    try {
-                      // Sleep before setting accessToken to new accessToken. Refresh should not
-                      // complete before this, and the accessToken is `null` until it is.
-                      Thread.sleep(300);
-                      super.run();
-                    } catch (Exception e) {
-                      fail("Unexpected error. Exception: " + e);
-                    }
-                  }
-                };
-
-            this.refreshTask = new RefreshTask(task, listener);
 
             try {
               // Sleep for 100 milliseconds to give parent thread time to create a refresh future.
@@ -934,6 +905,9 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
               @Override
               public void run() {
                 try {
+                  // Sleep for 100 milliseconds to give parent thread time to grab a lock on the
+                  // creds object.
+                  Thread.sleep(100);
                   creds.refresh();
                   assertNotNull(creds.getAccessToken());
                 } catch (Exception e) {
