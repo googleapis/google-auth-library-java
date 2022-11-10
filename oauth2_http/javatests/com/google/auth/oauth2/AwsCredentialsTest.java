@@ -525,6 +525,43 @@ public class AwsCredentialsTest {
   }
 
   @Test
+  public void validateMetadataServerUrlIfAny_validUrls() {
+    String[] urls = {
+      "http://[fd00:ec2::254]/region",
+      "http://169.254.169.254",
+      "http://169.254.169.254/xyz",
+      " ",
+      "",
+      null
+    };
+    for (String url : urls) {
+      AwsCredentialSource.validateMetadataServerUrlIfAny(url, "url");
+    }
+  }
+
+  @Test
+  public void validateMetadataServerUrlIfAny_invalidUrls() {
+    Map<String, String> urls = new HashMap<String, String>();
+    urls.put("http://[fd00:ec2::255]/region", "[fd00:ec2::255]");
+    urls.put("http://fake.com/region", "fake.com");
+    urls.put("http://169.254.169.255", "169.254.169.255");
+
+    for (Map.Entry<String, String> entry : urls.entrySet()) {
+      IllegalArgumentException e =
+          assertThrows(
+              IllegalArgumentException.class,
+              new ThrowingRunnable() {
+                @Override
+                public void run() throws Throwable {
+                  AwsCredentialSource.validateMetadataServerUrlIfAny(entry.getKey(), "url");
+                }
+              });
+
+      assertEquals(String.format("Invalid host %s for url.", entry.getValue()), e.getMessage());
+    }
+  }
+
+  @Test
   public void getAwsSecurityCredentials_fromMetadataServer() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
