@@ -92,6 +92,7 @@ public class DefaultCredentialsProviderTest {
   private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
   private static final String QUOTA_PROJECT = "sample-quota-project-id";
+  private static final String SMBIOS_PATH_LINUX = "/sys/class/dmi/id/product_name";
 
   static class MockRequestCountingTransportFactory implements HttpTransportFactory {
 
@@ -170,7 +171,7 @@ public class DefaultCredentialsProviderTest {
   public void getDefaultCredentials_noCredentials_linuxNotGce() throws IOException {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setProperty("os.name", "Linux");
-    String productFilePath = "/sys/class/dmi/id/product_name";
+    String productFilePath = SMBIOS_PATH_LINUX;
     InputStream productStream = new ByteArrayInputStream("test".getBytes());
     testProvider.addFile(productFilePath, productStream);
 
@@ -181,18 +182,18 @@ public class DefaultCredentialsProviderTest {
   public void getDefaultCredentials_static_linux() throws IOException {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setProperty("os.name", "Linux");
-    String productFilePath = "/sys/class/dmi/id/product_name";
+    String productFilePath = SMBIOS_PATH_LINUX;
+    File productFile = new File(productFilePath);
     InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
-    testProvider.addFile(productFilePath, productStream);
+    testProvider.addFile(productFile.getAbsolutePath(), productStream);
 
     assertTrue(ComputeEngineCredentials.checkStaticGceDetection(testProvider));
   }
 
   @Test
-  public void getDefaultCredentials_static_windows_skipsLinuxPath() throws IOException {
-    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+  public void getDefaultCredentials_static_windows_configuredAsLinux_notGce() throws IOException {    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setProperty("os.name", "windows");
-    String productFilePath = "/sys/class/dmi/id/product_name";
+    String productFilePath = SMBIOS_PATH_LINUX;
     InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
     testProvider.addFile(productFilePath, productStream);
 
@@ -203,7 +204,7 @@ public class DefaultCredentialsProviderTest {
   public void getDefaultCredentials_static_unsupportedPlatform_notGce() throws IOException {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setProperty("os.name", "macos");
-    String productFilePath = "/sys/class/dmi/id/product_name";
+    String productFilePath = SMBIOS_PATH_LINUX;
     InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
     testProvider.addFile(productFilePath, productStream);
 
@@ -550,7 +551,7 @@ public class DefaultCredentialsProviderTest {
     return handler.getRecord();
   }
 
-  private static File getTempDirectory() {
+private static File getTempDirectory() {
     return new File(System.getProperty("java.io.tmpdir"));
   }
 

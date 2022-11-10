@@ -104,6 +104,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
   private static final String METADATA_FLAVOR = "Metadata-Flavor";
   private static final String GOOGLE = "Google";
+  private static final String WINDOWS = "windows";
+  private static final String LINUX = "linux";
 
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final String PARSE_ERROR_ACCOUNT = "Error parsing service account response. ";
@@ -324,19 +326,19 @@ public class ComputeEngineCredentials extends GoogleCredentials
   @VisibleForTesting
   static boolean checkProductNameOnLinux(BufferedReader reader) throws IOException {
     String name = reader.readLine().trim();
-    return name.startsWith("Google");
+    return name.startsWith(GOOGLE);
   }
 
   @VisibleForTesting
   static boolean checkStaticGceDetection(DefaultCredentialsProvider provider) {
     String osName = provider.getOsName();
     try {
-      if (osName.startsWith("linux")) {
+      if (osName.startsWith(LINUX)) {
         // Checks GCE residency on Linux platform.
         File linuxFile = new File("/sys/class/dmi/id/product_name");
         return checkProductNameOnLinux(
             new BufferedReader(new InputStreamReader(provider.readStream(linuxFile))));
-      } else if (osName.startsWith("windows")) {
+      } else if (osName.startsWith(WINDOWS)) {
         // Checks GCE residency on Windows platform.
         // TODO: implement registry check via FFI
         return false;
