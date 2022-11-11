@@ -105,7 +105,21 @@ public class DefaultCredentialsProviderTest {
   }
 
   @Test
-  public void getDefaultCredentials_noCredentialsSandbox_throwsNonSecurity() throws Exception {
+  public void getDefaultCredentials_noCredentials_throws() {
+    MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+
+    try {
+      testProvider.getDefaultCredentials(transportFactory);
+      fail("No credential expected.");
+    } catch (IOException e) {
+      String message = e.getMessage();
+      assertTrue(message.contains(DefaultCredentialsProvider.HELP_PERMALINK));
+    }
+  }
+
+  @Test
+  public void getDefaultCredentials_noCredentialsSandbox_throwsNonSecurity() {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setFileSandbox(true);

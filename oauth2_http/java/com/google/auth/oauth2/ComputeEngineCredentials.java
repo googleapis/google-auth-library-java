@@ -301,10 +301,13 @@ public class ComputeEngineCredentials extends GoogleCredentials
    * line that starts with Google.
    *
    * <p><b>For Windows:</b> to be implemented
-   *
-   * <p>This algorithm overall can be disabled with environment variable {@code
-   * DefaultCredentialsProvider.NO_GCE_CHECK_ENV_VAR} set to true. Returns {@code true} if currently
-   * running on Google Compute Environment (GCE) or equivalent runtime.
+   * <p><b>Other platforms:</b> not supported
+   * <p>This algorithm can be disabled with environment variable {@code
+   * DefaultCredentialsProvider.NO_GCE_CHECK_ENV_VAR} set to {@code true}. In this case,
+   * the algorithm will always return {@code false}
+   * Returns {@code true} if currently running on Google Compute Environment (GCE)
+   * or equivalent runtime. Returns {@code false} if detection fails, platform is not supported
+   * or if detection disabled using the environment variable.
    */
   static synchronized boolean isOnGce(
       HttpTransportFactory transportFactory, DefaultCredentialsProvider provider) {
@@ -319,7 +322,10 @@ public class ComputeEngineCredentials extends GoogleCredentials
       result = checkStaticGceDetection(provider);
     }
 
-    LOGGER.log(Level.FINE, "Failed to detect whether running on Google Compute Engine.");
+    if (!result) {
+      LOGGER.log(Level.FINE, "Failed to detect whether running on Google Compute Engine.");
+    }
+
     return result;
   }
 
