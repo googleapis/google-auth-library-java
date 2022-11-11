@@ -525,7 +525,7 @@ public class AwsCredentialsTest {
   }
 
   @Test
-  public void validateMetadataServerUrlIfAny_validUrls() {
+  public void validateMetadataServerUrlIfAny_validOrEmptyUrls() {
     String[] urls = {
       "http://[fd00:ec2::254]/region",
       "http://169.254.169.254",
