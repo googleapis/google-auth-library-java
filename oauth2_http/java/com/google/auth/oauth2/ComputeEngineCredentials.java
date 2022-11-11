@@ -301,13 +301,14 @@ public class ComputeEngineCredentials extends GoogleCredentials
    * line that starts with Google.
    *
    * <p><b>For Windows:</b> to be implemented
+   *
    * <p><b>Other platforms:</b> not supported
+   *
    * <p>This algorithm can be disabled with environment variable {@code
-   * DefaultCredentialsProvider.NO_GCE_CHECK_ENV_VAR} set to {@code true}. In this case,
-   * the algorithm will always return {@code false}
-   * Returns {@code true} if currently running on Google Compute Environment (GCE)
-   * or equivalent runtime. Returns {@code false} if detection fails, platform is not supported
-   * or if detection disabled using the environment variable.
+   * DefaultCredentialsProvider.NO_GCE_CHECK_ENV_VAR} set to {@code true}. In this case, the
+   * algorithm will always return {@code false} Returns {@code true} if currently running on Google
+   * Compute Environment (GCE) or equivalent runtime. Returns {@code false} if detection fails,
+   * platform is not supported or if detection disabled using the environment variable.
    */
   static synchronized boolean isOnGce(
       HttpTransportFactory transportFactory, DefaultCredentialsProvider provider) {
