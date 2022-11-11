@@ -68,7 +68,7 @@ import java.util.Objects;
 
 public class GdchCredentials extends GoogleCredentials implements JwtProvider {
 
-  private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
+  private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:token-exchange";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
 

@@ -57,7 +57,8 @@ import java.util.concurrent.Future;
 public class MockTokenServerTransport extends MockHttpTransport {
 
   public static final String REFRESH_TOKEN_WITH_USER_SCOPE = "refresh_token_with_user.email_scope";
-  static final String EXPECTED_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
+  static final String JWT_BEARER_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
+  static final String TOKEN_EXCHANGE_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:token-exchange";
   static final JsonFactory JSON_FACTORY = new GsonFactory();
   int buildRequestCount;
   final Map<String, String> clients = new HashMap<String, String>();
@@ -209,15 +210,11 @@ public class MockTokenServerTransport extends MockHttpTransport {
             accessToken = refreshTokens.get(refreshToken);
           } else if (query.containsKey("grant_type")) {
             String grantType = query.get("grant_type");
-            if (!EXPECTED_GRANT_TYPE.equals(grantType)) {
-              throw new IOException("Unexpected Grant Type.");
-            }
             String assertion = query.get("assertion");
             JsonWebSignature signature = JsonWebSignature.parse(JSON_FACTORY, assertion);
-            if (!serviceAccounts.isEmpty()) {
+            if (JWT_BEARER_GRANT_TYPE.equals(grantType)) {
               String foundEmail = signature.getPayload().getIssuer();
               if (!serviceAccounts.containsKey(foundEmail)) {
-                throw new IOException("Service Account Email not found as issuer.");
               }
               accessToken = serviceAccounts.get(foundEmail);
               String foundTargetAudience = (String) signature.getPayload().get("target_audience");
@@ -233,7 +230,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
               if (foundTargetAudience != null) {
                 generateAccessToken = false;
               }
-            } else if (!gdchServiceAccounts.isEmpty()) {
+            } else if (TOKEN_EXCHANGE_GRANT_TYPE.equals(grantType)) {
               String foundServiceIdentityName = signature.getPayload().getIssuer();
               if (!gdchServiceAccounts.containsKey(foundServiceIdentityName)) {
                 throw new IOException(
@@ -244,6 +241,8 @@ public class MockTokenServerTransport extends MockHttpTransport {
               if ((foundApiAudience == null || foundApiAudience.length() == 0)) {
                 throw new IOException("Api_audience must be specified.");
               }
+            } else {
+              throw new IOException("Service Account Email not found as issuer.");
             }
           } else {
             throw new IOException("Unknown token type.");
