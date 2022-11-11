@@ -42,11 +42,15 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
@@ -100,6 +104,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
   private static final String METADATA_FLAVOR = "Metadata-Flavor";
   private static final String GOOGLE = "Google";
+  private static final String WINDOWS = "windows";
+  private static final String LINUX = "linux";
 
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final String PARSE_ERROR_ACCOUNT = "Error parsing service account response. ";
@@ -281,14 +287,79 @@ public class ComputeEngineCredentials extends GoogleCredentials
     return response;
   }
 
-  /** Return whether code is running on Google Compute Engine. */
-  static boolean runningOnComputeEngine(
+  /**
+   * Implements an algorithm to detect whether the code is running on Google Compute Environment
+   * (GCE) or equivalent runtime. <a href="https://google.aip.dev/auth/4115">See AIP-4115 for more
+   * details</a> The algorithm consists of active and passive checks: <br>
+   * <b>Active:</b> to check that GCE Metadata service is present by sending a http request to send
+   * a request to {@code ComputeEngineCredentials.DEFAULT_METADATA_SERVER_URL}
+   *
+   * <p><b>Passive:</b> to check if SMBIOS variable is present and contains expected value. This
+   * step is platform specific:
+   *
+   * <p><b>For Linux:</b> check if the file "/sys/class/dmi/id/product_name" exists and contains a
+   * line that starts with Google.
+   *
+   * <p><b>For Windows:</b> to be implemented
+   *
+   * <p><b>Other platforms:</b> not supported
+   *
+   * <p>This algorithm can be disabled with environment variable {@code
+   * DefaultCredentialsProvider.NO_GCE_CHECK_ENV_VAR} set to {@code true}. In this case, the
+   * algorithm will always return {@code false} Returns {@code true} if currently running on Google
+   * Compute Environment (GCE) or equivalent runtime. Returns {@code false} if detection fails,
+   * platform is not supported or if detection disabled using the environment variable.
+   */
+  static synchronized boolean isOnGce(
       HttpTransportFactory transportFactory, DefaultCredentialsProvider provider) {
     // If the environment has requested that we do no GCE checks, return immediately.
     if (Boolean.parseBoolean(provider.getEnv(DefaultCredentialsProvider.NO_GCE_CHECK_ENV_VAR))) {
       return false;
     }
 
+    boolean result = pingComputeEngineMetadata(transportFactory, provider);
+
+    if (!result) {
+      result = checkStaticGceDetection(provider);
+    }
+
+    if (!result) {
+      LOGGER.log(Level.FINE, "Failed to detect whether running on Google Compute Engine.");
+    }
+
+    return result;
+  }
+
+  @VisibleForTesting
+  static boolean checkProductNameOnLinux(BufferedReader reader) throws IOException {
+    String name = reader.readLine().trim();
+    return name.startsWith(GOOGLE);
+  }
+
+  @VisibleForTesting
+  static boolean checkStaticGceDetection(DefaultCredentialsProvider provider) {
+    String osName = provider.getOsName();
+    try {
+      if (osName.startsWith(LINUX)) {
+        // Checks GCE residency on Linux platform.
+        File linuxFile = new File("/sys/class/dmi/id/product_name");
+        return checkProductNameOnLinux(
+            new BufferedReader(new InputStreamReader(provider.readStream(linuxFile))));
+      } else if (osName.startsWith(WINDOWS)) {
+        // Checks GCE residency on Windows platform.
+        // TODO: implement registry check via FFI
+        return false;
+      }
+    } catch (IOException e) {
+      LOGGER.log(Level.FINE, "Encountered an unexpected exception when checking SMBIOS value", e);
+      return false;
+    }
+    // Platforms other than Linux and Windows are not supported.
+    return false;
+  }
+
+  private static boolean pingComputeEngineMetadata(
+      HttpTransportFactory transportFactory, DefaultCredentialsProvider provider) {
     GenericUrl tokenUrl = new GenericUrl(getMetadataServerUrl(provider));
     for (int i = 1; i <= MAX_COMPUTE_PING_TRIES; ++i) {
       try {
@@ -311,12 +382,11 @@ public class ComputeEngineCredentials extends GoogleCredentials
       } catch (IOException e) {
         LOGGER.log(
             Level.FINE,
-            "Encountered an unexpected exception when determining"
-                + " if we are running on Google Compute Engine.",
+            "Encountered an unexpected exception when checking"
+                + " if running on Google Compute Engine using Metadata Service ping.",
             e);
       }
     }
-    LOGGER.log(Level.FINE, "Failed to detect whether we are running on Google Compute Engine.");
     return false;
   }
 
