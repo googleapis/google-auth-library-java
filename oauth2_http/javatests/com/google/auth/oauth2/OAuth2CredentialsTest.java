@@ -876,6 +876,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
   }
 
+  @Ignore
   @Test
   public void updateTokenValueBeforeWake() throws IOException, InterruptedException {
     final SettableFuture<AccessToken> refreshedTokenFuture = SettableFuture.create();
