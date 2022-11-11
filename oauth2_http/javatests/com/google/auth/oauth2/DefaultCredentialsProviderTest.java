@@ -406,6 +406,26 @@ public class DefaultCredentialsProviderTest {
   }
 
   @Test
+  public void getDefaultCredentials_linuxSetup_envNoGceCheck_noGce() throws IOException {
+    MockRequestCountingTransportFactory transportFactory =
+        new MockRequestCountingTransportFactory();
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setEnv(DefaultCredentialsProvider.NO_GCE_CHECK_ENV_VAR, "true");
+    testProvider.setProperty("os.name", "Linux");
+    String productFilePath = SMBIOS_PATH_LINUX;
+    File productFile = new File(productFilePath);
+    InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
+    testProvider.addFile(productFile.getAbsolutePath(), productStream);
+    try {
+      testProvider.getDefaultCredentials(transportFactory);
+      fail("No credential expected.");
+    } catch (IOException expected) {
+      // Expected
+    }
+    assertEquals(transportFactory.transport.getRequestCount(), 0);
+  }
+
+  @Test
   public void getDefaultCredentials_envGceMetadataHost_setsMetadataServerUrl() {
     String testUrl = "192.0.2.0";
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
