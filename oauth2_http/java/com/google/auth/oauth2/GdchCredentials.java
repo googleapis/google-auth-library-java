@@ -66,7 +66,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 
-public class GdchCredentials extends GoogleCredentials implements JwtProvider {
+public class GdchCredentials extends GoogleCredentials {
 
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:token-exchange";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
@@ -285,26 +285,6 @@ public class GdchCredentials extends GoogleCredentials implements JwtProvider {
   @VisibleForTesting
   String getIssSubValue() {
     return String.format("system:serviceaccount:%s:%s", getProjectId(), getServiceIdentityName());
-  }
-
-  /**
-   * Return a new JwtCredentials instance with modified claims.
-   *
-   * @param newClaims new claims. Any unspecified claim fields will default to the the current
-   *     values.
-   * @return new credentials
-   */
-  @Override
-  public JwtCredentials jwtWithClaims(JwtClaims newClaims) {
-
-    JwtClaims.Builder claimsBuilder =
-        JwtClaims.newBuilder().setIssuer(getIssSubValue()).setSubject(getIssSubValue());
-    return JwtCredentials.newBuilder()
-        .setPrivateKey(privateKey)
-        .setPrivateKeyId(privateKeyId)
-        .setJwtClaims(claimsBuilder.build().merge(newClaims))
-        .setClock(clock)
-        .build();
   }
 
   public final String getProjectId() {
