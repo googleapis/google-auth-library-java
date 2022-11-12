@@ -214,8 +214,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
             JsonWebSignature signature = JsonWebSignature.parse(JSON_FACTORY, assertion);
             if (JWT_BEARER_GRANT_TYPE.equals(grantType)) {
               String foundEmail = signature.getPayload().getIssuer();
-              if (!serviceAccounts.containsKey(foundEmail)) {
-              }
+              if (!serviceAccounts.containsKey(foundEmail)) {}
               accessToken = serviceAccounts.get(foundEmail);
               String foundTargetAudience = (String) signature.getPayload().get("target_audience");
               String foundScopes = (String) signature.getPayload().get("scope");

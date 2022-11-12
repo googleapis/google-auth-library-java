@@ -51,6 +51,8 @@ import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFact
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.List;
+import java.util.Map;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -76,9 +78,10 @@ public class GdchCredentialsTest extends BaseSerializationTest {
           + "==\n-----END PRIVATE KEY-----\n";
   private static final String PROJECT_ID = "project-id";
   private static final String SERVICE_IDENTITY_NAME = "service-identity-name";
+  private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
   private static final URI TOKEN_SERVER_URI =
       URI.create("https://service-identity.domain/authenticate");
-  private static final URI API_AUDIENCE = URI.create("gdch-api-audience");
+  private static final URI API_AUDIENCE = URI.create("https://gdch-api-audience");
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
 
   @Test
@@ -289,6 +292,26 @@ public class GdchCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void fromJSON_hasAccessToken() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    GenericJson json =
+        writeGdchServiceAccountJson(
+            FORMAT_VERSION,
+            PROJECT_ID,
+            PRIVATE_KEY_ID,
+            PRIVATE_KEY_PKCS8,
+            SERVICE_IDENTITY_NAME,
+            TOKEN_SERVER_URI);
+    GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
+    GdchCredentials gdchWithAudience = credentials.createWithGdchAudience(API_AUDIENCE);
+    transportFactory.transport.addGdchServiceAccount(
+        gdchWithAudience.getIssSubValue(), ACCESS_TOKEN);
+    transportFactory.transport.setTokenServerUri(TOKEN_SERVER_URI);
+    Map<String, List<String>> metadata = gdchWithAudience.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+  }
+
+  @Test
   public void createWithGdchAudience() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     GenericJson json =
@@ -367,8 +390,6 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     final String tokenString = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
-    URI mockTokenServerUri = OAuth2Utils.TOKEN_SERVER_URI;
-
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -376,13 +397,14 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
-            mockTokenServerUri);
+            TOKEN_SERVER_URI);
     GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
     GdchCredentials gdchWithAudience = credentials.createWithGdchAudience(API_AUDIENCE);
 
     gdchWithAudience.clock = new FixedClock(0L);
 
     transport.addGdchServiceAccount(gdchWithAudience.getIssSubValue(), tokenString);
+    transport.setTokenServerUri(TOKEN_SERVER_URI);
     AccessToken accessToken = gdchWithAudience.refreshAccessToken();
     assertNotNull(accessToken);
     assertEquals(tokenString, accessToken.getTokenValue());
@@ -401,8 +423,6 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     final String tokenString = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
-    URI mockTokenServerUri = OAuth2Utils.TOKEN_SERVER_URI;
-
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -410,12 +430,13 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
-            mockTokenServerUri);
+            TOKEN_SERVER_URI);
     GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
 
     credentials.clock = new FixedClock(0L);
 
     transport.addGdchServiceAccount(credentials.getIssSubValue(), tokenString);
+    transport.setTokenServerUri(TOKEN_SERVER_URI);
     try {
       AccessToken accessToken = credentials.refreshAccessToken();
       fail("Should not be able to refresh access token without exception.");

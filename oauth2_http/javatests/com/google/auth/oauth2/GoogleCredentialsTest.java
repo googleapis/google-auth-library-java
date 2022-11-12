@@ -70,12 +70,14 @@ public class GoogleCredentialsTest {
   private static final String SA_PRIVATE_KEY_PKCS8 =
       ServiceAccountCredentialsTest.PRIVATE_KEY_PKCS8;
   private static final String GDCH_SA_FORMAT_VERSION = "1";
-  private static final String GDCH_SA_PROJECT_ID = "GDCH-service-account-project-id";
+  private static final String GDCH_SA_PROJECT_ID = "gdch-service-account-project-id";
   private static final String GDCH_SA_PRIVATE_KEY_ID = "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
   private static final String GDCH_SA_PRIVATE_KEY_PKC8 = GdchCredentialsTest.PRIVATE_KEY_PKCS8;
   private static final String GDCH_SA_SERVICE_IDENTITY_NAME =
-      "GDCH-service-account-service-identity-name";
-  private static final URI GDCH_SA_TOKEN_SERVER_URI = URI.create("GDCH-token-server-uri");
+      "gdch-service-account-service-identity-name";
+  private static final URI GDCH_SA_TOKEN_SERVER_URI =
+      URI.create("https://service-identity.domain/authenticate");
+  private static final URI GDCH_API_AUDIENCE = URI.create("https://gdch-api-audience");
   private static final String USER_CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
   private static final String USER_CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
   private static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
@@ -197,6 +199,30 @@ public class GoogleCredentialsTest {
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, null);
 
     testFromStreamException(serviceAccountStream, "private_key_id");
+  }
+
+  @Test
+  public void fromStream_gdchServiceAccount_providesToken() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    InputStream gdchServiceAccountStream =
+        GdchCredentialsTest.writeGdchServiceAccountStream(
+            GDCH_SA_FORMAT_VERSION,
+            GDCH_SA_PROJECT_ID,
+            GDCH_SA_PRIVATE_KEY_ID,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_TOKEN_SERVER_URI);
+
+    GoogleCredentials credentials =
+        GoogleCredentials.fromStream(gdchServiceAccountStream, transportFactory);
+    credentials = ((GdchCredentials) credentials).createWithGdchAudience(GDCH_API_AUDIENCE);
+    transportFactory.transport.addGdchServiceAccount(
+        ((GdchCredentials) credentials).getIssSubValue(), ACCESS_TOKEN);
+    transportFactory.transport.setTokenServerUri(GDCH_SA_TOKEN_SERVER_URI);
+
+    assertNotNull(credentials);
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
   @Test

@@ -87,12 +87,14 @@ public class DefaultCredentialsProviderTest {
   private static final String SA_PRIVATE_KEY_PKCS8 =
       ServiceAccountCredentialsTest.PRIVATE_KEY_PKCS8;
   private static final String GDCH_SA_FORMAT_VERSION = "1";
-  private static final String GDCH_SA_PROJECT_ID = "GDCH-service-account-project-id";
+  private static final String GDCH_SA_PROJECT_ID = "gdch-service-account-project-id";
   private static final String GDCH_SA_PRIVATE_KEY_ID = "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
   private static final String GDCH_SA_PRIVATE_KEY_PKC8 = GdchCredentialsTest.PRIVATE_KEY_PKCS8;
   private static final String GDCH_SA_SERVICE_IDENTITY_NAME =
-      "GDCH-service-account-service-identity-name";
-  private static final URI GDCH_SA_TOKEN_SERVER_URI = URI.create("GDCH-token-server-uri");
+      "gdch-service-account-service-identity-name";
+  private static final URI GDCH_SA_TOKEN_SERVER_URI =
+      URI.create("https://service-identity.domain/authenticate");
+  private static final URI GDCH_API_AUDIENCE = URI.create("https://gdch-api-audience");
   private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
   private static final String QUOTA_PROJECT = "sample-quota-project-id";
@@ -284,35 +286,6 @@ public class DefaultCredentialsProviderTest {
   }
 
   @Test
-  public void getDefaultCredentials_GdchServiceAccount() throws IOException {
-    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    InputStream gdchServiceAccountStream =
-        GdchCredentialsTest.writeGdchServiceAccountStream(
-            GDCH_SA_FORMAT_VERSION,
-            GDCH_SA_PROJECT_ID,
-            GDCH_SA_PRIVATE_KEY_ID,
-            GDCH_SA_PRIVATE_KEY_PKC8,
-            GDCH_SA_SERVICE_IDENTITY_NAME,
-            GDCH_SA_TOKEN_SERVER_URI);
-    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
-    String gdchServiceAccountPath = tempFilePath("gdch_service_account.json");
-    testProvider.addFile(gdchServiceAccountPath, gdchServiceAccountStream);
-    testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, gdchServiceAccountPath);
-
-    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory);
-
-    assertNotNull(defaultCredentials);
-    assertTrue(defaultCredentials instanceof GdchCredentials);
-    assertEquals(GDCH_SA_PROJECT_ID, ((GdchCredentials) defaultCredentials).getProjectId());
-    assertEquals(
-        GDCH_SA_SERVICE_IDENTITY_NAME,
-        ((GdchCredentials) defaultCredentials).getServiceIdentityName());
-    assertEquals(
-        GDCH_SA_TOKEN_SERVER_URI, ((GdchCredentials) defaultCredentials).getTokenServerUri());
-    assertNull(((GdchCredentials) defaultCredentials).getApiAudience());
-  }
-
-  @Test
   public void getDefaultCredentials_envMissingFile_throws() {
     final String invalidPath = "/invalid/path";
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
@@ -360,6 +333,46 @@ public class DefaultCredentialsProviderTest {
     testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, userPath);
 
     testUserProvidesToken(testProvider, USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
+  }
+
+  @Test
+  public void getDefaultCredentials_envGdchServiceAccount_providesToken() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    InputStream gdchServiceAccountStream =
+        GdchCredentialsTest.writeGdchServiceAccountStream(
+            GDCH_SA_FORMAT_VERSION,
+            GDCH_SA_PROJECT_ID,
+            GDCH_SA_PRIVATE_KEY_ID,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_TOKEN_SERVER_URI);
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    String gdchServiceAccountPath = tempFilePath("gdch_service_account.json");
+    testProvider.addFile(gdchServiceAccountPath, gdchServiceAccountStream);
+    testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, gdchServiceAccountPath);
+
+    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory);
+
+    assertNotNull(defaultCredentials);
+    assertTrue(defaultCredentials instanceof GdchCredentials);
+    assertEquals(GDCH_SA_PROJECT_ID, ((GdchCredentials) defaultCredentials).getProjectId());
+    assertEquals(
+        GDCH_SA_SERVICE_IDENTITY_NAME,
+        ((GdchCredentials) defaultCredentials).getServiceIdentityName());
+    assertEquals(
+        GDCH_SA_TOKEN_SERVER_URI, ((GdchCredentials) defaultCredentials).getTokenServerUri());
+    assertNull(((GdchCredentials) defaultCredentials).getApiAudience());
+
+    defaultCredentials =
+        ((GdchCredentials) defaultCredentials).createWithGdchAudience(GDCH_API_AUDIENCE);
+    transportFactory.transport.addGdchServiceAccount(
+        ((GdchCredentials) defaultCredentials).getIssSubValue(), ACCESS_TOKEN);
+    transportFactory.transport.setTokenServerUri(GDCH_SA_TOKEN_SERVER_URI);
+
+    assertNotNull(defaultCredentials);
+    assertNotNull(((GdchCredentials) defaultCredentials).getApiAudience());
+    Map<String, List<String>> metadata = defaultCredentials.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
   @Test
