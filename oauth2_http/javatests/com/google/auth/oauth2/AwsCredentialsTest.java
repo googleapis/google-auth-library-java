@@ -475,6 +475,41 @@ public class AwsCredentialsTest {
         .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey")
         .setEnv("AWS_SESSION_TOKEN", "awsSessionToken");
 
+    AwsCredentialSource credSource =
+        new AwsCredentialSource(
+            new HashMap<String, Object>() {
+              {
+                put("environment_id", "aws1");
+                put("region_url", "");
+                put("url", "");
+                put("regional_cred_verification_url", "regionalCredVerificationUrl");
+              }
+            });
+
+    AwsCredentials testAwsCredentials =
+        (AwsCredentials)
+            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+                .setEnvironmentProvider(environmentProvider)
+                .setCredentialSource(credSource)
+                .build();
+
+    AwsSecurityCredentials credentials =
+        testAwsCredentials.getAwsSecurityCredentials(EMPTY_METADATA_HEADERS);
+
+    assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
+    assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
+    assertEquals("awsSessionToken", credentials.getToken());
+  }
+
+  @Test
+  public void getAwsSecurityCredentials_fromEnvironmentVariables_noMetadataServerCall()
+      throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    environmentProvider
+        .setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId")
+        .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey")
+        .setEnv("AWS_SESSION_TOKEN", "awsSessionToken");
+
     AwsCredentials testAwsCredentials =
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
@@ -487,6 +522,43 @@ public class AwsCredentialsTest {
     assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
     assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
     assertEquals("awsSessionToken", credentials.getToken());
+  }
+
+  @Test
+  public void validateMetadataServerUrlIfAny_validOrEmptyUrls() {
+    String[] urls = {
+      "http://[fd00:ec2::254]/region",
+      "http://169.254.169.254",
+      "http://169.254.169.254/xyz",
+      " ",
+      "",
+      null
+    };
+    for (String url : urls) {
+      AwsCredentialSource.validateMetadataServerUrlIfAny(url, "url");
+    }
+  }
+
+  @Test
+  public void validateMetadataServerUrlIfAny_invalidUrls() {
+    Map<String, String> urls = new HashMap<String, String>();
+    urls.put("http://[fd00:ec2::255]/region", "[fd00:ec2::255]");
+    urls.put("http://fake.com/region", "fake.com");
+    urls.put("http://169.254.169.255", "169.254.169.255");
+
+    for (Map.Entry<String, String> entry : urls.entrySet()) {
+      IllegalArgumentException e =
+          assertThrows(
+              IllegalArgumentException.class,
+              new ThrowingRunnable() {
+                @Override
+                public void run() throws Throwable {
+                  AwsCredentialSource.validateMetadataServerUrlIfAny(entry.getKey(), "url");
+                }
+              });
+
+      assertEquals(String.format("Invalid host %s for url.", entry.getValue()), e.getMessage());
+    }
   }
 
   @Test
