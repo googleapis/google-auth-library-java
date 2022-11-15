@@ -1117,8 +1117,8 @@ public class ExternalAccountCredentialsTest {
 
     Map<String, String> map = new HashMap<>();
     map.put("environment_id", "aws1");
-    map.put("region_url", "regionUrl");
-    map.put("url", "url");
+    map.put("region_url", "https://169.254.169.254/region");
+    map.put("url", "https://169.254.169.254/");
     map.put("regional_cred_verification_url", "regionalCredVerificationUrl");
     json.put("credential_source", map);
 
