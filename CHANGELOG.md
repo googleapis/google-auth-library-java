@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.13.0](https://github.com/googleapis/google-auth-library-java/compare/v1.12.1...v1.13.0) (2022-11-15)
+
+
+### Features
+
+* Add smbios check for GCE residency detection ([#1092](https://github.com/googleapis/google-auth-library-java/issues/1092)) ([bfe7d93](https://github.com/googleapis/google-auth-library-java/commit/bfe7d932dbbbaf6b311c387834256519a0d1b9ad))
+
+
+### Bug Fixes
+
+* Empty string check for aws url validation ([#1089](https://github.com/googleapis/google-auth-library-java/issues/1089)) ([6f177a1](https://github.com/googleapis/google-auth-library-java/commit/6f177a1346ac481f34ab7cf343d552dcd88b7220))
+* Validate url domain for aws metadata urls ([#1079](https://github.com/googleapis/google-auth-library-java/issues/1079)) ([31fe461](https://github.com/googleapis/google-auth-library-java/commit/31fe461ac86e92fdff41bb17f0abc9b2a132676c))
+
 ## [1.12.1](https://github.com/googleapis/google-auth-library-java/compare/v1.12.0...v1.12.1) (2022-10-18)
 
 
