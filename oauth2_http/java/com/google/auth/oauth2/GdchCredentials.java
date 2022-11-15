@@ -44,31 +44,22 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.client.util.GenericData;
-import com.google.api.client.util.PemReader;
-import com.google.api.client.util.PemReader.Section;
-import com.google.api.client.util.SecurityUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.Reader;
-import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 
 public class GdchCredentials extends GoogleCredentials {
-
-  private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:token-exchange";
+  static final String SUPPORTED_FORMAT_VERSION = "1";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
 
@@ -88,12 +79,11 @@ public class GdchCredentials extends GoogleCredentials {
    * @param builder A builder for {@link GdchCredentials} See {@link GdchCredentials.Builder}.
    */
   GdchCredentials(GdchCredentials.Builder builder) {
-
-    this.projectId = builder.projectId;
-    this.privateKeyId = builder.privateKeyId;
-    this.privateKey = builder.privateKey;
-    this.serviceIdentityName = builder.serviceIdentityName;
-    this.tokenServerUri = builder.tokenServerUri;
+    this.projectId = Preconditions.checkNotNull(builder.projectId);
+    this.privateKeyId = Preconditions.checkNotNull(builder.privateKeyId);
+    this.privateKey = Preconditions.checkNotNull(builder.privateKey);
+    this.serviceIdentityName = Preconditions.checkNotNull(builder.serviceIdentityName);
+    this.tokenServerUri = Preconditions.checkNotNull(builder.tokenServerUri);
     this.transportFactory =
         firstNonNull(
             builder.transportFactory,
@@ -114,34 +104,22 @@ public class GdchCredentials extends GoogleCredentials {
    */
   static GdchCredentials fromJson(Map<String, Object> json, HttpTransportFactory transportFactory)
       throws IOException {
+    String formatVersion = validateField((String) json.get("format_version"), "format_version");
+    String projectId = validateField((String) json.get("project"), "project");
+    String privateKeyId = validateField((String) json.get("private_key_id"), "private_key_id");
+    String privateKeyPkcs8 = validateField((String) json.get("private_key"), "private_key");
+    String serviceIdentityName = validateField((String) json.get("name"), "name");
+    String tokenServerUriStringFromCreds =
+        validateField((String) json.get("token_uri"), "token_uri");
 
-    String formatVersion = (String) json.get("format_version");
-    String projectId = (String) json.get("project");
-    String privateKeyId = (String) json.get("private_key_id");
-    String privateKeyPkcs8 = (String) json.get("private_key");
-    String serviceIdentityName = (String) json.get("name");
-    String tokenServerUriStringFromCreds = (String) json.get("token_uri");
-
-    if (formatVersion == null
-        || privateKeyPkcs8 == null
-        || privateKeyId == null
-        || projectId == null
-        || serviceIdentityName == null
-        || tokenServerUriStringFromCreds == null) {
+    if (!SUPPORTED_FORMAT_VERSION.equals(formatVersion)) {
       throw new IOException(
-          "Error reading GDCH service account credential from JSON, "
-              + "expecting 'format_version', 'private_key', 'private_key_id', 'project', 'name' and 'token_uri'.");
-    }
-
-    if (!formatVersion.equals("1")) {
-      throw new IOException("Only format version 1 is supported.");
+          String.format("Only format version %s is supported.", SUPPORTED_FORMAT_VERSION));
     }
 
     URI tokenServerUriFromCreds = null;
     try {
-      if (tokenServerUriStringFromCreds != null) {
-        tokenServerUriFromCreds = new URI(tokenServerUriStringFromCreds);
-      }
+      tokenServerUriFromCreds = new URI(tokenServerUriStringFromCreds);
     } catch (URISyntaxException e) {
       throw new IOException("Token server URI specified in 'token_uri' could not be parsed.");
     }
@@ -158,7 +136,7 @@ public class GdchCredentials extends GoogleCredentials {
   }
 
   /**
-   * Internal constructor
+   * Internal constructor.
    *
    * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
    * @param builder A builder for GdchCredentials.
@@ -166,29 +144,10 @@ public class GdchCredentials extends GoogleCredentials {
    */
   static GdchCredentials fromPkcs8(String privateKeyPkcs8, GdchCredentials.Builder builder)
       throws IOException {
-    PrivateKey privateKey = privateKeyFromPkcs8(privateKeyPkcs8);
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(privateKeyPkcs8);
     builder.setPrivateKey(privateKey);
 
     return new GdchCredentials(builder);
-  }
-
-  /** Helper to convert from a PKCS#8 String to an RSA private key */
-  static PrivateKey privateKeyFromPkcs8(String privateKeyPkcs8) throws IOException {
-    Reader reader = new StringReader(privateKeyPkcs8);
-    Section section = PemReader.readFirstSectionAndClose(reader, "PRIVATE KEY");
-    if (section == null) {
-      throw new IOException("Invalid PKCS#8 data.");
-    }
-    byte[] bytes = section.getBase64DecodedBytes();
-    PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(bytes);
-    Exception unexpectedException;
-    try {
-      KeyFactory keyFactory = SecurityUtils.getRsaKeyFactory();
-      return keyFactory.generatePrivate(keySpec);
-    } catch (NoSuchAlgorithmException | InvalidKeySpecException exception) {
-      unexpectedException = exception;
-    }
-    throw new IOException("Unexpected exception reading PKCS#8 data", unexpectedException);
   }
 
   /**
@@ -197,29 +156,31 @@ public class GdchCredentials extends GoogleCredentials {
    * @param apiAudience The intended audience for GDCH credentials.
    */
   public GdchCredentials createWithGdchAudience(URI apiAudience) throws IOException {
-
-    if (apiAudience == null) {
-      throw new IOException("Audience are not configured for GDCH service account credentials.");
-    }
+    Preconditions.checkNotNull(
+        apiAudience, "Audience are not configured for GDCH service account credentials.");
     return this.toBuilder().setGdchAudience(apiAudience).build();
   }
 
-  /** Refresh the OAuth2 access token by getting a new access token using a JSON Web Token (JWT). */
+  /**
+   * Refresh the OAuth2 access token by getting a new access token using a JSON Web Token (JWT).
+   *
+   * <p>For GDCH credentials, this class creates a self-signed JWT, and sends to the GDCH
+   * authentication endpoint (tokenServerUri) to exchange an access token for the intended api
+   * audience (apiAudience).
+   */
   @Override
   public AccessToken refreshAccessToken() throws IOException {
-
-    if (this.apiAudience == null) {
-      throw new IOException(
-          "Audience are not configured for GDCH service account. Specify the "
-              + "audience by calling createWithGDCHAudience.");
-    }
+    Preconditions.checkNotNull(
+        this.apiAudience,
+        "Audience are not configured for GDCH service account. Specify the "
+            + "audience by calling createWithGDCHAudience.");
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     long currentTime = clock.currentTimeMillis();
     String assertion = createAssertion(jsonFactory, currentTime, getApiAudience());
 
     GenericData tokenRequest = new GenericData();
-    tokenRequest.set("grant_type", GRANT_TYPE);
+    tokenRequest.set("grant_type", OAuth2Utils.TOKEN_TYPE_TOKEN_EXCHANGE);
     tokenRequest.set("assertion", assertion);
     UrlEncodedContent content = new UrlEncodedContent(tokenRequest);
 
@@ -250,25 +211,27 @@ public class GdchCredentials extends GoogleCredentials {
     return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
   }
 
-  /** Create a self-signed JWT. */
+  /**
+   * Create a self-signed JWT for GDCH authentication flow.
+   *
+   * <p>The self-signed JWT is used to exchange access token from GDCH authentication
+   * (tokenServerUri), not for API call. It uses the serviceIdentityName as the `iss` and `sub`
+   * claim, and the tokenServerUri as the `aud` claim. The JWT is signed with the privateKey.
+   */
   String createAssertion(JsonFactory jsonFactory, long currentTime, URI apiAudience)
       throws IOException {
-
-    // Set JWT header.
     JsonWebSignature.Header header = new JsonWebSignature.Header();
     header.setAlgorithm("RS256");
     header.setType("JWT");
     header.setKeyId(privateKeyId);
 
-    // Set JWT payload.
     JsonWebToken.Payload payload = new JsonWebToken.Payload();
-    payload.setIssuer(getIssSubValue());
-    payload.setSubject(getIssSubValue());
+    payload.setIssuer(getIssSubValue(projectId, serviceIdentityName));
+    payload.setSubject(getIssSubValue(projectId, serviceIdentityName));
     payload.setIssuedAtTimeSeconds(currentTime / 1000);
     payload.setExpirationTimeSeconds(currentTime / 1000 + this.lifetime);
     payload.setAudience(getTokenServerUri().toString());
 
-    // Sign the JWT by calling the existing JsonWebSignature library.
     String assertion;
     try {
       payload.set("api_audience", apiAudience.toString());
@@ -283,8 +246,8 @@ public class GdchCredentials extends GoogleCredentials {
 
   /** Get the issuer and subject value in the format GDCH token server required. */
   @VisibleForTesting
-  String getIssSubValue() {
-    return String.format("system:serviceaccount:%s:%s", getProjectId(), getServiceIdentityName());
+  static String getIssSubValue(String projectId, String serviceIdentityName) {
+    return String.format("system:serviceaccount:%s:%s", projectId, serviceIdentityName);
   }
 
   public final String getProjectId() {
@@ -321,7 +284,7 @@ public class GdchCredentials extends GoogleCredentials {
 
   @SuppressWarnings("unused")
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
-    // properly deserialize the transient transportFactory
+    // properly deserialize the transient transportFactory.
     input.defaultReadObject();
     transportFactory = newInstance(transportFactoryClassName);
   }
@@ -335,6 +298,7 @@ public class GdchCredentials extends GoogleCredentials {
         serviceIdentityName,
         tokenServerUri,
         transportFactoryClassName,
+        apiAudience,
         lifetime);
   }
 
@@ -346,6 +310,7 @@ public class GdchCredentials extends GoogleCredentials {
         .add("serviceIdentityName", serviceIdentityName)
         .add("tokenServerUri", tokenServerUri)
         .add("transportFactoryClassName", transportFactoryClassName)
+        .add("apiAudience", apiAudience)
         .add("lifetime", lifetime)
         .toString();
   }
@@ -362,11 +327,11 @@ public class GdchCredentials extends GoogleCredentials {
         && Objects.equals(this.serviceIdentityName, other.serviceIdentityName)
         && Objects.equals(this.tokenServerUri, other.tokenServerUri)
         && Objects.equals(this.transportFactoryClassName, other.transportFactoryClassName)
+        && Objects.equals(this.apiAudience, other.apiAudience)
         && Objects.equals(this.lifetime, other.lifetime);
   }
 
   public static class Builder extends GoogleCredentials.Builder {
-
     private String projectId;
     private String privateKeyId;
     private PrivateKey privateKey;
@@ -459,5 +424,15 @@ public class GdchCredentials extends GoogleCredentials {
     public GdchCredentials build() {
       return new GdchCredentials(this);
     }
+  }
+
+  private static String validateField(String field, String fieldName) throws IOException {
+    if (field == null || field.isEmpty()) {
+      throw new IOException(
+          String.format(
+              "Error reading GDCH service account credential from JSON, " + "%s is misconfigured.",
+              fieldName));
+    }
+    return field;
   }
 }

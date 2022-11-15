@@ -57,8 +57,6 @@ import java.util.concurrent.Future;
 public class MockTokenServerTransport extends MockHttpTransport {
 
   public static final String REFRESH_TOKEN_WITH_USER_SCOPE = "refresh_token_with_user.email_scope";
-  static final String JWT_BEARER_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
-  static final String TOKEN_EXCHANGE_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:token-exchange";
   static final JsonFactory JSON_FACTORY = new GsonFactory();
   int buildRequestCount;
   final Map<String, String> clients = new HashMap<String, String>();
@@ -212,7 +210,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
             String grantType = query.get("grant_type");
             String assertion = query.get("assertion");
             JsonWebSignature signature = JsonWebSignature.parse(JSON_FACTORY, assertion);
-            if (JWT_BEARER_GRANT_TYPE.equals(grantType)) {
+            if (OAuth2Utils.GRANT_TYPE_JWT_BEARER.equals(grantType)) {
               String foundEmail = signature.getPayload().getIssuer();
               if (!serviceAccounts.containsKey(foundEmail)) {}
               accessToken = serviceAccounts.get(foundEmail);
@@ -229,7 +227,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
               if (foundTargetAudience != null) {
                 generateAccessToken = false;
               }
-            } else if (TOKEN_EXCHANGE_GRANT_TYPE.equals(grantType)) {
+            } else if (OAuth2Utils.TOKEN_TYPE_TOKEN_EXCHANGE.equals(grantType)) {
               String foundServiceIdentityName = signature.getPayload().getIssuer();
               if (!gdchServiceAccounts.containsKey(foundServiceIdentityName)) {
                 throw new IOException(

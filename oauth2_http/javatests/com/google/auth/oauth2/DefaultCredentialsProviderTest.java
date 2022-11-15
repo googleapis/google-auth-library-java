@@ -86,7 +86,7 @@ public class DefaultCredentialsProviderTest {
   private static final String SA_PRIVATE_KEY_ID = "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
   private static final String SA_PRIVATE_KEY_PKCS8 =
       ServiceAccountCredentialsTest.PRIVATE_KEY_PKCS8;
-  private static final String GDCH_SA_FORMAT_VERSION = "1";
+  private static final String GDCH_SA_FORMAT_VERSION = GdchCredentials.SUPPORTED_FORMAT_VERSION;
   private static final String GDCH_SA_PROJECT_ID = "gdch-service-account-project-id";
   private static final String GDCH_SA_PRIVATE_KEY_ID = "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
   private static final String GDCH_SA_PRIVATE_KEY_PKC8 = GdchCredentialsTest.PRIVATE_KEY_PKCS8;
@@ -366,7 +366,8 @@ public class DefaultCredentialsProviderTest {
     defaultCredentials =
         ((GdchCredentials) defaultCredentials).createWithGdchAudience(GDCH_API_AUDIENCE);
     transportFactory.transport.addGdchServiceAccount(
-        ((GdchCredentials) defaultCredentials).getIssSubValue(), ACCESS_TOKEN);
+        GdchCredentials.getIssSubValue(GDCH_SA_PROJECT_ID, GDCH_SA_SERVICE_IDENTITY_NAME),
+        ACCESS_TOKEN);
     transportFactory.transport.setTokenServerUri(GDCH_SA_TOKEN_SERVER_URI);
 
     assertNotNull(defaultCredentials);

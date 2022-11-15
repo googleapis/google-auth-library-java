@@ -69,7 +69,7 @@ public class GoogleCredentialsTest {
   private static final String SA_PRIVATE_KEY_ID = "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
   private static final String SA_PRIVATE_KEY_PKCS8 =
       ServiceAccountCredentialsTest.PRIVATE_KEY_PKCS8;
-  private static final String GDCH_SA_FORMAT_VERSION = "1";
+  private static final String GDCH_SA_FORMAT_VERSION = GdchCredentials.SUPPORTED_FORMAT_VERSION;
   private static final String GDCH_SA_PROJECT_ID = "gdch-service-account-project-id";
   private static final String GDCH_SA_PRIVATE_KEY_ID = "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
   private static final String GDCH_SA_PRIVATE_KEY_PKC8 = GdchCredentialsTest.PRIVATE_KEY_PKCS8;
@@ -217,7 +217,8 @@ public class GoogleCredentialsTest {
         GoogleCredentials.fromStream(gdchServiceAccountStream, transportFactory);
     credentials = ((GdchCredentials) credentials).createWithGdchAudience(GDCH_API_AUDIENCE);
     transportFactory.transport.addGdchServiceAccount(
-        ((GdchCredentials) credentials).getIssSubValue(), ACCESS_TOKEN);
+        GdchCredentials.getIssSubValue(GDCH_SA_PROJECT_ID, GDCH_SA_SERVICE_IDENTITY_NAME),
+        ACCESS_TOKEN);
     transportFactory.transport.setTokenServerUri(GDCH_SA_TOKEN_SERVER_URI);
 
     assertNotNull(credentials);
@@ -229,14 +230,16 @@ public class GoogleCredentialsTest {
   public void fromStream_gdchServiceAccountInvalidFormatVersion_throws() throws IOException {
     InputStream gdchServiceAccountStream =
         GdchCredentialsTest.writeGdchServiceAccountStream(
-            "2",
+            "100",
             GDCH_SA_PROJECT_ID,
             GDCH_SA_PRIVATE_KEY_ID,
             GDCH_SA_PRIVATE_KEY_PKC8,
             GDCH_SA_SERVICE_IDENTITY_NAME,
             GDCH_SA_TOKEN_SERVER_URI);
 
-    testFromStreamException(gdchServiceAccountStream, "Only format version 1 is supported");
+    testFromStreamException(
+        gdchServiceAccountStream,
+        String.format("Only format version %s is supported", GDCH_SA_FORMAT_VERSION));
   }
 
   @Test
