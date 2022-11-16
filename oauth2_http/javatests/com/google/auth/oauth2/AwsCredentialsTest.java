@@ -34,6 +34,7 @@ package com.google.auth.oauth2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -53,6 +54,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
+import org.junit.function.ThrowingRunnable;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -61,11 +63,10 @@ import org.junit.runners.JUnit4;
 public class AwsCredentialsTest {
 
   private static final String STS_URL = "https://sts.googleapis.com";
-  private static final String AWS_CREDENTIALS_URL = "https://www.aws-credentials.com";
-  private static final String AWS_CREDENTIALS_URL_WITH_ROLE =
-      "https://www.aws-credentials.com/roleName";
-  private static final String AWS_REGION_URL = "https://www.aws-region.com";
-  private static final String AWS_IMDSV2_SESSION_TOKEN_URL = "https://www.aws-session-token.com";
+  private static final String AWS_CREDENTIALS_URL = "https://169.254.169.254";
+  private static final String AWS_CREDENTIALS_URL_WITH_ROLE = "https://169.254.169.254/roleName";
+  private static final String AWS_REGION_URL = "https://169.254.169.254/region";
+  private static final String AWS_IMDSV2_SESSION_TOKEN_URL = "https://169.254.169.254/imdsv2";
   private static final String AWS_IMDSV2_SESSION_TOKEN = "sessiontoken";
 
   private static final String GET_CALLER_IDENTITY_URL =
@@ -78,8 +79,8 @@ public class AwsCredentialsTest {
       new HashMap<String, Object>() {
         {
           put("environment_id", "aws1");
-          put("region_url", "regionUrl");
-          put("url", "url");
+          put("region_url", AWS_REGION_URL);
+          put("url", AWS_CREDENTIALS_URL);
           put("regional_cred_verification_url", "regionalCredVerificationUrl");
         }
       };
@@ -100,6 +101,32 @@ public class AwsCredentialsTest {
               .setTokenInfoUrl("tokenInfoUrl")
               .setCredentialSource(AWS_CREDENTIAL_SOURCE)
               .build();
+
+  @Test
+  public void test_awsCredentialSource_ipv6() {
+    // If no exception is thrown, it means the urls were valid.
+    new AwsCredentialSource(buildAwsIpv6CredentialSourceMap());
+  }
+
+  @Test
+  public void test_awsCredentialSource_invalid_urls() {
+    String keys[] = {"region_url", "url", "imdsv2_session_token_url"};
+    for (String key : keys) {
+      Map<String, Object> credentialSourceWithInvalidUrl = buildAwsIpv6CredentialSourceMap();
+      credentialSourceWithInvalidUrl.put(key, "https://badhost.com/fake");
+      IllegalArgumentException e =
+          assertThrows(
+              IllegalArgumentException.class,
+              new ThrowingRunnable() {
+                @Override
+                public void run() throws Throwable {
+                  new AwsCredentialSource(credentialSourceWithInvalidUrl);
+                }
+              });
+
+      assertEquals(String.format("Invalid host badhost.com for %s.", key), e.getMessage());
+    }
+  }
 
   @Test
   public void refreshAccessToken_withoutServiceAccountImpersonation() throws IOException {
@@ -448,6 +475,41 @@ public class AwsCredentialsTest {
         .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey")
         .setEnv("AWS_SESSION_TOKEN", "awsSessionToken");
 
+    AwsCredentialSource credSource =
+        new AwsCredentialSource(
+            new HashMap<String, Object>() {
+              {
+                put("environment_id", "aws1");
+                put("region_url", "");
+                put("url", "");
+                put("regional_cred_verification_url", "regionalCredVerificationUrl");
+              }
+            });
+
+    AwsCredentials testAwsCredentials =
+        (AwsCredentials)
+            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+                .setEnvironmentProvider(environmentProvider)
+                .setCredentialSource(credSource)
+                .build();
+
+    AwsSecurityCredentials credentials =
+        testAwsCredentials.getAwsSecurityCredentials(EMPTY_METADATA_HEADERS);
+
+    assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
+    assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
+    assertEquals("awsSessionToken", credentials.getToken());
+  }
+
+  @Test
+  public void getAwsSecurityCredentials_fromEnvironmentVariables_noMetadataServerCall()
+      throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    environmentProvider
+        .setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId")
+        .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey")
+        .setEnv("AWS_SESSION_TOKEN", "awsSessionToken");
+
     AwsCredentials testAwsCredentials =
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
@@ -460,6 +522,43 @@ public class AwsCredentialsTest {
     assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
     assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
     assertEquals("awsSessionToken", credentials.getToken());
+  }
+
+  @Test
+  public void validateMetadataServerUrlIfAny_validOrEmptyUrls() {
+    String[] urls = {
+      "http://[fd00:ec2::254]/region",
+      "http://169.254.169.254",
+      "http://169.254.169.254/xyz",
+      " ",
+      "",
+      null
+    };
+    for (String url : urls) {
+      AwsCredentialSource.validateMetadataServerUrlIfAny(url, "url");
+    }
+  }
+
+  @Test
+  public void validateMetadataServerUrlIfAny_invalidUrls() {
+    Map<String, String> urls = new HashMap<String, String>();
+    urls.put("http://[fd00:ec2::255]/region", "[fd00:ec2::255]");
+    urls.put("http://fake.com/region", "fake.com");
+    urls.put("http://169.254.169.255", "169.254.169.255");
+
+    for (Map.Entry<String, String> entry : urls.entrySet()) {
+      IllegalArgumentException e =
+          assertThrows(
+              IllegalArgumentException.class,
+              new ThrowingRunnable() {
+                @Override
+                public void run() throws Throwable {
+                  AwsCredentialSource.validateMetadataServerUrlIfAny(entry.getKey(), "url");
+                }
+              });
+
+      assertEquals(String.format("Invalid host %s for url.", entry.getValue()), e.getMessage());
+    }
   }
 
   @Test
@@ -732,6 +831,20 @@ public class AwsCredentialsTest {
     credentialSourceMap.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
 
     return new AwsCredentialSource(credentialSourceMap);
+  }
+
+  private static Map<String, Object> buildAwsIpv6CredentialSourceMap() {
+    String regionUrl = "http://[fd00:ec2::254]/region";
+    String url = "http://[fd00:ec2::254]";
+    String imdsv2SessionTokenUrl = "http://[fd00:ec2::254]/imdsv2";
+    Map<String, Object> credentialSourceMap = new HashMap<>();
+    credentialSourceMap.put("environment_id", "aws1");
+    credentialSourceMap.put("region_url", regionUrl);
+    credentialSourceMap.put("url", url);
+    credentialSourceMap.put("imdsv2_session_token_url", imdsv2SessionTokenUrl);
+    credentialSourceMap.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
+
+    return credentialSourceMap;
   }
 
   static InputStream writeAwsCredentialsStream(String stsUrl, String regionUrl, String metadataUrl)
