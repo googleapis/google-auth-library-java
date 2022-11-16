@@ -49,10 +49,13 @@ import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.ComputeEngineCredentialsTest.MockMetadataServerTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.net.URI;
 import java.nio.file.Paths;
 import java.security.AccessControlException;
@@ -89,6 +92,7 @@ public class DefaultCredentialsProviderTest {
   private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
   private static final String QUOTA_PROJECT = "sample-quota-project-id";
+  private static final String SMBIOS_PATH_LINUX = "/sys/class/dmi/id/product_name";
 
   static class MockRequestCountingTransportFactory implements HttpTransportFactory {
 
@@ -101,7 +105,7 @@ public class DefaultCredentialsProviderTest {
   }
 
   @Test
-  public void getDefaultCredentials_noCredentials_throws() throws Exception {
+  public void getDefaultCredentials_noCredentials_throws() {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
 
@@ -115,7 +119,7 @@ public class DefaultCredentialsProviderTest {
   }
 
   @Test
-  public void getDefaultCredentials_noCredentialsSandbox_throwsNonSecurity() throws Exception {
+  public void getDefaultCredentials_noCredentialsSandbox_throwsNonSecurity() {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setFileSandbox(true);
@@ -160,7 +164,8 @@ public class DefaultCredentialsProviderTest {
       testProvider.getDefaultCredentials(transportFactory);
       fail("No credential expected.");
     } catch (IOException expected) {
-      // Expected
+      String message = expected.getMessage();
+      assertTrue(message.contains(DefaultCredentialsProvider.HELP_PERMALINK));
     }
     assertEquals(
         transportFactory.transport.getRequestCount(),
@@ -174,6 +179,64 @@ public class DefaultCredentialsProviderTest {
     assertEquals(
         transportFactory.transport.getRequestCount(),
         ComputeEngineCredentials.MAX_COMPUTE_PING_TRIES);
+  }
+
+  @Test
+  public void getDefaultCredentials_noCredentials_linuxNotGce() throws IOException {
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setProperty("os.name", "Linux");
+    String productFilePath = SMBIOS_PATH_LINUX;
+    InputStream productStream = new ByteArrayInputStream("test".getBytes());
+    testProvider.addFile(productFilePath, productStream);
+
+    assertFalse(ComputeEngineCredentials.checkStaticGceDetection(testProvider));
+  }
+
+  @Test
+  public void getDefaultCredentials_static_linux() throws IOException {
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setProperty("os.name", "Linux");
+    String productFilePath = SMBIOS_PATH_LINUX;
+    File productFile = new File(productFilePath);
+    InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
+    testProvider.addFile(productFile.getAbsolutePath(), productStream);
+
+    assertTrue(ComputeEngineCredentials.checkStaticGceDetection(testProvider));
+  }
+
+  @Test
+  public void getDefaultCredentials_static_windows_configuredAsLinux_notGce() throws IOException {
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setProperty("os.name", "windows");
+    String productFilePath = SMBIOS_PATH_LINUX;
+    InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
+    testProvider.addFile(productFilePath, productStream);
+
+    assertFalse(ComputeEngineCredentials.checkStaticGceDetection(testProvider));
+  }
+
+  @Test
+  public void getDefaultCredentials_static_unsupportedPlatform_notGce() throws IOException {
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setProperty("os.name", "macos");
+    String productFilePath = SMBIOS_PATH_LINUX;
+    InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
+    testProvider.addFile(productFilePath, productStream);
+
+    assertFalse(ComputeEngineCredentials.checkStaticGceDetection(testProvider));
+  }
+
+  @Test
+  public void checkGcpLinuxPlatformData() throws Exception {
+    BufferedReader reader;
+    reader = new BufferedReader(new StringReader("HP Z440 Workstation"));
+    assertFalse(ComputeEngineCredentials.checkProductNameOnLinux(reader));
+    reader = new BufferedReader(new StringReader("Google"));
+    assertTrue(ComputeEngineCredentials.checkProductNameOnLinux(reader));
+    reader = new BufferedReader(new StringReader("Google Compute Engine"));
+    assertTrue(ComputeEngineCredentials.checkProductNameOnLinux(reader));
+    reader = new BufferedReader(new StringReader("Google Compute Engine    "));
+    assertTrue(ComputeEngineCredentials.checkProductNameOnLinux(reader));
   }
 
   @Test
@@ -333,6 +396,26 @@ public class DefaultCredentialsProviderTest {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setEnv(DefaultCredentialsProvider.NO_GCE_CHECK_ENV_VAR, "true");
 
+    try {
+      testProvider.getDefaultCredentials(transportFactory);
+      fail("No credential expected.");
+    } catch (IOException expected) {
+      // Expected
+    }
+    assertEquals(transportFactory.transport.getRequestCount(), 0);
+  }
+
+  @Test
+  public void getDefaultCredentials_linuxSetup_envNoGceCheck_noGce() throws IOException {
+    MockRequestCountingTransportFactory transportFactory =
+        new MockRequestCountingTransportFactory();
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setEnv(DefaultCredentialsProvider.NO_GCE_CHECK_ENV_VAR, "true");
+    testProvider.setProperty("os.name", "Linux");
+    String productFilePath = SMBIOS_PATH_LINUX;
+    File productFile = new File(productFilePath);
+    InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
+    testProvider.addFile(productFile.getAbsolutePath(), productStream);
     try {
       testProvider.getDefaultCredentials(transportFactory);
       fail("No credential expected.");
