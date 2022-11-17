@@ -195,6 +195,10 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    * @return credential with quota project from envoronment
    */
   public GoogleCredentials createWithQuotaProject(String quotaProject) {
+    if (quotaProject == null) {
+      return this;
+    }
+
     return this.toBuilder().setQuotaProjectId(quotaProject).build();
   }
 
