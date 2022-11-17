@@ -1,5 +1,5 @@
 /*
- * Copyright 2015, Google Inc. All rights reserved.
+ * Copyright 2022, Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -51,6 +51,7 @@ import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFact
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.security.PrivateKey;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
@@ -80,6 +81,9 @@ public class GdchCredentialsTest extends BaseSerializationTest {
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
   private static final URI TOKEN_SERVER_URI =
       URI.create("https://service-identity.domain/authenticate");
+  private static final String CA_CERT_NAME = "cert.pem";
+  private static final String CA_CERT_PATH =
+      GdchCredentialsTest.class.getClassLoader().getResource(CA_CERT_NAME).getPath();
   private static final URI API_AUDIENCE = URI.create("https://gdch-api-audience");
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
 
@@ -93,6 +97,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
     GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
 
@@ -109,6 +114,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
     GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
 
@@ -125,6 +131,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
     GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
 
@@ -136,11 +143,12 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     GenericJson json =
         writeGdchServiceAccountJson(
-            "2",
+            "100",
             PROJECT_ID,
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
 
     try {
@@ -163,6 +171,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
 
     try {
@@ -189,6 +198,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
 
     try {
@@ -215,6 +225,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             null,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
 
     try {
@@ -241,6 +252,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             null,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
 
     try {
@@ -262,7 +274,13 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     GenericJson json =
         writeGdchServiceAccountJson(
-            FORMAT_VERSION, PROJECT_ID, PRIVATE_KEY_ID, PRIVATE_KEY_PKCS8, null, TOKEN_SERVER_URI);
+            FORMAT_VERSION,
+            PROJECT_ID,
+            PRIVATE_KEY_ID,
+            PRIVATE_KEY_PKCS8,
+            null,
+            CA_CERT_PATH,
+            TOKEN_SERVER_URI);
 
     try {
       GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
@@ -279,6 +297,23 @@ public class GdchCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void fromJSON_nullCaCertPath() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    GenericJson json =
+        writeGdchServiceAccountJson(
+            FORMAT_VERSION,
+            PROJECT_ID,
+            PRIVATE_KEY_ID,
+            PRIVATE_KEY_PKCS8,
+            SERVICE_IDENTITY_NAME,
+            null,
+            TOKEN_SERVER_URI);
+
+    GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
+    assertNull(credentials.getCaCertPath());
+  }
+
+  @Test
   public void fromJSON_nullTokenServerUri() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     GenericJson json =
@@ -288,6 +323,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             null);
 
     try {
@@ -305,7 +341,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromJSON_hasAccessToken() throws IOException {
+  public void fromJSON_defaultTransportFactory() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     GenericJson json =
         writeGdchServiceAccountJson(
@@ -314,8 +350,46 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            null,
             TOKEN_SERVER_URI);
     GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
+    assertEquals(
+        MockTokenServerTransportFactory.class, credentials.getTransportFactory().getClass());
+  }
+
+  @Test
+  public void fromJSON_transportFactoryForGdch() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    GenericJson json =
+        writeGdchServiceAccountJson(
+            FORMAT_VERSION,
+            PROJECT_ID,
+            PRIVATE_KEY_ID,
+            PRIVATE_KEY_PKCS8,
+            SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
+            TOKEN_SERVER_URI);
+    GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
+    assertEquals(
+        GdchCredentials.TransportFactoryForGdch.class,
+        credentials.getTransportFactory().getClass());
+  }
+
+  @Test
+  public void fromJSON_hasAccessToken() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    GdchCredentials credentials =
+        GdchCredentials.newBuilder()
+            .setProjectId(PROJECT_ID)
+            .setPrivateKeyId(PRIVATE_KEY_ID)
+            .setPrivateKey(privateKey)
+            .setServiceIdentityName(SERVICE_IDENTITY_NAME)
+            .setCaCertPath(CA_CERT_PATH)
+            .setHttpTransportFactory(transportFactory)
+            .setTokenServerUri(TOKEN_SERVER_URI)
+            .build();
+
     GdchCredentials gdchWithAudience = credentials.createWithGdchAudience(API_AUDIENCE);
     transportFactory.transport.addGdchServiceAccount(
         GdchCredentials.getIssSubValue(PROJECT_ID, SERVICE_IDENTITY_NAME), ACCESS_TOKEN);
@@ -334,6 +408,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
     GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
 
@@ -360,6 +435,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
     GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
 
@@ -381,6 +457,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
     GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
@@ -402,30 +479,32 @@ public class GdchCredentialsTest extends BaseSerializationTest {
   public void refreshAccessToken() throws IOException {
     final String tokenString = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    MockTokenServerTransport transport = transportFactory.transport;
-    GenericJson json =
-        writeGdchServiceAccountJson(
-            FORMAT_VERSION,
-            PROJECT_ID,
-            PRIVATE_KEY_ID,
-            PRIVATE_KEY_PKCS8,
-            SERVICE_IDENTITY_NAME,
-            TOKEN_SERVER_URI);
-    GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    GdchCredentials credentials =
+        GdchCredentials.newBuilder()
+            .setProjectId(PROJECT_ID)
+            .setPrivateKeyId(PRIVATE_KEY_ID)
+            .setPrivateKey(privateKey)
+            .setServiceIdentityName(SERVICE_IDENTITY_NAME)
+            .setCaCertPath(CA_CERT_PATH)
+            .setHttpTransportFactory(transportFactory)
+            .setTokenServerUri(TOKEN_SERVER_URI)
+            .build();
+
     GdchCredentials gdchWithAudience = credentials.createWithGdchAudience(API_AUDIENCE);
 
     gdchWithAudience.clock = new FixedClock(0L);
 
-    transport.addGdchServiceAccount(
+    transportFactory.transport.addGdchServiceAccount(
         GdchCredentials.getIssSubValue(PROJECT_ID, SERVICE_IDENTITY_NAME), tokenString);
-    transport.setTokenServerUri(TOKEN_SERVER_URI);
+    transportFactory.transport.setTokenServerUri(TOKEN_SERVER_URI);
     AccessToken accessToken = gdchWithAudience.refreshAccessToken();
     assertNotNull(accessToken);
     assertEquals(tokenString, accessToken.getTokenValue());
     assertEquals(3600 * 1000L, accessToken.getExpirationTimeMillis().longValue());
 
     // Test for large expires_in values (should not overflow).
-    transport.setExpiresInSeconds(3600 * 1000);
+    transportFactory.transport.setExpiresInSeconds(3600 * 1000);
     accessToken = gdchWithAudience.refreshAccessToken();
     assertNotNull(accessToken);
     assertEquals(tokenString, accessToken.getTokenValue());
@@ -436,7 +515,6 @@ public class GdchCredentialsTest extends BaseSerializationTest {
   public void refreshAccessToken_nullApiAudience() throws IOException {
     final String tokenString = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    MockTokenServerTransport transport = transportFactory.transport;
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -444,14 +522,15 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
     GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
 
     credentials.clock = new FixedClock(0L);
 
-    transport.addGdchServiceAccount(
+    transportFactory.transport.addGdchServiceAccount(
         GdchCredentials.getIssSubValue(PROJECT_ID, SERVICE_IDENTITY_NAME), tokenString);
-    transport.setTokenServerUri(TOKEN_SERVER_URI);
+    transportFactory.transport.setTokenServerUri(TOKEN_SERVER_URI);
     try {
       AccessToken accessToken = credentials.refreshAccessToken();
       fail("Should not be able to refresh access token without exception.");
@@ -474,6 +553,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
     GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
     Object expectedIssSubValue =
@@ -492,6 +572,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
     OAuth2Credentials credentials = GdchCredentials.fromJson(json, transportFactory);
     GenericJson otherJson =
@@ -501,6 +582,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
     OAuth2Credentials otherCredentials = GdchCredentials.fromJson(otherJson, transportFactory);
     assertTrue(credentials.equals(otherCredentials));
@@ -522,6 +604,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
     OAuth2Credentials credentials = GdchCredentials.fromJson(json, transportFactory);
     GenericJson otherJson =
@@ -531,6 +614,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
     OAuth2Credentials otherCredentials = GdchCredentials.fromJson(otherJson, transportFactory);
     assertFalse(credentials.equals(otherCredentials));
@@ -552,6 +636,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
     OAuth2Credentials credentials = GdchCredentials.fromJson(json, transportFactory);
     GenericJson otherJson =
@@ -561,6 +646,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             "otherId",
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
     OAuth2Credentials otherCredentials = GdchCredentials.fromJson(otherJson, transportFactory);
     assertFalse(credentials.equals(otherCredentials));
@@ -582,6 +668,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
     OAuth2Credentials credentials = GdchCredentials.fromJson(json, transportFactory);
     GenericJson otherJson =
@@ -591,6 +678,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             "otherServiceIdentityName",
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
     OAuth2Credentials otherCredentials = GdchCredentials.fromJson(otherJson, transportFactory);
     assertFalse(credentials.equals(otherCredentials));
@@ -612,6 +700,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
     OAuth2Credentials credentials = GdchCredentials.fromJson(json, transportFactory);
     GenericJson otherJson =
@@ -621,6 +710,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             URI.create("https://foo1.com/bar"));
     OAuth2Credentials otherCredentials = GdchCredentials.fromJson(otherJson, transportFactory);
     assertFalse(credentials.equals(otherCredentials));
@@ -643,6 +733,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            null,
             TOKEN_SERVER_URI);
     OAuth2Credentials credentials = GdchCredentials.fromJson(json, serverTransportFactory);
     GenericJson otherJson =
@@ -652,6 +743,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            null,
             TOKEN_SERVER_URI);
     OAuth2Credentials otherCredentials = GdchCredentials.fromJson(otherJson, httpTransportFactory);
     assertFalse(credentials.equals(otherCredentials));
@@ -675,6 +767,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
     OAuth2Credentials credentials = GdchCredentials.fromJson(json, transportFactory);
     GenericJson otherJson =
@@ -684,6 +777,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
     OAuth2Credentials otherCredentials = GdchCredentials.fromJson(otherJson, transportFactory);
 
@@ -704,18 +798,20 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
     OAuth2Credentials credentials = GdchCredentials.fromJson(json, transportFactory);
     credentials = ((GdchCredentials) credentials).createWithGdchAudience(API_AUDIENCE);
     String expectedToString =
         String.format(
             "GdchCredentials{projectId=%s, privateKeyId=%s, serviceIdentityName=%s, "
-                + "tokenServerUri=%s, transportFactoryClassName=%s, apiAudience=%s, lifetime=3600}",
+                + "tokenServerUri=%s, transportFactoryClassName=%s, caCertPath=%s, apiAudience=%s, lifetime=3600}",
             PROJECT_ID,
             PRIVATE_KEY_ID,
             SERVICE_IDENTITY_NAME,
             TOKEN_SERVER_URI,
-            MockTokenServerTransportFactory.class.getName(),
+            GdchCredentials.TransportFactoryForGdch.class.getName(),
+            CA_CERT_PATH,
             API_AUDIENCE);
     assertEquals(expectedToString, credentials.toString());
   }
@@ -730,6 +826,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
     OAuth2Credentials credentials = GdchCredentials.fromJson(json, transportFactory);
     GenericJson otherJson =
@@ -739,6 +836,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
             TOKEN_SERVER_URI);
     OAuth2Credentials otherCredentials = GdchCredentials.fromJson(otherJson, transportFactory);
     assertEquals(credentials.hashCode(), otherCredentials.hashCode());
@@ -751,15 +849,18 @@ public class GdchCredentialsTest extends BaseSerializationTest {
   @Test
   public void serialize() throws IOException, ClassNotFoundException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    GenericJson json =
-        writeGdchServiceAccountJson(
-            FORMAT_VERSION,
-            PROJECT_ID,
-            PRIVATE_KEY_ID,
-            PRIVATE_KEY_PKCS8,
-            SERVICE_IDENTITY_NAME,
-            TOKEN_SERVER_URI);
-    GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    GdchCredentials credentials =
+        GdchCredentials.newBuilder()
+            .setProjectId(PROJECT_ID)
+            .setPrivateKeyId(PRIVATE_KEY_ID)
+            .setPrivateKey(privateKey)
+            .setServiceIdentityName(SERVICE_IDENTITY_NAME)
+            .setCaCertPath(CA_CERT_PATH)
+            .setHttpTransportFactory(transportFactory)
+            .setTokenServerUri(TOKEN_SERVER_URI)
+            .build();
+
     credentials = credentials.createWithGdchAudience(API_AUDIENCE);
     GdchCredentials deserializedCredentials = serializeAndDeserialize(credentials);
     assertEquals(credentials, deserializedCredentials);
@@ -777,6 +878,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
       String privateKeyId,
       String privateKeyPkcs8,
       String serviceIdentityName,
+      String caCertPath,
       URI tokenServerUri) {
     GenericJson json = new GenericJson();
 
@@ -795,6 +897,9 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     if (serviceIdentityName != null) {
       json.put("name", serviceIdentityName);
     }
+    if (caCertPath != null) {
+      json.put("ca_cert_path", caCertPath);
+    }
     if (tokenServerUri != null) {
       json.put("token_uri", tokenServerUri.toString());
     }
@@ -808,6 +913,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
       String privateKeyId,
       String privateKeyPkcs8,
       String serviceIdentityName,
+      String caCertPath,
       URI tokenServerUri)
       throws IOException {
     GenericJson json =
@@ -817,6 +923,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             privateKeyId,
             privateKeyPkcs8,
             serviceIdentityName,
+            caCertPath,
             tokenServerUri);
     return TestUtils.jsonToInputStream(json);
   }

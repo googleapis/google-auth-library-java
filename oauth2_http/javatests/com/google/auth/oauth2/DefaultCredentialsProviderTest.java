@@ -94,7 +94,8 @@ public class DefaultCredentialsProviderTest {
       "gdch-service-account-service-identity-name";
   private static final URI GDCH_SA_TOKEN_SERVER_URI =
       URI.create("https://service-identity.domain/authenticate");
-  private static final URI GDCH_API_AUDIENCE = URI.create("https://gdch-api-audience");
+  private static final String GDCH_SA_CA_CERT_PATH = "/path/to/gdch/ca/cert/file/";
+  private static final URI GDCH_SA_API_AUDIENCE = URI.create("https://gdch-api-audience");
   private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
   private static final String QUOTA_PROJECT = "sample-quota-project-id";
@@ -345,6 +346,7 @@ public class DefaultCredentialsProviderTest {
             GDCH_SA_PRIVATE_KEY_ID,
             GDCH_SA_PRIVATE_KEY_PKC8,
             GDCH_SA_SERVICE_IDENTITY_NAME,
+            null,
             GDCH_SA_TOKEN_SERVER_URI);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     String gdchServiceAccountPath = tempFilePath("gdch_service_account.json");
@@ -364,7 +366,7 @@ public class DefaultCredentialsProviderTest {
     assertNull(((GdchCredentials) defaultCredentials).getApiAudience());
 
     defaultCredentials =
-        ((GdchCredentials) defaultCredentials).createWithGdchAudience(GDCH_API_AUDIENCE);
+        ((GdchCredentials) defaultCredentials).createWithGdchAudience(GDCH_SA_API_AUDIENCE);
     transportFactory.transport.addGdchServiceAccount(
         GdchCredentials.getIssSubValue(GDCH_SA_PROJECT_ID, GDCH_SA_SERVICE_IDENTITY_NAME),
         ACCESS_TOKEN);

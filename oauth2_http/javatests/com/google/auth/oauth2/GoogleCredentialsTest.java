@@ -48,6 +48,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.security.PrivateKey;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -77,6 +78,7 @@ public class GoogleCredentialsTest {
       "gdch-service-account-service-identity-name";
   private static final URI GDCH_SA_TOKEN_SERVER_URI =
       URI.create("https://service-identity.domain/authenticate");
+  private static final String GDCH_SA_CA_CERT_PATH = "/path/to/gdch/ca/cert/file/";
   private static final URI GDCH_API_AUDIENCE = URI.create("https://gdch-api-audience");
   private static final String USER_CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
   private static final String USER_CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
@@ -204,17 +206,18 @@ public class GoogleCredentialsTest {
   @Test
   public void fromStream_gdchServiceAccount_providesToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    InputStream gdchServiceAccountStream =
-        GdchCredentialsTest.writeGdchServiceAccountStream(
-            GDCH_SA_FORMAT_VERSION,
-            GDCH_SA_PROJECT_ID,
-            GDCH_SA_PRIVATE_KEY_ID,
-            GDCH_SA_PRIVATE_KEY_PKC8,
-            GDCH_SA_SERVICE_IDENTITY_NAME,
-            GDCH_SA_TOKEN_SERVER_URI);
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(GDCH_SA_PRIVATE_KEY_PKC8);
+    GdchCredentials credentials =
+        GdchCredentials.newBuilder()
+            .setProjectId(GDCH_SA_PROJECT_ID)
+            .setPrivateKeyId(GDCH_SA_PRIVATE_KEY_ID)
+            .setPrivateKey(privateKey)
+            .setServiceIdentityName(GDCH_SA_SERVICE_IDENTITY_NAME)
+            .setCaCertPath(GDCH_SA_CA_CERT_PATH)
+            .setHttpTransportFactory(transportFactory)
+            .setTokenServerUri(GDCH_SA_TOKEN_SERVER_URI)
+            .build();
 
-    GoogleCredentials credentials =
-        GoogleCredentials.fromStream(gdchServiceAccountStream, transportFactory);
     credentials = ((GdchCredentials) credentials).createWithGdchAudience(GDCH_API_AUDIENCE);
     transportFactory.transport.addGdchServiceAccount(
         GdchCredentials.getIssSubValue(GDCH_SA_PROJECT_ID, GDCH_SA_SERVICE_IDENTITY_NAME),
@@ -235,6 +238,7 @@ public class GoogleCredentialsTest {
             GDCH_SA_PRIVATE_KEY_ID,
             GDCH_SA_PRIVATE_KEY_PKC8,
             GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_CA_CERT_PATH,
             GDCH_SA_TOKEN_SERVER_URI);
 
     testFromStreamException(
@@ -251,6 +255,7 @@ public class GoogleCredentialsTest {
             GDCH_SA_PRIVATE_KEY_ID,
             GDCH_SA_PRIVATE_KEY_PKC8,
             GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_CA_CERT_PATH,
             GDCH_SA_TOKEN_SERVER_URI);
 
     testFromStreamException(gdchServiceAccountStream, "format_version");
@@ -265,6 +270,7 @@ public class GoogleCredentialsTest {
             GDCH_SA_PRIVATE_KEY_ID,
             GDCH_SA_PRIVATE_KEY_PKC8,
             GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_CA_CERT_PATH,
             GDCH_SA_TOKEN_SERVER_URI);
 
     testFromStreamException(gdchServiceAccountStream, "project");
@@ -279,6 +285,7 @@ public class GoogleCredentialsTest {
             null,
             GDCH_SA_PRIVATE_KEY_PKC8,
             GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_CA_CERT_PATH,
             GDCH_SA_TOKEN_SERVER_URI);
 
     testFromStreamException(gdchServiceAccountStream, "private_key_id");
@@ -293,6 +300,7 @@ public class GoogleCredentialsTest {
             GDCH_SA_PRIVATE_KEY_ID,
             null,
             GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_CA_CERT_PATH,
             GDCH_SA_TOKEN_SERVER_URI);
 
     testFromStreamException(gdchServiceAccountStream, "private_key");
@@ -307,6 +315,7 @@ public class GoogleCredentialsTest {
             GDCH_SA_PRIVATE_KEY_ID,
             GDCH_SA_PRIVATE_KEY_PKC8,
             null,
+            GDCH_SA_CA_CERT_PATH,
             GDCH_SA_TOKEN_SERVER_URI);
 
     testFromStreamException(gdchServiceAccountStream, "name");
@@ -321,6 +330,7 @@ public class GoogleCredentialsTest {
             GDCH_SA_PRIVATE_KEY_ID,
             GDCH_SA_PRIVATE_KEY_PKC8,
             GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_CA_CERT_PATH,
             null);
 
     testFromStreamException(gdchServiceAccountStream, "token_uri");

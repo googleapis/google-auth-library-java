@@ -1,5 +1,5 @@
 /*
- * Copyright 2015, Google Inc. All rights reserved.
+ * Copyright 2022, Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -38,21 +38,29 @@ import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpResponseException;
+import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.UrlEncodedContent;
+import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.client.util.GenericData;
+import com.google.api.client.util.SecurityUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
+import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.util.Date;
 import java.util.Map;
@@ -61,6 +69,7 @@ import java.util.Objects;
 public class GdchCredentials extends GoogleCredentials {
   static final String SUPPORTED_FORMAT_VERSION = "1";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
+  private static final String GDCH_ISS_SUB_VALUE_PREFIX = "system:serviceaccount:%s:%s";
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
 
   private final PrivateKey privateKey;
@@ -71,6 +80,7 @@ public class GdchCredentials extends GoogleCredentials {
   private final URI apiAudience;
   private final int lifetime;
   private final String transportFactoryClassName;
+  private final String caCertPath;
   private transient HttpTransportFactory transportFactory;
 
   /**
@@ -89,8 +99,35 @@ public class GdchCredentials extends GoogleCredentials {
             builder.transportFactory,
             getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
+    this.caCertPath = builder.caCertPath;
     this.apiAudience = builder.apiAudience;
     this.lifetime = builder.lifetime;
+  }
+
+  static class TransportFactoryForGdch implements HttpTransportFactory {
+
+    HttpTransport transport;
+
+    public TransportFactoryForGdch(String caCertPath) throws IOException {
+      try {
+        InputStream certificateStream = readStream(new File(caCertPath));
+        this.transport =
+            new NetHttpTransport.Builder().trustCertificatesFromStream(certificateStream).build();
+      } catch (IOException e) {
+        throw new IOException(
+            String.format(
+                "Error reading certificate file from CA cert path, value '%s': %s",
+                caCertPath, e.getMessage()),
+            e);
+      } catch (GeneralSecurityException e) {
+        throw new IOException("Error initiating transport with certificate stream.", e);
+      }
+    }
+
+    @Override
+    public HttpTransport create() {
+      return transport;
+    }
   }
 
   /**
@@ -111,6 +148,7 @@ public class GdchCredentials extends GoogleCredentials {
     String serviceIdentityName = validateField((String) json.get("name"), "name");
     String tokenServerUriStringFromCreds =
         validateField((String) json.get("token_uri"), "token_uri");
+    String caCertPath = (String) json.get("ca_cert_path");
 
     if (!SUPPORTED_FORMAT_VERSION.equals(formatVersion)) {
       throw new IOException(
@@ -124,12 +162,18 @@ public class GdchCredentials extends GoogleCredentials {
       throw new IOException("Token server URI specified in 'token_uri' could not be parsed.");
     }
 
+    // Override the transportFactory if CA cert path is provided.
+    if (caCertPath != null && caCertPath.length() > 0) {
+      transportFactory = new TransportFactoryForGdch(caCertPath);
+    }
+
     GdchCredentials.Builder builder =
         GdchCredentials.newBuilder()
             .setProjectId(projectId)
             .setPrivateKeyId(privateKeyId)
             .setTokenServerUri(tokenServerUriFromCreds)
             .setServiceIdentityName(serviceIdentityName)
+            .setCaCertPath(caCertPath)
             .setHttpTransportFactory(transportFactory);
 
     return fromPkcs8(privateKeyPkcs8, builder);
@@ -247,7 +291,7 @@ public class GdchCredentials extends GoogleCredentials {
   /** Get the issuer and subject value in the format GDCH token server required. */
   @VisibleForTesting
   static String getIssSubValue(String projectId, String serviceIdentityName) {
-    return String.format("system:serviceaccount:%s:%s", projectId, serviceIdentityName);
+    return String.format(GDCH_ISS_SUB_VALUE_PREFIX, projectId, serviceIdentityName);
   }
 
   public final String getProjectId() {
@@ -272,6 +316,14 @@ public class GdchCredentials extends GoogleCredentials {
 
   public final URI getApiAudience() {
     return apiAudience;
+  }
+
+  public final HttpTransportFactory getTransportFactory() {
+    return transportFactory;
+  }
+
+  public final String getCaCertPath() {
+    return caCertPath;
   }
 
   public static Builder newBuilder() {
@@ -299,6 +351,7 @@ public class GdchCredentials extends GoogleCredentials {
         tokenServerUri,
         transportFactoryClassName,
         apiAudience,
+        caCertPath,
         lifetime);
   }
 
@@ -310,6 +363,7 @@ public class GdchCredentials extends GoogleCredentials {
         .add("serviceIdentityName", serviceIdentityName)
         .add("tokenServerUri", tokenServerUri)
         .add("transportFactoryClassName", transportFactoryClassName)
+        .add("caCertPath", caCertPath)
         .add("apiAudience", apiAudience)
         .add("lifetime", lifetime)
         .toString();
@@ -328,7 +382,12 @@ public class GdchCredentials extends GoogleCredentials {
         && Objects.equals(this.tokenServerUri, other.tokenServerUri)
         && Objects.equals(this.transportFactoryClassName, other.transportFactoryClassName)
         && Objects.equals(this.apiAudience, other.apiAudience)
+        && Objects.equals(this.caCertPath, other.caCertPath)
         && Objects.equals(this.lifetime, other.lifetime);
+  }
+
+  static InputStream readStream(File file) throws FileNotFoundException {
+    return new FileInputStream(file);
   }
 
   public static class Builder extends GoogleCredentials.Builder {
@@ -339,6 +398,7 @@ public class GdchCredentials extends GoogleCredentials {
     private URI tokenServerUri;
     private URI apiAudience;
     private HttpTransportFactory transportFactory;
+    private String caCertPath;
     private int lifetime = DEFAULT_LIFETIME_IN_SECONDS;
 
     protected Builder() {}
@@ -350,6 +410,7 @@ public class GdchCredentials extends GoogleCredentials {
       this.serviceIdentityName = credentials.serviceIdentityName;
       this.tokenServerUri = credentials.tokenServerUri;
       this.transportFactory = credentials.transportFactory;
+      this.caCertPath = credentials.caCertPath;
       this.lifetime = credentials.lifetime;
     }
 
@@ -380,6 +441,11 @@ public class GdchCredentials extends GoogleCredentials {
 
     public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
       this.transportFactory = transportFactory;
+      return this;
+    }
+
+    public Builder setCaCertPath(String caCertPath) {
+      this.caCertPath = caCertPath;
       return this;
     }
 
@@ -417,6 +483,10 @@ public class GdchCredentials extends GoogleCredentials {
       return transportFactory;
     }
 
+    public String getCaCertPath() {
+      return caCertPath;
+    }
+
     public int getLifetime() {
       return lifetime;
     }
@@ -430,7 +500,7 @@ public class GdchCredentials extends GoogleCredentials {
     if (field == null || field.isEmpty()) {
       throw new IOException(
           String.format(
-              "Error reading GDCH service account credential from JSON, " + "%s is misconfigured.",
+              "Error reading GDCH service account credential from JSON, %s is misconfigured.",
               fieldName));
     }
     return field;
