@@ -54,12 +54,9 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
 
   private static final long serialVersionUID = -1522852442442473691L;
 
-  static final String QUOTA_PROJECT_ENV_VAR = "GOOGLE_CLOUD_QUOTA_PROJECT";
   static final String QUOTA_PROJECT_ID_HEADER_KEY = "x-goog-user-project";
   static final String USER_FILE_TYPE = "authorized_user";
   static final String SERVICE_ACCOUNT_FILE_TYPE = "service_account";
-
-  private final EnvironmentProvider environmentProvider;
 
   protected final String quotaProjectId;
 
@@ -197,23 +194,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    * @param environmentProvider a provider used to get environment values
    * @return credential with quota project from envoronment
    */
-  public GoogleCredentials createWithQuotaProject(EnvironmentProvider environmentProvider) {
-    String quotaProjectFromEnv = environmentProvider.getEnv(QUOTA_PROJECT_ENV_VAR);
-
-    if (quotaProjectFromEnv != null && !quotaProjectFromEnv.isEmpty()) {
-      return this.toBuilder().setQuotaProjectId(quotaProjectFromEnv).build();
-    }
-
-    return this;
-  }
-
-  /**
-   * Creates a credential with quota project from environment if present
-   *
-   * @return credential with quota project from envoronment
-   */
-  public GoogleCredentials createWithQuotaProject() {
-    return this.createWithQuotaProject(SystemEnvironmentProvider.getInstance());
+  public GoogleCredentials createWithQuotaProject(String quotaProject) {
+    return this.toBuilder().setQuotaProjectId(quotaProject).build();
   }
 
   /**
@@ -252,7 +234,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    * @param accessToken initial or temporary access token
    */
   public GoogleCredentials(AccessToken accessToken) {
-    this(accessToken, null, null);
+    this(accessToken, null);
   }
 
   /**
@@ -260,11 +242,9 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    *
    * @param accessToken initial or temporary access token
    */
-  public GoogleCredentials(AccessToken accessToken, @Nullable String quotaProjectId, @Nullable EnvironmentProvider environmentProvider) {
+  public GoogleCredentials(AccessToken accessToken, @Nullable String quotaProjectId) {
     super(accessToken);
     this.quotaProjectId = quotaProjectId;
-    this.environmentProvider =
-        environmentProvider == null ? SystemEnvironmentProvider.getInstance() : environmentProvider;
   }
 
   /**
@@ -276,12 +256,9 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       AccessToken accessToken,
       Duration refreshMargin,
       Duration expirationMargin,
-      String quotaProjectId,
-      EnvironmentProvider environmentProvider) {
+      String quotaProjectId) {
     super(accessToken, refreshMargin, expirationMargin);
     this.quotaProjectId = quotaProjectId;
-    this.environmentProvider =
-        environmentProvider == null ? SystemEnvironmentProvider.getInstance() : environmentProvider;
   }
 
   public static Builder newBuilder() {
@@ -364,15 +341,13 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   public static class Builder extends OAuth2Credentials.Builder {
-    protected String quotaProjectId = null;
-    protected EnvironmentProvider environmentProvider;
+    @Nullable protected String quotaProjectId;
 
     protected Builder() {}
 
     protected Builder(GoogleCredentials credentials) {
       setAccessToken(credentials.getAccessToken());
       this.quotaProjectId = credentials.quotaProjectId;
-      this.environmentProvider = credentials.environmentProvider;
     }
 
     public GoogleCredentials build() {
@@ -386,11 +361,6 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
 
     public String getQuotaProjectId() {
       return this.quotaProjectId;
-    }
-    
-    Builder setEnvironmentProvider(EnvironmentProvider environmentProvider) {
-      this.environmentProvider = environmentProvider;
-      return this;
     }
 
     @Override

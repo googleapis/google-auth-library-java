@@ -405,7 +405,7 @@ public class DefaultCredentialsProviderTest {
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
 
     // Validate that quota from env overrides the value from json
-    testProvider.setEnv(GoogleCredentials.QUOTA_PROJECT_ENV_VAR, QUOTA_PROJECT_FROM_ENVIRONMENT);
+    testProvider.setEnv(DefaultCredentialsProvider.QUOTA_PROJECT_ENV_VAR, QUOTA_PROJECT_FROM_ENVIRONMENT);
     GoogleCredentials credentials = testProvider.getDefaultCredentials(transportFactory);
     assertEquals(QUOTA_PROJECT_FROM_ENVIRONMENT, credentials.getQuotaProjectId());
 
@@ -732,7 +732,7 @@ public class DefaultCredentialsProviderTest {
     }
 
     @Override
-    public String getEnv(String name) {
+    String getEnv(String name) {
       return variables.get(name);
     }
 
