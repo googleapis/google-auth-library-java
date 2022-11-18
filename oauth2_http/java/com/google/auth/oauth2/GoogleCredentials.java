@@ -46,7 +46,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.annotation.Nullable;
 
 /** Base type for credentials for authorizing calls to Google APIs using OAuth2. */
@@ -241,12 +240,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     this(accessToken, null);
   }
 
-  /**
-   * Constructor with explicit access token and quota project.
-   *
-   * @param accessToken initial or temporary access token
-   */
-  public GoogleCredentials(AccessToken accessToken, @Nullable String quotaProjectId) {
+  public GoogleCredentials(AccessToken accessToken, String quotaProjectId) {
     super(accessToken);
     this.quotaProjectId = quotaProjectId;
   }
@@ -257,12 +251,9 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    * @param accessToken initial or temporary access token
    */
   protected GoogleCredentials(
-      AccessToken accessToken,
-      Duration refreshMargin,
-      Duration expirationMargin,
-      String quotaProjectId) {
+      AccessToken accessToken, Duration refreshMargin, Duration expirationMargin) {
     super(accessToken, refreshMargin, expirationMargin);
-    this.quotaProjectId = quotaProjectId;
+    this.quotaProjectId = null;
   }
 
   public static Builder newBuilder() {

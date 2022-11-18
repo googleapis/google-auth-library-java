@@ -220,8 +220,7 @@ class DefaultCredentialsProvider {
     if (credentials != null) {
       String quotaFromEnv = getEnv(QUOTA_PROJECT_ENV_VAR);
 
-      if (quotaFromEnv != null && quotaFromEnv.trim().length() > 0)
-      {
+      if (quotaFromEnv != null && quotaFromEnv.trim().length() > 0) {
         credentials = credentials.createWithQuotaProject(quotaFromEnv);
       }
     }

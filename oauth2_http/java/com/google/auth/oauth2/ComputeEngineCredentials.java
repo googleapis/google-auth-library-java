@@ -131,11 +131,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
       HttpTransportFactory transportFactory,
       Collection<String> scopes,
       Collection<String> defaultScopes) {
-    super(
-        /* accessToken= */ null,
-        COMPUTE_REFRESH_MARGIN,
-        COMPUTE_EXPIRATION_MARGIN,
-        /* quotaProjectId= */ null);
+    super(/* accessToken= */ null, COMPUTE_REFRESH_MARGIN, COMPUTE_EXPIRATION_MARGIN);
 
     this.transportFactory =
         firstNonNull(
