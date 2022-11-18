@@ -63,6 +63,13 @@ import javax.annotation.Nullable;
  */
 public class AwsCredentials extends ExternalAccountCredentials {
 
+  // Supported environment variables.
+  static final String AWS_REGION = "AWS_REGION";
+  static final String AWS_DEFAULT_REGION = "AWS_DEFAULT_REGION";
+  static final String AWS_ACCESS_KEY_ID = "AWS_ACCESS_KEY_ID";
+  static final String AWS_SECRET_ACCESS_KEY = "AWS_SECRET_ACCESS_KEY";
+  static final String AWS_SESSION_TOKEN = "AWS_SESSION_TOKEN";
+
   static final String AWS_IMDSV2_SESSION_TOKEN_HEADER = "x-aws-ec2-metadata-token";
   static final String AWS_IMDSV2_SESSION_TOKEN_TTL_HEADER = "x-aws-ec2-metadata-token-ttl-seconds";
   static final String AWS_IMDSV2_SESSION_TOKEN_TTL = "300";
@@ -273,10 +280,10 @@ public class AwsCredentials extends ExternalAccountCredentials {
   private boolean canRetrieveRegionFromEnvironment() {
     // The AWS region can be provided through AWS_REGION or AWS_DEFAULT_REGION. Only one is
     // required.
-    List<String> keys = ImmutableList.of("AWS_REGION", "AWS_DEFAULT_REGION");
+    List<String> keys = ImmutableList.of(AWS_REGION, AWS_DEFAULT_REGION);
     for (String env : keys) {
       String value = getEnvironmentProvider().getEnv(env);
-      if (value != null && !value.isEmpty()) {
+      if (value != null && value.trim().length() > 0) {
         // Region available.
         return true;
       }
@@ -286,10 +293,10 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
   private boolean canRetrieveSecurityCredentialsFromEnvironment() {
     // Check if both AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are available.
-    List<String> keys = ImmutableList.of("AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY");
+    List<String> keys = ImmutableList.of(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY);
     for (String env : keys) {
       String value = getEnvironmentProvider().getEnv(env);
-      if (value == null || value.isEmpty()) {
+      if (value == null || value.trim().length() == 0) {
         // Return false if one of them are missing.
         return false;
       }
@@ -342,11 +349,11 @@ public class AwsCredentials extends ExternalAccountCredentials {
     String region;
     if (canRetrieveRegionFromEnvironment()) {
       // For AWS Lambda, the region is retrieved through the AWS_REGION environment variable.
-      region = getEnvironmentProvider().getEnv("AWS_REGION");
-      if (region != null) {
+      region = getEnvironmentProvider().getEnv(AWS_REGION);
+      if (region != null && region.trim().length() > 0) {
         return region;
       }
-      return getEnvironmentProvider().getEnv("AWS_DEFAULT_REGION");
+      return getEnvironmentProvider().getEnv(AWS_DEFAULT_REGION);
     }
 
     if (awsCredentialSource.regionUrl == null || awsCredentialSource.regionUrl.isEmpty()) {
@@ -366,9 +373,9 @@ public class AwsCredentials extends ExternalAccountCredentials {
       throws IOException {
     // Check environment variables for credentials first.
     if (canRetrieveSecurityCredentialsFromEnvironment()) {
-      String accessKeyId = getEnvironmentProvider().getEnv("AWS_ACCESS_KEY_ID");
-      String secretAccessKey = getEnvironmentProvider().getEnv("AWS_SECRET_ACCESS_KEY");
-      String token = getEnvironmentProvider().getEnv("AWS_SESSION_TOKEN");
+      String accessKeyId = getEnvironmentProvider().getEnv(AWS_ACCESS_KEY_ID);
+      String secretAccessKey = getEnvironmentProvider().getEnv(AWS_SECRET_ACCESS_KEY);
+      String token = getEnvironmentProvider().getEnv(AWS_SESSION_TOKEN);
       return new AwsSecurityCredentials(accessKeyId, secretAccessKey, token);
     }
 
