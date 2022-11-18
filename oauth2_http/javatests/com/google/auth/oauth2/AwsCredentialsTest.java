@@ -965,6 +965,7 @@ public class AwsCredentialsTest {
       TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
       // AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are always required.
       // Not set here.
+      environmentProvider.setEnv(regionKey, "awsRegion");
       AwsCredentials awsCredential =
           (AwsCredentials)
               AwsCredentials.newBuilder(AWS_CREDENTIAL)
