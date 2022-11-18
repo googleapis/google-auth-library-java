@@ -955,6 +955,41 @@ public class AwsCredentialsTest {
   }
 
   @Test
+  public void shouldUseMetadataServer_missingAwsSecurityCreds() {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    // Add required environment variables.
+    List<String> regionKeys = ImmutableList.of("AWS_REGION", "AWS_DEFAULT_REGION");
+    for (String regionKey : regionKeys) {
+      TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+      // AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are always required.
+      // Not set here.
+      AwsCredentials awsCredential =
+          (AwsCredentials)
+              AwsCredentials.newBuilder(AWS_CREDENTIAL)
+                  .setHttpTransportFactory(transportFactory)
+                  .setCredentialSource(buildAwsImdsv2CredentialSource(transportFactory))
+                  .setEnvironmentProvider(environmentProvider)
+                  .build();
+      assertTrue(awsCredential.shouldUseMetadataServer());
+    }
+  }
+
+  @Test
+  public void shouldUseMetadataServer_noEnvironmentVars() {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+    AwsCredentials awsCredential =
+        (AwsCredentials)
+            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+                .setHttpTransportFactory(transportFactory)
+                .setCredentialSource(buildAwsImdsv2CredentialSource(transportFactory))
+                .build();
+    assertTrue(awsCredential.shouldUseMetadataServer());
+  }
+
+  @Test
   public void builder() {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
