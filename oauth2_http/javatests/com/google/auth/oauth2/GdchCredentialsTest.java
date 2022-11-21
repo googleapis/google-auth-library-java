@@ -81,9 +81,9 @@ public class GdchCredentialsTest extends BaseSerializationTest {
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
   private static final URI TOKEN_SERVER_URI =
       URI.create("https://service-identity.domain/authenticate");
-  private static final String CA_CERT_NAME = "cert.pem";
+  private static final String CA_CERT_FILE_NAME = "cert.pem";
   private static final String CA_CERT_PATH =
-      GdchCredentialsTest.class.getClassLoader().getResource(CA_CERT_NAME).getPath();
+      GdchCredentialsTest.class.getClassLoader().getResource(CA_CERT_FILE_NAME).getPath();
   private static final URI API_AUDIENCE = URI.create("https://gdch-api-audience");
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
 
@@ -311,6 +311,27 @@ public class GdchCredentialsTest extends BaseSerializationTest {
 
     GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
     assertNull(credentials.getCaCertPath());
+  }
+
+  @Test
+  public void fromJSON_invalidCaCertPath() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    GenericJson json =
+        writeGdchServiceAccountJson(
+            FORMAT_VERSION,
+            PROJECT_ID,
+            PRIVATE_KEY_ID,
+            PRIVATE_KEY_PKCS8,
+            SERVICE_IDENTITY_NAME,
+            "/path/to/missing/file",
+            TOKEN_SERVER_URI);
+
+    try {
+      GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
+      fail("Should not be able to create GDCH credential without exception.");
+    } catch (IOException ex) {
+      assertTrue(ex.getMessage().contains("Error reading certificate file from CA cert path"));
+    }
   }
 
   @Test

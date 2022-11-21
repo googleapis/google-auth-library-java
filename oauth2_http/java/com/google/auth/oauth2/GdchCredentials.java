@@ -46,7 +46,6 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.client.util.GenericData;
-import com.google.api.client.util.SecurityUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
@@ -60,7 +59,6 @@ import java.io.ObjectInputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
-import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.util.Date;
 import java.util.Map;
@@ -148,6 +146,11 @@ public class GdchCredentials extends GoogleCredentials {
     String serviceIdentityName = validateField((String) json.get("name"), "name");
     String tokenServerUriStringFromCreds =
         validateField((String) json.get("token_uri"), "token_uri");
+
+    /**
+     * The CA cert path for token server side TLS, certificate verification. If the token server
+     * uses well known CA, then this parameter can be `None`.
+     */
     String caCertPath = (String) json.get("ca_cert_path");
 
     if (!SUPPORTED_FORMAT_VERSION.equals(formatVersion)) {
