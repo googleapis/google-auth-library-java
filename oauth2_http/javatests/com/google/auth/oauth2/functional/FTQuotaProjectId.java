@@ -44,7 +44,7 @@ public final class FTQuotaProjectId {
   @Test
   public void adcQuotaFromEnv() throws IOException {
     GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
-    assertEquals("quota_from_env", credentials.getQuotaProjectId());
+    assertEquals("gcloud-devel", credentials.getQuotaProjectId());
   }
 
   @Test
