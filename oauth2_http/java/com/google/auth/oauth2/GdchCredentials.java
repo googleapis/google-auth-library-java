@@ -103,10 +103,18 @@ public class GdchCredentials extends GoogleCredentials {
   }
 
   static class TransportFactoryForGdch implements HttpTransportFactory {
-
     HttpTransport transport;
 
     public TransportFactoryForGdch(String caCertPath) throws IOException {
+      setTransport(caCertPath);
+    }
+
+    @Override
+    public HttpTransport create() {
+      return transport;
+    }
+
+    private void setTransport(String caCertPath) throws IOException {
       try {
         InputStream certificateStream = readStream(new File(caCertPath));
         this.transport =
@@ -120,11 +128,6 @@ public class GdchCredentials extends GoogleCredentials {
       } catch (GeneralSecurityException e) {
         throw new IOException("Error initiating transport with certificate stream.", e);
       }
-    }
-
-    @Override
-    public HttpTransport create() {
-      return transport;
     }
   }
 
@@ -449,11 +452,6 @@ public class GdchCredentials extends GoogleCredentials {
 
     public Builder setCaCertPath(String caCertPath) {
       this.caCertPath = caCertPath;
-      return this;
-    }
-
-    public Builder setLifetime(int lifetime) {
-      this.lifetime = lifetime == 0 ? DEFAULT_LIFETIME_IN_SECONDS : lifetime;
       return this;
     }
 
