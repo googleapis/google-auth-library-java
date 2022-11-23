@@ -173,7 +173,7 @@ public class GoogleCredentials extends OAuth2Credentials {
       return ServiceAccountCredentials.fromJson(fileContents, transportFactory);
     }
     if (GDCH_SERVICE_ACCOUNT_FILE_TYPE.equals(fileType)) {
-      return GdchCredentials.fromJson(fileContents, transportFactory);
+      return GdchCredentials.fromJson(fileContents);
     }
     if (ExternalAccountCredentials.EXTERNAL_ACCOUNT_FILE_TYPE.equals(fileType)) {
       return ExternalAccountCredentials.fromJson(fileContents, transportFactory);

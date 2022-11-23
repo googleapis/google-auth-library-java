@@ -94,7 +94,9 @@ public class DefaultCredentialsProviderTest {
       "gdch-service-account-service-identity-name";
   private static final URI GDCH_SA_TOKEN_SERVER_URI =
       URI.create("https://service-identity.domain/authenticate");
-  private static final String GDCH_SA_CA_CERT_PATH = "/path/to/gdch/ca/cert/file/";
+  private static final String GDCH_SA_CA_CERT_FILE_NAME = "cert.pem";
+  private static final String GDCH_SA_CA_CERT_PATH =
+      GdchCredentialsTest.class.getClassLoader().getResource(GDCH_SA_CA_CERT_FILE_NAME).getPath();
   private static final URI GDCH_SA_API_AUDIENCE = URI.create("https://gdch-api-audience");
   private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
@@ -346,7 +348,7 @@ public class DefaultCredentialsProviderTest {
             GDCH_SA_PRIVATE_KEY_ID,
             GDCH_SA_PRIVATE_KEY_PKC8,
             GDCH_SA_SERVICE_IDENTITY_NAME,
-            null,
+            GDCH_SA_CA_CERT_PATH,
             GDCH_SA_TOKEN_SERVER_URI);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     String gdchServiceAccountPath = tempFilePath("gdch_service_account.json");

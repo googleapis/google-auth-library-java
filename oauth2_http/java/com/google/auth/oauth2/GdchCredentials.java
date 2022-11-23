@@ -135,13 +135,26 @@ public class GdchCredentials extends GoogleCredentials {
    * Create GDCH service account credentials defined by JSON.
    *
    * @param json a map from the JSON representing the credentials.
+   * @return the GDCH service account credentials defined by the JSON.
+   * @throws IOException if the credential cannot be created from the JSON.
+   */
+  static GdchCredentials fromJson(Map<String, Object> json) throws IOException {
+    String caCertPath = validateField((String) json.get("ca_cert_path"), "ca_cert_path");
+    return fromJson(json, new TransportFactoryForGdch(caCertPath));
+  }
+
+  /**
+   * Create GDCH service account credentials defined by JSON.
+   *
+   * @param json a map from the JSON representing the credentials.
    * @param transportFactory HTTP transport factory, creates the transport used to get access
    *     tokens.
    * @return the GDCH service account credentials defined by the JSON.
    * @throws IOException if the credential cannot be created from the JSON.
    */
-  static GdchCredentials fromJson(Map<String, Object> json, HttpTransportFactory transportFactory)
-      throws IOException {
+  @VisibleForTesting
+  protected static GdchCredentials fromJson(
+      Map<String, Object> json, HttpTransportFactory transportFactory) throws IOException {
     String formatVersion = validateField((String) json.get("format_version"), "format_version");
     String projectId = validateField((String) json.get("project"), "project");
     String privateKeyId = validateField((String) json.get("private_key_id"), "private_key_id");
@@ -149,12 +162,7 @@ public class GdchCredentials extends GoogleCredentials {
     String serviceIdentityName = validateField((String) json.get("name"), "name");
     String tokenServerUriStringFromCreds =
         validateField((String) json.get("token_uri"), "token_uri");
-
-    /**
-     * The CA cert path for token server side TLS, certificate verification. If the token server
-     * uses well known CA, then this parameter can be `None`.
-     */
-    String caCertPath = (String) json.get("ca_cert_path");
+    String caCertPath = validateField((String) json.get("ca_cert_path"), "ca_cert_path");
 
     if (!SUPPORTED_FORMAT_VERSION.equals(formatVersion)) {
       throw new IOException(
@@ -166,11 +174,6 @@ public class GdchCredentials extends GoogleCredentials {
       tokenServerUriFromCreds = new URI(tokenServerUriStringFromCreds);
     } catch (URISyntaxException e) {
       throw new IOException("Token server URI specified in 'token_uri' could not be parsed.");
-    }
-
-    // Override the transportFactory if CA cert path is provided.
-    if (caCertPath != null && caCertPath.length() > 0) {
-      transportFactory = new TransportFactoryForGdch(caCertPath);
     }
 
     GdchCredentials.Builder builder =

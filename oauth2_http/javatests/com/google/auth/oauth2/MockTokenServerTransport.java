@@ -227,6 +227,8 @@ public class MockTokenServerTransport extends MockHttpTransport {
               if (foundTargetAudience != null) {
                 generateAccessToken = false;
               }
+
+              // For GDCH scenario
             } else if (OAuth2Utils.TOKEN_TYPE_TOKEN_EXCHANGE.equals(grantType)) {
               String foundServiceIdentityName = signature.getPayload().getIssuer();
               if (!gdchServiceAccounts.containsKey(foundServiceIdentityName)) {
