@@ -153,8 +153,8 @@ public class GdchCredentials extends GoogleCredentials {
    * @throws IOException if the credential cannot be created from the JSON.
    */
   @VisibleForTesting
-  protected static GdchCredentials fromJson(
-      Map<String, Object> json, HttpTransportFactory transportFactory) throws IOException {
+  static GdchCredentials fromJson(Map<String, Object> json, HttpTransportFactory transportFactory)
+      throws IOException {
     String formatVersion = validateField((String) json.get("format_version"), "format_version");
     String projectId = validateField((String) json.get("project"), "project");
     String privateKeyId = validateField((String) json.get("private_key_id"), "private_key_id");

@@ -230,23 +230,6 @@ public class GoogleCredentialsTest {
   }
 
   @Test
-  public void fromStream_gdchServiceAccountInvalidFormatVersion_throws() throws IOException {
-    InputStream gdchServiceAccountStream =
-        GdchCredentialsTest.writeGdchServiceAccountStream(
-            "100",
-            GDCH_SA_PROJECT_ID,
-            GDCH_SA_PRIVATE_KEY_ID,
-            GDCH_SA_PRIVATE_KEY_PKC8,
-            GDCH_SA_SERVICE_IDENTITY_NAME,
-            GDCH_SA_CA_CERT_PATH,
-            GDCH_SA_TOKEN_SERVER_URI);
-
-    testFromStreamException(
-        gdchServiceAccountStream,
-        String.format("Only format version %s is supported", GDCH_SA_FORMAT_VERSION));
-  }
-
-  @Test
   public void fromStream_gdchServiceAccountNoFormatVersion_throws() throws IOException {
     InputStream gdchServiceAccountStream =
         GdchCredentialsTest.writeGdchServiceAccountStream(
@@ -334,6 +317,55 @@ public class GoogleCredentialsTest {
             null);
 
     testFromStreamException(gdchServiceAccountStream, "token_uri");
+  }
+
+  @Test
+  public void fromStream_gdchServiceAccountNoCaCertPath_throws() throws IOException {
+    InputStream gdchServiceAccountStream =
+        GdchCredentialsTest.writeGdchServiceAccountStream(
+            GDCH_SA_FORMAT_VERSION,
+            GDCH_SA_PROJECT_ID,
+            GDCH_SA_PRIVATE_KEY_ID,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            null,
+            GDCH_SA_TOKEN_SERVER_URI);
+
+    testFromStreamException(gdchServiceAccountStream, "ca_cert_path");
+  }
+
+  @Test
+  public void fromStream_gdchServiceAccountInvalidFormatVersion_throws() throws IOException {
+    InputStream gdchServiceAccountStream =
+        GdchCredentialsTest.writeGdchServiceAccountStream(
+            "100",
+            GDCH_SA_PROJECT_ID,
+            GDCH_SA_PRIVATE_KEY_ID,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_CA_CERT_PATH,
+            GDCH_SA_TOKEN_SERVER_URI);
+
+    testFromStreamException(
+        gdchServiceAccountStream,
+        String.format("Only format version %s is supported", GDCH_SA_FORMAT_VERSION));
+  }
+
+  @Test
+  public void fromStream_gdchServiceAccountInvalidCaCertPath_throws() throws IOException {
+    InputStream gdchServiceAccountStream =
+        GdchCredentialsTest.writeGdchServiceAccountStream(
+            GDCH_SA_FORMAT_VERSION,
+            GDCH_SA_PROJECT_ID,
+            GDCH_SA_PRIVATE_KEY_ID,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            "/path/to/missing/file",
+            GDCH_SA_TOKEN_SERVER_URI);
+
+    testFromStreamException(
+        gdchServiceAccountStream,
+        String.format("Error reading certificate file from CA cert path"));
   }
 
   @Test
