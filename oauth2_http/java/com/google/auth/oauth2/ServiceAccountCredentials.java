@@ -125,7 +125,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
    *     ServiceAccountCredentials.Builder}
    */
   ServiceAccountCredentials(ServiceAccountCredentials.Builder builder) {
-    super(null, builder.getQuotaProjectId());
+    super(builder);
     this.clientId = builder.clientId;
     this.clientEmail = Preconditions.checkNotNull(builder.clientEmail);
     this.privateKey = Preconditions.checkNotNull(builder.privateKey);

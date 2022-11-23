@@ -107,6 +107,24 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
         "Either accessToken or refreshToken must not be null");
   }
 
+  private UserCredentials(
+    Builder builder
+  ) {
+    super(builder);
+    this.clientId = Preconditions.checkNotNull(builder.clientId);
+    this.clientSecret = Preconditions.checkNotNull(builder.clientSecret);
+    this.refreshToken = builder.refreshToken;
+    this.transportFactory =
+        firstNonNull(
+          builder.transportFactory,
+            getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
+    this.tokenServerUri = (builder.tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : builder.tokenServerUri;
+    this.transportFactoryClassName = this.transportFactory.getClass().getName();
+    Preconditions.checkState(
+        builder.getAccessToken() != null || builder.refreshToken != null,
+        "Either accessToken or refreshToken must not be null");
+  }
+
   /**
    * Returns user credentials defined by JSON contents using the format supported by the Cloud SDK.
    *
@@ -453,14 +471,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     }
 
     public UserCredentials build() {
-      return new UserCredentials(
-          clientId,
-          clientSecret,
-          refreshToken,
-          getAccessToken(),
-          transportFactory,
-          tokenServerUri,
-          getQuotaProjectId());
+      return new UserCredentials(this);
     }
   }
 }

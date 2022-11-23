@@ -451,7 +451,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
   }
 
   private ImpersonatedCredentials(Builder builder) {
-    super(null, builder.getQuotaProjectId());
+    super(builder);
     this.sourceCredentials = builder.getSourceCredentials();
     this.targetPrincipal = builder.getTargetPrincipal();
     this.delegates = builder.getDelegates();
