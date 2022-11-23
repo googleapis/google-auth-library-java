@@ -3,7 +3,7 @@
 <differences>
   <difference>
     <differenceType>6001</differenceType>
-    <className>com/google/auth/oauth2/ExternalAccountCredentials/Builder</className>
+    <className>com/google/auth/oauth2/ExternalAccountCredentials$Builder</className>
     <field>quotaProjectId</field>
   </difference>
 </differences>
