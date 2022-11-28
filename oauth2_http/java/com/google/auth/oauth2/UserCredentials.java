@@ -76,8 +76,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
   /**
    * Internal constructor
    *
-   * @param builder A builder for {@link UserCredentials} See {@link
-   *     UserCredentials.Builder}
+   * @param builder A builder for {@link UserCredentials} See {@link UserCredentials.Builder}
    */
   private UserCredentials(Builder builder) {
     super(builder);
