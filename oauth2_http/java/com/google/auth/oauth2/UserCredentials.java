@@ -74,39 +74,11 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
   private transient HttpTransportFactory transportFactory;
 
   /**
-   * Constructor with all parameters allowing custom transport and server URL.
+   * Internal constructor
    *
-   * @param clientId Client ID of the credential from the console.
-   * @param clientSecret Client ID of the credential from the console.
-   * @param refreshToken A refresh token resulting from a OAuth2 consent flow.
-   * @param accessToken Initial or temporary access token.
-   * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *     tokens.
-   * @param tokenServerUri URI of the end point that provides tokens
+   * @param builder A builder for {@link UserCredentials} See {@link
+   *     UserCredentials.Builder}
    */
-  private UserCredentials(
-      String clientId,
-      String clientSecret,
-      String refreshToken,
-      AccessToken accessToken,
-      HttpTransportFactory transportFactory,
-      URI tokenServerUri,
-      String quotaProjectId) {
-    super(accessToken, quotaProjectId);
-    this.clientId = Preconditions.checkNotNull(clientId);
-    this.clientSecret = Preconditions.checkNotNull(clientSecret);
-    this.refreshToken = refreshToken;
-    this.transportFactory =
-        firstNonNull(
-            transportFactory,
-            getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
-    this.tokenServerUri = (tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : tokenServerUri;
-    this.transportFactoryClassName = this.transportFactory.getClass().getName();
-    Preconditions.checkState(
-        accessToken != null || refreshToken != null,
-        "Either accessToken or refreshToken must not be null");
-  }
-
   private UserCredentials(Builder builder) {
     super(builder);
     this.clientId = Preconditions.checkNotNull(builder.clientId);
@@ -388,11 +360,6 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
 
   public Builder toBuilder() {
     return new Builder(this);
-  }
-
-  @Override
-  public String getQuotaProjectId() {
-    return quotaProjectId;
   }
 
   public static class Builder extends GoogleCredentials.Builder {

@@ -548,12 +548,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     return ImpersonatedCredentials.extractTargetPrincipal(serviceAccountImpersonationUrl);
   }
 
-  @Override
-  @Nullable
-  public String getQuotaProjectId() {
-    return quotaProjectId;
-  }
-
   @Nullable
   public String getClientId() {
     return clientId;

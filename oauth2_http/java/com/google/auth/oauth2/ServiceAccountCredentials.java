@@ -987,11 +987,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
     return new Builder(this);
   }
 
-  @Override
-  public String getQuotaProjectId() {
-    return quotaProjectId;
-  }
-
   public static class Builder extends GoogleCredentials.Builder {
 
     private String clientId;

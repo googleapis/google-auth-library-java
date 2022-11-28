@@ -303,11 +303,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
     return this.targetPrincipal;
   }
 
-  @Override
-  public String getQuotaProjectId() {
-    return this.quotaProjectId;
-  }
-
   @VisibleForTesting
   String getIamEndpointOverride() {
     return this.iamEndpointOverride;
