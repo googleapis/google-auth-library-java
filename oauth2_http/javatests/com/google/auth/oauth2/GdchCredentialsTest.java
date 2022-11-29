@@ -51,7 +51,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.nio.file.Paths;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
@@ -700,11 +700,8 @@ public class GdchCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void equals_false_caCertPath() throws IOException {
-    File testCaCertFile =
-        File.createTempFile("testCert", ".pem", Paths.get(CA_CERT_PATH).getParent().toFile());
-    String testCaCertPath =
-        GdchCredentialsTest.class.getClassLoader().getResource(testCaCertFile.getName()).getPath();
-
+    File tmpDirectory = Files.createTempDirectory("tmpDirectory").toFile();
+    File testCaCertFile = File.createTempFile("testCert", ".pem", tmpDirectory);
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -722,7 +719,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             PRIVATE_KEY_PKCS8,
             SERVICE_IDENTITY_NAME,
-            testCaCertPath,
+            testCaCertFile.getPath(),
             TOKEN_SERVER_URI);
     OAuth2Credentials otherCredentials = GdchCredentials.fromJson(otherJson);
     assertFalse(credentials.equals(otherCredentials));
