@@ -31,8 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.common.base.MoreObjects.firstNonNull;
-
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
@@ -67,7 +65,7 @@ import java.util.Objects;
 public class GdchCredentials extends GoogleCredentials {
   static final String SUPPORTED_FORMAT_VERSION = "1";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
-  private static final String GDCH_ISS_SUB_VALUE_PREFIX = "system:serviceaccount:%s:%s";
+  private static final String GDCH_ISSUER_SUBJECT_VALUE_PREFIX = "system:serviceaccount:%s:%s";
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
 
   private final PrivateKey privateKey;
@@ -86,49 +84,18 @@ public class GdchCredentials extends GoogleCredentials {
    *
    * @param builder A builder for {@link GdchCredentials} See {@link GdchCredentials.Builder}.
    */
+  @VisibleForTesting
   GdchCredentials(GdchCredentials.Builder builder) {
     this.projectId = Preconditions.checkNotNull(builder.projectId);
     this.privateKeyId = Preconditions.checkNotNull(builder.privateKeyId);
     this.privateKey = Preconditions.checkNotNull(builder.privateKey);
     this.serviceIdentityName = Preconditions.checkNotNull(builder.serviceIdentityName);
     this.tokenServerUri = Preconditions.checkNotNull(builder.tokenServerUri);
-    this.transportFactory =
-        firstNonNull(
-            builder.transportFactory,
-            getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
+    this.transportFactory = Preconditions.checkNotNull(builder.transportFactory);
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
     this.caCertPath = builder.caCertPath;
     this.apiAudience = builder.apiAudience;
     this.lifetime = builder.lifetime;
-  }
-
-  static class TransportFactoryForGdch implements HttpTransportFactory {
-    HttpTransport transport;
-
-    public TransportFactoryForGdch(String caCertPath) throws IOException {
-      setTransport(caCertPath);
-    }
-
-    @Override
-    public HttpTransport create() {
-      return transport;
-    }
-
-    private void setTransport(String caCertPath) throws IOException {
-      try {
-        InputStream certificateStream = readStream(new File(caCertPath));
-        this.transport =
-            new NetHttpTransport.Builder().trustCertificatesFromStream(certificateStream).build();
-      } catch (IOException e) {
-        throw new IOException(
-            String.format(
-                "Error reading certificate file from CA cert path, value '%s': %s",
-                caCertPath, e.getMessage()),
-            e);
-      } catch (GeneralSecurityException e) {
-        throw new IOException("Error initiating transport with certificate stream.", e);
-      }
-    }
   }
 
   /**
@@ -279,8 +246,8 @@ public class GdchCredentials extends GoogleCredentials {
     header.setKeyId(privateKeyId);
 
     JsonWebToken.Payload payload = new JsonWebToken.Payload();
-    payload.setIssuer(getIssSubValue(projectId, serviceIdentityName));
-    payload.setSubject(getIssSubValue(projectId, serviceIdentityName));
+    payload.setIssuer(getIssuerSubjectValue(projectId, serviceIdentityName));
+    payload.setSubject(getIssuerSubjectValue(projectId, serviceIdentityName));
     payload.setIssuedAtTimeSeconds(currentTime / 1000);
     payload.setExpirationTimeSeconds(currentTime / 1000 + this.lifetime);
     payload.setAudience(getTokenServerUri().toString());
@@ -297,10 +264,15 @@ public class GdchCredentials extends GoogleCredentials {
     return assertion;
   }
 
-  /** Get the issuer and subject value in the format GDCH token server required. */
+  /**
+   * Get the issuer and subject value in the format GDCH token server required.
+   *
+   * <p>This value is specific to GDCH and combined parameter used for both `iss` and `sub` fields
+   * in JWT claim.
+   */
   @VisibleForTesting
-  static String getIssSubValue(String projectId, String serviceIdentityName) {
-    return String.format(GDCH_ISS_SUB_VALUE_PREFIX, projectId, serviceIdentityName);
+  static String getIssuerSubjectValue(String projectId, String serviceIdentityName) {
+    return String.format(GDCH_ISSUER_SUBJECT_VALUE_PREFIX, projectId, serviceIdentityName);
   }
 
   public final String getProjectId() {
@@ -508,5 +480,34 @@ public class GdchCredentials extends GoogleCredentials {
               fieldName));
     }
     return field;
+  }
+
+  static class TransportFactoryForGdch implements HttpTransportFactory {
+    HttpTransport transport;
+
+    public TransportFactoryForGdch(String caCertPath) throws IOException {
+      setTransport(caCertPath);
+    }
+
+    @Override
+    public HttpTransport create() {
+      return transport;
+    }
+
+    private void setTransport(String caCertPath) throws IOException {
+      try {
+        InputStream certificateStream = readStream(new File(caCertPath));
+        this.transport =
+            new NetHttpTransport.Builder().trustCertificatesFromStream(certificateStream).build();
+      } catch (IOException e) {
+        throw new IOException(
+            String.format(
+                "Error reading certificate file from CA cert path, value '%s': %s",
+                caCertPath, e.getMessage()),
+            e);
+      } catch (GeneralSecurityException e) {
+        throw new IOException("Error initiating transport with certificate stream.", e);
+      }
+    }
   }
 }

@@ -339,7 +339,7 @@ public class DefaultCredentialsProviderTest {
   }
 
   @Test
-  public void getDefaultCredentials_envGdchServiceAccount_providesToken() throws IOException {
+  public void getDefaultCredentials_GdchServiceAccount() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     InputStream gdchServiceAccountStream =
         GdchCredentialsTest.writeGdchServiceAccountStream(
@@ -365,19 +365,21 @@ public class DefaultCredentialsProviderTest {
         ((GdchCredentials) defaultCredentials).getServiceIdentityName());
     assertEquals(
         GDCH_SA_TOKEN_SERVER_URI, ((GdchCredentials) defaultCredentials).getTokenServerUri());
+    assertEquals(GDCH_SA_CA_CERT_PATH, ((GdchCredentials) defaultCredentials).getCaCertPath());
     assertNull(((GdchCredentials) defaultCredentials).getApiAudience());
 
     defaultCredentials =
         ((GdchCredentials) defaultCredentials).createWithGdchAudience(GDCH_SA_API_AUDIENCE);
-    transportFactory.transport.addGdchServiceAccount(
-        GdchCredentials.getIssSubValue(GDCH_SA_PROJECT_ID, GDCH_SA_SERVICE_IDENTITY_NAME),
-        ACCESS_TOKEN);
-    transportFactory.transport.setTokenServerUri(GDCH_SA_TOKEN_SERVER_URI);
-
     assertNotNull(defaultCredentials);
+    assertTrue(defaultCredentials instanceof GdchCredentials);
+    assertEquals(GDCH_SA_PROJECT_ID, ((GdchCredentials) defaultCredentials).getProjectId());
+    assertEquals(
+        GDCH_SA_SERVICE_IDENTITY_NAME,
+        ((GdchCredentials) defaultCredentials).getServiceIdentityName());
+    assertEquals(
+        GDCH_SA_TOKEN_SERVER_URI, ((GdchCredentials) defaultCredentials).getTokenServerUri());
+    assertEquals(GDCH_SA_CA_CERT_PATH, ((GdchCredentials) defaultCredentials).getCaCertPath());
     assertNotNull(((GdchCredentials) defaultCredentials).getApiAudience());
-    Map<String, List<String>> metadata = defaultCredentials.getRequestMetadata(CALL_URI);
-    TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
   @Test

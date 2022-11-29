@@ -406,14 +406,14 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
     GdchCredentials gdchWithAudience = credentials.createWithGdchAudience(API_AUDIENCE);
     transportFactory.transport.addGdchServiceAccount(
-        GdchCredentials.getIssSubValue(PROJECT_ID, SERVICE_IDENTITY_NAME), ACCESS_TOKEN);
+        GdchCredentials.getIssuerSubjectValue(PROJECT_ID, SERVICE_IDENTITY_NAME), ACCESS_TOKEN);
     transportFactory.transport.setTokenServerUri(TOKEN_SERVER_URI);
     Map<String, List<String>> metadata = gdchWithAudience.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
   @Test
-  public void createWithGdchAudience() throws IOException {
+  public void createWithGdchAudience_correct() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -462,7 +462,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void createAssertion() throws IOException {
+  public void createAssertion_correct() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -480,7 +480,8 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     JsonWebSignature signature = JsonWebSignature.parse(jsonFactory, assertion);
     JsonWebToken.Payload payload = signature.getPayload();
 
-    String expectedIssSubValue = GdchCredentials.getIssSubValue(PROJECT_ID, SERVICE_IDENTITY_NAME);
+    String expectedIssSubValue =
+        GdchCredentials.getIssuerSubjectValue(PROJECT_ID, SERVICE_IDENTITY_NAME);
     assertEquals(expectedIssSubValue, payload.getIssuer());
     assertEquals(expectedIssSubValue, payload.getSubject());
     assertEquals(TOKEN_SERVER_URI.toString(), payload.getAudience());
@@ -489,7 +490,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void refreshAccessToken() throws IOException {
+  public void refreshAccessToken_correct() throws IOException {
     final String tokenString = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     GenericJson json =
@@ -507,7 +508,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     gdchWithAudience.clock = new FixedClock(0L);
 
     transportFactory.transport.addGdchServiceAccount(
-        GdchCredentials.getIssSubValue(PROJECT_ID, SERVICE_IDENTITY_NAME), tokenString);
+        GdchCredentials.getIssuerSubjectValue(PROJECT_ID, SERVICE_IDENTITY_NAME), tokenString);
     transportFactory.transport.setTokenServerUri(TOKEN_SERVER_URI);
     AccessToken accessToken = gdchWithAudience.refreshAccessToken();
     assertNotNull(accessToken);
@@ -540,7 +541,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     credentials.clock = new FixedClock(0L);
 
     transportFactory.transport.addGdchServiceAccount(
-        GdchCredentials.getIssSubValue(PROJECT_ID, SERVICE_IDENTITY_NAME), tokenString);
+        GdchCredentials.getIssuerSubjectValue(PROJECT_ID, SERVICE_IDENTITY_NAME), tokenString);
     transportFactory.transport.setTokenServerUri(TOKEN_SERVER_URI);
     try {
       AccessToken accessToken = credentials.refreshAccessToken();
@@ -555,7 +556,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getIssSubValue() throws IOException {
+  public void getIssuerSubjectValue_correct() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -569,11 +570,12 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     Object expectedIssSubValue =
         String.format("system:serviceaccount:%s:%s", PROJECT_ID, SERVICE_IDENTITY_NAME);
     assertEquals(
-        expectedIssSubValue, GdchCredentials.getIssSubValue(PROJECT_ID, SERVICE_IDENTITY_NAME));
+        expectedIssSubValue,
+        GdchCredentials.getIssuerSubjectValue(PROJECT_ID, SERVICE_IDENTITY_NAME));
   }
 
   @Test
-  public void equals_true() throws IOException {
+  public void equals_same() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -854,7 +856,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void serialize() throws IOException, ClassNotFoundException {
+  public void serialize_correct() throws IOException, ClassNotFoundException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     GenericJson json =
         writeGdchServiceAccountJson(

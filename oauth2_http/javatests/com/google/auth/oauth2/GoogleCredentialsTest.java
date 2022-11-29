@@ -34,6 +34,7 @@ package com.google.auth.oauth2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -205,7 +206,7 @@ public class GoogleCredentialsTest {
   }
 
   @Test
-  public void fromStream_gdchServiceAccount_providesToken() throws IOException {
+  public void fromStream_gdchServiceAccount_correct() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     InputStream gdchServiceAccountStream =
         GdchCredentialsTest.writeGdchServiceAccountStream(
@@ -218,15 +219,25 @@ public class GoogleCredentialsTest {
             GDCH_SA_TOKEN_SERVER_URI);
     GoogleCredentials credentials =
         GoogleCredentials.fromStream(gdchServiceAccountStream, transportFactory);
-    credentials = ((GdchCredentials) credentials).createWithGdchAudience(GDCH_API_AUDIENCE);
-    transportFactory.transport.addGdchServiceAccount(
-        GdchCredentials.getIssSubValue(GDCH_SA_PROJECT_ID, GDCH_SA_SERVICE_IDENTITY_NAME),
-        ACCESS_TOKEN);
-    transportFactory.transport.setTokenServerUri(GDCH_SA_TOKEN_SERVER_URI);
 
     assertNotNull(credentials);
-    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
-    TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+    assertTrue(credentials instanceof GdchCredentials);
+    assertEquals(GDCH_SA_PROJECT_ID, ((GdchCredentials) credentials).getProjectId());
+    assertEquals(
+        GDCH_SA_SERVICE_IDENTITY_NAME, ((GdchCredentials) credentials).getServiceIdentityName());
+    assertEquals(GDCH_SA_TOKEN_SERVER_URI, ((GdchCredentials) credentials).getTokenServerUri());
+    assertEquals(GDCH_SA_CA_CERT_PATH, ((GdchCredentials) credentials).getCaCertPath());
+    assertNull(((GdchCredentials) credentials).getApiAudience());
+
+    credentials = ((GdchCredentials) credentials).createWithGdchAudience(GDCH_API_AUDIENCE);
+    assertNotNull(credentials);
+    assertTrue(credentials instanceof GdchCredentials);
+    assertEquals(GDCH_SA_PROJECT_ID, ((GdchCredentials) credentials).getProjectId());
+    assertEquals(
+        GDCH_SA_SERVICE_IDENTITY_NAME, ((GdchCredentials) credentials).getServiceIdentityName());
+    assertEquals(GDCH_SA_TOKEN_SERVER_URI, ((GdchCredentials) credentials).getTokenServerUri());
+    assertEquals(GDCH_SA_CA_CERT_PATH, ((GdchCredentials) credentials).getCaCertPath());
+    assertNotNull(((GdchCredentials) credentials).getApiAudience());
   }
 
   @Test
