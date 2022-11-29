@@ -44,7 +44,7 @@ public final class FTQuotaProjectId {
   @Test
   public void validate_quota_from_environment_not_used() throws IOException {
     // Check the environment value for quota project
-    assertEquals("gcloud-devel", System.getenv("GOOGLE_CLOUD_QUOTA_PROJECT_ID"));
+    assertEquals("gcloud-devel", System.getenv("GOOGLE_CLOUD_QUOTA_PROJECT"));
 
     GenericJson json = new GenericJson();
     json.put("client_id", "clientId");
