@@ -220,8 +220,9 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   @Override
   protected Map<String, List<String>> getAdditionalHeaders() {
     Map<String, List<String>> headers = super.getAdditionalHeaders();
+    String quotaProjectId = this.getQuotaProjectId();
     if (quotaProjectId != null) {
-      return addQuotaProjectIdToRequestMetadata(this.quotaProjectId, headers);
+      return addQuotaProjectIdToRequestMetadata(quotaProjectId, headers);
     }
     return headers;
   }
@@ -245,7 +246,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     this(accessToken, null);
   }
 
-  public GoogleCredentials(Builder builder) {
+  protected GoogleCredentials(Builder builder) {
     super(builder.getAccessToken());
     this.quotaProjectId = builder.getQuotaProjectId();
   }
@@ -269,6 +270,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     return new Builder(this);
   }
 
+  @Override
   public String getQuotaProjectId() {
     return this.quotaProjectId;
   }

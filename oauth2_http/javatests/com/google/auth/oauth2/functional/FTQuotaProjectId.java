@@ -42,13 +42,10 @@ import org.junit.Test;
 public final class FTQuotaProjectId {
 
   @Test
-  public void adcQuotaFromEnv() throws IOException {
-    GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
-    assertEquals("gcloud-devel", credentials.getQuotaProjectId());
-  }
+  public void validate_quota_from_environment_not_used() throws IOException {
+    // Check the environment value for quota project
+    assertEquals("gcloud-devel", System.getenv("GOOGLE_CLOUD_QUOTA_PROJECT_ID"));
 
-  @Test
-  public void explicitCredentialQuotaFromJson() throws IOException {
     GenericJson json = new GenericJson();
     json.put("client_id", "clientId");
     json.put("client_secret", "clientSecret");
@@ -56,6 +53,8 @@ public final class FTQuotaProjectId {
     json.put("quota_project_id", "quota_from_file");
     json.put("type", "authorized_user");
     GoogleCredentials credentials = GoogleCredentials.fromStream(TestUtils.jsonToInputStream(json));
+
+    // Validate that the quota project from the json is used instead of environment value
     assertEquals("quota_from_file", credentials.getQuotaProjectId());
   }
 }
