@@ -47,27 +47,23 @@ import com.google.auth.oauth2.IdTokenProvider;
 import org.junit.Test;
 
 public final class FTComputeEngineCredentialsTest {
-
   private final String computeUrl =
       "https://compute.googleapis.com/compute/v1/projects/gcloud-devel/zones/us-central1-a/instances";
   private final String cloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform";
 
   @Test
   public void RefreshCredentials() throws Exception {
-
-    ComputeEngineCredentials credentials = ComputeEngineCredentials.create();
+    final ComputeEngineCredentials credentials = ComputeEngineCredentials.create();
 
     AccessToken accessToken = credentials.refreshAccessToken();
     assertNotNull(accessToken);
-    System.out.println(credentials.getAccount());
     assertNotNull(credentials.getAccount());
     assertTrue(accessToken.getExpirationTime().getTime() > System.currentTimeMillis());
   }
 
   @Test
   public void DefaultCredentials() throws Exception {
-
-    GoogleCredentials defaultCredential =
+    final GoogleCredentials defaultCredential =
         GoogleCredentials.getApplicationDefault().createScoped(cloudPlatformScope);
 
     AccessToken accessToken = defaultCredential.refreshAccessToken();
@@ -77,8 +73,7 @@ public final class FTComputeEngineCredentialsTest {
 
   @Test
   public void IdTokenFromMetadata() throws Exception {
-
-    ComputeEngineCredentials credentials = ComputeEngineCredentials.create();
+    final ComputeEngineCredentials credentials = ComputeEngineCredentials.create();
     IdToken idToken = credentials.idTokenWithAudience(computeUrl, null);
     assertNotNull(idToken);
     assertTrue(idToken.getExpirationTime().getTime() > System.currentTimeMillis());
@@ -90,9 +85,7 @@ public final class FTComputeEngineCredentialsTest {
 
   @Test
   public void FetchIdToken() throws Exception {
-
-    ComputeEngineCredentials credentials = ComputeEngineCredentials.create();
-
+    final ComputeEngineCredentials credentials = ComputeEngineCredentials.create();
     IdTokenCredentials tokenCredential =
         IdTokenCredentials.newBuilder()
             .setIdTokenProvider((IdTokenProvider) credentials)
