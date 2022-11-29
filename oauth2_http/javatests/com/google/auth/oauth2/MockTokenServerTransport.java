@@ -61,6 +61,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
   int buildRequestCount;
   final Map<String, String> clients = new HashMap<String, String>();
   final Map<String, String> refreshTokens = new HashMap<String, String>();
+  final Map<String, String> grantedScopes = new HashMap<String, String>();
   final Map<String, String> serviceAccounts = new HashMap<String, String>();
   final Map<String, String> gdchServiceAccounts = new HashMap<String, String>();
   final Map<String, String> codes = new HashMap<String, String>();
@@ -79,9 +80,11 @@ public class MockTokenServerTransport extends MockHttpTransport {
     this.tokenServerUri = tokenServerUri;
   }
 
-  public void addAuthorizationCode(String code, String refreshToken, String accessToken) {
+  public void addAuthorizationCode(
+      String code, String refreshToken, String accessToken, String grantedScopes) {
     codes.put(code, refreshToken);
     refreshTokens.put(refreshToken, accessToken);
+    this.grantedScopes.put(refreshToken, grantedScopes);
   }
 
   public void addClient(String clientId, String clientSecret) {
@@ -176,6 +179,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
           Map<String, String> query = TestUtils.parseQuery(content);
           String accessToken = null;
           String refreshToken = null;
+          String grantedScopesString = null;
           boolean generateAccessToken = true;
 
           String foundId = query.get("client_id");
@@ -206,6 +210,10 @@ public class MockTokenServerTransport extends MockHttpTransport {
               isUserEmailScope = true;
             }
             accessToken = refreshTokens.get(refreshToken);
+
+            if (grantedScopes.containsKey(refreshToken)) {
+              grantedScopesString = grantedScopes.get(refreshToken);
+            }
           } else if (query.containsKey("grant_type")) {
             String grantType = query.get("grant_type");
             String assertion = query.get("assertion");
@@ -257,6 +265,9 @@ public class MockTokenServerTransport extends MockHttpTransport {
             responseContents.put("access_token", accessToken);
             if (refreshToken != null) {
               responseContents.put("refresh_token", refreshToken);
+            }
+            if (grantedScopesString != null) {
+              responseContents.put("scope", grantedScopesString);
             }
           }
           if (isUserEmailScope || !generateAccessToken) {

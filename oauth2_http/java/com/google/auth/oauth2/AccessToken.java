@@ -43,6 +43,7 @@ public class AccessToken implements Serializable {
 
   private final String tokenValue;
   private final Long expirationTimeMillis;
+  private final String scopes;
 
   /**
    * @param tokenValue String representation of the access token.
@@ -51,6 +52,32 @@ public class AccessToken implements Serializable {
   public AccessToken(String tokenValue, Date expirationTime) {
     this.tokenValue = tokenValue;
     this.expirationTimeMillis = (expirationTime == null) ? null : expirationTime.getTime();
+    this.scopes = null;
+  }
+
+  public AccessToken(Builder builder) {
+    this.tokenValue = builder.getTokenValue();
+    Date expirationTime = builder.getExpirationTime();
+    this.expirationTimeMillis = (expirationTime == null) ? null : expirationTime.getTime();
+    this.scopes = builder.getScopes();
+  }
+
+  public static Builder newBuilder() {
+    return new Builder();
+  }
+
+  public Builder toBuilder() {
+    return new Builder(this);
+  }
+
+  /**
+   * Scopes from the access token response. Not all credentials provide scopes in response and as
+   * per https://datatracker.ietf.org/doc/html/rfc6749#section-5.1 it is optional in the response.
+   *
+   * @return Space seperated string of scopes
+   */
+  public String getScopes() {
+    return scopes;
   }
 
   /**
@@ -80,7 +107,7 @@ public class AccessToken implements Serializable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(tokenValue, expirationTimeMillis);
+    return Objects.hash(tokenValue, expirationTimeMillis, scopes);
   }
 
   @Override
@@ -88,6 +115,7 @@ public class AccessToken implements Serializable {
     return MoreObjects.toStringHelper(this)
         .add("tokenValue", tokenValue)
         .add("expirationTimeMillis", expirationTimeMillis)
+        .add("scopes", scopes)
         .toString();
   }
 
@@ -98,6 +126,52 @@ public class AccessToken implements Serializable {
     }
     AccessToken other = (AccessToken) obj;
     return Objects.equals(this.tokenValue, other.tokenValue)
-        && Objects.equals(this.expirationTimeMillis, other.expirationTimeMillis);
+        && Objects.equals(this.expirationTimeMillis, other.expirationTimeMillis)
+        && Objects.equals(this.scopes, other.scopes);
+  }
+
+  public static class Builder {
+    private String tokenValue;
+    private Date expirationTime;
+    private String scopes;
+
+    protected Builder() {}
+
+    protected Builder(AccessToken accessToken) {
+      this.tokenValue = accessToken.getTokenValue();
+      this.expirationTime = accessToken.getExpirationTime();
+      this.scopes = accessToken.getScopes();
+    }
+
+    public String getTokenValue() {
+      return this.tokenValue;
+    }
+
+    public String getScopes() {
+      return this.scopes;
+    }
+
+    public Date getExpirationTime() {
+      return this.expirationTime;
+    }
+
+    public Builder setTokenValue(String tokenValue) {
+      this.tokenValue = tokenValue;
+      return this;
+    }
+
+    public Builder setScopes(String scopes) {
+      this.scopes = scopes;
+      return this;
+    }
+
+    public Builder setExpirationTime(Date expirationTime) {
+      this.expirationTime = expirationTime;
+      return this;
+    }
+
+    public AccessToken build() {
+      return new AccessToken(this);
+    }
   }
 }

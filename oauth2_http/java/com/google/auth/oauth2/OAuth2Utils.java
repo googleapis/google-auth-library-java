@@ -89,6 +89,8 @@ class OAuth2Utils {
 
   static final String BEARER_PREFIX = AuthHttpConstants.BEARER + " ";
 
+  static final String TOKEN_RESPONSE_SCOPE = "scope";
+
   // Includes expected server errors from Google token endpoint
   // Other 5xx codes are either not used or retries are unlikely to succeed
   public static final Set<Integer> TOKEN_ENDPOINT_RETRYABLE_STATUS_CODES =
