@@ -53,8 +53,11 @@ import java.util.logging.Logger;
  * overriding the state and environment for testing purposes.
  */
 class DefaultCredentialsProvider {
+
   static final DefaultCredentialsProvider DEFAULT = new DefaultCredentialsProvider();
   static final String CREDENTIAL_ENV_VAR = "GOOGLE_APPLICATION_CREDENTIALS";
+  static final String QUOTA_PROJECT_ENV_VAR = "GOOGLE_CLOUD_QUOTA_PROJECT";
+
   static final String WELL_KNOWN_CREDENTIALS_FILE = "application_default_credentials.json";
   static final String CLOUDSDK_CONFIG_DIRECTORY = "gcloud";
   static final String HELP_PERMALINK =
@@ -212,6 +215,14 @@ class DefaultCredentialsProvider {
     if (credentials == null) {
       LOGGER.log(Level.FINE, "Attempting to load credentials from GCE");
       credentials = tryGetComputeCredentials(transportFactory);
+    }
+
+    if (credentials != null) {
+      String quotaFromEnv = getEnv(QUOTA_PROJECT_ENV_VAR);
+
+      if (quotaFromEnv != null && quotaFromEnv.trim().length() > 0) {
+        credentials = credentials.createWithQuotaProject(quotaFromEnv);
+      }
     }
 
     return credentials;
