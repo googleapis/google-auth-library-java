@@ -42,6 +42,12 @@ import org.junit.Test;
 public final class FTQuotaProjectId {
 
   @Test
+  public void validate_quota_from_environment_used() throws IOException {
+    GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
+    assertEquals("gcloud-devel", credentials.getQuotaProjectId());
+  }
+
+  @Test
   public void validate_quota_from_environment_not_used() throws IOException {
     // Check the environment value for quota project
     assertEquals("gcloud-devel", System.getenv("GOOGLE_CLOUD_QUOTA_PROJECT"));
