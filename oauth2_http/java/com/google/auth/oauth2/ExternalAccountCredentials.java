@@ -192,7 +192,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       @Nullable String clientSecret,
       @Nullable Collection<String> scopes,
       @Nullable EnvironmentProvider environmentProvider) {
-    super(null, quotaProjectId);
+    super(/* accessToken= */ null, quotaProjectId);
     this.transportFactory =
         MoreObjects.firstNonNull(
             transportFactory,
@@ -229,7 +229,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
    * @param builder the {@code Builder} object used to construct the credentials.
    */
   protected ExternalAccountCredentials(ExternalAccountCredentials.Builder builder) {
-    super(null, builder.getQuotaProjectId());
+    super(builder);
     this.transportFactory =
         MoreObjects.firstNonNull(
             builder.transportFactory,

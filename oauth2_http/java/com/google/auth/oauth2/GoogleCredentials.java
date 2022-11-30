@@ -188,7 +188,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * Creates a credential with the provided quota project
+   * Creates a credential with the provided quota project.
    *
    * @param quotaProject the quota project to set on the credential
    * @return credential with the provided quota project
@@ -243,8 +243,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   protected GoogleCredentials(Builder builder) {
-    super(builder.getAccessToken());
-    this.quotaProjectId = builder.getQuotaProjectId();
+    this(builder.getAccessToken(), builder.getQuotaProjectId());
   }
 
   /**
