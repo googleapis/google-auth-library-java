@@ -47,6 +47,7 @@ public class AccessTokenTest extends BaseSerializationTest {
 
   private static final String TOKEN = "AccessToken";
   private static final Date EXPIRATION_DATE = new Date();
+  private static final String SCOPES = "scope1 scope2";
 
   @Test
   public void constructor() {
@@ -82,11 +83,11 @@ public class AccessTokenTest extends BaseSerializationTest {
 
   @Test
   public void toString_containsFields() {
-    AccessToken accessToken = new AccessToken(TOKEN, EXPIRATION_DATE);
+    AccessToken accessToken = AccessToken.newBuilder().setExpirationTime(EXPIRATION_DATE).setTokenValue(TOKEN).setScopes(SCOPES).build();
     String expectedToString =
         String.format(
-            "AccessToken{tokenValue=%s, expirationTimeMillis=%d}",
-            TOKEN, EXPIRATION_DATE.getTime());
+            "AccessToken{tokenValue=%s, expirationTimeMillis=%d, scopes=%s}",
+            TOKEN, EXPIRATION_DATE.getTime(), SCOPES);
     assertEquals(expectedToString, accessToken.toString());
   }
 
