@@ -398,7 +398,7 @@ public class GoogleCredentialsTest {
     assertEquals("", withEmptyQuota.getQuotaProjectId());
 
     GoogleCredentials sameCredentials = googleCredentials.createWithQuotaProject(null);
-    assertEquals("old_quota", sameCredentials.getQuotaProjectId());
+    assertEquals(null, sameCredentials.getQuotaProjectId());
   }
 
   private static void testFromStreamException(InputStream stream, String expectedMessageContent) {
