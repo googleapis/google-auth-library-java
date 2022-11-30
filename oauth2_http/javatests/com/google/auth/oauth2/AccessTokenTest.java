@@ -55,35 +55,97 @@ public class AccessTokenTest extends BaseSerializationTest {
     assertEquals(TOKEN, accessToken.getTokenValue());
     assertEquals(EXPIRATION_DATE, accessToken.getExpirationTime());
     assertEquals(EXPIRATION_DATE.getTime(), (long) accessToken.getExpirationTimeMillis());
+    assertEquals(null, accessToken.getScopes());
   }
 
   @Test
   public void equals_true() throws IOException {
-    AccessToken accessToken = new AccessToken(TOKEN, EXPIRATION_DATE);
-    AccessToken otherAccessToken = new AccessToken(TOKEN, EXPIRATION_DATE);
+    AccessToken accessToken =
+        AccessToken.newBuilder()
+            .setExpirationTime(EXPIRATION_DATE)
+            .setTokenValue(TOKEN)
+            .setScopes(SCOPES)
+            .build();
+
+    AccessToken otherAccessToken =
+        AccessToken.newBuilder()
+            .setExpirationTime(EXPIRATION_DATE)
+            .setTokenValue(TOKEN)
+            .setScopes(SCOPES)
+            .build();
+
     assertTrue(accessToken.equals(otherAccessToken));
     assertTrue(otherAccessToken.equals(accessToken));
   }
 
   @Test
+  public void equals_false_scopes() throws IOException {
+    AccessToken accessToken =
+        AccessToken.newBuilder()
+            .setExpirationTime(EXPIRATION_DATE)
+            .setTokenValue(TOKEN)
+            .setScopes(SCOPES)
+            .build();
+
+    AccessToken otherAccessToken =
+        AccessToken.newBuilder()
+            .setExpirationTime(EXPIRATION_DATE)
+            .setTokenValue(TOKEN)
+            .setScopes("scope1")
+            .build();
+
+    assertFalse(accessToken.equals(otherAccessToken));
+    assertFalse(otherAccessToken.equals(accessToken));
+  }
+
+  @Test
   public void equals_false_token() throws IOException {
-    AccessToken accessToken = new AccessToken(TOKEN, EXPIRATION_DATE);
-    AccessToken otherAccessToken = new AccessToken("otherToken", EXPIRATION_DATE);
+    AccessToken accessToken =
+        AccessToken.newBuilder()
+            .setExpirationTime(EXPIRATION_DATE)
+            .setTokenValue(TOKEN)
+            .setScopes(SCOPES)
+            .build();
+
+    AccessToken otherAccessToken =
+        AccessToken.newBuilder()
+            .setExpirationTime(EXPIRATION_DATE)
+            .setTokenValue("otherToken")
+            .setScopes(SCOPES)
+            .build();
+
     assertFalse(accessToken.equals(otherAccessToken));
     assertFalse(otherAccessToken.equals(accessToken));
   }
 
   @Test
   public void equals_false_expirationDate() throws IOException {
-    AccessToken accessToken = new AccessToken(TOKEN, EXPIRATION_DATE);
-    AccessToken otherAccessToken = new AccessToken(TOKEN, new Date(EXPIRATION_DATE.getTime() + 42));
+    AccessToken accessToken =
+        AccessToken.newBuilder()
+            .setExpirationTime(EXPIRATION_DATE)
+            .setTokenValue(TOKEN)
+            .setScopes(SCOPES)
+            .build();
+
+    AccessToken otherAccessToken =
+        AccessToken.newBuilder()
+            .setExpirationTime(new Date(EXPIRATION_DATE.getTime() + 42))
+            .setTokenValue(TOKEN)
+            .setScopes(SCOPES)
+            .build();
+
     assertFalse(accessToken.equals(otherAccessToken));
     assertFalse(otherAccessToken.equals(accessToken));
   }
 
   @Test
   public void toString_containsFields() {
-    AccessToken accessToken = AccessToken.newBuilder().setExpirationTime(EXPIRATION_DATE).setTokenValue(TOKEN).setScopes(SCOPES).build();
+    AccessToken accessToken =
+        AccessToken.newBuilder()
+            .setExpirationTime(EXPIRATION_DATE)
+            .setTokenValue(TOKEN)
+            .setScopes(SCOPES)
+            .build();
     String expectedToString =
         String.format(
             "AccessToken{tokenValue=%s, expirationTimeMillis=%d, scopes=%s}",
@@ -93,14 +155,32 @@ public class AccessTokenTest extends BaseSerializationTest {
 
   @Test
   public void hashCode_equals() throws IOException {
-    AccessToken accessToken = new AccessToken(TOKEN, EXPIRATION_DATE);
-    AccessToken otherAccessToken = new AccessToken(TOKEN, EXPIRATION_DATE);
+    AccessToken accessToken =
+        AccessToken.newBuilder()
+            .setExpirationTime(EXPIRATION_DATE)
+            .setTokenValue(TOKEN)
+            .setScopes(SCOPES)
+            .build();
+
+    AccessToken otherAccessToken =
+        AccessToken.newBuilder()
+            .setExpirationTime(EXPIRATION_DATE)
+            .setTokenValue(TOKEN)
+            .setScopes(SCOPES)
+            .build();
+
     assertEquals(accessToken.hashCode(), otherAccessToken.hashCode());
   }
 
   @Test
   public void serialize() throws IOException, ClassNotFoundException {
-    AccessToken accessToken = new AccessToken(TOKEN, EXPIRATION_DATE);
+    AccessToken accessToken =
+        AccessToken.newBuilder()
+            .setExpirationTime(EXPIRATION_DATE)
+            .setTokenValue(TOKEN)
+            .setScopes(SCOPES)
+            .build();
+
     AccessToken deserializedAccessToken = serializeAndDeserialize(accessToken);
     assertEquals(accessToken, deserializedAccessToken);
     assertEquals(accessToken.hashCode(), deserializedAccessToken.hashCode());

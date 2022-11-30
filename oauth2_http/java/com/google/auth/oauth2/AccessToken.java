@@ -55,7 +55,7 @@ public class AccessToken implements Serializable {
     this.scopes = null;
   }
 
-  public AccessToken(Builder builder) {
+  private AccessToken(Builder builder) {
     this.tokenValue = builder.getTokenValue();
     Date expirationTime = builder.getExpirationTime();
     this.expirationTimeMillis = (expirationTime == null) ? null : expirationTime.getTime();
