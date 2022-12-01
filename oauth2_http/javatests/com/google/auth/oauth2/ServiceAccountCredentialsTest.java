@@ -124,7 +124,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   private static final String JWT_ACCESS_PREFIX = "Bearer ";
 
   private ServiceAccountCredentials.Builder createDefaultBuilder() throws IOException {
-    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     return ServiceAccountCredentials.newBuilder()
         .setClientId(CLIENT_ID)
         .setClientEmail(CLIENT_EMAIL)
@@ -171,7 +171,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void createdScoped_clones() throws IOException {
-    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials =
         ServiceAccountCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -201,7 +201,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void createdDelegated_clones() throws IOException {
-    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -232,7 +232,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void createAssertion_correct() throws IOException {
-    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     List<String> scopes = Arrays.asList("scope1", "scope2");
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.newBuilder()
@@ -261,7 +261,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void createAssertion_defaultScopes_correct() throws IOException {
-    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     List<String> scopes = Arrays.asList("scope1", "scope2");
     ServiceAccountCredentials.Builder builder =
         ServiceAccountCredentials.newBuilder()
@@ -305,7 +305,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void createAssertionForIdToken_correct() throws IOException {
 
-    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -350,7 +350,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void createAssertionForIdToken_incorrect() throws IOException {
 
-    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -1364,7 +1364,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addClient(CLIENT_ID, "unused-client-secret");
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
 
-    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials =
         ServiceAccountCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -1391,7 +1391,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addClient(CLIENT_ID, "unused-client-secret");
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
 
-    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials =
         ServiceAccountCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -1414,7 +1414,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addClient(CLIENT_ID, "unused-client-secret");
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
 
-    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials =
         ServiceAccountCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -1451,7 +1451,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void getRequestMetadata_selfSignedJWT_withScopes() throws IOException {
-    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials =
         ServiceAccountCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -1474,7 +1474,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
-    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials =
         ServiceAccountCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -1506,7 +1506,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void getRequestMetadata_selfSignedJWT_withAudience() throws IOException {
-    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials =
         ServiceAccountCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -1523,7 +1523,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void getRequestMetadata_selfSignedJWT_withDefaultScopes() throws IOException {
-    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials =
         ServiceAccountCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -1542,7 +1542,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void getRequestMetadataWithCallback_selfSignedJWT() throws IOException {
-    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials =
         ServiceAccountCredentials.newBuilder()
             .setClientId(CLIENT_ID)

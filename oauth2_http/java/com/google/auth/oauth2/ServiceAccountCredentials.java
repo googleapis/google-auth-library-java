@@ -49,10 +49,7 @@ import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Joiner;
-import com.google.api.client.util.PemReader;
-import com.google.api.client.util.PemReader.Section;
 import com.google.api.client.util.Preconditions;
-import com.google.api.client.util.SecurityUtils;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
@@ -62,20 +59,15 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
-import java.io.Reader;
-import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
-import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.SignatureException;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -438,29 +430,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
    */
   static ServiceAccountCredentials fromPkcs8(
       String privateKeyPkcs8, ServiceAccountCredentials.Builder builder) throws IOException {
-    PrivateKey privateKey = privateKeyFromPkcs8(privateKeyPkcs8);
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(privateKeyPkcs8);
     builder.setPrivateKey(privateKey);
 
     return new ServiceAccountCredentials(builder);
-  }
-
-  /** Helper to convert from a PKCS#8 String to an RSA private key */
-  static PrivateKey privateKeyFromPkcs8(String privateKeyPkcs8) throws IOException {
-    Reader reader = new StringReader(privateKeyPkcs8);
-    Section section = PemReader.readFirstSectionAndClose(reader, "PRIVATE KEY");
-    if (section == null) {
-      throw new IOException("Invalid PKCS#8 data.");
-    }
-    byte[] bytes = section.getBase64DecodedBytes();
-    PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(bytes);
-    Exception unexpectedException;
-    try {
-      KeyFactory keyFactory = SecurityUtils.getRsaKeyFactory();
-      return keyFactory.generatePrivate(keySpec);
-    } catch (NoSuchAlgorithmException | InvalidKeySpecException exception) {
-      unexpectedException = exception;
-    }
-    throw new IOException("Unexpected exception reading PKCS#8 data", unexpectedException);
   }
 
   /**
@@ -1054,7 +1027,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     }
 
     public Builder setPrivateKeyString(String privateKeyPkcs8) throws IOException {
-      this.privateKey = privateKeyFromPkcs8(privateKeyPkcs8);
+      this.privateKey = OAuth2Utils.privateKeyFromPkcs8(privateKeyPkcs8);
       return this;
     }
 
