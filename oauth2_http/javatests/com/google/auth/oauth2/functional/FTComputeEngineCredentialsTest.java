@@ -86,15 +86,15 @@ public final class FTComputeEngineCredentialsTest {
   @Test
   public void FetchIdToken() throws Exception {
     final ComputeEngineCredentials credentials = ComputeEngineCredentials.create();
-    IdTokenCredentials tokenCredential =
+    IdTokenCredentials idTokenCredential =
         IdTokenCredentials.newBuilder()
             .setIdTokenProvider((IdTokenProvider) credentials)
             .setTargetAudience(computeUrl)
             .build();
 
-    assertNull(tokenCredential.getIdToken());
-    tokenCredential.refresh();
-    IdToken idToken = tokenCredential.getIdToken();
+    assertNull(idTokenCredential.getIdToken());
+    idTokenCredential.refresh();
+    IdToken idToken = idTokenCredential.getIdToken();
     assertNotNull(idToken);
     assertTrue(idToken.getExpirationTime().getTime() > System.currentTimeMillis());
     JsonWebSignature jws =
