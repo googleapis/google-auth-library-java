@@ -482,6 +482,15 @@ public class GdchCredentials extends GoogleCredentials {
     return field;
   }
 
+  /*
+   * Internal HttpTransportFactory for GDCH credentials.
+   *
+   * <p> GDCH authentication server could use a self-signed certificate, thus the client should
+   * provide the CA certificate path through the `ca_cert_path` in GDCH JSON file.
+   *
+   * <p> The TransportFactoryForGdch subclass would read the certificate and create a trust store,
+   * then use the trust store to create a transport.
+   */
   static class TransportFactoryForGdch implements HttpTransportFactory {
     HttpTransport transport;
 
