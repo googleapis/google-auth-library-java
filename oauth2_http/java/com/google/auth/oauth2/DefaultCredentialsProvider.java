@@ -55,27 +55,21 @@ import java.util.logging.Logger;
 class DefaultCredentialsProvider {
 
   static final DefaultCredentialsProvider DEFAULT = new DefaultCredentialsProvider();
-
   static final String CREDENTIAL_ENV_VAR = "GOOGLE_APPLICATION_CREDENTIALS";
+  static final String QUOTA_PROJECT_ENV_VAR = "GOOGLE_CLOUD_QUOTA_PROJECT";
 
   static final String WELL_KNOWN_CREDENTIALS_FILE = "application_default_credentials.json";
-
   static final String CLOUDSDK_CONFIG_DIRECTORY = "gcloud";
-
   static final String HELP_PERMALINK =
       "https://developers.google.com/accounts/docs/application-default-credentials";
-
   static final String APP_ENGINE_SIGNAL_CLASS = "com.google.appengine.api.utils.SystemProperty";
-
   static final String CLOUD_SHELL_ENV_VAR = "DEVSHELL_CLIENT_PORT";
-
   static final String SKIP_APP_ENGINE_ENV_VAR = "GOOGLE_APPLICATION_CREDENTIALS_SKIP_APP_ENGINE";
   static final String SPECIFICATION_VERSION = System.getProperty("java.specification.version");
   static final String GAE_RUNTIME_VERSION =
       System.getProperty("com.google.appengine.runtime.version");
   static final String RUNTIME_JETTY_LOGGER = System.getProperty("org.eclipse.jetty.util.log.class");
   static final Logger LOGGER = Logger.getLogger(DefaultCredentialsProvider.class.getName());
-
   static final String NO_GCE_CHECK_ENV_VAR = "NO_GCE_CHECK";
   static final String GCE_METADATA_HOST_ENV_VAR = "GCE_METADATA_HOST";
   static final String CLOUDSDK_CLIENT_ID =
@@ -223,6 +217,14 @@ class DefaultCredentialsProvider {
       credentials = tryGetComputeCredentials(transportFactory);
     }
 
+    if (credentials != null) {
+      String quotaFromEnv = getEnv(QUOTA_PROJECT_ENV_VAR);
+
+      if (quotaFromEnv != null && quotaFromEnv.trim().length() > 0) {
+        credentials = credentials.createWithQuotaProject(quotaFromEnv);
+      }
+    }
+
     return credentials;
   }
 
@@ -236,11 +238,10 @@ class DefaultCredentialsProvider {
 
   private final File getWellKnownCredentialsFile() {
     File cloudConfigPath;
-    String os = getProperty("os.name", "").toLowerCase(Locale.US);
     String envPath = getEnv("CLOUDSDK_CONFIG");
     if (envPath != null) {
       cloudConfigPath = new File(envPath);
-    } else if (os.indexOf("windows") >= 0) {
+    } else if (getOsName().indexOf("windows") >= 0) {
       File appDataPath = new File(getEnv("APPDATA"));
       cloudConfigPath = new File(appDataPath, CLOUDSDK_CONFIG_DIRECTORY);
     } else {
@@ -310,8 +311,7 @@ class DefaultCredentialsProvider {
     if (checkedComputeEngine) {
       return null;
     }
-    boolean runningOnComputeEngine =
-        ComputeEngineCredentials.runningOnComputeEngine(transportFactory, this);
+    boolean runningOnComputeEngine = ComputeEngineCredentials.isOnGce(transportFactory, this);
     checkedComputeEngine = true;
     if (runningOnComputeEngine) {
       return ComputeEngineCredentials.newBuilder()
@@ -335,6 +335,10 @@ class DefaultCredentialsProvider {
   protected boolean isOnGAEStandard7() {
     return GAE_RUNTIME_VERSION != null
         && (SPECIFICATION_VERSION.equals("1.7") || RUNTIME_JETTY_LOGGER == null);
+  }
+
+  String getOsName() {
+    return getProperty("os.name", "").toLowerCase(Locale.US);
   }
 
   /*

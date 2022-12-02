@@ -31,9 +31,11 @@
 
 package com.google.auth.oauth2;
 
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -43,6 +45,7 @@ import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.auth.TestUtils;
 import com.google.auth.oauth2.AwsCredentials.AwsCredentialSource;
 import com.google.auth.oauth2.ExternalAccountCredentialsTest.MockExternalAccountCredentialsTransportFactory;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -53,6 +56,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
+import org.junit.function.ThrowingRunnable;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -61,11 +65,10 @@ import org.junit.runners.JUnit4;
 public class AwsCredentialsTest {
 
   private static final String STS_URL = "https://sts.googleapis.com";
-  private static final String AWS_CREDENTIALS_URL = "https://www.aws-credentials.com";
-  private static final String AWS_CREDENTIALS_URL_WITH_ROLE =
-      "https://www.aws-credentials.com/roleName";
-  private static final String AWS_REGION_URL = "https://www.aws-region.com";
-  private static final String AWS_IMDSV2_SESSION_TOKEN_URL = "https://www.aws-session-token.com";
+  private static final String AWS_CREDENTIALS_URL = "https://169.254.169.254";
+  private static final String AWS_CREDENTIALS_URL_WITH_ROLE = "https://169.254.169.254/roleName";
+  private static final String AWS_REGION_URL = "https://169.254.169.254/region";
+  private static final String AWS_IMDSV2_SESSION_TOKEN_URL = "https://169.254.169.254/imdsv2";
   private static final String AWS_IMDSV2_SESSION_TOKEN = "sessiontoken";
 
   private static final String GET_CALLER_IDENTITY_URL =
@@ -78,8 +81,8 @@ public class AwsCredentialsTest {
       new HashMap<String, Object>() {
         {
           put("environment_id", "aws1");
-          put("region_url", "regionUrl");
-          put("url", "url");
+          put("region_url", AWS_REGION_URL);
+          put("url", AWS_CREDENTIALS_URL);
           put("regional_cred_verification_url", "regionalCredVerificationUrl");
         }
       };
@@ -100,6 +103,32 @@ public class AwsCredentialsTest {
               .setTokenInfoUrl("tokenInfoUrl")
               .setCredentialSource(AWS_CREDENTIAL_SOURCE)
               .build();
+
+  @Test
+  public void test_awsCredentialSource_ipv6() {
+    // If no exception is thrown, it means the urls were valid.
+    new AwsCredentialSource(buildAwsIpv6CredentialSourceMap());
+  }
+
+  @Test
+  public void test_awsCredentialSource_invalid_urls() {
+    String keys[] = {"region_url", "url", "imdsv2_session_token_url"};
+    for (String key : keys) {
+      Map<String, Object> credentialSourceWithInvalidUrl = buildAwsIpv6CredentialSourceMap();
+      credentialSourceWithInvalidUrl.put(key, "https://badhost.com/fake");
+      IllegalArgumentException e =
+          assertThrows(
+              IllegalArgumentException.class,
+              new ThrowingRunnable() {
+                @Override
+                public void run() throws Throwable {
+                  new AwsCredentialSource(credentialSourceWithInvalidUrl);
+                }
+              });
+
+      assertEquals(String.format("Invalid host badhost.com for %s.", key), e.getMessage());
+    }
+  }
 
   @Test
   public void refreshAccessToken_withoutServiceAccountImpersonation() throws IOException {
@@ -224,19 +253,11 @@ public class AwsCredentialsTest {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
-    Map<String, Object> credentialSourceMap = new HashMap<>();
-    credentialSourceMap.put("environment_id", "aws1");
-    credentialSourceMap.put("region_url", transportFactory.transport.getAwsRegionUrl());
-    credentialSourceMap.put("url", transportFactory.transport.getAwsCredentialsUrl());
-    credentialSourceMap.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
-    credentialSourceMap.put(
-        "imdsv2_session_token_url", transportFactory.transport.getAwsImdsv2SessionTokenUrl());
-
     AwsCredentials awsCredential =
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(new AwsCredentialSource(credentialSourceMap))
+                .setCredentialSource(buildAwsImdsv2CredentialSource(transportFactory))
                 .build();
 
     String subjectToken = URLDecoder.decode(awsCredential.retrieveSubjectToken(), "UTF-8");
@@ -288,6 +309,100 @@ public class AwsCredentialsTest {
 
     // Validate security credentials request.
     ValidateRequest(requests.get(3), AWS_CREDENTIALS_URL_WITH_ROLE, sessionTokenHeader);
+  }
+
+  @Test
+  public void retrieveSubjectToken_imdsv1EnvVariablesSet_metadataServerNotCalled()
+      throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    // Provide AWS credentials through environment vars.
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    environmentProvider
+        .setEnv("AWS_REGION", "awsRegion")
+        .setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId")
+        .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey")
+        .setEnv("AWS_SESSION_TOKEN", "awsToken");
+
+    AwsCredentials awsCredential =
+        (AwsCredentials)
+            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+                .setHttpTransportFactory(transportFactory)
+                .setCredentialSource(buildAwsCredentialSource(transportFactory))
+                .setEnvironmentProvider(environmentProvider)
+                .build();
+
+    String subjectToken = URLDecoder.decode(awsCredential.retrieveSubjectToken(), "UTF-8");
+
+    JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser(subjectToken);
+    GenericJson json = parser.parseAndClose(GenericJson.class);
+
+    List<Map<String, String>> headersList = (List<Map<String, String>>) json.get("headers");
+    Map<String, String> headers = new HashMap<>();
+    for (Map<String, String> header : headersList) {
+      headers.put(header.get("key"), header.get("value"));
+    }
+
+    assertEquals("POST", json.get("method"));
+    assertEquals(GET_CALLER_IDENTITY_URL, json.get("url"));
+    assertEquals(URI.create(GET_CALLER_IDENTITY_URL).getHost(), headers.get("host"));
+    assertEquals("awsToken", headers.get("x-amz-security-token"));
+    assertEquals(awsCredential.getAudience(), headers.get("x-goog-cloud-target-resource"));
+    assertTrue(headers.containsKey("x-amz-date"));
+    assertNotNull(headers.get("Authorization"));
+
+    // No requests should have been made since AWS credentials and region is passed through
+    // environment variables.
+    List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
+    assertEquals(0, requests.size());
+  }
+
+  @Test
+  public void retrieveSubjectToken_imdsv2EnvVariablesSet_metadataServerNotCalled()
+      throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    // Provide AWS credentials through environment vars.
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    environmentProvider
+        .setEnv("AWS_REGION", "awsRegion")
+        .setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId")
+        .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey")
+        .setEnv("AWS_SESSION_TOKEN", "awsToken");
+
+    AwsCredentials awsCredential =
+        (AwsCredentials)
+            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+                .setHttpTransportFactory(transportFactory)
+                .setCredentialSource(buildAwsImdsv2CredentialSource(transportFactory))
+                .setEnvironmentProvider(environmentProvider)
+                .build();
+
+    String subjectToken = URLDecoder.decode(awsCredential.retrieveSubjectToken(), "UTF-8");
+
+    JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser(subjectToken);
+    GenericJson json = parser.parseAndClose(GenericJson.class);
+
+    List<Map<String, String>> headersList = (List<Map<String, String>>) json.get("headers");
+    Map<String, String> headers = new HashMap<>();
+    for (Map<String, String> header : headersList) {
+      headers.put(header.get("key"), header.get("value"));
+    }
+
+    assertEquals("POST", json.get("method"));
+    assertEquals(GET_CALLER_IDENTITY_URL, json.get("url"));
+    assertEquals(URI.create(GET_CALLER_IDENTITY_URL).getHost(), headers.get("host"));
+    assertEquals("awsToken", headers.get("x-amz-security-token"));
+    assertEquals(awsCredential.getAudience(), headers.get("x-goog-cloud-target-resource"));
+    assertTrue(headers.containsKey("x-amz-date"));
+    assertNotNull(headers.get("Authorization"));
+
+    // No requests should have been made since AWS credentials and region is passed through
+    // environment variables.
+    List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
+    assertEquals(0, requests.size());
   }
 
   @Test
@@ -448,6 +563,41 @@ public class AwsCredentialsTest {
         .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey")
         .setEnv("AWS_SESSION_TOKEN", "awsSessionToken");
 
+    AwsCredentialSource credSource =
+        new AwsCredentialSource(
+            new HashMap<String, Object>() {
+              {
+                put("environment_id", "aws1");
+                put("region_url", "");
+                put("url", "");
+                put("regional_cred_verification_url", "regionalCredVerificationUrl");
+              }
+            });
+
+    AwsCredentials testAwsCredentials =
+        (AwsCredentials)
+            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+                .setEnvironmentProvider(environmentProvider)
+                .setCredentialSource(credSource)
+                .build();
+
+    AwsSecurityCredentials credentials =
+        testAwsCredentials.getAwsSecurityCredentials(EMPTY_METADATA_HEADERS);
+
+    assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
+    assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
+    assertEquals("awsSessionToken", credentials.getToken());
+  }
+
+  @Test
+  public void getAwsSecurityCredentials_fromEnvironmentVariables_noMetadataServerCall()
+      throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    environmentProvider
+        .setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId")
+        .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey")
+        .setEnv("AWS_SESSION_TOKEN", "awsSessionToken");
+
     AwsCredentials testAwsCredentials =
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
@@ -460,6 +610,43 @@ public class AwsCredentialsTest {
     assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
     assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
     assertEquals("awsSessionToken", credentials.getToken());
+  }
+
+  @Test
+  public void validateMetadataServerUrlIfAny_validOrEmptyUrls() {
+    String[] urls = {
+      "http://[fd00:ec2::254]/region",
+      "http://169.254.169.254",
+      "http://169.254.169.254/xyz",
+      " ",
+      "",
+      null
+    };
+    for (String url : urls) {
+      AwsCredentialSource.validateMetadataServerUrlIfAny(url, "url");
+    }
+  }
+
+  @Test
+  public void validateMetadataServerUrlIfAny_invalidUrls() {
+    Map<String, String> urls = new HashMap<String, String>();
+    urls.put("http://[fd00:ec2::255]/region", "[fd00:ec2::255]");
+    urls.put("http://fake.com/region", "fake.com");
+    urls.put("http://169.254.169.255", "169.254.169.255");
+
+    for (Map.Entry<String, String> entry : urls.entrySet()) {
+      IllegalArgumentException e =
+          assertThrows(
+              IllegalArgumentException.class,
+              new ThrowingRunnable() {
+                @Override
+                public void run() throws Throwable {
+                  AwsCredentialSource.validateMetadataServerUrlIfAny(entry.getKey(), "url");
+                }
+              });
+
+      assertEquals(String.format("Invalid host %s for url.", entry.getValue()), e.getMessage());
+    }
   }
 
   @Test
@@ -676,6 +863,134 @@ public class AwsCredentialsTest {
   }
 
   @Test
+  public void shouldUseMetadataServer_withRequiredEnvironmentVariables() {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    // Add required environment variables.
+    List<String> regionKeys = ImmutableList.of("AWS_REGION", "AWS_DEFAULT_REGION");
+    for (String regionKey : regionKeys) {
+      TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+      // AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are always required.
+      environmentProvider
+          .setEnv(regionKey, "awsRegion")
+          .setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId")
+          .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey");
+      AwsCredentials awsCredential =
+          (AwsCredentials)
+              AwsCredentials.newBuilder(AWS_CREDENTIAL)
+                  .setHttpTransportFactory(transportFactory)
+                  .setCredentialSource(buildAwsImdsv2CredentialSource(transportFactory))
+                  .setEnvironmentProvider(environmentProvider)
+                  .build();
+      assertFalse(awsCredential.shouldUseMetadataServer());
+    }
+  }
+
+  @Test
+  public void shouldUseMetadataServer_missingRegion() {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    environmentProvider
+        .setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId")
+        .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey");
+    AwsCredentials awsCredential =
+        (AwsCredentials)
+            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+                .setHttpTransportFactory(transportFactory)
+                .setCredentialSource(buildAwsImdsv2CredentialSource(transportFactory))
+                .setEnvironmentProvider(environmentProvider)
+                .build();
+    assertTrue(awsCredential.shouldUseMetadataServer());
+  }
+
+  @Test
+  public void shouldUseMetadataServer_missingAwsAccessKeyId() {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    // Add required environment variables.
+    List<String> regionKeys = ImmutableList.of("AWS_REGION", "AWS_DEFAULT_REGION");
+    for (String regionKey : regionKeys) {
+      TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+      // AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are always required.
+      environmentProvider
+          .setEnv(regionKey, "awsRegion")
+          .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey");
+      AwsCredentials awsCredential =
+          (AwsCredentials)
+              AwsCredentials.newBuilder(AWS_CREDENTIAL)
+                  .setHttpTransportFactory(transportFactory)
+                  .setCredentialSource(buildAwsImdsv2CredentialSource(transportFactory))
+                  .setEnvironmentProvider(environmentProvider)
+                  .build();
+      assertTrue(awsCredential.shouldUseMetadataServer());
+    }
+  }
+
+  @Test
+  public void shouldUseMetadataServer_missingAwsSecretAccessKey() {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    // Add required environment variables.
+    List<String> regionKeys = ImmutableList.of("AWS_REGION", "AWS_DEFAULT_REGION");
+    for (String regionKey : regionKeys) {
+      TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+      // AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are always required.
+      environmentProvider
+          .setEnv(regionKey, "awsRegion")
+          .setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId");
+      AwsCredentials awsCredential =
+          (AwsCredentials)
+              AwsCredentials.newBuilder(AWS_CREDENTIAL)
+                  .setHttpTransportFactory(transportFactory)
+                  .setCredentialSource(buildAwsImdsv2CredentialSource(transportFactory))
+                  .setEnvironmentProvider(environmentProvider)
+                  .build();
+      assertTrue(awsCredential.shouldUseMetadataServer());
+    }
+  }
+
+  @Test
+  public void shouldUseMetadataServer_missingAwsSecurityCreds() {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    // Add required environment variables.
+    List<String> regionKeys = ImmutableList.of("AWS_REGION", "AWS_DEFAULT_REGION");
+    for (String regionKey : regionKeys) {
+      TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+      // AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are always required.
+      // Not set here.
+      environmentProvider.setEnv(regionKey, "awsRegion");
+      AwsCredentials awsCredential =
+          (AwsCredentials)
+              AwsCredentials.newBuilder(AWS_CREDENTIAL)
+                  .setHttpTransportFactory(transportFactory)
+                  .setCredentialSource(buildAwsImdsv2CredentialSource(transportFactory))
+                  .setEnvironmentProvider(environmentProvider)
+                  .build();
+      assertTrue(awsCredential.shouldUseMetadataServer());
+    }
+  }
+
+  @Test
+  public void shouldUseMetadataServer_noEnvironmentVars() {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+    AwsCredentials awsCredential =
+        (AwsCredentials)
+            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+                .setHttpTransportFactory(transportFactory)
+                .setCredentialSource(buildAwsImdsv2CredentialSource(transportFactory))
+                .build();
+    assertTrue(awsCredential.shouldUseMetadataServer());
+  }
+
+  @Test
   public void builder() {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
@@ -723,15 +1038,41 @@ public class AwsCredentialsTest {
     }
   }
 
-  private static AwsCredentialSource buildAwsCredentialSource(
+  private static Map<String, Object> buildAwsCredentialSourceMap(
       MockExternalAccountCredentialsTransportFactory transportFactory) {
     Map<String, Object> credentialSourceMap = new HashMap<>();
     credentialSourceMap.put("environment_id", "aws1");
     credentialSourceMap.put("region_url", transportFactory.transport.getAwsRegionUrl());
     credentialSourceMap.put("url", transportFactory.transport.getAwsCredentialsUrl());
     credentialSourceMap.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
+    return credentialSourceMap;
+  }
 
+  private static AwsCredentialSource buildAwsCredentialSource(
+      MockExternalAccountCredentialsTransportFactory transportFactory) {
+    return new AwsCredentialSource(buildAwsCredentialSourceMap(transportFactory));
+  }
+
+  private static AwsCredentialSource buildAwsImdsv2CredentialSource(
+      MockExternalAccountCredentialsTransportFactory transportFactory) {
+    Map<String, Object> credentialSourceMap = buildAwsCredentialSourceMap(transportFactory);
+    credentialSourceMap.put(
+        "imdsv2_session_token_url", transportFactory.transport.getAwsImdsv2SessionTokenUrl());
     return new AwsCredentialSource(credentialSourceMap);
+  }
+
+  private static Map<String, Object> buildAwsIpv6CredentialSourceMap() {
+    String regionUrl = "http://[fd00:ec2::254]/region";
+    String url = "http://[fd00:ec2::254]";
+    String imdsv2SessionTokenUrl = "http://[fd00:ec2::254]/imdsv2";
+    Map<String, Object> credentialSourceMap = new HashMap<>();
+    credentialSourceMap.put("environment_id", "aws1");
+    credentialSourceMap.put("region_url", regionUrl);
+    credentialSourceMap.put("url", url);
+    credentialSourceMap.put("imdsv2_session_token_url", imdsv2SessionTokenUrl);
+    credentialSourceMap.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
+
+    return credentialSourceMap;
   }
 
   static InputStream writeAwsCredentialsStream(String stsUrl, String regionUrl, String metadataUrl)
