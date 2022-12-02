@@ -90,7 +90,7 @@ import java.util.concurrent.Executor;
  * <p>By default uses a JSON Web Token (JWT) to fetch access tokens.
  */
 public class ServiceAccountCredentials extends GoogleCredentials
-    implements ServiceAccountSigner, IdTokenProvider, JwtProvider, QuotaProjectIdProvider {
+    implements ServiceAccountSigner, IdTokenProvider, JwtProvider {
 
   private static final long serialVersionUID = 7807543542681217978L;
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
@@ -112,7 +112,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
   private final URI tokenServerUri;
   private final Collection<String> scopes;
   private final Collection<String> defaultScopes;
-  private final String quotaProjectId;
   private final int lifetime;
   private final boolean useJwtAccessWithScope;
   private final boolean defaultRetriesEnabled;
@@ -126,6 +125,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
    *     ServiceAccountCredentials.Builder}
    */
   ServiceAccountCredentials(ServiceAccountCredentials.Builder builder) {
+    super(builder);
     this.clientId = builder.clientId;
     this.clientEmail = Preconditions.checkNotNull(builder.clientEmail);
     this.privateKey = Preconditions.checkNotNull(builder.privateKey);
@@ -145,7 +145,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
         (builder.tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : builder.tokenServerUri;
     this.serviceAccountUser = builder.serviceAccountUser;
     this.projectId = builder.projectId;
-    this.quotaProjectId = builder.quotaProjectId;
     if (builder.lifetime > TWELVE_HOURS_IN_SECONDS) {
       throw new IllegalStateException("lifetime must be less than or equal to 43200");
     }
@@ -769,15 +768,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
   }
 
   @Override
-  protected Map<String, List<String>> getAdditionalHeaders() {
-    Map<String, List<String>> headers = super.getAdditionalHeaders();
-    if (quotaProjectId != null) {
-      return addQuotaProjectIdToRequestMetadata(quotaProjectId, headers);
-    }
-    return headers;
-  }
-
-  @Override
   public int hashCode() {
     return Objects.hash(
         clientId,
@@ -997,11 +987,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
     return new Builder(this);
   }
 
-  @Override
-  public String getQuotaProjectId() {
-    return quotaProjectId;
-  }
-
   public static class Builder extends GoogleCredentials.Builder {
 
     private String clientId;
@@ -1014,7 +999,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
     private Collection<String> scopes;
     private Collection<String> defaultScopes;
     private HttpTransportFactory transportFactory;
-    private String quotaProjectId;
     private int lifetime = DEFAULT_LIFETIME_IN_SECONDS;
     private boolean useJwtAccessWithScope = false;
     private boolean defaultRetriesEnabled = true;
@@ -1022,6 +1006,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     protected Builder() {}
 
     protected Builder(ServiceAccountCredentials credentials) {
+      super(credentials);
       this.clientId = credentials.clientId;
       this.clientEmail = credentials.clientEmail;
       this.privateKey = credentials.privateKey;
@@ -1032,7 +1017,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
       this.tokenServerUri = credentials.tokenServerUri;
       this.serviceAccountUser = credentials.serviceAccountUser;
       this.projectId = credentials.projectId;
-      this.quotaProjectId = credentials.quotaProjectId;
       this.lifetime = credentials.lifetime;
       this.useJwtAccessWithScope = credentials.useJwtAccessWithScope;
       this.defaultRetriesEnabled = credentials.defaultRetriesEnabled;
@@ -1096,7 +1080,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     }
 
     public Builder setQuotaProjectId(String quotaProjectId) {
-      this.quotaProjectId = quotaProjectId;
+      super.setQuotaProjectId(quotaProjectId);
       return this;
     }
 
@@ -1153,10 +1137,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
     public HttpTransportFactory getHttpTransportFactory() {
       return transportFactory;
-    }
-
-    public String getQuotaProjectId() {
-      return quotaProjectId;
     }
 
     public int getLifetime() {

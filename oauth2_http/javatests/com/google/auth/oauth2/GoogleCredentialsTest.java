@@ -385,6 +385,22 @@ public class GoogleCredentialsTest {
     assertEquals(ImmutableList.of("foo", "bar"), called.get());
   }
 
+  @Test
+  public void createWithQuotaProject() {
+    final GoogleCredentials googleCredentials =
+        new GoogleCredentials.Builder().setQuotaProjectId("old_quota").build();
+    GoogleCredentials withUpdatedQuota = googleCredentials.createWithQuotaProject("new_quota");
+
+    assertEquals("old_quota", googleCredentials.getQuotaProjectId());
+    assertEquals("new_quota", withUpdatedQuota.getQuotaProjectId());
+
+    GoogleCredentials withEmptyQuota = googleCredentials.createWithQuotaProject("");
+    assertEquals("", withEmptyQuota.getQuotaProjectId());
+
+    GoogleCredentials sameCredentials = googleCredentials.createWithQuotaProject(null);
+    assertEquals(null, sameCredentials.getQuotaProjectId());
+  }
+
   private static void testFromStreamException(InputStream stream, String expectedMessageContent) {
     try {
       GoogleCredentials.fromStream(stream, DUMMY_TRANSPORT_FACTORY);
