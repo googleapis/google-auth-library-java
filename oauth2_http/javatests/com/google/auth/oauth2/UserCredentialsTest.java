@@ -55,8 +55,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -828,6 +831,26 @@ public class UserCredentialsTest extends BaseSerializationTest {
     } catch (IOException expected) {
       assertTrue(expected.getMessage().equals(expectedMessageContent));
     }
+  }
+
+  @Test
+  public void userCredentials_toBuilder_copyEveryAttribute() {
+    MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
+    UserCredentials credentials =
+        UserCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setAccessToken(new AccessToken(ACCESS_TOKEN, new Date()))
+            .setHttpTransportFactory(httpTransportFactory)
+            .setTokenServerUri(URI.create("https://foo1.com/bar"))
+            .setQuotaProjectId(QUOTA_PROJECT)
+            .setExpirationMargin(Duration.of(10, ChronoUnit.SECONDS))
+            .setRefreshMargin(Duration.of(12, ChronoUnit.MINUTES))
+            .build();
+
+    UserCredentials otherCredentials = credentials.toBuilder().build();
+    assertEquals(credentials, otherCredentials);
   }
 
   static GenericJson writeUserJson(
