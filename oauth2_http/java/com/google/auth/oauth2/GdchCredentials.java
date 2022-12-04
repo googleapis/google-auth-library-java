@@ -106,9 +106,8 @@ public class GdchCredentials extends GoogleCredentials {
    * @throws IOException if the credential cannot be created from the JSON.
    */
   static GdchCredentials fromJson(Map<String, Object> json) throws IOException {
-    String caCertPath = (String) json.get("ca_cert_path");
-    HttpTransportFactory transportFactory = new TransportFactoryForGdch(caCertPath);
-    return fromJson(json, transportFactory);
+    String caCertPath = validateField((String) json.get("ca_cert_path"), "ca_cert_path");
+    return fromJson(json, new TransportFactoryForGdch(caCertPath));
   }
 
   /**
@@ -130,7 +129,7 @@ public class GdchCredentials extends GoogleCredentials {
     String serviceIdentityName = validateField((String) json.get("name"), "name");
     String tokenServerUriStringFromCreds =
         validateField((String) json.get("token_uri"), "token_uri");
-    String caCertPath = (String) json.get("ca_cert_path");
+    String caCertPath = validateField((String) json.get("ca_cert_path"), "ca_cert_path");
 
     if (!SUPPORTED_FORMAT_VERSION.equals(formatVersion)) {
       throw new IOException(
@@ -486,14 +485,11 @@ public class GdchCredentials extends GoogleCredentials {
   /*
    * Internal HttpTransportFactory for GDCH credentials.
    *
-   * <p> GDCH authentication server could use a self-signed certificate, thus the client could
+   * <p> GDCH authentication server could use a self-signed certificate, thus the client should
    * provide the CA certificate path through the `ca_cert_path` in GDCH JSON file.
    *
    * <p> The TransportFactoryForGdch subclass would read the certificate and create a trust store,
    * then use the trust store to create a transport.
-   *
-   * <p> If the GDCH authentication server uses well known CA certificate, then a regular transport
-   * would be set.
    */
   static class TransportFactoryForGdch implements HttpTransportFactory {
     HttpTransport transport;
@@ -508,10 +504,6 @@ public class GdchCredentials extends GoogleCredentials {
     }
 
     private void setTransport(String caCertPath) throws IOException {
-      if (caCertPath == null || caCertPath.isEmpty()) {
-        this.transport = new NetHttpTransport();
-        return;
-      }
       try {
         InputStream certificateStream = readStream(new File(caCertPath));
         this.transport =
