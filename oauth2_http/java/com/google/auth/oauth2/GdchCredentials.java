@@ -65,7 +65,6 @@ import java.util.Objects;
 public class GdchCredentials extends GoogleCredentials {
   static final String SUPPORTED_FORMAT_VERSION = "1";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
-  private static final String GDCH_ISSUER_SUBJECT_VALUE_PREFIX = "system:serviceaccount:%s:%s";
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
 
   private final PrivateKey privateKey;
@@ -272,7 +271,7 @@ public class GdchCredentials extends GoogleCredentials {
    */
   @VisibleForTesting
   static String getIssuerSubjectValue(String projectId, String serviceIdentityName) {
-    return String.format(GDCH_ISSUER_SUBJECT_VALUE_PREFIX, projectId, serviceIdentityName);
+    return String.format("system:serviceaccount:%s:%s", projectId, serviceIdentityName);
   }
 
   public final String getProjectId() {
