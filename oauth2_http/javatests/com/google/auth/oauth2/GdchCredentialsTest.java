@@ -292,18 +292,8 @@ public class GdchCredentialsTest extends BaseSerializationTest {
             SERVICE_IDENTITY_NAME,
             null,
             TOKEN_SERVER_URI);
-    try {
-      GdchCredentials credentials = GdchCredentials.fromJson(json);
-      fail("Should not be able to create GDCH credential without exception.");
-    } catch (IOException ex) {
-      assertTrue(
-          ex.getMessage()
-              .contains(
-                  String.format(
-                      "Error reading GDCH service account credential from JSON, "
-                          + "%s is misconfigured.",
-                      "ca_cert_path")));
-    }
+    GdchCredentials credentials = GdchCredentials.fromJson(json);
+    assertNull(credentials.getCaCertPath());
   }
 
   @Test
@@ -372,6 +362,21 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     } catch (IOException ex) {
       assertTrue(ex.getMessage().contains("Error reading certificate file from CA cert path"));
     }
+  }
+
+  @Test
+  public void fromJSON_emptyCaCertPath() throws IOException {
+    GenericJson json =
+        writeGdchServiceAccountJson(
+            FORMAT_VERSION,
+            PROJECT_ID,
+            PRIVATE_KEY_ID,
+            PRIVATE_KEY_PKCS8,
+            SERVICE_IDENTITY_NAME,
+            "",
+            TOKEN_SERVER_URI);
+    GdchCredentials credentials = GdchCredentials.fromJson(json);
+    assertEquals("", credentials.getCaCertPath());
   }
 
   @Test
