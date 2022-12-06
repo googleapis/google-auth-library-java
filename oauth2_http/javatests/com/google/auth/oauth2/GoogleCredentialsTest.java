@@ -34,6 +34,7 @@ package com.google.auth.oauth2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -69,6 +70,18 @@ public class GoogleCredentialsTest {
   private static final String SA_PRIVATE_KEY_ID = "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
   private static final String SA_PRIVATE_KEY_PKCS8 =
       ServiceAccountCredentialsTest.PRIVATE_KEY_PKCS8;
+  private static final String GDCH_SA_FORMAT_VERSION = GdchCredentials.SUPPORTED_FORMAT_VERSION;
+  private static final String GDCH_SA_PROJECT_ID = "gdch-service-account-project-id";
+  private static final String GDCH_SA_PRIVATE_KEY_ID = "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
+  private static final String GDCH_SA_PRIVATE_KEY_PKC8 = GdchCredentialsTest.PRIVATE_KEY_PKCS8;
+  private static final String GDCH_SA_SERVICE_IDENTITY_NAME =
+      "gdch-service-account-service-identity-name";
+  private static final URI GDCH_SA_TOKEN_SERVER_URI =
+      URI.create("https://service-identity.domain/authenticate");
+  private static final String GDCH_SA_CA_CERT_FILE_NAME = "cert.pem";
+  private static final String GDCH_SA_CA_CERT_PATH =
+      GdchCredentialsTest.class.getClassLoader().getResource(GDCH_SA_CA_CERT_FILE_NAME).getPath();
+  private static final URI GDCH_API_AUDIENCE = URI.create("https://gdch-api-audience");
   private static final String USER_CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
   private static final String USER_CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
   private static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
@@ -190,6 +203,165 @@ public class GoogleCredentialsTest {
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, null);
 
     testFromStreamException(serviceAccountStream, "private_key_id");
+  }
+
+  @Test
+  public void fromStream_gdchServiceAccount_correct() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    InputStream gdchServiceAccountStream =
+        GdchCredentialsTest.writeGdchServiceAccountStream(
+            GDCH_SA_FORMAT_VERSION,
+            GDCH_SA_PROJECT_ID,
+            GDCH_SA_PRIVATE_KEY_ID,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_CA_CERT_PATH,
+            GDCH_SA_TOKEN_SERVER_URI);
+    GoogleCredentials credentials =
+        GoogleCredentials.fromStream(gdchServiceAccountStream, transportFactory);
+
+    assertNotNull(credentials);
+    assertTrue(credentials instanceof GdchCredentials);
+    assertEquals(GDCH_SA_PROJECT_ID, ((GdchCredentials) credentials).getProjectId());
+    assertEquals(
+        GDCH_SA_SERVICE_IDENTITY_NAME, ((GdchCredentials) credentials).getServiceIdentityName());
+    assertEquals(GDCH_SA_TOKEN_SERVER_URI, ((GdchCredentials) credentials).getTokenServerUri());
+    assertEquals(GDCH_SA_CA_CERT_PATH, ((GdchCredentials) credentials).getCaCertPath());
+    assertNull(((GdchCredentials) credentials).getApiAudience());
+
+    credentials = ((GdchCredentials) credentials).createWithGdchAudience(GDCH_API_AUDIENCE);
+    assertNotNull(credentials);
+    assertTrue(credentials instanceof GdchCredentials);
+    assertEquals(GDCH_SA_PROJECT_ID, ((GdchCredentials) credentials).getProjectId());
+    assertEquals(
+        GDCH_SA_SERVICE_IDENTITY_NAME, ((GdchCredentials) credentials).getServiceIdentityName());
+    assertEquals(GDCH_SA_TOKEN_SERVER_URI, ((GdchCredentials) credentials).getTokenServerUri());
+    assertEquals(GDCH_SA_CA_CERT_PATH, ((GdchCredentials) credentials).getCaCertPath());
+    assertNotNull(((GdchCredentials) credentials).getApiAudience());
+  }
+
+  @Test
+  public void fromStream_gdchServiceAccountNoFormatVersion_throws() throws IOException {
+    InputStream gdchServiceAccountStream =
+        GdchCredentialsTest.writeGdchServiceAccountStream(
+            null,
+            GDCH_SA_PROJECT_ID,
+            GDCH_SA_PRIVATE_KEY_ID,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_CA_CERT_PATH,
+            GDCH_SA_TOKEN_SERVER_URI);
+
+    testFromStreamException(gdchServiceAccountStream, "format_version");
+  }
+
+  @Test
+  public void fromStream_gdchServiceAccountNoProjectId_throws() throws IOException {
+    InputStream gdchServiceAccountStream =
+        GdchCredentialsTest.writeGdchServiceAccountStream(
+            GDCH_SA_FORMAT_VERSION,
+            null,
+            GDCH_SA_PRIVATE_KEY_ID,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_CA_CERT_PATH,
+            GDCH_SA_TOKEN_SERVER_URI);
+
+    testFromStreamException(gdchServiceAccountStream, "project");
+  }
+
+  @Test
+  public void fromStream_gdchServiceAccountNoPrivateKeyId_throws() throws IOException {
+    InputStream gdchServiceAccountStream =
+        GdchCredentialsTest.writeGdchServiceAccountStream(
+            GDCH_SA_FORMAT_VERSION,
+            GDCH_SA_PROJECT_ID,
+            null,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_CA_CERT_PATH,
+            GDCH_SA_TOKEN_SERVER_URI);
+
+    testFromStreamException(gdchServiceAccountStream, "private_key_id");
+  }
+
+  @Test
+  public void fromStream_gdchServiceAccountNoPrivateKey_throws() throws IOException {
+    InputStream gdchServiceAccountStream =
+        GdchCredentialsTest.writeGdchServiceAccountStream(
+            GDCH_SA_FORMAT_VERSION,
+            GDCH_SA_PROJECT_ID,
+            GDCH_SA_PRIVATE_KEY_ID,
+            null,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_CA_CERT_PATH,
+            GDCH_SA_TOKEN_SERVER_URI);
+
+    testFromStreamException(gdchServiceAccountStream, "private_key");
+  }
+
+  @Test
+  public void fromStream_gdchServiceAccountNoServiceIdentityName_throws() throws IOException {
+    InputStream gdchServiceAccountStream =
+        GdchCredentialsTest.writeGdchServiceAccountStream(
+            GDCH_SA_FORMAT_VERSION,
+            GDCH_SA_PROJECT_ID,
+            GDCH_SA_PRIVATE_KEY_ID,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            null,
+            GDCH_SA_CA_CERT_PATH,
+            GDCH_SA_TOKEN_SERVER_URI);
+
+    testFromStreamException(gdchServiceAccountStream, "name");
+  }
+
+  @Test
+  public void fromStream_gdchServiceAccountNoTokenServerUri_throws() throws IOException {
+    InputStream gdchServiceAccountStream =
+        GdchCredentialsTest.writeGdchServiceAccountStream(
+            GDCH_SA_FORMAT_VERSION,
+            GDCH_SA_PROJECT_ID,
+            GDCH_SA_PRIVATE_KEY_ID,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_CA_CERT_PATH,
+            null);
+
+    testFromStreamException(gdchServiceAccountStream, "token_uri");
+  }
+
+  @Test
+  public void fromStream_gdchServiceAccountInvalidFormatVersion_throws() throws IOException {
+    InputStream gdchServiceAccountStream =
+        GdchCredentialsTest.writeGdchServiceAccountStream(
+            "100",
+            GDCH_SA_PROJECT_ID,
+            GDCH_SA_PRIVATE_KEY_ID,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_CA_CERT_PATH,
+            GDCH_SA_TOKEN_SERVER_URI);
+
+    testFromStreamException(
+        gdchServiceAccountStream,
+        String.format("Only format version %s is supported", GDCH_SA_FORMAT_VERSION));
+  }
+
+  @Test
+  public void fromStream_gdchServiceAccountInvalidCaCertPath_throws() throws IOException {
+    InputStream gdchServiceAccountStream =
+        GdchCredentialsTest.writeGdchServiceAccountStream(
+            GDCH_SA_FORMAT_VERSION,
+            GDCH_SA_PROJECT_ID,
+            GDCH_SA_PRIVATE_KEY_ID,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            "/path/to/missing/file",
+            GDCH_SA_TOKEN_SERVER_URI);
+
+    testFromStreamException(
+        gdchServiceAccountStream,
+        String.format("Error reading certificate file from CA cert path"));
   }
 
   @Test

@@ -73,7 +73,7 @@ public class JwtCredentialsTest extends BaseSerializationTest {
 
   static PrivateKey getPrivateKey() {
     try {
-      return ServiceAccountCredentials.privateKeyFromPkcs8(PRIVATE_KEY);
+      return OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY);
     } catch (IOException ex) {
       return null;
     }

@@ -212,7 +212,7 @@ public class DownscopedCredentialsTest {
     ServiceAccountCredentials sourceCredentials =
         ServiceAccountCredentials.newBuilder()
             .setClientEmail(email)
-            .setPrivateKey(ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
+            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
             .setPrivateKeyId("privateKeyId")
             .setProjectId("projectId")
             .setHttpTransportFactory(transportFactory)
