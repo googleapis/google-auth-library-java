@@ -272,12 +272,10 @@ public class OAuth2Credentials extends Credentials {
   private void finishRefreshAsync(ListenableFuture<OAuthValue> finishedTask) {
     synchronized (lock) {
       try {
-        this.value = finishedTask.get();
+        this.value = Futures.getDone(finishedTask);
         for (CredentialsChangedListener listener : changeListeners) {
           listener.onChanged(this);
         }
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
       } catch (Exception e) {
         // noop
       } finally {
