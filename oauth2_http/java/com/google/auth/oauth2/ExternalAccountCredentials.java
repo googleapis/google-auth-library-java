@@ -43,6 +43,7 @@ import com.google.auth.oauth2.PluggableAuthCredentials.PluggableAuthCredentialSo
 import com.google.common.base.MoreObjects;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -66,7 +67,9 @@ import javax.annotation.Nullable;
 public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
   /** Base credential source class. Dictates the retrieval method of the external credential. */
-  abstract static class CredentialSource {
+  abstract static class CredentialSource implements Serializable {
+
+    private static final long serialVersionUID = 8204657811562399944L;
 
     CredentialSource(Map<String, Object> credentialSourceMap) {
       checkNotNull(credentialSourceMap);
