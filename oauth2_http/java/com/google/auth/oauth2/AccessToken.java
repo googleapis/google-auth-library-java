@@ -33,7 +33,9 @@ package com.google.auth.oauth2;
 
 import com.google.common.base.MoreObjects;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 /** Represents a temporary OAuth2 access token and its expiration information. */
@@ -43,7 +45,7 @@ public class AccessToken implements Serializable {
 
   private final String tokenValue;
   private final Long expirationTimeMillis;
-  private final String scopes;
+  private final List<String> scopes;
 
   /**
    * @param tokenValue String representation of the access token.
@@ -76,7 +78,7 @@ public class AccessToken implements Serializable {
    *
    * @return Space seperated string of scopes
    */
-  public String getScopes() {
+  public List<String> getScopes() {
     return scopes;
   }
 
@@ -133,7 +135,7 @@ public class AccessToken implements Serializable {
   public static class Builder {
     private String tokenValue;
     private Date expirationTime;
-    private String scopes;
+    private List<String> scopes;
 
     protected Builder() {}
 
@@ -147,7 +149,7 @@ public class AccessToken implements Serializable {
       return this.tokenValue;
     }
 
-    public String getScopes() {
+    public List<String> getScopes() {
       return this.scopes;
     }
 
@@ -161,7 +163,7 @@ public class AccessToken implements Serializable {
     }
 
     public Builder setScopes(String scopes) {
-      this.scopes = scopes;
+      this.scopes = Arrays.asList(scopes.split(" "));
       return this;
     }
 
