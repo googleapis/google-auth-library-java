@@ -360,12 +360,16 @@ public class UserAuthorizer {
     }
     AccessToken accessToken = credentials.getAccessToken();
     String acessTokenValue = null;
-    List<String> scopes = null;
+    String scopes = null;
     Date expiresBy = null;
     if (accessToken != null) {
       acessTokenValue = accessToken.getTokenValue();
       expiresBy = accessToken.getExpirationTime();
-      scopes = accessToken.getScopes();
+      List<String> grantedScopes = accessToken.getScopes();
+
+      if (grantedScopes != null) {
+        scopes = String.join(" ", grantedScopes);
+      }
     }
     String refreshToken = credentials.getRefreshToken();
     GenericJson tokenStateJson = new GenericJson();

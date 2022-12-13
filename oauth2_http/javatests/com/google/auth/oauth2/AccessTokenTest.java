@@ -36,6 +36,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Date;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -149,7 +150,7 @@ public class AccessTokenTest extends BaseSerializationTest {
     String expectedToString =
         String.format(
             "AccessToken{tokenValue=%s, expirationTimeMillis=%d, scopes=%s}",
-            TOKEN, EXPIRATION_DATE.getTime(), SCOPES);
+            TOKEN, EXPIRATION_DATE.getTime(), Arrays.asList(SCOPES.split(" ")));
     assertEquals(expectedToString, accessToken.toString());
   }
 
