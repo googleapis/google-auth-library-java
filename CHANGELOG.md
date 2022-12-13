@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.14.0](https://github.com/googleapis/google-auth-library-java/compare/v1.13.0...v1.14.0) (2022-12-06)
+
+
+### Features
+
+* Add GDCH support ([#1087](https://github.com/googleapis/google-auth-library-java/issues/1087)) ([cfafb2d](https://github.com/googleapis/google-auth-library-java/commit/cfafb2d4c8d6ab3179e709ff09fc09e6dbc11a70))
+* Adding functional tests for Compute Engine ([#1105](https://github.com/googleapis/google-auth-library-java/issues/1105)) ([6f32ac3](https://github.com/googleapis/google-auth-library-java/commit/6f32ac3d4db91ff05fd7134ad6c788a16ffe44f4))
+* Introduce Environment Variable for Quota Project Id ([#1082](https://github.com/googleapis/google-auth-library-java/issues/1082)) ([040acef](https://github.com/googleapis/google-auth-library-java/commit/040acefec507f419f6e4ec4eab9645a6e3888a15))
+* Next release from main branch is 1.13.0 ([#1077](https://github.com/googleapis/google-auth-library-java/issues/1077)) ([d56eee0](https://github.com/googleapis/google-auth-library-java/commit/d56eee07911ba65a685ccba585e71061037ea756))
+
+
+### Bug Fixes
+
+* AwsCredentials should not call metadata server if security creds and region are retrievable through environment vars ([#1100](https://github.com/googleapis/google-auth-library-java/issues/1100)) ([1ff5772](https://github.com/googleapis/google-auth-library-java/commit/1ff57720609fdf27f28b9c543c1ef63b57892593))
+* Not loosing the access token when calling UserCredentials#ToBuil… ([#993](https://github.com/googleapis/google-auth-library-java/issues/993)) ([84afdb8](https://github.com/googleapis/google-auth-library-java/commit/84afdb8f8d41e781dc93f04626411e10b35689de))
+
 ## [1.13.0](https://github.com/googleapis/google-auth-library-java/compare/v1.12.1...v1.13.0) (2022-11-15)
 
 
