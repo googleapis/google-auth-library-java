@@ -33,7 +33,6 @@ package com.google.auth.oauth2;
 
 import com.google.common.base.MoreObjects;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -77,7 +76,7 @@ public class AccessToken implements Serializable {
    * Scopes from the access token response. Not all credentials provide scopes in response and as
    * per https://datatracker.ietf.org/doc/html/rfc6749#section-5.1 it is optional in the response.
    *
-   * @return Space seperated string of scopes
+   * @return List of scopes
    */
   public List<String> getScopes() {
     return scopes;
@@ -164,9 +163,7 @@ public class AccessToken implements Serializable {
     }
 
     public Builder setScopes(String scopes) {
-      if (scopes == null) {
-        this.scopes = new ArrayList<String>();
-      } else {
+      if (scopes != null) {
         this.scopes = Arrays.asList(scopes.split(" "));
       }
 

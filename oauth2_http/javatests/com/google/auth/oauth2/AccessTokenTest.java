@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -57,6 +58,20 @@ public class AccessTokenTest extends BaseSerializationTest {
     assertEquals(EXPIRATION_DATE, accessToken.getExpirationTime());
     assertEquals(EXPIRATION_DATE.getTime(), (long) accessToken.getExpirationTimeMillis());
     assertEquals(null, accessToken.getScopes());
+  }
+
+  @Test
+  public void builder() {
+    AccessToken accessToken =
+        AccessToken.newBuilder()
+            .setExpirationTime(EXPIRATION_DATE)
+            .setTokenValue(TOKEN)
+            .setScopes(SCOPES)
+            .build();
+    assertEquals(TOKEN, accessToken.getTokenValue());
+    assertEquals(EXPIRATION_DATE, accessToken.getExpirationTime());
+    assertEquals(EXPIRATION_DATE.getTime(), (long) accessToken.getExpirationTimeMillis());
+    assertArrayEquals(SCOPES.split(" "), accessToken.getScopes().toArray());
   }
 
   @Test

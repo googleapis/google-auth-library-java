@@ -95,6 +95,12 @@ public class MockTokenServerTransport extends MockHttpTransport {
     refreshTokens.put(refreshToken, accessTokenToReturn);
   }
 
+  public void addRefreshToken(
+      String refreshToken, String accessTokenToReturn, String grantedScopes) {
+    refreshTokens.put(refreshToken, accessTokenToReturn);
+    this.grantedScopes.put(refreshToken, grantedScopes);
+  }
+
   public void addServiceAccount(String email, String accessToken) {
     serviceAccounts.put(email, accessToken);
   }
