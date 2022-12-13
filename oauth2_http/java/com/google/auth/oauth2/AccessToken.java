@@ -33,6 +33,7 @@ package com.google.auth.oauth2;
 
 import com.google.common.base.MoreObjects;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -163,7 +164,12 @@ public class AccessToken implements Serializable {
     }
 
     public Builder setScopes(String scopes) {
-      this.scopes = Arrays.asList(scopes.split(" "));
+      if (scopes == null) {
+        this.scopes = new ArrayList<String>();
+      } else {
+        this.scopes = Arrays.asList(scopes.split(" "));
+      }
+
       return this;
     }
 

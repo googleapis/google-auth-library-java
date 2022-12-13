@@ -48,6 +48,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 /** Handles an interactive 3-Legged-OAuth2 (3LO) user consent authorization. */
 public class UserAuthorizer {
@@ -359,7 +360,7 @@ public class UserAuthorizer {
     }
     AccessToken accessToken = credentials.getAccessToken();
     String acessTokenValue = null;
-    String scopes = null;
+    List<String> scopes = null;
     Date expiresBy = null;
     if (accessToken != null) {
       acessTokenValue = accessToken.getTokenValue();
