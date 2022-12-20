@@ -259,6 +259,7 @@ public class UserAuthorizerTest {
 
     assertEquals(REFRESH_TOKEN, credentials1.getRefreshToken());
     assertEquals(accessTokenValue1, credentials1.getAccessToken().getTokenValue());
+    assertArrayEquals(GRANTED_SCOPES_ARRAY, credentials1.getAccessToken().getScopes().toArray());
 
     // Refresh the token to get update from token server
     credentials1.refresh();
