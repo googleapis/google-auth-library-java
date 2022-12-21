@@ -180,7 +180,14 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     int expiresInSeconds =
         OAuth2Utils.validateInt32(responseData, "expires_in", PARSE_ERROR_PREFIX);
     long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000;
-    return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
+    String scopes =
+        OAuth2Utils.validateOptionalString(
+            responseData, OAuth2Utils.TOKEN_RESPONSE_SCOPE, PARSE_ERROR_PREFIX);
+    return AccessToken.newBuilder()
+        .setExpirationTime(new Date(expiresAtMilliseconds))
+        .setTokenValue(accessToken)
+        .setScopes(scopes)
+        .build();
   }
 
   /**
