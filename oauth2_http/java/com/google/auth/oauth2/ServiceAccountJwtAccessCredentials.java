@@ -217,7 +217,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
       URI defaultAudience,
       String quotaProjectId)
       throws IOException {
-    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(privateKeyPkcs8);
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(privateKeyPkcs8);
     return new ServiceAccountJwtAccessCredentials(
         clientId, clientEmail, privateKey, privateKeyId, defaultAudience, quotaProjectId);
   }

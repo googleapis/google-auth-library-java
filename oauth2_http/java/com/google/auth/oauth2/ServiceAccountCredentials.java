@@ -49,10 +49,7 @@ import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Joiner;
-import com.google.api.client.util.PemReader;
-import com.google.api.client.util.PemReader.Section;
 import com.google.api.client.util.Preconditions;
-import com.google.api.client.util.SecurityUtils;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
@@ -62,20 +59,15 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
-import java.io.Reader;
-import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
-import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.SignatureException;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -90,7 +82,7 @@ import java.util.concurrent.Executor;
  * <p>By default uses a JSON Web Token (JWT) to fetch access tokens.
  */
 public class ServiceAccountCredentials extends GoogleCredentials
-    implements ServiceAccountSigner, IdTokenProvider, JwtProvider, QuotaProjectIdProvider {
+    implements ServiceAccountSigner, IdTokenProvider, JwtProvider {
 
   private static final long serialVersionUID = 7807543542681217978L;
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
@@ -112,7 +104,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
   private final URI tokenServerUri;
   private final Collection<String> scopes;
   private final Collection<String> defaultScopes;
-  private final String quotaProjectId;
   private final int lifetime;
   private final boolean useJwtAccessWithScope;
   private final boolean defaultRetriesEnabled;
@@ -126,6 +117,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
    *     ServiceAccountCredentials.Builder}
    */
   ServiceAccountCredentials(ServiceAccountCredentials.Builder builder) {
+    super(builder);
     this.clientId = builder.clientId;
     this.clientEmail = Preconditions.checkNotNull(builder.clientEmail);
     this.privateKey = Preconditions.checkNotNull(builder.privateKey);
@@ -145,7 +137,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
         (builder.tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : builder.tokenServerUri;
     this.serviceAccountUser = builder.serviceAccountUser;
     this.projectId = builder.projectId;
-    this.quotaProjectId = builder.quotaProjectId;
     if (builder.lifetime > TWELVE_HOURS_IN_SECONDS) {
       throw new IllegalStateException("lifetime must be less than or equal to 43200");
     }
@@ -438,29 +429,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
    */
   static ServiceAccountCredentials fromPkcs8(
       String privateKeyPkcs8, ServiceAccountCredentials.Builder builder) throws IOException {
-    PrivateKey privateKey = privateKeyFromPkcs8(privateKeyPkcs8);
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(privateKeyPkcs8);
     builder.setPrivateKey(privateKey);
 
     return new ServiceAccountCredentials(builder);
-  }
-
-  /** Helper to convert from a PKCS#8 String to an RSA private key */
-  static PrivateKey privateKeyFromPkcs8(String privateKeyPkcs8) throws IOException {
-    Reader reader = new StringReader(privateKeyPkcs8);
-    Section section = PemReader.readFirstSectionAndClose(reader, "PRIVATE KEY");
-    if (section == null) {
-      throw new IOException("Invalid PKCS#8 data.");
-    }
-    byte[] bytes = section.getBase64DecodedBytes();
-    PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(bytes);
-    Exception unexpectedException;
-    try {
-      KeyFactory keyFactory = SecurityUtils.getRsaKeyFactory();
-      return keyFactory.generatePrivate(keySpec);
-    } catch (NoSuchAlgorithmException | InvalidKeySpecException exception) {
-      unexpectedException = exception;
-    }
-    throw new IOException("Unexpected exception reading PKCS#8 data", unexpectedException);
   }
 
   /**
@@ -769,15 +741,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
   }
 
   @Override
-  protected Map<String, List<String>> getAdditionalHeaders() {
-    Map<String, List<String>> headers = super.getAdditionalHeaders();
-    if (quotaProjectId != null) {
-      return addQuotaProjectIdToRequestMetadata(quotaProjectId, headers);
-    }
-    return headers;
-  }
-
-  @Override
   public int hashCode() {
     return Objects.hash(
         clientId,
@@ -997,11 +960,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
     return new Builder(this);
   }
 
-  @Override
-  public String getQuotaProjectId() {
-    return quotaProjectId;
-  }
-
   public static class Builder extends GoogleCredentials.Builder {
 
     private String clientId;
@@ -1014,7 +972,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
     private Collection<String> scopes;
     private Collection<String> defaultScopes;
     private HttpTransportFactory transportFactory;
-    private String quotaProjectId;
     private int lifetime = DEFAULT_LIFETIME_IN_SECONDS;
     private boolean useJwtAccessWithScope = false;
     private boolean defaultRetriesEnabled = true;
@@ -1022,6 +979,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     protected Builder() {}
 
     protected Builder(ServiceAccountCredentials credentials) {
+      super(credentials);
       this.clientId = credentials.clientId;
       this.clientEmail = credentials.clientEmail;
       this.privateKey = credentials.privateKey;
@@ -1032,7 +990,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
       this.tokenServerUri = credentials.tokenServerUri;
       this.serviceAccountUser = credentials.serviceAccountUser;
       this.projectId = credentials.projectId;
-      this.quotaProjectId = credentials.quotaProjectId;
       this.lifetime = credentials.lifetime;
       this.useJwtAccessWithScope = credentials.useJwtAccessWithScope;
       this.defaultRetriesEnabled = credentials.defaultRetriesEnabled;
@@ -1054,7 +1011,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     }
 
     public Builder setPrivateKeyString(String privateKeyPkcs8) throws IOException {
-      this.privateKey = privateKeyFromPkcs8(privateKeyPkcs8);
+      this.privateKey = OAuth2Utils.privateKeyFromPkcs8(privateKeyPkcs8);
       return this;
     }
 
@@ -1096,7 +1053,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     }
 
     public Builder setQuotaProjectId(String quotaProjectId) {
-      this.quotaProjectId = quotaProjectId;
+      super.setQuotaProjectId(quotaProjectId);
       return this;
     }
 
@@ -1153,10 +1110,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
     public HttpTransportFactory getHttpTransportFactory() {
       return transportFactory;
-    }
-
-    public String getQuotaProjectId() {
-      return quotaProjectId;
     }
 
     public int getLifetime() {

@@ -162,7 +162,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
   private GoogleCredentials getSourceCredentials() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    PrivateKey privateKey = ServiceAccountCredentials.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountCredentials sourceCredentials =
         ServiceAccountCredentials.newBuilder()
             .setClientEmail(SA_CLIENT_EMAIL)

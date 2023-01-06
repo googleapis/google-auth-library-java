@@ -38,6 +38,9 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.client.util.PemReader;
+import com.google.api.client.util.PemReader.Section;
+import com.google.api.client.util.SecurityUtils;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.io.ByteStreams;
@@ -47,9 +50,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Reader;
+import java.io.StringReader;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -61,6 +71,8 @@ class OAuth2Utils {
   static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
 
   static final String TOKEN_TYPE_ACCESS_TOKEN = "urn:ietf:params:oauth:token-type:access_token";
+  static final String TOKEN_TYPE_TOKEN_EXCHANGE = "urn:ietf:params:oauth:token-type:token-exchange";
+  static final String GRANT_TYPE_JWT_BEARER = "urn:ietf:params:oauth:grant-type:jwt-bearer";
 
   static final URI TOKEN_SERVER_URI = URI.create("https://oauth2.googleapis.com/token");
   static final URI TOKEN_REVOKE_URI = URI.create("https://oauth2.googleapis.com/revoke");
@@ -76,6 +88,8 @@ class OAuth2Utils {
   private static String VALUE_WRONG_TYPE_MESSAGE = "%sExpected %s value %s of wrong type.";
 
   static final String BEARER_PREFIX = AuthHttpConstants.BEARER + " ";
+
+  static final String TOKEN_RESPONSE_SCOPE = "scope";
 
   // Includes expected server errors from Google token endpoint
   // Other 5xx codes are either not used or retries are unlikely to succeed
@@ -200,6 +214,25 @@ class OAuth2Utils {
       throw new IOException(String.format(VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "Map", key));
     }
     return (Map) value;
+  }
+
+  /** Helper to convert from a PKCS#8 String to an RSA private key */
+  static PrivateKey privateKeyFromPkcs8(String privateKeyPkcs8) throws IOException {
+    Reader reader = new StringReader(privateKeyPkcs8);
+    Section section = PemReader.readFirstSectionAndClose(reader, "PRIVATE KEY");
+    if (section == null) {
+      throw new IOException("Invalid PKCS#8 data.");
+    }
+    byte[] bytes = section.getBase64DecodedBytes();
+    PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(bytes);
+    Exception unexpectedException;
+    try {
+      KeyFactory keyFactory = SecurityUtils.getRsaKeyFactory();
+      return keyFactory.generatePrivate(keySpec);
+    } catch (NoSuchAlgorithmException | InvalidKeySpecException exception) {
+      unexpectedException = exception;
+    }
+    throw new IOException("Unexpected exception reading PKCS#8 data", unexpectedException);
   }
 
   private OAuth2Utils() {}

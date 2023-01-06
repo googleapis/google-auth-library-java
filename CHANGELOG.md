@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.14.0](https://github.com/googleapis/google-auth-library-java/compare/v1.13.0...v1.14.0) (2022-12-06)
+
+
+### Features
+
+* Add GDCH support ([#1087](https://github.com/googleapis/google-auth-library-java/issues/1087)) ([cfafb2d](https://github.com/googleapis/google-auth-library-java/commit/cfafb2d4c8d6ab3179e709ff09fc09e6dbc11a70))
+* Adding functional tests for Compute Engine ([#1105](https://github.com/googleapis/google-auth-library-java/issues/1105)) ([6f32ac3](https://github.com/googleapis/google-auth-library-java/commit/6f32ac3d4db91ff05fd7134ad6c788a16ffe44f4))
+* Introduce Environment Variable for Quota Project Id ([#1082](https://github.com/googleapis/google-auth-library-java/issues/1082)) ([040acef](https://github.com/googleapis/google-auth-library-java/commit/040acefec507f419f6e4ec4eab9645a6e3888a15))
+* Next release from main branch is 1.13.0 ([#1077](https://github.com/googleapis/google-auth-library-java/issues/1077)) ([d56eee0](https://github.com/googleapis/google-auth-library-java/commit/d56eee07911ba65a685ccba585e71061037ea756))
+
+
+### Bug Fixes
+
+* AwsCredentials should not call metadata server if security creds and region are retrievable through environment vars ([#1100](https://github.com/googleapis/google-auth-library-java/issues/1100)) ([1ff5772](https://github.com/googleapis/google-auth-library-java/commit/1ff57720609fdf27f28b9c543c1ef63b57892593))
+* Not loosing the access token when calling UserCredentials#ToBuil… ([#993](https://github.com/googleapis/google-auth-library-java/issues/993)) ([84afdb8](https://github.com/googleapis/google-auth-library-java/commit/84afdb8f8d41e781dc93f04626411e10b35689de))
+
+## [1.13.0](https://github.com/googleapis/google-auth-library-java/compare/v1.12.1...v1.13.0) (2022-11-15)
+
+
+### Features
+
+* Add smbios check for GCE residency detection ([#1092](https://github.com/googleapis/google-auth-library-java/issues/1092)) ([bfe7d93](https://github.com/googleapis/google-auth-library-java/commit/bfe7d932dbbbaf6b311c387834256519a0d1b9ad))
+
+
+### Bug Fixes
+
+* Empty string check for aws url validation ([#1089](https://github.com/googleapis/google-auth-library-java/issues/1089)) ([6f177a1](https://github.com/googleapis/google-auth-library-java/commit/6f177a1346ac481f34ab7cf343d552dcd88b7220))
+* Validate url domain for aws metadata urls ([#1079](https://github.com/googleapis/google-auth-library-java/issues/1079)) ([31fe461](https://github.com/googleapis/google-auth-library-java/commit/31fe461ac86e92fdff41bb17f0abc9b2a132676c))
+
 ## [1.12.1](https://github.com/googleapis/google-auth-library-java/compare/v1.12.0...v1.12.1) (2022-10-18)
 
 

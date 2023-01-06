@@ -57,12 +57,13 @@ import java.util.concurrent.Future;
 public class MockTokenServerTransport extends MockHttpTransport {
 
   public static final String REFRESH_TOKEN_WITH_USER_SCOPE = "refresh_token_with_user.email_scope";
-  static final String EXPECTED_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
   static final JsonFactory JSON_FACTORY = new GsonFactory();
   int buildRequestCount;
   final Map<String, String> clients = new HashMap<String, String>();
   final Map<String, String> refreshTokens = new HashMap<String, String>();
+  final Map<String, String> grantedScopes = new HashMap<String, String>();
   final Map<String, String> serviceAccounts = new HashMap<String, String>();
+  final Map<String, String> gdchServiceAccounts = new HashMap<String, String>();
   final Map<String, String> codes = new HashMap<String, String>();
   URI tokenServerUri = OAuth2Utils.TOKEN_SERVER_URI;
   private IOException error;
@@ -79,9 +80,11 @@ public class MockTokenServerTransport extends MockHttpTransport {
     this.tokenServerUri = tokenServerUri;
   }
 
-  public void addAuthorizationCode(String code, String refreshToken, String accessToken) {
+  public void addAuthorizationCode(
+      String code, String refreshToken, String accessToken, String grantedScopes) {
     codes.put(code, refreshToken);
     refreshTokens.put(refreshToken, accessToken);
+    this.grantedScopes.put(refreshToken, grantedScopes);
   }
 
   public void addClient(String clientId, String clientSecret) {
@@ -92,8 +95,18 @@ public class MockTokenServerTransport extends MockHttpTransport {
     refreshTokens.put(refreshToken, accessTokenToReturn);
   }
 
+  public void addRefreshToken(
+      String refreshToken, String accessTokenToReturn, String grantedScopes) {
+    refreshTokens.put(refreshToken, accessTokenToReturn);
+    this.grantedScopes.put(refreshToken, grantedScopes);
+  }
+
   public void addServiceAccount(String email, String accessToken) {
     serviceAccounts.put(email, accessToken);
+  }
+
+  public void addGdchServiceAccount(String serviceIdentityName, String accessToken) {
+    gdchServiceAccounts.put(serviceIdentityName, accessToken);
   }
 
   public String getAccessToken(String refreshToken) {
@@ -170,8 +183,9 @@ public class MockTokenServerTransport extends MockHttpTransport {
 
           String content = this.getContentAsString();
           Map<String, String> query = TestUtils.parseQuery(content);
-          String accessToken;
+          String accessToken = null;
           String refreshToken = null;
+          String grantedScopesString = null;
           boolean generateAccessToken = true;
 
           String foundId = query.get("client_id");
@@ -202,30 +216,46 @@ public class MockTokenServerTransport extends MockHttpTransport {
               isUserEmailScope = true;
             }
             accessToken = refreshTokens.get(refreshToken);
+
+            if (grantedScopes.containsKey(refreshToken)) {
+              grantedScopesString = grantedScopes.get(refreshToken);
+            }
           } else if (query.containsKey("grant_type")) {
             String grantType = query.get("grant_type");
-            if (!EXPECTED_GRANT_TYPE.equals(grantType)) {
-              throw new IOException("Unexpected Grant Type.");
-            }
             String assertion = query.get("assertion");
             JsonWebSignature signature = JsonWebSignature.parse(JSON_FACTORY, assertion);
-            String foundEmail = signature.getPayload().getIssuer();
-            if (!serviceAccounts.containsKey(foundEmail)) {
-              throw new IOException("Service Account Email not found as issuer.");
-            }
-            accessToken = serviceAccounts.get(foundEmail);
-            String foundTargetAudience = (String) signature.getPayload().get("target_audience");
-            String foundScopes = (String) signature.getPayload().get("scope");
-            if ((foundScopes == null || foundScopes.length() == 0)
-                && (foundTargetAudience == null || foundTargetAudience.length() == 0)) {
-              throw new IOException("Either target_audience or scopes must be specified.");
-            }
+            if (OAuth2Utils.GRANT_TYPE_JWT_BEARER.equals(grantType)) {
+              String foundEmail = signature.getPayload().getIssuer();
+              if (!serviceAccounts.containsKey(foundEmail)) {}
+              accessToken = serviceAccounts.get(foundEmail);
+              String foundTargetAudience = (String) signature.getPayload().get("target_audience");
+              String foundScopes = (String) signature.getPayload().get("scope");
+              if ((foundScopes == null || foundScopes.length() == 0)
+                  && (foundTargetAudience == null || foundTargetAudience.length() == 0)) {
+                throw new IOException("Either target_audience or scopes must be specified.");
+              }
 
-            if (foundScopes != null && foundTargetAudience != null) {
-              throw new IOException("Only one of target_audience or scopes must be specified.");
-            }
-            if (foundTargetAudience != null) {
-              generateAccessToken = false;
+              if (foundScopes != null && foundTargetAudience != null) {
+                throw new IOException("Only one of target_audience or scopes must be specified.");
+              }
+              if (foundTargetAudience != null) {
+                generateAccessToken = false;
+              }
+
+              // For GDCH scenario
+            } else if (OAuth2Utils.TOKEN_TYPE_TOKEN_EXCHANGE.equals(grantType)) {
+              String foundServiceIdentityName = signature.getPayload().getIssuer();
+              if (!gdchServiceAccounts.containsKey(foundServiceIdentityName)) {
+                throw new IOException(
+                    "GDCH Service Account Service Identity Name not found as issuer.");
+              }
+              accessToken = gdchServiceAccounts.get(foundServiceIdentityName);
+              String foundApiAudience = (String) signature.getPayload().get("api_audience");
+              if ((foundApiAudience == null || foundApiAudience.length() == 0)) {
+                throw new IOException("Api_audience must be specified.");
+              }
+            } else {
+              throw new IOException("Service Account Email not found as issuer.");
             }
           } else {
             throw new IOException("Unknown token type.");
@@ -241,6 +271,9 @@ public class MockTokenServerTransport extends MockHttpTransport {
             responseContents.put("access_token", accessToken);
             if (refreshToken != null) {
               responseContents.put("refresh_token", refreshToken);
+            }
+            if (grantedScopesString != null) {
+              responseContents.put("scope", grantedScopesString);
             }
           }
           if (isUserEmailScope || !generateAccessToken) {
