@@ -34,7 +34,7 @@ package com.google.auth.oauth2;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /** Encapsulates the error response's for 3rd party executables defined by the executable spec. */
-class PluggableAuthException extends OAuthException {
+public class PluggableAuthException extends OAuthException {
 
   PluggableAuthException(String errorCode, String errorDescription) {
     super(errorCode, checkNotNull(errorDescription), /* errorUri=*/ null);

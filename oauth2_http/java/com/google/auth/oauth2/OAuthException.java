@@ -39,7 +39,7 @@ import javax.annotation.Nullable;
  * Encapsulates the standard OAuth error response. See
  * https://tools.ietf.org/html/rfc6749#section-5.2.
  */
-class OAuthException extends GoogleAuthException {
+public class OAuthException extends GoogleAuthException {
 
   private final String errorCode;
   @Nullable private final String errorDescription;

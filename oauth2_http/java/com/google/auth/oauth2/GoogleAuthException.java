@@ -39,7 +39,7 @@ import java.io.IOException;
  * Base class for the standard Auth error response. It extends a default exception while keeping
  * Json response format
  */
-class GoogleAuthException extends IOException implements Retryable {
+public class GoogleAuthException extends IOException implements Retryable {
 
   private final boolean isRetryable;
   private final int retryCount;

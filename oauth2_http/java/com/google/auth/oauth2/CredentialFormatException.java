@@ -34,7 +34,7 @@ package com.google.auth.oauth2;
 import java.io.IOException;
 
 /** Indicates that the provided credential does not adhere to the required format. */
-class CredentialFormatException extends IOException {
+public class CredentialFormatException extends IOException {
   CredentialFormatException(String message, Throwable cause) {
     super(message, cause);
   }
