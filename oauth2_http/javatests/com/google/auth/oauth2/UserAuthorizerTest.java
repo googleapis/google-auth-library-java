@@ -31,7 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
@@ -43,8 +42,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +58,8 @@ public class UserAuthorizerTest {
   private static final String ACCESS_TOKEN_VALUE = "1/MkSJoj1xsli0AccessToken_NKPY2";
   private static final List<String> GRANTED_SCOPES = Arrays.asList("scope1", "scope2");
   private static final String GRANTED_SCOPES_STRING = String.join(" ", GRANTED_SCOPES);
+  private static final String DUMMY_SCOPE = "dummy_scope";
+  private static final List<String> DUMMY_SCOPES = Arrays.asList(DUMMY_SCOPE);
   private static final Long EXPIRATION_TIME = 504000300L;
   private static final AccessToken ACCESS_TOKEN =
       AccessToken.newBuilder()
@@ -69,8 +68,6 @@ public class UserAuthorizerTest {
           .setScopes(GRANTED_SCOPES)
           .build();
   private static final ClientId CLIENT_ID = ClientId.of(CLIENT_ID_VALUE, CLIENT_SECRET);
-  private static final String SCOPE = "scope1 scope2 scope3";
-  private static final Collection<String> SCOPES = Collections.singletonList(SCOPE);
   private static final String USER_ID = "foo@bar.com";
   private static final URI CALLBACK_URI = URI.create("/testcallback");
   private static final String CODE = "thisistheend";
@@ -83,13 +80,13 @@ public class UserAuthorizerTest {
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
-            .setScopes(SCOPES)
+            .setScopes(DUMMY_SCOPES)
             .setTokenStore(store)
             .build();
 
     assertSame(CLIENT_ID, authorizer.getClientId());
     assertSame(store, authorizer.getTokenStore());
-    assertArrayEquals(SCOPES.toArray(), authorizer.getScopes().toArray());
+    assertEquals(DUMMY_SCOPES, authorizer.getScopes());
     assertEquals(UserAuthorizer.DEFAULT_CALLBACK_URI, authorizer.getCallbackUri());
   }
 
@@ -100,20 +97,20 @@ public class UserAuthorizerTest {
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
-            .setScopes(SCOPES)
+            .setScopes(DUMMY_SCOPES)
             .setTokenStore(store)
             .setCallbackUri(CALLBACK_URI)
             .build();
 
     assertSame(CLIENT_ID, authorizer.getClientId());
     assertSame(store, authorizer.getTokenStore());
-    assertArrayEquals(SCOPES.toArray(), authorizer.getScopes().toArray());
+    assertEquals(DUMMY_SCOPES, authorizer.getScopes());
     assertEquals(CALLBACK_URI, authorizer.getCallbackUri());
   }
 
   @Test(expected = NullPointerException.class)
   public void constructorCommon_nullClientId_throws() {
-    UserAuthorizer.newBuilder().setScopes(SCOPES).setCallbackUri(CALLBACK_URI).build();
+    UserAuthorizer.newBuilder().setScopes(DUMMY_SCOPES).setCallbackUri(CALLBACK_URI).build();
   }
 
   @Test(expected = NullPointerException.class)
@@ -128,7 +125,7 @@ public class UserAuthorizerTest {
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
-            .setScopes(SCOPES)
+            .setScopes(DUMMY_SCOPES)
             .setCallbackUri(callbackURI)
             .build();
 
@@ -148,7 +145,7 @@ public class UserAuthorizerTest {
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
-            .setScopes(SCOPES)
+            .setScopes(DUMMY_SCOPES)
             .setCallbackUri(CALLBACK_URI)
             .setUserAuthUri(AUTH_URI)
             .build();
@@ -165,7 +162,7 @@ public class UserAuthorizerTest {
     assertEquals(USER_ID, parameters.get("login_hint"));
     assertEquals(EXPECTED_CALLBACK, parameters.get("redirect_uri"));
     assertEquals(CLIENT_ID_VALUE, parameters.get("client_id"));
-    assertEquals(SCOPE, parameters.get("scope"));
+    assertEquals(DUMMY_SCOPE, parameters.get("scope"));
     assertEquals("code", parameters.get("response_type"));
   }
 
@@ -174,7 +171,7 @@ public class UserAuthorizerTest {
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
-            .setScopes(SCOPES)
+            .setScopes(DUMMY_SCOPES)
             .setTokenStore(new MemoryTokensStorage())
             .build();
 
@@ -198,7 +195,7 @@ public class UserAuthorizerTest {
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
-            .setScopes(SCOPES)
+            .setScopes(DUMMY_SCOPES)
             .setTokenStore(tokenStore)
             .build();
     authorizer.storeCredentials(USER_ID, initialCredentials);
@@ -217,7 +214,7 @@ public class UserAuthorizerTest {
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
-            .setScopes(SCOPES)
+            .setScopes(DUMMY_SCOPES)
             .setTokenStore(tokenStore)
             .build();
 
@@ -241,7 +238,7 @@ public class UserAuthorizerTest {
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
-            .setScopes(SCOPES)
+            .setScopes(DUMMY_SCOPES)
             .setTokenStore(tokenStore)
             .setHttpTransportFactory(transportFactory)
             .build();
@@ -296,7 +293,7 @@ public class UserAuthorizerTest {
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
-            .setScopes(SCOPES)
+            .setScopes(DUMMY_SCOPES)
             .setTokenStore(tokenStore)
             .setHttpTransportFactory(transportFactory)
             .build();
@@ -343,7 +340,7 @@ public class UserAuthorizerTest {
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
-            .setScopes(SCOPES)
+            .setScopes(DUMMY_SCOPES)
             .setTokenStore(tokenStore)
             .setHttpTransportFactory(transportFactory)
             .build();
@@ -360,7 +357,7 @@ public class UserAuthorizerTest {
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
-            .setScopes(SCOPES)
+            .setScopes(DUMMY_SCOPES)
             .setTokenStore(new MemoryTokensStorage())
             .build();
 
@@ -379,7 +376,7 @@ public class UserAuthorizerTest {
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
-            .setScopes(SCOPES)
+            .setScopes(DUMMY_SCOPES)
             .setTokenStore(tokenStore)
             .setHttpTransportFactory(transportFactory)
             .build();
@@ -411,7 +408,7 @@ public class UserAuthorizerTest {
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
-            .setScopes(SCOPES)
+            .setScopes(DUMMY_SCOPES)
             .setTokenStore(new MemoryTokensStorage())
             .build();
 
@@ -423,7 +420,7 @@ public class UserAuthorizerTest {
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
-            .setScopes(SCOPES)
+            .setScopes(DUMMY_SCOPES)
             .setTokenStore(new MemoryTokensStorage())
             .build();
 
@@ -447,7 +444,7 @@ public class UserAuthorizerTest {
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
-            .setScopes(SCOPES)
+            .setScopes(DUMMY_SCOPES)
             .setTokenStore(tokenStore)
             .setHttpTransportFactory(transportFactory)
             .build();

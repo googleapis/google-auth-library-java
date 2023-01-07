@@ -31,7 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
@@ -79,6 +78,7 @@ public class AccessTokenTest extends BaseSerializationTest {
     assertEquals(SCOPES, accessToken.getScopes());
     assertNotSame(SCOPES, accessToken.getScopes());
 
+    // scopes list
     accessToken =
         AccessToken.newBuilder()
             .setExpirationTime(EXPIRATION_DATE)
@@ -87,6 +87,24 @@ public class AccessTokenTest extends BaseSerializationTest {
             .build();
     assertEquals(SCOPES, accessToken.getScopes());
     assertSame(SCOPES, accessToken.getScopes());
+
+    // single scope
+    accessToken =
+        AccessToken.newBuilder()
+            .setExpirationTime(EXPIRATION_DATE)
+            .setTokenValue(TOKEN)
+            .setScopes("dummy")
+            .build();
+    assertEquals(Arrays.asList("dummy"), accessToken.getScopes());
+
+    // empty scope
+    accessToken =
+            AccessToken.newBuilder()
+                .setExpirationTime(EXPIRATION_DATE)
+                .setTokenValue(TOKEN)
+                .setScopes("  ")
+                .build();
+        assertEquals(new ArrayList<>(), accessToken.getScopes());
   }
 
   @Test
@@ -101,6 +119,7 @@ public class AccessTokenTest extends BaseSerializationTest {
     AccessToken otherAccessToken =
         AccessToken.newBuilder()
             .setExpirationTime(EXPIRATION_DATE)
+            .setTokenValue(TOKEN)
             .setTokenValue(TOKEN)
             .setScopes(SCOPES)
             .build();

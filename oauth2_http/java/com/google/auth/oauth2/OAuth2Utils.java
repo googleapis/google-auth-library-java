@@ -60,7 +60,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -170,7 +169,8 @@ class OAuth2Utils {
     return (String) value;
   }
 
-  static List<String> validateOptionalList(Map<String, Object> map, String key, String errorPrefix)
+  /** Return the specified list of strings from JSON or throw a helpful error message. */
+  static List<String> validateOptionalListString(Map<String, Object> map, String key, String errorPrefix)
       throws IOException {
     Object value = map.get(key);
     if (value == null) {

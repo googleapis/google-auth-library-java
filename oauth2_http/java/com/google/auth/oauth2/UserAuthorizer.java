@@ -207,7 +207,7 @@ public class UserAuthorizer {
         OAuth2Utils.validateLong(tokenJson, "expiration_time_millis", TOKEN_STORE_ERROR);
     Date expirationTime = new Date(expirationMillis);
     List<String> scopes =
-        OAuth2Utils.validateOptionalList(
+        OAuth2Utils.validateOptionalListString(
             tokenJson, OAuth2Utils.TOKEN_RESPONSE_SCOPE, FETCH_TOKEN_ERROR);
     AccessToken accessToken =
         AccessToken.newBuilder()
