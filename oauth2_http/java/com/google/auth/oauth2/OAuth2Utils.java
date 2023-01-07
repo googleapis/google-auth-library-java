@@ -170,14 +170,15 @@ class OAuth2Utils {
   }
 
   /** Return the specified list of strings from JSON or throw a helpful error message. */
-  static List<String> validateOptionalListString(Map<String, Object> map, String key, String errorPrefix)
-      throws IOException {
+  static List<String> validateOptionalListString(
+      Map<String, Object> map, String key, String errorPrefix) throws IOException {
     Object value = map.get(key);
     if (value == null) {
       return null;
     }
     if (!(value instanceof List)) {
-      throw new IOException(String.format(VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "List<String>", key));
+      throw new IOException(
+          String.format(VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "List<String>", key));
     }
     return (List<String>) value;
   }

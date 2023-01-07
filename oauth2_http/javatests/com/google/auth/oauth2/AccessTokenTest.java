@@ -99,12 +99,12 @@ public class AccessTokenTest extends BaseSerializationTest {
 
     // empty scope
     accessToken =
-            AccessToken.newBuilder()
-                .setExpirationTime(EXPIRATION_DATE)
-                .setTokenValue(TOKEN)
-                .setScopes("  ")
-                .build();
-        assertEquals(new ArrayList<>(), accessToken.getScopes());
+        AccessToken.newBuilder()
+            .setExpirationTime(EXPIRATION_DATE)
+            .setTokenValue(TOKEN)
+            .setScopes("  ")
+            .build();
+    assertEquals(new ArrayList<>(), accessToken.getScopes());
   }
 
   @Test
@@ -224,11 +224,12 @@ public class AccessTokenTest extends BaseSerializationTest {
 
   @Test
   public void serialize() throws IOException, ClassNotFoundException {
-    AccessToken emptyScopes = AccessToken.newBuilder()
-        .setExpirationTime(EXPIRATION_DATE)
-        .setTokenValue(TOKEN)
-        .setScopes("")
-        .build();
+    AccessToken emptyScopes =
+        AccessToken.newBuilder()
+            .setExpirationTime(EXPIRATION_DATE)
+            .setTokenValue(TOKEN)
+            .setScopes("")
+            .build();
 
     AccessToken deserializedAccessToken = serializeAndDeserialize(emptyScopes);
     assertEquals(emptyScopes, deserializedAccessToken);
@@ -236,11 +237,12 @@ public class AccessTokenTest extends BaseSerializationTest {
     assertEquals(emptyScopes.toString(), deserializedAccessToken.toString());
     assertEquals(new ArrayList<>(), deserializedAccessToken.getScopes());
 
-    AccessToken accessToken = AccessToken.newBuilder()
-        .setExpirationTime(EXPIRATION_DATE)
-        .setTokenValue(TOKEN)
-        .setScopes(SCOPES)
-        .build();
+    AccessToken accessToken =
+        AccessToken.newBuilder()
+            .setExpirationTime(EXPIRATION_DATE)
+            .setTokenValue(TOKEN)
+            .setScopes(SCOPES)
+            .build();
 
     deserializedAccessToken = serializeAndDeserialize(accessToken);
     assertEquals(accessToken, deserializedAccessToken);

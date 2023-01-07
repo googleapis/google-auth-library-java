@@ -233,7 +233,8 @@ public class UserAuthorizerTest {
             .build();
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
-    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessTokenValue2, GRANTED_SCOPES_STRING);
+    transportFactory.transport.addRefreshToken(
+        REFRESH_TOKEN, accessTokenValue2, GRANTED_SCOPES_STRING);
     TokenStore tokenStore = new MemoryTokensStorage();
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
@@ -432,7 +433,8 @@ public class UserAuthorizerTest {
     TokenStore tokenStore = new MemoryTokensStorage();
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
-    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN_VALUE, GRANTED_SCOPES_STRING);
+    transportFactory.transport.addRefreshToken(
+        REFRESH_TOKEN, ACCESS_TOKEN_VALUE, GRANTED_SCOPES_STRING);
     UserCredentials initialCredentials =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID_VALUE)
