@@ -33,6 +33,7 @@ package com.google.auth.oauth2;
 
 import com.google.common.base.MoreObjects;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -54,7 +55,7 @@ public class AccessToken implements Serializable {
   public AccessToken(String tokenValue, Date expirationTime) {
     this.tokenValue = tokenValue;
     this.expirationTimeMillis = (expirationTime == null) ? null : expirationTime.getTime();
-    this.scopes = null;
+    this.scopes = new ArrayList<>();
   }
 
   private AccessToken(Builder builder) {
@@ -135,7 +136,7 @@ public class AccessToken implements Serializable {
   public static class Builder {
     private String tokenValue;
     private Date expirationTime;
-    private List<String> scopes;
+    private List<String> scopes = new ArrayList<>();
 
     protected Builder() {}
 
@@ -163,8 +164,17 @@ public class AccessToken implements Serializable {
     }
 
     public Builder setScopes(String scopes) {
-      if (scopes != null) {
+      if (scopes != null && scopes.trim().length() > 0) {
         this.scopes = Arrays.asList(scopes.split(" "));
+      }
+      return this;
+    }
+
+    public Builder setScopes(List<String> scopes) {
+      if (scopes == null) {
+        this.scopes = new ArrayList<>();
+      } else {
+        this.scopes = scopes;
       }
 
       return this;

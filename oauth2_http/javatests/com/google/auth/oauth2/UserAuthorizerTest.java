@@ -42,9 +42,11 @@ import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFact
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -57,8 +59,8 @@ public class UserAuthorizerTest {
   private static final String CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
   private static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
   private static final String ACCESS_TOKEN_VALUE = "1/MkSJoj1xsli0AccessToken_NKPY2";
-  private static final String GRANTED_SCOPES = "scope1 scope2";
-  private static final String[] GRANTED_SCOPES_ARRAY = GRANTED_SCOPES.split(" ");
+  private static final List<String> GRANTED_SCOPES = Arrays.asList("scope1", "scope2");
+  private static final String GRANTED_SCOPES_STRING = String.join(" ", GRANTED_SCOPES);
   private static final Long EXPIRATION_TIME = 504000300L;
   private static final AccessToken ACCESS_TOKEN =
       AccessToken.newBuilder()
@@ -206,7 +208,7 @@ public class UserAuthorizerTest {
     assertEquals(REFRESH_TOKEN, credentials.getRefreshToken());
     assertEquals(ACCESS_TOKEN_VALUE, credentials.getAccessToken().getTokenValue());
     assertEquals(EXPIRATION_TIME, credentials.getAccessToken().getExpirationTimeMillis());
-    assertArrayEquals(GRANTED_SCOPES_ARRAY, credentials.getAccessToken().getScopes().toArray());
+    assertEquals(GRANTED_SCOPES, credentials.getAccessToken().getScopes());
   }
 
   @Test(expected = NullPointerException.class)
@@ -234,7 +236,7 @@ public class UserAuthorizerTest {
             .build();
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
-    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessTokenValue2, GRANTED_SCOPES);
+    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessTokenValue2, GRANTED_SCOPES_STRING);
     TokenStore tokenStore = new MemoryTokensStorage();
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
@@ -259,13 +261,13 @@ public class UserAuthorizerTest {
 
     assertEquals(REFRESH_TOKEN, credentials1.getRefreshToken());
     assertEquals(accessTokenValue1, credentials1.getAccessToken().getTokenValue());
-    assertArrayEquals(GRANTED_SCOPES_ARRAY, credentials1.getAccessToken().getScopes().toArray());
+    assertEquals(GRANTED_SCOPES, credentials1.getAccessToken().getScopes());
 
     // Refresh the token to get update from token server
     credentials1.refresh();
     assertEquals(REFRESH_TOKEN, credentials1.getRefreshToken());
     assertEquals(accessTokenValue2, credentials1.getAccessToken().getTokenValue());
-    assertArrayEquals(GRANTED_SCOPES_ARRAY, credentials1.getAccessToken().getScopes().toArray());
+    assertEquals(GRANTED_SCOPES, credentials1.getAccessToken().getScopes());
 
     // Load a second credentials instance
     UserCredentials credentials2 = authorizer.getCredentials(USER_ID);
@@ -273,14 +275,14 @@ public class UserAuthorizerTest {
     // Verify that token refresh stored the updated tokens
     assertEquals(REFRESH_TOKEN, credentials2.getRefreshToken());
     assertEquals(accessTokenValue2, credentials2.getAccessToken().getTokenValue());
-    assertArrayEquals(GRANTED_SCOPES_ARRAY, credentials2.getAccessToken().getScopes().toArray());
+    assertEquals(GRANTED_SCOPES, credentials2.getAccessToken().getScopes());
   }
 
   @Test
   public void getCredentials_refreshedToken_different_granted_scopes() throws IOException {
     final String accessTokenValue1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessTokenValue2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
-    final String granted_refresh_scopes[] = new String[] {"scope3"};
+    final List<String> grantedRefreshScopes = Arrays.asList("scope3");
     AccessToken accessToken1 =
         AccessToken.newBuilder()
             .setTokenValue(accessTokenValue1)
@@ -314,13 +316,13 @@ public class UserAuthorizerTest {
 
     assertEquals(REFRESH_TOKEN, credentials1.getRefreshToken());
     assertEquals(accessTokenValue1, credentials1.getAccessToken().getTokenValue());
-    assertArrayEquals(GRANTED_SCOPES_ARRAY, credentials1.getAccessToken().getScopes().toArray());
+    assertEquals(GRANTED_SCOPES, credentials1.getAccessToken().getScopes());
 
     // Refresh the token to get update from token server
     credentials1.refresh();
     assertEquals(REFRESH_TOKEN, credentials1.getRefreshToken());
     assertEquals(accessTokenValue2, credentials1.getAccessToken().getTokenValue());
-    assertArrayEquals(granted_refresh_scopes, credentials1.getAccessToken().getScopes().toArray());
+    assertEquals(grantedRefreshScopes, credentials1.getAccessToken().getScopes());
 
     // Load a second credentials instance
     UserCredentials credentials2 = authorizer.getCredentials(USER_ID);
@@ -328,7 +330,7 @@ public class UserAuthorizerTest {
     // Verify that token refresh stored the updated tokens
     assertEquals(REFRESH_TOKEN, credentials2.getRefreshToken());
     assertEquals(accessTokenValue2, credentials2.getAccessToken().getTokenValue());
-    assertArrayEquals(granted_refresh_scopes, credentials2.getAccessToken().getScopes().toArray());
+    assertEquals(grantedRefreshScopes, credentials2.getAccessToken().getScopes());
   }
 
   @Test
@@ -336,7 +338,7 @@ public class UserAuthorizerTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
     transportFactory.transport.addAuthorizationCode(
-        CODE, REFRESH_TOKEN, ACCESS_TOKEN_VALUE, GRANTED_SCOPES);
+        CODE, REFRESH_TOKEN, ACCESS_TOKEN_VALUE, GRANTED_SCOPES_STRING);
     TokenStore tokenStore = new MemoryTokensStorage();
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
@@ -350,7 +352,7 @@ public class UserAuthorizerTest {
 
     assertEquals(REFRESH_TOKEN, credentials.getRefreshToken());
     assertEquals(ACCESS_TOKEN_VALUE, credentials.getAccessToken().getTokenValue());
-    assertArrayEquals(GRANTED_SCOPES_ARRAY, credentials.getAccessToken().getScopes().toArray());
+    assertEquals(GRANTED_SCOPES, credentials.getAccessToken().getScopes());
   }
 
   @Test(expected = NullPointerException.class)
@@ -372,7 +374,7 @@ public class UserAuthorizerTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
     transportFactory.transport.addAuthorizationCode(
-        CODE, REFRESH_TOKEN, accessTokenValue1, GRANTED_SCOPES);
+        CODE, REFRESH_TOKEN, accessTokenValue1, GRANTED_SCOPES_STRING);
     TokenStore tokenStore = new MemoryTokensStorage();
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
@@ -386,7 +388,7 @@ public class UserAuthorizerTest {
         authorizer.getAndStoreCredentialsFromCode(USER_ID, CODE, BASE_URI);
 
     assertEquals(REFRESH_TOKEN, credentials1.getRefreshToken());
-    assertArrayEquals(GRANTED_SCOPES_ARRAY, credentials1.getAccessToken().getScopes().toArray());
+    assertEquals(GRANTED_SCOPES, credentials1.getAccessToken().getScopes());
     assertEquals(accessTokenValue1, credentials1.getAccessToken().getTokenValue());
 
     // Refresh the token to get update from token server
@@ -400,7 +402,7 @@ public class UserAuthorizerTest {
 
     // Verify that token refresh stored the updated tokens
     assertEquals(REFRESH_TOKEN, credentials2.getRefreshToken());
-    assertArrayEquals(GRANTED_SCOPES_ARRAY, credentials2.getAccessToken().getScopes().toArray());
+    assertEquals(GRANTED_SCOPES, credentials2.getAccessToken().getScopes());
     assertEquals(accessTokenValue2, credentials2.getAccessToken().getTokenValue());
   }
 
@@ -433,7 +435,7 @@ public class UserAuthorizerTest {
     TokenStore tokenStore = new MemoryTokensStorage();
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
-    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN_VALUE, GRANTED_SCOPES);
+    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN_VALUE, GRANTED_SCOPES_STRING);
     UserCredentials initialCredentials =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID_VALUE)
@@ -457,7 +459,7 @@ public class UserAuthorizerTest {
     assertEquals(REFRESH_TOKEN, credentials1.getRefreshToken());
     credentials1.refresh();
     assertEquals(ACCESS_TOKEN_VALUE, credentials1.getAccessToken().getTokenValue());
-    assertArrayEquals(GRANTED_SCOPES_ARRAY, credentials1.getAccessToken().getScopes().toArray());
+    assertEquals(GRANTED_SCOPES, credentials1.getAccessToken().getScopes());
 
     authorizer.revokeAuthorization(USER_ID);
 

@@ -46,6 +46,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -205,8 +206,8 @@ public class UserAuthorizer {
     Long expirationMillis =
         OAuth2Utils.validateLong(tokenJson, "expiration_time_millis", TOKEN_STORE_ERROR);
     Date expirationTime = new Date(expirationMillis);
-    String scopes =
-        OAuth2Utils.validateOptionalString(
+    List<String> scopes =
+        OAuth2Utils.validateOptionalList(
             tokenJson, OAuth2Utils.TOKEN_RESPONSE_SCOPE, FETCH_TOKEN_ERROR);
     AccessToken accessToken =
         AccessToken.newBuilder()
@@ -362,20 +363,18 @@ public class UserAuthorizer {
     String acessTokenValue = null;
     String scopes = null;
     Date expiresBy = null;
+    List<String> grantedScopes = new ArrayList<>();
+
     if (accessToken != null) {
       acessTokenValue = accessToken.getTokenValue();
       expiresBy = accessToken.getExpirationTime();
-      List<String> grantedScopes = accessToken.getScopes();
-
-      if (grantedScopes != null) {
-        scopes = String.join(" ", grantedScopes);
-      }
+      grantedScopes = accessToken.getScopes();
     }
     String refreshToken = credentials.getRefreshToken();
     GenericJson tokenStateJson = new GenericJson();
     tokenStateJson.setFactory(OAuth2Utils.JSON_FACTORY);
     tokenStateJson.put("access_token", acessTokenValue);
-    tokenStateJson.put(OAuth2Utils.TOKEN_RESPONSE_SCOPE, scopes);
+    tokenStateJson.put(OAuth2Utils.TOKEN_RESPONSE_SCOPE, grantedScopes);
     tokenStateJson.put("expiration_time_millis", expiresBy.getTime());
     if (refreshToken != null) {
       tokenStateJson.put("refresh_token", refreshToken);
