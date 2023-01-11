@@ -53,7 +53,6 @@ import java.util.logging.Logger;
  * overriding the state and environment for testing purposes.
  */
 class DefaultCredentialsProvider {
-
   static final DefaultCredentialsProvider DEFAULT = new DefaultCredentialsProvider();
   static final String CREDENTIAL_ENV_VAR = "GOOGLE_APPLICATION_CREDENTIALS";
   static final String QUOTA_PROJECT_ENV_VAR = "GOOGLE_CLOUD_QUOTA_PROJECT";
