@@ -289,11 +289,6 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
         && Objects.equals(this.quotaProjectId, credentials.quotaProjectId);
   }
 
-  private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
-    input.defaultReadObject();
-    transportFactory = newInstance(transportFactoryClassName);
-  }
-
   public Builder toBuilder() {
     return new Builder(this);
   }
@@ -329,6 +324,11 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
         .setHttpTransportFactory(transportFactory)
         .setQuotaProjectId(quotaProjectId)
         .build();
+  }
+
+  private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
+    input.defaultReadObject();
+    transportFactory = newInstance(transportFactoryClassName);
   }
 
   private boolean canRefresh() {
