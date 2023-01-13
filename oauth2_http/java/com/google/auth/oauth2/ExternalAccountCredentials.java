@@ -649,7 +649,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     private static final int MINIMUM_TOKEN_LIFETIME_SECONDS = 600;
     private static final String TOKEN_LIFETIME_SECONDS_KEY = "token_lifetime_seconds";
 
-
     private final int lifetime;
 
     ServiceAccountImpersonationOptions(Map<String, Object> optionsMap) {

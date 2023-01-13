@@ -958,25 +958,32 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void serialize() throws IOException, ClassNotFoundException {
-    Map<String, Object> impersonationOpts = new HashMap<String, Object>(){{ put("token_lifetime_seconds", 1000); }};
+    Map<String, Object> impersonationOpts =
+        new HashMap<String, Object>() {
+          {
+            put("token_lifetime_seconds", 1000);
+          }
+        };
 
     TestExternalAccountCredentials testCredentials =
-            (TestExternalAccountCredentials)
-                    TestExternalAccountCredentials.newBuilder()
-                            .setHttpTransportFactory(transportFactory)
-                            .setAudience("audience")
-                            .setSubjectTokenType("subjectTokenType")
-                            .setTokenUrl(STS_URL)
-                            .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
-                            .setServiceAccountImpersonationOptions(impersonationOpts)
-                            .build();
+        (TestExternalAccountCredentials)
+            TestExternalAccountCredentials.newBuilder()
+                .setHttpTransportFactory(transportFactory)
+                .setAudience("audience")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenUrl(STS_URL)
+                .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+                .setServiceAccountImpersonationOptions(impersonationOpts)
+                .build();
 
-    TestExternalAccountCredentials deserializedCredentials = serializeAndDeserialize(testCredentials);
+    TestExternalAccountCredentials deserializedCredentials =
+        serializeAndDeserialize(testCredentials);
     assertEquals(testCredentials, deserializedCredentials);
     assertEquals(testCredentials.hashCode(), deserializedCredentials.hashCode());
     assertEquals(testCredentials.toString(), deserializedCredentials.toString());
-    assertEquals(testCredentials.getServiceAccountImpersonationOptions().getLifetime(),
-            deserializedCredentials.getServiceAccountImpersonationOptions().getLifetime());
+    assertEquals(
+        testCredentials.getServiceAccountImpersonationOptions().getLifetime(),
+        deserializedCredentials.getServiceAccountImpersonationOptions().getLifetime());
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
   }
 
