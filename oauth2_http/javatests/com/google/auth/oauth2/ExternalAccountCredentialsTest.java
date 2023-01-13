@@ -35,11 +35,13 @@ import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SER
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
+import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.ExternalAccountCredentialsTest.TestExternalAccountCredentials.TestCredentialSource;
@@ -62,7 +64,7 @@ import org.junit.runners.JUnit4;
 
 /** Tests for {@link ExternalAccountCredentials}. */
 @RunWith(JUnit4.class)
-public class ExternalAccountCredentialsTest {
+public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
   private static final String STS_URL = "https://sts.googleapis.com";
 
@@ -952,6 +954,30 @@ public class ExternalAccountCredentialsTest {
         testCredentials.getRequestMetadata(URI.create("http://googleapis.com/foo/bar"));
 
     assertEquals("quotaProjectId", requestMetadata.get("x-goog-user-project").get(0));
+  }
+
+  @Test
+  public void serialize() throws IOException, ClassNotFoundException {
+    Map<String, Object> impersonationOpts = new HashMap<String, Object>(){{ put("token_lifetime_seconds", 1000); }};
+
+    TestExternalAccountCredentials testCredentials =
+            (TestExternalAccountCredentials)
+                    TestExternalAccountCredentials.newBuilder()
+                            .setHttpTransportFactory(transportFactory)
+                            .setAudience("audience")
+                            .setSubjectTokenType("subjectTokenType")
+                            .setTokenUrl(STS_URL)
+                            .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+                            .setServiceAccountImpersonationOptions(impersonationOpts)
+                            .build();
+
+    TestExternalAccountCredentials deserializedCredentials = serializeAndDeserialize(testCredentials);
+    assertEquals(testCredentials, deserializedCredentials);
+    assertEquals(testCredentials.hashCode(), deserializedCredentials.hashCode());
+    assertEquals(testCredentials.toString(), deserializedCredentials.toString());
+    assertEquals(testCredentials.getServiceAccountImpersonationOptions().getLifetime(),
+            deserializedCredentials.getServiceAccountImpersonationOptions().getLifetime());
+    assertSame(deserializedCredentials.clock, Clock.SYSTEM);
   }
 
   @Test

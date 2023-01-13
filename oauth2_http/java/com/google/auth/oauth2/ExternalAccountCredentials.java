@@ -66,6 +66,8 @@ import javax.annotation.Nullable;
  */
 public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
+  private static final long serialVersionUID = 8049126194174465023L;
+
   /** Base credential source class. Dictates the retrieval method of the external credential. */
   abstract static class CredentialSource implements Serializable {
 
@@ -639,11 +641,14 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
    * }
    * </pre>
    */
-  static final class ServiceAccountImpersonationOptions {
+  static final class ServiceAccountImpersonationOptions implements Serializable {
+
+    private static final long serialVersionUID = 4250771921886280953L;
     private static final int DEFAULT_TOKEN_LIFETIME_SECONDS = 3600;
     private static final int MAXIMUM_TOKEN_LIFETIME_SECONDS = 43200;
     private static final int MINIMUM_TOKEN_LIFETIME_SECONDS = 600;
     private static final String TOKEN_LIFETIME_SECONDS_KEY = "token_lifetime_seconds";
+
 
     private final int lifetime;
 
