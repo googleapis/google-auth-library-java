@@ -78,6 +78,8 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
 
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
 
+  private static final long serialVersionUID = -2181779590486283287L;
+
   static final String EXTERNAL_ACCOUNT_AUTHORIZED_USER_FILE_TYPE =
       "external_account_authorized_user";
 
