@@ -46,8 +46,10 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 /** Handles an interactive 3-Legged-OAuth2 (3LO) user consent authorization. */
 public class UserAuthorizer {
@@ -204,7 +206,15 @@ public class UserAuthorizer {
     Long expirationMillis =
         OAuth2Utils.validateLong(tokenJson, "expiration_time_millis", TOKEN_STORE_ERROR);
     Date expirationTime = new Date(expirationMillis);
-    AccessToken accessToken = new AccessToken(accessTokenValue, expirationTime);
+    List<String> scopes =
+        OAuth2Utils.validateOptionalListString(
+            tokenJson, OAuth2Utils.TOKEN_RESPONSE_SCOPE, FETCH_TOKEN_ERROR);
+    AccessToken accessToken =
+        AccessToken.newBuilder()
+            .setExpirationTime(expirationTime)
+            .setTokenValue(accessTokenValue)
+            .setScopes(scopes)
+            .build();
     String refreshToken =
         OAuth2Utils.validateOptionalString(tokenJson, "refresh_token", TOKEN_STORE_ERROR);
     UserCredentials credentials =
@@ -251,7 +261,15 @@ public class UserAuthorizer {
         OAuth2Utils.validateString(parsedTokens, "access_token", FETCH_TOKEN_ERROR);
     int expiresInSecs = OAuth2Utils.validateInt32(parsedTokens, "expires_in", FETCH_TOKEN_ERROR);
     Date expirationTime = new Date(new Date().getTime() + expiresInSecs * 1000);
-    AccessToken accessToken = new AccessToken(accessTokenValue, expirationTime);
+    String scopes =
+        OAuth2Utils.validateOptionalString(
+            parsedTokens, OAuth2Utils.TOKEN_RESPONSE_SCOPE, FETCH_TOKEN_ERROR);
+    AccessToken accessToken =
+        AccessToken.newBuilder()
+            .setExpirationTime(expirationTime)
+            .setTokenValue(accessTokenValue)
+            .setScopes(scopes)
+            .build();
     String refreshToken =
         OAuth2Utils.validateOptionalString(parsedTokens, "refresh_token", FETCH_TOKEN_ERROR);
 
@@ -343,15 +361,20 @@ public class UserAuthorizer {
     }
     AccessToken accessToken = credentials.getAccessToken();
     String acessTokenValue = null;
+    String scopes = null;
     Date expiresBy = null;
+    List<String> grantedScopes = new ArrayList<>();
+
     if (accessToken != null) {
       acessTokenValue = accessToken.getTokenValue();
       expiresBy = accessToken.getExpirationTime();
+      grantedScopes = accessToken.getScopes();
     }
     String refreshToken = credentials.getRefreshToken();
     GenericJson tokenStateJson = new GenericJson();
     tokenStateJson.setFactory(OAuth2Utils.JSON_FACTORY);
     tokenStateJson.put("access_token", acessTokenValue);
+    tokenStateJson.put(OAuth2Utils.TOKEN_RESPONSE_SCOPE, grantedScopes);
     tokenStateJson.put("expiration_time_millis", expiresBy.getTime());
     if (refreshToken != null) {
       tokenStateJson.put("refresh_token", refreshToken);
