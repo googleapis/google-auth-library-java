@@ -152,12 +152,14 @@ public class OAuth2Credentials extends Credentials {
   }
 
   /** Returns the credentials' refresh margin. */
-  public Duration getRefreshMargin() {
+  @VisibleForTesting
+  Duration getRefreshMargin() {
     return this.refreshMargin;
   }
 
   /** Returns the credentials' expiration margin. */
-  public Duration getExpirationMargin() {
+  @VisibleForTesting
+  Duration getExpirationMargin() {
     return this.expirationMargin;
   }
 
