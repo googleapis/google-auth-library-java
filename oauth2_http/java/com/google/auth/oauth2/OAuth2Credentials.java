@@ -151,6 +151,18 @@ public class OAuth2Credentials extends Credentials {
     return null;
   }
 
+  /** Returns the credentials' refresh margin. */
+  @VisibleForTesting
+  Duration getRefreshMargin() {
+    return this.refreshMargin;
+  }
+
+  /** Returns the credentials' expiration margin. */
+  @VisibleForTesting
+  Duration getExpirationMargin() {
+    return this.expirationMargin;
+  }
+
   @Override
   public void getRequestMetadata(
       final URI uri, Executor executor, final RequestMetadataCallback callback) {
