@@ -43,6 +43,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
@@ -168,6 +169,44 @@ public class UserAuthorizerTest {
     assertEquals("code", parameters.get("response_type"));
     assertEquals(pkce.getCodeChallenge(), parameters.get("code_challenge"));
     assertEquals(pkce.getCodeChallengeMethod(), parameters.get("code_challenge_method"));
+  }
+
+  @Test
+  public void getAuthorizationUrl_additionalParameters() throws IOException {
+    final String CUSTOM_STATE = "custom_state";
+    final String PROTOCOL = "https";
+    final String HOST = "accounts.test.com";
+    final String PATH = "/o/o/oauth2/auth";
+    final URI AUTH_URI = URI.create(PROTOCOL + "://" + HOST + PATH);
+    final String EXPECTED_CALLBACK = "http://example.com" + CALLBACK_URI.toString();
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(DUMMY_SCOPES)
+            .setCallbackUri(CALLBACK_URI)
+            .setUserAuthUri(AUTH_URI)
+            .build();
+    Map<String, String> additionalParameters = new HashMap<String, String>();
+    additionalParameters.put("param1", "value1");
+    additionalParameters.put("param2", "value2");
+
+    URL authorizationUrl =
+        authorizer.getAuthorizationUrl(USER_ID, CUSTOM_STATE, BASE_URI, additionalParameters);
+
+    assertEquals(PROTOCOL, authorizationUrl.getProtocol());
+    assertEquals(-1, authorizationUrl.getPort());
+    assertEquals(PATH, authorizationUrl.getPath());
+    assertEquals(HOST, authorizationUrl.getHost());
+    String query = authorizationUrl.getQuery();
+    Map<String, String> parameters = TestUtils.parseQuery(query);
+    assertEquals(CUSTOM_STATE, parameters.get("state"));
+    assertEquals(USER_ID, parameters.get("login_hint"));
+    assertEquals(EXPECTED_CALLBACK, parameters.get("redirect_uri"));
+    assertEquals(CLIENT_ID_VALUE, parameters.get("client_id"));
+    assertEquals(DUMMY_SCOPE, parameters.get("scope"));
+    assertEquals("code", parameters.get("response_type"));
+    assertEquals("value1", parameters.get("param1"));
+    assertEquals("value2", parameters.get("param2"));
   }
 
   @Test

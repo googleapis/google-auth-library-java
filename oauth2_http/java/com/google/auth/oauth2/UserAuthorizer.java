@@ -50,6 +50,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /** Handles an interactive 3-Legged-OAuth2 (3LO) user consent authorization. */
 public class UserAuthorizer {
@@ -168,6 +169,20 @@ public class UserAuthorizer {
    * @return The URL that can be navigated or redirected to.
    */
   public URL getAuthorizationUrl(String userId, String state, URI baseUri) {
+    return this.getAuthorizationUrl(userId, state, baseUri, null);
+  }
+
+  /**
+   * Return an URL that performs the authorization consent prompt web UI.
+   *
+   * @param userId Application's identifier for the end user.
+   * @param state State that is passed on to the OAuth2 callback URI after the consent.
+   * @param baseUri The URI to resolve the OAuth2 callback URI relative to.
+   * @param additionalParameters Additional query parameters to be added to the authorization url
+   * @return The URL that can be navigated or redirected to.
+   */
+  public URL getAuthorizationUrl(
+      String userId, String state, URI baseUri, Map<String, String> additionalParameters) {
     URI resolvedCallbackUri = getCallbackUri(baseUri);
     String scopesString = Joiner.on(' ').join(scopes);
 
@@ -185,6 +200,13 @@ public class UserAuthorizer {
       url.put("login_hint", userId);
     }
     url.put("include_granted_scopes", true);
+
+    if (additionalParameters != null) {
+      for (Map.Entry<String, String> entry : additionalParameters.entrySet()) {
+        url.put(entry.getKey(), entry.getValue());
+      }
+    }
+
     if (pkce != null) {
       url.put("code_challenge", pkce.getCodeChallenge());
       url.put("code_challenge_method", pkce.getCodeChallengeMethod());
