@@ -31,11 +31,19 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.oauth2.OAuth2Credentials.DEFAULT_EXPIRATION_MARGIN;
+import static com.google.auth.oauth2.OAuth2Credentials.DEFAULT_REFRESH_MARGIN;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import com.google.auth.TestUtils;
 import java.io.IOException;
+import java.net.URI;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -43,7 +51,6 @@ import org.junit.runners.JUnit4;
 /** Tests for {@link OAuth2CredentialsWithRefresh}. */
 @RunWith(JUnit4.class)
 public class OAuth2CredentialsWithRefreshTest {
-
   private static final AccessToken ACCESS_TOKEN = new AccessToken("accessToken", new Date());
 
   @Test
@@ -62,6 +69,85 @@ public class OAuth2CredentialsWithRefreshTest {
             .build();
 
     assertEquals(ACCESS_TOKEN, credential.getAccessToken());
+    assertEquals(refreshHandler, credential.getRefreshHandler());
+  }
+
+  @Test
+  public void builder_withRefreshAndExpirationMargins() {
+    OAuth2CredentialsWithRefresh.OAuth2RefreshHandler refreshHandler =
+        new OAuth2CredentialsWithRefresh.OAuth2RefreshHandler() {
+          @Override
+          public AccessToken refreshAccessToken() {
+            return null;
+          }
+        };
+
+    Duration refreshMargin = Duration.of(10, ChronoUnit.SECONDS);
+    Duration expirationMargin = Duration.of(12, ChronoUnit.SECONDS);
+
+    OAuth2CredentialsWithRefresh credential =
+        (OAuth2CredentialsWithRefresh)
+            OAuth2CredentialsWithRefresh.newBuilder()
+                .setAccessToken(ACCESS_TOKEN)
+                .setRefreshHandler(refreshHandler)
+                .setRefreshMargin(refreshMargin)
+                .setExpirationMargin(expirationMargin)
+                .build();
+
+    assertEquals(ACCESS_TOKEN, credential.getAccessToken());
+    assertEquals(refreshMargin, credential.getRefreshMargin());
+    assertEquals(expirationMargin, credential.getExpirationMargin());
+    assertEquals(refreshHandler, credential.getRefreshHandler());
+  }
+
+  @Test
+  public void builder_onlyRefreshMarginSet() {
+    OAuth2CredentialsWithRefresh.OAuth2RefreshHandler refreshHandler =
+        new OAuth2CredentialsWithRefresh.OAuth2RefreshHandler() {
+          @Override
+          public AccessToken refreshAccessToken() {
+            return null;
+          }
+        };
+
+    Duration refreshMargin = Duration.of(10, ChronoUnit.SECONDS);
+
+    OAuth2CredentialsWithRefresh credential =
+        (OAuth2CredentialsWithRefresh)
+            OAuth2CredentialsWithRefresh.newBuilder()
+                .setAccessToken(ACCESS_TOKEN)
+                .setRefreshHandler(refreshHandler)
+                .setRefreshMargin(refreshMargin)
+                .build();
+
+    assertEquals(ACCESS_TOKEN, credential.getAccessToken());
+    assertEquals(refreshMargin, credential.getRefreshMargin());
+    assertEquals(DEFAULT_EXPIRATION_MARGIN, credential.getExpirationMargin());
+    assertEquals(refreshHandler, credential.getRefreshHandler());
+  }
+
+  @Test
+  public void builder_onlyExpirationMarginSet() {
+    OAuth2CredentialsWithRefresh.OAuth2RefreshHandler refreshHandler =
+        new OAuth2CredentialsWithRefresh.OAuth2RefreshHandler() {
+          @Override
+          public AccessToken refreshAccessToken() {
+            return null;
+          }
+        };
+
+    Duration expirationMargin = Duration.of(12, ChronoUnit.SECONDS);
+    OAuth2CredentialsWithRefresh credential =
+        (OAuth2CredentialsWithRefresh)
+            OAuth2CredentialsWithRefresh.newBuilder()
+                .setAccessToken(ACCESS_TOKEN)
+                .setRefreshHandler(refreshHandler)
+                .setExpirationMargin(expirationMargin)
+                .build();
+
+    assertEquals(ACCESS_TOKEN, credential.getAccessToken());
+    assertEquals(DEFAULT_REFRESH_MARGIN, credential.getRefreshMargin());
+    assertEquals(expirationMargin, credential.getExpirationMargin());
     assertEquals(refreshHandler, credential.getRefreshHandler());
   }
 
@@ -118,5 +204,26 @@ public class OAuth2CredentialsWithRefreshTest {
     AccessToken accessToken = credentials.refreshAccessToken();
 
     assertEquals(refreshedToken, accessToken);
+  }
+
+  @Test
+  public void getRequestMetadata() throws IOException {
+    URI uri = URI.create("http://googleapis.com/testapi/v1/foo");
+    final AccessToken refreshedToken = new AccessToken("refreshedAccessToken", new Date());
+    OAuth2CredentialsWithRefresh credentials =
+        OAuth2CredentialsWithRefresh.newBuilder()
+            .setAccessToken(ACCESS_TOKEN)
+            .setRefreshHandler(
+                new OAuth2CredentialsWithRefresh.OAuth2RefreshHandler() {
+                  @Override
+                  public AccessToken refreshAccessToken() {
+                    return refreshedToken;
+                  }
+                })
+            .build();
+
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(uri);
+
+    TestUtils.assertContainsBearerToken(metadata, refreshedToken.getTokenValue());
   }
 }

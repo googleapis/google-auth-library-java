@@ -49,6 +49,16 @@ public class OAuth2CredentialsWithRefresh extends OAuth2Credentials {
 
   private final OAuth2RefreshHandler refreshHandler;
 
+  protected OAuth2CredentialsWithRefresh(Builder builder) {
+    super(builder.getAccessToken(), builder.getRefreshMargin(), builder.getExpirationMargin());
+    // An expiration time must be provided.
+    if (builder.getAccessToken() != null && builder.getAccessToken().getExpirationTime() == null) {
+      throw new IllegalArgumentException(
+          "The provided access token must contain the expiration time.");
+    }
+    this.refreshHandler = checkNotNull(builder.refreshHandler);
+  }
+
   protected OAuth2CredentialsWithRefresh(
       AccessToken accessToken, OAuth2RefreshHandler refreshHandler) {
     super(accessToken);
@@ -101,7 +111,7 @@ public class OAuth2CredentialsWithRefresh extends OAuth2Credentials {
     }
 
     public OAuth2CredentialsWithRefresh build() {
-      return new OAuth2CredentialsWithRefresh(getAccessToken(), refreshHandler);
+      return new OAuth2CredentialsWithRefresh(this);
     }
   }
 }
