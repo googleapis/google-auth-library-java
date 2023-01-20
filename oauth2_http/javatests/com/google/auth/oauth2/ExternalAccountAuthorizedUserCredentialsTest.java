@@ -289,6 +289,26 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
   }
 
   @Test
+  public void toBuilder() {
+    ExternalAccountAuthorizedUserCredentials credentials =
+        ExternalAccountAuthorizedUserCredentials.newBuilder()
+            .setAudience(AUDIENCE)
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setTokenUrl(TOKEN_URL)
+            .setTokenInfoUrl(TOKEN_INFO_URL)
+            .setRevokeUrl(REVOKE_URL)
+            .setAccessToken(new AccessToken(ACCESS_TOKEN, new Date()))
+            .setQuotaProjectId(QUOTA_PROJECT)
+            .build();
+
+    ExternalAccountAuthorizedUserCredentials secondCredentials = credentials.toBuilder().build();
+
+    assertEquals(credentials, secondCredentials);
+  }
+
+  @Test
   public void fromJson_allFields() throws IOException {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.fromJson(
@@ -776,6 +796,246 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
 
     assertNotEquals(userCredentials, credentials);
     assertNotEquals(credentials, userCredentials);
+  }
+
+  @Test
+  public void equals_differentAudience() {
+    ExternalAccountAuthorizedUserCredentials credentials =
+        ExternalAccountAuthorizedUserCredentials.newBuilder()
+            .setAudience(AUDIENCE)
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setTokenUrl(TOKEN_URL)
+            .setTokenInfoUrl(TOKEN_INFO_URL)
+            .setRevokeUrl(REVOKE_URL)
+            .setAccessToken(new AccessToken(ACCESS_TOKEN, /* expirationTime= */ null))
+            .setQuotaProjectId(QUOTA_PROJECT)
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    ExternalAccountAuthorizedUserCredentials secondCredentials =
+        credentials.toBuilder().setAudience("different").build();
+
+    assertNotEquals(secondCredentials, credentials);
+    assertNotEquals(credentials, secondCredentials);
+    assertNotEquals(credentials.hashCode(), secondCredentials.hashCode());
+  }
+
+  @Test
+  public void equals_differentClientId() {
+    ExternalAccountAuthorizedUserCredentials credentials =
+        ExternalAccountAuthorizedUserCredentials.newBuilder()
+            .setAudience(AUDIENCE)
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setTokenUrl(TOKEN_URL)
+            .setTokenInfoUrl(TOKEN_INFO_URL)
+            .setRevokeUrl(REVOKE_URL)
+            .setAccessToken(new AccessToken(ACCESS_TOKEN, /* expirationTime= */ null))
+            .setQuotaProjectId(QUOTA_PROJECT)
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    ExternalAccountAuthorizedUserCredentials secondCredentials =
+        credentials.toBuilder().setClientId("different").build();
+
+    assertNotEquals(secondCredentials, credentials);
+    assertNotEquals(credentials, secondCredentials);
+    assertNotEquals(credentials.hashCode(), secondCredentials.hashCode());
+  }
+
+  @Test
+  public void equals_differentClientSecret() {
+    ExternalAccountAuthorizedUserCredentials credentials =
+        ExternalAccountAuthorizedUserCredentials.newBuilder()
+            .setAudience(AUDIENCE)
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setTokenUrl(TOKEN_URL)
+            .setTokenInfoUrl(TOKEN_INFO_URL)
+            .setRevokeUrl(REVOKE_URL)
+            .setAccessToken(new AccessToken(ACCESS_TOKEN, /* expirationTime= */ null))
+            .setQuotaProjectId(QUOTA_PROJECT)
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    ExternalAccountAuthorizedUserCredentials secondCredentials =
+        credentials.toBuilder().setClientSecret("different").build();
+
+    assertNotEquals(secondCredentials, credentials);
+    assertNotEquals(credentials, secondCredentials);
+    assertNotEquals(credentials.hashCode(), secondCredentials.hashCode());
+  }
+
+  @Test
+  public void equals_differentRefreshToken() {
+    ExternalAccountAuthorizedUserCredentials credentials =
+        ExternalAccountAuthorizedUserCredentials.newBuilder()
+            .setAudience(AUDIENCE)
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setTokenUrl(TOKEN_URL)
+            .setTokenInfoUrl(TOKEN_INFO_URL)
+            .setRevokeUrl(REVOKE_URL)
+            .setAccessToken(new AccessToken(ACCESS_TOKEN, /* expirationTime= */ null))
+            .setQuotaProjectId(QUOTA_PROJECT)
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    ExternalAccountAuthorizedUserCredentials secondCredentials =
+        credentials.toBuilder().setRefreshToken("different").build();
+
+    assertNotEquals(secondCredentials, credentials);
+    assertNotEquals(credentials, secondCredentials);
+    assertNotEquals(credentials.hashCode(), secondCredentials.hashCode());
+  }
+
+  @Test
+  public void equals_differentTokenUrl() {
+    ExternalAccountAuthorizedUserCredentials credentials =
+        ExternalAccountAuthorizedUserCredentials.newBuilder()
+            .setAudience(AUDIENCE)
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setTokenUrl(TOKEN_URL)
+            .setTokenInfoUrl(TOKEN_INFO_URL)
+            .setRevokeUrl(REVOKE_URL)
+            .setAccessToken(new AccessToken(ACCESS_TOKEN, /* expirationTime= */ null))
+            .setQuotaProjectId(QUOTA_PROJECT)
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    ExternalAccountAuthorizedUserCredentials secondCredentials =
+        credentials.toBuilder().setTokenUrl("different").build();
+
+    assertNotEquals(secondCredentials, credentials);
+    assertNotEquals(credentials, secondCredentials);
+    assertNotEquals(credentials.hashCode(), secondCredentials.hashCode());
+  }
+
+  @Test
+  public void equals_differentTokenInfoUrl() {
+    ExternalAccountAuthorizedUserCredentials credentials =
+        ExternalAccountAuthorizedUserCredentials.newBuilder()
+            .setAudience(AUDIENCE)
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setTokenUrl(TOKEN_URL)
+            .setTokenInfoUrl(TOKEN_INFO_URL)
+            .setRevokeUrl(REVOKE_URL)
+            .setAccessToken(new AccessToken(ACCESS_TOKEN, /* expirationTime= */ null))
+            .setQuotaProjectId(QUOTA_PROJECT)
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    ExternalAccountAuthorizedUserCredentials secondCredentials =
+        credentials.toBuilder().setTokenInfoUrl("different").build();
+
+    assertNotEquals(secondCredentials, credentials);
+    assertNotEquals(credentials, secondCredentials);
+    assertNotEquals(credentials.hashCode(), secondCredentials.hashCode());
+  }
+
+  @Test
+  public void equals_differentRevokeUrl() {
+    ExternalAccountAuthorizedUserCredentials credentials =
+        ExternalAccountAuthorizedUserCredentials.newBuilder()
+            .setAudience(AUDIENCE)
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setTokenUrl(TOKEN_URL)
+            .setTokenInfoUrl(TOKEN_INFO_URL)
+            .setRevokeUrl(REVOKE_URL)
+            .setAccessToken(new AccessToken(ACCESS_TOKEN, /* expirationTime= */ null))
+            .setQuotaProjectId(QUOTA_PROJECT)
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    ExternalAccountAuthorizedUserCredentials secondCredentials =
+        credentials.toBuilder().setRevokeUrl("different").build();
+
+    assertNotEquals(secondCredentials, credentials);
+    assertNotEquals(credentials, secondCredentials);
+    assertNotEquals(credentials.hashCode(), secondCredentials.hashCode());
+  }
+
+  @Test
+  public void equals_differentAccessToken() {
+    ExternalAccountAuthorizedUserCredentials credentials =
+        ExternalAccountAuthorizedUserCredentials.newBuilder()
+            .setAudience(AUDIENCE)
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setTokenUrl(TOKEN_URL)
+            .setTokenInfoUrl(TOKEN_INFO_URL)
+            .setRevokeUrl(REVOKE_URL)
+            .setAccessToken(new AccessToken(ACCESS_TOKEN, new Date()))
+            .setQuotaProjectId(QUOTA_PROJECT)
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    ExternalAccountAuthorizedUserCredentials secondCredentials =
+        credentials.toBuilder().setAccessToken(new AccessToken("different", new Date())).build();
+
+    assertNotEquals(secondCredentials, credentials);
+    assertNotEquals(credentials, secondCredentials);
+    assertNotEquals(credentials.hashCode(), secondCredentials.hashCode());
+  }
+
+  @Test
+  public void equals_differentQuotaProjectId() {
+    ExternalAccountAuthorizedUserCredentials credentials =
+        ExternalAccountAuthorizedUserCredentials.newBuilder()
+            .setAudience(AUDIENCE)
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setTokenUrl(TOKEN_URL)
+            .setTokenInfoUrl(TOKEN_INFO_URL)
+            .setRevokeUrl(REVOKE_URL)
+            .setAccessToken(new AccessToken(ACCESS_TOKEN, /* expirationTime= */ null))
+            .setQuotaProjectId(QUOTA_PROJECT)
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    ExternalAccountAuthorizedUserCredentials secondCredentials =
+        credentials.toBuilder().setQuotaProjectId("different").build();
+
+    assertNotEquals(secondCredentials, credentials);
+    assertNotEquals(credentials, secondCredentials);
+    assertNotEquals(credentials.hashCode(), secondCredentials.hashCode());
+  }
+
+  @Test
+  public void equals_differentTransportFactory() {
+    ExternalAccountAuthorizedUserCredentials credentials =
+        ExternalAccountAuthorizedUserCredentials.newBuilder()
+            .setAudience(AUDIENCE)
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setTokenUrl(TOKEN_URL)
+            .setTokenInfoUrl(TOKEN_INFO_URL)
+            .setRevokeUrl(REVOKE_URL)
+            .setAccessToken(new AccessToken(ACCESS_TOKEN, /* expirationTime= */ null))
+            .setQuotaProjectId(QUOTA_PROJECT)
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    ExternalAccountAuthorizedUserCredentials secondCredentials =
+        credentials.toBuilder().setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY).build();
+
+    assertNotEquals(secondCredentials, credentials);
+    assertNotEquals(credentials, secondCredentials);
+    assertNotEquals(credentials.hashCode(), secondCredentials.hashCode());
   }
 
   @Test
