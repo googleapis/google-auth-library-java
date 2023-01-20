@@ -33,13 +33,11 @@ package com.google.auth.oauth2;
 
 import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
 import static com.google.auth.oauth2.OAuth2Utils.JSON_FACTORY;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
+import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSource;
@@ -59,7 +57,7 @@ import org.junit.runners.JUnit4;
 
 /** Tests for {@link IdentityPoolCredentials}. */
 @RunWith(JUnit4.class)
-public class IdentityPoolCredentialsTest {
+public class IdentityPoolCredentialsTest extends BaseSerializationTest {
 
   private static final String STS_URL = "https://sts.googleapis.com";
 
@@ -730,6 +728,24 @@ public class IdentityPoolCredentialsTest {
                 .build();
 
     assertTrue(credentials.isWorkforcePoolConfiguration());
+  }
+
+  @Test
+  public void serialize() throws IOException, ClassNotFoundException {
+    IdentityPoolCredentials testCredentials =
+        (IdentityPoolCredentials)
+            IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+                .setQuotaProjectId("quotaProjectId")
+                .setClientId("clientId")
+                .setClientSecret("clientSecret")
+                .build();
+
+    IdentityPoolCredentials deserializedCredentials = serializeAndDeserialize(testCredentials);
+    assertEquals(testCredentials, deserializedCredentials);
+    assertEquals(testCredentials.hashCode(), deserializedCredentials.hashCode());
+    assertEquals(testCredentials.toString(), deserializedCredentials.toString());
+    assertSame(deserializedCredentials.clock, Clock.SYSTEM);
   }
 
   static InputStream writeIdentityPoolCredentialsStream(

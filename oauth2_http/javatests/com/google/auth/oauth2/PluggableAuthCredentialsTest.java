@@ -32,9 +32,7 @@
 package com.google.auth.oauth2;
 
 import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
@@ -45,6 +43,7 @@ import com.google.auth.oauth2.ExternalAccountCredentials.CredentialSource;
 import com.google.auth.oauth2.PluggableAuthCredentials.PluggableAuthCredentialSource;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.NotSerializableException;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -54,7 +53,7 @@ import javax.annotation.Nullable;
 import org.junit.Test;
 
 /** Tests for {@link PluggableAuthCredentials}. */
-public class PluggableAuthCredentialsTest {
+public class PluggableAuthCredentialsTest extends BaseSerializationTest {
   // The default timeout for waiting for the executable to finish (30 seconds).
   private static final int DEFAULT_EXECUTABLE_TIMEOUT_MS = 30 * 1000;
   // The minimum timeout for waiting for the executable to finish (5 seconds).
@@ -434,6 +433,22 @@ public class PluggableAuthCredentialsTest {
     assertEquals(credentials.getClientId(), newCredentials.getClientId());
     assertEquals(credentials.getClientSecret(), newCredentials.getClientSecret());
     assertEquals(credentials.getExecutableHandler(), newCredentials.getExecutableHandler());
+  }
+
+  @Test
+  public void serialize() throws IOException, ClassNotFoundException {
+    PluggableAuthCredentials testCredentials =
+        (PluggableAuthCredentials)
+            PluggableAuthCredentials.newBuilder(CREDENTIAL)
+                .setExecutableHandler(options -> "pluggableAuthToken")
+                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+                .setQuotaProjectId("quotaProjectId")
+                .setClientId("clientId")
+                .setClientSecret("clientSecret")
+                .build();
+
+    // PluggableAuthCredentials are not serializable
+    assertThrows(NotSerializableException.class, () -> serializeAndDeserialize(testCredentials));
   }
 
   private static CredentialSource buildCredentialSource() {
