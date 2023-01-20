@@ -935,7 +935,7 @@ https://search.maven.org/artifact/com.google.auth/google-auth-library-oauth2-htt
 can be used with Google's [HTTP-based clients][apiary-clients].
 We provide a [`HttpCredentialsAdapter`][http-credentials-adapter] which can be used
 as an [`HttpRequestInitializer`][http-request-initializer], the last argument for
-the their builders.
+their builders.
 
 ```java
 import com.google.api.client.http.HttpRequestInitializer;
