@@ -930,10 +930,12 @@ The above example requires `com.google.http-client:google-http-client-apache-v2`
 
 ## Using Credentials with `google-http-client`
 
-Credentials provided by `google-auth-library` can be used with Google's 
-[HTTP-based clients][apiary-clients]. We provide a 
-[`HttpCredentialsAdapter`][http-credentials-adapter] which can be used as an 
-[`HttpRequestInitializer`][http-request-initializer].
+Credentials provided by [com.google.auth:google-auth-library-oauth2-http](
+https://search.maven.org/artifact/com.google.auth/google-auth-library-oauth2-http)
+can be used with Google's [HTTP-based clients][apiary-clients].
+We provide a [`HttpCredentialsAdapter`][http-credentials-adapter] which can be used
+as an [`HttpRequestInitializer`][http-request-initializer], the last argument for
+the their builders.
 
 ```java
 import com.google.api.client.http.HttpRequestInitializer;
@@ -948,6 +950,7 @@ Bigquery bq = new Bigquery.Builder(HTTP_TRANSPORT, JSON_FACTORY, requestInitiali
     .setApplicationName(APPLICATION_NAME)
     .build();
 ```
+
 
 ## Verifying JWT Tokens (Beta)
 
