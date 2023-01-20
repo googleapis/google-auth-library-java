@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import com.google.api.client.http.HttpRequestInitializer;
 import com.google.auth.http.HttpTransportFactory;
 import java.io.File;
 import java.io.FileInputStream;
@@ -112,11 +113,11 @@ class DefaultCredentialsProvider {
    * @return the credentials instance.
    * @throws IOException if the credentials cannot be created in the current environment.
    */
-  final GoogleCredentials getDefaultCredentials(HttpTransportFactory transportFactory)
+  final GoogleCredentials getDefaultCredentials(HttpTransportFactory transportFactory, HttpRequestInitializer httpRequestInitializer)
       throws IOException {
     synchronized (this) {
       if (cachedCredentials == null) {
-        cachedCredentials = getDefaultCredentialsUnsynchronized(transportFactory);
+        cachedCredentials = getDefaultCredentialsUnsynchronized(transportFactory, httpRequestInitializer);
       }
       if (cachedCredentials != null) {
         return cachedCredentials;
@@ -132,7 +133,7 @@ class DefaultCredentialsProvider {
   }
 
   private final GoogleCredentials getDefaultCredentialsUnsynchronized(
-      HttpTransportFactory transportFactory) throws IOException {
+      HttpTransportFactory transportFactory, HttpRequestInitializer httpRequestInitializer) throws IOException {
 
     // First try the environment variable
     GoogleCredentials credentials = null;
@@ -149,7 +150,7 @@ class DefaultCredentialsProvider {
           throw new IOException("File does not exist.");
         }
         credentialsStream = readStream(credentialsFile);
-        credentials = GoogleCredentials.fromStream(credentialsStream, transportFactory);
+        credentials = GoogleCredentials.fromStream(credentialsStream, transportFactory, httpRequestInitializer);
       } catch (IOException e) {
         // Although it is also the cause, the message of the caught exception can have very
         // important information for diagnosing errors, so include its message in the
@@ -180,7 +181,7 @@ class DefaultCredentialsProvider {
                   "Attempting to load credentials from well known file: %s",
                   wellKnownFileLocation.getCanonicalPath()));
           credentialsStream = readStream(wellKnownFileLocation);
-          credentials = GoogleCredentials.fromStream(credentialsStream, transportFactory);
+          credentials = GoogleCredentials.fromStream(credentialsStream, transportFactory, httpRequestInitializer);
         }
       } catch (IOException e) {
         throw new IOException(
@@ -314,8 +315,8 @@ class DefaultCredentialsProvider {
     checkedComputeEngine = true;
     if (runningOnComputeEngine) {
       return ComputeEngineCredentials.newBuilder()
-          .setHttpTransportFactory(transportFactory)
-          .build();
+                                     .setHttpTransportFactory(transportFactory)
+                                     .build();
     }
     return null;
   }

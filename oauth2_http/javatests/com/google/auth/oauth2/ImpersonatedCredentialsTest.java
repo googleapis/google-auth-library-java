@@ -165,13 +165,13 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountCredentials sourceCredentials =
         ServiceAccountCredentials.newBuilder()
-            .setClientEmail(SA_CLIENT_EMAIL)
-            .setPrivateKey(privateKey)
-            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
-            .setScopes(IMMUTABLE_SCOPES_LIST)
-            .setProjectId(PROJECT_ID)
-            .setHttpTransportFactory(transportFactory)
-            .build();
+                                 .setClientEmail(SA_CLIENT_EMAIL)
+                                 .setPrivateKey(privateKey)
+                                 .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+                                 .setScopes(IMMUTABLE_SCOPES_LIST)
+                                 .setProjectId(PROJECT_ID)
+                                 .setHttpTransportFactory(transportFactory)
+                                 .build();
     transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
 
     return sourceCredentials;
@@ -188,7 +188,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             USER_ACCOUNT_CLIENT_SECRET,
             REFRESH_TOKEN);
     ImpersonatedCredentials credentials =
-        ImpersonatedCredentials.fromJson(json, mockTransportFactory);
+        ImpersonatedCredentials.fromJson(json, mockTransportFactory, null);
     assertEquals(IMPERSONATED_CLIENT_EMAIL, credentials.getAccount());
     assertEquals(IMPERSONATION_URL, credentials.getIamEndpointOverride());
     assertEquals(QUOTA_PROJECT_ID, credentials.getQuotaProjectId());
@@ -210,7 +210,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             USER_ACCOUNT_CLIENT_SECRET,
             REFRESH_TOKEN);
     ImpersonatedCredentials credentials =
-        ImpersonatedCredentials.fromJson(json, mockTransportFactory);
+        ImpersonatedCredentials.fromJson(json, mockTransportFactory, null);
     assertEquals(IMPERSONATED_CLIENT_EMAIL, credentials.getAccount());
     assertEquals(IMPERSONATION_URL, credentials.getIamEndpointOverride());
     assertNull(credentials.getQuotaProjectId());
@@ -233,7 +233,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             REFRESH_TOKEN);
     json.remove("delegates");
     ImpersonatedCredentials credentials =
-        ImpersonatedCredentials.fromJson(json, mockTransportFactory);
+        ImpersonatedCredentials.fromJson(json, mockTransportFactory, null);
     assertEquals(IMPERSONATED_CLIENT_EMAIL, credentials.getAccount());
     assertEquals(IMPERSONATION_URL, credentials.getIamEndpointOverride());
     assertNull(credentials.getQuotaProjectId());
@@ -249,7 +249,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     GenericJson json =
         buildImpersonationCredentialsJson(IMPERSONATION_URL, DELEGATES, QUOTA_PROJECT_ID);
     ImpersonatedCredentials credentials =
-        ImpersonatedCredentials.fromJson(json, mockTransportFactory);
+        ImpersonatedCredentials.fromJson(json, mockTransportFactory, null);
     assertEquals(IMPERSONATED_CLIENT_EMAIL, credentials.getAccount());
     assertEquals(IMPERSONATION_URL, credentials.getIamEndpointOverride());
     assertEquals(QUOTA_PROJECT_ID, credentials.getQuotaProjectId());
@@ -264,7 +264,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   public void fromJson_InvalidFormat() throws IOException {
     GenericJson json = buildInvalidCredentialsJson();
     try {
-      ImpersonatedCredentials.fromJson(json, mockTransportFactory);
+      ImpersonatedCredentials.fromJson(json, mockTransportFactory, null);
       fail("An exception should be thrown.");
     } catch (CredentialFormatException e) {
       assertEquals("An invalid input stream was provided.", e.getMessage());
@@ -577,15 +577,15 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     mockTransportFactory.transport.setExpireTime(getFormattedTime(c.getTime()));
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
-                sourceCredentials,
-                IMPERSONATED_CLIENT_EMAIL,
-                null,
-                IMMUTABLE_SCOPES_LIST,
-                VALID_LIFETIME,
-                mockTransportFactory)
-            .createWithCustomCalendar(
-                // Set system timezone to GMT
-                Calendar.getInstance(TimeZone.getTimeZone("GMT")));
+                                   sourceCredentials,
+                                   IMPERSONATED_CLIENT_EMAIL,
+                                   null,
+                                   IMMUTABLE_SCOPES_LIST,
+                                   VALID_LIFETIME,
+                                   mockTransportFactory)
+                               .createWithCustomCalendar(
+                                   // Set system timezone to GMT
+                                   Calendar.getInstance(TimeZone.getTimeZone("GMT")));
 
     assertTrue(
         c.getTime().toInstant().truncatedTo(ChronoUnit.SECONDS).toEpochMilli()
@@ -603,15 +603,15 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     mockTransportFactory.transport.setExpireTime(getFormattedTime(c.getTime()));
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
-                sourceCredentials,
-                IMPERSONATED_CLIENT_EMAIL,
-                null,
-                IMMUTABLE_SCOPES_LIST,
-                VALID_LIFETIME,
-                mockTransportFactory)
-            .createWithCustomCalendar(
-                // Set system timezone to one different than GMT
-                Calendar.getInstance(TimeZone.getTimeZone("America/Los_Angeles")));
+                                   sourceCredentials,
+                                   IMPERSONATED_CLIENT_EMAIL,
+                                   null,
+                                   IMMUTABLE_SCOPES_LIST,
+                                   VALID_LIFETIME,
+                                   mockTransportFactory)
+                               .createWithCustomCalendar(
+                                   // Set system timezone to one different than GMT
+                                   Calendar.getInstance(TimeZone.getTimeZone("America/Los_Angeles")));
 
     assertTrue(
         c.getTime().toInstant().truncatedTo(ChronoUnit.SECONDS).toEpochMilli()
@@ -829,9 +829,9 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     String targetAudience = "https://foo.bar";
     IdTokenCredentials tokenCredential =
         IdTokenCredentials.newBuilder()
-            .setIdTokenProvider(targetCredentials)
-            .setTargetAudience(targetAudience)
-            .build();
+                          .setIdTokenProvider(targetCredentials)
+                          .setTargetAudience(targetAudience)
+                          .build();
     tokenCredential.refresh();
     assertEquals(STANDARD_ID_TOKEN, tokenCredential.getAccessToken().getTokenValue());
     assertEquals(STANDARD_ID_TOKEN, tokenCredential.getIdToken().getTokenValue());
@@ -860,10 +860,10 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     String targetAudience = "https://foo.bar";
     IdTokenCredentials tokenCredential =
         IdTokenCredentials.newBuilder()
-            .setIdTokenProvider(targetCredentials)
-            .setTargetAudience(targetAudience)
-            .setOptions(Arrays.asList(IdTokenProvider.Option.INCLUDE_EMAIL))
-            .build();
+                          .setIdTokenProvider(targetCredentials)
+                          .setTargetAudience(targetAudience)
+                          .setOptions(Arrays.asList(IdTokenProvider.Option.INCLUDE_EMAIL))
+                          .build();
     tokenCredential.refresh();
     assertEquals(TOKEN_WITH_EMAIL, tokenCredential.getAccessToken().getTokenValue());
     Payload p = tokenCredential.getIdToken().getJsonWebSignature().getPayload();
@@ -892,9 +892,9 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     String targetAudience = "https://foo.bar";
     IdTokenCredentials tokenCredential =
         IdTokenCredentials.newBuilder()
-            .setIdTokenProvider(targetCredentials)
-            .setTargetAudience(targetAudience)
-            .build();
+                          .setIdTokenProvider(targetCredentials)
+                          .setTargetAudience(targetAudience)
+                          .build();
     try {
       tokenCredential.refresh();
       fail("Should not be able to use credential without exception.");
@@ -925,9 +925,9 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     String targetAudience = "https://foo.bar";
     IdTokenCredentials tokenCredential =
         IdTokenCredentials.newBuilder()
-            .setIdTokenProvider(targetCredentials)
-            .setTargetAudience(targetAudience)
-            .build();
+                          .setIdTokenProvider(targetCredentials)
+                          .setTargetAudience(targetAudience)
+                          .build();
     try {
       tokenCredential.refresh();
       fail("Should not be able to use credential without exception.");

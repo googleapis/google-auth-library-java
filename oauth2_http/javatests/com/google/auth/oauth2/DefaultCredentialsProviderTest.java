@@ -39,6 +39,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.LowLevelHttpRequest;
 import com.google.api.client.http.LowLevelHttpResponse;
@@ -46,6 +47,7 @@ import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.http.TimeoutInitializer;
 import com.google.auth.oauth2.ComputeEngineCredentialsTest.MockMetadataServerTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
@@ -124,7 +126,7 @@ public class DefaultCredentialsProviderTest {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
 
     try {
-      testProvider.getDefaultCredentials(transportFactory);
+      testProvider.getDefaultCredentials(transportFactory, null);
       fail("No credential expected.");
     } catch (IOException e) {
       String message = e.getMessage();
@@ -139,7 +141,7 @@ public class DefaultCredentialsProviderTest {
     testProvider.setFileSandbox(true);
 
     try {
-      testProvider.getDefaultCredentials(transportFactory);
+      testProvider.getDefaultCredentials(transportFactory, null);
       fail("No credential expected.");
     } catch (IOException e) {
       String message = e.getMessage();
@@ -160,7 +162,7 @@ public class DefaultCredentialsProviderTest {
     testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, userPath);
 
     try {
-      testProvider.getDefaultCredentials(transportFactory);
+      testProvider.getDefaultCredentials(transportFactory, null);
       fail("No credential expected.");
     } catch (IOException e) {
       String message = e.getMessage();
@@ -175,7 +177,7 @@ public class DefaultCredentialsProviderTest {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
 
     try {
-      testProvider.getDefaultCredentials(transportFactory);
+      testProvider.getDefaultCredentials(transportFactory, null);
       fail("No credential expected.");
     } catch (IOException expected) {
       String message = expected.getMessage();
@@ -185,7 +187,7 @@ public class DefaultCredentialsProviderTest {
         transportFactory.transport.getRequestCount(),
         ComputeEngineCredentials.MAX_COMPUTE_PING_TRIES);
     try {
-      testProvider.getDefaultCredentials(transportFactory);
+      testProvider.getDefaultCredentials(transportFactory, null);
       fail("No credential expected.");
     } catch (IOException expected) {
       // Expected
@@ -257,9 +259,10 @@ public class DefaultCredentialsProviderTest {
   public void getDefaultCredentials_caches() throws IOException {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    HttpRequestInitializer requestInitializer = new TimeoutInitializer(3000, 30000);
 
-    GoogleCredentials firstCall = testProvider.getDefaultCredentials(transportFactory);
-    GoogleCredentials secondCall = testProvider.getDefaultCredentials(transportFactory);
+    GoogleCredentials firstCall = testProvider.getDefaultCredentials(transportFactory, requestInitializer);
+    GoogleCredentials secondCall = testProvider.getDefaultCredentials(transportFactory, requestInitializer);
 
     assertNotNull(firstCall);
     assertSame(firstCall, secondCall);
@@ -274,7 +277,7 @@ public class DefaultCredentialsProviderTest {
     testProvider.setProperty("isOnGAEStandard7", "true");
 
     try {
-      testProvider.getDefaultCredentials(transportFactory);
+      testProvider.getDefaultCredentials(transportFactory, null);
       fail("No credential expected when not on App Engine.");
     } catch (IOException e) {
       String message = e.getMessage();
@@ -291,7 +294,7 @@ public class DefaultCredentialsProviderTest {
     testProvider.setProperty("isOnGAEStandard7", "true");
 
     try {
-      testProvider.getDefaultCredentials(transportFactory);
+      testProvider.getDefaultCredentials(transportFactory, null);
       fail("Credential expected to fail to load if credential class not present.");
     } catch (IOException e) {
       String message = e.getMessage();
@@ -310,7 +313,8 @@ public class DefaultCredentialsProviderTest {
     testProvider.setEnv(DefaultCredentialsProvider.CLOUD_SHELL_ENV_VAR, "9090");
     testProvider.setEnv(DefaultCredentialsProvider.SKIP_APP_ENGINE_ENV_VAR, "true");
     testProvider.setProperty("isOnGAEStanadard7", "true");
-    GoogleCredentials credentials = testProvider.getDefaultCredentials(transportFactory);
+    HttpRequestInitializer requestInitializer = new TimeoutInitializer(3000, 30000);
+    GoogleCredentials credentials = testProvider.getDefaultCredentials(transportFactory, requestInitializer);
     assertNotNull(credentials);
     assertTrue(credentials instanceof CloudShellCredentials);
   }
@@ -320,8 +324,9 @@ public class DefaultCredentialsProviderTest {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setAccessToken(ACCESS_TOKEN);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    HttpRequestInitializer requestInitializer = new TimeoutInitializer(3000, 30000);
 
-    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory);
+    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory, requestInitializer);
 
     assertNotNull(defaultCredentials);
     Map<String, List<String>> metadata = defaultCredentials.getRequestMetadata(CALL_URI);
@@ -333,8 +338,9 @@ public class DefaultCredentialsProviderTest {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setEnv(DefaultCredentialsProvider.CLOUD_SHELL_ENV_VAR, "4");
+    HttpRequestInitializer requestInitializer = new TimeoutInitializer(3000, 30000);
 
-    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory);
+    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory, requestInitializer);
 
     assertTrue(defaultCredentials instanceof CloudShellCredentials);
     assertEquals(((CloudShellCredentials) defaultCredentials).getAuthPort(), 4);
@@ -346,8 +352,9 @@ public class DefaultCredentialsProviderTest {
     transportFactory.transport.setAccessToken(ACCESS_TOKEN);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setEnv(DefaultCredentialsProvider.CLOUD_SHELL_ENV_VAR, "4");
+    HttpRequestInitializer requestInitializer = new TimeoutInitializer(3000, 30000);
 
-    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory);
+    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory, requestInitializer);
 
     assertTrue(defaultCredentials instanceof CloudShellCredentials);
     assertEquals(((CloudShellCredentials) defaultCredentials).getAuthPort(), 4);
@@ -361,7 +368,7 @@ public class DefaultCredentialsProviderTest {
     testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, invalidPath);
 
     try {
-      testProvider.getDefaultCredentials(transportFactory);
+      testProvider.getDefaultCredentials(transportFactory, null);
       fail("Non existent credential should throw exception");
     } catch (IOException e) {
       String message = e.getMessage();
@@ -381,8 +388,9 @@ public class DefaultCredentialsProviderTest {
     String serviceAccountPath = tempFilePath("service_account.json");
     testProvider.addFile(serviceAccountPath, serviceAccountStream);
     testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, serviceAccountPath);
+    HttpRequestInitializer requestInitializer = new TimeoutInitializer(3000, 30000);
 
-    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory);
+    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory, null);
 
     assertNotNull(defaultCredentials);
     defaultCredentials = defaultCredentials.createScoped(SCOPES);
@@ -480,7 +488,7 @@ public class DefaultCredentialsProviderTest {
     testProvider.setEnv(DefaultCredentialsProvider.NO_GCE_CHECK_ENV_VAR, "true");
 
     try {
-      testProvider.getDefaultCredentials(transportFactory);
+      testProvider.getDefaultCredentials(transportFactory, null);
       fail("No credential expected.");
     } catch (IOException expected) {
       // Expected
@@ -608,7 +616,8 @@ public class DefaultCredentialsProviderTest {
     transportFactory.transport.addRefreshToken(refreshTokenWkf, accessTokenWkf);
     transportFactory.transport.addRefreshToken(refreshTokenEnv, accessTokenEnv);
 
-    testUserProvidesToken(testProvider, transportFactory, accessTokenEnv);
+    HttpRequestInitializer requestInitializer = new TimeoutInitializer(3000, 30000);
+    testUserProvidesToken(testProvider, transportFactory, requestInitializer, accessTokenEnv);
   }
 
   private String tempFilePath(String filename) {
@@ -682,15 +691,17 @@ public class DefaultCredentialsProviderTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(clientId, clientSecret);
     transportFactory.transport.addRefreshToken(refreshToken, ACCESS_TOKEN);
-    testUserProvidesToken(testProvider, transportFactory, ACCESS_TOKEN);
+    HttpRequestInitializer requestInitializer = new TimeoutInitializer(3000, 30000);
+    testUserProvidesToken(testProvider, transportFactory, requestInitializer, ACCESS_TOKEN);
   }
 
   private void testUserProvidesToken(
       TestDefaultCredentialsProvider testProvider,
       HttpTransportFactory transportFactory,
+      HttpRequestInitializer httpRequestInitializer,
       String accessToken)
       throws IOException {
-    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory);
+    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory, httpRequestInitializer);
 
     assertNotNull(defaultCredentials);
     Map<String, List<String>> metadata = defaultCredentials.getRequestMetadata(CALL_URI);
