@@ -45,7 +45,10 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
+import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.BaseEncoding;
 import java.io.IOException;
 import java.net.URI;
@@ -53,6 +56,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -772,6 +776,45 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
 
     assertNotEquals(userCredentials, credentials);
     assertNotEquals(credentials, userCredentials);
+  }
+
+  @Test
+  public void toString_expectedFormat() {
+    AccessToken accessToken = new AccessToken(ACCESS_TOKEN, new Date());
+    ExternalAccountAuthorizedUserCredentials credentials =
+        ExternalAccountAuthorizedUserCredentials.newBuilder()
+            .setAudience(AUDIENCE)
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setTokenUrl(TOKEN_URL)
+            .setTokenInfoUrl(TOKEN_INFO_URL)
+            .setRevokeUrl(REVOKE_URL)
+            .setAccessToken(accessToken)
+            .setQuotaProjectId(QUOTA_PROJECT)
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    String expectedToString =
+        String.format(
+            "ExternalAccountAuthorizedUserCredentials{requestMetadata=%s, temporaryAccess=%s, "
+                + "clientId=%s, clientSecret=%s, refreshToken=%s, tokenUrl=%s, tokenInfoUrl=%s, "
+                + "revokeUrl=%s, audience=%s, transportFactoryClassName=%s, quotaProjectId=%s}",
+            ImmutableMap.of(
+                AuthHttpConstants.AUTHORIZATION,
+                ImmutableList.of(OAuth2Utils.BEARER_PREFIX + accessToken.getTokenValue())),
+            accessToken,
+            CLIENT_ID,
+            CLIENT_SECRET,
+            REFRESH_TOKEN,
+            TOKEN_URL,
+            TOKEN_INFO_URL,
+            REVOKE_URL,
+            AUDIENCE,
+            transportFactory.getClass().getName(),
+            QUOTA_PROJECT);
+
+    assertEquals(expectedToString, credentials.toString());
   }
 
   @Test
