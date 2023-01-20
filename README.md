@@ -951,7 +951,6 @@ Bigquery bq = new Bigquery.Builder(HTTP_TRANSPORT, JSON_FACTORY, requestInitiali
     .build();
 ```
 
-
 ## Verifying JWT Tokens (Beta)
 
 To verify a JWT token, use the [`TokenVerifier`][token-verifier] class.
