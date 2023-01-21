@@ -181,6 +181,10 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     if (ExternalAccountCredentials.EXTERNAL_ACCOUNT_FILE_TYPE.equals(fileType)) {
       return ExternalAccountCredentials.fromJson(fileContents, transportFactory);
     }
+    if (ExternalAccountAuthorizedUserCredentials.EXTERNAL_ACCOUNT_AUTHORIZED_USER_FILE_TYPE.equals(
+        fileType)) {
+      return ExternalAccountAuthorizedUserCredentials.fromJson(fileContents, transportFactory);
+    }
     if ("impersonated_service_account".equals(fileType)) {
       return ImpersonatedCredentials.fromJson(fileContents, transportFactory);
     }
