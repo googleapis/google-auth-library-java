@@ -107,17 +107,7 @@ final class StsRequestHandler {
       GenericData responseData = response.parseAs(GenericData.class);
       return buildResponse(responseData);
     } catch (HttpResponseException e) {
-      GenericJson errorResponse = parseJson((e).getContent());
-      String errorCode = (String) errorResponse.get("error");
-      String errorDescription = null;
-      String errorUri = null;
-      if (errorResponse.containsKey("error_description")) {
-        errorDescription = (String) errorResponse.get("error_description");
-      }
-      if (errorResponse.containsKey("error_uri")) {
-        errorUri = (String) errorResponse.get("error_uri");
-      }
-      throw new OAuthException(errorCode, errorDescription, errorUri);
+      throw OAuthException.createFromHttpResponseException(e);
     }
   }
 
