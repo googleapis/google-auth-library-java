@@ -178,7 +178,7 @@ public class UserAuthorizer {
    * @param userId Application's identifier for the end user.
    * @param state State that is passed on to the OAuth2 callback URI after the consent.
    * @param baseUri The URI to resolve the OAuth2 callback URI relative to.
-   * @param additionalParameters Additional query parameters to be added to the authorization url
+   * @param additionalParameters Additional query parameters to be added to the authorization URL.
    * @return The URL that can be navigated or redirected to.
    */
   public URL getAuthorizationUrl(
