@@ -81,3 +81,5 @@ permissionRules:
     permission: admin
   - team: googleapis-auth
     permission: push
+  - team: aion-sdk
+    permission: push
