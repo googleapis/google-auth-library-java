@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.15.0](https://github.com/googleapis/google-auth-library-java/compare/v1.14.0...v1.15.0) (2023-01-25)
+
+
+### Features
+
+* Adds external account authorized user credentials ([#1129](https://github.com/googleapis/google-auth-library-java/issues/1129)) ([06bf21a](https://github.com/googleapis/google-auth-library-java/commit/06bf21a6ce9478a35907bd6681e53a0e86ffc83f))
+* Expose scopes granted by user ([#1107](https://github.com/googleapis/google-auth-library-java/issues/1107)) ([240c26b](https://github.com/googleapis/google-auth-library-java/commit/240c26bf11652e208469c2a6ea2fc2f383343c25))
+
+
+### Bug Fixes
+
+* AccessToken scopes clean serialization and default as empty list ([#1125](https://github.com/googleapis/google-auth-library-java/issues/1125)) ([f55d41f](https://github.com/googleapis/google-auth-library-java/commit/f55d41fa90750464a37a452ff03a8b811ae93425))
+* Enforce Locale.US for AwsRequestSignerTest ([#1111](https://github.com/googleapis/google-auth-library-java/issues/1111)) ([aeb1218](https://github.com/googleapis/google-auth-library-java/commit/aeb12182241e75cba664975a83bbcfa2449fb0f5))
+* Ensure both refreshMargin and expirationMargin are set when using OAuth2CredentialsWithRefresh ([#1131](https://github.com/googleapis/google-auth-library-java/issues/1131)) ([326e4a1](https://github.com/googleapis/google-auth-library-java/commit/326e4a15dae72b3806b7a640843d7abc669b19c6))
+
 ## [1.14.0](https://github.com/googleapis/google-auth-library-java/compare/v1.13.0...v1.14.0) (2022-12-06)
 
 
