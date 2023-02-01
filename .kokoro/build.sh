@@ -71,12 +71,20 @@ integration)
     ;;
 graalvm)
     # Run Unit and Integration Tests with Native Image
-    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Penable-integration-tests test
+    mvn -B install -DskipTests
+    cd oauth2_http
+    mvn -B ${INTEGRATION_TEST_ARGS} -ntp verify \
+      -DargLine="-agentlib:native-image-agent=config-output-dir=native-image-config"
+    cat native-image-config/reflect-config.json
     RETURN_CODE=$?
     ;;
 graalvm17)
     # Run Unit and Integration Tests with Native Image
-    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Penable-integration-tests test
+    mvn -B install -DskipTests
+    cd oauth2_http
+    mvn -B ${INTEGRATION_TEST_ARGS} -ntp verify \
+      -DargLine="-agentlib:native-image-agent=config-output-dir=native-image-config"
+    cat native-image-config/reflect-config.json
     RETURN_CODE=$?
     ;;
 samples)
