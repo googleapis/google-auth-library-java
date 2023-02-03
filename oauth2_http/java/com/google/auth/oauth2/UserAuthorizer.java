@@ -67,6 +67,7 @@ public class UserAuthorizer {
   private final HttpTransportFactory transportFactory;
   private final URI tokenServerUri;
   private final URI userAuthUri;
+  private final PKCEProvider pkce;
 
   /**
    * Constructor with all parameters.
@@ -79,6 +80,7 @@ public class UserAuthorizer {
    *     tokens.
    * @param tokenServerUri URI of the end point that provides tokens
    * @param userAuthUri URI of the Web UI for user consent
+   * @param pkce PKCE implementation
    */
   private UserAuthorizer(
       ClientId clientId,
@@ -87,7 +89,8 @@ public class UserAuthorizer {
       URI callbackUri,
       HttpTransportFactory transportFactory,
       URI tokenServerUri,
-      URI userAuthUri) {
+      URI userAuthUri,
+      PKCEProvider pkce) {
     this.clientId = Preconditions.checkNotNull(clientId);
     this.scopes = ImmutableList.copyOf(Preconditions.checkNotNull(scopes));
     this.callbackUri = (callbackUri == null) ? DEFAULT_CALLBACK_URI : callbackUri;
@@ -96,6 +99,7 @@ public class UserAuthorizer {
     this.tokenServerUri = (tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : tokenServerUri;
     this.userAuthUri = (userAuthUri == null) ? OAuth2Utils.USER_AUTH_URI : userAuthUri;
     this.tokenStore = (tokenStore == null) ? new MemoryTokensStorage() : tokenStore;
+    this.pkce = pkce;
   }
 
   /**
@@ -181,6 +185,10 @@ public class UserAuthorizer {
       url.put("login_hint", userId);
     }
     url.put("include_granted_scopes", true);
+    if (pkce != null) {
+      url.put("code_challenge", pkce.getCodeChallenge());
+      url.put("code_challenge_method", pkce.getCodeChallengeMethod());
+    }
     return url.toURL();
   }
 
@@ -248,6 +256,11 @@ public class UserAuthorizer {
     tokenData.put("client_secret", clientId.getClientSecret());
     tokenData.put("redirect_uri", resolvedCallbackUri);
     tokenData.put("grant_type", "authorization_code");
+
+    if (pkce != null) {
+      tokenData.put("code_verifier", pkce.getCodeVerifier());
+    }
+
     UrlEncodedContent tokenContent = new UrlEncodedContent(tokenData);
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest tokenRequest =
@@ -430,6 +443,7 @@ public class UserAuthorizer {
     private URI userAuthUri;
     private Collection<String> scopes;
     private HttpTransportFactory transportFactory;
+    private PKCEProvider pkce;
 
     protected Builder() {}
 
@@ -478,6 +492,11 @@ public class UserAuthorizer {
       return this;
     }
 
+    public Builder setPKCEProvider(PKCEProvider pkce) {
+      this.pkce = pkce;
+      return this;
+    }
+
     public ClientId getClientId() {
       return clientId;
     }
@@ -506,9 +525,24 @@ public class UserAuthorizer {
       return transportFactory;
     }
 
+    public PKCEProvider getPKCEProvider() {
+      return pkce;
+    }
+
     public UserAuthorizer build() {
+      if (pkce == null) {
+        pkce = new DefaultPKCEProvider();
+      }
+
       return new UserAuthorizer(
-          clientId, scopes, tokenStore, callbackUri, transportFactory, tokenServerUri, userAuthUri);
+          clientId,
+          scopes,
+          tokenStore,
+          callbackUri,
+          transportFactory,
+          tokenServerUri,
+          userAuthUri,
+          pkce);
     }
   }
 }

@@ -72,6 +72,7 @@ public class UserAuthorizerTest {
   private static final URI CALLBACK_URI = URI.create("/testcallback");
   private static final String CODE = "thisistheend";
   private static final URI BASE_URI = URI.create("http://example.com/foo");
+  private static final PKCEProvider pkce = new DefaultPKCEProvider();
 
   @Test
   public void constructorMinimum() {
@@ -148,6 +149,7 @@ public class UserAuthorizerTest {
             .setScopes(DUMMY_SCOPES)
             .setCallbackUri(CALLBACK_URI)
             .setUserAuthUri(AUTH_URI)
+            .setPKCEProvider(pkce)
             .build();
 
     URL authorizationUrl = authorizer.getAuthorizationUrl(USER_ID, CUSTOM_STATE, BASE_URI);
@@ -164,6 +166,8 @@ public class UserAuthorizerTest {
     assertEquals(CLIENT_ID_VALUE, parameters.get("client_id"));
     assertEquals(DUMMY_SCOPE, parameters.get("scope"));
     assertEquals("code", parameters.get("response_type"));
+    assertEquals(pkce.getCodeChallenge(), parameters.get("code_challenge"));
+    assertEquals(pkce.getCodeChallengeMethod(), parameters.get("code_challenge_method"));
   }
 
   @Test
