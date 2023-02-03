@@ -39,7 +39,7 @@ import java.util.Base64;
 public class DefaultPKCEProvider implements PKCEProvider {
   private String codeVerifier;
   private CodeChallenge codeChallenge;
-  final int MAX_CODE_VERIFIER_LENGTH = 127;
+  private static final int MAX_CODE_VERIFIER_LENGTH = 127;
 
   private class CodeChallenge {
     private String codeChallenge;
