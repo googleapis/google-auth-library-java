@@ -455,6 +455,7 @@ public class UserAuthorizer {
       this.tokenStore = authorizer.tokenStore;
       this.callbackUri = authorizer.callbackUri;
       this.userAuthUri = authorizer.userAuthUri;
+      this.pkce = new DefaultPKCEProvider();
     }
 
     public Builder setClientId(ClientId clientId) {
@@ -539,10 +540,6 @@ public class UserAuthorizer {
     }
 
     public UserAuthorizer build() {
-      if (pkce == null) {
-        pkce = new DefaultPKCEProvider();
-      }
-
       return new UserAuthorizer(
           clientId,
           scopes,
