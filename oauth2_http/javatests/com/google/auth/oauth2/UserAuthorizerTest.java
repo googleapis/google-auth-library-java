@@ -475,4 +475,33 @@ public class UserAuthorizerTest {
     UserCredentials credentials2 = authorizer.getCredentials(USER_ID);
     assertNull(credentials2);
   }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void illegalPKCEProvider() {
+    PKCEProvider pkce =
+        new PKCEProvider() {
+          @Override
+          public String getCodeVerifier() {
+            return null;
+          }
+
+          @Override
+          public String getCodeChallengeMethod() {
+            return null;
+          }
+
+          @Override
+          public String getCodeChallenge() {
+            return null;
+          }
+        };
+
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(DUMMY_SCOPES)
+            .setTokenStore(new MemoryTokensStorage())
+            .setPKCEProvider(pkce)
+            .build();
+  }
 }

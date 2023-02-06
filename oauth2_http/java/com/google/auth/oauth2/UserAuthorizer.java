@@ -493,6 +493,15 @@ public class UserAuthorizer {
     }
 
     public Builder setPKCEProvider(PKCEProvider pkce) {
+      if (pkce != null) {
+        if (pkce.getCodeChallenge() == null
+            || pkce.getCodeVerifier() == null
+            || pkce.getCodeChallengeMethod() == null) {
+
+          throw new IllegalArgumentException(
+              "PKCE provider contained null implementations. PKCE object must implement all PKCEProvider methods.");
+        }
+      }
       this.pkce = pkce;
       return this;
     }
