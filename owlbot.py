@@ -35,5 +35,7 @@ java.common_templates(
         ".github/CODEOWNERS",
         ".kokoro/nightly/integration.cfg",
         ".kokoro/presubmit/integration.cfg",
+        ".kokoro/presubmit/graalvm-native.cfg",
+        ".kokoro/presubmit/graalvm-native-17.cfg"
     ]
 )
