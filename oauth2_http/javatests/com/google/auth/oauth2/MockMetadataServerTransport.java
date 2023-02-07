@@ -209,6 +209,15 @@ public class MockMetadataServerTransport extends MockHttpTransport {
               .setContent(ComputeEngineCredentialsTest.STANDARD_ID_TOKEN);
         }
       };
+    } else if (url.equals(MtlsIdentityBoundCredentials.EMAIL_METADATA_SERVICE_ADDRESS)) {
+      return new MockLowLevelHttpRequest(url) {
+        @Override
+        public LowLevelHttpResponse execute() throws IOException {
+
+          return new MockLowLevelHttpResponse()
+              .setContent(serviceAccountEmail);
+        }
+      };
     }
     return super.buildRequest(method, url);
   }

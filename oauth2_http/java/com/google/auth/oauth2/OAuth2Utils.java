@@ -31,6 +31,8 @@
 
 package com.google.auth.oauth2;
 
+import com.google.api.client.googleapis.GoogleUtils;
+import com.google.api.client.googleapis.mtls.MtlsProvider;
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -43,6 +45,7 @@ import com.google.api.client.util.PemReader.Section;
 import com.google.api.client.util.SecurityUtils;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.http.MtlsHttpTransportFactory;
 import com.google.common.io.ByteStreams;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -55,7 +58,9 @@ import java.io.StringReader;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
+import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.spec.InvalidKeySpecException;
@@ -104,6 +109,43 @@ class OAuth2Utils {
     }
   }
 
+  static class DefaultMtlsHttpTransportFactory implements MtlsHttpTransportFactory {
+
+    public HttpTransport newTrustedTransport(MtlsProvider mtlsProvider)
+        throws GeneralSecurityException, IOException {
+      KeyStore mtlsKeyStore = mtlsProvider.getKeyStore();
+      String mtlsKeyStorePassword = mtlsProvider.getKeyStorePassword();
+
+      return new NetHttpTransport.Builder()
+          .trustCertificates(
+              GoogleUtils.getCertificateTrustStore(), mtlsKeyStore, mtlsKeyStorePassword)
+          .build();
+    }
+  }
+
+  public static class FromFileMtlsProvider implements MtlsProvider {
+
+    private final InputStream certAndKey;
+
+    FromFileMtlsProvider(InputStream certAndKey) {
+      this.certAndKey = certAndKey;
+    }
+
+    @Override
+    public boolean useMtlsClientCertificate() {
+      return true;
+    }
+
+    @Override
+    public String getKeyStorePassword() {
+      return "";
+    }
+
+    @Override
+    public KeyStore getKeyStore() throws IOException, GeneralSecurityException {
+      return SecurityUtils.createMtlsKeyStore(certAndKey);
+    }
+  }
   /**
    * Returns whether the headers contain the specified value as one of the entries in the specified
    * header.
