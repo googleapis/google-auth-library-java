@@ -54,7 +54,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Executor;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
@@ -601,10 +600,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     }
   }
 
-  /**
-   * Returns true if the provided URL's scheme is valid and is HTTPS.
-   */
-  private static boolean isValidUrl( String url) {
+  /** Returns true if the provided URL's scheme is valid and is HTTPS. */
+  private static boolean isValidUrl(String url) {
     URI uri;
 
     try {
