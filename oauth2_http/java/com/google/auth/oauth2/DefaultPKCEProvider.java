@@ -39,7 +39,7 @@ import java.util.Base64;
 /**
  * Implements PKCE using only the Java standard library. See https://www.rfc-editor.org/rfc/rfc7636.
  *
- * <p>go/client-auth-java-oauth-pkce
+ * <p>https://developers.google.com/identity/protocols/oauth2/native-app#step1-code-verifier.
  */
 public class DefaultPKCEProvider implements PKCEProvider {
   private String codeVerifier;
