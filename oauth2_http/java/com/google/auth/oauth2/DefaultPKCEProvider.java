@@ -36,39 +36,15 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
 
+/**
+ * Implements PKCE using only the Java standard library. See https://www.rfc-editor.org/rfc/rfc7636.
+ *
+ * <p>https://developers.google.com/identity/protocols/oauth2/native-app#step1-code-verifier.
+ */
 public class DefaultPKCEProvider implements PKCEProvider {
   private String codeVerifier;
   private CodeChallenge codeChallenge;
   private static final int MAX_CODE_VERIFIER_LENGTH = 127;
-
-  private class CodeChallenge {
-    private String codeChallenge;
-    private String codeChallengeMethod;
-
-    CodeChallenge(String codeVerifier) {
-      try {
-        byte[] bytes = codeVerifier.getBytes();
-        MessageDigest md = MessageDigest.getInstance("SHA-256");
-        md.update(bytes);
-
-        byte[] digest = md.digest();
-
-        this.codeChallenge = Base64.getUrlEncoder().encodeToString(digest);
-        this.codeChallengeMethod = "S256";
-      } catch (NoSuchAlgorithmException e) {
-        this.codeChallenge = codeVerifier;
-        this.codeChallengeMethod = "plain";
-      }
-    }
-
-    public String getCodeChallenge() {
-      return codeChallenge;
-    }
-
-    public String getCodeChallengeMethod() {
-      return codeChallengeMethod;
-    }
-  }
 
   private String createCodeVerifier() {
     SecureRandom sr = new SecureRandom();
@@ -99,5 +75,35 @@ public class DefaultPKCEProvider implements PKCEProvider {
   @Override
   public String getCodeChallengeMethod() {
     return codeChallenge.getCodeChallengeMethod();
+  }
+
+  /** Class representing the Code Challenge derived from a Code Verifier string. */
+  private class CodeChallenge {
+    private String codeChallenge;
+    private String codeChallengeMethod;
+
+    CodeChallenge(String codeVerifier) {
+      try {
+        byte[] bytes = codeVerifier.getBytes();
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        md.update(bytes);
+
+        byte[] digest = md.digest();
+
+        this.codeChallenge = Base64.getUrlEncoder().encodeToString(digest);
+        this.codeChallengeMethod = "S256";
+      } catch (NoSuchAlgorithmException e) {
+        this.codeChallenge = codeVerifier;
+        this.codeChallengeMethod = "plain";
+      }
+    }
+
+    public String getCodeChallenge() {
+      return codeChallenge;
+    }
+
+    public String getCodeChallengeMethod() {
+      return codeChallengeMethod;
+    }
   }
 }
