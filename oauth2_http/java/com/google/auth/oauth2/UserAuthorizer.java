@@ -46,8 +46,10 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 /** Handles an interactive 3-Legged-OAuth2 (3LO) user consent authorization. */
 public class UserAuthorizer {
@@ -65,6 +67,7 @@ public class UserAuthorizer {
   private final HttpTransportFactory transportFactory;
   private final URI tokenServerUri;
   private final URI userAuthUri;
+  private final PKCEProvider pkce;
 
   /**
    * Constructor with all parameters.
@@ -77,6 +80,7 @@ public class UserAuthorizer {
    *     tokens.
    * @param tokenServerUri URI of the end point that provides tokens
    * @param userAuthUri URI of the Web UI for user consent
+   * @param pkce PKCE implementation
    */
   private UserAuthorizer(
       ClientId clientId,
@@ -85,7 +89,8 @@ public class UserAuthorizer {
       URI callbackUri,
       HttpTransportFactory transportFactory,
       URI tokenServerUri,
-      URI userAuthUri) {
+      URI userAuthUri,
+      PKCEProvider pkce) {
     this.clientId = Preconditions.checkNotNull(clientId);
     this.scopes = ImmutableList.copyOf(Preconditions.checkNotNull(scopes));
     this.callbackUri = (callbackUri == null) ? DEFAULT_CALLBACK_URI : callbackUri;
@@ -94,6 +99,7 @@ public class UserAuthorizer {
     this.tokenServerUri = (tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : tokenServerUri;
     this.userAuthUri = (userAuthUri == null) ? OAuth2Utils.USER_AUTH_URI : userAuthUri;
     this.tokenStore = (tokenStore == null) ? new MemoryTokensStorage() : tokenStore;
+    this.pkce = pkce;
   }
 
   /**
@@ -179,6 +185,10 @@ public class UserAuthorizer {
       url.put("login_hint", userId);
     }
     url.put("include_granted_scopes", true);
+    if (pkce != null) {
+      url.put("code_challenge", pkce.getCodeChallenge());
+      url.put("code_challenge_method", pkce.getCodeChallengeMethod());
+    }
     return url.toURL();
   }
 
@@ -204,7 +214,15 @@ public class UserAuthorizer {
     Long expirationMillis =
         OAuth2Utils.validateLong(tokenJson, "expiration_time_millis", TOKEN_STORE_ERROR);
     Date expirationTime = new Date(expirationMillis);
-    AccessToken accessToken = new AccessToken(accessTokenValue, expirationTime);
+    List<String> scopes =
+        OAuth2Utils.validateOptionalListString(
+            tokenJson, OAuth2Utils.TOKEN_RESPONSE_SCOPE, FETCH_TOKEN_ERROR);
+    AccessToken accessToken =
+        AccessToken.newBuilder()
+            .setExpirationTime(expirationTime)
+            .setTokenValue(accessTokenValue)
+            .setScopes(scopes)
+            .build();
     String refreshToken =
         OAuth2Utils.validateOptionalString(tokenJson, "refresh_token", TOKEN_STORE_ERROR);
     UserCredentials credentials =
@@ -238,6 +256,11 @@ public class UserAuthorizer {
     tokenData.put("client_secret", clientId.getClientSecret());
     tokenData.put("redirect_uri", resolvedCallbackUri);
     tokenData.put("grant_type", "authorization_code");
+
+    if (pkce != null) {
+      tokenData.put("code_verifier", pkce.getCodeVerifier());
+    }
+
     UrlEncodedContent tokenContent = new UrlEncodedContent(tokenData);
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest tokenRequest =
@@ -251,7 +274,15 @@ public class UserAuthorizer {
         OAuth2Utils.validateString(parsedTokens, "access_token", FETCH_TOKEN_ERROR);
     int expiresInSecs = OAuth2Utils.validateInt32(parsedTokens, "expires_in", FETCH_TOKEN_ERROR);
     Date expirationTime = new Date(new Date().getTime() + expiresInSecs * 1000);
-    AccessToken accessToken = new AccessToken(accessTokenValue, expirationTime);
+    String scopes =
+        OAuth2Utils.validateOptionalString(
+            parsedTokens, OAuth2Utils.TOKEN_RESPONSE_SCOPE, FETCH_TOKEN_ERROR);
+    AccessToken accessToken =
+        AccessToken.newBuilder()
+            .setExpirationTime(expirationTime)
+            .setTokenValue(accessTokenValue)
+            .setScopes(scopes)
+            .build();
     String refreshToken =
         OAuth2Utils.validateOptionalString(parsedTokens, "refresh_token", FETCH_TOKEN_ERROR);
 
@@ -343,15 +374,20 @@ public class UserAuthorizer {
     }
     AccessToken accessToken = credentials.getAccessToken();
     String acessTokenValue = null;
+    String scopes = null;
     Date expiresBy = null;
+    List<String> grantedScopes = new ArrayList<>();
+
     if (accessToken != null) {
       acessTokenValue = accessToken.getTokenValue();
       expiresBy = accessToken.getExpirationTime();
+      grantedScopes = accessToken.getScopes();
     }
     String refreshToken = credentials.getRefreshToken();
     GenericJson tokenStateJson = new GenericJson();
     tokenStateJson.setFactory(OAuth2Utils.JSON_FACTORY);
     tokenStateJson.put("access_token", acessTokenValue);
+    tokenStateJson.put(OAuth2Utils.TOKEN_RESPONSE_SCOPE, grantedScopes);
     tokenStateJson.put("expiration_time_millis", expiresBy.getTime());
     if (refreshToken != null) {
       tokenStateJson.put("refresh_token", refreshToken);
@@ -407,6 +443,7 @@ public class UserAuthorizer {
     private URI userAuthUri;
     private Collection<String> scopes;
     private HttpTransportFactory transportFactory;
+    private PKCEProvider pkce;
 
     protected Builder() {}
 
@@ -418,6 +455,7 @@ public class UserAuthorizer {
       this.tokenStore = authorizer.tokenStore;
       this.callbackUri = authorizer.callbackUri;
       this.userAuthUri = authorizer.userAuthUri;
+      this.pkce = new DefaultPKCEProvider();
     }
 
     public Builder setClientId(ClientId clientId) {
@@ -455,6 +493,20 @@ public class UserAuthorizer {
       return this;
     }
 
+    public Builder setPKCEProvider(PKCEProvider pkce) {
+      if (pkce != null) {
+        if (pkce.getCodeChallenge() == null
+            || pkce.getCodeVerifier() == null
+            || pkce.getCodeChallengeMethod() == null) {
+
+          throw new IllegalArgumentException(
+              "PKCE provider contained null implementations. PKCE object must implement all PKCEProvider methods.");
+        }
+      }
+      this.pkce = pkce;
+      return this;
+    }
+
     public ClientId getClientId() {
       return clientId;
     }
@@ -483,9 +535,20 @@ public class UserAuthorizer {
       return transportFactory;
     }
 
+    public PKCEProvider getPKCEProvider() {
+      return pkce;
+    }
+
     public UserAuthorizer build() {
       return new UserAuthorizer(
-          clientId, scopes, tokenStore, callbackUri, transportFactory, tokenServerUri, userAuthUri);
+          clientId,
+          scopes,
+          tokenStore,
+          callbackUri,
+          transportFactory,
+          tokenServerUri,
+          userAuthUri,
+          pkce);
     }
   }
 }

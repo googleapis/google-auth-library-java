@@ -41,6 +41,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,6 +65,8 @@ public class AwsRequestSignerTest {
 
   @Before
   public void setUp() throws IOException {
+    // Required for date parsing when run in different Locales
+    Locale.setDefault(Locale.US);
     awsSecurityCredentials = retrieveAwsSecurityCredentials();
   }
 

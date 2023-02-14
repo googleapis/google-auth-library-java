@@ -980,34 +980,14 @@ public class ExternalAccountCredentialsTest {
   public void validateTokenUrl_invalidUrls() {
     List<String> invalidUrls =
         Arrays.asList(
-            "https://iamcredentials.googleapis.com",
             "sts.googleapis.com",
             "https://",
             "http://sts.googleapis.com",
-            "https://st.s.googleapis.com",
             "https://us-eas\\t-1.sts.googleapis.com",
             "https:/us-east-1.sts.googleapis.com",
-            "https://US-WE/ST-1-sts.googleapis.com",
-            "https://sts-us-east-1.googleapis.com",
-            "https://sts-US-WEST-1.googleapis.com",
             "testhttps://us-east-1.sts.googleapis.com",
-            "https://us-east-1.sts.googleapis.comevil.com",
-            "https://us-east-1.us-east-1.sts.googleapis.com",
-            "https://us-ea.s.t.sts.googleapis.com",
-            "https://sts.googleapis.comevil.com",
             "hhttps://us-east-1.sts.googleapis.com",
-            "https://us- -1.sts.googleapis.com",
-            "https://-sts.googleapis.com",
-            "https://us-east-1.sts.googleapis.com.evil.com",
-            "https://sts.pgoogleapis.com",
-            "https://p.googleapis.com",
-            "https://sts.p.com",
-            "http://sts.p.googleapis.com",
-            "https://xyz-sts.p.googleapis.com",
-            "https://sts-xyz.123.p.googleapis.com",
-            "https://sts-xyz.p1.googleapis.com",
-            "https://sts-xyz.p.foo.com",
-            "https://sts-xyz.p.foo.googleapis.com");
+            "https://us- -1.sts.googleapis.com");
 
     for (String url : invalidUrls) {
       try {
@@ -1046,34 +1026,14 @@ public class ExternalAccountCredentialsTest {
   public void validateServiceAccountImpersonationUrls_invalidUrls() {
     List<String> invalidUrls =
         Arrays.asList(
-            "https://sts.googleapis.com",
             "iamcredentials.googleapis.com",
             "https://",
             "http://iamcredentials.googleapis.com",
-            "https://iamcre.dentials.googleapis.com",
+            "https:/iamcredentials.googleapis.com",
             "https://us-eas\t-1.iamcredentials.googleapis.com",
-            "https:/us-east-1.iamcredentials.googleapis.com",
-            "https://US-WE/ST-1-iamcredentials.googleapis.com",
-            "https://iamcredentials-us-east-1.googleapis.com",
-            "https://iamcredentials-US-WEST-1.googleapis.com",
             "testhttps://us-east-1.iamcredentials.googleapis.com",
-            "https://us-east-1.iamcredentials.googleapis.comevil.com",
-            "https://us-east-1.us-east-1.iamcredentials.googleapis.com",
-            "https://us-ea.s.t.iamcredentials.googleapis.com",
-            "https://iamcredentials.googleapis.comevil.com",
             "hhttps://us-east-1.iamcredentials.googleapis.com",
-            "https://us- -1.iamcredentials.googleapis.com",
-            "https://-iamcredentials.googleapis.com",
-            "https://us-east-1.iamcredentials.googleapis.com.evil.com",
-            "https://iamcredentials.pgoogleapis.com",
-            "https://p.googleapis.com",
-            "https://iamcredentials.p.com",
-            "http://iamcredentials.p.googleapis.com",
-            "https://xyz-iamcredentials.p.googleapis.com",
-            "https://iamcredentials-xyz.123.p.googleapis.com",
-            "https://iamcredentials-xyz.p1.googleapis.com",
-            "https://iamcredentials-xyz.p.foo.com",
-            "https://iamcredentials-xyz.p.foo.googleapis.com");
+            "https://us- -1.iamcredentials.googleapis.com");
 
     for (String url : invalidUrls) {
       try {

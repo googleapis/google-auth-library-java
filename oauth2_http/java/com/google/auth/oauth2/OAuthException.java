@@ -33,6 +33,10 @@ package com.google.auth.oauth2;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.api.client.http.HttpResponseException;
+import com.google.api.client.json.GenericJson;
+import com.google.api.client.json.JsonParser;
+import java.io.IOException;
 import javax.annotation.Nullable;
 
 /**
@@ -76,5 +80,22 @@ class OAuthException extends GoogleAuthException {
   @Nullable
   String getErrorUri() {
     return errorUri;
+  }
+
+  static OAuthException createFromHttpResponseException(HttpResponseException e)
+      throws IOException {
+    JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser((e).getContent());
+    GenericJson errorResponse = parser.parseAndClose(GenericJson.class);
+
+    String errorCode = (String) errorResponse.get("error");
+    String errorDescription = null;
+    String errorUri = null;
+    if (errorResponse.containsKey("error_description")) {
+      errorDescription = (String) errorResponse.get("error_description");
+    }
+    if (errorResponse.containsKey("error_uri")) {
+      errorUri = (String) errorResponse.get("error_uri");
+    }
+    return new OAuthException(errorCode, errorDescription, errorUri);
   }
 }

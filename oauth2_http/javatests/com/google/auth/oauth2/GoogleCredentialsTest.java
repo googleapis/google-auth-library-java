@@ -42,6 +42,7 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.oauth2.ExternalAccountAuthorizedUserCredentialsTest.MockExternalAccountAuthorizedUserCredentialsTransportFactory;
 import com.google.auth.oauth2.IdentityPoolCredentialsTest.MockExternalAccountCredentialsTransportFactory;
 import com.google.auth.oauth2.ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory;
 import com.google.common.collect.ImmutableList;
@@ -465,6 +466,21 @@ public class GoogleCredentialsTest {
 
     copy = copy.createScoped(SCOPES);
     Map<String, List<String>> metadata = copy.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, transportFactory.transport.getAccessToken());
+  }
+
+  @Test
+  public void fromStream_externalAccountAuthorizedUserCredentials_providesToken()
+      throws IOException {
+    MockExternalAccountAuthorizedUserCredentialsTransportFactory transportFactory =
+        new MockExternalAccountAuthorizedUserCredentialsTransportFactory();
+    InputStream stream =
+        TestUtils.jsonToInputStream(
+            ExternalAccountAuthorizedUserCredentialsTest.buildJsonCredentials());
+
+    GoogleCredentials credentials = GoogleCredentials.fromStream(stream, transportFactory);
+
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, transportFactory.transport.getAccessToken());
   }
 

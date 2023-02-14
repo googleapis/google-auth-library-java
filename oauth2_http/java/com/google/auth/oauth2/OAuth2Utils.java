@@ -63,6 +63,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -88,6 +89,8 @@ class OAuth2Utils {
   private static String VALUE_WRONG_TYPE_MESSAGE = "%sExpected %s value %s of wrong type.";
 
   static final String BEARER_PREFIX = AuthHttpConstants.BEARER + " ";
+
+  static final String TOKEN_RESPONSE_SCOPE = "scope";
 
   // Includes expected server errors from Google token endpoint
   // Other 5xx codes are either not used or retries are unlikely to succeed
@@ -164,6 +167,20 @@ class OAuth2Utils {
       throw new IOException(String.format(VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "string", key));
     }
     return (String) value;
+  }
+
+  /** Return the specified list of strings from JSON or throw a helpful error message. */
+  static List<String> validateOptionalListString(
+      Map<String, Object> map, String key, String errorPrefix) throws IOException {
+    Object value = map.get(key);
+    if (value == null) {
+      return null;
+    }
+    if (!(value instanceof List)) {
+      throw new IOException(
+          String.format(VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "List<String>", key));
+    }
+    return (List<String>) value;
   }
 
   /** Return the specified integer from JSON or throw a helpful error message. */
