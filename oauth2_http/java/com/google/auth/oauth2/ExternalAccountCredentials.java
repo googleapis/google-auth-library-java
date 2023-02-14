@@ -54,7 +54,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Executor;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
@@ -589,37 +588,20 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   }
 
   static void validateTokenUrl(String tokenUrl) {
-    List<Pattern> patterns = new ArrayList<>();
-    patterns.add(Pattern.compile("^[^\\.\\s\\/\\\\]+\\.sts\\.googleapis\\.com$"));
-    patterns.add(Pattern.compile("^sts\\.googleapis\\.com$"));
-    patterns.add(Pattern.compile("^sts\\.[^\\.\\s\\/\\\\]+\\.googleapis\\.com$"));
-    patterns.add(Pattern.compile("^[^\\.\\s\\/\\\\]+\\-sts\\.googleapis\\.com$"));
-    patterns.add(Pattern.compile("^sts\\-[^\\.\\s\\/\\\\]+\\.p\\.googleapis\\.com$"));
-
-    if (!isValidUrl(patterns, tokenUrl)) {
+    if (!isValidUrl(tokenUrl)) {
       throw new IllegalArgumentException("The provided token URL is invalid.");
     }
   }
 
   static void validateServiceAccountImpersonationInfoUrl(String serviceAccountImpersonationUrl) {
-    List<Pattern> patterns = new ArrayList<>();
-    patterns.add(Pattern.compile("^[^\\.\\s\\/\\\\]+\\.iamcredentials\\.googleapis\\.com$"));
-    patterns.add(Pattern.compile("^iamcredentials\\.googleapis\\.com$"));
-    patterns.add(Pattern.compile("^iamcredentials\\.[^\\.\\s\\/\\\\]+\\.googleapis\\.com$"));
-    patterns.add(Pattern.compile("^[^\\.\\s\\/\\\\]+\\-iamcredentials\\.googleapis\\.com$"));
-    patterns.add(Pattern.compile("^iamcredentials-[^\\.\\s\\/\\\\]+\\.p\\.googleapis\\.com$"));
-
-    if (!isValidUrl(patterns, serviceAccountImpersonationUrl)) {
+    if (!isValidUrl(serviceAccountImpersonationUrl)) {
       throw new IllegalArgumentException(
           "The provided service account impersonation URL is invalid.");
     }
   }
 
-  /**
-   * Returns true if the provided URL's scheme is HTTPS and the host comforms to at least one of the
-   * provided patterns.
-   */
-  private static boolean isValidUrl(List<Pattern> patterns, String url) {
+  /** Returns true if the provided URL's scheme is valid and is HTTPS. */
+  private static boolean isValidUrl(String url) {
     URI uri;
 
     try {
@@ -635,13 +617,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       return false;
     }
 
-    for (Pattern pattern : patterns) {
-      Matcher match = pattern.matcher(uri.getHost().toLowerCase(Locale.US));
-      if (match.matches()) {
-        return true;
-      }
-    }
-    return false;
+    return true;
   }
 
   /**
