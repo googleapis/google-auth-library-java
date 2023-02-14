@@ -1421,6 +1421,7 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
             .build();
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+    assertNotNull(((ServiceAccountCredentials) credentials).getSelfSignedJwtCredentialsWithScope());
     verifyJwtAccess(metadata, "dummy.scope");
   }
 
@@ -1472,6 +1473,7 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
             .build();
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+    assertNull(((ServiceAccountCredentials) credentials).getSelfSignedJwtCredentialsWithScope());
     verifyJwtAccess(metadata, null);
   }
 
