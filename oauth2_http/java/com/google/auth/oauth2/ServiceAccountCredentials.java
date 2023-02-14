@@ -110,6 +110,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   private transient HttpTransportFactory transportFactory;
 
+  private transient JwtCredentials selfSignedJwtCredentialsWithScope = null;
+
   /**
    * Internal constructor
    *
@@ -704,6 +706,11 @@ public class ServiceAccountCredentials extends GoogleCredentials
     return useJwtAccessWithScope;
   }
 
+  @VisibleForTesting
+  JwtCredentials getSelfSignedJwtCredentialsWithScope() {
+    return selfSignedJwtCredentialsWithScope;
+  }
+
   @Override
   public String getAccount() {
     return getClientEmail();
@@ -935,8 +942,11 @@ public class ServiceAccountCredentials extends GoogleCredentials
     // Otherwise, use self signed JWT with uri as the audience.
     JwtCredentials jwtCredentials;
     if (!createScopedRequired() && useJwtAccessWithScope) {
-      // Create JWT credentials with the scopes.
-      jwtCredentials = createSelfSignedJwtCredentials(null);
+      // Create selfSignedJwtCredentialsWithScope when needed and reuse it for better performance.
+      if (selfSignedJwtCredentialsWithScope == null) {
+        selfSignedJwtCredentialsWithScope = createSelfSignedJwtCredentials(null);
+      }
+      jwtCredentials = selfSignedJwtCredentialsWithScope;
     } else {
       // Create JWT credentials with the uri as audience.
       jwtCredentials = createSelfSignedJwtCredentials(uri);
