@@ -34,6 +34,8 @@ package com.google.auth.oauth2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import com.google.auth.TestUtils;
+import java.io.IOException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -76,6 +78,52 @@ public final class OAuthExceptionTest {
   public void getMessage_baseFormat() {
     OAuthException e =
         new OAuthException("errorCode", /* errorDescription= */ null, /* errorUri= */ null);
+
+    assertEquals("errorCode", e.getErrorCode());
+    assertNull(e.getErrorDescription());
+    assertNull(e.getErrorUri());
+
+    String expectedMessage = String.format(BASE_MESSAGE_FORMAT, "errorCode");
+    assertEquals(expectedMessage, e.getMessage());
+  }
+
+  @Test
+  public void createFromHttpResponseException() throws IOException {
+    OAuthException e =
+        OAuthException.createFromHttpResponseException(
+            TestUtils.buildHttpResponseException("errorCode", "errorDescription", "errorUri"));
+
+    assertEquals("errorCode", e.getErrorCode());
+    assertEquals("errorDescription", e.getErrorDescription());
+    assertEquals("errorUri", e.getErrorUri());
+
+    String expectedMessage =
+        String.format(FULL_MESSAGE_FORMAT, "errorCode", "errorDescription", "errorUri");
+    assertEquals(expectedMessage, e.getMessage());
+  }
+
+  @Test
+  public void createFromHttpResponseException_descriptionFormat() throws IOException {
+    OAuthException e =
+        OAuthException.createFromHttpResponseException(
+            TestUtils.buildHttpResponseException(
+                "errorCode", "errorDescription", /* errorUri= */ null));
+
+    assertEquals("errorCode", e.getErrorCode());
+    assertEquals("errorDescription", e.getErrorDescription());
+    assertNull(e.getErrorUri());
+
+    String expectedMessage =
+        String.format(ERROR_DESCRIPTION_FORMAT, "errorCode", "errorDescription");
+    assertEquals(expectedMessage, e.getMessage());
+  }
+
+  @Test
+  public void createFromHttpResponseException_baseFormat() throws IOException {
+    OAuthException e =
+        OAuthException.createFromHttpResponseException(
+            TestUtils.buildHttpResponseException(
+                "errorCode", /* errorDescription= */ null, /* errorUri= */ null));
 
     assertEquals("errorCode", e.getErrorCode());
     assertNull(e.getErrorDescription());

@@ -728,6 +728,13 @@ ExternalAccountCredentials credentials =
     ExternalAccountCredentials.fromStream(new FileInputStream("/path/to/credentials.json"));
 ```
 
+##### Security Considerations
+Note that this library does not perform any validation on the token_url, token_info_url,
+or service_account_impersonation_url fields of the credential configuration.
+It is not recommended to use a credential configuration that you did not
+generate with the gcloud CLI unless you verify that the URL fields point to a
+googleapis.com domain.
+
 ### Downscoping with Credential Access Boundaries
 
 [Downscoping with Credential Access Boundaries](https://cloud.google.com/iam/docs/downscoping-short-lived-credentials)
@@ -930,10 +937,12 @@ The above example requires `com.google.http-client:google-http-client-apache-v2`
 
 ## Using Credentials with `google-http-client`
 
-Credentials provided by `google-auth-library` can be used with Google's 
-[HTTP-based clients][apiary-clients]. We provide a 
-[`HttpCredentialsAdapter`][http-credentials-adapter] which can be used as an 
-[`HttpRequestInitializer`][http-request-initializer].
+Credentials provided by [com.google.auth:google-auth-library-oauth2-http](
+https://search.maven.org/artifact/com.google.auth/google-auth-library-oauth2-http)
+can be used with Google's [HTTP-based clients][apiary-clients].
+We provide a [`HttpCredentialsAdapter`][http-credentials-adapter] which can be used
+as an [`HttpRequestInitializer`][http-request-initializer], the last argument for
+their builders.
 
 ```java
 import com.google.api.client.http.HttpRequestInitializer;

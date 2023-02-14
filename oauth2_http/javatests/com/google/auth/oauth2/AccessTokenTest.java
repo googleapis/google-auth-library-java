@@ -31,14 +31,17 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -49,7 +52,8 @@ public class AccessTokenTest extends BaseSerializationTest {
 
   private static final String TOKEN = "AccessToken";
   private static final Date EXPIRATION_DATE = new Date();
-  private static final String SCOPES = "scope1 scope2";
+  private static final List<String> SCOPES = Arrays.asList("scope1", "scope2");
+  private static final String SCOPES_STRING = "scope1 scope2";
 
   @Test
   public void constructor() {
@@ -57,7 +61,7 @@ public class AccessTokenTest extends BaseSerializationTest {
     assertEquals(TOKEN, accessToken.getTokenValue());
     assertEquals(EXPIRATION_DATE, accessToken.getExpirationTime());
     assertEquals(EXPIRATION_DATE.getTime(), (long) accessToken.getExpirationTimeMillis());
-    assertEquals(null, accessToken.getScopes());
+    assertEquals(new ArrayList<>(), accessToken.getScopes());
   }
 
   @Test
@@ -66,12 +70,41 @@ public class AccessTokenTest extends BaseSerializationTest {
         AccessToken.newBuilder()
             .setExpirationTime(EXPIRATION_DATE)
             .setTokenValue(TOKEN)
-            .setScopes(SCOPES)
+            .setScopes(SCOPES_STRING)
             .build();
     assertEquals(TOKEN, accessToken.getTokenValue());
     assertEquals(EXPIRATION_DATE, accessToken.getExpirationTime());
     assertEquals(EXPIRATION_DATE.getTime(), (long) accessToken.getExpirationTimeMillis());
-    assertArrayEquals(SCOPES.split(" "), accessToken.getScopes().toArray());
+    assertEquals(SCOPES, accessToken.getScopes());
+    assertNotSame(SCOPES, accessToken.getScopes());
+
+    // scopes list
+    accessToken =
+        AccessToken.newBuilder()
+            .setExpirationTime(EXPIRATION_DATE)
+            .setTokenValue(TOKEN)
+            .setScopes(SCOPES)
+            .build();
+    assertEquals(SCOPES, accessToken.getScopes());
+    assertSame(SCOPES, accessToken.getScopes());
+
+    // single scope
+    accessToken =
+        AccessToken.newBuilder()
+            .setExpirationTime(EXPIRATION_DATE)
+            .setTokenValue(TOKEN)
+            .setScopes("dummy")
+            .build();
+    assertEquals(Arrays.asList("dummy"), accessToken.getScopes());
+
+    // empty scope
+    accessToken =
+        AccessToken.newBuilder()
+            .setExpirationTime(EXPIRATION_DATE)
+            .setTokenValue(TOKEN)
+            .setScopes("  ")
+            .build();
+    assertEquals(new ArrayList<>(), accessToken.getScopes());
   }
 
   @Test
@@ -86,6 +119,7 @@ public class AccessTokenTest extends BaseSerializationTest {
     AccessToken otherAccessToken =
         AccessToken.newBuilder()
             .setExpirationTime(EXPIRATION_DATE)
+            .setTokenValue(TOKEN)
             .setTokenValue(TOKEN)
             .setScopes(SCOPES)
             .build();
@@ -107,7 +141,7 @@ public class AccessTokenTest extends BaseSerializationTest {
         AccessToken.newBuilder()
             .setExpirationTime(EXPIRATION_DATE)
             .setTokenValue(TOKEN)
-            .setScopes("scope1")
+            .setScopes(Arrays.asList("scope1"))
             .build();
 
     assertFalse(accessToken.equals(otherAccessToken));
@@ -165,7 +199,7 @@ public class AccessTokenTest extends BaseSerializationTest {
     String expectedToString =
         String.format(
             "AccessToken{tokenValue=%s, expirationTimeMillis=%d, scopes=%s}",
-            TOKEN, EXPIRATION_DATE.getTime(), Arrays.asList(SCOPES.split(" ")));
+            TOKEN, EXPIRATION_DATE.getTime(), SCOPES);
     assertEquals(expectedToString, accessToken.toString());
   }
 
@@ -190,6 +224,19 @@ public class AccessTokenTest extends BaseSerializationTest {
 
   @Test
   public void serialize() throws IOException, ClassNotFoundException {
+    AccessToken emptyScopes =
+        AccessToken.newBuilder()
+            .setExpirationTime(EXPIRATION_DATE)
+            .setTokenValue(TOKEN)
+            .setScopes("")
+            .build();
+
+    AccessToken deserializedAccessToken = serializeAndDeserialize(emptyScopes);
+    assertEquals(emptyScopes, deserializedAccessToken);
+    assertEquals(emptyScopes.hashCode(), deserializedAccessToken.hashCode());
+    assertEquals(emptyScopes.toString(), deserializedAccessToken.toString());
+    assertEquals(new ArrayList<>(), deserializedAccessToken.getScopes());
+
     AccessToken accessToken =
         AccessToken.newBuilder()
             .setExpirationTime(EXPIRATION_DATE)
@@ -197,7 +244,7 @@ public class AccessTokenTest extends BaseSerializationTest {
             .setScopes(SCOPES)
             .build();
 
-    AccessToken deserializedAccessToken = serializeAndDeserialize(accessToken);
+    deserializedAccessToken = serializeAndDeserialize(accessToken);
     assertEquals(accessToken, deserializedAccessToken);
     assertEquals(accessToken.hashCode(), deserializedAccessToken.hashCode());
     assertEquals(accessToken.toString(), deserializedAccessToken.toString());
