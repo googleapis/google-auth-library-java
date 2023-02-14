@@ -145,12 +145,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
     this.lifetime = builder.lifetime;
     this.useJwtAccessWithScope = builder.useJwtAccessWithScope;
     this.defaultRetriesEnabled = builder.defaultRetriesEnabled;
-
-    // Create a jwt credential for self signed jwt with scopes, and reuse it to improve the
-    // performance. For example see https://github.com/googleapis/google-cloud-java/issues/3149.
-    if (!createScopedRequired() && this.useJwtAccessWithScope) {
-      this.selfSignedJwtCredentialsWithScope = createSelfSignedJwtCredentials(null);
-    }
   }
 
   /**
@@ -948,7 +942,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
     // Otherwise, use self signed JWT with uri as the audience.
     JwtCredentials jwtCredentials;
     if (!createScopedRequired() && useJwtAccessWithScope) {
-      // Reuse selfSignedJwtCredentialsWithScope to improve the performance.
+      // Create selfSignedJwtCredentialsWithScope when needed and reuse it for better performance.
+      if (selfSignedJwtCredentialsWithScope == null) {
+        selfSignedJwtCredentialsWithScope = createSelfSignedJwtCredentials(null);
+      }
       jwtCredentials = selfSignedJwtCredentialsWithScope;
     } else {
       // Create JWT credentials with the uri as audience.
