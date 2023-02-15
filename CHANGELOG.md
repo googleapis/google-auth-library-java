@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.16.0](https://github.com/googleapis/google-auth-library-java/compare/v1.15.0...v1.16.0) (2023-02-15)
+
+
+### Features
+
+* Add PKCE to 3LO exchange. ([#1146](https://github.com/googleapis/google-auth-library-java/issues/1146)) ([5bf606b](https://github.com/googleapis/google-auth-library-java/commit/5bf606bb8f6d863b44e87587eebf51eaeea4a0ae))
+
+
+### Bug Fixes
+
+* Create and reuse self signed jwt creds for better performance ([#1154](https://github.com/googleapis/google-auth-library-java/issues/1154)) ([eaaa8e8](https://github.com/googleapis/google-auth-library-java/commit/eaaa8e89cf69d1e0d581443121f315854d52c75f))
+* Java doc for DefaultPKCEProvider.java ([#1148](https://github.com/googleapis/google-auth-library-java/issues/1148)) ([154c127](https://github.com/googleapis/google-auth-library-java/commit/154c1279b3ec96cc34a3225e5e78800ccdda927c))
+* Removed url pattern validation for google urls in external account credential configurations ([#1150](https://github.com/googleapis/google-auth-library-java/issues/1150)) ([35495b1](https://github.com/googleapis/google-auth-library-java/commit/35495b1207ffe11712ee996d3e305449752fb87c))
+
+
+### Documentation
+
+* Clarified Maven artifact for HTTP-based clients ([#1136](https://github.com/googleapis/google-auth-library-java/issues/1136)) ([b49fc13](https://github.com/googleapis/google-auth-library-java/commit/b49fc13b10d0e326c7296e2aad7a50ea03e774f5))
+
 ## [1.15.0](https://github.com/googleapis/google-auth-library-java/compare/v1.14.0...v1.15.0) (2023-01-25)
 
 
