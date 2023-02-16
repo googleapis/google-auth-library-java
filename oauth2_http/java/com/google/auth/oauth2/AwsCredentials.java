@@ -73,6 +73,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
   static final String AWS_IMDSV2_SESSION_TOKEN_HEADER = "x-aws-ec2-metadata-token";
   static final String AWS_IMDSV2_SESSION_TOKEN_TTL_HEADER = "x-aws-ec2-metadata-token-ttl-seconds";
   static final String AWS_IMDSV2_SESSION_TOKEN_TTL = "300";
+  private static final long serialVersionUID = -3670131891574618105L;
 
   /**
    * The AWS credential source. Stores data required to retrieve the AWS credential from the AWS
@@ -81,6 +82,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
   static class AwsCredentialSource extends CredentialSource {
 
     private static final String IMDSV2_SESSION_TOKEN_URL_FIELD_NAME = "imdsv2_session_token_url";
+    private static final long serialVersionUID = -4180558200808134436L;
 
     private final String regionUrl;
     private final String url;
