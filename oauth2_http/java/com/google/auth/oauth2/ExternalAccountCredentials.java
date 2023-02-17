@@ -43,6 +43,7 @@ import com.google.auth.oauth2.PluggableAuthCredentials.PluggableAuthCredentialSo
 import com.google.common.base.MoreObjects;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -54,7 +55,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Executor;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
@@ -66,8 +66,12 @@ import javax.annotation.Nullable;
  */
 public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
+  private static final long serialVersionUID = 8049126194174465023L;
+
   /** Base credential source class. Dictates the retrieval method of the external credential. */
-  abstract static class CredentialSource {
+  abstract static class CredentialSource implements Serializable {
+
+    private static final long serialVersionUID = 8204657811562399944L;
 
     CredentialSource(Map<String, Object> credentialSourceMap) {
       checkNotNull(credentialSourceMap);
@@ -589,37 +593,20 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   }
 
   static void validateTokenUrl(String tokenUrl) {
-    List<Pattern> patterns = new ArrayList<>();
-    patterns.add(Pattern.compile("^[^\\.\\s\\/\\\\]+\\.sts\\.googleapis\\.com$"));
-    patterns.add(Pattern.compile("^sts\\.googleapis\\.com$"));
-    patterns.add(Pattern.compile("^sts\\.[^\\.\\s\\/\\\\]+\\.googleapis\\.com$"));
-    patterns.add(Pattern.compile("^[^\\.\\s\\/\\\\]+\\-sts\\.googleapis\\.com$"));
-    patterns.add(Pattern.compile("^sts\\-[^\\.\\s\\/\\\\]+\\.p\\.googleapis\\.com$"));
-
-    if (!isValidUrl(patterns, tokenUrl)) {
+    if (!isValidUrl(tokenUrl)) {
       throw new IllegalArgumentException("The provided token URL is invalid.");
     }
   }
 
   static void validateServiceAccountImpersonationInfoUrl(String serviceAccountImpersonationUrl) {
-    List<Pattern> patterns = new ArrayList<>();
-    patterns.add(Pattern.compile("^[^\\.\\s\\/\\\\]+\\.iamcredentials\\.googleapis\\.com$"));
-    patterns.add(Pattern.compile("^iamcredentials\\.googleapis\\.com$"));
-    patterns.add(Pattern.compile("^iamcredentials\\.[^\\.\\s\\/\\\\]+\\.googleapis\\.com$"));
-    patterns.add(Pattern.compile("^[^\\.\\s\\/\\\\]+\\-iamcredentials\\.googleapis\\.com$"));
-    patterns.add(Pattern.compile("^iamcredentials-[^\\.\\s\\/\\\\]+\\.p\\.googleapis\\.com$"));
-
-    if (!isValidUrl(patterns, serviceAccountImpersonationUrl)) {
+    if (!isValidUrl(serviceAccountImpersonationUrl)) {
       throw new IllegalArgumentException(
           "The provided service account impersonation URL is invalid.");
     }
   }
 
-  /**
-   * Returns true if the provided URL's scheme is HTTPS and the host comforms to at least one of the
-   * provided patterns.
-   */
-  private static boolean isValidUrl(List<Pattern> patterns, String url) {
+  /** Returns true if the provided URL's scheme is valid and is HTTPS. */
+  private static boolean isValidUrl(String url) {
     URI uri;
 
     try {
@@ -635,13 +622,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       return false;
     }
 
-    for (Pattern pattern : patterns) {
-      Matcher match = pattern.matcher(uri.getHost().toLowerCase(Locale.US));
-      if (match.matches()) {
-        return true;
-      }
-    }
-    return false;
+    return true;
   }
 
   /**
@@ -660,7 +641,9 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
    * }
    * </pre>
    */
-  static final class ServiceAccountImpersonationOptions {
+  static final class ServiceAccountImpersonationOptions implements Serializable {
+
+    private static final long serialVersionUID = 4250771921886280953L;
     private static final int DEFAULT_TOKEN_LIFETIME_SECONDS = 3600;
     private static final int MAXIMUM_TOKEN_LIFETIME_SECONDS = 43200;
     private static final int MINIMUM_TOKEN_LIFETIME_SECONDS = 600;

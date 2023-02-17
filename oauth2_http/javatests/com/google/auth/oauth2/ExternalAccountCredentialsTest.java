@@ -35,11 +35,13 @@ import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SER
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
+import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.ExternalAccountCredentialsTest.TestExternalAccountCredentials.TestCredentialSource;
@@ -62,7 +64,7 @@ import org.junit.runners.JUnit4;
 
 /** Tests for {@link ExternalAccountCredentials}. */
 @RunWith(JUnit4.class)
-public class ExternalAccountCredentialsTest {
+public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
   private static final String STS_URL = "https://sts.googleapis.com";
 
@@ -955,6 +957,37 @@ public class ExternalAccountCredentialsTest {
   }
 
   @Test
+  public void serialize() throws IOException, ClassNotFoundException {
+    Map<String, Object> impersonationOpts =
+        new HashMap<String, Object>() {
+          {
+            put("token_lifetime_seconds", 1000);
+          }
+        };
+
+    TestExternalAccountCredentials testCredentials =
+        (TestExternalAccountCredentials)
+            TestExternalAccountCredentials.newBuilder()
+                .setHttpTransportFactory(transportFactory)
+                .setAudience("audience")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenUrl(STS_URL)
+                .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+                .setServiceAccountImpersonationOptions(impersonationOpts)
+                .build();
+
+    TestExternalAccountCredentials deserializedCredentials =
+        serializeAndDeserialize(testCredentials);
+    assertEquals(testCredentials, deserializedCredentials);
+    assertEquals(testCredentials.hashCode(), deserializedCredentials.hashCode());
+    assertEquals(testCredentials.toString(), deserializedCredentials.toString());
+    assertEquals(
+        testCredentials.getServiceAccountImpersonationOptions().getLifetime(),
+        deserializedCredentials.getServiceAccountImpersonationOptions().getLifetime());
+    assertSame(deserializedCredentials.clock, Clock.SYSTEM);
+  }
+
+  @Test
   public void validateTokenUrl_validUrls() {
     List<String> validUrls =
         Arrays.asList(
@@ -980,34 +1013,14 @@ public class ExternalAccountCredentialsTest {
   public void validateTokenUrl_invalidUrls() {
     List<String> invalidUrls =
         Arrays.asList(
-            "https://iamcredentials.googleapis.com",
             "sts.googleapis.com",
             "https://",
             "http://sts.googleapis.com",
-            "https://st.s.googleapis.com",
             "https://us-eas\\t-1.sts.googleapis.com",
             "https:/us-east-1.sts.googleapis.com",
-            "https://US-WE/ST-1-sts.googleapis.com",
-            "https://sts-us-east-1.googleapis.com",
-            "https://sts-US-WEST-1.googleapis.com",
             "testhttps://us-east-1.sts.googleapis.com",
-            "https://us-east-1.sts.googleapis.comevil.com",
-            "https://us-east-1.us-east-1.sts.googleapis.com",
-            "https://us-ea.s.t.sts.googleapis.com",
-            "https://sts.googleapis.comevil.com",
             "hhttps://us-east-1.sts.googleapis.com",
-            "https://us- -1.sts.googleapis.com",
-            "https://-sts.googleapis.com",
-            "https://us-east-1.sts.googleapis.com.evil.com",
-            "https://sts.pgoogleapis.com",
-            "https://p.googleapis.com",
-            "https://sts.p.com",
-            "http://sts.p.googleapis.com",
-            "https://xyz-sts.p.googleapis.com",
-            "https://sts-xyz.123.p.googleapis.com",
-            "https://sts-xyz.p1.googleapis.com",
-            "https://sts-xyz.p.foo.com",
-            "https://sts-xyz.p.foo.googleapis.com");
+            "https://us- -1.sts.googleapis.com");
 
     for (String url : invalidUrls) {
       try {
@@ -1046,34 +1059,14 @@ public class ExternalAccountCredentialsTest {
   public void validateServiceAccountImpersonationUrls_invalidUrls() {
     List<String> invalidUrls =
         Arrays.asList(
-            "https://sts.googleapis.com",
             "iamcredentials.googleapis.com",
             "https://",
             "http://iamcredentials.googleapis.com",
-            "https://iamcre.dentials.googleapis.com",
+            "https:/iamcredentials.googleapis.com",
             "https://us-eas\t-1.iamcredentials.googleapis.com",
-            "https:/us-east-1.iamcredentials.googleapis.com",
-            "https://US-WE/ST-1-iamcredentials.googleapis.com",
-            "https://iamcredentials-us-east-1.googleapis.com",
-            "https://iamcredentials-US-WEST-1.googleapis.com",
             "testhttps://us-east-1.iamcredentials.googleapis.com",
-            "https://us-east-1.iamcredentials.googleapis.comevil.com",
-            "https://us-east-1.us-east-1.iamcredentials.googleapis.com",
-            "https://us-ea.s.t.iamcredentials.googleapis.com",
-            "https://iamcredentials.googleapis.comevil.com",
             "hhttps://us-east-1.iamcredentials.googleapis.com",
-            "https://us- -1.iamcredentials.googleapis.com",
-            "https://-iamcredentials.googleapis.com",
-            "https://us-east-1.iamcredentials.googleapis.com.evil.com",
-            "https://iamcredentials.pgoogleapis.com",
-            "https://p.googleapis.com",
-            "https://iamcredentials.p.com",
-            "http://iamcredentials.p.googleapis.com",
-            "https://xyz-iamcredentials.p.googleapis.com",
-            "https://iamcredentials-xyz.123.p.googleapis.com",
-            "https://iamcredentials-xyz.p1.googleapis.com",
-            "https://iamcredentials-xyz.p.foo.com",
-            "https://iamcredentials-xyz.p.foo.googleapis.com");
+            "https://us- -1.iamcredentials.googleapis.com");
 
     for (String url : invalidUrls) {
       try {

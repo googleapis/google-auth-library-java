@@ -728,6 +728,13 @@ ExternalAccountCredentials credentials =
     ExternalAccountCredentials.fromStream(new FileInputStream("/path/to/credentials.json"));
 ```
 
+##### Security Considerations
+Note that this library does not perform any validation on the token_url, token_info_url,
+or service_account_impersonation_url fields of the credential configuration.
+It is not recommended to use a credential configuration that you did not
+generate with the gcloud CLI unless you verify that the URL fields point to a
+googleapis.com domain.
+
 ### Downscoping with Credential Access Boundaries
 
 [Downscoping with Credential Access Boundaries](https://cloud.google.com/iam/docs/downscoping-short-lived-credentials)

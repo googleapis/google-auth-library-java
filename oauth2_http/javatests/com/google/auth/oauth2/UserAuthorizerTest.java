@@ -72,6 +72,7 @@ public class UserAuthorizerTest {
   private static final URI CALLBACK_URI = URI.create("/testcallback");
   private static final String CODE = "thisistheend";
   private static final URI BASE_URI = URI.create("http://example.com/foo");
+  private static final PKCEProvider pkce = new DefaultPKCEProvider();
 
   @Test
   public void constructorMinimum() {
@@ -148,6 +149,7 @@ public class UserAuthorizerTest {
             .setScopes(DUMMY_SCOPES)
             .setCallbackUri(CALLBACK_URI)
             .setUserAuthUri(AUTH_URI)
+            .setPKCEProvider(pkce)
             .build();
 
     URL authorizationUrl = authorizer.getAuthorizationUrl(USER_ID, CUSTOM_STATE, BASE_URI);
@@ -164,6 +166,8 @@ public class UserAuthorizerTest {
     assertEquals(CLIENT_ID_VALUE, parameters.get("client_id"));
     assertEquals(DUMMY_SCOPE, parameters.get("scope"));
     assertEquals("code", parameters.get("response_type"));
+    assertEquals(pkce.getCodeChallenge(), parameters.get("code_challenge"));
+    assertEquals(pkce.getCodeChallengeMethod(), parameters.get("code_challenge_method"));
   }
 
   @Test
@@ -470,5 +474,92 @@ public class UserAuthorizerTest {
     }
     UserCredentials credentials2 = authorizer.getCredentials(USER_ID);
     assertNull(credentials2);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void nullCodeVerifierPKCEProvider() {
+    PKCEProvider pkce =
+        new PKCEProvider() {
+          @Override
+          public String getCodeVerifier() {
+            return null;
+          }
+
+          @Override
+          public String getCodeChallengeMethod() {
+            return "dummy string";
+          }
+
+          @Override
+          public String getCodeChallenge() {
+            return "dummy string";
+          }
+        };
+
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(DUMMY_SCOPES)
+            .setTokenStore(new MemoryTokensStorage())
+            .setPKCEProvider(pkce)
+            .build();
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void nullCodeChallengePKCEProvider() {
+    PKCEProvider pkce =
+        new PKCEProvider() {
+          @Override
+          public String getCodeVerifier() {
+            return "dummy string";
+          }
+
+          @Override
+          public String getCodeChallengeMethod() {
+            return "dummy string";
+          }
+
+          @Override
+          public String getCodeChallenge() {
+            return null;
+          }
+        };
+
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(DUMMY_SCOPES)
+            .setTokenStore(new MemoryTokensStorage())
+            .setPKCEProvider(pkce)
+            .build();
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void nullCodeChallengeMethodPKCEProvider() {
+    PKCEProvider pkce =
+        new PKCEProvider() {
+          @Override
+          public String getCodeVerifier() {
+            return "dummy string";
+          }
+
+          @Override
+          public String getCodeChallengeMethod() {
+            return null;
+          }
+
+          @Override
+          public String getCodeChallenge() {
+            return "dummy string";
+          }
+        };
+
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(DUMMY_SCOPES)
+            .setTokenStore(new MemoryTokensStorage())
+            .setPKCEProvider(pkce)
+            .build();
   }
 }

@@ -42,6 +42,7 @@ import static org.junit.Assert.fail;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonParser;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
+import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
 import com.google.auth.oauth2.AwsCredentials.AwsCredentialSource;
 import com.google.auth.oauth2.ExternalAccountCredentialsTest.MockExternalAccountCredentialsTransportFactory;
@@ -62,7 +63,7 @@ import org.junit.runners.JUnit4;
 
 /** Tests for {@link AwsCredentials}. */
 @RunWith(JUnit4.class)
-public class AwsCredentialsTest {
+public class AwsCredentialsTest extends BaseSerializationTest {
 
   private static final String STS_URL = "https://sts.googleapis.com";
   private static final String AWS_CREDENTIALS_URL = "https://169.254.169.254";
@@ -1023,6 +1024,34 @@ public class AwsCredentialsTest {
     assertEquals(credentials.getClientSecret(), "clientSecret");
     assertEquals(credentials.getScopes(), scopes);
     assertEquals(credentials.getEnvironmentProvider(), SystemEnvironmentProvider.getInstance());
+  }
+
+  @Test
+  public void serialize() throws IOException, ClassNotFoundException {
+    List<String> scopes = Arrays.asList("scope1", "scope2");
+
+    AwsCredentials testCredentials =
+        (AwsCredentials)
+            AwsCredentials.newBuilder()
+                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+                .setAudience("audience")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenUrl(STS_URL)
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setCredentialSource(AWS_CREDENTIAL_SOURCE)
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+                .setQuotaProjectId("quotaProjectId")
+                .setClientId("clientId")
+                .setClientSecret("clientSecret")
+                .setScopes(scopes)
+                .build();
+
+    AwsCredentials deserializedCredentials = serializeAndDeserialize(testCredentials);
+    assertEquals(testCredentials, deserializedCredentials);
+    assertEquals(testCredentials.hashCode(), deserializedCredentials.hashCode());
+    assertEquals(testCredentials.toString(), deserializedCredentials.toString());
+    assertSame(deserializedCredentials.clock, Clock.SYSTEM);
   }
 
   private static void ValidateRequest(
