@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.1](https://github.com/googleapis/google-auth-library-java/compare/v1.6.0...v1.6.1) (2023-02-17)
+
+
+### Bug Fixes
+
+* Create and reuse self signed jwt creds for better performance  ([#1164](https://github.com/googleapis/google-auth-library-java/issues/1164)) ([4eb1143](https://github.com/googleapis/google-auth-library-java/commit/4eb11439c30447039a3f6953cc23f0b72e056cb5))
+
 ## [1.6.0](https://github.com/googleapis/google-auth-library-java/compare/v1.5.3...v1.6.0) (2022-03-15)
 
 
