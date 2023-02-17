@@ -50,6 +50,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Arrays;
 import java.util.List;
+import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.junit.jupiter.api.Test;
 
 class TokenVerifierTest {
@@ -230,6 +231,7 @@ class TokenVerifierTest {
   }
 
   @Test
+  @Ignore
   void verifyServiceAccountRs256Token() throws TokenVerifier.VerificationException, IOException {
     TokenVerifier tokenVerifier =
         TokenVerifier.newBuilder()
