@@ -128,7 +128,7 @@ public class DefaultCredentialsProviderTest {
       fail("No credential expected.");
     } catch (IOException e) {
       String message = e.getMessage();
-      assertTrue(message.contains(DefaultCredentialsProvider.HELP_PERMALINK));
+      assertTrue(message.equals(DefaultCredentialsProvider.CLOUDSDK_MISSING_CREDENTIALS));
     }
   }
 
@@ -143,7 +143,7 @@ public class DefaultCredentialsProviderTest {
       fail("No credential expected.");
     } catch (IOException e) {
       String message = e.getMessage();
-      assertTrue(message.contains(DefaultCredentialsProvider.HELP_PERMALINK));
+      assertTrue(message.equals(DefaultCredentialsProvider.CLOUDSDK_MISSING_CREDENTIALS));
     }
   }
 
@@ -164,7 +164,7 @@ public class DefaultCredentialsProviderTest {
       fail("No credential expected.");
     } catch (IOException e) {
       String message = e.getMessage();
-      assertTrue(message.contains(DefaultCredentialsProvider.HELP_PERMALINK));
+      assertTrue(message.equals(DefaultCredentialsProvider.CLOUDSDK_MISSING_CREDENTIALS));
     }
   }
 
@@ -179,7 +179,7 @@ public class DefaultCredentialsProviderTest {
       fail("No credential expected.");
     } catch (IOException expected) {
       String message = expected.getMessage();
-      assertTrue(message.contains(DefaultCredentialsProvider.HELP_PERMALINK));
+      assertTrue(message.equals(DefaultCredentialsProvider.CLOUDSDK_MISSING_CREDENTIALS));
     }
     assertEquals(
         transportFactory.transport.getRequestCount(),
@@ -278,7 +278,7 @@ public class DefaultCredentialsProviderTest {
       fail("No credential expected when not on App Engine.");
     } catch (IOException e) {
       String message = e.getMessage();
-      assertTrue(message.contains(DefaultCredentialsProvider.HELP_PERMALINK));
+      assertTrue(message.equals(DefaultCredentialsProvider.CLOUDSDK_MISSING_CREDENTIALS));
     }
   }
 
@@ -295,7 +295,7 @@ public class DefaultCredentialsProviderTest {
       fail("Credential expected to fail to load if credential class not present.");
     } catch (IOException e) {
       String message = e.getMessage();
-      assertFalse(message.contains(DefaultCredentialsProvider.HELP_PERMALINK));
+      assertFalse(message.equals(DefaultCredentialsProvider.CLOUDSDK_MISSING_CREDENTIALS));
       assertTrue(message.contains("Check that the App Engine SDK is deployed."));
     }
   }

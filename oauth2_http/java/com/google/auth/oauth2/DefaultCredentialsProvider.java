@@ -59,8 +59,6 @@ class DefaultCredentialsProvider {
 
   static final String WELL_KNOWN_CREDENTIALS_FILE = "application_default_credentials.json";
   static final String CLOUDSDK_CONFIG_DIRECTORY = "gcloud";
-  static final String HELP_PERMALINK =
-      "https://developers.google.com/accounts/docs/application-default-credentials";
   static final String APP_ENGINE_SIGNAL_CLASS = "com.google.appengine.api.utils.SystemProperty";
   static final String CLOUD_SHELL_ENV_VAR = "DEVSHELL_CLIENT_PORT";
   static final String SKIP_APP_ENGINE_ENV_VAR = "GOOGLE_APPLICATION_CREDENTIALS_SKIP_APP_ENGINE";
@@ -80,6 +78,11 @@ class DefaultCredentialsProvider {
           + "SDK, you might receive a \"quota exceeded\" or \"API not enabled\" error. For "
           + "more information about service accounts, see "
           + "https://cloud.google.com/docs/authentication/.";
+
+  static final String CLOUDSDK_MISSING_CREDENTIALS =
+      "Your default credentials were not found. To set up Application Default Credentials, "
+          + "see https://cloud.google.com/docs/authentication/external/set-up-adc "
+          + "for more information.";
   public static final String SUPPRESS_GCLOUD_CREDS_WARNING_ENV_VAR =
       "SUPPRESS_GCLOUD_CREDS_WARNING";
 
@@ -123,12 +126,7 @@ class DefaultCredentialsProvider {
       }
     }
 
-    throw new IOException(
-        String.format(
-            "The Application Default Credentials are not available. They are available if running"
-                + " in Google Compute Engine. Otherwise, the environment variable %s must be defined"
-                + " pointing to a file defining the credentials. See %s for more information.",
-            CREDENTIAL_ENV_VAR, HELP_PERMALINK));
+    throw new IOException(CLOUDSDK_MISSING_CREDENTIALS);
   }
 
   private final GoogleCredentials getDefaultCredentialsUnsynchronized(
