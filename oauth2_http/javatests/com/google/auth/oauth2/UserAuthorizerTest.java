@@ -477,7 +477,7 @@ public class UserAuthorizerTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void illegalPKCEProvider() {
+  public void nullCodeVerifierPKCEProvider() {
     PKCEProvider pkce =
         new PKCEProvider() {
           @Override
@@ -487,12 +487,70 @@ public class UserAuthorizerTest {
 
           @Override
           public String getCodeChallengeMethod() {
-            return null;
+            return "dummy string";
+          }
+
+          @Override
+          public String getCodeChallenge() {
+            return "dummy string";
+          }
+        };
+
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(DUMMY_SCOPES)
+            .setTokenStore(new MemoryTokensStorage())
+            .setPKCEProvider(pkce)
+            .build();
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void nullCodeChallengePKCEProvider() {
+    PKCEProvider pkce =
+        new PKCEProvider() {
+          @Override
+          public String getCodeVerifier() {
+            return "dummy string";
+          }
+
+          @Override
+          public String getCodeChallengeMethod() {
+            return "dummy string";
           }
 
           @Override
           public String getCodeChallenge() {
             return null;
+          }
+        };
+
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(DUMMY_SCOPES)
+            .setTokenStore(new MemoryTokensStorage())
+            .setPKCEProvider(pkce)
+            .build();
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void nullCodeChallengeMethodPKCEProvider() {
+    PKCEProvider pkce =
+        new PKCEProvider() {
+          @Override
+          public String getCodeVerifier() {
+            return "dummy string";
+          }
+
+          @Override
+          public String getCodeChallengeMethod() {
+            return null;
+          }
+
+          @Override
+          public String getCodeChallenge() {
+            return "dummy string";
           }
         };
 
