@@ -633,19 +633,25 @@ public class DefaultCredentialsProviderTest {
 
   @Test
   public void getDefaultCredentials_wellKnownFile_logsGcloudWarning() throws IOException {
-    LogRecord message = getCredentialsAndReturnLogMessage(false);
+    LogRecord message = getCredentialsAndReturnLogMessage(false, true);
     assertNotNull(message);
     assertEquals(Level.WARNING, message.getLevel());
-    assertTrue(message.getMessage().contains("end user credentials from Google Cloud SDK"));
+    assertTrue(message.getMessage().equals(DefaultCredentialsProvider.CLOUDSDK_CREDENTIALS_WARNING));
+  }
+
+  @Test
+  public void getDefaultCredentials_wellKnownFile_noGcloudWarning() throws IOException {
+    LogRecord message = getCredentialsAndReturnLogMessage(false, false);
+    assertNull(message);
   }
 
   @Test
   public void getDefaultCredentials_wellKnownFile_suppressGcloudWarning() throws IOException {
-    LogRecord message = getCredentialsAndReturnLogMessage(true);
+    LogRecord message = getCredentialsAndReturnLogMessage(true, true);
     assertNull(message);
   }
 
-  private LogRecord getCredentialsAndReturnLogMessage(boolean suppressWarning) throws IOException {
+  private LogRecord getCredentialsAndReturnLogMessage(boolean suppressWarning, boolean isGce) throws IOException {
     Logger logger = Logger.getLogger(DefaultCredentialsProvider.class.getName());
     LogHandler handler = new LogHandler();
     logger.addHandler(handler);
@@ -664,6 +670,12 @@ public class DefaultCredentialsProviderTest {
         Boolean.toString(suppressWarning));
     testProvider.setProperty("os.name", "linux");
     testProvider.setProperty("user.home", homeDir.getAbsolutePath());
+    if (isGce) {
+      String productFilePath = SMBIOS_PATH_LINUX;
+      File productFile = new File(productFilePath);
+      InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
+      testProvider.addFile(productFile.getAbsolutePath(), productStream);
+    }
     testProvider.addFile(wellKnownFile.getAbsolutePath(), userStream);
     testUserProvidesToken(testProvider, GCLOUDSDK_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
     return handler.getRecord();
