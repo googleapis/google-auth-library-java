@@ -636,7 +636,8 @@ public class DefaultCredentialsProviderTest {
     LogRecord message = getCredentialsAndReturnLogMessage(false, true);
     assertNotNull(message);
     assertEquals(Level.WARNING, message.getLevel());
-    assertTrue(message.getMessage().equals(DefaultCredentialsProvider.CLOUDSDK_CREDENTIALS_WARNING));
+    assertTrue(
+        message.getMessage().equals(DefaultCredentialsProvider.CLOUDSDK_CREDENTIALS_WARNING));
   }
 
   @Test
@@ -651,7 +652,8 @@ public class DefaultCredentialsProviderTest {
     assertNull(message);
   }
 
-  private LogRecord getCredentialsAndReturnLogMessage(boolean suppressWarning, boolean isGce) throws IOException {
+  private LogRecord getCredentialsAndReturnLogMessage(boolean suppressWarning, boolean isGce)
+      throws IOException {
     Logger logger = Logger.getLogger(DefaultCredentialsProvider.class.getName());
     LogHandler handler = new LogHandler();
     logger.addHandler(handler);
