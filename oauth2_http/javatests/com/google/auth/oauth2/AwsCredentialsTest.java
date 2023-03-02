@@ -35,7 +35,6 @@ import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -57,7 +56,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
-import org.junit.function.ThrowingRunnable;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -106,28 +104,14 @@ public class AwsCredentialsTest extends BaseSerializationTest {
               .build();
 
   @Test
-  public void test_awsCredentialSource_ipv6() {
-    // If no exception is thrown, it means the urls were valid.
-    new AwsCredentialSource(buildAwsIpv6CredentialSourceMap());
-  }
-
-  @Test
-  public void test_awsCredentialSource_invalid_urls() {
+  public void test_awsCredentialSource() {
     String keys[] = {"region_url", "url", "imdsv2_session_token_url"};
     for (String key : keys) {
       Map<String, Object> credentialSourceWithInvalidUrl = buildAwsIpv6CredentialSourceMap();
       credentialSourceWithInvalidUrl.put(key, "https://badhost.com/fake");
-      IllegalArgumentException e =
-          assertThrows(
-              IllegalArgumentException.class,
-              new ThrowingRunnable() {
-                @Override
-                public void run() throws Throwable {
-                  new AwsCredentialSource(credentialSourceWithInvalidUrl);
-                }
-              });
 
-      assertEquals(String.format("Invalid host badhost.com for %s.", key), e.getMessage());
+      // Should succeed as no validation is done.
+      new AwsCredentialSource(credentialSourceWithInvalidUrl);
     }
   }
 
@@ -611,43 +595,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
     assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
     assertEquals("awsSessionToken", credentials.getToken());
-  }
-
-  @Test
-  public void validateMetadataServerUrlIfAny_validOrEmptyUrls() {
-    String[] urls = {
-      "http://[fd00:ec2::254]/region",
-      "http://169.254.169.254",
-      "http://169.254.169.254/xyz",
-      " ",
-      "",
-      null
-    };
-    for (String url : urls) {
-      AwsCredentialSource.validateMetadataServerUrlIfAny(url, "url");
-    }
-  }
-
-  @Test
-  public void validateMetadataServerUrlIfAny_invalidUrls() {
-    Map<String, String> urls = new HashMap<String, String>();
-    urls.put("http://[fd00:ec2::255]/region", "[fd00:ec2::255]");
-    urls.put("http://fake.com/region", "fake.com");
-    urls.put("http://169.254.169.255", "169.254.169.255");
-
-    for (Map.Entry<String, String> entry : urls.entrySet()) {
-      IllegalArgumentException e =
-          assertThrows(
-              IllegalArgumentException.class,
-              new ThrowingRunnable() {
-                @Override
-                public void run() throws Throwable {
-                  AwsCredentialSource.validateMetadataServerUrlIfAny(entry.getKey(), "url");
-                }
-              });
-
-      assertEquals(String.format("Invalid host %s for url.", entry.getValue()), e.getMessage());
-    }
   }
 
   @Test
