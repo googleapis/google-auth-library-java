@@ -33,6 +33,7 @@ package com.google.auth.oauth2;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.Serializable;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.auth.RequestMetadataCallback;
@@ -43,7 +44,6 @@ import com.google.auth.oauth2.PluggableAuthCredentials.PluggableAuthCredentialSo
 import com.google.common.base.MoreObjects;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
