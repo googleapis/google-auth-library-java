@@ -1,6 +1,5 @@
 package com.google.auth.oauth2;
 
-
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.Serializable;

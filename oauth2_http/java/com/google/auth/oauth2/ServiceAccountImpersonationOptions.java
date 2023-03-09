@@ -1,6 +1,5 @@
 package com.google.auth.oauth2;
 
-
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Map;
