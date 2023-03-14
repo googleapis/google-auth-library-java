@@ -130,6 +130,17 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
+   * Clears the default credentials provider's cached credentials
+   *
+   * <p>This will remove the cached credentials returned by {@code getApplicationDefault()}, meaning
+   * that a new call to {@code getApplicationDefault()} will trigger the search for Application
+   * Default Credentials
+   */
+  public static void clearApplicationDefaultCachedCredentials() {
+    defaultCredentialsProvider.clearCachedCredentials();
+  }
+
+  /**
    * Returns credentials defined by a JSON file stream.
    *
    * <p>The stream can contain a Service Account key file in JSON format from the Google Developers

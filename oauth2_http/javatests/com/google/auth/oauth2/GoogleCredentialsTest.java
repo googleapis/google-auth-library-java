@@ -595,6 +595,14 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
   }
 
+  @Test
+  public void clearCache() throws IOException {
+    GoogleCredentials credentialsFirst = GoogleCredentials.getApplicationDefault();
+    GoogleCredentials.clearApplicationDefaultCachedCredentials();
+    GoogleCredentials credentialsSecond = GoogleCredentials.getApplicationDefault();
+    assertNotSame(credentialsFirst, credentialsSecond);
+  }
+
   private static void testFromStreamException(InputStream stream, String expectedMessageContent) {
     try {
       GoogleCredentials.fromStream(stream, DUMMY_TRANSPORT_FACTORY);

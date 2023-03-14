@@ -131,6 +131,12 @@ class DefaultCredentialsProvider {
             CREDENTIAL_ENV_VAR, HELP_PERMALINK));
   }
 
+  final void clearCachedCredentials() {
+    synchronized (this) {
+      cachedCredentials = null;
+    }
+  }
+
   private final GoogleCredentials getDefaultCredentialsUnsynchronized(
       HttpTransportFactory transportFactory) throws IOException {
 
