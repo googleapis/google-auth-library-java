@@ -32,6 +32,8 @@
 package com.google.auth.oauth2;
 
 import com.google.auth.http.HttpTransportFactory;
+import com.google.common.annotations.VisibleForTesting;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -137,8 +139,9 @@ class DefaultCredentialsProvider {
     }
   }
 
-  private final GoogleCredentials getDefaultCredentialsUnsynchronized(
-      HttpTransportFactory transportFactory) throws IOException {
+  @VisibleForTesting
+  final GoogleCredentials getDefaultCredentialsUnsynchronized(
+          HttpTransportFactory transportFactory) throws IOException {
 
     // First try the environment variable
     GoogleCredentials credentials = null;
@@ -362,6 +365,7 @@ class DefaultCredentialsProvider {
     return System.getProperty(property, def);
   }
 
+  @VisibleForTesting
   boolean isFile(File file) {
     return file.isFile();
   }

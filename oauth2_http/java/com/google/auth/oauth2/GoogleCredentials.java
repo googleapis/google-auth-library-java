@@ -36,6 +36,7 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,6 +61,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
 
   protected final String quotaProjectId;
 
+  @VisibleForTesting
   private static final DefaultCredentialsProvider defaultCredentialsProvider =
       new DefaultCredentialsProvider();
 

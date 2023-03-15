@@ -52,9 +52,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
 
 /** Test case for {@link GoogleCredentials}. */
 @RunWith(JUnit4.class)
@@ -597,10 +599,15 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void clearCache() throws IOException {
+    DefaultCredentialsProvider mockProvider = Mockito.spy(DefaultCredentialsProvider.DEFAULT);
+    Mockito.when(mockProvider.getDefaultCredentialsUnsynchronized(OAuth2Utils.HTTP_TRANSPORT_FACTORY))
+            .thenAnswer(GoogleCredentials -> new GoogleCredentials.Builder().build());
     GoogleCredentials credentialsFirst = GoogleCredentials.getApplicationDefault();
-    GoogleCredentials.clearApplicationDefaultCachedCredentials();
     GoogleCredentials credentialsSecond = GoogleCredentials.getApplicationDefault();
-    assertNotSame(credentialsFirst, credentialsSecond);
+    GoogleCredentials.clearApplicationDefaultCachedCredentials();
+    GoogleCredentials credentialsThird = GoogleCredentials.getApplicationDefault();
+    assertSame(credentialsFirst, credentialsSecond);
+    assertNotSame(credentialsSecond, credentialsThird);
   }
 
   private static void testFromStreamException(InputStream stream, String expectedMessageContent) {
