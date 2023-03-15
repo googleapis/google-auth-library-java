@@ -52,7 +52,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -600,8 +599,9 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   @Test
   public void clearCache() throws IOException {
     DefaultCredentialsProvider mockProvider = Mockito.spy(DefaultCredentialsProvider.DEFAULT);
-    Mockito.when(mockProvider.getDefaultCredentialsUnsynchronized(OAuth2Utils.HTTP_TRANSPORT_FACTORY))
-            .thenAnswer(GoogleCredentials -> new GoogleCredentials.Builder().build());
+    Mockito.when(
+            mockProvider.getDefaultCredentialsUnsynchronized(OAuth2Utils.HTTP_TRANSPORT_FACTORY))
+        .thenAnswer(GoogleCredentials -> new GoogleCredentials.Builder().build());
     GoogleCredentials credentialsFirst = GoogleCredentials.getApplicationDefault();
     GoogleCredentials credentialsSecond = GoogleCredentials.getApplicationDefault();
     GoogleCredentials.clearApplicationDefaultCachedCredentials();
