@@ -72,7 +72,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-
 /** Test case for {@link DefaultCredentialsProvider}. */
 @RunWith(JUnit4.class)
 public class DefaultCredentialsProviderTest {
@@ -662,8 +661,6 @@ public class DefaultCredentialsProviderTest {
     LogRecord message = getCredentialsAndReturnLogMessage(true);
     assertNull(message);
   }
-
-
 
   private LogRecord getCredentialsAndReturnLogMessage(boolean suppressWarning) throws IOException {
     Logger logger = Logger.getLogger(DefaultCredentialsProvider.class.getName());
