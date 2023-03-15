@@ -72,6 +72,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+
 /** Test case for {@link DefaultCredentialsProvider}. */
 @RunWith(JUnit4.class)
 public class DefaultCredentialsProviderTest {
@@ -263,6 +264,23 @@ public class DefaultCredentialsProviderTest {
 
     assertNotNull(firstCall);
     assertSame(firstCall, secondCall);
+  }
+
+  @Test
+  public void getDefaultCredentials_clearCache() throws IOException {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+
+    GoogleCredentials firstCall = testProvider.getDefaultCredentials(transportFactory);
+    GoogleCredentials secondCall = testProvider.getDefaultCredentials(transportFactory);
+    testProvider.clearCachedCredentials();
+    testProvider.setCheckedComputeEngine(false);
+    GoogleCredentials thirdCall = testProvider.getDefaultCredentials(transportFactory);
+
+    assertNotNull(firstCall);
+    assertNotNull(thirdCall);
+    assertSame(firstCall, secondCall);
+    assertNotSame(secondCall, thirdCall);
   }
 
   @Test
@@ -645,6 +663,8 @@ public class DefaultCredentialsProviderTest {
     assertNull(message);
   }
 
+
+
   private LogRecord getCredentialsAndReturnLogMessage(boolean suppressWarning) throws IOException {
     Logger logger = Logger.getLogger(DefaultCredentialsProvider.class.getName());
     LogHandler handler = new LogHandler();
@@ -842,6 +862,10 @@ public class DefaultCredentialsProviderTest {
 
     void setFileSandbox(boolean fileSandbox) {
       this.fileSandbox = fileSandbox;
+    }
+
+    void setCheckedComputeEngine(boolean value) {
+      this.checkedComputeEngine = value;
     }
   }
 }

@@ -87,7 +87,7 @@ class DefaultCredentialsProvider {
   // These variables should only be accessed inside a synchronized block
   private GoogleCredentials cachedCredentials = null;
   private boolean checkedAppEngine = false;
-  private boolean checkedComputeEngine = false;
+  boolean checkedComputeEngine = false;
 
   DefaultCredentialsProvider() {}
 
