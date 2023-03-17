@@ -65,10 +65,8 @@ import javax.annotation.Nullable;
 public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
   private static final long serialVersionUID = 8049126194174465023L;
-
   private static final String CLOUD_PLATFORM_SCOPE =
       "https://www.googleapis.com/auth/cloud-platform";
-
   static final String EXTERNAL_ACCOUNT_FILE_TYPE = "external_account";
   static final String EXECUTABLE_SOURCE_KEY = "executable";
 
@@ -812,5 +810,15 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     }
 
     public abstract ExternalAccountCredentials build();
+  }
+
+  /** Base credential source class. Dictates the retrieval method of the external credential. */
+  abstract static class CredentialSource implements Serializable {
+
+    private static final long serialVersionUID = 8204657811562399944L;
+
+    CredentialSource(Map<String, Object> credentialSourceMap) {
+      checkNotNull(credentialSourceMap);
+    }
   }
 }
