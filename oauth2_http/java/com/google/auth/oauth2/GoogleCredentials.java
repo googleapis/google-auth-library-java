@@ -102,6 +102,24 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
+   * Returns the Application Default Credentials stored in the gcloud CLI's well-known location file
+   * Corresponds to one of the elements of {@code getApplicationDefault()}, exposed for convenience.
+   *
+   * <ol>
+   *   <li>{@code gcloud auth application-default login} for user account credentials.
+   *   <li>{@code gcloud auth application-default login --impersonate-service-account} for
+   *       impersonated service account credentials.
+   * </ol>
+   *
+   * @return the credentials, or null if not found
+   * @throws IOException if the credentials cannot be created in the current environment.
+   */
+  public static GoogleCredentials getFromGcloudCliWellKnownFile() throws IOException {
+    return defaultCredentialsProvider.getFromGcloudCliWellKnownFile(
+        OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+  }
+
+  /**
    * Returns the Application Default Credentials.
    *
    * <p>Returns the Application Default Credentials which are used to identify and authorize the
