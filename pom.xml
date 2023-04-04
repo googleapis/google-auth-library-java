@@ -214,6 +214,7 @@
           <version>2.13</version>
           <configuration>
             <verbose>true</verbose>
+            <skipSortingImports>true</skipSortingImports>
           </configuration>
         </plugin>
         <plugin>
@@ -268,6 +269,7 @@
               <testSourceDirectories>
                 <testSourceDirectory>src/test</testSourceDirectory>
               </testSourceDirectories>
+              <excludes>com.google.auth.oauth2.ExternalAccountCredentials</excludes>
             </configuration>
           </execution>
         </executions>
