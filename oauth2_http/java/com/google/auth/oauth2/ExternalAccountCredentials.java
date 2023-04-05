@@ -641,7 +641,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
    * }
    * </pre>
    */
-  static final class ServiceAccountImpersonationOptions implements Serializable {
+  static final class ServiceAccountImpersonationOptions implements java.io.Serializable {
 
     private static final long serialVersionUID = 4250771921886280953L;
     private static final int DEFAULT_TOKEN_LIFETIME_SECONDS = 3600;
