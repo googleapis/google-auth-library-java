@@ -36,7 +36,6 @@ java.common_templates(
         ".kokoro/nightly/integration.cfg",
         ".kokoro/presubmit/integration.cfg",
         ".kokoro/presubmit/graalvm-native.cfg",
-        ".kokoro/presubmit/graalvm-native-17.cfg",
-        "oauth2_http/java/com/google/auth/oauth2/ExternalAccountCredentials.java"
+        ".kokoro/presubmit/graalvm-native-17.cfg"
     ]
 )
