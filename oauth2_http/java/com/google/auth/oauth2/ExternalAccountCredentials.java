@@ -43,7 +43,6 @@ import com.google.auth.oauth2.PluggableAuthCredentials.PluggableAuthCredentialSo
 import com.google.common.base.MoreObjects;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -69,7 +68,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   private static final long serialVersionUID = 8049126194174465023L;
 
   /** Base credential source class. Dictates the retrieval method of the external credential. */
-  abstract static class CredentialSource implements Serializable {
+  abstract static class CredentialSource implements java.io.Serializable {
 
     private static final long serialVersionUID = 8204657811562399944L;
 
@@ -641,7 +640,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
    * }
    * </pre>
    */
-  static final class ServiceAccountImpersonationOptions implements Serializable {
+  static final class ServiceAccountImpersonationOptions implements java.io.Serializable {
 
     private static final long serialVersionUID = 4250771921886280953L;
     private static final int DEFAULT_TOKEN_LIFETIME_SECONDS = 3600;

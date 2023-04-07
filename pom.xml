@@ -214,7 +214,6 @@
           <version>2.13</version>
           <configuration>
             <verbose>true</verbose>
-            <skipSortingImports>true</skipSortingImports>
           </configuration>
         </plugin>
         <plugin>
