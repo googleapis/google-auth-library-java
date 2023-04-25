@@ -646,7 +646,7 @@ public class DefaultCredentialsProviderTest {
   }
 
   @Test
-  public void getFromGcloudCliWellKnownFile() throws IOException {
+  public void getWellKnownCredentialsPath_correct() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     File homeDir = getTempDirectory();
