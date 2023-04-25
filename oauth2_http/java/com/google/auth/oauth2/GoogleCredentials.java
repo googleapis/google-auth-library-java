@@ -102,11 +102,11 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-<<<<<<< HEAD
+   * <<<<<<< HEAD
    * Returns the gcloud CLI's well-known location path. Corresponds to one of the elements of {@code
-=======
+   * =======
    * Returns the gcloud CLI's well-known location file. Corresponds to one of the elements of {@code
->>>>>>> 608179607cce89b7d8c3271ffd0d5a078a457255
+   * >>>>>>> 608179607cce89b7d8c3271ffd0d5a078a457255
    * getApplicationDefault()}, exposed for convenience.
    *
    * @return the credentials, or null if not found
