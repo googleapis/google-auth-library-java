@@ -647,37 +647,24 @@ public class DefaultCredentialsProviderTest {
 
   @Test
   public void getFromGcloudCliWellKnownFile() throws IOException {
-    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     File homeDir = getTempDirectory();
     File configDir = new File(homeDir, ".config");
     File cloudConfigDir = new File(configDir, DefaultCredentialsProvider.CLOUDSDK_CONFIG_DIRECTORY);
     File wellKnownFile =
         new File(cloudConfigDir, DefaultCredentialsProvider.WELL_KNOWN_CREDENTIALS_FILE);
-    InputStream userStream =
-        UserCredentialsTest.writeUserStream(
-            USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
     testProvider.setEnv(
         DefaultCredentialsProvider.SUPPRESS_GCLOUD_CREDS_WARNING_ENV_VAR, Boolean.toString(true));
     testProvider.setProperty("os.name", "linux");
     testProvider.setProperty("user.home", homeDir.getAbsolutePath());
 
-    GoogleCredentials firstCall = testProvider.tryGetFromWellKnownCredentialsFile(transportFactory);
-    testProvider.addFile(
-        wellKnownFile.getAbsolutePath(),
-        UserCredentialsTest.writeUserStream(
-            USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT));
-    GoogleCredentials secondCall =
-        testProvider.tryGetFromWellKnownCredentialsFile(transportFactory);
-    testProvider.addFile(
-        wellKnownFile.getAbsolutePath(),
-        UserCredentialsTest.writeUserStream(
-            USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT));
-    GoogleCredentials thirdCall = testProvider.tryGetFromWellKnownCredentialsFile(transportFactory);
+    File firstCall = testProvider.getWellKnownCredentialsFile();
+    File secondCall = testProvider.getWellKnownCredentialsFile();
 
-    assertNull(firstCall);
-    assertNotNull(secondCall);
-    assertEquals(secondCall, thirdCall);
+    assertNotNull(firstCall);
+    assertEquals(firstCall, secondCall);
+    assertEquals(firstCall.getAbsolutePath(), wellKnownFile.getAbsolutePath());
+    assertEquals(secondCall.getAbsolutePath(), wellKnownFile.getAbsolutePath());
   }
 
   private LogRecord getCredentialsAndReturnLogMessage(boolean suppressWarning) throws IOException {

@@ -212,7 +212,7 @@ class DefaultCredentialsProvider {
     }
   }
 
-  private final File getWellKnownCredentialsFile() {
+  final File getWellKnownCredentialsFile() {
     File cloudConfigPath;
     String envPath = getEnv("CLOUDSDK_CONFIG");
     if (envPath != null) {
@@ -257,11 +257,6 @@ class DefaultCredentialsProvider {
             "Unexpected error trying to determine if runnning on Google App Engine: %s",
             cause.getMessage()),
         cause);
-  }
-
-  final GoogleCredentials getFromGcloudCliWellKnownFile(HttpTransportFactory transportFactory)
-      throws IOException {
-    return tryGetFromWellKnownCredentialsFile(transportFactory);
   }
 
   @VisibleForTesting
