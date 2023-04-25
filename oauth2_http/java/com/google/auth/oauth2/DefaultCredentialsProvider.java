@@ -212,7 +212,11 @@ class DefaultCredentialsProvider {
     }
   }
 
-  final File getWellKnownCredentialsFile() {
+  final String getWellKnownCredentialsPath() {
+    return getWellKnownCredentialsFile().getAbsolutePath();
+  }
+
+  private final File getWellKnownCredentialsFile() {
     File cloudConfigPath;
     String envPath = getEnv("CLOUDSDK_CONFIG");
     if (envPath != null) {

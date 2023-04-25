@@ -647,24 +647,29 @@ public class DefaultCredentialsProviderTest {
 
   @Test
   public void getFromGcloudCliWellKnownFile() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     File homeDir = getTempDirectory();
     File configDir = new File(homeDir, ".config");
     File cloudConfigDir = new File(configDir, DefaultCredentialsProvider.CLOUDSDK_CONFIG_DIRECTORY);
     File wellKnownFile =
         new File(cloudConfigDir, DefaultCredentialsProvider.WELL_KNOWN_CREDENTIALS_FILE);
-    testProvider.setEnv(
-        DefaultCredentialsProvider.SUPPRESS_GCLOUD_CREDS_WARNING_ENV_VAR, Boolean.toString(true));
     testProvider.setProperty("os.name", "linux");
     testProvider.setProperty("user.home", homeDir.getAbsolutePath());
 
-    File firstCall = testProvider.getWellKnownCredentialsFile();
-    File secondCall = testProvider.getWellKnownCredentialsFile();
+    String obtainedPath = testProvider.getWellKnownCredentialsPath();
+    File obtainedPathFile = new File(obtainedPath);
 
-    assertNotNull(firstCall);
-    assertEquals(firstCall, secondCall);
-    assertEquals(firstCall.getAbsolutePath(), wellKnownFile.getAbsolutePath());
-    assertEquals(secondCall.getAbsolutePath(), wellKnownFile.getAbsolutePath());
+    assertNotNull(obtainedPath);
+    assertEquals(obtainedPath, wellKnownFile.getAbsolutePath());
+
+    testProvider.addFile(
+        obtainedPathFile.getAbsolutePath(),
+        UserCredentialsTest.writeUserStream(
+            USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT));
+
+    GoogleCredentials creds = testProvider.getDefaultCredentials(transportFactory);
+    assertNotNull(creds);
   }
 
   private LogRecord getCredentialsAndReturnLogMessage(boolean suppressWarning) throws IOException {
