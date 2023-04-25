@@ -37,7 +37,6 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -104,8 +103,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * Returns the gcloud CLI's well-known location file.
-   * Corresponds to one of the elements of {@code getApplicationDefault()}, exposed for convenience.
+   * Returns the gcloud CLI's well-known location file. Corresponds to one of the elements of {@code
+   * getApplicationDefault()}, exposed for convenience.
    *
    * @return the credentials, or null if not found
    * @throws IOException if the credentials cannot be created in the current environment.
