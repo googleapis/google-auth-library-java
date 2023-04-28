@@ -171,7 +171,31 @@ class DefaultCredentialsProvider {
 
     // Then try the well-known file
     if (credentials == null) {
-      credentials = tryGetFromWellKnownCredentialsFile(transportFactory);
+      File wellKnownFileLocation = getWellKnownCredentialsFile();
+      InputStream credentialsStream = null;
+      try {
+        if (isFile(wellKnownFileLocation)) {
+          LOGGER.log(
+                  Level.FINE,
+                  String.format(
+                          "Attempting to load credentials from well known file: %s",
+                          wellKnownFileLocation.getCanonicalPath()));
+          credentialsStream = readStream(wellKnownFileLocation);
+          credentials = GoogleCredentials.fromStream(credentialsStream, transportFactory);
+        }
+      } catch (IOException e) {
+        throw new IOException(
+                String.format(
+                        "Error reading credential file from location %s: %s",
+                        wellKnownFileLocation, e.getMessage()));
+      } catch (AccessControlException expected) {
+        // Exception querying file system is expected on App-Engine
+      } finally {
+        if (credentialsStream != null) {
+          credentialsStream.close();
+        }
+      }
+      warnAboutProblematicCredentials(credentials);
     }
 
     // Then try GAE 7 standard environment
@@ -210,10 +234,6 @@ class DefaultCredentialsProvider {
         && !Boolean.parseBoolean(getEnv(SUPPRESS_GCLOUD_CREDS_WARNING_ENV_VAR))) {
       LOGGER.log(Level.WARNING, CLOUDSDK_CREDENTIALS_WARNING);
     }
-  }
-
-  final String getWellKnownCredentialsPath() {
-    return getWellKnownCredentialsFile().getAbsolutePath();
   }
 
   private final File getWellKnownCredentialsFile() {
@@ -261,38 +281,6 @@ class DefaultCredentialsProvider {
             "Unexpected error trying to determine if runnning on Google App Engine: %s",
             cause.getMessage()),
         cause);
-  }
-
-  @VisibleForTesting
-  final GoogleCredentials tryGetFromWellKnownCredentialsFile(HttpTransportFactory transportFactory)
-      throws IOException {
-    File wellKnownFileLocation = getWellKnownCredentialsFile();
-    InputStream credentialsStream = null;
-    GoogleCredentials credentials = null;
-    try {
-      if (isFile(wellKnownFileLocation)) {
-        LOGGER.log(
-            Level.FINE,
-            String.format(
-                "Attempting to load credentials from well known file: %s",
-                wellKnownFileLocation.getCanonicalPath()));
-        credentialsStream = readStream(wellKnownFileLocation);
-        credentials = GoogleCredentials.fromStream(credentialsStream, transportFactory);
-      }
-    } catch (IOException e) {
-      throw new IOException(
-          String.format(
-              "Error reading credential file from location %s: %s",
-              wellKnownFileLocation, e.getMessage()));
-    } catch (AccessControlException expected) {
-      // Exception querying file system is expected on App-Engine
-    } finally {
-      if (credentialsStream != null) {
-        credentialsStream.close();
-      }
-    }
-    warnAboutProblematicCredentials(credentials);
-    return credentials;
   }
 
   private GoogleCredentials tryGetCloudShellCredentials() {

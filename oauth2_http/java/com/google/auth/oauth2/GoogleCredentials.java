@@ -102,21 +102,6 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-<<<<<<< HEAD
-   * Returns the gcloud CLI's well-known location path. Corresponds to one of the elements of {@code
-=======
-   * Returns the gcloud CLI's well-known location file. Corresponds to one of the elements of {@code
->>>>>>> 608179607cce89b7d8c3271ffd0d5a078a457255
-   * getApplicationDefault()}, exposed for convenience.
-   *
-   * @return the credentials, or null if not found
-   * @throws IOException if the credentials cannot be created in the current environment.
-   */
-  public static String getWellKnownCredentialsPath() {
-    return defaultCredentialsProvider.getWellKnownCredentialsPath();
-  }
-
-  /**
    * Returns the Application Default Credentials.
    *
    * <p>Returns the Application Default Credentials which are used to identify and authorize the
