@@ -32,7 +32,6 @@
 package com.google.auth.oauth2;
 
 import com.google.auth.http.HttpTransportFactory;
-import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -43,7 +42,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.AccessControlException;
 import java.util.Collections;
-import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -176,18 +174,18 @@ class DefaultCredentialsProvider {
       try {
         if (isFile(wellKnownFileLocation)) {
           LOGGER.log(
-                  Level.FINE,
-                  String.format(
-                          "Attempting to load credentials from well known file: %s",
-                          wellKnownFileLocation.getCanonicalPath()));
+              Level.FINE,
+              String.format(
+                  "Attempting to load credentials from well known file: %s",
+                  wellKnownFileLocation.getCanonicalPath()));
           credentialsStream = readStream(wellKnownFileLocation);
           credentials = GoogleCredentials.fromStream(credentialsStream, transportFactory);
         }
       } catch (IOException e) {
         throw new IOException(
-                String.format(
-                        "Error reading credential file from location %s: %s",
-                        wellKnownFileLocation, e.getMessage()));
+            String.format(
+                "Error reading credential file from location %s: %s",
+                wellKnownFileLocation, e.getMessage()));
       } catch (AccessControlException expected) {
         // Exception querying file system is expected on App-Engine
       } finally {

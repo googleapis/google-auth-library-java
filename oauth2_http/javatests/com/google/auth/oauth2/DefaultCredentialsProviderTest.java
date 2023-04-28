@@ -645,33 +645,6 @@ public class DefaultCredentialsProviderTest {
     assertNull(message);
   }
 
-  @Test
-  public void getWellKnownCredentialsPath_correct() throws IOException {
-    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
-    File homeDir = getTempDirectory();
-    File configDir = new File(homeDir, ".config");
-    File cloudConfigDir = new File(configDir, DefaultCredentialsProvider.CLOUDSDK_CONFIG_DIRECTORY);
-    File wellKnownFile =
-        new File(cloudConfigDir, DefaultCredentialsProvider.WELL_KNOWN_CREDENTIALS_FILE);
-    testProvider.setProperty("os.name", "linux");
-    testProvider.setProperty("user.home", homeDir.getAbsolutePath());
-
-    String obtainedPath = testProvider.getWellKnownCredentialsPath();
-    File obtainedPathFile = new File(obtainedPath);
-
-    assertNotNull(obtainedPath);
-    assertEquals(obtainedPath, wellKnownFile.getAbsolutePath());
-
-    testProvider.addFile(
-        obtainedPathFile.getAbsolutePath(),
-        UserCredentialsTest.writeUserStream(
-            USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT));
-
-    GoogleCredentials creds = testProvider.getDefaultCredentials(transportFactory);
-    assertNotNull(creds);
-  }
-
   private LogRecord getCredentialsAndReturnLogMessage(boolean suppressWarning) throws IOException {
     Logger logger = Logger.getLogger(DefaultCredentialsProvider.class.getName());
     LogHandler handler = new LogHandler();
@@ -696,7 +669,7 @@ public class DefaultCredentialsProviderTest {
     return handler.getRecord();
   }
 
-  private static File getTempDirectory() {
+  static File getTempDirectory() {
     return new File(System.getProperty("java.io.tmpdir"));
   }
 
@@ -796,7 +769,7 @@ public class DefaultCredentialsProviderTest {
     }
   }
 
-  private static class TestDefaultCredentialsProvider extends DefaultCredentialsProvider {
+  static class TestDefaultCredentialsProvider extends DefaultCredentialsProvider {
 
     private final Map<String, Class<?>> types = new HashMap<>();
     private final Map<String, String> variables = new HashMap<>();
