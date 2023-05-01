@@ -35,23 +35,43 @@ import java.io.File;
 
 public class GoogleAuthUtils {
 
+  /**
+   * Gets the gcloud CLI path
+   *
+   * @return the path to the well-known gcloud CLI credentials location
+   */
   public static final String getWellKnownCredentialsPath() {
-    return getWellKnownCredentialsFile().getAbsolutePath();
+    return getWellKnownCredentialsFile(DefaultCredentialsProvider.DEFAULT).getAbsolutePath();
   }
 
-  static final File getWellKnownCredentialsFile() {
+  /**
+   * Testing version of getWellKnownCredentialsPath() that uses a custom provider
+   *
+   * @return the path to the well-known gcloud CLI credentials location
+   */
+  static final String getWellKnownCredentialsPath(DefaultCredentialsProvider provider) {
+    return getWellKnownCredentialsFile(provider).getAbsolutePath();
+  }
+
+  /**
+   * Platform-independent logic to obtain the gcloud CLI credentials file
+   *
+   * @param provider the provider used to resolve env and system properties (exposed for testing
+   *     purposes)
+   * @return the gcloud CLI credentials file
+   */
+  static final File getWellKnownCredentialsFile(DefaultCredentialsProvider provider) {
     File cloudConfigPath;
-    String envPath = DefaultCredentialsProvider.DEFAULT.getEnv("CLOUDSDK_CONFIG");
+    String envPath = provider.getEnv("CLOUDSDK_CONFIG");
     if (envPath != null) {
       cloudConfigPath = new File(envPath);
-    } else if (DefaultCredentialsProvider.DEFAULT.getOsName().indexOf("windows") >= 0) {
-      File appDataPath = new File(DefaultCredentialsProvider.DEFAULT.getEnv("APPDATA"));
-      cloudConfigPath = new File(appDataPath, DefaultCredentialsProvider.CLOUDSDK_CONFIG_DIRECTORY);
+    } else if (provider.getOsName().indexOf("windows") >= 0) {
+      File appDataPath = new File(provider.getEnv("APPDATA"));
+      cloudConfigPath = new File(appDataPath, provider.CLOUDSDK_CONFIG_DIRECTORY);
     } else {
-      File configPath =
-          new File(DefaultCredentialsProvider.DEFAULT.getProperty("user.home", ""), ".config");
-      cloudConfigPath = new File(configPath, DefaultCredentialsProvider.CLOUDSDK_CONFIG_DIRECTORY);
+      File configPath = new File(provider.getProperty("user.home", ""), ".config");
+      cloudConfigPath = new File(configPath, provider.CLOUDSDK_CONFIG_DIRECTORY);
     }
-    return new File(cloudConfigPath, DefaultCredentialsProvider.WELL_KNOWN_CREDENTIALS_FILE);
+    return new File(cloudConfigPath, provider.WELL_KNOWN_CREDENTIALS_FILE);
   }
 }

@@ -170,7 +170,7 @@ class DefaultCredentialsProvider {
 
     // Then try the well-known file
     if (credentials == null) {
-      File wellKnownFileLocation = GoogleAuthUtils.getWellKnownCredentialsFile();
+      File wellKnownFileLocation = getWellKnownCredentialsFile();
       InputStream credentialsStream = null;
       try {
         if (isFile(wellKnownFileLocation)) {
@@ -225,6 +225,10 @@ class DefaultCredentialsProvider {
     }
 
     return credentials;
+  }
+
+  private final File getWellKnownCredentialsFile() {
+    return GoogleAuthUtils.getWellKnownCredentialsFile(this);
   }
 
   private void warnAboutProblematicCredentials(GoogleCredentials credentials) {
