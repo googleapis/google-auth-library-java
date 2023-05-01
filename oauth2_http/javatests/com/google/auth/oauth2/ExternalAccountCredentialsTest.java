@@ -403,6 +403,8 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void fromJson_pluggableAuthCredentials_withUniverseDomain() {
     GenericJson json = buildJsonPluggableAuthCredential();
+    json.set("universe_domain", "universeDomain");
+
     Map<String, Object> credentialSourceMap = (Map<String, Object>) json.get("credential_source");
     // Add optional params to the executable config (timeout, output file path).
     Map<String, Object> executableConfig =
@@ -425,7 +427,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals("command", source.getCommand());
     assertEquals("path/to/output/file", source.getOutputFilePath());
     assertEquals(5000, source.getTimeoutMs());
-    assertNull(credential.getUniverseDomain());
+    assertEquals("universeDomain", credential.getUniverseDomain());
   }
 
   @Test

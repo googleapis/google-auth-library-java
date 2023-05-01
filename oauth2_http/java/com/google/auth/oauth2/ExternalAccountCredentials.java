@@ -95,7 +95,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   @Nullable private final String serviceAccountImpersonationUrl;
   @Nullable private final String clientId;
   @Nullable private final String clientSecret;
-
   @Nullable private final String universeDomain;
 
   // This is used for Workforce Pools. It is passed to the Security Token Service during token
