@@ -232,8 +232,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void fromJson_identityPoolCredentialsWithUniverseDomain() {
     GenericJson identityPoolCredentialJson = buildJsonIdentityPoolCredential();
-    identityPoolCredentialJson.set(
-        "universe_domain", "universeDomain");
+    identityPoolCredentialJson.set("universe_domain", "universeDomain");
 
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
@@ -287,8 +286,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void fromJson_awsCredentialsWithUniverseDomain() {
     GenericJson awsCredentialJson = buildJsonAwsCredential();
-    awsCredentialJson.set(
-        "universe_domain", "universeDomain");
+    awsCredentialJson.set("universe_domain", "universeDomain");
 
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(awsCredentialJson, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
@@ -433,8 +431,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void fromJson_pluggableAuthCredentialsWithUniverseDomain() {
     GenericJson pluggableAuthCredentialJson = buildJsonPluggableAuthCredential();
-    pluggableAuthCredentialJson.set(
-        "universe_domain", "universeDomain");
+    pluggableAuthCredentialJson.set("universe_domain", "universeDomain");
 
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
@@ -764,23 +761,23 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     optionsMap.put("token_lifetime_seconds", 599);
 
     try {
-        IdentityPoolCredentials.newBuilder()
-            .setHttpTransportFactory(transportFactory)
-            .setAudience(
-                "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
-            .setSubjectTokenType("subjectTokenType")
-            .setTokenUrl(STS_URL)
-            .setTokenInfoUrl("https://tokeninfo.com")
-            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-            .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
-            .setScopes(Arrays.asList("scope1", "scope2"))
-            .setQuotaProjectId("projectId")
-            .setClientId("clientId")
-            .setClientSecret("clientSecret")
-            .setWorkforcePoolUserProject("workforcePoolUserProject")
-            .setUniverseDomain("universeDomain")
-            .setServiceAccountImpersonationOptions(optionsMap)
-            .build();
+      IdentityPoolCredentials.newBuilder()
+          .setHttpTransportFactory(transportFactory)
+          .setAudience(
+              "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+          .setSubjectTokenType("subjectTokenType")
+          .setTokenUrl(STS_URL)
+          .setTokenInfoUrl("https://tokeninfo.com")
+          .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+          .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+          .setScopes(Arrays.asList("scope1", "scope2"))
+          .setQuotaProjectId("projectId")
+          .setClientId("clientId")
+          .setClientSecret("clientSecret")
+          .setWorkforcePoolUserProject("workforcePoolUserProject")
+          .setUniverseDomain("universeDomain")
+          .setServiceAccountImpersonationOptions(optionsMap)
+          .build();
     } catch (IllegalArgumentException e) {
       assertEquals(
           "The \"token_lifetime_seconds\" field must be between 600 and 43200 seconds.",
@@ -794,23 +791,23 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     optionsMap.put("token_lifetime_seconds", 43201);
 
     try {
-        IdentityPoolCredentials.newBuilder()
-            .setHttpTransportFactory(transportFactory)
-            .setAudience(
-                "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
-            .setSubjectTokenType("subjectTokenType")
-            .setTokenUrl(STS_URL)
-            .setTokenInfoUrl("https://tokeninfo.com")
-            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-            .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
-            .setScopes(Arrays.asList("scope1", "scope2"))
-            .setQuotaProjectId("projectId")
-            .setClientId("clientId")
-            .setClientSecret("clientSecret")
-            .setWorkforcePoolUserProject("workforcePoolUserProject")
-            .setUniverseDomain("universeDomain")
-            .setServiceAccountImpersonationOptions(optionsMap)
-            .build();
+      IdentityPoolCredentials.newBuilder()
+          .setHttpTransportFactory(transportFactory)
+          .setAudience(
+              "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+          .setSubjectTokenType("subjectTokenType")
+          .setTokenUrl(STS_URL)
+          .setTokenInfoUrl("https://tokeninfo.com")
+          .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+          .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+          .setScopes(Arrays.asList("scope1", "scope2"))
+          .setQuotaProjectId("projectId")
+          .setClientId("clientId")
+          .setClientSecret("clientSecret")
+          .setWorkforcePoolUserProject("workforcePoolUserProject")
+          .setUniverseDomain("universeDomain")
+          .setServiceAccountImpersonationOptions(optionsMap)
+          .build();
     } catch (IllegalArgumentException e) {
       assertEquals(
           "The \"token_lifetime_seconds\" field must be between 600 and 43200 seconds.",
