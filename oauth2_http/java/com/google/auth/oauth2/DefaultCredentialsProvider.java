@@ -42,6 +42,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.AccessControlException;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -321,7 +322,7 @@ class DefaultCredentialsProvider {
   }
 
   String getOsName() {
-    return GoogleAuthUtils.getOsName();
+    return getProperty("os.name", "").toLowerCase(Locale.US);
   }
 
   /*
@@ -333,11 +334,11 @@ class DefaultCredentialsProvider {
   }
 
   String getEnv(String name) {
-    return GoogleAuthUtils.getEnv(name);
+    return System.getenv(name);
   }
 
   String getProperty(String property, String def) {
-    return GoogleAuthUtils.getProperty(property, def);
+    return System.getProperty(property, def);
   }
 
   boolean isFile(File file) {
