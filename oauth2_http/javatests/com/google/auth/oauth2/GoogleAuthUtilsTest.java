@@ -9,7 +9,7 @@ import org.junit.Test;
 public class GoogleAuthUtilsTest {
   @Test
   public void getWellKnownCredentialsPath_correct() {
-    File homeDir = DefaultCredentialsProviderTest.getTempDirectory();
+    File homeDir = new File(System.getProperty("java.io.tmpdir"));
     File configDir = new File(homeDir, ".config");
     File cloudConfigDir = new File(configDir, DefaultCredentialsProvider.CLOUDSDK_CONFIG_DIRECTORY);
     File wellKnownFile =

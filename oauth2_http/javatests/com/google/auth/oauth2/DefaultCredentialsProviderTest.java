@@ -669,7 +669,7 @@ public class DefaultCredentialsProviderTest {
     return handler.getRecord();
   }
 
-  static File getTempDirectory() {
+  private File getTempDirectory() {
     return new File(System.getProperty("java.io.tmpdir"));
   }
 
@@ -769,7 +769,7 @@ public class DefaultCredentialsProviderTest {
     }
   }
 
-  static class TestDefaultCredentialsProvider extends DefaultCredentialsProvider {
+  private class TestDefaultCredentialsProvider extends DefaultCredentialsProvider {
 
     private final Map<String, Class<?>> types = new HashMap<>();
     private final Map<String, String> variables = new HashMap<>();
