@@ -1,5 +1,5 @@
 /*
- * Copyright 2015, Google Inc. All rights reserved.
+ * Copyright 2023, Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -33,12 +33,16 @@ package com.google.auth.oauth2;
 
 import java.io.File;
 
+/**
+ * This public class provides shared utilities for common OAuth2 utils or ADC. It also exposes
+ * convenience methods such as a getter for well-known Application Default Credentials file path
+ */
 public class GoogleAuthUtils {
 
   /**
-   * Gets the gcloud CLI path
+   * Gets the path to the well-known Application Default Credentials file location
    *
-   * @return the path to the well-known gcloud CLI credentials location
+   * @return the path to the well-known Application Default Credentials file location
    */
   public static final String getWellKnownCredentialsPath() {
     return getWellKnownCredentialsFile(DefaultCredentialsProvider.DEFAULT).getAbsolutePath();
@@ -47,18 +51,18 @@ public class GoogleAuthUtils {
   /**
    * Testing version of getWellKnownCredentialsPath() that uses a custom provider
    *
-   * @return the path to the well-known gcloud CLI credentials location
+   * @return the path to the well-known Application Default Credentials file location
    */
   static final String getWellKnownCredentialsPath(DefaultCredentialsProvider provider) {
     return getWellKnownCredentialsFile(provider).getAbsolutePath();
   }
 
   /**
-   * Platform-independent logic to obtain the gcloud CLI credentials file
+   * Platform-independent logic to obtain the well-known Application Default Credentials file
    *
    * @param provider the provider used to resolve env and system properties (exposed for testing
    *     purposes)
-   * @return the gcloud CLI credentials file
+   * @return the well-known Application Default Credentials file
    */
   static final File getWellKnownCredentialsFile(DefaultCredentialsProvider provider) {
     File cloudConfigPath;
