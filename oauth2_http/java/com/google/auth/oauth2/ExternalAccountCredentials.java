@@ -468,6 +468,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
   /**
    * Exchanges the external credential for a Google Cloud access token.
+   * blablabla
    *
    * @param stsTokenExchangeRequest the Security Token Service token exchange request
    * @return the access token returned by the Security Token Service
