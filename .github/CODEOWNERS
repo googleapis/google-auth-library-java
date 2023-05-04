@@ -65,3 +65,4 @@ oauth2_http/javatests/com/google/auth/PluggableAuthExceptionTest.java           
 oauth2_http/javatests/com/google/auth/PluggableAuthHandlerTest.java                     @googleapis/googleapis-auth @googleapis/aion-sdk
 oauth2_http/javatests/com/google/auth/StsRequestHandlerTest.java                        @googleapis/googleapis-auth @googleapis/aion-sdk
 oauth2_http/javatests/com/google/auth/TestEnvironmentProvider.java                      @googleapis/googleapis-auth @googleapis/aion-sdk
+README.md                                                                               @googleapis/googleapis-auth @googleapis/aion-sdk
