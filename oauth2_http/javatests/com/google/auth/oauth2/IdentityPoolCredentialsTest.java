@@ -103,6 +103,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
                 .setQuotaProjectId("quotaProjectId")
                 .setClientId("clientId")
                 .setClientSecret("clientSecret")
+                .setUniverseDomain("universeDomain")
                 .build();
 
     List<String> newScopes = Arrays.asList("scope1", "scope2");
@@ -121,6 +122,8 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     assertEquals(credentials.getQuotaProjectId(), newCredentials.getQuotaProjectId());
     assertEquals(credentials.getClientId(), newCredentials.getClientId());
     assertEquals(credentials.getClientSecret(), newCredentials.getClientSecret());
+    assertEquals(credentials.getUniverseDomain(), newCredentials.getUniverseDomain());
+    assertEquals("universeDomain", newCredentials.getUniverseDomain());
   }
 
   @Test
@@ -739,6 +742,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
                 .setQuotaProjectId("quotaProjectId")
                 .setClientId("clientId")
                 .setClientSecret("clientSecret")
+                .setUniverseDomain("universeDomain")
                 .build();
 
     IdentityPoolCredentials deserializedCredentials = serializeAndDeserialize(testCredentials);
