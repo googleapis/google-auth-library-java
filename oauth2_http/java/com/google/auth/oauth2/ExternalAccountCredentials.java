@@ -43,7 +43,6 @@ import com.google.auth.oauth2.PluggableAuthCredentials.PluggableAuthCredentialSo
 import com.google.common.base.MoreObjects;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -69,7 +68,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   private static final long serialVersionUID = 8049126194174465023L;
 
   /** Base credential source class. Dictates the retrieval method of the external credential. */
-  abstract static class CredentialSource implements Serializable {
+  abstract static class CredentialSource implements java.io.Serializable {
 
     private static final long serialVersionUID = 8204657811562399944L;
 
@@ -96,6 +95,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   @Nullable private final String serviceAccountImpersonationUrl;
   @Nullable private final String clientId;
   @Nullable private final String clientSecret;
+  @Nullable private final String universeDomain;
 
   // This is used for Workforce Pools. It is passed to the Security Token Service during token
   // exchange in the `options` param and will be embedded in the token by the Security Token
@@ -215,6 +215,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     this.environmentProvider =
         environmentProvider == null ? SystemEnvironmentProvider.getInstance() : environmentProvider;
     this.workforcePoolUserProject = null;
+    this.universeDomain = null;
     this.serviceAccountImpersonationOptions =
         new ServiceAccountImpersonationOptions(new HashMap<String, Object>());
 
@@ -265,6 +266,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       throw new IllegalArgumentException(
           "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.");
     }
+
+    this.universeDomain = builder.universeDomain;
 
     validateTokenUrl(tokenUrl);
     if (serviceAccountImpersonationUrl != null) {
@@ -404,6 +407,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     String clientSecret = (String) json.get("client_secret");
     String quotaProjectId = (String) json.get("quota_project_id");
     String userProject = (String) json.get("workforce_pool_user_project");
+    String universeDomain = (String) json.get("universe_domain");
     Map<String, Object> impersonationOptionsMap =
         (Map<String, Object>) json.get("service_account_impersonation");
 
@@ -424,6 +428,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
           .setClientId(clientId)
           .setClientSecret(clientSecret)
           .setServiceAccountImpersonationOptions(impersonationOptionsMap)
+          .setUniverseDomain(universeDomain)
           .build();
     } else if (isPluggableAuthCredential(credentialSourceMap)) {
       return PluggableAuthCredentials.newBuilder()
@@ -439,6 +444,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
           .setClientSecret(clientSecret)
           .setWorkforcePoolUserProject(userProject)
           .setServiceAccountImpersonationOptions(impersonationOptionsMap)
+          .setUniverseDomain(universeDomain)
           .build();
     }
     return IdentityPoolCredentials.newBuilder()
@@ -454,6 +460,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
         .setClientSecret(clientSecret)
         .setWorkforcePoolUserProject(userProject)
         .setServiceAccountImpersonationOptions(impersonationOptionsMap)
+        .setUniverseDomain(universeDomain)
         .build();
   }
 
@@ -573,6 +580,11 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   }
 
   @Nullable
+  public String getUniverseDomain() {
+    return universeDomain;
+  }
+
+  @Nullable
   public ServiceAccountImpersonationOptions getServiceAccountImpersonationOptions() {
     return serviceAccountImpersonationOptions;
   }
@@ -641,7 +653,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
    * }
    * </pre>
    */
-  static final class ServiceAccountImpersonationOptions implements Serializable {
+  static final class ServiceAccountImpersonationOptions implements java.io.Serializable {
 
     private static final long serialVersionUID = 4250771921886280953L;
     private static final int DEFAULT_TOKEN_LIFETIME_SECONDS = 3600;
@@ -701,6 +713,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     @Nullable protected Collection<String> scopes;
     @Nullable protected String workforcePoolUserProject;
     @Nullable protected ServiceAccountImpersonationOptions serviceAccountImpersonationOptions;
+    @Nullable protected String universeDomain;
 
     protected Builder() {}
 
@@ -719,6 +732,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       this.environmentProvider = credentials.environmentProvider;
       this.workforcePoolUserProject = credentials.workforcePoolUserProject;
       this.serviceAccountImpersonationOptions = credentials.serviceAccountImpersonationOptions;
+      this.universeDomain = credentials.universeDomain;
     }
 
     /**
@@ -868,6 +882,17 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      */
     public Builder setServiceAccountImpersonationOptions(Map<String, Object> optionsMap) {
       this.serviceAccountImpersonationOptions = new ServiceAccountImpersonationOptions(optionsMap);
+      return this;
+    }
+
+    /**
+     * Sets the optional universe domain.
+     *
+     * @param universeDomain the universe domain to set
+     * @return this {@code Builder} object
+     */
+    public Builder setUniverseDomain(String universeDomain) {
+      this.universeDomain = universeDomain;
       return this;
     }
 
