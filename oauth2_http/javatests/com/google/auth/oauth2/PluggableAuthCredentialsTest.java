@@ -414,6 +414,7 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
                 .setQuotaProjectId("quotaProjectId")
                 .setClientId("clientId")
                 .setClientSecret("clientSecret")
+                .setUniverseDomain("universeDomain")
                 .build();
 
     List<String> newScopes = Arrays.asList("scope1", "scope2");
@@ -433,6 +434,8 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
     assertEquals(credentials.getClientId(), newCredentials.getClientId());
     assertEquals(credentials.getClientSecret(), newCredentials.getClientSecret());
     assertEquals(credentials.getExecutableHandler(), newCredentials.getExecutableHandler());
+    assertEquals(credentials.getUniverseDomain(), newCredentials.getUniverseDomain());
+    assertEquals("universeDomain", newCredentials.getUniverseDomain());
   }
 
   @Test
@@ -445,6 +448,7 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
                 .setQuotaProjectId("quotaProjectId")
                 .setClientId("clientId")
                 .setClientSecret("clientSecret")
+                .setUniverseDomain("universeDomain")
                 .build();
 
     // PluggableAuthCredentials are not serializable
