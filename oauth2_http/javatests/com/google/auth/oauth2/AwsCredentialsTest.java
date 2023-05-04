@@ -746,6 +746,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
                 .setQuotaProjectId("quotaProjectId")
                 .setClientId("clientId")
                 .setClientSecret("clientSecret")
+                .setUniverseDomain("universeDomain")
                 .build();
 
     List<String> newScopes = Arrays.asList("scope1", "scope2");
@@ -764,6 +765,8 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     assertEquals(credentials.getClientId(), newCredentials.getClientId());
     assertEquals(credentials.getClientSecret(), newCredentials.getClientSecret());
     assertEquals(newScopes, newCredentials.getScopes());
+    assertEquals(credentials.getUniverseDomain(), newCredentials.getUniverseDomain());
+    assertEquals("universeDomain", newCredentials.getUniverseDomain());
   }
 
   @Test
@@ -991,6 +994,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
                 .setQuotaProjectId("quotaProjectId")
                 .setClientId("clientId")
                 .setClientSecret("clientSecret")
+                .setUniverseDomain("universeDomain")
                 .setScopes(scopes)
                 .build();
 
