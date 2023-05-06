@@ -227,27 +227,16 @@ class DefaultCredentialsProvider {
     return credentials;
   }
 
+  private final File getWellKnownCredentialsFile() {
+    return GoogleAuthUtils.getWellKnownCredentialsFile(this);
+  }
+
   private void warnAboutProblematicCredentials(GoogleCredentials credentials) {
     if (credentials instanceof UserCredentials
         && ((UserCredentials) credentials).getClientId().equals(CLOUDSDK_CLIENT_ID)
         && !Boolean.parseBoolean(getEnv(SUPPRESS_GCLOUD_CREDS_WARNING_ENV_VAR))) {
       LOGGER.log(Level.WARNING, CLOUDSDK_CREDENTIALS_WARNING);
     }
-  }
-
-  private final File getWellKnownCredentialsFile() {
-    File cloudConfigPath;
-    String envPath = getEnv("CLOUDSDK_CONFIG");
-    if (envPath != null) {
-      cloudConfigPath = new File(envPath);
-    } else if (getOsName().indexOf("windows") >= 0) {
-      File appDataPath = new File(getEnv("APPDATA"));
-      cloudConfigPath = new File(appDataPath, CLOUDSDK_CONFIG_DIRECTORY);
-    } else {
-      File configPath = new File(getProperty("user.home", ""), ".config");
-      cloudConfigPath = new File(configPath, CLOUDSDK_CONFIG_DIRECTORY);
-    }
-    return new File(cloudConfigPath, WELL_KNOWN_CREDENTIALS_FILE);
   }
 
   private boolean runningOnAppEngine() {
