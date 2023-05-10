@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.16.1](https://github.com/googleapis/google-auth-library-java/compare/v1.16.0...v1.16.1) (2023-04-07)
+
+
+### Bug Fixes
+
+* Make supporting classes of AwsCredentials serializable ([#1113](https://github.com/googleapis/google-auth-library-java/issues/1113)) ([82bf871](https://github.com/googleapis/google-auth-library-java/commit/82bf871125b8473677a499c979ab9a843972c930))
+* Remove AWS credential source validation. ([#1177](https://github.com/googleapis/google-auth-library-java/issues/1177)) ([77a99c9](https://github.com/googleapis/google-auth-library-java/commit/77a99c9cfab3c1ce2db50c92e89fc292efaeb3ab))
+
 ## [1.16.0](https://github.com/googleapis/google-auth-library-java/compare/v1.15.0...v1.16.0) (2023-02-15)
 
 

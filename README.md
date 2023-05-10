@@ -32,6 +32,7 @@ credentials as well as utility methods to create them and to get Application Def
       * [Configurable Token Lifetime](#configurable-token-lifetime)
   * [Workforce Identity Federation](#workforce-identity-federation)
       * [Accessing resources using an OIDC or SAML 2.0 identity provider](#accessing-resources-using-an-oidc-or-saml-20-identity-provider)
+      * [Accessing resources using external account authorized user workforce credentials](#using-external-account-authorized-user-workforce-credentials)
       * [Accessing resources using Executable-sourced credentials](#using-executable-sourced-workforce-credentials-with-oidc-and-saml)
   * [Downscoping with Credential Access Boundaries](#downscoping-with-credential-access-boundaries)
   * [Configuring a Proxy](#configuring-a-proxy)
@@ -621,6 +622,29 @@ Where the following variables need to be substituted:
 - `$HEADER_KEY` and `$HEADER_VALUE`: The additional header key/value pairs to pass along the GET request to
   `$URL_TO_GET_SAML_ASSERTION`, e.g. `Metadata-Flavor=Google`.
 - `$WORKFORCE_POOL_USER_PROJECT`: The project number associated with the [workforce pools user project](https://cloud.google.com/iam/docs/workforce-identity-federation#workforce-pools-user-project).
+
+#### Using external account authorized user workforce credentials
+
+[External account authorized user credentials](https://cloud.google.com/iam/docs/workforce-obtaining-short-lived-credentials#browser-based-sign-in) allow you to sign in with a web browser to an external identity provider account via the
+gcloud CLI and create a configuration for the auth library to use.
+
+To generate an external account authorized user workforce identity configuration, run the following command:
+
+```bash
+gcloud auth application-default login --login-config=$LOGIN_CONFIG
+```
+
+Where the following variable needs to be substituted:
+- `$LOGIN_CONFIG`: The login config file generated with the cloud console or
+  [gcloud iam workforce-pools create-login-config](https://cloud.google.com/sdk/gcloud/reference/iam/workforce-pools/create-login-config)
+
+This will open a browser flow for you to sign in via the configured third party identity provider
+and then will store the external account authorized user configuration at the well known ADC location.
+The auth library will then use the provided refresh token from the configuration to generate and refresh
+an access token to call Google Cloud services.
+
+Note that the default lifetime of the refresh token is one hour, after which a new configuration will need to be generated from the gcloud CLI.
+The lifetime can be modified by changing the [session duration of the workforce pool](https://cloud.google.com/iam/docs/reference/rest/v1/locations.workforcePools), and can be set as high as 12 hours.
 
 #### Using Executable-sourced workforce credentials with OIDC and SAML
 

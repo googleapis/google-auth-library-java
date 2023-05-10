@@ -783,7 +783,7 @@ public class DefaultCredentialsProviderTest {
     }
   }
 
-  private static class TestDefaultCredentialsProvider extends DefaultCredentialsProvider {
+  static class TestDefaultCredentialsProvider extends DefaultCredentialsProvider {
 
     private final Map<String, Class<?>> types = new HashMap<>();
     private final Map<String, String> variables = new HashMap<>();
