@@ -72,11 +72,8 @@ class DefaultCredentialsProvider {
   static final String CLOUDSDK_CLIENT_ID =
       "764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com";
   static final String CLOUDSDK_CREDENTIALS_WARNING =
-      "Your application has authenticated using end user credentials from Google "
-          + "Cloud SDK. User credentials are not recommended for production environment. "
-          + "You might receive a \"quota exceeded\" or \"API not enabled\" error. For "
-          + "more information on how to troubleshoot, see "
-          + "https://cloud.google.com/docs/authentication/adc-troubleshooting/user-creds.";
+      "You are authenticating using user credentials. "
+          + "For production, we recommend using service account credentials.";
 
   static final String CLOUDSDK_MISSING_CREDENTIALS =
       "Your default credentials were not found. To set up Application Default Credentials, "
@@ -230,7 +227,6 @@ class DefaultCredentialsProvider {
 
   private void warnAboutProblematicCredentials(GoogleCredentials credentials) {
     if (credentials instanceof UserCredentials
-        && ((UserCredentials) credentials).getClientId().equals(CLOUDSDK_CLIENT_ID)
         && !Boolean.parseBoolean(getEnv(SUPPRESS_GCLOUD_CREDS_WARNING_ENV_VAR))
         && ComputeEngineCredentials.checkStaticGceDetection(this)) {
       LOGGER.log(Level.WARNING, CLOUDSDK_CREDENTIALS_WARNING);
