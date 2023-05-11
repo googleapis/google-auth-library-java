@@ -73,12 +73,14 @@ class DefaultCredentialsProvider {
       "764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com";
   static final String CLOUDSDK_CREDENTIALS_WARNING =
       "You are authenticating using user credentials. "
-          + "For production, we recommend using service account credentials.";
+          + "For production, we recommend using service account credentials.\n\n"
+          + "To learn more about service account credentials, see "
+          + "http://cloud.google.com/docs/authentication/external/set-up-adc-on-cloud";
 
   static final String CLOUDSDK_MISSING_CREDENTIALS =
-      "Your default credentials were not found. To set up Application Default Credentials, "
-          + "see https://cloud.google.com/docs/authentication/external/set-up-adc "
-          + "for more information.";
+      "Your default credentials were not found. To set up Application Default Credentials "
+          + "for your environment, see "
+          + "https://cloud.google.com/docs/authentication/external/set-up-adc.";
   public static final String SUPPRESS_GCLOUD_CREDS_WARNING_ENV_VAR =
       "SUPPRESS_GCLOUD_CREDS_WARNING";
 
