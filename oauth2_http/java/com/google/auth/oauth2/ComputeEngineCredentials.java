@@ -37,6 +37,7 @@ import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
@@ -284,6 +285,11 @@ public class ComputeEngineCredentials extends GoogleCredentials
               + " likely because code is not running on Google Compute Engine.",
           exception);
     }
+
+    if (response.getStatusCode() == 503) {
+      GoogleAuthException.createWithTokenEndpointResponseException(new HttpResponseException(response));
+    }
+
     return response;
   }
 
