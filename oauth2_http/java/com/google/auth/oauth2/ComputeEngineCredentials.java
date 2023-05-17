@@ -287,7 +287,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
     }
 
     if (response.getStatusCode() == 503) {
-      GoogleAuthException.createWithTokenEndpointResponseException(new HttpResponseException(response));
+      throw GoogleAuthException.createWithTokenEndpointResponseException(new HttpResponseException(response));
     }
 
     return response;
