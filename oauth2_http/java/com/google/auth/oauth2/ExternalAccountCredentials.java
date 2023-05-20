@@ -580,7 +580,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   }
 
   @Nullable
-  public String getUniverseDomain() {
+  String getUniverseDomain() {
     return universeDomain;
   }
 
