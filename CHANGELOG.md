@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.1](https://github.com/googleapis/google-auth-library-java/compare/v1.17.0...v1.17.1) (2023-05-25)
+
+
+### Dependencies
+
+* Update doclet version to v1.9.0 ([#1211](https://github.com/googleapis/google-auth-library-java/issues/1211)) ([8b6e28e](https://github.com/googleapis/google-auth-library-java/commit/8b6e28e00aa609edefceafbb4f2c1dbc10afd6f9))
+
 ## [1.17.0](https://github.com/googleapis/google-auth-library-java/compare/v1.16.1...v1.17.0) (2023-05-20)
 
 
