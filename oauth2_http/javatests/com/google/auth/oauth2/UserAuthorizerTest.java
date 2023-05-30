@@ -379,7 +379,7 @@ public class UserAuthorizerTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
     transportFactory.transport.addAuthorizationCode(
-        CODE, REFRESH_TOKEN, ACCESS_TOKEN_VALUE, GRANTED_SCOPES_STRING);
+        CODE, REFRESH_TOKEN, ACCESS_TOKEN_VALUE, GRANTED_SCOPES_STRING, null);
     TokenStore tokenStore = new MemoryTokensStorage();
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
@@ -390,6 +390,34 @@ public class UserAuthorizerTest {
             .build();
 
     UserCredentials credentials = authorizer.getCredentialsFromCode(CODE, BASE_URI);
+
+    assertEquals(REFRESH_TOKEN, credentials.getRefreshToken());
+    assertEquals(ACCESS_TOKEN_VALUE, credentials.getAccessToken().getTokenValue());
+    assertEquals(GRANTED_SCOPES, credentials.getAccessToken().getScopes());
+  }
+
+  @Test
+  public void getCredentialsFromCode_additionalParameters() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
+
+    Map<String, String> additionalParameters = new HashMap<String, String>();
+    additionalParameters.put("param1", "value1");
+    additionalParameters.put("param2", "value2");
+
+    transportFactory.transport.addAuthorizationCode(
+        CODE, REFRESH_TOKEN, ACCESS_TOKEN_VALUE, GRANTED_SCOPES_STRING, additionalParameters);
+    TokenStore tokenStore = new MemoryTokensStorage();
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(DUMMY_SCOPES)
+            .setTokenStore(tokenStore)
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    UserCredentials credentials =
+        authorizer.getCredentialsFromCode(CODE, BASE_URI, additionalParameters);
 
     assertEquals(REFRESH_TOKEN, credentials.getRefreshToken());
     assertEquals(ACCESS_TOKEN_VALUE, credentials.getAccessToken().getTokenValue());
@@ -415,7 +443,7 @@ public class UserAuthorizerTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
     transportFactory.transport.addAuthorizationCode(
-        CODE, REFRESH_TOKEN, accessTokenValue1, GRANTED_SCOPES_STRING);
+        CODE, REFRESH_TOKEN, accessTokenValue1, GRANTED_SCOPES_STRING, null);
     TokenStore tokenStore = new MemoryTokensStorage();
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()

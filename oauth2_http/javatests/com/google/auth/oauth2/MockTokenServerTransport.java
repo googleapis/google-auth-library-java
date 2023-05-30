@@ -65,6 +65,8 @@ public class MockTokenServerTransport extends MockHttpTransport {
   final Map<String, String> serviceAccounts = new HashMap<String, String>();
   final Map<String, String> gdchServiceAccounts = new HashMap<String, String>();
   final Map<String, String> codes = new HashMap<String, String>();
+  final Map<String, Map<String, String>> customParameters =
+      new HashMap<String, Map<String, String>>();
   URI tokenServerUri = OAuth2Utils.TOKEN_SERVER_URI;
   private IOException error;
   private final Queue<Future<LowLevelHttpResponse>> responseSequence = new ArrayDeque<>();
@@ -81,10 +83,18 @@ public class MockTokenServerTransport extends MockHttpTransport {
   }
 
   public void addAuthorizationCode(
-      String code, String refreshToken, String accessToken, String grantedScopes) {
+      String code,
+      String refreshToken,
+      String accessToken,
+      String grantedScopes,
+      Map<String, String> customParameters) {
     codes.put(code, refreshToken);
     refreshTokens.put(refreshToken, accessToken);
     this.grantedScopes.put(refreshToken, grantedScopes);
+
+    if (customParameters != null) {
+      this.customParameters.put(refreshToken, customParameters);
+    }
   }
 
   public void addClient(String clientId, String clientSecret) {
@@ -220,6 +230,21 @@ public class MockTokenServerTransport extends MockHttpTransport {
             if (grantedScopes.containsKey(refreshToken)) {
               grantedScopesString = grantedScopes.get(refreshToken);
             }
+
+            if (customParameters.containsKey(refreshToken)) {
+              Map<String, String> customParametersMap = customParameters.get(refreshToken);
+              for (Map.Entry<String, String> entry : customParametersMap.entrySet()) {
+                String key = entry.getKey();
+                String value = entry.getValue();
+                if (!query.containsKey(key)) {
+                  throw new IllegalArgumentException("Missing custom parameter: " + key);
+                } else if (!query.get(key).equals(value)) {
+                  throw new IllegalArgumentException(
+                      "Custom parameter " + key + " does not match: " + value);
+                }
+              }
+            }
+
           } else if (query.containsKey("grant_type")) {
             String grantType = query.get("grant_type");
             String assertion = query.get("assertion");

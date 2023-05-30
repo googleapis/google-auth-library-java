@@ -265,10 +265,27 @@ public class UserAuthorizer {
    *
    * @param code Code returned from OAuth2 consent prompt.
    * @param baseUri The URI to resolve the OAuth2 callback URI relative to.
+   * @param additionalParameters Additional parameters to be added to the post body of token
+   *     endpoint request.
    * @return the UserCredentials instance created from the authorization code.
    * @throws IOException An error from the server API call to get the tokens.
    */
   public UserCredentials getCredentialsFromCode(String code, URI baseUri) throws IOException {
+    return getCredentialsFromCode(code, baseUri, null);
+  }
+
+  /**
+   * Returns a UserCredentials instance by exchanging an OAuth2 authorization code for tokens.
+   *
+   * @param code Code returned from OAuth2 consent prompt.
+   * @param baseUri The URI to resolve the OAuth2 callback URI relative to.
+   * @param additionalParameters Additional parameters to be added to the post body of token
+   *     endpoint request.
+   * @return the UserCredentials instance created from the authorization code.
+   * @throws IOException An error from the server API call to get the tokens.
+   */
+  public UserCredentials getCredentialsFromCode(
+      String code, URI baseUri, Map<String, String> additionalParameters) throws IOException {
     Preconditions.checkNotNull(code);
     URI resolvedCallbackUri = getCallbackUri(baseUri);
 
@@ -278,6 +295,12 @@ public class UserAuthorizer {
     tokenData.put("client_secret", clientId.getClientSecret());
     tokenData.put("redirect_uri", resolvedCallbackUri);
     tokenData.put("grant_type", "authorization_code");
+
+    if (additionalParameters != null) {
+      for (Map.Entry<String, String> entry : additionalParameters.entrySet()) {
+        tokenData.put(entry.getKey(), entry.getValue());
+      }
+    }
 
     if (pkce != null) {
       tokenData.put("code_verifier", pkce.getCodeVerifier());
