@@ -65,7 +65,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
   final Map<String, String> serviceAccounts = new HashMap<String, String>();
   final Map<String, String> gdchServiceAccounts = new HashMap<String, String>();
   final Map<String, String> codes = new HashMap<String, String>();
-  final Map<String, Map<String, String>> customParameters =
+  final Map<String, Map<String, String>> additionalParameters =
       new HashMap<String, Map<String, String>>();
   URI tokenServerUri = OAuth2Utils.TOKEN_SERVER_URI;
   private IOException error;
@@ -87,13 +87,13 @@ public class MockTokenServerTransport extends MockHttpTransport {
       String refreshToken,
       String accessToken,
       String grantedScopes,
-      Map<String, String> customParameters) {
+      Map<String, String> additionalParameters) {
     codes.put(code, refreshToken);
     refreshTokens.put(refreshToken, accessToken);
     this.grantedScopes.put(refreshToken, grantedScopes);
 
-    if (customParameters != null) {
-      this.customParameters.put(refreshToken, customParameters);
+    if (additionalParameters != null) {
+      this.additionalParameters.put(refreshToken, additionalParameters);
     }
   }
 
@@ -231,16 +231,24 @@ public class MockTokenServerTransport extends MockHttpTransport {
               grantedScopesString = grantedScopes.get(refreshToken);
             }
 
-            if (customParameters.containsKey(refreshToken)) {
-              Map<String, String> customParametersMap = customParameters.get(refreshToken);
-              for (Map.Entry<String, String> entry : customParametersMap.entrySet()) {
+            if (additionalParameters.containsKey(refreshToken)) {
+              Map<String, String> additionalParametersMap = additionalParameters.get(refreshToken);
+              for (Map.Entry<String, String> entry : additionalParametersMap.entrySet()) {
                 String key = entry.getKey();
-                String value = entry.getValue();
+                String expectedValue = entry.getValue();
                 if (!query.containsKey(key)) {
-                  throw new IllegalArgumentException("Missing custom parameter: " + key);
-                } else if (!query.get(key).equals(value)) {
-                  throw new IllegalArgumentException(
-                      "Custom parameter " + key + " does not match: " + value);
+                  throw new IllegalArgumentException("Missing additional parameter: " + key);
+                } else {
+                  String actualValue = query.get(key);
+                  if (!expectedValue.equals(actualValue)) {
+                    throw new IllegalArgumentException(
+                        "For additional parameter "
+                            + key
+                            + ", Actual value: "
+                            + actualValue
+                            + ", Expected value: "
+                            + expectedValue);
+                  }
                 }
               }
             }

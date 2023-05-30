@@ -265,8 +265,6 @@ public class UserAuthorizer {
    *
    * @param code Code returned from OAuth2 consent prompt.
    * @param baseUri The URI to resolve the OAuth2 callback URI relative to.
-   * @param additionalParameters Additional parameters to be added to the post body of token
-   *     endpoint request.
    * @return the UserCredentials instance created from the authorization code.
    * @throws IOException An error from the server API call to get the tokens.
    */
