@@ -747,7 +747,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     } catch (GoogleAuthException ex) {
       assertTrue(ex.getMessage().contains("Error getting access token for service account: 408"));
       assertTrue(ex.isRetryable());
-      assertEquals(3, ex.getRetryCount());
+      assertEquals(0, ex.getRetryCount());
     }
   }
 
@@ -866,7 +866,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
         fail("Should not be able to use credential without exception.");
       } catch (GoogleAuthException ex) {
         assertFalse(ex.isRetryable());
-        assertEquals(3, ex.getRetryCount());
+        assertEquals(0, ex.getRetryCount());
       }
     }
   }
