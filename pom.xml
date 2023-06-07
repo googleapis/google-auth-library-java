@@ -171,7 +171,7 @@
           <artifactId>maven-javadoc-plugin</artifactId>
           <version>3.4.1</version>
           <configuration>
-            <source>7</source>
+            <source>8</source>
             <failOnError>false</failOnError>
           </configuration>
           <executions>
@@ -336,7 +336,7 @@
         <configuration>
           <failOnError>false</failOnError>
           <doclint>none</doclint>
-          <source>7</source>
+          <source>8</source>
           <outputDirectory>${project.build.directory}/javadoc</outputDirectory>
           <doctitle>Google Auth Library for Java ${project.version}</doctitle>
           <overview>${basedir}/overview.html</overview>
@@ -483,7 +483,7 @@
         <projectname>${project.artifactId}</projectname>
         <excludeclasses></excludeclasses>
         <excludePackages></excludePackages>
-        <source>7</source>
+        <source>8</source>
         <sourceFileExclude></sourceFileExclude>
       </properties>
       <build>
