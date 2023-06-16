@@ -32,6 +32,7 @@
 package com.google.auth.oauth2;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
@@ -190,23 +191,29 @@ public class UserAuthorizerTest {
     additionalParameters.put("param1", "value1");
     additionalParameters.put("param2", "value2");
 
-    URL authorizationUrl =
-        authorizer.getAuthorizationUrl(USER_ID, CUSTOM_STATE, BASE_URI, additionalParameters);
-
-    assertEquals(PROTOCOL, authorizationUrl.getProtocol());
-    assertEquals(-1, authorizationUrl.getPort());
-    assertEquals(PATH, authorizationUrl.getPath());
-    assertEquals(HOST, authorizationUrl.getHost());
+    // Verify that the authorization URL doesn't include the additional parameters if they are not
+    // passed in.
+    URL authorizationUrl = authorizer.getAuthorizationUrl(USER_ID, CUSTOM_STATE, BASE_URI);
     String query = authorizationUrl.getQuery();
     Map<String, String> parameters = TestUtils.parseQuery(query);
-    assertEquals(CUSTOM_STATE, parameters.get("state"));
-    assertEquals(USER_ID, parameters.get("login_hint"));
-    assertEquals(EXPECTED_CALLBACK, parameters.get("redirect_uri"));
-    assertEquals(CLIENT_ID_VALUE, parameters.get("client_id"));
-    assertEquals(DUMMY_SCOPE, parameters.get("scope"));
-    assertEquals("code", parameters.get("response_type"));
+    assertFalse(parameters.containsKey("param1"));
+    assertFalse(parameters.containsKey("param2"));
+
+    // Verify that the authorization URL includes the additional parameters if they are passed in.
+    authorizationUrl =
+        authorizer.getAuthorizationUrl(USER_ID, CUSTOM_STATE, BASE_URI, additionalParameters);
+    query = authorizationUrl.getQuery();
+    parameters = TestUtils.parseQuery(query);
     assertEquals("value1", parameters.get("param1"));
     assertEquals("value2", parameters.get("param2"));
+
+    // Verify that the authorization URL doesn't include the additional parameters passed in the
+    // previous call to the authorizer
+    authorizationUrl = authorizer.getAuthorizationUrl(USER_ID, CUSTOM_STATE, BASE_URI);
+    query = authorizationUrl.getQuery();
+    parameters = TestUtils.parseQuery(query);
+    assertFalse(parameters.containsKey("param1"));
+    assertFalse(parameters.containsKey("param2"));
   }
 
   @Test
@@ -405,8 +412,15 @@ public class UserAuthorizerTest {
     additionalParameters.put("param1", "value1");
     additionalParameters.put("param2", "value2");
 
+    String code2 = "code2";
+    String refreshToken2 = "refreshToken2";
+    String accessTokenValue2 = "accessTokenValue2";
+
     transportFactory.transport.addAuthorizationCode(
-        CODE, REFRESH_TOKEN, ACCESS_TOKEN_VALUE, GRANTED_SCOPES_STRING, additionalParameters);
+        CODE, REFRESH_TOKEN, ACCESS_TOKEN_VALUE, GRANTED_SCOPES_STRING, null);
+    transportFactory.transport.addAuthorizationCode(
+        code2, refreshToken2, accessTokenValue2, GRANTED_SCOPES_STRING, additionalParameters);
+
     TokenStore tokenStore = new MemoryTokensStorage();
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
@@ -416,9 +430,20 @@ public class UserAuthorizerTest {
             .setHttpTransportFactory(transportFactory)
             .build();
 
-    UserCredentials credentials =
-        authorizer.getCredentialsFromCode(CODE, BASE_URI, additionalParameters);
+    // Verify that the additional parameters are not attached to the post body when not specified
+    UserCredentials credentials = authorizer.getCredentialsFromCode(CODE, BASE_URI);
+    assertEquals(REFRESH_TOKEN, credentials.getRefreshToken());
+    assertEquals(ACCESS_TOKEN_VALUE, credentials.getAccessToken().getTokenValue());
+    assertEquals(GRANTED_SCOPES, credentials.getAccessToken().getScopes());
 
+    // Verify that the additional parameters are attached to the post body when specified
+    credentials = authorizer.getCredentialsFromCode(code2, BASE_URI, additionalParameters);
+    assertEquals(refreshToken2, credentials.getRefreshToken());
+    assertEquals(accessTokenValue2, credentials.getAccessToken().getTokenValue());
+    assertEquals(GRANTED_SCOPES, credentials.getAccessToken().getScopes());
+
+    // Verify that the additional parameters from previous request are not attached to the post body
+    credentials = authorizer.getCredentialsFromCode(CODE, BASE_URI);
     assertEquals(REFRESH_TOKEN, credentials.getRefreshToken());
     assertEquals(ACCESS_TOKEN_VALUE, credentials.getAccessToken().getTokenValue());
     assertEquals(GRANTED_SCOPES, credentials.getAccessToken().getScopes());
