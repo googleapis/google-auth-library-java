@@ -20,7 +20,8 @@ public class GdchCredentialsTestUtil {
   }
 
   public static GdchCredentials fromJson(
-      Map<String, Object> json, MockTokenServerTransportFactory transportFactory) throws IOException {
+      Map<String, Object> json, MockTokenServerTransportFactory transportFactory)
+      throws IOException {
     return GdchCredentials.fromJson(json, transportFactory);
   }
 }
