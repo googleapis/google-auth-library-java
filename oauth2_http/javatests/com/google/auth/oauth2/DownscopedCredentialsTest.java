@@ -204,8 +204,7 @@ public class DownscopedCredentialsTest {
 
   private static GoogleCredentials getServiceAccountSourceCredentials(boolean canRefresh)
       throws IOException {
-    GoogleCredentialsTest.MockTokenServerTransportFactory transportFactory =
-        new GoogleCredentialsTest.MockTokenServerTransportFactory();
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
 
     String email = "service-account@google.com";
 
@@ -228,8 +227,7 @@ public class DownscopedCredentialsTest {
   }
 
   private static GoogleCredentials getUserSourceCredentials() {
-    GoogleCredentialsTest.MockTokenServerTransportFactory transportFactory =
-        new GoogleCredentialsTest.MockTokenServerTransportFactory();
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient("clientId", "clientSecret");
     transportFactory.transport.addRefreshToken("refreshToken", "accessToken");
     AccessToken accessToken = new AccessToken("accessToken", new Date());
