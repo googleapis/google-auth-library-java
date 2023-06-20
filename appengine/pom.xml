@@ -77,6 +77,8 @@
       <artifactId>google-auth-library-oauth2-http</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
+      <version>${project.version}</version>
+      <classifier>testlib</classifier>
     </dependency>
   </dependencies>
 </project>
