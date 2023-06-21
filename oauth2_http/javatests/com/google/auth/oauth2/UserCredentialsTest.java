@@ -60,6 +60,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -804,6 +805,51 @@ public class UserCredentialsTest extends BaseSerializationTest {
         assertEquals(0, ex.getRetryCount());
       }
     }
+  }
+
+  @Test
+  public void refreshAccessToken() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+
+    transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
+    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
+
+    UserCredentials credentials =
+        UserCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setAccessToken(new AccessToken(ACCESS_TOKEN, new Date()))
+            .setHttpTransportFactory(transportFactory)
+            .build();
+    credentials.refresh();
+
+    assertEquals(ACCESS_TOKEN, credentials.getAccessToken().getTokenValue());
+  }
+
+  @Test
+  public void refreshAccessToken_AdditionalParameters() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+
+    Map<String, String> additionalParameters = new HashMap<String, String>();
+    additionalParameters.put("param1", "value1");
+    additionalParameters.put("param2", "value2");
+
+    transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
+    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN, additionalParameters);
+
+    UserCredentials credentials =
+        UserCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setAccessToken(new AccessToken(ACCESS_TOKEN, new Date()))
+            .setHttpTransportFactory(transportFactory)
+            .setAdditionalParameters(additionalParameters)
+            .build();
+    credentials.refresh();
+
+    assertEquals(ACCESS_TOKEN, credentials.getAccessToken().getTokenValue());
   }
 
   @Test

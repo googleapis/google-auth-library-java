@@ -71,6 +71,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
   private final String refreshToken;
   private final URI tokenServerUri;
   private final String transportFactoryClassName;
+  private final Map<String, String> additionalParameters;
 
   private transient HttpTransportFactory transportFactory;
 
@@ -91,6 +92,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     this.tokenServerUri =
         (builder.tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : builder.tokenServerUri;
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
+    this.additionalParameters = builder.additionalParameters;
     Preconditions.checkState(
         builder.getAccessToken() != null || builder.refreshToken != null,
         "Either accessToken or refreshToken must not be null");
@@ -259,6 +261,13 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     tokenRequest.set("client_secret", clientSecret);
     tokenRequest.set("refresh_token", refreshToken);
     tokenRequest.set("grant_type", GRANT_TYPE);
+
+    if (additionalParameters != null) {
+      for (Map.Entry<String, String> entry : additionalParameters.entrySet()) {
+        tokenRequest.set(entry.getKey(), entry.getValue());
+      }
+    }
+
     UrlEncodedContent content = new UrlEncodedContent(tokenRequest);
 
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
@@ -376,6 +385,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     private String refreshToken;
     private URI tokenServerUri;
     private HttpTransportFactory transportFactory;
+    private Map<String, String> additionalParameters;
 
     protected Builder() {}
 
@@ -386,6 +396,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
       this.refreshToken = credentials.refreshToken;
       this.transportFactory = credentials.transportFactory;
       this.tokenServerUri = credentials.tokenServerUri;
+      this.additionalParameters = credentials.additionalParameters;
     }
 
     public Builder setClientId(String clientId) {
@@ -410,6 +421,11 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
 
     public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
       this.transportFactory = transportFactory;
+      return this;
+    }
+
+    public Builder setAdditionalParameters(Map<String, String> additionalParameters) {
+      this.additionalParameters = additionalParameters;
       return this;
     }
 
@@ -451,6 +467,10 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
 
     public HttpTransportFactory getHttpTransportFactory() {
       return transportFactory;
+    }
+
+    public Map<String, String> getAdditionalParameters() {
+      return additionalParameters;
     }
 
     public UserCredentials build() {
