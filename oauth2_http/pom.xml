@@ -136,7 +136,7 @@
               <includes>
                 <include>**/Mock*</include>
                 <include>**/*TestUtil*</include>
-                <include>**/BaseSerializationTest</include>
+                <include>**/BaseSerializationTest*</include>
               </includes>
             </configuration>
           </execution>
