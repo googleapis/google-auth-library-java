@@ -49,7 +49,6 @@ import com.google.auth.Credentials;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.TestClock;
 import com.google.auth.http.AuthHttpConstants;
-import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;

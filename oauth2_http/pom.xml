@@ -125,6 +125,22 @@
             </manifestEntries>
           </archive>
         </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+            <configuration>
+              <skip>false</skip>
+              <classifier>testlib</classifier>
+              <includes>
+                <include>**/Mock*</include>
+                <include>**/*TestUtil*</include>
+                <include>**/BaseSerializationTest*</include>
+              </includes>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

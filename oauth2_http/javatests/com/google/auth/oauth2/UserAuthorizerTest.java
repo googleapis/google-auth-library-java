@@ -38,7 +38,6 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
 import com.google.auth.TestUtils;
-import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
