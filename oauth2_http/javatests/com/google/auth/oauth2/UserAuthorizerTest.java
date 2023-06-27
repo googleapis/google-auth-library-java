@@ -32,17 +32,18 @@
 package com.google.auth.oauth2;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
 import com.google.auth.TestUtils;
-import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
@@ -168,6 +169,50 @@ public class UserAuthorizerTest {
     assertEquals("code", parameters.get("response_type"));
     assertEquals(pkce.getCodeChallenge(), parameters.get("code_challenge"));
     assertEquals(pkce.getCodeChallengeMethod(), parameters.get("code_challenge_method"));
+  }
+
+  @Test
+  public void getAuthorizationUrl_additionalParameters() throws IOException {
+    final String CUSTOM_STATE = "custom_state";
+    final String PROTOCOL = "https";
+    final String HOST = "accounts.test.com";
+    final String PATH = "/o/o/oauth2/auth";
+    final URI AUTH_URI = URI.create(PROTOCOL + "://" + HOST + PATH);
+    final String EXPECTED_CALLBACK = "http://example.com" + CALLBACK_URI.toString();
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(DUMMY_SCOPES)
+            .setCallbackUri(CALLBACK_URI)
+            .setUserAuthUri(AUTH_URI)
+            .build();
+    Map<String, String> additionalParameters = new HashMap<String, String>();
+    additionalParameters.put("param1", "value1");
+    additionalParameters.put("param2", "value2");
+
+    // Verify that the authorization URL doesn't include the additional parameters if they are not
+    // passed in.
+    URL authorizationUrl = authorizer.getAuthorizationUrl(USER_ID, CUSTOM_STATE, BASE_URI);
+    String query = authorizationUrl.getQuery();
+    Map<String, String> parameters = TestUtils.parseQuery(query);
+    assertFalse(parameters.containsKey("param1"));
+    assertFalse(parameters.containsKey("param2"));
+
+    // Verify that the authorization URL includes the additional parameters if they are passed in.
+    authorizationUrl =
+        authorizer.getAuthorizationUrl(USER_ID, CUSTOM_STATE, BASE_URI, additionalParameters);
+    query = authorizationUrl.getQuery();
+    parameters = TestUtils.parseQuery(query);
+    assertEquals("value1", parameters.get("param1"));
+    assertEquals("value2", parameters.get("param2"));
+
+    // Verify that the authorization URL doesn't include the additional parameters passed in the
+    // previous call to the authorizer
+    authorizationUrl = authorizer.getAuthorizationUrl(USER_ID, CUSTOM_STATE, BASE_URI);
+    query = authorizationUrl.getQuery();
+    parameters = TestUtils.parseQuery(query);
+    assertFalse(parameters.containsKey("param1"));
+    assertFalse(parameters.containsKey("param2"));
   }
 
   @Test
@@ -340,7 +385,7 @@ public class UserAuthorizerTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
     transportFactory.transport.addAuthorizationCode(
-        CODE, REFRESH_TOKEN, ACCESS_TOKEN_VALUE, GRANTED_SCOPES_STRING);
+        CODE, REFRESH_TOKEN, ACCESS_TOKEN_VALUE, GRANTED_SCOPES_STRING, null);
     TokenStore tokenStore = new MemoryTokensStorage();
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
@@ -352,6 +397,52 @@ public class UserAuthorizerTest {
 
     UserCredentials credentials = authorizer.getCredentialsFromCode(CODE, BASE_URI);
 
+    assertEquals(REFRESH_TOKEN, credentials.getRefreshToken());
+    assertEquals(ACCESS_TOKEN_VALUE, credentials.getAccessToken().getTokenValue());
+    assertEquals(GRANTED_SCOPES, credentials.getAccessToken().getScopes());
+  }
+
+  @Test
+  public void getCredentialsFromCode_additionalParameters() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
+
+    Map<String, String> additionalParameters = new HashMap<String, String>();
+    additionalParameters.put("param1", "value1");
+    additionalParameters.put("param2", "value2");
+
+    String code2 = "code2";
+    String refreshToken2 = "refreshToken2";
+    String accessTokenValue2 = "accessTokenValue2";
+
+    transportFactory.transport.addAuthorizationCode(
+        CODE, REFRESH_TOKEN, ACCESS_TOKEN_VALUE, GRANTED_SCOPES_STRING, null);
+    transportFactory.transport.addAuthorizationCode(
+        code2, refreshToken2, accessTokenValue2, GRANTED_SCOPES_STRING, additionalParameters);
+
+    TokenStore tokenStore = new MemoryTokensStorage();
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(DUMMY_SCOPES)
+            .setTokenStore(tokenStore)
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    // Verify that the additional parameters are not attached to the post body when not specified
+    UserCredentials credentials = authorizer.getCredentialsFromCode(CODE, BASE_URI);
+    assertEquals(REFRESH_TOKEN, credentials.getRefreshToken());
+    assertEquals(ACCESS_TOKEN_VALUE, credentials.getAccessToken().getTokenValue());
+    assertEquals(GRANTED_SCOPES, credentials.getAccessToken().getScopes());
+
+    // Verify that the additional parameters are attached to the post body when specified
+    credentials = authorizer.getCredentialsFromCode(code2, BASE_URI, additionalParameters);
+    assertEquals(refreshToken2, credentials.getRefreshToken());
+    assertEquals(accessTokenValue2, credentials.getAccessToken().getTokenValue());
+    assertEquals(GRANTED_SCOPES, credentials.getAccessToken().getScopes());
+
+    // Verify that the additional parameters from previous request are not attached to the post body
+    credentials = authorizer.getCredentialsFromCode(CODE, BASE_URI);
     assertEquals(REFRESH_TOKEN, credentials.getRefreshToken());
     assertEquals(ACCESS_TOKEN_VALUE, credentials.getAccessToken().getTokenValue());
     assertEquals(GRANTED_SCOPES, credentials.getAccessToken().getScopes());
@@ -376,7 +467,7 @@ public class UserAuthorizerTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
     transportFactory.transport.addAuthorizationCode(
-        CODE, REFRESH_TOKEN, accessTokenValue1, GRANTED_SCOPES_STRING);
+        CODE, REFRESH_TOKEN, accessTokenValue1, GRANTED_SCOPES_STRING, null);
     TokenStore tokenStore = new MemoryTokensStorage();
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()

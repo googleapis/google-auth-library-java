@@ -52,7 +52,6 @@ import com.google.api.client.util.Clock;
 import com.google.auth.ServiceAccountSigner.SigningException;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
-import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayDeque;

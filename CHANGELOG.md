@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.18.0](https://github.com/googleapis/google-auth-library-java/compare/v1.17.1...v1.18.0) (2023-06-16)
+
+
+### Features
+
+* Introduce a way to pass additional parameters to auhtorization url ([#1134](https://github.com/googleapis/google-auth-library-java/issues/1134)) ([3a2c5d3](https://github.com/googleapis/google-auth-library-java/commit/3a2c5d3d1abf23bce0af7f958240b5f9ee9d1bf8))
+
+## [1.17.1](https://github.com/googleapis/google-auth-library-java/compare/v1.17.0...v1.17.1) (2023-05-25)
+
+
+### Dependencies
+
+* Update doclet version to v1.9.0 ([#1211](https://github.com/googleapis/google-auth-library-java/issues/1211)) ([8b6e28e](https://github.com/googleapis/google-auth-library-java/commit/8b6e28e00aa609edefceafbb4f2c1dbc10afd6f9))
+
 ## [1.17.0](https://github.com/googleapis/google-auth-library-java/compare/v1.16.1...v1.17.0) (2023-05-20)
 
 
