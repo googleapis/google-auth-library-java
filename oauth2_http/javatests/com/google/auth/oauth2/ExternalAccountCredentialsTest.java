@@ -186,6 +186,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(STS_URL, credential.getTokenUrl());
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
     assertNotNull(credential.getCredentialSource());
+    assertNull(credential.getUniverseDomain());
   }
 
   @Test
@@ -203,6 +204,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
     assertEquals("userProject", credential.getWorkforcePoolUserProject());
     assertNotNull(credential.getCredentialSource());
+    assertNull(credential.getUniverseDomain());
   }
 
   @Test
@@ -224,6 +226,27 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
     assertNotNull(credential.getCredentialSource());
     assertEquals(2800, credential.getServiceAccountImpersonationOptions().getLifetime());
+    assertNull(credential.getUniverseDomain());
+  }
+
+  @Test
+  public void fromJson_identityPoolCredentialsWithUniverseDomain() {
+    GenericJson identityPoolCredentialJson = buildJsonIdentityPoolCredential();
+    identityPoolCredentialJson.set("universe_domain", "universeDomain");
+
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(
+            identityPoolCredentialJson, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+
+    assertTrue(credential instanceof IdentityPoolCredentials);
+    assertNotNull(credential.getCredentialSource());
+    assertEquals(
+        "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider",
+        credential.getAudience());
+    assertEquals("subjectTokenType", credential.getSubjectTokenType());
+    assertEquals(STS_URL, credential.getTokenUrl());
+    assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
+    assertEquals("universeDomain", credential.getUniverseDomain());
   }
 
   @Test
@@ -238,6 +261,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(STS_URL, credential.getTokenUrl());
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
     assertNotNull(credential.getCredentialSource());
+    assertNull(credential.getUniverseDomain());
   }
 
   @Test
@@ -256,6 +280,24 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
     assertNotNull(credential.getCredentialSource());
     assertEquals(2800, credential.getServiceAccountImpersonationOptions().getLifetime());
+    assertNull(credential.getUniverseDomain());
+  }
+
+  @Test
+  public void fromJson_awsCredentialsWithUniverseDomain() {
+    GenericJson awsCredentialJson = buildJsonAwsCredential();
+    awsCredentialJson.set("universe_domain", "universeDomain");
+
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(awsCredentialJson, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+
+    assertTrue(credential instanceof AwsCredentials);
+    assertEquals("audience", credential.getAudience());
+    assertEquals("subjectTokenType", credential.getSubjectTokenType());
+    assertEquals(STS_URL, credential.getTokenUrl());
+    assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
+    assertEquals("universeDomain", credential.getUniverseDomain());
+    assertNotNull(credential.getCredentialSource());
   }
 
   @Test
@@ -276,6 +318,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals("command", source.getCommand());
     assertEquals(30000, source.getTimeoutMs()); // Default timeout is 30s.
     assertNull(source.getOutputFilePath());
+    assertNull(credential.getUniverseDomain());
   }
 
   @Test
@@ -300,6 +343,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals("command", source.getCommand());
     assertEquals(30000, source.getTimeoutMs()); // Default timeout is 30s.
     assertNull(source.getOutputFilePath());
+    assertNull(credential.getUniverseDomain());
   }
 
   @Test
@@ -327,6 +371,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals("command", source.getCommand());
     assertEquals("path/to/output/file", source.getOutputFilePath());
     assertEquals(5000, source.getTimeoutMs());
+    assertNull(credential.getUniverseDomain());
   }
 
   @Test
@@ -346,6 +391,61 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
     assertNotNull(credential.getCredentialSource());
     assertEquals(2800, credential.getServiceAccountImpersonationOptions().getLifetime());
+
+    PluggableAuthCredentialSource source =
+        (PluggableAuthCredentialSource) credential.getCredentialSource();
+    assertEquals("command", source.getCommand());
+    assertEquals(30000, source.getTimeoutMs()); // Default timeout is 30s.
+    assertNull(source.getOutputFilePath());
+    assertNull(credential.getUniverseDomain());
+  }
+
+  @Test
+  public void fromJson_pluggableAuthCredentials_withUniverseDomain() {
+    GenericJson json = buildJsonPluggableAuthCredential();
+    json.set("universe_domain", "universeDomain");
+
+    Map<String, Object> credentialSourceMap = (Map<String, Object>) json.get("credential_source");
+    // Add optional params to the executable config (timeout, output file path).
+    Map<String, Object> executableConfig =
+        (Map<String, Object>) credentialSourceMap.get("executable");
+    executableConfig.put("timeout_millis", 5000);
+    executableConfig.put("output_file", "path/to/output/file");
+
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+
+    assertTrue(credential instanceof PluggableAuthCredentials);
+    assertEquals("audience", credential.getAudience());
+    assertEquals("subjectTokenType", credential.getSubjectTokenType());
+    assertEquals(STS_URL, credential.getTokenUrl());
+    assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
+    assertNotNull(credential.getCredentialSource());
+
+    PluggableAuthCredentialSource source =
+        (PluggableAuthCredentialSource) credential.getCredentialSource();
+    assertEquals("command", source.getCommand());
+    assertEquals("path/to/output/file", source.getOutputFilePath());
+    assertEquals(5000, source.getTimeoutMs());
+    assertEquals("universeDomain", credential.getUniverseDomain());
+  }
+
+  @Test
+  public void fromJson_pluggableAuthCredentialsWithUniverseDomain() {
+    GenericJson pluggableAuthCredentialJson = buildJsonPluggableAuthCredential();
+    pluggableAuthCredentialJson.set("universe_domain", "universeDomain");
+
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(
+            pluggableAuthCredentialJson, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+
+    assertTrue(credential instanceof PluggableAuthCredentials);
+    assertEquals("audience", credential.getAudience());
+    assertEquals("subjectTokenType", credential.getSubjectTokenType());
+    assertEquals(STS_URL, credential.getTokenUrl());
+    assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
+    assertNotNull(credential.getCredentialSource());
+    assertEquals("universeDomain", credential.getUniverseDomain());
 
     PluggableAuthCredentialSource source =
         (PluggableAuthCredentialSource) credential.getCredentialSource();
@@ -439,6 +539,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
             .setClientId("clientId")
             .setClientSecret("clientSecret")
             .setWorkforcePoolUserProject("workforcePoolUserProject")
+            .setUniverseDomain("universeDomain")
             .build();
 
     assertEquals(
@@ -454,6 +555,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals("clientId", credentials.getClientId());
     assertEquals("clientSecret", credentials.getClientSecret());
     assertEquals("workforcePoolUserProject", credentials.getWorkforcePoolUserProject());
+    assertEquals("universeDomain", credentials.getUniverseDomain());
     assertNotNull(credentials.getCredentialSource());
   }
 
@@ -562,6 +664,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
           .setClientId("clientId")
           .setClientSecret("clientSecret")
           .setWorkforcePoolUserProject("workforcePoolUserProject")
+          .setUniverseDomain("universeDomain")
           .setServiceAccountImpersonationOptions(invalidOptionsMap)
           .build();
       fail("Should not be able to continue without exception.");
@@ -593,6 +696,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
             .setClientId("clientId")
             .setClientSecret("clientSecret")
             .setWorkforcePoolUserProject("workforcePoolUserProject")
+            .setUniverseDomain("universeDomain")
             .setServiceAccountImpersonationOptions(optionsMap)
             .build();
 
@@ -619,6 +723,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
             .setClientId("clientId")
             .setClientSecret("clientSecret")
             .setWorkforcePoolUserProject("workforcePoolUserProject")
+            .setUniverseDomain("universeDomain")
             .setServiceAccountImpersonationOptions(optionsMap)
             .build();
 
@@ -645,6 +750,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
             .setClientId("clientId")
             .setClientSecret("clientSecret")
             .setWorkforcePoolUserProject("workforcePoolUserProject")
+            .setUniverseDomain("universeDomain")
             .setServiceAccountImpersonationOptions(optionsMap)
             .build();
 
@@ -657,23 +763,23 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     optionsMap.put("token_lifetime_seconds", 599);
 
     try {
-      ExternalAccountCredentials credentials =
-          IdentityPoolCredentials.newBuilder()
-              .setHttpTransportFactory(transportFactory)
-              .setAudience(
-                  "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
-              .setSubjectTokenType("subjectTokenType")
-              .setTokenUrl(STS_URL)
-              .setTokenInfoUrl("https://tokeninfo.com")
-              .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-              .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
-              .setScopes(Arrays.asList("scope1", "scope2"))
-              .setQuotaProjectId("projectId")
-              .setClientId("clientId")
-              .setClientSecret("clientSecret")
-              .setWorkforcePoolUserProject("workforcePoolUserProject")
-              .setServiceAccountImpersonationOptions(optionsMap)
-              .build();
+      IdentityPoolCredentials.newBuilder()
+          .setHttpTransportFactory(transportFactory)
+          .setAudience(
+              "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+          .setSubjectTokenType("subjectTokenType")
+          .setTokenUrl(STS_URL)
+          .setTokenInfoUrl("https://tokeninfo.com")
+          .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+          .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+          .setScopes(Arrays.asList("scope1", "scope2"))
+          .setQuotaProjectId("projectId")
+          .setClientId("clientId")
+          .setClientSecret("clientSecret")
+          .setWorkforcePoolUserProject("workforcePoolUserProject")
+          .setUniverseDomain("universeDomain")
+          .setServiceAccountImpersonationOptions(optionsMap)
+          .build();
     } catch (IllegalArgumentException e) {
       assertEquals(
           "The \"token_lifetime_seconds\" field must be between 600 and 43200 seconds.",
@@ -687,23 +793,23 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     optionsMap.put("token_lifetime_seconds", 43201);
 
     try {
-      ExternalAccountCredentials credentials =
-          IdentityPoolCredentials.newBuilder()
-              .setHttpTransportFactory(transportFactory)
-              .setAudience(
-                  "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
-              .setSubjectTokenType("subjectTokenType")
-              .setTokenUrl(STS_URL)
-              .setTokenInfoUrl("https://tokeninfo.com")
-              .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-              .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
-              .setScopes(Arrays.asList("scope1", "scope2"))
-              .setQuotaProjectId("projectId")
-              .setClientId("clientId")
-              .setClientSecret("clientSecret")
-              .setWorkforcePoolUserProject("workforcePoolUserProject")
-              .setServiceAccountImpersonationOptions(optionsMap)
-              .build();
+      IdentityPoolCredentials.newBuilder()
+          .setHttpTransportFactory(transportFactory)
+          .setAudience(
+              "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+          .setSubjectTokenType("subjectTokenType")
+          .setTokenUrl(STS_URL)
+          .setTokenInfoUrl("https://tokeninfo.com")
+          .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+          .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+          .setScopes(Arrays.asList("scope1", "scope2"))
+          .setQuotaProjectId("projectId")
+          .setClientId("clientId")
+          .setClientSecret("clientSecret")
+          .setWorkforcePoolUserProject("workforcePoolUserProject")
+          .setUniverseDomain("universeDomain")
+          .setServiceAccountImpersonationOptions(optionsMap)
+          .build();
     } catch (IllegalArgumentException e) {
       assertEquals(
           "The \"token_lifetime_seconds\" field must be between 600 and 43200 seconds.",

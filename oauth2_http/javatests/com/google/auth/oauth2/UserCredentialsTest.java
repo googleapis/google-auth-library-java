@@ -45,8 +45,6 @@ import com.google.api.client.util.Clock;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.TestUtils;
 import com.google.auth.http.AuthHttpConstants;
-import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
-import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.ByteArrayInputStream;
@@ -758,7 +756,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     } catch (GoogleAuthException ex) {
       assertTrue(ex.getMessage().contains("com.google.api.client.http.HttpResponseException: 408"));
       assertTrue(ex.isRetryable());
-      assertEquals(3, ex.getRetryCount());
+      assertEquals(0, ex.getRetryCount());
     }
 
     IdTokenCredentials tokenCredential =
@@ -774,7 +772,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     } catch (GoogleAuthException ex) {
       assertTrue(ex.getMessage().contains("com.google.api.client.http.HttpResponseException: 429"));
       assertTrue(ex.isRetryable());
-      assertEquals(3, ex.getRetryCount());
+      assertEquals(0, ex.getRetryCount());
     }
   }
 
@@ -801,7 +799,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
         fail("Should not be able to use credential without exception.");
       } catch (GoogleAuthException ex) {
         assertFalse(ex.isRetryable());
-        assertEquals(3, ex.getRetryCount());
+        assertEquals(0, ex.getRetryCount());
       }
     }
   }

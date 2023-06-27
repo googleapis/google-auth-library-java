@@ -59,8 +59,6 @@ class DefaultCredentialsProvider {
 
   static final String WELL_KNOWN_CREDENTIALS_FILE = "application_default_credentials.json";
   static final String CLOUDSDK_CONFIG_DIRECTORY = "gcloud";
-  static final String HELP_PERMALINK =
-      "https://developers.google.com/accounts/docs/application-default-credentials";
   static final String APP_ENGINE_SIGNAL_CLASS = "com.google.appengine.api.utils.SystemProperty";
   static final String CLOUD_SHELL_ENV_VAR = "DEVSHELL_CLIENT_PORT";
   static final String SKIP_APP_ENGINE_ENV_VAR = "GOOGLE_APPLICATION_CREDENTIALS_SKIP_APP_ENGINE";
@@ -74,12 +72,15 @@ class DefaultCredentialsProvider {
   static final String CLOUDSDK_CLIENT_ID =
       "764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com";
   static final String CLOUDSDK_CREDENTIALS_WARNING =
-      "Your application has authenticated using end user credentials from Google "
-          + "Cloud SDK. We recommend that most server applications use service accounts "
-          + "instead. If your application continues to use end user credentials from Cloud "
-          + "SDK, you might receive a \"quota exceeded\" or \"API not enabled\" error. For "
-          + "more information about service accounts, see "
-          + "https://cloud.google.com/docs/authentication/.";
+      "You are authenticating using user credentials. "
+          + "For production, we recommend using service account credentials.\n\n"
+          + "To learn more about service account credentials, see "
+          + "http://cloud.google.com/docs/authentication/external/set-up-adc-on-cloud";
+
+  static final String CLOUDSDK_MISSING_CREDENTIALS =
+      "Your default credentials were not found. To set up Application Default Credentials "
+          + "for your environment, see "
+          + "https://cloud.google.com/docs/authentication/external/set-up-adc.";
   public static final String SUPPRESS_GCLOUD_CREDS_WARNING_ENV_VAR =
       "SUPPRESS_GCLOUD_CREDS_WARNING";
 
@@ -123,12 +124,7 @@ class DefaultCredentialsProvider {
       }
     }
 
-    throw new IOException(
-        String.format(
-            "The Application Default Credentials are not available. They are available if running"
-                + " in Google Compute Engine. Otherwise, the environment variable %s must be defined"
-                + " pointing to a file defining the credentials. See %s for more information.",
-            CREDENTIAL_ENV_VAR, HELP_PERMALINK));
+    throw new IOException(CLOUDSDK_MISSING_CREDENTIALS);
   }
 
   private final GoogleCredentials getDefaultCredentialsUnsynchronized(
@@ -227,27 +223,16 @@ class DefaultCredentialsProvider {
     return credentials;
   }
 
-  private void warnAboutProblematicCredentials(GoogleCredentials credentials) {
-    if (credentials instanceof UserCredentials
-        && ((UserCredentials) credentials).getClientId().equals(CLOUDSDK_CLIENT_ID)
-        && !Boolean.parseBoolean(getEnv(SUPPRESS_GCLOUD_CREDS_WARNING_ENV_VAR))) {
-      LOGGER.log(Level.WARNING, CLOUDSDK_CREDENTIALS_WARNING);
-    }
+  private final File getWellKnownCredentialsFile() {
+    return GoogleAuthUtils.getWellKnownCredentialsFile(this);
   }
 
-  private final File getWellKnownCredentialsFile() {
-    File cloudConfigPath;
-    String envPath = getEnv("CLOUDSDK_CONFIG");
-    if (envPath != null) {
-      cloudConfigPath = new File(envPath);
-    } else if (getOsName().indexOf("windows") >= 0) {
-      File appDataPath = new File(getEnv("APPDATA"));
-      cloudConfigPath = new File(appDataPath, CLOUDSDK_CONFIG_DIRECTORY);
-    } else {
-      File configPath = new File(getProperty("user.home", ""), ".config");
-      cloudConfigPath = new File(configPath, CLOUDSDK_CONFIG_DIRECTORY);
+  private void warnAboutProblematicCredentials(GoogleCredentials credentials) {
+    if (credentials instanceof UserCredentials
+        && !Boolean.parseBoolean(getEnv(SUPPRESS_GCLOUD_CREDS_WARNING_ENV_VAR))
+        && ComputeEngineCredentials.checkStaticGceDetection(this)) {
+      LOGGER.log(Level.WARNING, CLOUDSDK_CREDENTIALS_WARNING);
     }
-    return new File(cloudConfigPath, WELL_KNOWN_CREDENTIALS_FILE);
   }
 
   private boolean runningOnAppEngine() {

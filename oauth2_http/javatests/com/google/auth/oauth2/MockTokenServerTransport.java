@@ -65,6 +65,8 @@ public class MockTokenServerTransport extends MockHttpTransport {
   final Map<String, String> serviceAccounts = new HashMap<String, String>();
   final Map<String, String> gdchServiceAccounts = new HashMap<String, String>();
   final Map<String, String> codes = new HashMap<String, String>();
+  final Map<String, Map<String, String>> additionalParameters =
+      new HashMap<String, Map<String, String>>();
   URI tokenServerUri = OAuth2Utils.TOKEN_SERVER_URI;
   private IOException error;
   private final Queue<Future<LowLevelHttpResponse>> responseSequence = new ArrayDeque<>();
@@ -81,10 +83,18 @@ public class MockTokenServerTransport extends MockHttpTransport {
   }
 
   public void addAuthorizationCode(
-      String code, String refreshToken, String accessToken, String grantedScopes) {
+      String code,
+      String refreshToken,
+      String accessToken,
+      String grantedScopes,
+      Map<String, String> additionalParameters) {
     codes.put(code, refreshToken);
     refreshTokens.put(refreshToken, accessToken);
     this.grantedScopes.put(refreshToken, grantedScopes);
+
+    if (additionalParameters != null) {
+      this.additionalParameters.put(refreshToken, additionalParameters);
+    }
   }
 
   public void addClient(String clientId, String clientSecret) {
@@ -220,6 +230,29 @@ public class MockTokenServerTransport extends MockHttpTransport {
             if (grantedScopes.containsKey(refreshToken)) {
               grantedScopesString = grantedScopes.get(refreshToken);
             }
+
+            if (additionalParameters.containsKey(refreshToken)) {
+              Map<String, String> additionalParametersMap = additionalParameters.get(refreshToken);
+              for (Map.Entry<String, String> entry : additionalParametersMap.entrySet()) {
+                String key = entry.getKey();
+                String expectedValue = entry.getValue();
+                if (!query.containsKey(key)) {
+                  throw new IllegalArgumentException("Missing additional parameter: " + key);
+                } else {
+                  String actualValue = query.get(key);
+                  if (!expectedValue.equals(actualValue)) {
+                    throw new IllegalArgumentException(
+                        "For additional parameter "
+                            + key
+                            + ", Actual value: "
+                            + actualValue
+                            + ", Expected value: "
+                            + expectedValue);
+                  }
+                }
+              }
+            }
+
           } else if (query.containsKey("grant_type")) {
             String grantType = query.get("grant_type");
             String assertion = query.get("assertion");

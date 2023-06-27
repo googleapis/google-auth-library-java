@@ -1,5 +1,43 @@
 # Changelog
 
+## [1.18.0](https://github.com/googleapis/google-auth-library-java/compare/v1.17.1...v1.18.0) (2023-06-16)
+
+
+### Features
+
+* Introduce a way to pass additional parameters to auhtorization url ([#1134](https://github.com/googleapis/google-auth-library-java/issues/1134)) ([3a2c5d3](https://github.com/googleapis/google-auth-library-java/commit/3a2c5d3d1abf23bce0af7f958240b5f9ee9d1bf8))
+
+## [1.17.1](https://github.com/googleapis/google-auth-library-java/compare/v1.17.0...v1.17.1) (2023-05-25)
+
+
+### Dependencies
+
+* Update doclet version to v1.9.0 ([#1211](https://github.com/googleapis/google-auth-library-java/issues/1211)) ([8b6e28e](https://github.com/googleapis/google-auth-library-java/commit/8b6e28e00aa609edefceafbb4f2c1dbc10afd6f9))
+
+## [1.17.0](https://github.com/googleapis/google-auth-library-java/compare/v1.16.1...v1.17.0) (2023-05-20)
+
+
+### Features
+
+* Adds universe_domain to external account creds ([#1199](https://github.com/googleapis/google-auth-library-java/issues/1199)) ([608ee87](https://github.com/googleapis/google-auth-library-java/commit/608ee87c92b3e6c355541b50e39387b03deebdf8))
+* Expose method to manually obtain ADC from gcloud CLI well-known… ([#1188](https://github.com/googleapis/google-auth-library-java/issues/1188)) ([2fa9d52](https://github.com/googleapis/google-auth-library-java/commit/2fa9d5211569f802948ed2d1aaf13f7d37f8409c))
+* Updating readme for external account authorized user credentials ([#1200](https://github.com/googleapis/google-auth-library-java/issues/1200)) ([bf25574](https://github.com/googleapis/google-auth-library-java/commit/bf255749b7b403cc5f7538f6e901d9089f529fca))
+
+
+### Bug Fixes
+
+* Do not expose universe_domain yet ([#1206](https://github.com/googleapis/google-auth-library-java/issues/1206)) ([9cce49c](https://github.com/googleapis/google-auth-library-java/commit/9cce49cbba26892e573629b4d11a375eb6ec28fc))
+* Improve errors and warnings related to ADC ([#1172](https://github.com/googleapis/google-auth-library-java/issues/1172)) ([6d2251c](https://github.com/googleapis/google-auth-library-java/commit/6d2251cd8e87b018a65a9296bb5c10f487b304cb))
+* Marking 503 as retryable for Compute credentials ([#1205](https://github.com/googleapis/google-auth-library-java/issues/1205)) ([8ea9445](https://github.com/googleapis/google-auth-library-java/commit/8ea9445a3b738e74c6fc0b59f593b32ef0df5314))
+
+## [1.16.1](https://github.com/googleapis/google-auth-library-java/compare/v1.16.0...v1.16.1) (2023-04-07)
+
+
+### Bug Fixes
+
+* Make supporting classes of AwsCredentials serializable ([#1113](https://github.com/googleapis/google-auth-library-java/issues/1113)) ([82bf871](https://github.com/googleapis/google-auth-library-java/commit/82bf871125b8473677a499c979ab9a843972c930))
+* Remove AWS credential source validation. ([#1177](https://github.com/googleapis/google-auth-library-java/issues/1177)) ([77a99c9](https://github.com/googleapis/google-auth-library-java/commit/77a99c9cfab3c1ce2db50c92e89fc292efaeb3ab))
+
 ## [1.16.0](https://github.com/googleapis/google-auth-library-java/compare/v1.15.0...v1.16.0) (2023-02-15)
 
 

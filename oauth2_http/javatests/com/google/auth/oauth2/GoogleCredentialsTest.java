@@ -33,8 +33,6 @@ package com.google.auth.oauth2;
 
 import static org.junit.Assert.*;
 
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
@@ -92,26 +90,6 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
       Collections.unmodifiableCollection(Arrays.asList("scope1", "scope2"));
   private static final Collection<String> DEFAULT_SCOPES =
       Collections.unmodifiableCollection(Arrays.asList("scope3"));
-
-  static class MockHttpTransportFactory implements HttpTransportFactory {
-
-    MockHttpTransport transport = new MockHttpTransport();
-
-    @Override
-    public HttpTransport create() {
-      return transport;
-    }
-  }
-
-  public static class MockTokenServerTransportFactory implements HttpTransportFactory {
-
-    public MockTokenServerTransport transport = new MockTokenServerTransport();
-
-    @Override
-    public HttpTransport create() {
-      return transport;
-    }
-  }
 
   @Test
   public void getApplicationDefault_nullTransport_throws() throws IOException {
