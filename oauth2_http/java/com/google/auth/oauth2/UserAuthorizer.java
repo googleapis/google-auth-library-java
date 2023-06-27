@@ -50,6 +50,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /** Handles an interactive 3-Legged-OAuth2 (3LO) user consent authorization. */
 public class UserAuthorizer {
@@ -168,6 +169,20 @@ public class UserAuthorizer {
    * @return The URL that can be navigated or redirected to.
    */
   public URL getAuthorizationUrl(String userId, String state, URI baseUri) {
+    return this.getAuthorizationUrl(userId, state, baseUri, null);
+  }
+
+  /**
+   * Return an URL that performs the authorization consent prompt web UI.
+   *
+   * @param userId Application's identifier for the end user.
+   * @param state State that is passed on to the OAuth2 callback URI after the consent.
+   * @param baseUri The URI to resolve the OAuth2 callback URI relative to.
+   * @param additionalParameters Additional query parameters to be added to the authorization URL.
+   * @return The URL that can be navigated or redirected to.
+   */
+  public URL getAuthorizationUrl(
+      String userId, String state, URI baseUri, Map<String, String> additionalParameters) {
     URI resolvedCallbackUri = getCallbackUri(baseUri);
     String scopesString = Joiner.on(' ').join(scopes);
 
@@ -185,6 +200,13 @@ public class UserAuthorizer {
       url.put("login_hint", userId);
     }
     url.put("include_granted_scopes", true);
+
+    if (additionalParameters != null) {
+      for (Map.Entry<String, String> entry : additionalParameters.entrySet()) {
+        url.put(entry.getKey(), entry.getValue());
+      }
+    }
+
     if (pkce != null) {
       url.put("code_challenge", pkce.getCodeChallenge());
       url.put("code_challenge_method", pkce.getCodeChallengeMethod());
@@ -247,6 +269,21 @@ public class UserAuthorizer {
    * @throws IOException An error from the server API call to get the tokens.
    */
   public UserCredentials getCredentialsFromCode(String code, URI baseUri) throws IOException {
+    return getCredentialsFromCode(code, baseUri, null);
+  }
+
+  /**
+   * Returns a UserCredentials instance by exchanging an OAuth2 authorization code for tokens.
+   *
+   * @param code Code returned from OAuth2 consent prompt.
+   * @param baseUri The URI to resolve the OAuth2 callback URI relative to.
+   * @param additionalParameters Additional parameters to be added to the post body of token
+   *     endpoint request.
+   * @return the UserCredentials instance created from the authorization code.
+   * @throws IOException An error from the server API call to get the tokens.
+   */
+  public UserCredentials getCredentialsFromCode(
+      String code, URI baseUri, Map<String, String> additionalParameters) throws IOException {
     Preconditions.checkNotNull(code);
     URI resolvedCallbackUri = getCallbackUri(baseUri);
 
@@ -256,6 +293,12 @@ public class UserAuthorizer {
     tokenData.put("client_secret", clientId.getClientSecret());
     tokenData.put("redirect_uri", resolvedCallbackUri);
     tokenData.put("grant_type", "authorization_code");
+
+    if (additionalParameters != null) {
+      for (Map.Entry<String, String> entry : additionalParameters.entrySet()) {
+        tokenData.put(entry.getKey(), entry.getValue());
+      }
+    }
 
     if (pkce != null) {
       tokenData.put("code_verifier", pkce.getCodeVerifier());
