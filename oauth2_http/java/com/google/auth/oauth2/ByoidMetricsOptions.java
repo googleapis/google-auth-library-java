@@ -31,7 +31,6 @@
 
 package com.google.auth.oauth2;
 
-
 class ByoidMetricsHandler implements java.io.Serializable {
   private static final String SOURCE_KEY = "source";
   private static final String IMPERSONATION_KEY = "sa-impersonation";
