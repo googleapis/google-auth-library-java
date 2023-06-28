@@ -40,7 +40,6 @@ import com.google.auth.RequestMetadataCallback;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.AwsCredentials.AwsCredentialSource;
 import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSource;
-import com.google.auth.oauth2.ByoidMetricsHandler;
 import com.google.auth.oauth2.PluggableAuthCredentials.PluggableAuthCredentialSource;
 import com.google.common.base.MoreObjects;
 import java.io.IOException;
@@ -81,7 +80,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
   private static final String CLOUD_PLATFORM_SCOPE =
       "https://www.googleapis.com/auth/cloud-platform";
-
 
   static final String EXTERNAL_ACCOUNT_FILE_TYPE = "external_account";
   static final String EXECUTABLE_SOURCE_KEY = "executable";
@@ -280,9 +278,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       validateServiceAccountImpersonationInfoUrl(serviceAccountImpersonationUrl);
     }
 
-    this.metricsHandler = builder.metricsHandler == null
-        ? this.getDefaultMetricsHandler()
-        : builder.metricsHandler;
+    this.metricsHandler =
+        builder.metricsHandler == null ? this.getDefaultMetricsHandler() : builder.metricsHandler;
 
     this.impersonatedCredentials = buildImpersonatedCredentials();
   }
@@ -523,7 +520,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
     // Set BYOID Metrics header.
     HttpHeaders additionalHeaders = new HttpHeaders();
-    additionalHeaders.set(MetricsUtils.API_CLIENT_HEADER, this.metricsHandler.getByoidMetricsHeader());
+    additionalHeaders.set(
+        MetricsUtils.API_CLIENT_HEADER, this.metricsHandler.getByoidMetricsHeader());
     requestHandler.setHeaders(additionalHeaders);
 
     if (stsTokenExchangeRequest.getInternalOptions() != null) {

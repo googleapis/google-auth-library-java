@@ -39,8 +39,8 @@ class MetricsUtils {
   static final String API_CLIENT_HEADER = "x-goog-api-client";
   private static final String libVersion = getLibVersion();
 
-  static String getAuthAndLibVersion(){
-    return String.format("gl-java/%s auth/%s",System.getProperty("java.version"), libVersion);
+  static String getAuthAndLibVersion() {
+    return String.format("gl-java/%s auth/%s", System.getProperty("java.version"), libVersion);
   }
 
   private static String getLibVersion() {
@@ -60,5 +60,4 @@ class MetricsUtils {
     }
     return version;
   }
-
 }

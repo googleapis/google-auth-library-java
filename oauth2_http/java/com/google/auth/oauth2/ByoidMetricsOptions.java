@@ -31,12 +31,11 @@
 
 package com.google.auth.oauth2;
 
-import io.opencensus.metrics.Metrics;
 
-class ByoidMetricsHandler implements java.io.Serializable{
-  private final static String SOURCE_KEY = "source";
-  private final static String IMPERSONATION_KEY = "sa-impersonation";
-  private final static String CONFIG_LIFETIME_KEY = "config-lifetime";
+class ByoidMetricsHandler implements java.io.Serializable {
+  private static final String SOURCE_KEY = "source";
+  private static final String IMPERSONATION_KEY = "sa-impersonation";
+  private static final String CONFIG_LIFETIME_KEY = "config-lifetime";
 
   private final boolean configLifetime;
   private final boolean saImpersonation;
@@ -48,8 +47,17 @@ class ByoidMetricsHandler implements java.io.Serializable{
     this.source = source;
   }
 
-  String getByoidMetricsHeader(){
-    return String.format("%s %s %s/%s %s/%s %s/%s", MetricsUtils.API_CLIENT_HEADER, MetricsUtils.getAuthAndLibVersion(), SOURCE_KEY, this.source, IMPERSONATION_KEY, this.saImpersonation, CONFIG_LIFETIME_KEY, this.configLifetime);
+  String getByoidMetricsHeader() {
+    return String.format(
+        "%s %s %s/%s %s/%s %s/%s",
+        MetricsUtils.API_CLIENT_HEADER,
+        MetricsUtils.getAuthAndLibVersion(),
+        SOURCE_KEY,
+        this.source,
+        IMPERSONATION_KEY,
+        this.saImpersonation,
+        CONFIG_LIFETIME_KEY,
+        this.configLifetime);
   }
 
   void setSource(String source) {

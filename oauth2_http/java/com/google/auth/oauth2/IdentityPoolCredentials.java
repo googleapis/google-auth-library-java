@@ -195,10 +195,10 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   @Override
   protected String getMetricsSource() {
-    if (((IdentityPoolCredentialSource)this.getCredentialSource()).credentialSourceType == IdentityPoolCredentialSourceType.FILE){
+    if (((IdentityPoolCredentialSource) this.getCredentialSource()).credentialSourceType
+        == IdentityPoolCredentialSourceType.FILE) {
       return "file";
-    }
-    else {
+    } else {
       return "url";
     }
   }

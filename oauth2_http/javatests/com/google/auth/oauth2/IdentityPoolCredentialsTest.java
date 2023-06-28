@@ -331,8 +331,9 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
 
     // Validate metrics header is set correctly on the sts request.
-    Map<String, List<String>> headers = transportFactory.transport.getRequests().get(1).getHeaders();
-    ExternalAccountCredentialsTest.validateMetricsHeader(headers,"url", false, false);
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(1).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "url", false, false);
   }
 
   @Test
@@ -393,8 +394,9 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
         transportFactory.transport.getServiceAccountAccessToken(), accessToken.getTokenValue());
 
     // Validate metrics header is set correctly on the sts request.
-    Map<String, List<String>> headers = transportFactory.transport.getRequests().get(2).getHeaders();
-    ExternalAccountCredentialsTest.validateMetricsHeader(headers,"url", true, false);
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(2).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "url", true, false);
   }
 
   @Test
@@ -431,8 +433,9 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     assertEquals("2800s", query.get("lifetime"));
 
     // Validate metrics header is set correctly on the sts request.
-    Map<String, List<String>> headers = transportFactory.transport.getRequests().get(2).getHeaders();
-    ExternalAccountCredentialsTest.validateMetricsHeader(headers,"url", true, true);
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(2).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "url", true, true);
   }
 
   @Test
