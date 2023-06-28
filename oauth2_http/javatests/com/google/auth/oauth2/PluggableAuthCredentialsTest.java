@@ -200,6 +200,10 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
     Map<String, String> query =
         TestUtils.parseQuery(transportFactory.transport.getRequests().get(0).getContentAsString());
     assertEquals(query.get("subject_token"), "pluggableAuthToken");
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers = transportFactory.transport.getRequests().get(0).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers,"executable", false, false);
   }
 
   @Test
@@ -217,6 +221,7 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
                 .setServiceAccountImpersonationUrl(
                     transportFactory.transport.getServiceAccountImpersonationUrl())
                 .setHttpTransportFactory(transportFactory)
+                .setMetricsHandler(null)
                 .build();
 
     AccessToken accessToken = credential.refreshAccessToken();
@@ -228,6 +233,10 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
     Map<String, String> query =
         TestUtils.parseQuery(transportFactory.transport.getRequests().get(0).getContentAsString());
     assertEquals(query.get("subject_token"), "pluggableAuthToken");
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers = transportFactory.transport.getRequests().get(0).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers,"executable", true, false);
   }
 
   @Test
@@ -247,6 +256,7 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
                 .setHttpTransportFactory(transportFactory)
                 .setServiceAccountImpersonationOptions(
                     ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(2800))
+                .setMetricsHandler(null)
                 .build();
 
     AccessToken accessToken = credential.refreshAccessToken();
@@ -261,6 +271,10 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
             .parseAndClose(GenericJson.class);
 
     assertEquals("2800s", query.get("lifetime"));
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers = transportFactory.transport.getRequests().get(0).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers,"executable", true, true);
   }
 
   @Test

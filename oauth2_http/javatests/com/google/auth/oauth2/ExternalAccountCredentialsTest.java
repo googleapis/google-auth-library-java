@@ -834,6 +834,10 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     Map<String, String> query =
         TestUtils.parseQuery(transportFactory.transport.getLastRequest().getContentAsString());
     assertNull(query.get("options"));
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers = transportFactory.transport.getRequests().get(0).getHeaders();
+    validateMetricsHeader(headers,"file", false, false);
   }
 
   @Test
@@ -952,6 +956,10 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
             .parseAndClose(GenericJson.class);
 
     assertEquals("3600s", query.get("lifetime"));
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers = transportFactory.transport.getRequests().get(1).getHeaders();
+    validateMetricsHeader(headers,"url", true, false);
   }
 
   @Test
@@ -983,6 +991,9 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
             .createJsonParser(transportFactory.transport.getLastRequest().getContentAsString())
             .parseAndClose(GenericJson.class);
 
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers = transportFactory.transport.getRequests().get(1).getHeaders();
+    validateMetricsHeader(headers,"url", true, true);
     assertEquals("2800s", query.get("lifetime"));
   }
 
@@ -1255,6 +1266,13 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     map.put("token_lifetime_seconds", lifetime);
 
     return map;
+  }
+
+  static void validateMetricsHeader( Map<String, List<String>> headers, String source, boolean saImpersonationUsed, boolean configLifetimeUsed){
+    assertTrue(headers.containsKey(MetricsUtils.API_CLIENT_HEADER));
+    String actualMetricsValue = headers.get(MetricsUtils.API_CLIENT_HEADER).get(0);
+    String expectedMetricsValue = String.format("%s %s source/%s sa-impersonation/%s config-lifetime/%s", MetricsUtils.API_CLIENT_HEADER, MetricsUtils.getAuthAndLibVersion(), source, saImpersonationUsed, configLifetimeUsed);
+    assertEquals(expectedMetricsValue, actualMetricsValue);
   }
 
   static class TestExternalAccountCredentials extends ExternalAccountCredentials {

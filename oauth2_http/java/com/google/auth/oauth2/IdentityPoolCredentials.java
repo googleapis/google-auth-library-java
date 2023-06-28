@@ -38,6 +38,7 @@ import com.google.api.client.http.HttpResponse;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSource.CredentialFormatType;
+import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSource.IdentityPoolCredentialSourceType;
 import com.google.common.io.CharStreams;
 import java.io.BufferedReader;
 import java.io.File;
@@ -190,6 +191,16 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       return retrieveSubjectTokenFromCredentialFile();
     }
     return getSubjectTokenFromMetadataServer();
+  }
+
+  @Override
+  protected String getMetricsSource() {
+    if (((IdentityPoolCredentialSource)this.getCredentialSource()).credentialSourceType == IdentityPoolCredentialSourceType.FILE){
+      return "file";
+    }
+    else {
+      return "url";
+    }
   }
 
   private String retrieveSubjectTokenFromCredentialFile() throws IOException {
