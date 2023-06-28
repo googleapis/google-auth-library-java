@@ -43,7 +43,6 @@ import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.auth.http.HttpTransportFactory;
-import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
 import com.google.auth.oauth2.TokenVerifier.VerificationException;
 import com.google.common.io.CharStreams;
 import java.io.IOException;

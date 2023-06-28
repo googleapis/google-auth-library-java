@@ -45,8 +45,6 @@ import com.google.api.client.util.Clock;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.TestUtils;
 import com.google.auth.http.AuthHttpConstants;
-import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
-import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.ByteArrayInputStream;

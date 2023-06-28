@@ -46,7 +46,6 @@ import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.client.testing.http.FixedClock;
 import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
-import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -510,11 +509,14 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
     GdchCredentials gdchWithAudience = credentials.createWithGdchAudience(API_AUDIENCE);
 
-    gdchWithAudience.clock = new FixedClock(0L);
+    GdchCredentialsTestUtil.registerGdchCredentialWithMockTransport(
+        gdchWithAudience,
+        transportFactory.transport,
+        PROJECT_ID,
+        SERVICE_IDENTITY_NAME,
+        tokenString,
+        TOKEN_SERVER_URI);
 
-    transportFactory.transport.addGdchServiceAccount(
-        GdchCredentials.getIssuerSubjectValue(PROJECT_ID, SERVICE_IDENTITY_NAME), tokenString);
-    transportFactory.transport.setTokenServerUri(TOKEN_SERVER_URI);
     AccessToken accessToken = gdchWithAudience.refreshAccessToken();
     assertNotNull(accessToken);
     assertEquals(tokenString, accessToken.getTokenValue());
