@@ -31,6 +31,10 @@
 
 package com.google.auth.oauth2;
 
+/**
+ * A handler for generating the x-goog-api-client header value for BYOID external account
+ * credentials.
+ */
 class ByoidMetricsHandler implements java.io.Serializable {
   private static final String SOURCE_KEY = "source";
   private static final String IMPERSONATION_KEY = "sa-impersonation";
@@ -40,26 +44,32 @@ class ByoidMetricsHandler implements java.io.Serializable {
   private final boolean saImpersonation;
   private String source;
 
-  ByoidMetricsHandler(boolean saImpersonation, boolean configLifetime, String source) {
-    this.saImpersonation = saImpersonation;
-    this.configLifetime = configLifetime;
-    this.source = source;
+  /**
+   * Constructor for the BYOID Metrics Handler.
+   *
+   * @param creds the {@code ExternalAccountCredentials} object to set the BYOID metrics options
+   * from.
+   */
+  ByoidMetricsHandler(ExternalAccountCredentials creds) {
+    this.saImpersonation = creds.getServiceAccountImpersonationUrl() != null;
+    this.configLifetime = creds.getServiceAccountImpersonationOptions().customTokenLifetimeRequested;
+    this.source = creds.getCredentialSourceType();
   }
 
+  /**
+   * Gets the BYOID metrics header value for the x-goog-api-client header.
+   * @return the header value.
+   */
   String getByoidMetricsHeader() {
     return String.format(
         "%s %s %s/%s %s/%s %s/%s",
         MetricsUtils.API_CLIENT_HEADER,
-        MetricsUtils.getAuthAndLibVersion(),
+        MetricsUtils.getLangAndAuthLibVersions(),
         SOURCE_KEY,
         this.source,
         IMPERSONATION_KEY,
         this.saImpersonation,
         CONFIG_LIFETIME_KEY,
         this.configLifetime);
-  }
-
-  void setSource(String source) {
-    this.source = source;
   }
 }

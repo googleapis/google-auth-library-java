@@ -226,7 +226,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       validateServiceAccountImpersonationInfoUrl(serviceAccountImpersonationUrl);
     }
 
-    this.metricsHandler = this.getDefaultMetricsHandler();
+    this.metricsHandler = new ByoidMetricsHandler(this);
 
     this.impersonatedCredentials = buildImpersonatedCredentials();
   }
@@ -279,7 +279,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     }
 
     this.metricsHandler =
-        builder.metricsHandler == null ? this.getDefaultMetricsHandler() : builder.metricsHandler;
+        builder.metricsHandler == null ? new ByoidMetricsHandler(this) : builder.metricsHandler;
 
     this.impersonatedCredentials = buildImpersonatedCredentials();
   }
@@ -317,12 +317,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
         .setLifetime(this.serviceAccountImpersonationOptions.lifetime)
         .setIamEndpointOverride(serviceAccountImpersonationUrl)
         .build();
-  }
-
-  private ByoidMetricsHandler getDefaultMetricsHandler() {
-    boolean saImpersonation = (this.serviceAccountImpersonationUrl != null);
-    boolean configLifetime = this.serviceAccountImpersonationOptions.customLifetimeProvided;
-    return new ByoidMetricsHandler(saImpersonation, configLifetime, this.getMetricsSource());
   }
 
   void overrideImpersonatedCredentials(ImpersonatedCredentials credentials) {
@@ -608,7 +602,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     return serviceAccountImpersonationOptions;
   }
 
-  protected String getMetricsSource() {
+  String getCredentialSourceType() {
     return "unknown";
   }
 
@@ -686,16 +680,15 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
     private final int lifetime;
 
-    private final boolean customLifetimeProvided;
+    final boolean customTokenLifetimeRequested;
 
     ServiceAccountImpersonationOptions(Map<String, Object> optionsMap) {
-      if (!optionsMap.containsKey(TOKEN_LIFETIME_SECONDS_KEY)) {
+      customTokenLifetimeRequested = optionsMap.containsKey(TOKEN_LIFETIME_SECONDS_KEY);
+      if (!customTokenLifetimeRequested) {
         lifetime = DEFAULT_TOKEN_LIFETIME_SECONDS;
-        customLifetimeProvided = false;
         return;
       }
 
-      customLifetimeProvided = true;
       try {
         Object lifetimeValue = optionsMap.get(TOKEN_LIFETIME_SECONDS_KEY);
         if (lifetimeValue instanceof BigDecimal) {

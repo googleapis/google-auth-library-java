@@ -198,7 +198,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
   }
 
   @Override
-  protected String getMetricsSource() {
+  String getCredentialSourceType() {
     return "aws";
   }
 

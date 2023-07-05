@@ -293,7 +293,7 @@ public class PluggableAuthCredentials extends ExternalAccountCredentials {
   }
 
   @Override
-  protected String getMetricsSource() {
+  String getCredentialSourceType() {
     return "executable";
   }
 

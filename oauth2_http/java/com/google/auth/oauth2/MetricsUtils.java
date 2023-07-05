@@ -37,13 +37,19 @@ import java.util.Properties;
 
 class MetricsUtils {
   static final String API_CLIENT_HEADER = "x-goog-api-client";
-  private static final String libVersion = getLibVersion();
+  private static final String authLibVersion = getAuthLibVersion();
+  private static final String javaLangVersion = System.getProperty("java.version");
 
-  static String getAuthAndLibVersion() {
-    return String.format("gl-java/%s auth/%s", System.getProperty("java.version"), libVersion);
+  /**
+   * Gets the x-goog-api-client header value for the current Java language version and the auth
+   * library version.
+   * @return the header value.
+   */
+  static String getLangAndAuthLibVersions() {
+    return String.format("gl-java/%s auth/%s", javaLangVersion, authLibVersion);
   }
 
-  private static String getLibVersion() {
+  private static String getAuthLibVersion() {
     // attempt to read the library's version from a properties file generated during the build
     // this value should be read and cached for later use
     String version = "unknown-version";
