@@ -62,7 +62,7 @@ class MetricsUtils {
         version = properties.getProperty("google-auth-library.version");
       }
     } catch (IOException e) {
-      // ignore
+      // Ignore.
     }
     return version;
   }
