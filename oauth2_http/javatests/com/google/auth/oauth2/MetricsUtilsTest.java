@@ -51,7 +51,7 @@ public class MetricsUtilsTest {
 
   @Test
   public void getVersionWorks() {
-    String version = MetricsUtils.getAuthAndLibVersion();
+    String version = MetricsUtils.getLangAndAuthLibVersions();
     assertVersion(version);
   }
 }
