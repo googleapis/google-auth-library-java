@@ -1282,7 +1282,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
         String.format(
             "%s %s source/%s sa-impersonation/%s config-lifetime/%s",
             MetricsUtils.API_CLIENT_HEADER,
-            MetricsUtils.getLangAndAuthLibVersions(),
+            MetricsUtils.getLanguageAndAuthLibraryVersions(),
             source,
             saImpersonationUsed,
             configLifetimeUsed);

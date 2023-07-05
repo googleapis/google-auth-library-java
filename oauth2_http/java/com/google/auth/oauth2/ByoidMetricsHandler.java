@@ -48,23 +48,25 @@ class ByoidMetricsHandler implements java.io.Serializable {
    * Constructor for the BYOID Metrics Handler.
    *
    * @param creds the {@code ExternalAccountCredentials} object to set the BYOID metrics options
-   * from.
+   *     from.
    */
   ByoidMetricsHandler(ExternalAccountCredentials creds) {
     this.saImpersonation = creds.getServiceAccountImpersonationUrl() != null;
-    this.configLifetime = creds.getServiceAccountImpersonationOptions().customTokenLifetimeRequested;
+    this.configLifetime =
+        creds.getServiceAccountImpersonationOptions().customTokenLifetimeRequested;
     this.source = creds.getCredentialSourceType();
   }
 
   /**
    * Gets the BYOID metrics header value for the x-goog-api-client header.
+   *
    * @return the header value.
    */
   String getByoidMetricsHeader() {
     return String.format(
         "%s %s %s/%s %s/%s %s/%s",
         MetricsUtils.API_CLIENT_HEADER,
-        MetricsUtils.getLangAndAuthLibVersions(),
+        MetricsUtils.getLanguageAndAuthLibraryVersions(),
         SOURCE_KEY,
         this.source,
         IMPERSONATION_KEY,
