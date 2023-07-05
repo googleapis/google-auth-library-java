@@ -51,7 +51,7 @@ class MetricsUtils {
 
   private static String getAuthLibVersion() {
     // Attempt to read the library's version from a properties file generated during the build.
-    // this value should be read and cached for later use
+    // This value should be read and cached for later use.
     String version = "unknown-version";
     try (InputStream inputStream =
         MetricsUtils.class.getResourceAsStream(
