@@ -61,11 +61,8 @@ class MetricsUtils {
         final Properties properties = new Properties();
         properties.load(inputStream);
         version = properties.getProperty("google-auth-library.version");
-        System.out.println(version);
       }
-      System.out.println("input stream was null");
     } catch (IOException e) {
-      System.out.println(e);
       // Ignore.
     }
     return version;
