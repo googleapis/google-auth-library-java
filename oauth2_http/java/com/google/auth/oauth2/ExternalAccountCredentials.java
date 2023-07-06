@@ -919,17 +919,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     }
 
     /**
-     * Sets the optional metrics handler.
-     *
-     * @param metricsHandler the ByoidMetricsHandler object to set.
-     * @return this {@code Builder} object
-     */
-    Builder setMetricsHandler(ByoidMetricsHandler metricsHandler) {
-      this.metricsHandler = metricsHandler;
-      return this;
-    }
-
-    /**
      * Sets the optional Environment Provider.
      *
      * @param environmentProvider the {@code EnvironmentProvider} to set

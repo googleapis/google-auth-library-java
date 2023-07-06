@@ -318,12 +318,16 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
 
     IdentityPoolCredentials credential =
         (IdentityPoolCredentials)
-            IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+            IdentityPoolCredentials.newBuilder()
+                .setAudience(
+                    "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setCredentialSource(FILE_CREDENTIAL_SOURCE)
                 .setTokenUrl(transportFactory.transport.getStsUrl())
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(
                     buildUrlBasedCredentialSource(transportFactory.transport.getMetadataUrl()))
-                .setMetricsHandler(null)
                 .build();
 
     AccessToken accessToken = credential.refreshAccessToken();
@@ -378,14 +382,17 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
     IdentityPoolCredentials credential =
         (IdentityPoolCredentials)
-            IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
-                .setTokenUrl(transportFactory.transport.getStsUrl())
+            IdentityPoolCredentials.newBuilder()
+                .setAudience(
+                    "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenInfoUrl("tokenInfoUrl")
                 .setServiceAccountImpersonationUrl(
                     transportFactory.transport.getServiceAccountImpersonationUrl())
+                .setTokenUrl(transportFactory.transport.getStsUrl())
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(
                     buildUrlBasedCredentialSource(transportFactory.transport.getMetadataUrl()))
-                .setMetricsHandler(null)
                 .build();
 
     AccessToken accessToken = credential.refreshAccessToken();
@@ -407,16 +414,19 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
     IdentityPoolCredentials credential =
         (IdentityPoolCredentials)
-            IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+            IdentityPoolCredentials.newBuilder()
+                .setAudience(
+                    "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenInfoUrl("tokenInfoUrl")
                 .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setHttpTransportFactory(transportFactory)
                 .setServiceAccountImpersonationUrl(
                     transportFactory.transport.getServiceAccountImpersonationUrl())
-                .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(
                     buildUrlBasedCredentialSource(transportFactory.transport.getMetadataUrl()))
                 .setServiceAccountImpersonationOptions(
                     ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(2800))
-                .setMetricsHandler(null)
                 .build();
 
     AccessToken accessToken = credential.refreshAccessToken();

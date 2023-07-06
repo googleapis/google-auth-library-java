@@ -216,14 +216,22 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
 
     PluggableAuthCredentials credential =
         (PluggableAuthCredentials)
-            PluggableAuthCredentials.newBuilder(CREDENTIAL)
-                .setExecutableHandler(options -> "pluggableAuthToken")
+            PluggableAuthCredentials.newBuilder()
+                .setAudience(
+                    "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenInfoUrl("tokenInfoUrl")
                 .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setCredentialSource(buildCredentialSource())
                 .setServiceAccountImpersonationUrl(
                     transportFactory.transport.getServiceAccountImpersonationUrl())
                 .setHttpTransportFactory(transportFactory)
-                .setMetricsHandler(null)
                 .build();
+
+    credential =
+        PluggableAuthCredentials.newBuilder(credential)
+            .setExecutableHandler(options -> "pluggableAuthToken")
+            .build();
 
     AccessToken accessToken = credential.refreshAccessToken();
 
@@ -250,16 +258,24 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
 
     PluggableAuthCredentials credential =
         (PluggableAuthCredentials)
-            PluggableAuthCredentials.newBuilder(CREDENTIAL)
-                .setExecutableHandler(options -> "pluggableAuthToken")
+            PluggableAuthCredentials.newBuilder()
+                .setAudience(
+                    "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenInfoUrl("tokenInfoUrl")
                 .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setCredentialSource(buildCredentialSource())
                 .setServiceAccountImpersonationUrl(
                     transportFactory.transport.getServiceAccountImpersonationUrl())
-                .setHttpTransportFactory(transportFactory)
                 .setServiceAccountImpersonationOptions(
                     ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(2800))
-                .setMetricsHandler(null)
+                .setHttpTransportFactory(transportFactory)
                 .build();
+
+    credential =
+        PluggableAuthCredentials.newBuilder(credential)
+            .setExecutableHandler(options -> "pluggableAuthToken")
+            .build();
 
     AccessToken accessToken = credential.refreshAccessToken();
 

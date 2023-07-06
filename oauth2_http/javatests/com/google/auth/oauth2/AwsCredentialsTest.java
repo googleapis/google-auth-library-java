@@ -147,13 +147,15 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
     AwsCredentials awsCredential =
         (AwsCredentials)
-            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+            AwsCredentials.newBuilder()
+                .setHttpTransportFactory(transportFactory)
+                .setAudience("audience")
+                .setSubjectTokenType("subjectTokenType")
                 .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .setServiceAccountImpersonationUrl(
                     transportFactory.transport.getServiceAccountImpersonationUrl())
-                .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory))
-                .setMetricsHandler(null)
                 .build();
 
     AccessToken accessToken = awsCredential.refreshAccessToken();
@@ -176,15 +178,17 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
     AwsCredentials awsCredential =
         (AwsCredentials)
-            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+            AwsCredentials.newBuilder()
+                .setHttpTransportFactory(transportFactory)
+                .setAudience("audience")
+                .setSubjectTokenType("subjectTokenType")
                 .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .setServiceAccountImpersonationUrl(
                     transportFactory.transport.getServiceAccountImpersonationUrl())
-                .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .setServiceAccountImpersonationOptions(
                     ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(2800))
-                .setMetricsHandler(null)
                 .build();
 
     AccessToken accessToken = awsCredential.refreshAccessToken();
