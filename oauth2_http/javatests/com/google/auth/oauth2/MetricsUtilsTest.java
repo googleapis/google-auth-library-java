@@ -45,7 +45,7 @@ public class MetricsUtilsTest {
     assertNotNull("version constant should not be null", version);
     Pattern semverPattern =
         Pattern.compile(
-            "gl-java/\\d+\\.\\d+\\.\\d+ auth/\\d+\\.\\d+\\.\\d+(-sp\\.\\d+)?(-SNAPSHOT)?");
+            "gl-java/[\\d\\._-]+ auth/\\d+\\.\\d+\\.\\d+(-sp\\.\\d+)?(-SNAPSHOT)?");
     assertTrue(semverPattern.matcher(version).matches());
   }
 
