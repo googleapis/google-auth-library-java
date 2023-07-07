@@ -35,22 +35,23 @@ package com.google.auth.oauth2;
  * A handler for generating the x-goog-api-client header value for BYOID external account
  * credentials.
  */
-class ByoidMetricsHandler implements java.io.Serializable {
+class ExternalAccountMetricsHandler implements java.io.Serializable {
   private static final String SOURCE_KEY = "source";
   private static final String IMPERSONATION_KEY = "sa-impersonation";
   private static final String CONFIG_LIFETIME_KEY = "config-lifetime";
+  private static final String BYOID_METRICS_SECTION = "google-byoid-sdk";
 
   private final boolean configLifetime;
   private final boolean saImpersonation;
   private String source;
 
   /**
-   * Constructor for the BYOID Metrics Handler.
+   * Constructor for the external account metrics handler.
    *
-   * @param creds the {@code ExternalAccountCredentials} object to set the BYOID metrics options
-   *     from.
+   * @param creds the {@code ExternalAccountCredentials} object to set the external account metrics
+   *     options from.
    */
-  ByoidMetricsHandler(ExternalAccountCredentials creds) {
+  ExternalAccountMetricsHandler(ExternalAccountCredentials creds) {
     this.saImpersonation = creds.getServiceAccountImpersonationUrl() != null;
     this.configLifetime =
         creds.getServiceAccountImpersonationOptions().customTokenLifetimeRequested;
@@ -58,15 +59,15 @@ class ByoidMetricsHandler implements java.io.Serializable {
   }
 
   /**
-   * Gets the BYOID metrics header value for the x-goog-api-client header.
+   * Gets the external account metrics header value for the x-goog-api-client header.
    *
    * @return the header value.
    */
-  String getByoidMetricsHeader() {
+  String getExternalAccountMetricsHeader() {
     return String.format(
         "%s %s %s/%s %s/%s %s/%s",
-        MetricsUtils.API_CLIENT_HEADER,
         MetricsUtils.getLanguageAndAuthLibraryVersions(),
+        BYOID_METRICS_SECTION,
         SOURCE_KEY,
         this.source,
         IMPERSONATION_KEY,

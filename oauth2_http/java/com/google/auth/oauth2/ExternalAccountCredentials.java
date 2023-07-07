@@ -91,7 +91,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   private final CredentialSource credentialSource;
   private final Collection<String> scopes;
   private final ServiceAccountImpersonationOptions serviceAccountImpersonationOptions;
-  private ByoidMetricsHandler metricsHandler;
+  private ExternalAccountMetricsHandler metricsHandler;
 
   @Nullable private final String tokenInfoUrl;
   @Nullable private final String serviceAccountImpersonationUrl;
@@ -226,7 +226,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       validateServiceAccountImpersonationInfoUrl(serviceAccountImpersonationUrl);
     }
 
-    this.metricsHandler = new ByoidMetricsHandler(this);
+    this.metricsHandler = new ExternalAccountMetricsHandler(this);
 
     this.impersonatedCredentials = buildImpersonatedCredentials();
   }
@@ -279,7 +279,9 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     }
 
     this.metricsHandler =
-        builder.metricsHandler == null ? new ByoidMetricsHandler(this) : builder.metricsHandler;
+        builder.metricsHandler == null
+            ? new ExternalAccountMetricsHandler(this)
+            : builder.metricsHandler;
 
     this.impersonatedCredentials = buildImpersonatedCredentials();
   }
@@ -515,7 +517,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     // Set BYOID Metrics header.
     HttpHeaders additionalHeaders = new HttpHeaders();
     additionalHeaders.set(
-        MetricsUtils.API_CLIENT_HEADER, this.metricsHandler.getByoidMetricsHeader());
+        MetricsUtils.API_CLIENT_HEADER, this.metricsHandler.getExternalAccountMetricsHeader());
     requestHandler.setHeaders(additionalHeaders);
 
     if (stsTokenExchangeRequest.getInternalOptions() != null) {
@@ -734,7 +736,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     @Nullable protected String workforcePoolUserProject;
     @Nullable protected ServiceAccountImpersonationOptions serviceAccountImpersonationOptions;
     @Nullable protected String universeDomain;
-    @Nullable protected ByoidMetricsHandler metricsHandler;
+    @Nullable protected ExternalAccountMetricsHandler metricsHandler;
 
     protected Builder() {}
 

@@ -1280,8 +1280,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     String actualMetricsValue = headers.get(MetricsUtils.API_CLIENT_HEADER).get(0);
     String expectedMetricsValue =
         String.format(
-            "%s %s source/%s sa-impersonation/%s config-lifetime/%s",
-            MetricsUtils.API_CLIENT_HEADER,
+            "%s google-byoid-sdk source/%s sa-impersonation/%s config-lifetime/%s",
             MetricsUtils.getLanguageAndAuthLibraryVersions(),
             source,
             saImpersonationUsed,

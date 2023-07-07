@@ -41,7 +41,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class MetricsUtilsTest {
 
-  public static void assertVersion(String version) {
+  public static void assertVersions(String version) {
     assertNotNull("version constant should not be null", version);
     Pattern semverPattern =
         Pattern.compile("gl-java/[\\d\\._-]+ auth/\\d+\\.\\d+\\.\\d+(-sp\\.\\d+)?(-SNAPSHOT)?");
@@ -51,6 +51,6 @@ public class MetricsUtilsTest {
   @Test
   public void getVersionWorks() {
     String version = MetricsUtils.getLanguageAndAuthLibraryVersions();
-    assertVersion(version);
+    assertVersions(version);
   }
 }
