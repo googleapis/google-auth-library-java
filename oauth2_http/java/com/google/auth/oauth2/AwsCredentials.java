@@ -77,7 +77,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
    * The AWS credential source. Stores data required to retrieve the AWS credential from the AWS
    * metadata server.
    */
-  static class AwsCredentialSource extends CredentialSource {
+  public static class AwsCredentialSource extends CredentialSource {
 
     private static final String IMDSV2_SESSION_TOKEN_URL_FIELD_NAME = "imdsv2_session_token_url";
     private static final long serialVersionUID = -4180558200808134436L;
@@ -101,7 +101,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
      *
      * <p>The `url` locates the metadata server used to retrieve the AWS credentials. Optional.
      */
-    AwsCredentialSource(Map<String, Object> credentialSourceMap) {
+    public AwsCredentialSource(Map<String, Object> credentialSourceMap) {
       super(credentialSourceMap);
       if (!credentialSourceMap.containsKey("regional_cred_verification_url")) {
         throw new IllegalArgumentException(

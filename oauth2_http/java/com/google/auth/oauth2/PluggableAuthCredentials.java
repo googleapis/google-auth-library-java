@@ -118,7 +118,7 @@ public class PluggableAuthCredentials extends ExternalAccountCredentials {
    * }
    * </pre>
    */
-  static class PluggableAuthCredentialSource extends CredentialSource {
+  public static class PluggableAuthCredentialSource extends CredentialSource {
 
     // The default timeout for waiting for the executable to finish (30 seconds).
     private static final int DEFAULT_EXECUTABLE_TIMEOUT_MS = 30 * 1000;
@@ -141,7 +141,7 @@ public class PluggableAuthCredentials extends ExternalAccountCredentials {
     // location.
     @Nullable private final String outputFilePath;
 
-    PluggableAuthCredentialSource(Map<String, Object> credentialSourceMap) {
+    public PluggableAuthCredentialSource(Map<String, Object> credentialSourceMap) {
       super(credentialSourceMap);
 
       if (!credentialSourceMap.containsKey(EXECUTABLE_SOURCE_KEY)) {

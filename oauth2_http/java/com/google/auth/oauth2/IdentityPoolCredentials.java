@@ -69,7 +69,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
    * The IdentityPool credential source. Dictates the retrieval method of the external credential,
    * which can either be through a metadata server or a local file.
    */
-  static class IdentityPoolCredentialSource extends ExternalAccountCredentials.CredentialSource {
+  public static class IdentityPoolCredentialSource extends ExternalAccountCredentials.CredentialSource {
 
     private static final long serialVersionUID = -745855247050085694L;
 
@@ -106,7 +106,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
      *
      * <p>Optional headers can be present, and should be keyed by `headers`.
      */
-    IdentityPoolCredentialSource(Map<String, Object> credentialSourceMap) {
+    public IdentityPoolCredentialSource(Map<String, Object> credentialSourceMap) {
       super(credentialSourceMap);
 
       if (credentialSourceMap.containsKey("file") && credentialSourceMap.containsKey("url")) {
