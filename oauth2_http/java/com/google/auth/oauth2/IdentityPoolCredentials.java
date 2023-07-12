@@ -69,7 +69,8 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
    * The IdentityPool credential source. Dictates the retrieval method of the external credential,
    * which can either be through a metadata server or a local file.
    */
-  public static class IdentityPoolCredentialSource extends ExternalAccountCredentials.CredentialSource {
+  public static class IdentityPoolCredentialSource
+      extends ExternalAccountCredentials.CredentialSource {
 
     private static final long serialVersionUID = -745855247050085694L;
 
