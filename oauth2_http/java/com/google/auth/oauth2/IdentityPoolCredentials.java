@@ -37,7 +37,7 @@ import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
-import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSource.CredentialFormatType;
+import com.google.auth.oauth2.IdentityPoolCredentialSource.CredentialFormatType;
 import com.google.common.io.CharStreams;
 import java.io.BufferedReader;
 import java.io.File;
@@ -51,10 +51,6 @@ import java.nio.file.LinkOption;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import javax.annotation.Nullable;
 
 /**
  * Url-sourced and file-sourced external account credentials.
@@ -64,102 +60,6 @@ import javax.annotation.Nullable;
 public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   private static final long serialVersionUID = 2471046175477275881L;
-
-  /**
-   * The IdentityPool credential source. Dictates the retrieval method of the external credential,
-   * which can either be through a metadata server or a local file.
-   */
-  public static class IdentityPoolCredentialSource
-      extends ExternalAccountCredentials.CredentialSource {
-
-    private static final long serialVersionUID = -745855247050085694L;
-
-    enum IdentityPoolCredentialSourceType {
-      FILE,
-      URL
-    }
-
-    enum CredentialFormatType {
-      TEXT,
-      JSON
-    }
-
-    private IdentityPoolCredentialSourceType credentialSourceType;
-    private CredentialFormatType credentialFormatType;
-    private String credentialLocation;
-
-    @Nullable private String subjectTokenFieldName;
-    @Nullable private Map<String, String> headers;
-
-    /**
-     * The source of the 3P credential.
-     *
-     * <p>If this is a file based 3P credential, the credentials file can be retrieved using the
-     * `file` key.
-     *
-     * <p>If this is URL-based 3p credential, the metadata server URL can be retrieved using the
-     * `url` key.
-     *
-     * <p>The third party credential can be provided in different formats, such as text or JSON. The
-     * format can be specified using the `format` header, which returns a map with keys `type` and
-     * `subject_token_field_name`. If the `type` is json, the `subject_token_field_name` must be
-     * provided. If no format is provided, we expect the token to be in the raw text format.
-     *
-     * <p>Optional headers can be present, and should be keyed by `headers`.
-     */
-    public IdentityPoolCredentialSource(Map<String, Object> credentialSourceMap) {
-      super(credentialSourceMap);
-
-      if (credentialSourceMap.containsKey("file") && credentialSourceMap.containsKey("url")) {
-        throw new IllegalArgumentException(
-            "Only one credential source type can be set, either file or url.");
-      }
-
-      if (credentialSourceMap.containsKey("file")) {
-        credentialLocation = (String) credentialSourceMap.get("file");
-        credentialSourceType = IdentityPoolCredentialSourceType.FILE;
-      } else if (credentialSourceMap.containsKey("url")) {
-        credentialLocation = (String) credentialSourceMap.get("url");
-        credentialSourceType = IdentityPoolCredentialSourceType.URL;
-      } else {
-        throw new IllegalArgumentException(
-            "Missing credential source file location or URL. At least one must be specified.");
-      }
-
-      Map<String, String> headersMap = (Map<String, String>) credentialSourceMap.get("headers");
-      if (headersMap != null && !headersMap.isEmpty()) {
-        headers = new HashMap<>();
-        headers.putAll(headersMap);
-      }
-
-      // If the format is not provided, we expect the token to be in the raw text format.
-      credentialFormatType = CredentialFormatType.TEXT;
-
-      Map<String, String> formatMap = (Map<String, String>) credentialSourceMap.get("format");
-      if (formatMap != null && formatMap.containsKey("type")) {
-        String type = formatMap.get("type");
-
-        if (type != null && "json".equals(type.toLowerCase(Locale.US))) {
-          // For JSON, the subject_token field name must be provided.
-          if (!formatMap.containsKey("subject_token_field_name")) {
-            throw new IllegalArgumentException(
-                "When specifying a JSON credential type, the subject_token_field_name must be set.");
-          }
-          credentialFormatType = CredentialFormatType.JSON;
-          subjectTokenFieldName = formatMap.get("subject_token_field_name");
-        } else if (type != null && "text".equals(type.toLowerCase(Locale.US))) {
-          credentialFormatType = CredentialFormatType.TEXT;
-        } else {
-          throw new IllegalArgumentException(
-              String.format("Invalid credential source format type: %s.", type));
-        }
-      }
-    }
-
-    private boolean hasHeaders() {
-      return headers != null && !headers.isEmpty();
-    }
-  }
 
   private final IdentityPoolCredentialSource identityPoolCredentialSource;
 

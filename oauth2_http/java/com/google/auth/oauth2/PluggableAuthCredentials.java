@@ -34,7 +34,6 @@ package com.google.auth.oauth2;
 import com.google.auth.oauth2.ExecutableHandler.ExecutableOptions;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -97,108 +96,6 @@ import javax.annotation.Nullable;
  * <p>Please see this repositories README for a complete executable request/response specification.
  */
 public class PluggableAuthCredentials extends ExternalAccountCredentials {
-
-  /**
-   * Encapsulates the credential source portion of the configuration for PluggableAuthCredentials.
-   *
-   * <p>Command is the only required field. If timeout_millis is not specified, the library will
-   * default to a 30 second timeout.
-   *
-   * <pre>
-   * Sample credential source for Pluggable Auth credentials:
-   * {
-   *   ...
-   *   "credential_source": {
-   *     "executable": {
-   *       "command": "/path/to/get/credentials.sh --arg1=value1 --arg2=value2",
-   *       "timeout_millis": 5000,
-   *       "output_file": "/path/to/generated/cached/credentials"
-   *     }
-   *   }
-   * }
-   * </pre>
-   */
-  public static class PluggableAuthCredentialSource extends CredentialSource {
-
-    // The default timeout for waiting for the executable to finish (30 seconds).
-    private static final int DEFAULT_EXECUTABLE_TIMEOUT_MS = 30 * 1000;
-    // The minimum timeout for waiting for the executable to finish (5 seconds).
-    private static final int MINIMUM_EXECUTABLE_TIMEOUT_MS = 5 * 1000;
-    // The maximum timeout for waiting for the executable to finish (120 seconds).
-    private static final int MAXIMUM_EXECUTABLE_TIMEOUT_MS = 120 * 1000;
-
-    private static final String COMMAND_KEY = "command";
-    private static final String TIMEOUT_MILLIS_KEY = "timeout_millis";
-    private static final String OUTPUT_FILE_KEY = "output_file";
-
-    // Required. The command used to retrieve the 3rd party token.
-    private final String executableCommand;
-
-    // Optional. Set to the default timeout when not provided.
-    private final int executableTimeoutMs;
-
-    // Optional. Provided when the 3rd party executable caches the response at the specified
-    // location.
-    @Nullable private final String outputFilePath;
-
-    public PluggableAuthCredentialSource(Map<String, Object> credentialSourceMap) {
-      super(credentialSourceMap);
-
-      if (!credentialSourceMap.containsKey(EXECUTABLE_SOURCE_KEY)) {
-        throw new IllegalArgumentException(
-            "Invalid credential source for PluggableAuth credentials.");
-      }
-
-      Map<String, Object> executable =
-          (Map<String, Object>) credentialSourceMap.get(EXECUTABLE_SOURCE_KEY);
-
-      // Command is the only required field.
-      if (!executable.containsKey(COMMAND_KEY)) {
-        throw new IllegalArgumentException(
-            "The PluggableAuthCredentialSource is missing the required 'command' field.");
-      }
-
-      // Parse the executable timeout.
-      if (executable.containsKey(TIMEOUT_MILLIS_KEY)) {
-        Object timeout = executable.get(TIMEOUT_MILLIS_KEY);
-        if (timeout instanceof BigDecimal) {
-          executableTimeoutMs = ((BigDecimal) timeout).intValue();
-        } else if (executable.get(TIMEOUT_MILLIS_KEY) instanceof Integer) {
-          executableTimeoutMs = (int) timeout;
-        } else {
-          executableTimeoutMs = Integer.parseInt((String) timeout);
-        }
-      } else {
-        executableTimeoutMs = DEFAULT_EXECUTABLE_TIMEOUT_MS;
-      }
-
-      // Provided timeout must be between 5s and 120s.
-      if (executableTimeoutMs < MINIMUM_EXECUTABLE_TIMEOUT_MS
-          || executableTimeoutMs > MAXIMUM_EXECUTABLE_TIMEOUT_MS) {
-        throw new IllegalArgumentException(
-            String.format(
-                "The executable timeout must be between %s and %s milliseconds.",
-                MINIMUM_EXECUTABLE_TIMEOUT_MS, MAXIMUM_EXECUTABLE_TIMEOUT_MS));
-      }
-
-      executableCommand = (String) executable.get(COMMAND_KEY);
-      outputFilePath = (String) executable.get(OUTPUT_FILE_KEY);
-    }
-
-    String getCommand() {
-      return executableCommand;
-    }
-
-    int getTimeoutMs() {
-      return executableTimeoutMs;
-    }
-
-    @Nullable
-    String getOutputFilePath() {
-      return outputFilePath;
-    }
-  }
-
   private final PluggableAuthCredentialSource config;
 
   private final ExecutableHandler handler;

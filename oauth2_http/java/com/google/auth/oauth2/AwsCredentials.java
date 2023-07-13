@@ -50,8 +50,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -72,71 +70,6 @@ public class AwsCredentials extends ExternalAccountCredentials {
   static final String AWS_IMDSV2_SESSION_TOKEN_TTL_HEADER = "x-aws-ec2-metadata-token-ttl-seconds";
   static final String AWS_IMDSV2_SESSION_TOKEN_TTL = "300";
   private static final long serialVersionUID = -3670131891574618105L;
-
-  /**
-   * The AWS credential source. Stores data required to retrieve the AWS credential from the AWS
-   * metadata server.
-   */
-  public static class AwsCredentialSource extends CredentialSource {
-
-    private static final String IMDSV2_SESSION_TOKEN_URL_FIELD_NAME = "imdsv2_session_token_url";
-    private static final long serialVersionUID = -4180558200808134436L;
-
-    private final String regionUrl;
-    private final String url;
-    private final String regionalCredentialVerificationUrl;
-    private final String imdsv2SessionTokenUrl;
-
-    /**
-     * The source of the AWS credential. The credential source map must contain the
-     * `regional_cred_verification_url` field.
-     *
-     * <p>The `regional_cred_verification_url` is the regional GetCallerIdentity action URL, used to
-     * determine the account ID and its roles.
-     *
-     * <p>The `environment_id` is the environment identifier, in the format “aws${version}”. This
-     * indicates whether breaking changes were introduced to the underlying AWS implementation.
-     *
-     * <p>The `region_url` identifies the targeted region. Optional.
-     *
-     * <p>The `url` locates the metadata server used to retrieve the AWS credentials. Optional.
-     */
-    public AwsCredentialSource(Map<String, Object> credentialSourceMap) {
-      super(credentialSourceMap);
-      if (!credentialSourceMap.containsKey("regional_cred_verification_url")) {
-        throw new IllegalArgumentException(
-            "A regional_cred_verification_url representing the"
-                + " GetCallerIdentity action URL must be specified.");
-      }
-
-      String environmentId = (String) credentialSourceMap.get("environment_id");
-
-      // Environment version is prefixed by "aws". e.g. "aws1".
-      Matcher matcher = Pattern.compile("(aws)([\\d]+)").matcher(environmentId);
-      if (!matcher.matches()) {
-        throw new IllegalArgumentException("Invalid AWS environment ID.");
-      }
-
-      int environmentVersion = Integer.parseInt(matcher.group(2));
-      if (environmentVersion != 1) {
-        throw new IllegalArgumentException(
-            String.format(
-                "AWS version %s is not supported in the current build.", environmentVersion));
-      }
-
-      this.regionUrl = (String) credentialSourceMap.get("region_url");
-      this.url = (String) credentialSourceMap.get("url");
-      this.regionalCredentialVerificationUrl =
-          (String) credentialSourceMap.get("regional_cred_verification_url");
-
-      if (credentialSourceMap.containsKey(IMDSV2_SESSION_TOKEN_URL_FIELD_NAME)) {
-        this.imdsv2SessionTokenUrl =
-            (String) credentialSourceMap.get(IMDSV2_SESSION_TOKEN_URL_FIELD_NAME);
-      } else {
-        this.imdsv2SessionTokenUrl = null;
-      }
-    }
-  }
 
   private final AwsCredentialSource awsCredentialSource;
 
