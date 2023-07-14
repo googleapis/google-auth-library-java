@@ -31,16 +31,16 @@
 
 package com.google.auth.oauth2;
 
-import java.util.Map;
-
 import static com.google.api.client.util.Preconditions.checkNotNull;
+
+import java.util.Map;
 
 /** Base credential source class. Dictates the retrieval method of the external credential. */
 public abstract class ExternalAccountCredentialSource implements java.io.Serializable {
 
-    private static final long serialVersionUID = 8204657811562399944L;
+  private static final long serialVersionUID = 8204657811562399944L;
 
-    public ExternalAccountCredentialSource(Map<String, Object> credentialSourceMap) {
-        checkNotNull(credentialSourceMap);
-    }
+  public ExternalAccountCredentialSource(Map<String, Object> credentialSourceMap) {
+    checkNotNull(credentialSourceMap);
+  }
 }

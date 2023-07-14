@@ -64,8 +64,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
   private static final long serialVersionUID = 8049126194174465023L;
 
-
-
   private static final String CLOUD_PLATFORM_SCOPE =
       "https://www.googleapis.com/auth/cloud-platform";
 
@@ -139,7 +137,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
         audience,
         subjectTokenType,
         tokenUrl,
-            externalAccountCredentialSource,
+        externalAccountCredentialSource,
         tokenInfoUrl,
         serviceAccountImpersonationUrl,
         quotaProjectId,
@@ -776,7 +774,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param externalAccountCredentialSource the {@code CredentialSource} to set
      * @return this {@code Builder} object
      */
-    public Builder setCredentialSource(ExternalAccountCredentialSource externalAccountCredentialSource) {
+    public Builder setCredentialSource(
+        ExternalAccountCredentialSource externalAccountCredentialSource) {
       this.externalAccountCredentialSource = externalAccountCredentialSource;
       return this;
     }
