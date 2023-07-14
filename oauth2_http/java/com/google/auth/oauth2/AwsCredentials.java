@@ -76,7 +76,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
   /** Internal constructor. See {@link AwsCredentials.Builder}. */
   AwsCredentials(Builder builder) {
     super(builder);
-    this.awsCredentialSource = (AwsCredentialSource) builder.credentialSource;
+    this.awsCredentialSource = (AwsCredentialSource) builder.externalAccountCredentialSource;
   }
 
   @Override

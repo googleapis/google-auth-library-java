@@ -367,7 +367,7 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
   public void builder_allFields() {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
-    CredentialSource source = buildCredentialSource();
+    ExternalAccountCredentialSource source = buildCredentialSource();
     ExecutableHandler handler = options -> "Token";
 
     PluggableAuthCredentials credentials =
@@ -453,11 +453,11 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
     assertThrows(NotSerializableException.class, () -> serializeAndDeserialize(testCredentials));
   }
 
-  private static CredentialSource buildCredentialSource() {
+  private static ExternalAccountCredentialSource buildCredentialSource() {
     return buildCredentialSource("command", null, null);
   }
 
-  private static CredentialSource buildCredentialSource(
+  private static ExternalAccountCredentialSource buildCredentialSource(
       String command, @Nullable String timeoutMs, @Nullable String outputFile) {
     Map<String, Object> source = new HashMap<>();
     Map<String, Object> executable = new HashMap<>();

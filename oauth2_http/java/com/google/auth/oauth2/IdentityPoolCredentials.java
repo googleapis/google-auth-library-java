@@ -66,7 +66,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
   /** Internal constructor. See {@link Builder}. */
   IdentityPoolCredentials(Builder builder) {
     super(builder);
-    this.identityPoolCredentialSource = (IdentityPoolCredentialSource) builder.credentialSource;
+    this.identityPoolCredentialSource = (IdentityPoolCredentialSource) builder.externalAccountCredentialSource;
   }
 
   @Override

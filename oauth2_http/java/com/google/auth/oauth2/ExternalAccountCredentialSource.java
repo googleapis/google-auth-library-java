@@ -36,11 +36,11 @@ import java.util.Map;
 import static com.google.api.client.util.Preconditions.checkNotNull;
 
 /** Base credential source class. Dictates the retrieval method of the external credential. */
-public abstract class CredentialSource implements java.io.Serializable {
+public abstract class ExternalAccountCredentialSource implements java.io.Serializable {
 
     private static final long serialVersionUID = 8204657811562399944L;
 
-    public CredentialSource(Map<String, Object> credentialSourceMap) {
+    public ExternalAccountCredentialSource(Map<String, Object> credentialSourceMap) {
         checkNotNull(credentialSourceMap);
     }
 }

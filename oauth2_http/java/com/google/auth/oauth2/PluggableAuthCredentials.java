@@ -103,7 +103,7 @@ public class PluggableAuthCredentials extends ExternalAccountCredentials {
   /** Internal constructor. See {@link Builder}. */
   PluggableAuthCredentials(Builder builder) {
     super(builder);
-    this.config = (PluggableAuthCredentialSource) builder.credentialSource;
+    this.config = (PluggableAuthCredentialSource) builder.externalAccountCredentialSource;
 
     if (builder.handler != null) {
       handler = builder.handler;
