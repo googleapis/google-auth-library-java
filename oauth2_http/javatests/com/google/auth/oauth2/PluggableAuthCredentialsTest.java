@@ -39,7 +39,6 @@ import com.google.api.client.json.GenericJson;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.ExecutableHandler.ExecutableOptions;
-import com.google.auth.oauth2.ExternalAccountCredentials.CredentialSource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.NotSerializableException;

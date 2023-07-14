@@ -64,15 +64,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
   private static final long serialVersionUID = 8049126194174465023L;
 
-  /** Base credential source class. Dictates the retrieval method of the external credential. */
-  abstract static class CredentialSource implements java.io.Serializable {
 
-    private static final long serialVersionUID = 8204657811562399944L;
-
-    CredentialSource(Map<String, Object> credentialSourceMap) {
-      checkNotNull(credentialSourceMap);
-    }
-  }
 
   private static final String CLOUD_PLATFORM_SCOPE =
       "https://www.googleapis.com/auth/cloud-platform";

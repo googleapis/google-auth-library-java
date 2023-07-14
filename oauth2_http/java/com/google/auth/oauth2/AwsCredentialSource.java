@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
  * The AWS credential source. Stores data required to retrieve the AWS credential from the AWS
  * metadata server.
  */
-public class AwsCredentialSource extends ExternalAccountCredentials.CredentialSource {
+public class AwsCredentialSource extends CredentialSource {
 
   static final String IMDSV2_SESSION_TOKEN_URL_FIELD_NAME = "imdsv2_session_token_url";
   static final long serialVersionUID = -4180558200808134436L;
