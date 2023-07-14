@@ -86,6 +86,7 @@
     <resources>
       <resource>
         <directory>resources</directory>
+        <filtering>true</filtering>
       </resource>
     </resources>
     <testSourceDirectory>javatests</testSourceDirectory>
@@ -95,6 +96,17 @@
       </testResource>
     </testResources>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>resources</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.sonatype.plugins</groupId>
         <artifactId>nexus-staging-maven-plugin</artifactId>
@@ -120,6 +132,9 @@
         <artifactId>maven-jar-plugin</artifactId>
         <configuration>
           <archive>
+            <manifest>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
             <manifestEntries>
               <Automatic-Module-Name>com.google.auth.oauth2</Automatic-Module-Name>
             </manifestEntries>
