@@ -33,6 +33,7 @@ package com.google.auth.oauth2;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.auth.RequestMetadataCallback;
@@ -77,6 +78,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   private final ExternalAccountCredentialSource externalAccountCredentialSource;
   private final Collection<String> scopes;
   private final ServiceAccountImpersonationOptions serviceAccountImpersonationOptions;
+  private ExternalAccountMetricsHandler metricsHandler;
 
   @Nullable private final String tokenInfoUrl;
   @Nullable private final String serviceAccountImpersonationUrl;
@@ -211,6 +213,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       validateServiceAccountImpersonationInfoUrl(serviceAccountImpersonationUrl);
     }
 
+    this.metricsHandler = new ExternalAccountMetricsHandler(this);
+
     this.impersonatedCredentials = buildImpersonatedCredentials();
   }
 
@@ -260,6 +264,11 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     if (serviceAccountImpersonationUrl != null) {
       validateServiceAccountImpersonationInfoUrl(serviceAccountImpersonationUrl);
     }
+
+    this.metricsHandler =
+        builder.metricsHandler == null
+            ? new ExternalAccountMetricsHandler(this)
+            : builder.metricsHandler;
 
     this.impersonatedCredentials = buildImpersonatedCredentials();
   }
@@ -492,6 +501,12 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       requestHandler.setInternalOptions(options.toString());
     }
 
+    // Set BYOID Metrics header.
+    HttpHeaders additionalHeaders = new HttpHeaders();
+    additionalHeaders.set(
+        MetricsUtils.API_CLIENT_HEADER, this.metricsHandler.getExternalAccountMetricsHeader());
+    requestHandler.setHeaders(additionalHeaders);
+
     if (stsTokenExchangeRequest.getInternalOptions() != null) {
       // Overwrite internal options. Let subclass handle setting options.
       requestHandler.setInternalOptions(stsTokenExchangeRequest.getInternalOptions());
@@ -576,6 +591,10 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     return serviceAccountImpersonationOptions;
   }
 
+  String getCredentialSourceType() {
+    return "unknown";
+  }
+
   EnvironmentProvider getEnvironmentProvider() {
     return environmentProvider;
   }
@@ -650,8 +669,11 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
     private final int lifetime;
 
+    final boolean customTokenLifetimeRequested;
+
     ServiceAccountImpersonationOptions(Map<String, Object> optionsMap) {
-      if (!optionsMap.containsKey(TOKEN_LIFETIME_SECONDS_KEY)) {
+      customTokenLifetimeRequested = optionsMap.containsKey(TOKEN_LIFETIME_SECONDS_KEY);
+      if (!customTokenLifetimeRequested) {
         lifetime = DEFAULT_TOKEN_LIFETIME_SECONDS;
         return;
       }
@@ -701,6 +723,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     @Nullable protected String workforcePoolUserProject;
     @Nullable protected ServiceAccountImpersonationOptions serviceAccountImpersonationOptions;
     @Nullable protected String universeDomain;
+    @Nullable protected ExternalAccountMetricsHandler metricsHandler;
 
     protected Builder() {}
 
@@ -720,6 +743,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       this.workforcePoolUserProject = credentials.workforcePoolUserProject;
       this.serviceAccountImpersonationOptions = credentials.serviceAccountImpersonationOptions;
       this.universeDomain = credentials.universeDomain;
+      this.metricsHandler = credentials.metricsHandler;
     }
 
     /**

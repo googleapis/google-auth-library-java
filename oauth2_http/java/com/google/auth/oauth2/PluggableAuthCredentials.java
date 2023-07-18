@@ -189,6 +189,11 @@ public class PluggableAuthCredentials extends ExternalAccountCredentials {
         (PluggableAuthCredentials.Builder) newBuilder(this).setScopes(newScopes));
   }
 
+  @Override
+  String getCredentialSourceType() {
+    return "executable";
+  }
+
   public static Builder newBuilder() {
     return new Builder();
   }

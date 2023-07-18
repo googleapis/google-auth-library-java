@@ -130,6 +130,11 @@ public class AwsCredentials extends ExternalAccountCredentials {
     return new AwsCredentials((AwsCredentials.Builder) newBuilder(this).setScopes(newScopes));
   }
 
+  @Override
+  String getCredentialSourceType() {
+    return "aws";
+  }
+
   private String retrieveResource(String url, String resourceName, Map<String, Object> headers)
       throws IOException {
     return retrieveResource(url, resourceName, HttpMethods.GET, headers, /* content= */ null);
