@@ -35,10 +35,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * The AWS credential source. Stores data required to retrieve the AWS credential from the AWS
- * metadata server.
- */
+/** The AWS credential source. Stores data required to retrieve the AWS credential. */
 public class AwsCredentialSource extends ExternalAccountCredentials.CredentialSource {
 
   static final String IMDSV2_SESSION_TOKEN_URL_FIELD_NAME = "imdsv2_session_token_url";
