@@ -65,6 +65,16 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
   private static final long serialVersionUID = 8049126194174465023L;
 
+  /** Base credential source class. Dictates the retrieval method of the external credential. */
+  abstract static class CredentialSource implements java.io.Serializable {
+
+    private static final long serialVersionUID = 8204657811562399944L;
+
+    CredentialSource(Map<String, Object> credentialSourceMap) {
+      checkNotNull(credentialSourceMap);
+    }
+  }
+
   private static final String CLOUD_PLATFORM_SCOPE =
       "https://www.googleapis.com/auth/cloud-platform";
 
@@ -75,7 +85,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   private final String audience;
   private final String subjectTokenType;
   private final String tokenUrl;
-  private final ExternalAccountCredentialSource externalAccountCredentialSource;
+  private final CredentialSource credentialSource;
   private final Collection<String> scopes;
   private final ServiceAccountImpersonationOptions serviceAccountImpersonationOptions;
   private ExternalAccountMetricsHandler metricsHandler;
@@ -113,7 +123,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
    * @param tokenUrl the Security Token Service token exchange endpoint
    * @param tokenInfoUrl the endpoint used to retrieve account related information. Required for
    *     gCloud session account identification.
-   * @param externalAccountCredentialSource the external credential source
+   * @param credentialSource the external credential source
    * @param serviceAccountImpersonationUrl the URL for the service account impersonation request.
    *     This URL is required for some APIs. If this URL is not available, the access token from the
    *     Security Token Service is used directly. May be null.
@@ -127,7 +137,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       String audience,
       String subjectTokenType,
       String tokenUrl,
-      ExternalAccountCredentialSource externalAccountCredentialSource,
+      CredentialSource credentialSource,
       @Nullable String tokenInfoUrl,
       @Nullable String serviceAccountImpersonationUrl,
       @Nullable String quotaProjectId,
@@ -139,7 +149,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
         audience,
         subjectTokenType,
         tokenUrl,
-        externalAccountCredentialSource,
+        credentialSource,
         tokenInfoUrl,
         serviceAccountImpersonationUrl,
         quotaProjectId,
@@ -161,7 +171,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
    * @param tokenUrl the Security Token Service token exchange endpoint
    * @param tokenInfoUrl the endpoint used to retrieve account related information. Required for
    *     gCloud session account identification.
-   * @param externalAccountCredentialSource the external credential source
+   * @param credentialSource the external credential source
    * @param serviceAccountImpersonationUrl the URL for the service account impersonation request.
    *     This URL is required for some APIs. If this URL is not available, the access token from the
    *     Security Token Service is used directly. May be null.
@@ -177,7 +187,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       String audience,
       String subjectTokenType,
       String tokenUrl,
-      ExternalAccountCredentialSource externalAccountCredentialSource,
+      CredentialSource credentialSource,
       @Nullable String tokenInfoUrl,
       @Nullable String serviceAccountImpersonationUrl,
       @Nullable String quotaProjectId,
@@ -194,7 +204,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     this.audience = checkNotNull(audience);
     this.subjectTokenType = checkNotNull(subjectTokenType);
     this.tokenUrl = checkNotNull(tokenUrl);
-    this.externalAccountCredentialSource = checkNotNull(externalAccountCredentialSource);
+    this.credentialSource = checkNotNull(credentialSource);
     this.tokenInfoUrl = tokenInfoUrl;
     this.serviceAccountImpersonationUrl = serviceAccountImpersonationUrl;
     this.clientId = clientId;
@@ -234,7 +244,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     this.audience = checkNotNull(builder.audience);
     this.subjectTokenType = checkNotNull(builder.subjectTokenType);
     this.tokenUrl = checkNotNull(builder.tokenUrl);
-    this.externalAccountCredentialSource = checkNotNull(builder.externalAccountCredentialSource);
+    this.credentialSource = checkNotNull(builder.credentialSource);
     this.tokenInfoUrl = builder.tokenInfoUrl;
     this.serviceAccountImpersonationUrl = builder.serviceAccountImpersonationUrl;
     this.clientId = builder.clientId;
@@ -543,8 +553,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     return tokenInfoUrl;
   }
 
-  public ExternalAccountCredentialSource getCredentialSource() {
-    return externalAccountCredentialSource;
+  public CredentialSource getCredentialSource() {
+    return credentialSource;
   }
 
   @Nullable
@@ -712,7 +722,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     protected String subjectTokenType;
     protected String tokenUrl;
     protected String tokenInfoUrl;
-    protected ExternalAccountCredentialSource externalAccountCredentialSource;
+    protected CredentialSource credentialSource;
     protected EnvironmentProvider environmentProvider;
     protected HttpTransportFactory transportFactory;
 
@@ -735,7 +745,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       this.tokenUrl = credentials.tokenUrl;
       this.tokenInfoUrl = credentials.tokenInfoUrl;
       this.serviceAccountImpersonationUrl = credentials.serviceAccountImpersonationUrl;
-      this.externalAccountCredentialSource = credentials.externalAccountCredentialSource;
+      this.credentialSource = credentials.credentialSource;
       this.clientId = credentials.clientId;
       this.clientSecret = credentials.clientSecret;
       this.scopes = credentials.scopes;
@@ -795,12 +805,11 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     /**
      * Sets the external credential source.
      *
-     * @param externalAccountCredentialSource the {@code CredentialSource} to set
+     * @param credentialSource the {@code CredentialSource} to set
      * @return this {@code Builder} object
      */
-    public Builder setCredentialSource(
-        ExternalAccountCredentialSource externalAccountCredentialSource) {
-      this.externalAccountCredentialSource = externalAccountCredentialSource;
+    public Builder setCredentialSource(CredentialSource credentialSource) {
+      this.credentialSource = credentialSource;
       return this;
     }
 

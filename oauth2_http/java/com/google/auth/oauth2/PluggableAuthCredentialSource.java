@@ -57,7 +57,7 @@ import javax.annotation.Nullable;
  * }
  * </pre>
  */
-public class PluggableAuthCredentialSource extends ExternalAccountCredentialSource {
+public class PluggableAuthCredentialSource extends ExternalAccountCredentials.CredentialSource {
 
   // The default timeout for waiting for the executable to finish (30 seconds).
   static final int DEFAULT_EXECUTABLE_TIMEOUT_MS = 30 * 1000;
