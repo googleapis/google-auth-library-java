@@ -157,7 +157,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-source-plugin</artifactId>
-          <version>3.2.1</version>
+          <version>3.3.0</version>
           <executions>
             <execution>
               <id>attach-sources</id>
@@ -285,7 +285,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.8</version>
+        <version>0.8.10</version>
         <executions>
           <execution>
             <goals>
@@ -319,7 +319,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>3.3.0</version>
+        <version>3.3.1</version>
       </plugin>
     </plugins>
   </build>
@@ -384,7 +384,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-source-plugin</artifactId>
-            <version>3.2.1</version>
+            <version>3.3.0</version>
             <executions>
               <execution>
                 <id>attach-sources</id>
@@ -410,7 +410,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
-            <version>3.0.1</version>
+            <version>3.1.0</version>
             <executions>
               <execution>
                 <id>sign-artifacts</id>
@@ -465,7 +465,7 @@
                 <path>
                   <groupId>com.google.auto.service</groupId>
                   <artifactId>auto-service-annotations</artifactId>
-                  <version>1.0.1</version>
+                  <version>1.1.1</version>
                 </path>
               </annotationProcessorPaths>
             </configuration>
