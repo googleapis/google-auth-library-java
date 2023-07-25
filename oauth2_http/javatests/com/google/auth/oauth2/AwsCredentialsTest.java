@@ -131,6 +131,11 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     AccessToken accessToken = awsCredential.refreshAccessToken();
 
     assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(3).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "aws", false, false);
   }
 
   @Test
@@ -142,18 +147,26 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
     AwsCredentials awsCredential =
         (AwsCredentials)
-            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+            AwsCredentials.newBuilder()
+                .setHttpTransportFactory(transportFactory)
+                .setAudience("audience")
+                .setSubjectTokenType("subjectTokenType")
                 .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .setServiceAccountImpersonationUrl(
                     transportFactory.transport.getServiceAccountImpersonationUrl())
-                .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .build();
 
     AccessToken accessToken = awsCredential.refreshAccessToken();
 
     assertEquals(
         transportFactory.transport.getServiceAccountAccessToken(), accessToken.getTokenValue());
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(6).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "aws", true, false);
   }
 
   @Test
@@ -165,12 +178,15 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
     AwsCredentials awsCredential =
         (AwsCredentials)
-            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+            AwsCredentials.newBuilder()
+                .setHttpTransportFactory(transportFactory)
+                .setAudience("audience")
+                .setSubjectTokenType("subjectTokenType")
                 .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .setServiceAccountImpersonationUrl(
                     transportFactory.transport.getServiceAccountImpersonationUrl())
-                .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .setServiceAccountImpersonationOptions(
                     ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(2800))
                 .build();
@@ -187,6 +203,11 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .parseAndClose(GenericJson.class);
 
     assertEquals("2800s", query.get("lifetime"));
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(6).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "aws", true, true);
   }
 
   @Test
