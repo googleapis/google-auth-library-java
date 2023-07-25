@@ -200,6 +200,11 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
     Map<String, String> query =
         TestUtils.parseQuery(transportFactory.transport.getRequests().get(0).getContentAsString());
     assertEquals(query.get("subject_token"), "pluggableAuthToken");
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(0).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "executable", false, false);
   }
 
   @Test
@@ -211,13 +216,22 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
 
     PluggableAuthCredentials credential =
         (PluggableAuthCredentials)
-            PluggableAuthCredentials.newBuilder(CREDENTIAL)
-                .setExecutableHandler(options -> "pluggableAuthToken")
+            PluggableAuthCredentials.newBuilder()
+                .setAudience(
+                    "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenInfoUrl("tokenInfoUrl")
                 .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setCredentialSource(buildCredentialSource())
                 .setServiceAccountImpersonationUrl(
                     transportFactory.transport.getServiceAccountImpersonationUrl())
                 .setHttpTransportFactory(transportFactory)
                 .build();
+
+    credential =
+        PluggableAuthCredentials.newBuilder(credential)
+            .setExecutableHandler(options -> "pluggableAuthToken")
+            .build();
 
     AccessToken accessToken = credential.refreshAccessToken();
 
@@ -228,6 +242,11 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
     Map<String, String> query =
         TestUtils.parseQuery(transportFactory.transport.getRequests().get(0).getContentAsString());
     assertEquals(query.get("subject_token"), "pluggableAuthToken");
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(0).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "executable", true, false);
   }
 
   @Test
@@ -239,15 +258,24 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
 
     PluggableAuthCredentials credential =
         (PluggableAuthCredentials)
-            PluggableAuthCredentials.newBuilder(CREDENTIAL)
-                .setExecutableHandler(options -> "pluggableAuthToken")
+            PluggableAuthCredentials.newBuilder()
+                .setAudience(
+                    "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenInfoUrl("tokenInfoUrl")
                 .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setCredentialSource(buildCredentialSource())
                 .setServiceAccountImpersonationUrl(
                     transportFactory.transport.getServiceAccountImpersonationUrl())
-                .setHttpTransportFactory(transportFactory)
                 .setServiceAccountImpersonationOptions(
                     ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(2800))
+                .setHttpTransportFactory(transportFactory)
                 .build();
+
+    credential =
+        PluggableAuthCredentials.newBuilder(credential)
+            .setExecutableHandler(options -> "pluggableAuthToken")
+            .build();
 
     AccessToken accessToken = credential.refreshAccessToken();
 
@@ -261,6 +289,11 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
             .parseAndClose(GenericJson.class);
 
     assertEquals("2800s", query.get("lifetime"));
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(0).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "executable", true, true);
   }
 
   @Test
