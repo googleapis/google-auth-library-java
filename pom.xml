@@ -66,7 +66,7 @@
     <project.google.http.version>1.43.3</project.google.http.version>
     <project.junit.version>4.13.2</project.junit.version>
     <project.guava.version>32.0.0-android</project.guava.version>
-    <project.appengine.version>2.0.10</project.appengine.version>
+    <project.appengine.version>2.0.16</project.appengine.version>
     <project.findbugs.version>3.0.2</project.findbugs.version>
     <deploy.autorelease>false</deploy.autorelease>
     <project.autovalue.version>1.8.2</project.autovalue.version>
@@ -207,7 +207,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
-          <version>3.5.0</version>
+          <version>3.6.0</version>
         </plugin>
         <plugin>
           <groupId>com.coveo</groupId>
@@ -285,7 +285,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.8</version>
+        <version>0.8.10</version>
         <executions>
           <execution>
             <goals>
@@ -319,7 +319,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>3.3.0</version>
+        <version>3.3.1</version>
       </plugin>
     </plugins>
   </build>
