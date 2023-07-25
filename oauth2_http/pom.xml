@@ -29,13 +29,13 @@
         <dependency>
           <groupId>org.junit.vintage</groupId>
           <artifactId>junit-vintage-engine</artifactId>
-          <version>5.9.1</version>
+          <version>5.10.0</version>
           <scope>test</scope>
         </dependency>
         <dependency>
           <groupId>org.graalvm.buildtools</groupId>
           <artifactId>junit-platform-native</artifactId>
-          <version>0.9.19</version>
+          <version>0.9.23</version>
           <scope>test</scope>
         </dependency>
       </dependencies>
@@ -58,7 +58,7 @@
           <plugin>
             <groupId>org.graalvm.buildtools</groupId>
             <artifactId>native-maven-plugin</artifactId>
-            <version>0.9.19</version>
+            <version>0.9.23</version>
             <extensions>true</extensions>
             <executions>
               <execution>
@@ -160,7 +160,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>3.0.0-M7</version>
+        <version>3.1.2</version>
         <configuration>
           <forkedProcessTimeoutInSeconds>1200</forkedProcessTimeoutInSeconds>
           <reportNameSuffix>sponge_log</reportNameSuffix>
