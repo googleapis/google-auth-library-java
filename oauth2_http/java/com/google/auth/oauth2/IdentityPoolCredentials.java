@@ -38,6 +38,7 @@ import com.google.api.client.http.HttpResponse;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSource.CredentialFormatType;
+import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSource.IdentityPoolCredentialSourceType;
 import com.google.common.io.CharStreams;
 import java.io.BufferedReader;
 import java.io.File;
@@ -63,11 +64,15 @@ import javax.annotation.Nullable;
  */
 public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
+  private static final long serialVersionUID = 2471046175477275881L;
+
   /**
    * The IdentityPool credential source. Dictates the retrieval method of the external credential,
    * which can either be through a metadata server or a local file.
    */
   static class IdentityPoolCredentialSource extends ExternalAccountCredentials.CredentialSource {
+
+    private static final long serialVersionUID = -745855247050085694L;
 
     enum IdentityPoolCredentialSourceType {
       FILE,
@@ -186,6 +191,16 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       return retrieveSubjectTokenFromCredentialFile();
     }
     return getSubjectTokenFromMetadataServer();
+  }
+
+  @Override
+  String getCredentialSourceType() {
+    if (((IdentityPoolCredentialSource) this.getCredentialSource()).credentialSourceType
+        == IdentityPoolCredentialSourceType.FILE) {
+      return "file";
+    } else {
+      return "url";
+    }
   }
 
   private String retrieveSubjectTokenFromCredentialFile() throws IOException {

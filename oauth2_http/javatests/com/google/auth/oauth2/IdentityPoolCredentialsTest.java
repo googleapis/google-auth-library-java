@@ -33,13 +33,11 @@ package com.google.auth.oauth2;
 
 import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
 import static com.google.auth.oauth2.OAuth2Utils.JSON_FACTORY;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
+import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.IdentityPoolCredentials.IdentityPoolCredentialSource;
@@ -59,7 +57,7 @@ import org.junit.runners.JUnit4;
 
 /** Tests for {@link IdentityPoolCredentials}. */
 @RunWith(JUnit4.class)
-public class IdentityPoolCredentialsTest {
+public class IdentityPoolCredentialsTest extends BaseSerializationTest {
 
   private static final String STS_URL = "https://sts.googleapis.com";
 
@@ -105,6 +103,7 @@ public class IdentityPoolCredentialsTest {
                 .setQuotaProjectId("quotaProjectId")
                 .setClientId("clientId")
                 .setClientSecret("clientSecret")
+                .setUniverseDomain("universeDomain")
                 .build();
 
     List<String> newScopes = Arrays.asList("scope1", "scope2");
@@ -123,6 +122,8 @@ public class IdentityPoolCredentialsTest {
     assertEquals(credentials.getQuotaProjectId(), newCredentials.getQuotaProjectId());
     assertEquals(credentials.getClientId(), newCredentials.getClientId());
     assertEquals(credentials.getClientSecret(), newCredentials.getClientSecret());
+    assertEquals(credentials.getUniverseDomain(), newCredentials.getUniverseDomain());
+    assertEquals("universeDomain", newCredentials.getUniverseDomain());
   }
 
   @Test
@@ -317,7 +318,12 @@ public class IdentityPoolCredentialsTest {
 
     IdentityPoolCredentials credential =
         (IdentityPoolCredentials)
-            IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+            IdentityPoolCredentials.newBuilder()
+                .setAudience(
+                    "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setCredentialSource(FILE_CREDENTIAL_SOURCE)
                 .setTokenUrl(transportFactory.transport.getStsUrl())
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(
@@ -327,6 +333,11 @@ public class IdentityPoolCredentialsTest {
     AccessToken accessToken = credential.refreshAccessToken();
 
     assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(1).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "url", false, false);
   }
 
   @Test
@@ -371,10 +382,14 @@ public class IdentityPoolCredentialsTest {
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
     IdentityPoolCredentials credential =
         (IdentityPoolCredentials)
-            IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
-                .setTokenUrl(transportFactory.transport.getStsUrl())
+            IdentityPoolCredentials.newBuilder()
+                .setAudience(
+                    "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenInfoUrl("tokenInfoUrl")
                 .setServiceAccountImpersonationUrl(
                     transportFactory.transport.getServiceAccountImpersonationUrl())
+                .setTokenUrl(transportFactory.transport.getStsUrl())
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(
                     buildUrlBasedCredentialSource(transportFactory.transport.getMetadataUrl()))
@@ -384,6 +399,11 @@ public class IdentityPoolCredentialsTest {
 
     assertEquals(
         transportFactory.transport.getServiceAccountAccessToken(), accessToken.getTokenValue());
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(2).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "url", true, false);
   }
 
   @Test
@@ -394,11 +414,15 @@ public class IdentityPoolCredentialsTest {
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
     IdentityPoolCredentials credential =
         (IdentityPoolCredentials)
-            IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+            IdentityPoolCredentials.newBuilder()
+                .setAudience(
+                    "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenInfoUrl("tokenInfoUrl")
                 .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setHttpTransportFactory(transportFactory)
                 .setServiceAccountImpersonationUrl(
                     transportFactory.transport.getServiceAccountImpersonationUrl())
-                .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(
                     buildUrlBasedCredentialSource(transportFactory.transport.getMetadataUrl()))
                 .setServiceAccountImpersonationOptions(
@@ -417,6 +441,11 @@ public class IdentityPoolCredentialsTest {
             .parseAndClose(GenericJson.class);
 
     assertEquals("2800s", query.get("lifetime"));
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(2).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "url", true, true);
   }
 
   @Test
@@ -730,6 +759,25 @@ public class IdentityPoolCredentialsTest {
                 .build();
 
     assertTrue(credentials.isWorkforcePoolConfiguration());
+  }
+
+  @Test
+  public void serialize() throws IOException, ClassNotFoundException {
+    IdentityPoolCredentials testCredentials =
+        (IdentityPoolCredentials)
+            IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+                .setQuotaProjectId("quotaProjectId")
+                .setClientId("clientId")
+                .setClientSecret("clientSecret")
+                .setUniverseDomain("universeDomain")
+                .build();
+
+    IdentityPoolCredentials deserializedCredentials = serializeAndDeserialize(testCredentials);
+    assertEquals(testCredentials, deserializedCredentials);
+    assertEquals(testCredentials.hashCode(), deserializedCredentials.hashCode());
+    assertEquals(testCredentials.toString(), deserializedCredentials.toString());
+    assertSame(deserializedCredentials.clock, Clock.SYSTEM);
   }
 
   static InputStream writeIdentityPoolCredentialsStream(

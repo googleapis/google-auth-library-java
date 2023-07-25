@@ -44,8 +44,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -73,6 +71,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
   static final String AWS_IMDSV2_SESSION_TOKEN_HEADER = "x-aws-ec2-metadata-token";
   static final String AWS_IMDSV2_SESSION_TOKEN_TTL_HEADER = "x-aws-ec2-metadata-token-ttl-seconds";
   static final String AWS_IMDSV2_SESSION_TOKEN_TTL = "300";
+  private static final long serialVersionUID = -3670131891574618105L;
 
   /**
    * The AWS credential source. Stores data required to retrieve the AWS credential from the AWS
@@ -81,6 +80,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
   static class AwsCredentialSource extends CredentialSource {
 
     private static final String IMDSV2_SESSION_TOKEN_URL_FIELD_NAME = "imdsv2_session_token_url";
+    private static final long serialVersionUID = -4180558200808134436L;
 
     private final String regionUrl;
     private final String url;
@@ -134,32 +134,6 @@ public class AwsCredentials extends ExternalAccountCredentials {
             (String) credentialSourceMap.get(IMDSV2_SESSION_TOKEN_URL_FIELD_NAME);
       } else {
         this.imdsv2SessionTokenUrl = null;
-      }
-
-      this.validateMetadataServerUrls();
-    }
-
-    private void validateMetadataServerUrls() {
-      validateMetadataServerUrlIfAny(this.regionUrl, "region_url");
-      validateMetadataServerUrlIfAny(this.url, "url");
-      validateMetadataServerUrlIfAny(this.imdsv2SessionTokenUrl, "imdsv2_session_token_url");
-    }
-
-    @VisibleForTesting
-    static void validateMetadataServerUrlIfAny(String urlString, String nameInConfig) {
-      if (urlString == null || urlString.trim().length() == 0) {
-        return;
-      }
-
-      try {
-        URL url = new URL(urlString);
-        String host = url.getHost();
-        if (!host.equals("169.254.169.254") && !host.equals("[fd00:ec2::254]")) {
-          throw new IllegalArgumentException(
-              String.format("Invalid host %s for %s.", host, nameInConfig));
-        }
-      } catch (MalformedURLException malformedURLException) {
-        throw new IllegalArgumentException(malformedURLException);
       }
     }
   }
@@ -221,6 +195,11 @@ public class AwsCredentials extends ExternalAccountCredentials {
   @Override
   public GoogleCredentials createScoped(Collection<String> newScopes) {
     return new AwsCredentials((AwsCredentials.Builder) newBuilder(this).setScopes(newScopes));
+  }
+
+  @Override
+  String getCredentialSourceType() {
+    return "aws";
   }
 
   private String retrieveResource(String url, String resourceName, Map<String, Object> headers)

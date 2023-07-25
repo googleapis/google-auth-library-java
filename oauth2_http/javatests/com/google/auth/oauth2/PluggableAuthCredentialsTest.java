@@ -32,9 +32,7 @@
 package com.google.auth.oauth2;
 
 import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
@@ -45,6 +43,7 @@ import com.google.auth.oauth2.ExternalAccountCredentials.CredentialSource;
 import com.google.auth.oauth2.PluggableAuthCredentials.PluggableAuthCredentialSource;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.NotSerializableException;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -54,7 +53,7 @@ import javax.annotation.Nullable;
 import org.junit.Test;
 
 /** Tests for {@link PluggableAuthCredentials}. */
-public class PluggableAuthCredentialsTest {
+public class PluggableAuthCredentialsTest extends BaseSerializationTest {
   // The default timeout for waiting for the executable to finish (30 seconds).
   private static final int DEFAULT_EXECUTABLE_TIMEOUT_MS = 30 * 1000;
   // The minimum timeout for waiting for the executable to finish (5 seconds).
@@ -201,6 +200,11 @@ public class PluggableAuthCredentialsTest {
     Map<String, String> query =
         TestUtils.parseQuery(transportFactory.transport.getRequests().get(0).getContentAsString());
     assertEquals(query.get("subject_token"), "pluggableAuthToken");
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(0).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "executable", false, false);
   }
 
   @Test
@@ -212,13 +216,22 @@ public class PluggableAuthCredentialsTest {
 
     PluggableAuthCredentials credential =
         (PluggableAuthCredentials)
-            PluggableAuthCredentials.newBuilder(CREDENTIAL)
-                .setExecutableHandler(options -> "pluggableAuthToken")
+            PluggableAuthCredentials.newBuilder()
+                .setAudience(
+                    "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenInfoUrl("tokenInfoUrl")
                 .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setCredentialSource(buildCredentialSource())
                 .setServiceAccountImpersonationUrl(
                     transportFactory.transport.getServiceAccountImpersonationUrl())
                 .setHttpTransportFactory(transportFactory)
                 .build();
+
+    credential =
+        PluggableAuthCredentials.newBuilder(credential)
+            .setExecutableHandler(options -> "pluggableAuthToken")
+            .build();
 
     AccessToken accessToken = credential.refreshAccessToken();
 
@@ -229,6 +242,11 @@ public class PluggableAuthCredentialsTest {
     Map<String, String> query =
         TestUtils.parseQuery(transportFactory.transport.getRequests().get(0).getContentAsString());
     assertEquals(query.get("subject_token"), "pluggableAuthToken");
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(0).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "executable", true, false);
   }
 
   @Test
@@ -240,15 +258,24 @@ public class PluggableAuthCredentialsTest {
 
     PluggableAuthCredentials credential =
         (PluggableAuthCredentials)
-            PluggableAuthCredentials.newBuilder(CREDENTIAL)
-                .setExecutableHandler(options -> "pluggableAuthToken")
+            PluggableAuthCredentials.newBuilder()
+                .setAudience(
+                    "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenInfoUrl("tokenInfoUrl")
                 .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setCredentialSource(buildCredentialSource())
                 .setServiceAccountImpersonationUrl(
                     transportFactory.transport.getServiceAccountImpersonationUrl())
-                .setHttpTransportFactory(transportFactory)
                 .setServiceAccountImpersonationOptions(
                     ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(2800))
+                .setHttpTransportFactory(transportFactory)
                 .build();
+
+    credential =
+        PluggableAuthCredentials.newBuilder(credential)
+            .setExecutableHandler(options -> "pluggableAuthToken")
+            .build();
 
     AccessToken accessToken = credential.refreshAccessToken();
 
@@ -262,6 +289,11 @@ public class PluggableAuthCredentialsTest {
             .parseAndClose(GenericJson.class);
 
     assertEquals("2800s", query.get("lifetime"));
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(0).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "executable", true, true);
   }
 
   @Test
@@ -415,6 +447,7 @@ public class PluggableAuthCredentialsTest {
                 .setQuotaProjectId("quotaProjectId")
                 .setClientId("clientId")
                 .setClientSecret("clientSecret")
+                .setUniverseDomain("universeDomain")
                 .build();
 
     List<String> newScopes = Arrays.asList("scope1", "scope2");
@@ -434,6 +467,25 @@ public class PluggableAuthCredentialsTest {
     assertEquals(credentials.getClientId(), newCredentials.getClientId());
     assertEquals(credentials.getClientSecret(), newCredentials.getClientSecret());
     assertEquals(credentials.getExecutableHandler(), newCredentials.getExecutableHandler());
+    assertEquals(credentials.getUniverseDomain(), newCredentials.getUniverseDomain());
+    assertEquals("universeDomain", newCredentials.getUniverseDomain());
+  }
+
+  @Test
+  public void serialize() throws IOException, ClassNotFoundException {
+    PluggableAuthCredentials testCredentials =
+        (PluggableAuthCredentials)
+            PluggableAuthCredentials.newBuilder(CREDENTIAL)
+                .setExecutableHandler(options -> "pluggableAuthToken")
+                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+                .setQuotaProjectId("quotaProjectId")
+                .setClientId("clientId")
+                .setClientSecret("clientSecret")
+                .setUniverseDomain("universeDomain")
+                .build();
+
+    // PluggableAuthCredentials are not serializable
+    assertThrows(NotSerializableException.class, () -> serializeAndDeserialize(testCredentials));
   }
 
   private static CredentialSource buildCredentialSource() {

@@ -31,15 +31,9 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.testing.http.MockHttpTransport;
+import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.ExternalAccountAuthorizedUserCredentialsTest.MockExternalAccountAuthorizedUserCredentialsTransportFactory;
@@ -62,7 +56,7 @@ import org.junit.runners.JUnit4;
 
 /** Test case for {@link GoogleCredentials}. */
 @RunWith(JUnit4.class)
-public class GoogleCredentialsTest {
+public class GoogleCredentialsTest extends BaseSerializationTest {
 
   private static final String SA_CLIENT_EMAIL =
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr@developer.gserviceaccount.com";
@@ -96,26 +90,6 @@ public class GoogleCredentialsTest {
       Collections.unmodifiableCollection(Arrays.asList("scope1", "scope2"));
   private static final Collection<String> DEFAULT_SCOPES =
       Collections.unmodifiableCollection(Arrays.asList("scope3"));
-
-  static class MockHttpTransportFactory implements HttpTransportFactory {
-
-    MockHttpTransport transport = new MockHttpTransport();
-
-    @Override
-    public HttpTransport create() {
-      return transport;
-    }
-  }
-
-  public static class MockTokenServerTransportFactory implements HttpTransportFactory {
-
-    public MockTokenServerTransport transport = new MockTokenServerTransport();
-
-    @Override
-    public HttpTransport create() {
-      return transport;
-    }
-  }
 
   @Test
   public void getApplicationDefault_nullTransport_throws() throws IOException {
@@ -587,6 +561,16 @@ public class GoogleCredentialsTest {
 
     GoogleCredentials sameCredentials = googleCredentials.createWithQuotaProject(null);
     assertEquals(null, sameCredentials.getQuotaProjectId());
+  }
+
+  @Test
+  public void serialize() throws IOException, ClassNotFoundException {
+    final GoogleCredentials testCredentials = new GoogleCredentials.Builder().build();
+    GoogleCredentials deserializedCredentials = serializeAndDeserialize(testCredentials);
+    assertEquals(testCredentials, deserializedCredentials);
+    assertEquals(testCredentials.hashCode(), deserializedCredentials.hashCode());
+    assertEquals(testCredentials.toString(), deserializedCredentials.toString());
+    assertSame(deserializedCredentials.clock, Clock.SYSTEM);
   }
 
   private static void testFromStreamException(InputStream stream, String expectedMessageContent) {

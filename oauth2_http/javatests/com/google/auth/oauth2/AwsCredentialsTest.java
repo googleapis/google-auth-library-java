@@ -35,13 +35,13 @@ import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonParser;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
+import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
 import com.google.auth.oauth2.AwsCredentials.AwsCredentialSource;
 import com.google.auth.oauth2.ExternalAccountCredentialsTest.MockExternalAccountCredentialsTransportFactory;
@@ -56,13 +56,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
-import org.junit.function.ThrowingRunnable;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** Tests for {@link AwsCredentials}. */
 @RunWith(JUnit4.class)
-public class AwsCredentialsTest {
+public class AwsCredentialsTest extends BaseSerializationTest {
 
   private static final String STS_URL = "https://sts.googleapis.com";
   private static final String AWS_CREDENTIALS_URL = "https://169.254.169.254";
@@ -105,28 +104,14 @@ public class AwsCredentialsTest {
               .build();
 
   @Test
-  public void test_awsCredentialSource_ipv6() {
-    // If no exception is thrown, it means the urls were valid.
-    new AwsCredentialSource(buildAwsIpv6CredentialSourceMap());
-  }
-
-  @Test
-  public void test_awsCredentialSource_invalid_urls() {
+  public void test_awsCredentialSource() {
     String keys[] = {"region_url", "url", "imdsv2_session_token_url"};
     for (String key : keys) {
       Map<String, Object> credentialSourceWithInvalidUrl = buildAwsIpv6CredentialSourceMap();
       credentialSourceWithInvalidUrl.put(key, "https://badhost.com/fake");
-      IllegalArgumentException e =
-          assertThrows(
-              IllegalArgumentException.class,
-              new ThrowingRunnable() {
-                @Override
-                public void run() throws Throwable {
-                  new AwsCredentialSource(credentialSourceWithInvalidUrl);
-                }
-              });
 
-      assertEquals(String.format("Invalid host badhost.com for %s.", key), e.getMessage());
+      // Should succeed as no validation is done.
+      new AwsCredentialSource(credentialSourceWithInvalidUrl);
     }
   }
 
@@ -146,6 +131,11 @@ public class AwsCredentialsTest {
     AccessToken accessToken = awsCredential.refreshAccessToken();
 
     assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(3).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "aws", false, false);
   }
 
   @Test
@@ -157,18 +147,26 @@ public class AwsCredentialsTest {
 
     AwsCredentials awsCredential =
         (AwsCredentials)
-            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+            AwsCredentials.newBuilder()
+                .setHttpTransportFactory(transportFactory)
+                .setAudience("audience")
+                .setSubjectTokenType("subjectTokenType")
                 .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .setServiceAccountImpersonationUrl(
                     transportFactory.transport.getServiceAccountImpersonationUrl())
-                .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .build();
 
     AccessToken accessToken = awsCredential.refreshAccessToken();
 
     assertEquals(
         transportFactory.transport.getServiceAccountAccessToken(), accessToken.getTokenValue());
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(6).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "aws", true, false);
   }
 
   @Test
@@ -180,12 +178,15 @@ public class AwsCredentialsTest {
 
     AwsCredentials awsCredential =
         (AwsCredentials)
-            AwsCredentials.newBuilder(AWS_CREDENTIAL)
+            AwsCredentials.newBuilder()
+                .setHttpTransportFactory(transportFactory)
+                .setAudience("audience")
+                .setSubjectTokenType("subjectTokenType")
                 .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .setServiceAccountImpersonationUrl(
                     transportFactory.transport.getServiceAccountImpersonationUrl())
-                .setHttpTransportFactory(transportFactory)
-                .setCredentialSource(buildAwsCredentialSource(transportFactory))
                 .setServiceAccountImpersonationOptions(
                     ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(2800))
                 .build();
@@ -202,6 +203,11 @@ public class AwsCredentialsTest {
             .parseAndClose(GenericJson.class);
 
     assertEquals("2800s", query.get("lifetime"));
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(6).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "aws", true, true);
   }
 
   @Test
@@ -613,43 +619,6 @@ public class AwsCredentialsTest {
   }
 
   @Test
-  public void validateMetadataServerUrlIfAny_validOrEmptyUrls() {
-    String[] urls = {
-      "http://[fd00:ec2::254]/region",
-      "http://169.254.169.254",
-      "http://169.254.169.254/xyz",
-      " ",
-      "",
-      null
-    };
-    for (String url : urls) {
-      AwsCredentialSource.validateMetadataServerUrlIfAny(url, "url");
-    }
-  }
-
-  @Test
-  public void validateMetadataServerUrlIfAny_invalidUrls() {
-    Map<String, String> urls = new HashMap<String, String>();
-    urls.put("http://[fd00:ec2::255]/region", "[fd00:ec2::255]");
-    urls.put("http://fake.com/region", "fake.com");
-    urls.put("http://169.254.169.255", "169.254.169.255");
-
-    for (Map.Entry<String, String> entry : urls.entrySet()) {
-      IllegalArgumentException e =
-          assertThrows(
-              IllegalArgumentException.class,
-              new ThrowingRunnable() {
-                @Override
-                public void run() throws Throwable {
-                  AwsCredentialSource.validateMetadataServerUrlIfAny(entry.getKey(), "url");
-                }
-              });
-
-      assertEquals(String.format("Invalid host %s for url.", entry.getValue()), e.getMessage());
-    }
-  }
-
-  @Test
   public void getAwsSecurityCredentials_fromMetadataServer() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
@@ -798,6 +767,7 @@ public class AwsCredentialsTest {
                 .setQuotaProjectId("quotaProjectId")
                 .setClientId("clientId")
                 .setClientSecret("clientSecret")
+                .setUniverseDomain("universeDomain")
                 .build();
 
     List<String> newScopes = Arrays.asList("scope1", "scope2");
@@ -816,6 +786,8 @@ public class AwsCredentialsTest {
     assertEquals(credentials.getClientId(), newCredentials.getClientId());
     assertEquals(credentials.getClientSecret(), newCredentials.getClientSecret());
     assertEquals(newScopes, newCredentials.getScopes());
+    assertEquals(credentials.getUniverseDomain(), newCredentials.getUniverseDomain());
+    assertEquals("universeDomain", newCredentials.getUniverseDomain());
   }
 
   @Test
@@ -1023,6 +995,35 @@ public class AwsCredentialsTest {
     assertEquals(credentials.getClientSecret(), "clientSecret");
     assertEquals(credentials.getScopes(), scopes);
     assertEquals(credentials.getEnvironmentProvider(), SystemEnvironmentProvider.getInstance());
+  }
+
+  @Test
+  public void serialize() throws IOException, ClassNotFoundException {
+    List<String> scopes = Arrays.asList("scope1", "scope2");
+
+    AwsCredentials testCredentials =
+        (AwsCredentials)
+            AwsCredentials.newBuilder()
+                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+                .setAudience("audience")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenUrl(STS_URL)
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setCredentialSource(AWS_CREDENTIAL_SOURCE)
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+                .setQuotaProjectId("quotaProjectId")
+                .setClientId("clientId")
+                .setClientSecret("clientSecret")
+                .setUniverseDomain("universeDomain")
+                .setScopes(scopes)
+                .build();
+
+    AwsCredentials deserializedCredentials = serializeAndDeserialize(testCredentials);
+    assertEquals(testCredentials, deserializedCredentials);
+    assertEquals(testCredentials.hashCode(), deserializedCredentials.hashCode());
+    assertEquals(testCredentials.toString(), deserializedCredentials.toString());
+    assertSame(deserializedCredentials.clock, Clock.SYSTEM);
   }
 
   private static void ValidateRequest(

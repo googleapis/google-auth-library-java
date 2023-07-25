@@ -35,11 +35,13 @@ import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SER
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
+import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.ExternalAccountCredentialsTest.TestExternalAccountCredentials.TestCredentialSource;
@@ -62,7 +64,7 @@ import org.junit.runners.JUnit4;
 
 /** Tests for {@link ExternalAccountCredentials}. */
 @RunWith(JUnit4.class)
-public class ExternalAccountCredentialsTest {
+public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
   private static final String STS_URL = "https://sts.googleapis.com";
 
@@ -184,6 +186,7 @@ public class ExternalAccountCredentialsTest {
     assertEquals(STS_URL, credential.getTokenUrl());
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
     assertNotNull(credential.getCredentialSource());
+    assertNull(credential.getUniverseDomain());
   }
 
   @Test
@@ -201,6 +204,7 @@ public class ExternalAccountCredentialsTest {
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
     assertEquals("userProject", credential.getWorkforcePoolUserProject());
     assertNotNull(credential.getCredentialSource());
+    assertNull(credential.getUniverseDomain());
   }
 
   @Test
@@ -222,6 +226,27 @@ public class ExternalAccountCredentialsTest {
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
     assertNotNull(credential.getCredentialSource());
     assertEquals(2800, credential.getServiceAccountImpersonationOptions().getLifetime());
+    assertNull(credential.getUniverseDomain());
+  }
+
+  @Test
+  public void fromJson_identityPoolCredentialsWithUniverseDomain() {
+    GenericJson identityPoolCredentialJson = buildJsonIdentityPoolCredential();
+    identityPoolCredentialJson.set("universe_domain", "universeDomain");
+
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(
+            identityPoolCredentialJson, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+
+    assertTrue(credential instanceof IdentityPoolCredentials);
+    assertNotNull(credential.getCredentialSource());
+    assertEquals(
+        "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider",
+        credential.getAudience());
+    assertEquals("subjectTokenType", credential.getSubjectTokenType());
+    assertEquals(STS_URL, credential.getTokenUrl());
+    assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
+    assertEquals("universeDomain", credential.getUniverseDomain());
   }
 
   @Test
@@ -236,6 +261,7 @@ public class ExternalAccountCredentialsTest {
     assertEquals(STS_URL, credential.getTokenUrl());
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
     assertNotNull(credential.getCredentialSource());
+    assertNull(credential.getUniverseDomain());
   }
 
   @Test
@@ -254,6 +280,24 @@ public class ExternalAccountCredentialsTest {
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
     assertNotNull(credential.getCredentialSource());
     assertEquals(2800, credential.getServiceAccountImpersonationOptions().getLifetime());
+    assertNull(credential.getUniverseDomain());
+  }
+
+  @Test
+  public void fromJson_awsCredentialsWithUniverseDomain() {
+    GenericJson awsCredentialJson = buildJsonAwsCredential();
+    awsCredentialJson.set("universe_domain", "universeDomain");
+
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(awsCredentialJson, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+
+    assertTrue(credential instanceof AwsCredentials);
+    assertEquals("audience", credential.getAudience());
+    assertEquals("subjectTokenType", credential.getSubjectTokenType());
+    assertEquals(STS_URL, credential.getTokenUrl());
+    assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
+    assertEquals("universeDomain", credential.getUniverseDomain());
+    assertNotNull(credential.getCredentialSource());
   }
 
   @Test
@@ -274,6 +318,7 @@ public class ExternalAccountCredentialsTest {
     assertEquals("command", source.getCommand());
     assertEquals(30000, source.getTimeoutMs()); // Default timeout is 30s.
     assertNull(source.getOutputFilePath());
+    assertNull(credential.getUniverseDomain());
   }
 
   @Test
@@ -298,6 +343,7 @@ public class ExternalAccountCredentialsTest {
     assertEquals("command", source.getCommand());
     assertEquals(30000, source.getTimeoutMs()); // Default timeout is 30s.
     assertNull(source.getOutputFilePath());
+    assertNull(credential.getUniverseDomain());
   }
 
   @Test
@@ -325,6 +371,7 @@ public class ExternalAccountCredentialsTest {
     assertEquals("command", source.getCommand());
     assertEquals("path/to/output/file", source.getOutputFilePath());
     assertEquals(5000, source.getTimeoutMs());
+    assertNull(credential.getUniverseDomain());
   }
 
   @Test
@@ -344,6 +391,61 @@ public class ExternalAccountCredentialsTest {
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
     assertNotNull(credential.getCredentialSource());
     assertEquals(2800, credential.getServiceAccountImpersonationOptions().getLifetime());
+
+    PluggableAuthCredentialSource source =
+        (PluggableAuthCredentialSource) credential.getCredentialSource();
+    assertEquals("command", source.getCommand());
+    assertEquals(30000, source.getTimeoutMs()); // Default timeout is 30s.
+    assertNull(source.getOutputFilePath());
+    assertNull(credential.getUniverseDomain());
+  }
+
+  @Test
+  public void fromJson_pluggableAuthCredentials_withUniverseDomain() {
+    GenericJson json = buildJsonPluggableAuthCredential();
+    json.set("universe_domain", "universeDomain");
+
+    Map<String, Object> credentialSourceMap = (Map<String, Object>) json.get("credential_source");
+    // Add optional params to the executable config (timeout, output file path).
+    Map<String, Object> executableConfig =
+        (Map<String, Object>) credentialSourceMap.get("executable");
+    executableConfig.put("timeout_millis", 5000);
+    executableConfig.put("output_file", "path/to/output/file");
+
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+
+    assertTrue(credential instanceof PluggableAuthCredentials);
+    assertEquals("audience", credential.getAudience());
+    assertEquals("subjectTokenType", credential.getSubjectTokenType());
+    assertEquals(STS_URL, credential.getTokenUrl());
+    assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
+    assertNotNull(credential.getCredentialSource());
+
+    PluggableAuthCredentialSource source =
+        (PluggableAuthCredentialSource) credential.getCredentialSource();
+    assertEquals("command", source.getCommand());
+    assertEquals("path/to/output/file", source.getOutputFilePath());
+    assertEquals(5000, source.getTimeoutMs());
+    assertEquals("universeDomain", credential.getUniverseDomain());
+  }
+
+  @Test
+  public void fromJson_pluggableAuthCredentialsWithUniverseDomain() {
+    GenericJson pluggableAuthCredentialJson = buildJsonPluggableAuthCredential();
+    pluggableAuthCredentialJson.set("universe_domain", "universeDomain");
+
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(
+            pluggableAuthCredentialJson, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+
+    assertTrue(credential instanceof PluggableAuthCredentials);
+    assertEquals("audience", credential.getAudience());
+    assertEquals("subjectTokenType", credential.getSubjectTokenType());
+    assertEquals(STS_URL, credential.getTokenUrl());
+    assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
+    assertNotNull(credential.getCredentialSource());
+    assertEquals("universeDomain", credential.getUniverseDomain());
 
     PluggableAuthCredentialSource source =
         (PluggableAuthCredentialSource) credential.getCredentialSource();
@@ -437,6 +539,7 @@ public class ExternalAccountCredentialsTest {
             .setClientId("clientId")
             .setClientSecret("clientSecret")
             .setWorkforcePoolUserProject("workforcePoolUserProject")
+            .setUniverseDomain("universeDomain")
             .build();
 
     assertEquals(
@@ -452,6 +555,7 @@ public class ExternalAccountCredentialsTest {
     assertEquals("clientId", credentials.getClientId());
     assertEquals("clientSecret", credentials.getClientSecret());
     assertEquals("workforcePoolUserProject", credentials.getWorkforcePoolUserProject());
+    assertEquals("universeDomain", credentials.getUniverseDomain());
     assertNotNull(credentials.getCredentialSource());
   }
 
@@ -560,6 +664,7 @@ public class ExternalAccountCredentialsTest {
           .setClientId("clientId")
           .setClientSecret("clientSecret")
           .setWorkforcePoolUserProject("workforcePoolUserProject")
+          .setUniverseDomain("universeDomain")
           .setServiceAccountImpersonationOptions(invalidOptionsMap)
           .build();
       fail("Should not be able to continue without exception.");
@@ -591,6 +696,7 @@ public class ExternalAccountCredentialsTest {
             .setClientId("clientId")
             .setClientSecret("clientSecret")
             .setWorkforcePoolUserProject("workforcePoolUserProject")
+            .setUniverseDomain("universeDomain")
             .setServiceAccountImpersonationOptions(optionsMap)
             .build();
 
@@ -617,6 +723,7 @@ public class ExternalAccountCredentialsTest {
             .setClientId("clientId")
             .setClientSecret("clientSecret")
             .setWorkforcePoolUserProject("workforcePoolUserProject")
+            .setUniverseDomain("universeDomain")
             .setServiceAccountImpersonationOptions(optionsMap)
             .build();
 
@@ -643,6 +750,7 @@ public class ExternalAccountCredentialsTest {
             .setClientId("clientId")
             .setClientSecret("clientSecret")
             .setWorkforcePoolUserProject("workforcePoolUserProject")
+            .setUniverseDomain("universeDomain")
             .setServiceAccountImpersonationOptions(optionsMap)
             .build();
 
@@ -655,23 +763,23 @@ public class ExternalAccountCredentialsTest {
     optionsMap.put("token_lifetime_seconds", 599);
 
     try {
-      ExternalAccountCredentials credentials =
-          IdentityPoolCredentials.newBuilder()
-              .setHttpTransportFactory(transportFactory)
-              .setAudience(
-                  "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
-              .setSubjectTokenType("subjectTokenType")
-              .setTokenUrl(STS_URL)
-              .setTokenInfoUrl("https://tokeninfo.com")
-              .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-              .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
-              .setScopes(Arrays.asList("scope1", "scope2"))
-              .setQuotaProjectId("projectId")
-              .setClientId("clientId")
-              .setClientSecret("clientSecret")
-              .setWorkforcePoolUserProject("workforcePoolUserProject")
-              .setServiceAccountImpersonationOptions(optionsMap)
-              .build();
+      IdentityPoolCredentials.newBuilder()
+          .setHttpTransportFactory(transportFactory)
+          .setAudience(
+              "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+          .setSubjectTokenType("subjectTokenType")
+          .setTokenUrl(STS_URL)
+          .setTokenInfoUrl("https://tokeninfo.com")
+          .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+          .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+          .setScopes(Arrays.asList("scope1", "scope2"))
+          .setQuotaProjectId("projectId")
+          .setClientId("clientId")
+          .setClientSecret("clientSecret")
+          .setWorkforcePoolUserProject("workforcePoolUserProject")
+          .setUniverseDomain("universeDomain")
+          .setServiceAccountImpersonationOptions(optionsMap)
+          .build();
     } catch (IllegalArgumentException e) {
       assertEquals(
           "The \"token_lifetime_seconds\" field must be between 600 and 43200 seconds.",
@@ -685,23 +793,23 @@ public class ExternalAccountCredentialsTest {
     optionsMap.put("token_lifetime_seconds", 43201);
 
     try {
-      ExternalAccountCredentials credentials =
-          IdentityPoolCredentials.newBuilder()
-              .setHttpTransportFactory(transportFactory)
-              .setAudience(
-                  "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
-              .setSubjectTokenType("subjectTokenType")
-              .setTokenUrl(STS_URL)
-              .setTokenInfoUrl("https://tokeninfo.com")
-              .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-              .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
-              .setScopes(Arrays.asList("scope1", "scope2"))
-              .setQuotaProjectId("projectId")
-              .setClientId("clientId")
-              .setClientSecret("clientSecret")
-              .setWorkforcePoolUserProject("workforcePoolUserProject")
-              .setServiceAccountImpersonationOptions(optionsMap)
-              .build();
+      IdentityPoolCredentials.newBuilder()
+          .setHttpTransportFactory(transportFactory)
+          .setAudience(
+              "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+          .setSubjectTokenType("subjectTokenType")
+          .setTokenUrl(STS_URL)
+          .setTokenInfoUrl("https://tokeninfo.com")
+          .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+          .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+          .setScopes(Arrays.asList("scope1", "scope2"))
+          .setQuotaProjectId("projectId")
+          .setClientId("clientId")
+          .setClientSecret("clientSecret")
+          .setWorkforcePoolUserProject("workforcePoolUserProject")
+          .setUniverseDomain("universeDomain")
+          .setServiceAccountImpersonationOptions(optionsMap)
+          .build();
     } catch (IllegalArgumentException e) {
       assertEquals(
           "The \"token_lifetime_seconds\" field must be between 600 and 43200 seconds.",
@@ -726,6 +834,11 @@ public class ExternalAccountCredentialsTest {
     Map<String, String> query =
         TestUtils.parseQuery(transportFactory.transport.getLastRequest().getContentAsString());
     assertNull(query.get("options"));
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(0).getHeaders();
+    validateMetricsHeader(headers, "file", false, false);
   }
 
   @Test
@@ -844,6 +957,11 @@ public class ExternalAccountCredentialsTest {
             .parseAndClose(GenericJson.class);
 
     assertEquals("3600s", query.get("lifetime"));
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(1).getHeaders();
+    validateMetricsHeader(headers, "url", true, false);
   }
 
   @Test
@@ -875,6 +993,10 @@ public class ExternalAccountCredentialsTest {
             .createJsonParser(transportFactory.transport.getLastRequest().getContentAsString())
             .parseAndClose(GenericJson.class);
 
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(1).getHeaders();
+    validateMetricsHeader(headers, "url", true, true);
     assertEquals("2800s", query.get("lifetime"));
   }
 
@@ -952,6 +1074,37 @@ public class ExternalAccountCredentialsTest {
         testCredentials.getRequestMetadata(URI.create("http://googleapis.com/foo/bar"));
 
     assertEquals("quotaProjectId", requestMetadata.get("x-goog-user-project").get(0));
+  }
+
+  @Test
+  public void serialize() throws IOException, ClassNotFoundException {
+    Map<String, Object> impersonationOpts =
+        new HashMap<String, Object>() {
+          {
+            put("token_lifetime_seconds", 1000);
+          }
+        };
+
+    TestExternalAccountCredentials testCredentials =
+        (TestExternalAccountCredentials)
+            TestExternalAccountCredentials.newBuilder()
+                .setHttpTransportFactory(transportFactory)
+                .setAudience("audience")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenUrl(STS_URL)
+                .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+                .setServiceAccountImpersonationOptions(impersonationOpts)
+                .build();
+
+    TestExternalAccountCredentials deserializedCredentials =
+        serializeAndDeserialize(testCredentials);
+    assertEquals(testCredentials, deserializedCredentials);
+    assertEquals(testCredentials.hashCode(), deserializedCredentials.hashCode());
+    assertEquals(testCredentials.toString(), deserializedCredentials.toString());
+    assertEquals(
+        testCredentials.getServiceAccountImpersonationOptions().getLifetime(),
+        deserializedCredentials.getServiceAccountImpersonationOptions().getLifetime());
+    assertSame(deserializedCredentials.clock, Clock.SYSTEM);
   }
 
   @Test
@@ -1116,6 +1269,23 @@ public class ExternalAccountCredentialsTest {
     map.put("token_lifetime_seconds", lifetime);
 
     return map;
+  }
+
+  static void validateMetricsHeader(
+      Map<String, List<String>> headers,
+      String source,
+      boolean saImpersonationUsed,
+      boolean configLifetimeUsed) {
+    assertTrue(headers.containsKey(MetricsUtils.API_CLIENT_HEADER));
+    String actualMetricsValue = headers.get(MetricsUtils.API_CLIENT_HEADER).get(0);
+    String expectedMetricsValue =
+        String.format(
+            "%s google-byoid-sdk source/%s sa-impersonation/%s config-lifetime/%s",
+            MetricsUtils.getLanguageAndAuthLibraryVersions(),
+            source,
+            saImpersonationUsed,
+            configLifetimeUsed);
+    assertEquals(expectedMetricsValue, actualMetricsValue);
   }
 
   static class TestExternalAccountCredentials extends ExternalAccountCredentials {
