@@ -45,7 +45,6 @@ import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.ExternalAccountCredentialsTest.TestExternalAccountCredentials.TestCredentialSource;
-import com.google.auth.oauth2.PluggableAuthCredentials.PluggableAuthCredentialSource;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -1289,7 +1288,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   static class TestExternalAccountCredentials extends ExternalAccountCredentials {
-    static class TestCredentialSource extends IdentityPoolCredentials.IdentityPoolCredentialSource {
+    static class TestCredentialSource extends IdentityPoolCredentialSource {
       protected TestCredentialSource(Map<String, Object> credentialSourceMap) {
         super(credentialSourceMap);
       }
