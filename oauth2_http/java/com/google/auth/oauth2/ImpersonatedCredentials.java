@@ -50,6 +50,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -699,5 +700,10 @@ public class ImpersonatedCredentials extends GoogleCredentials
     public ImpersonatedCredentials build() {
       return new ImpersonatedCredentials(this);
     }
+  }
+
+  private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
+    input.defaultReadObject();
+    transportFactory = newInstance(transportFactoryClassName);
   }
 }

@@ -1,5 +1,100 @@
 # Changelog
 
+## [1.19.0](https://github.com/googleapis/google-auth-library-java/compare/v1.18.0...v1.19.0) (2023-06-27)
+
+
+### Features
+
+* Expose test-jar and mock classes in oauth2 ([12e8db6](https://github.com/googleapis/google-auth-library-java/commit/12e8db6025e0263b801d5385844924a4f5ff7b7e))
+
+## [1.18.0](https://github.com/googleapis/google-auth-library-java/compare/v1.17.1...v1.18.0) (2023-06-16)
+
+
+### Features
+
+* Introduce a way to pass additional parameters to auhtorization url ([#1134](https://github.com/googleapis/google-auth-library-java/issues/1134)) ([3a2c5d3](https://github.com/googleapis/google-auth-library-java/commit/3a2c5d3d1abf23bce0af7f958240b5f9ee9d1bf8))
+
+## [1.17.1](https://github.com/googleapis/google-auth-library-java/compare/v1.17.0...v1.17.1) (2023-05-25)
+
+
+### Dependencies
+
+* Update doclet version to v1.9.0 ([#1211](https://github.com/googleapis/google-auth-library-java/issues/1211)) ([8b6e28e](https://github.com/googleapis/google-auth-library-java/commit/8b6e28e00aa609edefceafbb4f2c1dbc10afd6f9))
+
+## [1.17.0](https://github.com/googleapis/google-auth-library-java/compare/v1.16.1...v1.17.0) (2023-05-20)
+
+
+### Features
+
+* Adds universe_domain to external account creds ([#1199](https://github.com/googleapis/google-auth-library-java/issues/1199)) ([608ee87](https://github.com/googleapis/google-auth-library-java/commit/608ee87c92b3e6c355541b50e39387b03deebdf8))
+* Expose method to manually obtain ADC from gcloud CLI well-known… ([#1188](https://github.com/googleapis/google-auth-library-java/issues/1188)) ([2fa9d52](https://github.com/googleapis/google-auth-library-java/commit/2fa9d5211569f802948ed2d1aaf13f7d37f8409c))
+* Updating readme for external account authorized user credentials ([#1200](https://github.com/googleapis/google-auth-library-java/issues/1200)) ([bf25574](https://github.com/googleapis/google-auth-library-java/commit/bf255749b7b403cc5f7538f6e901d9089f529fca))
+
+
+### Bug Fixes
+
+* Do not expose universe_domain yet ([#1206](https://github.com/googleapis/google-auth-library-java/issues/1206)) ([9cce49c](https://github.com/googleapis/google-auth-library-java/commit/9cce49cbba26892e573629b4d11a375eb6ec28fc))
+* Improve errors and warnings related to ADC ([#1172](https://github.com/googleapis/google-auth-library-java/issues/1172)) ([6d2251c](https://github.com/googleapis/google-auth-library-java/commit/6d2251cd8e87b018a65a9296bb5c10f487b304cb))
+* Marking 503 as retryable for Compute credentials ([#1205](https://github.com/googleapis/google-auth-library-java/issues/1205)) ([8ea9445](https://github.com/googleapis/google-auth-library-java/commit/8ea9445a3b738e74c6fc0b59f593b32ef0df5314))
+
+## [1.16.1](https://github.com/googleapis/google-auth-library-java/compare/v1.16.0...v1.16.1) (2023-04-07)
+
+
+### Bug Fixes
+
+* Make supporting classes of AwsCredentials serializable ([#1113](https://github.com/googleapis/google-auth-library-java/issues/1113)) ([82bf871](https://github.com/googleapis/google-auth-library-java/commit/82bf871125b8473677a499c979ab9a843972c930))
+* Remove AWS credential source validation. ([#1177](https://github.com/googleapis/google-auth-library-java/issues/1177)) ([77a99c9](https://github.com/googleapis/google-auth-library-java/commit/77a99c9cfab3c1ce2db50c92e89fc292efaeb3ab))
+
+## [1.16.0](https://github.com/googleapis/google-auth-library-java/compare/v1.15.0...v1.16.0) (2023-02-15)
+
+
+### Features
+
+* Add PKCE to 3LO exchange. ([#1146](https://github.com/googleapis/google-auth-library-java/issues/1146)) ([5bf606b](https://github.com/googleapis/google-auth-library-java/commit/5bf606bb8f6d863b44e87587eebf51eaeea4a0ae))
+
+
+### Bug Fixes
+
+* Create and reuse self signed jwt creds for better performance ([#1154](https://github.com/googleapis/google-auth-library-java/issues/1154)) ([eaaa8e8](https://github.com/googleapis/google-auth-library-java/commit/eaaa8e89cf69d1e0d581443121f315854d52c75f))
+* Java doc for DefaultPKCEProvider.java ([#1148](https://github.com/googleapis/google-auth-library-java/issues/1148)) ([154c127](https://github.com/googleapis/google-auth-library-java/commit/154c1279b3ec96cc34a3225e5e78800ccdda927c))
+* Removed url pattern validation for google urls in external account credential configurations ([#1150](https://github.com/googleapis/google-auth-library-java/issues/1150)) ([35495b1](https://github.com/googleapis/google-auth-library-java/commit/35495b1207ffe11712ee996d3e305449752fb87c))
+
+
+### Documentation
+
+* Clarified Maven artifact for HTTP-based clients ([#1136](https://github.com/googleapis/google-auth-library-java/issues/1136)) ([b49fc13](https://github.com/googleapis/google-auth-library-java/commit/b49fc13b10d0e326c7296e2aad7a50ea03e774f5))
+
+## [1.15.0](https://github.com/googleapis/google-auth-library-java/compare/v1.14.0...v1.15.0) (2023-01-25)
+
+
+### Features
+
+* Adds external account authorized user credentials ([#1129](https://github.com/googleapis/google-auth-library-java/issues/1129)) ([06bf21a](https://github.com/googleapis/google-auth-library-java/commit/06bf21a6ce9478a35907bd6681e53a0e86ffc83f))
+* Expose scopes granted by user ([#1107](https://github.com/googleapis/google-auth-library-java/issues/1107)) ([240c26b](https://github.com/googleapis/google-auth-library-java/commit/240c26bf11652e208469c2a6ea2fc2f383343c25))
+
+
+### Bug Fixes
+
+* AccessToken scopes clean serialization and default as empty list ([#1125](https://github.com/googleapis/google-auth-library-java/issues/1125)) ([f55d41f](https://github.com/googleapis/google-auth-library-java/commit/f55d41fa90750464a37a452ff03a8b811ae93425))
+* Enforce Locale.US for AwsRequestSignerTest ([#1111](https://github.com/googleapis/google-auth-library-java/issues/1111)) ([aeb1218](https://github.com/googleapis/google-auth-library-java/commit/aeb12182241e75cba664975a83bbcfa2449fb0f5))
+* Ensure both refreshMargin and expirationMargin are set when using OAuth2CredentialsWithRefresh ([#1131](https://github.com/googleapis/google-auth-library-java/issues/1131)) ([326e4a1](https://github.com/googleapis/google-auth-library-java/commit/326e4a15dae72b3806b7a640843d7abc669b19c6))
+
+## [1.14.0](https://github.com/googleapis/google-auth-library-java/compare/v1.13.0...v1.14.0) (2022-12-06)
+
+
+### Features
+
+* Add GDCH support ([#1087](https://github.com/googleapis/google-auth-library-java/issues/1087)) ([cfafb2d](https://github.com/googleapis/google-auth-library-java/commit/cfafb2d4c8d6ab3179e709ff09fc09e6dbc11a70))
+* Adding functional tests for Compute Engine ([#1105](https://github.com/googleapis/google-auth-library-java/issues/1105)) ([6f32ac3](https://github.com/googleapis/google-auth-library-java/commit/6f32ac3d4db91ff05fd7134ad6c788a16ffe44f4))
+* Introduce Environment Variable for Quota Project Id ([#1082](https://github.com/googleapis/google-auth-library-java/issues/1082)) ([040acef](https://github.com/googleapis/google-auth-library-java/commit/040acefec507f419f6e4ec4eab9645a6e3888a15))
+* Next release from main branch is 1.13.0 ([#1077](https://github.com/googleapis/google-auth-library-java/issues/1077)) ([d56eee0](https://github.com/googleapis/google-auth-library-java/commit/d56eee07911ba65a685ccba585e71061037ea756))
+
+
+### Bug Fixes
+
+* AwsCredentials should not call metadata server if security creds and region are retrievable through environment vars ([#1100](https://github.com/googleapis/google-auth-library-java/issues/1100)) ([1ff5772](https://github.com/googleapis/google-auth-library-java/commit/1ff57720609fdf27f28b9c543c1ef63b57892593))
+* Not loosing the access token when calling UserCredentials#ToBuil… ([#993](https://github.com/googleapis/google-auth-library-java/issues/993)) ([84afdb8](https://github.com/googleapis/google-auth-library-java/commit/84afdb8f8d41e781dc93f04626411e10b35689de))
+
 ## [1.13.0](https://github.com/googleapis/google-auth-library-java/compare/v1.12.1...v1.13.0) (2022-11-15)
 
 

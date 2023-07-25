@@ -32,6 +32,7 @@ credentials as well as utility methods to create them and to get Application Def
       * [Configurable Token Lifetime](#configurable-token-lifetime)
   * [Workforce Identity Federation](#workforce-identity-federation)
       * [Accessing resources using an OIDC or SAML 2.0 identity provider](#accessing-resources-using-an-oidc-or-saml-20-identity-provider)
+      * [Accessing resources using external account authorized user workforce credentials](#using-external-account-authorized-user-workforce-credentials)
       * [Accessing resources using Executable-sourced credentials](#using-executable-sourced-workforce-credentials-with-oidc-and-saml)
   * [Downscoping with Credential Access Boundaries](#downscoping-with-credential-access-boundaries)
   * [Configuring a Proxy](#configuring-a-proxy)
@@ -56,7 +57,7 @@ If you are using Maven, add this to your pom.xml file (notice that you can repla
 <dependency>
   <groupId>com.google.auth</groupId>
   <artifactId>google-auth-library-oauth2-http</artifactId>
-  <version>1.3.0</version>
+  <version>1.19.0</version>
 </dependency>
 ```
 [//]: # ({x-version-update-end})
@@ -66,7 +67,7 @@ If you are using Gradle, add this to your dependencies
 
 [//]: # ({x-version-update-start:google-auth-library-oauth2-http:released})
 ```Groovy
-implementation 'com.google.auth:google-auth-library-oauth2-http:1.3.0'
+implementation 'com.google.auth:google-auth-library-oauth2-http:1.19.0'
 ```
 [//]: # ({x-version-update-end})
 
@@ -74,7 +75,7 @@ If you are using SBT, add this to your dependencies
 
 [//]: # ({x-version-update-start:google-auth-library-oauth2-http:released})
 ```Scala
-libraryDependencies += "com.google.auth" % "google-auth-library-oauth2-http" % "1.3.0"
+libraryDependencies += "com.google.auth" % "google-auth-library-oauth2-http" % "1.19.0"
 ```
 [//]: # ({x-version-update-end})
 
@@ -622,6 +623,29 @@ Where the following variables need to be substituted:
   `$URL_TO_GET_SAML_ASSERTION`, e.g. `Metadata-Flavor=Google`.
 - `$WORKFORCE_POOL_USER_PROJECT`: The project number associated with the [workforce pools user project](https://cloud.google.com/iam/docs/workforce-identity-federation#workforce-pools-user-project).
 
+#### Using external account authorized user workforce credentials
+
+[External account authorized user credentials](https://cloud.google.com/iam/docs/workforce-obtaining-short-lived-credentials#browser-based-sign-in) allow you to sign in with a web browser to an external identity provider account via the
+gcloud CLI and create a configuration for the auth library to use.
+
+To generate an external account authorized user workforce identity configuration, run the following command:
+
+```bash
+gcloud auth application-default login --login-config=$LOGIN_CONFIG
+```
+
+Where the following variable needs to be substituted:
+- `$LOGIN_CONFIG`: The login config file generated with the cloud console or
+  [gcloud iam workforce-pools create-login-config](https://cloud.google.com/sdk/gcloud/reference/iam/workforce-pools/create-login-config)
+
+This will open a browser flow for you to sign in via the configured third party identity provider
+and then will store the external account authorized user configuration at the well known ADC location.
+The auth library will then use the provided refresh token from the configuration to generate and refresh
+an access token to call Google Cloud services.
+
+Note that the default lifetime of the refresh token is one hour, after which a new configuration will need to be generated from the gcloud CLI.
+The lifetime can be modified by changing the [session duration of the workforce pool](https://cloud.google.com/iam/docs/reference/rest/v1/locations.workforcePools), and can be set as high as 12 hours.
+
 #### Using Executable-sourced workforce credentials with OIDC and SAML
 
 **Executable-sourced credentials**
@@ -727,6 +751,13 @@ You can also explicitly initialize external account clients using the generated 
 ExternalAccountCredentials credentials = 
     ExternalAccountCredentials.fromStream(new FileInputStream("/path/to/credentials.json"));
 ```
+
+##### Security Considerations
+Note that this library does not perform any validation on the token_url, token_info_url,
+or service_account_impersonation_url fields of the credential configuration.
+It is not recommended to use a credential configuration that you did not
+generate with the gcloud CLI unless you verify that the URL fields point to a
+googleapis.com domain.
 
 ### Downscoping with Credential Access Boundaries
 
@@ -930,10 +961,12 @@ The above example requires `com.google.http-client:google-http-client-apache-v2`
 
 ## Using Credentials with `google-http-client`
 
-Credentials provided by `google-auth-library` can be used with Google's 
-[HTTP-based clients][apiary-clients]. We provide a 
-[`HttpCredentialsAdapter`][http-credentials-adapter] which can be used as an 
-[`HttpRequestInitializer`][http-request-initializer].
+Credentials provided by [com.google.auth:google-auth-library-oauth2-http](
+https://search.maven.org/artifact/com.google.auth/google-auth-library-oauth2-http)
+can be used with Google's [HTTP-based clients][apiary-clients].
+We provide a [`HttpCredentialsAdapter`][http-credentials-adapter] which can be used
+as an [`HttpRequestInitializer`][http-request-initializer], the last argument for
+their builders.
 
 ```java
 import com.google.api.client.http.HttpRequestInitializer;

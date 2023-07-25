@@ -52,14 +52,16 @@ import com.google.api.client.util.Clock;
 import com.google.auth.ServiceAccountSigner.SigningException;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
-import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.stream.IntStream;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -530,6 +532,77 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
       assertEquals("Failed to sign the provided bytes", e.getMessage());
       assertNotNull(e.getCause());
       assertTrue(e.getCause().getMessage().contains("500"));
+    }
+  }
+
+  @Test
+  public void refresh_503_retryable_throws() {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+
+    transportFactory.transport =
+        new MockMetadataServerTransport() {
+          @Override
+          public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+            return new MockLowLevelHttpRequest(url) {
+              @Override
+              public LowLevelHttpResponse execute() throws IOException {
+                return new MockLowLevelHttpResponse()
+                    .setStatusCode(HttpStatusCodes.STATUS_CODE_SERVICE_UNAVAILABLE)
+                    .setContent(TestUtils.errorJson("Some error"));
+              }
+            };
+          }
+        };
+
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+    try {
+      credentials.refreshAccessToken();
+      fail("Should have failed");
+    } catch (IOException e) {
+      assertTrue(e.getCause().getMessage().contains("503"));
+      assertTrue(e instanceof GoogleAuthException);
+      assertTrue(((GoogleAuthException) e).isRetryable());
+    }
+  }
+
+  @Test
+  public void refresh_non503_ioexception_throws() {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    final Queue<Integer> responseSequence = new ArrayDeque<>();
+    IntStream.rangeClosed(400, 600).forEach(i -> responseSequence.add(i));
+
+    while (!responseSequence.isEmpty()) {
+      if (responseSequence.peek() == 503) {
+        responseSequence.poll();
+        continue;
+      }
+
+      transportFactory.transport =
+          new MockMetadataServerTransport() {
+            @Override
+            public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+              return new MockLowLevelHttpRequest(url) {
+                @Override
+                public LowLevelHttpResponse execute() throws IOException {
+                  return new MockLowLevelHttpResponse()
+                      .setStatusCode(responseSequence.poll())
+                      .setContent(TestUtils.errorJson("Some error"));
+                }
+              };
+            }
+          };
+
+      ComputeEngineCredentials credentials =
+          ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+      try {
+        credentials.refreshAccessToken();
+        fail("Should have failed");
+      } catch (IOException e) {
+        assertFalse(e instanceof GoogleAuthException);
+      }
     }
   }
 

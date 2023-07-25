@@ -121,9 +121,7 @@ class GoogleAuthException extends IOException implements Retryable {
     int responseStatus = responseException.getStatusCode();
     boolean isRetryable =
         OAuth2Utils.TOKEN_ENDPOINT_RETRYABLE_STATUS_CODES.contains(responseStatus);
-    // TODO: temporarily setting to default to remove a direct dependency, to be reverted after
-    // release
-    int retryCount = ServiceAccountCredentials.DEFAULT_NUMBER_OF_RETRIES;
+    int retryCount = responseException.getAttemptCount() - 1;
 
     if (message == null) {
       return new GoogleAuthException(isRetryable, retryCount, responseException);

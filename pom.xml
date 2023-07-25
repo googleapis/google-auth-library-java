@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.auth</groupId>
   <artifactId>google-auth-library-parent</artifactId>
-  <version>1.13.1-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
+  <version>1.19.1-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
   <packaging>pom</packaging>
   <name>Google Auth Library for Java</name>
   <description>Client libraries providing authentication and
-    authorization to enable calling Google APIs.</description>
+    authorization to enable calling Google APIs.
+  </description>
   <url>https://github.com/googleapis/google-auth-library-java</url>
 
   <distributionManagement>
@@ -53,20 +56,21 @@
 
   <scm>
     <connection>scm:git:https://github.com/googleapis/google-auth-library-java.git</connection>
-    <developerConnection>scm:git:https://github.com/googleapis/google-auth-library-java.git</developerConnection>
+    <developerConnection>scm:git:https://github.com/googleapis/google-auth-library-java.git
+    </developerConnection>
     <url>https://github.com/googleapis/google-auth-library-java</url>
   </scm>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.google.http.version>1.42.3</project.google.http.version>
+    <project.google.http.version>1.43.3</project.google.http.version>
     <project.junit.version>4.13.2</project.junit.version>
-    <project.guava.version>31.0.1-android</project.guava.version>
-    <project.appengine.version>2.0.10</project.appengine.version>
+    <project.guava.version>32.0.0-android</project.guava.version>
+    <project.appengine.version>2.0.16</project.appengine.version>
     <project.findbugs.version>3.0.2</project.findbugs.version>
     <deploy.autorelease>false</deploy.autorelease>
     <project.autovalue.version>1.8.2</project.autovalue.version>
-    <auto-value-annotation.version>1.10.1</auto-value-annotation.version>
+    <auto-value-annotation.version>1.10.2</auto-value-annotation.version>
   </properties>
 
   <dependencyManagement>
@@ -130,6 +134,7 @@
         <artifactId>google-auth-library-oauth2-http</artifactId>
         <version>${project.version}</version>
         <type>test-jar</type>
+        <classifier>testlib</classifier>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -152,7 +157,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-source-plugin</artifactId>
-          <version>3.2.1</version>
+          <version>3.3.0</version>
           <executions>
             <execution>
               <id>attach-sources</id>
@@ -165,9 +170,9 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>3.4.1</version>
+          <version>3.5.0</version>
           <configuration>
-            <source>7</source>
+            <source>8</source>
             <failOnError>false</failOnError>
           </configuration>
           <executions>
@@ -202,7 +207,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
-          <version>3.3.0</version>
+          <version>3.6.0</version>
         </plugin>
         <plugin>
           <groupId>com.coveo</groupId>
@@ -222,7 +227,7 @@
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.10.1</version>
+        <version>3.11.0</version>
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
@@ -241,7 +246,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.2.0</version>
+        <version>3.3.0</version>
         <executions>
           <execution>
             <id>checkstyle</id>
@@ -264,6 +269,7 @@
               <testSourceDirectories>
                 <testSourceDirectory>src/test</testSourceDirectory>
               </testSourceDirectories>
+              <excludes>com.google.auth.oauth2.ExternalAccountCredentials</excludes>
             </configuration>
           </execution>
         </executions>
@@ -279,7 +285,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.8</version>
+        <version>0.8.10</version>
         <executions>
           <execution>
             <goals>
@@ -310,6 +316,11 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.3.1</version>
+      </plugin>
     </plugins>
   </build>
 
@@ -318,7 +329,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.4.1</version>
+        <version>3.5.0</version>
         <reportSets>
           <reportSet>
             <id>html</id>
@@ -331,7 +342,7 @@
         <configuration>
           <failOnError>false</failOnError>
           <doclint>none</doclint>
-          <source>7</source>
+          <source>8</source>
           <outputDirectory>${project.build.directory}/javadoc</outputDirectory>
           <doctitle>Google Auth Library for Java ${project.version}</doctitle>
           <overview>${basedir}/overview.html</overview>
@@ -373,7 +384,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-source-plugin</artifactId>
-            <version>3.2.1</version>
+            <version>3.3.0</version>
             <executions>
               <execution>
                 <id>attach-sources</id>
@@ -386,7 +397,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
-            <version>3.4.1</version>
+            <version>3.5.0</version>
             <executions>
               <execution>
                 <id>attach-javadocs</id>
@@ -399,7 +410,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
-            <version>3.0.1</version>
+            <version>3.1.0</version>
             <executions>
               <execution>
                 <id>sign-artifacts</id>
@@ -454,7 +465,7 @@
                 <path>
                   <groupId>com.google.auto.service</groupId>
                   <artifactId>auto-service-annotations</artifactId>
-                  <version>1.0.1</version>
+                  <version>1.1.1</version>
                 </path>
               </annotationProcessorPaths>
             </configuration>
@@ -473,12 +484,12 @@
       </activation>
       <properties>
         <!-- default config values -->
-        <docletName>java-docfx-doclet-1.5.0</docletName>
+        <docletName>java-docfx-doclet-1.9.0</docletName>
         <outputpath>${project.build.directory}/docfx-yml</outputpath>
         <projectname>${project.artifactId}</projectname>
         <excludeclasses></excludeclasses>
         <excludePackages></excludePackages>
-        <source>7</source>            
+        <source>8</source>
         <sourceFileExclude></sourceFileExclude>
       </properties>
       <build>
@@ -486,16 +497,16 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
-            <version>3.4.1</version>
+            <version>3.5.0</version>
             <configuration>
               <doclet>com.microsoft.doclet.DocFxDoclet</doclet>
               <useStandardDocletOptions>false</useStandardDocletOptions>
-               <!-- custom config with -Dproperty=value -->
+              <!-- custom config with -Dproperty=value -->
               <docletPath>${env.KOKORO_GFILE_DIR}/${docletName}.jar</docletPath>
               <additionalOptions>
-                -outputpath ${outputpath} 
-                -projectname ${projectname} 
-                -excludeclasses ${excludeclasses}: 
+                -outputpath ${outputpath}
+                -projectname ${projectname}
+                -excludeclasses ${excludeclasses}:
                 -excludepackages ${excludePackages}:
               </additionalOptions>
               <doclint>none</doclint>
@@ -507,7 +518,7 @@
               </sourceFileExcludes>
               <failOnError>false</failOnError>
             </configuration>
-          </plugin>  
+          </plugin>
         </plugins>
       </build>
     </profile>

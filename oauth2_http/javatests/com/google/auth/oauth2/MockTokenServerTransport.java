@@ -61,9 +61,12 @@ public class MockTokenServerTransport extends MockHttpTransport {
   int buildRequestCount;
   final Map<String, String> clients = new HashMap<String, String>();
   final Map<String, String> refreshTokens = new HashMap<String, String>();
+  final Map<String, String> grantedScopes = new HashMap<String, String>();
   final Map<String, String> serviceAccounts = new HashMap<String, String>();
   final Map<String, String> gdchServiceAccounts = new HashMap<String, String>();
   final Map<String, String> codes = new HashMap<String, String>();
+  final Map<String, Map<String, String>> additionalParameters =
+      new HashMap<String, Map<String, String>>();
   URI tokenServerUri = OAuth2Utils.TOKEN_SERVER_URI;
   private IOException error;
   private final Queue<Future<LowLevelHttpResponse>> responseSequence = new ArrayDeque<>();
@@ -79,9 +82,19 @@ public class MockTokenServerTransport extends MockHttpTransport {
     this.tokenServerUri = tokenServerUri;
   }
 
-  public void addAuthorizationCode(String code, String refreshToken, String accessToken) {
+  public void addAuthorizationCode(
+      String code,
+      String refreshToken,
+      String accessToken,
+      String grantedScopes,
+      Map<String, String> additionalParameters) {
     codes.put(code, refreshToken);
     refreshTokens.put(refreshToken, accessToken);
+    this.grantedScopes.put(refreshToken, grantedScopes);
+
+    if (additionalParameters != null) {
+      this.additionalParameters.put(refreshToken, additionalParameters);
+    }
   }
 
   public void addClient(String clientId, String clientSecret) {
@@ -90,6 +103,12 @@ public class MockTokenServerTransport extends MockHttpTransport {
 
   public void addRefreshToken(String refreshToken, String accessTokenToReturn) {
     refreshTokens.put(refreshToken, accessTokenToReturn);
+  }
+
+  public void addRefreshToken(
+      String refreshToken, String accessTokenToReturn, String grantedScopes) {
+    refreshTokens.put(refreshToken, accessTokenToReturn);
+    this.grantedScopes.put(refreshToken, grantedScopes);
   }
 
   public void addServiceAccount(String email, String accessToken) {
@@ -176,6 +195,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
           Map<String, String> query = TestUtils.parseQuery(content);
           String accessToken = null;
           String refreshToken = null;
+          String grantedScopesString = null;
           boolean generateAccessToken = true;
 
           String foundId = query.get("client_id");
@@ -206,6 +226,33 @@ public class MockTokenServerTransport extends MockHttpTransport {
               isUserEmailScope = true;
             }
             accessToken = refreshTokens.get(refreshToken);
+
+            if (grantedScopes.containsKey(refreshToken)) {
+              grantedScopesString = grantedScopes.get(refreshToken);
+            }
+
+            if (additionalParameters.containsKey(refreshToken)) {
+              Map<String, String> additionalParametersMap = additionalParameters.get(refreshToken);
+              for (Map.Entry<String, String> entry : additionalParametersMap.entrySet()) {
+                String key = entry.getKey();
+                String expectedValue = entry.getValue();
+                if (!query.containsKey(key)) {
+                  throw new IllegalArgumentException("Missing additional parameter: " + key);
+                } else {
+                  String actualValue = query.get(key);
+                  if (!expectedValue.equals(actualValue)) {
+                    throw new IllegalArgumentException(
+                        "For additional parameter "
+                            + key
+                            + ", Actual value: "
+                            + actualValue
+                            + ", Expected value: "
+                            + expectedValue);
+                  }
+                }
+              }
+            }
+
           } else if (query.containsKey("grant_type")) {
             String grantType = query.get("grant_type");
             String assertion = query.get("assertion");
@@ -257,6 +304,9 @@ public class MockTokenServerTransport extends MockHttpTransport {
             responseContents.put("access_token", accessToken);
             if (refreshToken != null) {
               responseContents.put("refresh_token", refreshToken);
+            }
+            if (grantedScopesString != null) {
+              responseContents.put("scope", grantedScopesString);
             }
           }
           if (isUserEmailScope || !generateAccessToken) {

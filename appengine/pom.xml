@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.google.auth</groupId>
     <artifactId>google-auth-library-parent</artifactId>
-    <version>1.13.1-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
+    <version>1.19.1-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -75,8 +75,9 @@
     <dependency>
       <groupId>com.google.auth</groupId>
       <artifactId>google-auth-library-oauth2-http</artifactId>
-      <type>test-jar</type>
       <scope>test</scope>
+      <type>test-jar</type>
+      <classifier>testlib</classifier>
     </dependency>
   </dependencies>
 </project>

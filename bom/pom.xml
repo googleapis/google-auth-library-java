@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.auth</groupId>
   <artifactId>google-auth-library-bom</artifactId>
-  <version>1.13.1-SNAPSHOT</version><!-- {x-version-update:google-auth-library-bom:current} -->
+  <version>1.19.1-SNAPSHOT</version><!-- {x-version-update:google-auth-library-bom:current} -->
   <packaging>pom</packaging>
   <name>Google Auth Library for Java BOM</name>
   <description>
@@ -83,7 +83,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.4.1</version>
+        <version>3.5.0</version>
         <configuration>
           <skip>true</skip>
         </configuration>
@@ -122,7 +122,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
-            <version>3.0.1</version>
+            <version>3.1.0</version>
             <executions>
               <execution>
                 <id>sign-artifacts</id>

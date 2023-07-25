@@ -47,8 +47,6 @@ import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.ComputeEngineCredentialsTest.MockMetadataServerTransportFactory;
-import com.google.auth.oauth2.GoogleCredentialsTest.MockHttpTransportFactory;
-import com.google.auth.oauth2.GoogleCredentialsTest.MockTokenServerTransportFactory;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -128,7 +126,7 @@ public class DefaultCredentialsProviderTest {
       fail("No credential expected.");
     } catch (IOException e) {
       String message = e.getMessage();
-      assertTrue(message.contains(DefaultCredentialsProvider.HELP_PERMALINK));
+      assertTrue(message.equals(DefaultCredentialsProvider.CLOUDSDK_MISSING_CREDENTIALS));
     }
   }
 
@@ -143,7 +141,7 @@ public class DefaultCredentialsProviderTest {
       fail("No credential expected.");
     } catch (IOException e) {
       String message = e.getMessage();
-      assertTrue(message.contains(DefaultCredentialsProvider.HELP_PERMALINK));
+      assertTrue(message.equals(DefaultCredentialsProvider.CLOUDSDK_MISSING_CREDENTIALS));
     }
   }
 
@@ -164,7 +162,7 @@ public class DefaultCredentialsProviderTest {
       fail("No credential expected.");
     } catch (IOException e) {
       String message = e.getMessage();
-      assertTrue(message.contains(DefaultCredentialsProvider.HELP_PERMALINK));
+      assertTrue(message.equals(DefaultCredentialsProvider.CLOUDSDK_MISSING_CREDENTIALS));
     }
   }
 
@@ -179,7 +177,7 @@ public class DefaultCredentialsProviderTest {
       fail("No credential expected.");
     } catch (IOException expected) {
       String message = expected.getMessage();
-      assertTrue(message.contains(DefaultCredentialsProvider.HELP_PERMALINK));
+      assertTrue(message.equals(DefaultCredentialsProvider.CLOUDSDK_MISSING_CREDENTIALS));
     }
     assertEquals(
         transportFactory.transport.getRequestCount(),
@@ -278,7 +276,7 @@ public class DefaultCredentialsProviderTest {
       fail("No credential expected when not on App Engine.");
     } catch (IOException e) {
       String message = e.getMessage();
-      assertTrue(message.contains(DefaultCredentialsProvider.HELP_PERMALINK));
+      assertTrue(message.equals(DefaultCredentialsProvider.CLOUDSDK_MISSING_CREDENTIALS));
     }
   }
 
@@ -295,7 +293,7 @@ public class DefaultCredentialsProviderTest {
       fail("Credential expected to fail to load if credential class not present.");
     } catch (IOException e) {
       String message = e.getMessage();
-      assertFalse(message.contains(DefaultCredentialsProvider.HELP_PERMALINK));
+      assertFalse(message.equals(DefaultCredentialsProvider.CLOUDSDK_MISSING_CREDENTIALS));
       assertTrue(message.contains("Check that the App Engine SDK is deployed."));
     }
   }
@@ -633,19 +631,27 @@ public class DefaultCredentialsProviderTest {
 
   @Test
   public void getDefaultCredentials_wellKnownFile_logsGcloudWarning() throws IOException {
-    LogRecord message = getCredentialsAndReturnLogMessage(false);
+    LogRecord message = getCredentialsAndReturnLogMessage(false, true);
     assertNotNull(message);
     assertEquals(Level.WARNING, message.getLevel());
-    assertTrue(message.getMessage().contains("end user credentials from Google Cloud SDK"));
+    assertTrue(
+        message.getMessage().equals(DefaultCredentialsProvider.CLOUDSDK_CREDENTIALS_WARNING));
+  }
+
+  @Test
+  public void getDefaultCredentials_wellKnownFile_noGcloudWarning() throws IOException {
+    LogRecord message = getCredentialsAndReturnLogMessage(false, false);
+    assertNull(message);
   }
 
   @Test
   public void getDefaultCredentials_wellKnownFile_suppressGcloudWarning() throws IOException {
-    LogRecord message = getCredentialsAndReturnLogMessage(true);
+    LogRecord message = getCredentialsAndReturnLogMessage(true, true);
     assertNull(message);
   }
 
-  private LogRecord getCredentialsAndReturnLogMessage(boolean suppressWarning) throws IOException {
+  private LogRecord getCredentialsAndReturnLogMessage(boolean suppressWarning, boolean isGce)
+      throws IOException {
     Logger logger = Logger.getLogger(DefaultCredentialsProvider.class.getName());
     LogHandler handler = new LogHandler();
     logger.addHandler(handler);
@@ -664,6 +670,12 @@ public class DefaultCredentialsProviderTest {
         Boolean.toString(suppressWarning));
     testProvider.setProperty("os.name", "linux");
     testProvider.setProperty("user.home", homeDir.getAbsolutePath());
+    if (isGce) {
+      String productFilePath = SMBIOS_PATH_LINUX;
+      File productFile = new File(productFilePath);
+      InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
+      testProvider.addFile(productFile.getAbsolutePath(), productStream);
+    }
     testProvider.addFile(wellKnownFile.getAbsolutePath(), userStream);
     testUserProvidesToken(testProvider, GCLOUDSDK_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
     return handler.getRecord();
@@ -769,7 +781,7 @@ public class DefaultCredentialsProviderTest {
     }
   }
 
-  private static class TestDefaultCredentialsProvider extends DefaultCredentialsProvider {
+  static class TestDefaultCredentialsProvider extends DefaultCredentialsProvider {
 
     private final Map<String, Class<?>> types = new HashMap<>();
     private final Map<String, String> variables = new HashMap<>();

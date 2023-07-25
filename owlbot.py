@@ -32,7 +32,10 @@ java.common_templates(
         "samples/**",
         ".github/workflows/approve-readme.yaml",
         ".github/workflows/samples.yaml",
+        ".github/CODEOWNERS",
         ".kokoro/nightly/integration.cfg",
         ".kokoro/presubmit/integration.cfg",
+        ".kokoro/presubmit/graalvm-native.cfg",
+        ".kokoro/presubmit/graalvm-native-17.cfg"
     ]
 )
