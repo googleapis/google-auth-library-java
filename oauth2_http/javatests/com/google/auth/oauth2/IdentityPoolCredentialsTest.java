@@ -318,7 +318,12 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
 
     IdentityPoolCredentials credential =
         (IdentityPoolCredentials)
-            IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+            IdentityPoolCredentials.newBuilder()
+                .setAudience(
+                    "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setCredentialSource(FILE_CREDENTIAL_SOURCE)
                 .setTokenUrl(transportFactory.transport.getStsUrl())
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(
@@ -328,6 +333,11 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     AccessToken accessToken = credential.refreshAccessToken();
 
     assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(1).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "url", false, false);
   }
 
   @Test
@@ -372,10 +382,14 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
     IdentityPoolCredentials credential =
         (IdentityPoolCredentials)
-            IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
-                .setTokenUrl(transportFactory.transport.getStsUrl())
+            IdentityPoolCredentials.newBuilder()
+                .setAudience(
+                    "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenInfoUrl("tokenInfoUrl")
                 .setServiceAccountImpersonationUrl(
                     transportFactory.transport.getServiceAccountImpersonationUrl())
+                .setTokenUrl(transportFactory.transport.getStsUrl())
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(
                     buildUrlBasedCredentialSource(transportFactory.transport.getMetadataUrl()))
@@ -385,6 +399,11 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
 
     assertEquals(
         transportFactory.transport.getServiceAccountAccessToken(), accessToken.getTokenValue());
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(2).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "url", true, false);
   }
 
   @Test
@@ -395,11 +414,15 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
     IdentityPoolCredentials credential =
         (IdentityPoolCredentials)
-            IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+            IdentityPoolCredentials.newBuilder()
+                .setAudience(
+                    "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenInfoUrl("tokenInfoUrl")
                 .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setHttpTransportFactory(transportFactory)
                 .setServiceAccountImpersonationUrl(
                     transportFactory.transport.getServiceAccountImpersonationUrl())
-                .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(
                     buildUrlBasedCredentialSource(transportFactory.transport.getMetadataUrl()))
                 .setServiceAccountImpersonationOptions(
@@ -418,6 +441,11 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
             .parseAndClose(GenericJson.class);
 
     assertEquals("2800s", query.get("lifetime"));
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(2).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "url", true, true);
   }
 
   @Test

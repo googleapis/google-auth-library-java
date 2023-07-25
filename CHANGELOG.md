@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.0](https://github.com/googleapis/google-auth-library-java/compare/v1.18.0...v1.19.0) (2023-06-27)
+
+
+### Features
+
+* Expose test-jar and mock classes in oauth2 ([12e8db6](https://github.com/googleapis/google-auth-library-java/commit/12e8db6025e0263b801d5385844924a4f5ff7b7e))
+
 ## [1.18.0](https://github.com/googleapis/google-auth-library-java/compare/v1.17.1...v1.18.0) (2023-06-16)
 
 
