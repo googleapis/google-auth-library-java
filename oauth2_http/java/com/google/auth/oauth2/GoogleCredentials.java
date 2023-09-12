@@ -207,10 +207,9 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   /**
    * Returns an instance of GoogleCredentials defined by JSON
    *
-   * To be used to parse common credentials fields
+   * <p>To be used to parse common credentials fields
    *
    * @param json a map from the JSON representing the credentials.
-   *
    * @return the credentials defined by the JSON.
    * @throws IOException if the credential cannot be created from the JSON.
    */
@@ -233,7 +232,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    * Creates a credential with the provided universe domain.
    *
    * @param universeDomain the universe domain to set on the credential. Empty or null value will
-   * result in the default universe domain 'googleapis.com'
+   *     result in the default universe domain 'googleapis.com'
    * @return credential with the provided universe domain
    */
   public GoogleCredentials createWithUniverseDomain(String universeDomain) {
@@ -253,8 +252,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   /**
    * Returns the universe domain for the credential
    *
-   * @return An explicit universe domain if it was explicitly provided,
-   * {@code GoogleAuthUtils.GOOGLE_DEFAULT_UNIVERSE} otherwise.
+   * @return An explicit universe domain if it was explicitly provided, {@code
+   *     GoogleAuthUtils.GOOGLE_DEFAULT_UNIVERSE} otherwise.
    */
   public String getUniverseDomain() {
     if (this.universeDomain == null || universeDomain.trim().isEmpty()) {
@@ -298,7 +297,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   /**
    * Constructor with explicit access token and quotaProjectId
    *
-   * Deprecated, please use the builder constructor whenever possible
+   * <p>Deprecated, please use the builder constructor whenever possible
    *
    * @param accessToken initial or temporary access token
    * @param quotaProjectId a quotaProjectId, a project id to be used for billing purposes
@@ -320,8 +319,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * Constructor with using builder
-   * All the fields comes explicitly from builder
+   * Constructor with using builder All the fields comes explicitly from builder
    *
    * @param builder an instance of a builder
    */
@@ -334,7 +332,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   /**
    * Constructor with explicit access token and refresh times
    *
-   * Deprecated, please use the builder constructor whenever possible
+   * <p>Deprecated, please use the builder constructor whenever possible
    *
    * @param accessToken initial or temporary access token
    */
@@ -462,7 +460,9 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       return this.quotaProjectId;
     }
 
-    public String getUniverseDomain() { return this.universeDomain; }
+    public String getUniverseDomain() {
+      return this.universeDomain;
+    }
 
     @Override
     public Builder setAccessToken(AccessToken token) {

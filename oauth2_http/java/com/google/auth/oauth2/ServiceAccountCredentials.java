@@ -41,7 +41,6 @@ import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.UrlEncodedContent;
-import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.webtoken.JsonWebSignature;
@@ -61,7 +60,6 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -465,7 +463,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
   public static ServiceAccountCredentials fromStream(
       InputStream credentialsStream, HttpTransportFactory transportFactory) throws IOException {
     ServiceAccountCredentials credential =
-        (ServiceAccountCredentials) GoogleCredentials.fromStream(credentialsStream, transportFactory);
+        (ServiceAccountCredentials)
+            GoogleCredentials.fromStream(credentialsStream, transportFactory);
     if (credential == null) {
       throw new IOException(
           String.format(
@@ -721,8 +720,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   /**
    * Returns a new JwtCredentials instance with modified claims.
    *
-   * @param newClaims new claims. Any unspecified claim fields will default to the current
-   *     values.
+   * @param newClaims new claims. Any unspecified claim fields will default to the current values.
    * @return new credentials
    */
   @Override
