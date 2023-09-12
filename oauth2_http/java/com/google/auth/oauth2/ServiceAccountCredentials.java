@@ -184,8 +184,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
               + "expecting  'client_id', 'client_email', 'private_key' and 'private_key_id'.");
     }
 
+    GoogleCredentials baseCredential = GoogleCredentials.fromJson(json);
+
     ServiceAccountCredentials.Builder builder =
-        ServiceAccountCredentials.newBuilder()
+        ServiceAccountCredentials.Builder(baseCredential.toBuilder())
             .setClientId(clientId)
             .setClientEmail(clientEmail)
             .setPrivateKeyId(privateKeyId)
@@ -462,26 +464,14 @@ public class ServiceAccountCredentials extends GoogleCredentials
    */
   public static ServiceAccountCredentials fromStream(
       InputStream credentialsStream, HttpTransportFactory transportFactory) throws IOException {
-    Preconditions.checkNotNull(credentialsStream);
-    Preconditions.checkNotNull(transportFactory);
-
-    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
-    JsonObjectParser parser = new JsonObjectParser(jsonFactory);
-    GenericJson fileContents =
-        parser.parseAndClose(credentialsStream, StandardCharsets.UTF_8, GenericJson.class);
-
-    String fileType = (String) fileContents.get("type");
-    if (fileType == null) {
-      throw new IOException("Error reading credentials from stream, 'type' field not specified.");
+    ServiceAccountCredentials credential =
+        (ServiceAccountCredentials) GoogleCredentials.fromStream(credentialsStream, transportFactory);
+    if (credential == null) {
+      throw new IOException(
+          String.format(
+              "Error reading credentials from stream, ServiceAccountCredentials type is not recognized."));
     }
-    if (SERVICE_ACCOUNT_FILE_TYPE.equals(fileType)) {
-      return fromJson(fileContents, transportFactory);
-    }
-    throw new IOException(
-        String.format(
-            "Error reading credentials from stream, 'type' value '%s' not recognized."
-                + " Expecting '%s'.",
-            fileType, SERVICE_ACCOUNT_FILE_TYPE));
+    return credential;
   }
 
   /** Returns whether the scopes are empty, meaning createScoped must be called before use. */
@@ -731,7 +721,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   /**
    * Returns a new JwtCredentials instance with modified claims.
    *
-   * @param newClaims new claims. Any unspecified claim fields will default to the the current
+   * @param newClaims new claims. Any unspecified claim fields will default to the current
    *     values.
    * @return new credentials
    */
@@ -1003,6 +993,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
       this.lifetime = credentials.lifetime;
       this.useJwtAccessWithScope = credentials.useJwtAccessWithScope;
       this.defaultRetriesEnabled = credentials.defaultRetriesEnabled;
+    }
+
+    protected Builder(GoogleCredentials.Builder superBuilder) {
+      super(superBuilder);
     }
 
     public Builder setClientId(String clientId) {

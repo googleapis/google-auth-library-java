@@ -66,6 +66,7 @@ import org.junit.runners.JUnit4;
 public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
   private static final String STS_URL = "https://sts.googleapis.com";
+  private static final String GOOGLE_DEFAULT_UNIVERSE = "googleapis.com";
 
   private static final Map<String, Object> FILE_CREDENTIAL_SOURCE_MAP =
       new HashMap<String, Object>() {
@@ -203,7 +204,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
     assertEquals("userProject", credential.getWorkforcePoolUserProject());
     assertNotNull(credential.getCredentialSource());
-    assertNull(credential.getUniverseDomain());
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credential.getUniverseDomain());
   }
 
   @Test
@@ -225,7 +226,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
     assertNotNull(credential.getCredentialSource());
     assertEquals(2800, credential.getServiceAccountImpersonationOptions().getLifetime());
-    assertNull(credential.getUniverseDomain());
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credential.getUniverseDomain());
   }
 
   @Test

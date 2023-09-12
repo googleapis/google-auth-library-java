@@ -38,6 +38,7 @@ import java.io.File;
  * convenience methods such as a getter for well-known Application Default Credentials file path
  */
 public class GoogleAuthUtils {
+  static final String GOOGLE_DEFAULT_UNIVERSE = "googleapis.com";
 
   /**
    * Gets the path to the well-known Application Default Credentials file location

@@ -94,7 +94,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   @Nullable private final String serviceAccountImpersonationUrl;
   @Nullable private final String clientId;
   @Nullable private final String clientSecret;
-  @Nullable private final String universeDomain;
 
   // This is used for Workforce Pools. It is passed to the Security Token Service during token
   // exchange in the `options` param and will be embedded in the token by the Security Token
@@ -214,7 +213,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     this.environmentProvider =
         environmentProvider == null ? SystemEnvironmentProvider.getInstance() : environmentProvider;
     this.workforcePoolUserProject = null;
-    this.universeDomain = null;
     this.serviceAccountImpersonationOptions =
         new ServiceAccountImpersonationOptions(new HashMap<String, Object>());
 
@@ -267,8 +265,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       throw new IllegalArgumentException(
           "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.");
     }
-
-    this.universeDomain = builder.universeDomain;
 
     validateTokenUrl(tokenUrl);
     if (serviceAccountImpersonationUrl != null) {
@@ -592,11 +588,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   }
 
   @Nullable
-  String getUniverseDomain() {
-    return universeDomain;
-  }
-
-  @Nullable
   public ServiceAccountImpersonationOptions getServiceAccountImpersonationOptions() {
     return serviceAccountImpersonationOptions;
   }
@@ -752,7 +743,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       this.environmentProvider = credentials.environmentProvider;
       this.workforcePoolUserProject = credentials.workforcePoolUserProject;
       this.serviceAccountImpersonationOptions = credentials.serviceAccountImpersonationOptions;
-      this.universeDomain = credentials.universeDomain;
       this.metricsHandler = credentials.metricsHandler;
     }
 
