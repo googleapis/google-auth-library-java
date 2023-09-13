@@ -490,7 +490,13 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   public void fromJSON_Universe_getUniverseDomain() throws IOException {
     GenericJson json =
         writeServiceAccountJson(
-            CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, PROJECT_ID, null, TPC_UNIVERSE);
+            CLIENT_ID,
+            CLIENT_EMAIL,
+            PRIVATE_KEY_PKCS8,
+            PRIVATE_KEY_ID,
+            PROJECT_ID,
+            null,
+            TPC_UNIVERSE);
 
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.fromJson(json, new MockTokenServerTransportFactory());
@@ -545,7 +551,13 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
     GenericJson json =
         writeServiceAccountJson(
-            CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, PROJECT_ID, QUOTA_PROJECT, null);
+            CLIENT_ID,
+            CLIENT_EMAIL,
+            PRIVATE_KEY_PKCS8,
+            PRIVATE_KEY_ID,
+            PROJECT_ID,
+            QUOTA_PROJECT,
+            null);
     GoogleCredentials credentials = ServiceAccountCredentials.fromJson(json, transportFactory);
     credentials = credentials.createScoped(SCOPES);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
@@ -1676,17 +1688,15 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   static InputStream writeServiceAccountStream(
-      String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId, String universeDomain)
+      String clientId,
+      String clientEmail,
+      String privateKeyPkcs8,
+      String privateKeyId,
+      String universeDomain)
       throws IOException {
     GenericJson json =
         writeServiceAccountJson(
-            clientId,
-            clientEmail,
-            privateKeyPkcs8,
-            privateKeyId,
-            null,
-            null,
-            universeDomain);
+            clientId, clientEmail, privateKeyPkcs8, privateKeyId, null, null, universeDomain);
     return TestUtils.jsonToInputStream(json);
   }
 
