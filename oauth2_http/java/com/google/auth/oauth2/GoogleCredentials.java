@@ -217,7 +217,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   static GoogleCredentials fromJson(Map<String, Object> json) throws IOException {
     Builder credentialsBuilder = GoogleCredentials.newBuilder();
 
-    // parse fields that are common for all the types of GoogleCredentials
+    // Parse fields that are common for all the types of GoogleCredentials.
     String universeDomain = (String) json.get("universe_domain");
     if (universeDomain != null
         && universeDomain.trim().isEmpty()
