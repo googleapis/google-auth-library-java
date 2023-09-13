@@ -90,6 +90,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
       Collections.unmodifiableCollection(Arrays.asList("scope1", "scope2"));
   private static final Collection<String> DEFAULT_SCOPES =
       Collections.unmodifiableCollection(Arrays.asList("scope3"));
+  private static final String GOOGLE_DEFAULT_UNIVERSE = "googleapis.com";
+  private static final String TPC_UNIVERSE = "foo.bar";
 
   @Test
   public void getApplicationDefault_nullTransport_throws() throws IOException {
@@ -124,7 +126,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_serviceAccount_providesToken() throws IOException {
+  public void fromStream_serviceAccount_noUniverse_providesToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     InputStream serviceAccountStream =
@@ -135,6 +137,29 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
         GoogleCredentials.fromStream(serviceAccountStream, transportFactory);
 
     assertNotNull(credentials);
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
+    credentials = credentials.createScoped(SCOPES);
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+
+    credentials = credentials.createScoped(SCOPES, DEFAULT_SCOPES);
+    metadata = credentials.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+  }
+
+  @Test
+  public void fromStream_serviceAccount_Universe_providesToken() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    InputStream serviceAccountStream =
+        ServiceAccountCredentialsTest.writeServiceAccountStream(
+            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, TPC_UNIVERSE);
+
+    GoogleCredentials credentials =
+        GoogleCredentials.fromStream(serviceAccountStream, transportFactory);
+
+    assertNotNull(credentials);
+    assertEquals(TPC_UNIVERSE, credentials.getUniverseDomain());
     credentials = credentials.createScoped(SCOPES);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
@@ -561,6 +586,22 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     GoogleCredentials sameCredentials = googleCredentials.createWithQuotaProject(null);
     assertEquals(null, sameCredentials.getQuotaProjectId());
+  }
+
+  @Test
+  public void createWithUniverseDomain() {
+    final GoogleCredentials original =
+        new GoogleCredentials.Builder().setUniverseDomain("universe1").build();
+    GoogleCredentials updated = original.createWithUniverseDomain("universe2");
+
+    assertEquals("universe1", original.getUniverseDomain());
+    assertEquals("universe2", updated.getUniverseDomain());
+
+    GoogleCredentials withEmpty = original.createWithUniverseDomain("");
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, withEmpty.getUniverseDomain());
+
+    GoogleCredentials withNull = original.createWithUniverseDomain(null);
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, withNull.getUniverseDomain());
   }
 
   @Test

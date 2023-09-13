@@ -185,14 +185,15 @@ public class ServiceAccountCredentials extends GoogleCredentials
     GoogleCredentials baseCredential = GoogleCredentials.fromJson(json);
 
     ServiceAccountCredentials.Builder builder =
-        ServiceAccountCredentials.Builder(baseCredential.toBuilder())
+        ServiceAccountCredentials.newBuilder()
             .setClientId(clientId)
             .setClientEmail(clientEmail)
             .setPrivateKeyId(privateKeyId)
             .setHttpTransportFactory(transportFactory)
             .setTokenServerUri(tokenServerUriFromCreds)
             .setProjectId(projectId)
-            .setQuotaProjectId(quotaProjectId);
+            .setQuotaProjectId(quotaProjectId)
+            .setUniverseDomain(baseCredential.getUniverseDomain());
 
     return fromPkcs8(privateKeyPkcs8, builder);
   }
@@ -993,10 +994,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
       this.defaultRetriesEnabled = credentials.defaultRetriesEnabled;
     }
 
-    protected Builder(GoogleCredentials.Builder superBuilder) {
-      super(superBuilder);
-    }
-
     public Builder setClientId(String clientId) {
       this.clientId = clientId;
       return this;
@@ -1071,6 +1068,11 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
     public Builder setDefaultRetriesEnabled(boolean defaultRetriesEnabled) {
       this.defaultRetriesEnabled = defaultRetriesEnabled;
+      return this;
+    }
+
+    public Builder setUniverseDomain(String universeDomain) {
+      this.universeDomain = universeDomain;
       return this;
     }
 

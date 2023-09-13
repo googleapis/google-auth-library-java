@@ -120,6 +120,8 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
   private static final int INVALID_LIFETIME = 43210;
   private static final String JWT_ACCESS_PREFIX = "Bearer ";
+  private static final String GOOGLE_DEFAULT_UNIVERSE = "googleapis.com";
+  private static final String TPC_UNIVERSE = "foo.bar";
 
   private ServiceAccountCredentials.Builder createDefaultBuilder() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
@@ -192,6 +194,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertArrayEquals(newScopes.toArray(), newCredentials.getScopes().toArray());
     assertEquals(USER, newCredentials.getServiceAccountUser());
     assertEquals(PROJECT_ID, newCredentials.getProjectId());
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, newCredentials.getUniverseDomain());
 
     assertArrayEquals(
         SCOPES.toArray(), ((ServiceAccountCredentials) credentials).getScopes().toArray());
@@ -473,15 +476,25 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void fromJSON_getProjectId() throws IOException {
-    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
     GenericJson json =
         writeServiceAccountJson(
-            CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, PROJECT_ID, null);
+            CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, PROJECT_ID, null, null);
 
     ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.fromJson(json, transportFactory);
+        ServiceAccountCredentials.fromJson(json, new MockTokenServerTransportFactory());
     assertEquals(PROJECT_ID, credentials.getProjectId());
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
+  }
+
+  @Test
+  public void fromJSON_Universe_getUniverseDomain() throws IOException {
+    GenericJson json =
+        writeServiceAccountJson(
+            CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, PROJECT_ID, null, TPC_UNIVERSE);
+
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.fromJson(json, new MockTokenServerTransportFactory());
+    assertEquals(TPC_UNIVERSE, credentials.getUniverseDomain());
   }
 
   @Test
@@ -490,7 +503,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
     GenericJson json =
         writeServiceAccountJson(
-            CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, null, null);
+            CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, null, null, null);
 
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.fromJson(json, transportFactory);
@@ -503,7 +516,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
     GenericJson json =
         writeServiceAccountJson(
-            CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, PROJECT_ID, null);
+            CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, PROJECT_ID, null, null);
 
     GoogleCredentials credentials = ServiceAccountCredentials.fromJson(json, transportFactory);
 
@@ -519,7 +532,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
     GenericJson json =
         writeServiceAccountJson(
-            CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, PROJECT_ID, null);
+            CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, PROJECT_ID, null, null);
     json.put("token_uri", tokenServerUri);
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.fromJson(json, transportFactory);
@@ -532,7 +545,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
     GenericJson json =
         writeServiceAccountJson(
-            CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, PROJECT_ID, QUOTA_PROJECT);
+            CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, PROJECT_ID, QUOTA_PROJECT, null);
     GoogleCredentials credentials = ServiceAccountCredentials.fromJson(json, transportFactory);
     credentials = credentials.createScoped(SCOPES);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
@@ -581,6 +594,21 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+  }
+
+  @Test
+  public void getUniverseDomain_defaultUniverse() throws IOException {
+    final URI TOKEN_SERVER = URI.create("https://foo.com/bar");
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.fromPkcs8(
+            CLIENT_ID,
+            CLIENT_EMAIL,
+            PRIVATE_KEY_PKCS8,
+            PRIVATE_KEY_ID,
+            SCOPES,
+            new MockTokenServerTransportFactory(),
+            TOKEN_SERVER);
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
   @Test
@@ -1613,7 +1641,8 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
       String privateKeyPkcs8,
       String privateKeyId,
       String projectId,
-      String quotaProjectId) {
+      String quotaProjectId,
+      String universeDomain) {
     GenericJson json = new GenericJson();
     if (clientId != null) {
       json.put("client_id", clientId);
@@ -1633,6 +1662,9 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     if (quotaProjectId != null) {
       json.put("quota_project_id", quotaProjectId);
     }
+    if (universeDomain != null) {
+      json.put("universe_domain", universeDomain);
+    }
     json.put("type", GoogleCredentials.SERVICE_ACCOUNT_FILE_TYPE);
     return json;
   }
@@ -1640,8 +1672,21 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   static InputStream writeServiceAccountStream(
       String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId)
       throws IOException {
+    return writeServiceAccountStream(clientId, clientEmail, privateKeyPkcs8, privateKeyId, null);
+  }
+
+  static InputStream writeServiceAccountStream(
+      String clientId, String clientEmail, String privateKeyPkcs8, String privateKeyId, String universeDomain)
+      throws IOException {
     GenericJson json =
-        writeServiceAccountJson(clientId, clientEmail, privateKeyPkcs8, privateKeyId, null, null);
+        writeServiceAccountJson(
+            clientId,
+            clientEmail,
+            privateKeyPkcs8,
+            privateKeyId,
+            null,
+            null,
+            universeDomain);
     return TestUtils.jsonToInputStream(json);
   }
 

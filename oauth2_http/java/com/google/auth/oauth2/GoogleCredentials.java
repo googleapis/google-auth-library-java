@@ -219,9 +219,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
 
     // Parse fields that are common for all the types of GoogleCredentials.
     String universeDomain = (String) json.get("universe_domain");
-    if (universeDomain != null
-        && universeDomain.trim().isEmpty()
-        && !universeDomain.equalsIgnoreCase(GoogleAuthUtils.GOOGLE_DEFAULT_UNIVERSE)) {
+    if (universeDomain != null && !universeDomain.trim().isEmpty()) {
       credentialsBuilder.setUniverseDomain(universeDomain);
     }
 
