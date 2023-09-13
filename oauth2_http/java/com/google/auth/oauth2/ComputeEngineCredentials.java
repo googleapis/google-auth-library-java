@@ -138,6 +138,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
             builder.getHttpTransportFactory(),
             getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
+
+    Collection<String> scopes = builder.getScopes();
     // Use defaultScopes only when scopes don't exist.
     Collection<String> scopesToUse = builder.scopes;
     if (scopesToUse == null || scopesToUse.isEmpty()) {
