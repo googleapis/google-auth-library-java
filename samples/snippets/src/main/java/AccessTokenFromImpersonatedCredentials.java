@@ -44,8 +44,8 @@ public class AccessTokenFromImpersonatedCredentials {
   // for the impersonated account.
   // To obtain token for SA2, SA1 should have the "roles/iam.serviceAccountTokenCreator" permission
   // on SA2.
-  public static void getAccessToken(
-      String impersonatedServiceAccount, String scope) throws IOException {
+  public static void getAccessToken(String impersonatedServiceAccount, String scope)
+      throws IOException {
 
     // Construct the GoogleCredentials object which obtains the default configuration from your
     // working environment.
