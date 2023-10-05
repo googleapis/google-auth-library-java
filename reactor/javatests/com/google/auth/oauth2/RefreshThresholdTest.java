@@ -19,27 +19,24 @@ package com.google.auth.oauth2;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.google.auth.oauth2.AccessToken;
-import org.junit.Test;
-
 import java.util.Date;
+import org.junit.Test;
 
 public class RefreshThresholdTest {
 
-    @Test
-    public void testCloseToExpirationTrue() {
-        long currentDate = System.currentTimeMillis();
-        RefreshThreshold refreshThreshold = new RefreshThreshold(10_000);
-        AccessToken accessToken = new AccessToken("token", new Date(currentDate + 9_500));
-        assertTrue(refreshThreshold.over(accessToken));
-    }
+  @Test
+  public void testCloseToExpirationTrue() {
+    long currentDate = System.currentTimeMillis();
+    RefreshThreshold refreshThreshold = new RefreshThreshold(10_000);
+    AccessToken accessToken = new AccessToken("token", new Date(currentDate + 9_500));
+    assertTrue(refreshThreshold.over(accessToken));
+  }
 
-    @Test
-    public void testCloseToExpirationFalse() {
-        long currentDate = System.currentTimeMillis();
-        RefreshThreshold refreshThreshold = new RefreshThreshold(10_000);
-        AccessToken accessToken = new AccessToken("token", new Date(currentDate + 20_000));
-        assertFalse(refreshThreshold.over(accessToken));
-    }
-
+  @Test
+  public void testCloseToExpirationFalse() {
+    long currentDate = System.currentTimeMillis();
+    RefreshThreshold refreshThreshold = new RefreshThreshold(10_000);
+    AccessToken accessToken = new AccessToken("token", new Date(currentDate + 20_000));
+    assertFalse(refreshThreshold.over(accessToken));
+  }
 }

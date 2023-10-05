@@ -23,40 +23,37 @@ import okhttp3.mockwebserver.MockResponse;
 
 public class TokenProviderBase {
 
-    static final Long SECONDS = 3600L;
-    static final String ACCESS_TOKEN = "ya29.a0AfH6SMAa-dKy_...";
+  static final Long SECONDS = 3600L;
+  static final String ACCESS_TOKEN = "ya29.a0AfH6SMAa-dKy_...";
 
-    private TokenProviderBase() {
-    }
+  private TokenProviderBase() {}
 
-    static MockResponse successfulResponse(String response) {
-        return new MockResponse()
-                .setHeader("Content-Type", "application/json")
-                .setResponseCode(200)
-                .setBody(response);
-    }
+  static MockResponse successfulResponse(String response) {
+    return new MockResponse()
+        .setHeader("Content-Type", "application/json")
+        .setResponseCode(200)
+        .setBody(response);
+  }
 
-    static long addExpiration(Long millis) {
-        return millis + (SECONDS * 1000L);
-    }
+  static long addExpiration(Long millis) {
+    return millis + (SECONDS * 1000L);
+  }
 
-    static boolean expectedToken(Long expirationWindowStart, AccessToken at) {
-        boolean isExpirationWithinWindow = isExpirationWithinWindow(expirationWindowStart, at);
-        return isExpirationWithinWindow
-                && at.getTokenValue().equals(ACCESS_TOKEN);
-    }
+  static boolean expectedToken(Long expirationWindowStart, AccessToken at) {
+    boolean isExpirationWithinWindow = isExpirationWithinWindow(expirationWindowStart, at);
+    return isExpirationWithinWindow && at.getTokenValue().equals(ACCESS_TOKEN);
+  }
 
-    static boolean tokenParseError(Throwable e) {
-        return e instanceof IOException
-                && e.getMessage().contains(ERROR_PARSING_TOKEN_REFRESH_RESPONSE);
-    }
+  static boolean tokenParseError(Throwable e) {
+    return e instanceof IOException
+        && e.getMessage().contains(ERROR_PARSING_TOKEN_REFRESH_RESPONSE);
+  }
 
-    static boolean isExpirationWithinWindow(Long expirationWindowStart, AccessToken at) {
-        Long expirationWindowEnd = addExpiration(System.currentTimeMillis());
-        Long expiration = at.getExpirationTimeMillis();
-        boolean expirationWithinLimits =
-                expiration <= expirationWindowEnd && expiration >= expirationWindowStart;
-        return expirationWithinLimits;
-    }
-
+  static boolean isExpirationWithinWindow(Long expirationWindowStart, AccessToken at) {
+    Long expirationWindowEnd = addExpiration(System.currentTimeMillis());
+    Long expiration = at.getExpirationTimeMillis();
+    boolean expirationWithinLimits =
+        expiration <= expirationWindowEnd && expiration >= expirationWindowStart;
+    return expirationWithinLimits;
+  }
 }

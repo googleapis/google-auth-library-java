@@ -16,55 +16,57 @@
 
 package com.google.auth.oauth2;
 
-
 import java.util.Date;
 import java.util.UUID;
-
 import org.junit.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 public class CacheableTokenProviderTest {
 
-    @Test
-    void testRetrieveCache() {
-        ReactiveTokenProvider reactiveTokenProvider = () -> Mono.fromSupplier(() -> {
-            String token = UUID.randomUUID().toString();
-            Date date = new Date();
-            return new AccessToken(token, date);
-        });
+  @Test
+  void testRetrieveCache() {
+    ReactiveTokenProvider reactiveTokenProvider =
+        () ->
+            Mono.fromSupplier(
+                () -> {
+                  String token = UUID.randomUUID().toString();
+                  Date date = new Date();
+                  return new AccessToken(token, date);
+                });
 
-        ReactiveTokenProvider cacheableTokenProvider = new CacheableTokenProvider(
-                reactiveTokenProvider);
+    ReactiveTokenProvider cacheableTokenProvider =
+        new CacheableTokenProvider(reactiveTokenProvider);
 
-        StepVerifier.create(
-                        Mono.zip(cacheableTokenProvider.retrieve(), cacheableTokenProvider.retrieve())
-                                .map(tuple -> tuple.getT1().equals(tuple.getT2())))
-                .expectNext(true)
-                .verifyComplete();
-    }
+    StepVerifier.create(
+            Mono.zip(cacheableTokenProvider.retrieve(), cacheableTokenProvider.retrieve())
+                .map(tuple -> tuple.getT1().equals(tuple.getT2())))
+        .expectNext(true)
+        .verifyComplete();
+  }
 
-    @Test
-    void testRetrieveExpired() throws InterruptedException {
-        ReactiveTokenProvider reactiveTokenProvider = () -> Mono.fromSupplier(() -> {
-            String token = UUID.randomUUID().toString();
-            return new AccessToken(token, new Date(System.currentTimeMillis() + 4 * 1000));
-        });
+  @Test
+  void testRetrieveExpired() throws InterruptedException {
+    ReactiveTokenProvider reactiveTokenProvider =
+        () ->
+            Mono.fromSupplier(
+                () -> {
+                  String token = UUID.randomUUID().toString();
+                  return new AccessToken(token, new Date(System.currentTimeMillis() + 4 * 1000));
+                });
 
-        ReactiveTokenProvider cacheableTokenProvider = new CacheableTokenProvider(
-                reactiveTokenProvider);
+    ReactiveTokenProvider cacheableTokenProvider =
+        new CacheableTokenProvider(reactiveTokenProvider);
 
-        Mono<AccessToken> firstMono = cacheableTokenProvider.retrieve();
+    Mono<AccessToken> firstMono = cacheableTokenProvider.retrieve();
 
-        AccessToken accessToken = firstMono.block();
+    AccessToken accessToken = firstMono.block();
 
-        Thread.sleep(1000L);
-        Mono<AccessToken> secondMono = cacheableTokenProvider.retrieve();
+    Thread.sleep(1000L);
+    Mono<AccessToken> secondMono = cacheableTokenProvider.retrieve();
 
-        StepVerifier.create(secondMono.map(at -> at.equals(accessToken)))
-                .expectNext(false)
-                .verifyComplete();
-    }
-
-
+    StepVerifier.create(secondMono.map(at -> at.equals(accessToken)))
+        .expectNext(false)
+        .verifyComplete();
+  }
 }

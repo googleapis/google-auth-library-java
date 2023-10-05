@@ -30,61 +30,62 @@ import reactor.test.StepVerifier;
 
 public class UserCredentialsTokenProviderTest {
 
-    private static String USER_CREDENTIALS_TOKEN =
-            "{\"access_token\":\"" + ACCESS_TOKEN
-                    + "\",\"token_type\":\"Bearer\",\"expires_in\":3599,\"refresh_token\":\"test_refresh_token\",\"scope\":\"https://www.googleapis.com/auth/cloud-platform\"}";
+  private static String USER_CREDENTIALS_TOKEN =
+      "{\"access_token\":\""
+          + ACCESS_TOKEN
+          + "\",\"token_type\":\"Bearer\",\"expires_in\":3599,\"refresh_token\":\"test_refresh_token\",\"scope\":\"https://www.googleapis.com/auth/cloud-platform\"}";
 
-    private static String USER_CREDENTIALS_TOKEN_BAD_RESPONSE =
-            "{\"token\":\"" + ACCESS_TOKEN
-                    + "\",\"token_type\":\"Bearer\",\"in\":3599,\"refresh_token\":\"test_refresh_token\",\"scope\":\"https://www.googleapis.com/auth/cloud-platform\"}";
+  private static String USER_CREDENTIALS_TOKEN_BAD_RESPONSE =
+      "{\"token\":\""
+          + ACCESS_TOKEN
+          + "\",\"token_type\":\"Bearer\",\"in\":3599,\"refresh_token\":\"test_refresh_token\",\"scope\":\"https://www.googleapis.com/auth/cloud-platform\"}";
 
-    private MockWebServer mockWebServer;
+  private MockWebServer mockWebServer;
 
-    private WebClient webClient;
+  private WebClient webClient;
 
-    private String tokenUrl;
+  private String tokenUrl;
 
-    @Before
-    public void setUp() throws IOException, URISyntaxException {
-        mockWebServer = new MockWebServer();
-        mockWebServer.start();
-        webClient = WebClient.builder().build();
-        tokenUrl = mockWebServer.url("/").toString();
-    }
+  @Before
+  public void setUp() throws IOException, URISyntaxException {
+    mockWebServer = new MockWebServer();
+    mockWebServer.start();
+    webClient = WebClient.builder().build();
+    tokenUrl = mockWebServer.url("/").toString();
+  }
 
-    @Test
-    public void testRetrieve() throws Exception {
-        mockWebServer.enqueue(successfulResponse(USER_CREDENTIALS_TOKEN));
-        UserCredentials userCredentials = createUserCredentials();
-        ReactiveTokenProvider tokenProvider = new UserCredentialsTokenProvider(webClient,
-                userCredentials, tokenUrl);
-        StepVerifier.create(tokenProvider.retrieve().map(AccessToken::getTokenValue))
-                .expectNext(ACCESS_TOKEN)
-                .verifyComplete();
-    }
+  @Test
+  public void testRetrieve() throws Exception {
+    mockWebServer.enqueue(successfulResponse(USER_CREDENTIALS_TOKEN));
+    UserCredentials userCredentials = createUserCredentials();
+    ReactiveTokenProvider tokenProvider =
+        new UserCredentialsTokenProvider(webClient, userCredentials, tokenUrl);
+    StepVerifier.create(tokenProvider.retrieve().map(AccessToken::getTokenValue))
+        .expectNext(ACCESS_TOKEN)
+        .verifyComplete();
+  }
 
-    @Test
-    public void testRetrieveErrorParsingResponse() {
-        mockWebServer.enqueue(successfulResponse(USER_CREDENTIALS_TOKEN_BAD_RESPONSE));
-        UserCredentials userCredentials = createUserCredentials();
-        ReactiveTokenProvider tokenProvider = new UserCredentialsTokenProvider(webClient,
-                userCredentials, tokenUrl);
-        StepVerifier.create(tokenProvider.retrieve())
-                .expectNext()
-                .verifyErrorMatches(TokenProviderBase::tokenParseError);
-    }
+  @Test
+  public void testRetrieveErrorParsingResponse() {
+    mockWebServer.enqueue(successfulResponse(USER_CREDENTIALS_TOKEN_BAD_RESPONSE));
+    UserCredentials userCredentials = createUserCredentials();
+    ReactiveTokenProvider tokenProvider =
+        new UserCredentialsTokenProvider(webClient, userCredentials, tokenUrl);
+    StepVerifier.create(tokenProvider.retrieve())
+        .expectNext()
+        .verifyErrorMatches(TokenProviderBase::tokenParseError);
+  }
 
-    @After
-    public void tearDown() throws IOException {
-        mockWebServer.shutdown();
-    }
+  @After
+  public void tearDown() throws IOException {
+    mockWebServer.shutdown();
+  }
 
-    private static UserCredentials createUserCredentials() {
-        return UserCredentials.newBuilder()
-                .setClientId("test_client_id")
-                .setClientSecret("test_client_secret")
-                .setRefreshToken("refresh_token")
-                .build();
-    }
-
+  private static UserCredentials createUserCredentials() {
+    return UserCredentials.newBuilder()
+        .setClientId("test_client_id")
+        .setClientSecret("test_client_secret")
+        .setRefreshToken("refresh_token")
+        .build();
+  }
 }
