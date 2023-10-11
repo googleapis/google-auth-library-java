@@ -64,8 +64,7 @@ public class SnippetsIT {
   }
 
   @AfterClass
-  public static void cleanup() {
-  }
+  public static void cleanup() {}
 
   // Get an id token from a Google service account.
   private static String getIdTokenFromServiceAccount(
@@ -120,8 +119,8 @@ public class SnippetsIT {
   @Test
   public void testIdTokenFromImpersonatedCredentials()
       throws GeneralSecurityException, IOException {
-    IdTokenFromImpersonatedCredentials.getIdTokenUsingOAuth2(impersonatedServiceAccount, scope,
-        "https://example.com");
+    IdTokenFromImpersonatedCredentials.getIdTokenUsingOAuth2(
+        impersonatedServiceAccount, scope, "https://example.com");
     assertThat(stdOut.toString()).contains("Generated ID token.");
   }
 
