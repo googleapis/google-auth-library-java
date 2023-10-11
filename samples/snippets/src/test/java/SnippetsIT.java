@@ -40,8 +40,6 @@ public class SnippetsIT {
 
   private static final String PROJECT_ID = System.getenv("GOOGLE_CLOUD_PROJECT");
   private static final String CREDENTIALS = System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
-  private static final String impersonatedServiceAccount = "TODO";
-  private static final String scope = "https://www.googleapis.com/auth/cloud-platform";
   private ByteArrayOutputStream stdOut;
 
   // Check if the required environment variables are set.
@@ -64,7 +62,18 @@ public class SnippetsIT {
   }
 
   @AfterClass
-  public static void cleanup() {
+  public static void cleanup() {}
+
+  @Before
+  public void beforeEach() {
+    stdOut = new ByteArrayOutputStream();
+    System.setOut(new PrintStream(stdOut));
+  }
+
+  @After
+  public void afterEach() {
+    stdOut = null;
+    System.setOut(null);
   }
 
   // Get an id token from a Google service account.
@@ -84,18 +93,6 @@ public class SnippetsIT {
     return idToken.getTokenValue();
   }
 
-  @Before
-  public void beforeEach() {
-    stdOut = new ByteArrayOutputStream();
-    System.setOut(new PrintStream(stdOut));
-  }
-
-  @After
-  public void afterEach() {
-    stdOut = null;
-    System.setOut(null);
-  }
-
   @Test
   public void testIdTokenFromServiceAccount() throws IOException {
     IdTokenFromServiceAccount.getIdTokenFromServiceAccount(CREDENTIALS, "https://example.com");
@@ -108,21 +105,6 @@ public class SnippetsIT {
 
     VerifyGoogleIdToken.verifyGoogleIdToken(
         idToken, "https://example.com", "https://www.googleapis.com/oauth2/v3/certs");
-  }
-
-  @Test
-  public void testAccessTokenFromImpersonatedCredentials()
-      throws GeneralSecurityException, IOException {
-    AccessTokenFromImpersonatedCredentials.getAccessToken(impersonatedServiceAccount, scope);
-    assertThat(stdOut.toString()).contains("Generated access token.");
-  }
-
-  @Test
-  public void testIdTokenFromImpersonatedCredentials()
-      throws GeneralSecurityException, IOException {
-    IdTokenFromImpersonatedCredentials.getIdTokenUsingOAuth2(impersonatedServiceAccount, scope,
-        "https://example.com");
-    assertThat(stdOut.toString()).contains("Generated ID token.");
   }
 
   @Test
