@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.20.0](https://github.com/googleapis/google-auth-library-java/compare/v1.19.0...v1.20.0) (2023-09-19)
+
+
+### Features
+
+* Byoid metrics framework ([#1232](https://github.com/googleapis/google-auth-library-java/issues/1232)) ([38bdf60](https://github.com/googleapis/google-auth-library-java/commit/38bdf60189b44171f5d481fa934f4ece60553653))
+
+
+### Bug Fixes
+
+* Make derived classes of CredentialSource public ([#1236](https://github.com/googleapis/google-auth-library-java/issues/1236)) ([9bb9e0a](https://github.com/googleapis/google-auth-library-java/commit/9bb9e0a67c503415a69f35e390f6c64357fc7be1))
+
+
+### Documentation
+
+* Update library definitions in README to the latest version ([#1239](https://github.com/googleapis/google-auth-library-java/issues/1239)) ([0c5cff2](https://github.com/googleapis/google-auth-library-java/commit/0c5cff26fc66ad90d2dbccd374c6ead81f66d569))
+
 ## [1.19.0](https://github.com/googleapis/google-auth-library-java/compare/v1.18.0...v1.19.0) (2023-06-27)
 
 

@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.auth</groupId>
   <artifactId>google-auth-library-parent</artifactId>
-  <version>1.19.1-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
+  <version>1.20.1-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
   <packaging>pom</packaging>
   <name>Google Auth Library for Java</name>
   <description>Client libraries providing authentication and
@@ -66,7 +66,7 @@
     <project.google.http.version>1.43.3</project.google.http.version>
     <project.junit.version>4.13.2</project.junit.version>
     <project.guava.version>32.0.0-android</project.guava.version>
-    <project.appengine.version>2.0.19</project.appengine.version>
+    <project.appengine.version>2.0.21</project.appengine.version>
     <project.findbugs.version>3.0.2</project.findbugs.version>
     <deploy.autorelease>false</deploy.autorelease>
     <project.autovalue.version>1.8.2</project.autovalue.version>
@@ -285,7 +285,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.10</version>
+        <version>0.8.11</version>
         <executions>
           <execution>
             <goals>
