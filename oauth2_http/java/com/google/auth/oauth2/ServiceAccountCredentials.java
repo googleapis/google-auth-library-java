@@ -952,7 +952,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
     // Self Signed JWT is not supported for domain-wide delegation for non-GDU universes
     if (isConfiguredForDomainWideDelegation()) {
       throw new IOException(
-          String.format("Service Account user is configured for the credential. "
+          String.format(
+              "Service Account user is configured for the credential. "
                   + "Domain-wide delegation is not supported in universes different than %s.",
               Credentials.GOOGLE_DEFAULT_UNIVERSE));
     }

@@ -251,8 +251,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   /**
    * Returns the universe domain for the credential
    *
-   * @return An explicit universe domain if it was explicitly provided, invokes
-   * the super implementation otherwise.
+   * @return An explicit universe domain if it was explicitly provided, invokes the super
+   *     implementation otherwise.
    */
   @Override
   public String getUniverseDomain() {
@@ -265,8 +265,9 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
 
   /**
    * Checks if universe domain equals to {@link Credentials#GOOGLE_DEFAULT_UNIVERSE}.
-   * @return true if universeDomain equals to {@link Credentials#GOOGLE_DEFAULT_UNIVERSE},
-   * false otherwise
+   *
+   * @return true if universeDomain equals to {@link Credentials#GOOGLE_DEFAULT_UNIVERSE}, false
+   *     otherwise
    */
   boolean isDefaultUniverseDomain() {
     return getUniverseDomain() == Credentials.GOOGLE_DEFAULT_UNIVERSE;
