@@ -601,21 +601,10 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   public void fromJson_hasQuotaProjectId() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
-<<<<<<< HEAD
-    GenericJson json =
-        writeServiceAccountJson(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            PROJECT_ID,
-            QUOTA_PROJECT,
-            null);
-=======
     GenericJson json = writeServiceAccountJson(PROJECT_ID, QUOTA_PROJECT, null);
->>>>>>> 7959a6c (fix: move universe_domain to very base Credential, tests cleanup)
     GoogleCredentials credentials = ServiceAccountCredentials.fromJson(json, transportFactory);
     credentials = credentials.createScoped(SCOPES);
+
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
     assertTrue(metadata.containsKey(GoogleCredentials.QUOTA_PROJECT_ID_HEADER_KEY));
