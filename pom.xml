@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.auth</groupId>
   <artifactId>google-auth-library-parent</artifactId>
-  <version>1.19.1-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
+  <version>1.20.1-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
   <packaging>pom</packaging>
   <name>Google Auth Library for Java</name>
   <description>Client libraries providing authentication and
@@ -66,11 +66,11 @@
     <project.google.http.version>1.43.3</project.google.http.version>
     <project.junit.version>4.13.2</project.junit.version>
     <project.guava.version>32.0.0-android</project.guava.version>
-    <project.appengine.version>2.0.17</project.appengine.version>
+    <project.appengine.version>2.0.21</project.appengine.version>
     <project.findbugs.version>3.0.2</project.findbugs.version>
     <deploy.autorelease>false</deploy.autorelease>
     <project.autovalue.version>1.8.2</project.autovalue.version>
-    <auto-value-annotation.version>1.10.3</auto-value-annotation.version>
+    <auto-value-annotation.version>1.10.4</auto-value-annotation.version>
   </properties>
 
   <dependencyManagement>
@@ -170,7 +170,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>3.5.0</version>
+          <version>3.6.0</version>
           <configuration>
             <source>8</source>
             <failOnError>false</failOnError>
@@ -207,7 +207,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
-          <version>3.6.0</version>
+          <version>3.6.1</version>
         </plugin>
         <plugin>
           <groupId>com.coveo</groupId>
@@ -246,7 +246,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.3.0</version>
+        <version>3.3.1</version>
         <executions>
           <execution>
             <id>checkstyle</id>
@@ -285,7 +285,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.10</version>
+        <version>0.8.11</version>
         <executions>
           <execution>
             <goals>
@@ -329,7 +329,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.5.0</version>
+        <version>3.6.0</version>
         <reportSets>
           <reportSet>
             <id>html</id>
@@ -397,7 +397,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
-            <version>3.5.0</version>
+            <version>3.6.0</version>
             <executions>
               <execution>
                 <id>attach-javadocs</id>
@@ -497,7 +497,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
-            <version>3.5.0</version>
+            <version>3.6.0</version>
             <configuration>
               <doclet>com.microsoft.doclet.DocFxDoclet</doclet>
               <useStandardDocletOptions>false</useStandardDocletOptions>

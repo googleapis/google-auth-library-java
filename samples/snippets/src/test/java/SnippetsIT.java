@@ -116,7 +116,7 @@ public class SnippetsIT {
   @Test
   public void testAuthenticateImplicitWithAdc() throws IOException {
     AuthenticateImplicitWithAdc.authenticateImplicitWithAdc(PROJECT_ID);
-    assertThat(stdOut.toString()).contains("Listing instances complete");
+    assertThat(stdOut.toString()).contains("Listed all storage buckets.");
   }
 
   @Test
