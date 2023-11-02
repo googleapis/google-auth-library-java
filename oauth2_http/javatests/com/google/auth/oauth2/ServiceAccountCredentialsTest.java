@@ -121,19 +121,60 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   private static final int INVALID_LIFETIME = 43210;
   private static final String JWT_ACCESS_PREFIX = "Bearer ";
   private static final String GOOGLE_DEFAULT_UNIVERSE = "googleapis.com";
-  private static final String TPC_UNIVERSE = "foo.bar";
 
-  private ServiceAccountCredentials.Builder createDefaultBuilder() throws IOException {
-    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
-    return ServiceAccountCredentials.newBuilder()
+  private ServiceAccountCredentials.Builder createDefaultBuilderWithToken(String accessToken) throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addServiceAccount(CLIENT_EMAIL, accessToken);
+    return createDefaultBuilder().setHttpTransportFactory(transportFactory);
+  }
+
+  private ServiceAccountCredentials.Builder createDefaultBuilderWithScopes(Collection<String> scopes)
+      throws IOException {
+    return createDefaultBuilder().setScopes(scopes);
+  }
+
+  private ServiceAccountCredentials.Builder createDefaultBuilderWithKey(PrivateKey privateKey) {
+    ServiceAccountCredentials.Builder builder = ServiceAccountCredentials.newBuilder()
         .setClientId(CLIENT_ID)
         .setClientEmail(CLIENT_EMAIL)
         .setPrivateKey(privateKey)
         .setPrivateKeyId(PRIVATE_KEY_ID)
-        .setScopes(SCOPES)
-        .setServiceAccountUser(USER)
-        .setProjectId(PROJECT_ID);
+        .setProjectId(PROJECT_ID)
+        .setQuotaProjectId(QUOTA_PROJECT)
+        .setHttpTransportFactory(new MockHttpTransportFactory());
+
+    return builder;
   }
+
+  private ServiceAccountCredentials.Builder createDefaultBuilder() throws IOException {
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    return createDefaultBuilderWithKey(privateKey);
+  }
+
+  //
+  // private ServiceAccountCredentials createServiceAccountWithToken(Collection<String> scopes)
+  //     throws IOException {
+  //   MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+  //   transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
+  //   return createServiceAccountFromPkcs8(scopes, transportFactory);
+  // }
+  //
+  // private ServiceAccountCredentials createServiceAccountFromPkcs8(Collection<String> scopes)
+  //     throws IOException {
+  //   return createServiceAccountFromPkcs8(scopes, new MockTokenServerTransportFactory());
+  // }
+  //
+  // private ServiceAccountCredentials createServiceAccountFromPkcs8(Collection<String> scopes, HttpTransportFactory transportFactory)
+  //     throws IOException {
+  //   return ServiceAccountCredentials.fromPkcs8(
+  //       CLIENT_ID,
+  //       CLIENT_EMAIL,
+  //       PRIVATE_KEY_PKCS8,
+  //       PRIVATE_KEY_ID,
+  //       scopes,
+  //       transportFactory,
+  //       null);
+  // }
 
   @Test
   public void setLifetime() throws IOException {
@@ -172,16 +213,11 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void createdScoped_clones() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
-    GoogleCredentials credentials =
-        ServiceAccountCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientEmail(CLIENT_EMAIL)
-            .setPrivateKey(privateKey)
-            .setPrivateKeyId(PRIVATE_KEY_ID)
-            .setScopes(SCOPES)
-            .setServiceAccountUser(USER)
-            .setProjectId(PROJECT_ID)
-            .build();
+    ServiceAccountCredentials credentials = createDefaultBuilderWithKey(privateKey)
+        .setServiceAccountUser(USER)
+        .setScopes(SCOPES)
+        .setProjectId(PROJECT_ID)
+        .build();
     List<String> newScopes = Arrays.asList("scope1", "scope2");
 
     ServiceAccountCredentials newCredentials =
@@ -203,17 +239,10 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void createdDelegated_clones() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientEmail(CLIENT_EMAIL)
-            .setPrivateKey(privateKey)
-            .setPrivateKeyId(PRIVATE_KEY_ID)
-            .setScopes(SCOPES)
-            .setServiceAccountUser(USER)
-            .setProjectId(PROJECT_ID)
-            .setQuotaProjectId(QUOTA_PROJECT)
-            .build();
+    ServiceAccountCredentials credentials = createDefaultBuilderWithKey(privateKey)
+        .setScopes(SCOPES)
+        .setServiceAccountUser(USER)
+        .build();
     String newServiceAccountUser = "stranger@other.org";
 
     ServiceAccountCredentials newCredentials =
@@ -233,18 +262,9 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void createAssertion_correct() throws IOException {
-    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     List<String> scopes = Arrays.asList("scope1", "scope2");
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientEmail(CLIENT_EMAIL)
-            .setPrivateKey(privateKey)
-            .setPrivateKeyId(PRIVATE_KEY_ID)
-            .setScopes(scopes)
-            .setServiceAccountUser(USER)
-            .setProjectId(PROJECT_ID)
-            .build();
+    ServiceAccountCredentials.Builder builder = createDefaultBuilderWithScopes(scopes);
+    ServiceAccountCredentials credentials = builder.setServiceAccountUser(USER).build();
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
@@ -262,17 +282,11 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void createAssertion_defaultScopes_correct() throws IOException {
-    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
-    List<String> scopes = Arrays.asList("scope1", "scope2");
-    ServiceAccountCredentials.Builder builder =
-        ServiceAccountCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientEmail(CLIENT_EMAIL)
-            .setPrivateKey(privateKey)
-            .setPrivateKeyId(PRIVATE_KEY_ID)
-            .setScopes(null, scopes)
-            .setServiceAccountUser(USER)
-            .setProjectId(PROJECT_ID);
+    List<String> defaultScopes = Arrays.asList("scope1", "scope2");
+    ServiceAccountCredentials.Builder builder = createDefaultBuilder();
+    builder.setScopes(null, defaultScopes)
+        .setServiceAccountUser(USER);
+
     assertEquals(2, builder.getDefaultScopes().size());
     ServiceAccountCredentials credentials = builder.build();
 
@@ -287,7 +301,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(currentTimeMillis / 1000, (long) payload.getIssuedAtTimeSeconds());
     assertEquals(currentTimeMillis / 1000 + 3600, (long) payload.getExpirationTimeSeconds());
     assertEquals(USER, payload.getSubject());
-    assertEquals(Joiner.on(' ').join(scopes), payload.get("scope"));
+    assertEquals(Joiner.on(' ').join(defaultScopes), payload.get("scope"));
   }
 
   @Test
@@ -305,13 +319,8 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void createAssertionForIdToken_correct() throws IOException {
-
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientEmail(CLIENT_EMAIL)
-            .setPrivateKey(privateKey)
+    ServiceAccountCredentials credentials = createDefaultBuilder()
             .setPrivateKeyId(PRIVATE_KEY_ID)
             .setServiceAccountUser(USER)
             .setProjectId(PROJECT_ID)
@@ -334,7 +343,6 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void createAssertionForIdToken_custom_lifetime() throws IOException {
-
     ServiceAccountCredentials credentials = createDefaultBuilder().setLifetime(4000).build();
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
@@ -350,7 +358,6 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void createAssertionForIdToken_incorrect() throws IOException {
-
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.newBuilder()
@@ -379,19 +386,12 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void createdScoped_enablesAccessTokens() throws IOException {
-    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
-    GoogleCredentials credentials =
-        ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            null,
-            transportFactory,
-            null);
+  public void createdScoped_withAud_noUniverse_jwtWithScopesDisabled_accessToken() throws IOException {
+    // TODO: this should not default to AUD and throw exception that scopes
+    // are provided, but cannot be used
+    GoogleCredentials credentials = createDefaultBuilderWithToken(ACCESS_TOKEN).build();
 
+    // no aud, no scopes -> exception
     try {
       credentials.getRequestMetadata(null);
       fail("Should not be able to get token without scopes");
@@ -407,11 +407,61 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void createdScoped_withUniverse_selfSignedJwt() throws IOException {
+    GoogleCredentials credentials = createDefaultBuilder().build();
+    credentials = credentials.createWithUniverseDomain("foo.bar");
+
+    try {
+      credentials.getRequestMetadata(null);
+      fail("Should not be able to get token without scopes");
+    } catch (IOException e) {
+      assertTrue(
+          "expected to fail with exception",
+          e.getMessage().contains("Scopes and uri are not configured for service account"));
+    }
+
+    GoogleCredentials scopedCredentials = credentials.createScoped("dummy.scope");
+    Map<String, List<String>> metadata = scopedCredentials.getRequestMetadata(null);
+    verifyJwtAccess(metadata, "dummy.scope");
+
+    // recreate to avoid jwt caching
+    scopedCredentials = credentials.createScoped("dummy.scope2");
+    metadata = scopedCredentials.getRequestMetadata(CALL_URI);
+    verifyJwtAccess(metadata, "dummy.scope2");
+
+    // recreate to avoid jwt caching
+    scopedCredentials = credentials.createScoped(Collections.<String>emptyList(), Arrays.asList("dummy.default.scope"));
+    metadata = scopedCredentials.getRequestMetadata(null);
+    verifyJwtAccess(metadata, "dummy.default.scope");
+
+    // recreate to avoid jwt caching
+    scopedCredentials = credentials.createScoped(Collections.<String>emptyList(), Arrays.asList("dummy.default.scope2"));
+    metadata = scopedCredentials.getRequestMetadata(CALL_URI);
+    verifyJwtAccess(metadata, "dummy.default.scope2");
+  }
+
+  @Test
+  public void noScopes_withUniverse_selfSignedJwt() throws IOException {
+    GoogleCredentials credentials = createDefaultBuilder().build();
+    credentials = credentials.createWithUniverseDomain("foo.bar");
+
+    try {
+      credentials.getRequestMetadata(null);
+      fail("Should not be able to get token without scopes");
+    } catch (IOException e) {
+      assertTrue(
+          "expected to fail with exception",
+          e.getMessage().contains("Scopes and uri are not configured for service account"));
+    }
+
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+    assertNull(((ServiceAccountCredentials) credentials).getSelfSignedJwtCredentialsWithScope());
+    verifyJwtAccess(metadata, null);
+  }
+
+  @Test
   public void createdScoped_defaultScopes() throws IOException {
-    final URI TOKEN_SERVER = URI.create("https://foo.com/bar");
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
-    transportFactory.transport.setTokenServerUri(TOKEN_SERVER);
 
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.fromPkcs8(
@@ -428,7 +478,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             SCOPES,
             DEFAULT_SCOPES,
             transportFactory,
-            TOKEN_SERVER);
+            null);
     assertEquals(1, credentials.getDefaultScopes().size());
     assertEquals("dummy.default.scope", credentials.getDefaultScopes().toArray()[0]);
 
@@ -441,7 +491,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             SCOPES,
             DEFAULT_SCOPES,
             transportFactory,
-            TOKEN_SERVER,
+            null,
             "service_account_user");
     assertEquals(1, credentials.getDefaultScopes().size());
     assertEquals("dummy.default.scope", credentials.getDefaultScopes().toArray()[0]);
@@ -477,8 +527,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void fromJSON_getProjectId() throws IOException {
     GenericJson json =
-        writeServiceAccountJson(
-            CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, PROJECT_ID, null, null);
+        writeServiceAccountJson(PROJECT_ID, null, null);
 
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.fromJson(json, new MockTokenServerTransportFactory());
@@ -489,18 +538,11 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void fromJSON_Universe_getUniverseDomain() throws IOException {
     GenericJson json =
-        writeServiceAccountJson(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            PROJECT_ID,
-            null,
-            TPC_UNIVERSE);
+        writeServiceAccountJson(PROJECT_ID, null,"foo.bar");
 
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.fromJson(json, new MockTokenServerTransportFactory());
-    assertEquals(TPC_UNIVERSE, credentials.getUniverseDomain());
+    assertEquals("foo.bar", credentials.getUniverseDomain());
   }
 
   @Test
@@ -508,8 +550,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
     GenericJson json =
-        writeServiceAccountJson(
-            CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, null, null, null);
+        writeServiceAccountJson(null, null, null);
 
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.fromJson(json, transportFactory);
@@ -521,8 +562,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
     GenericJson json =
-        writeServiceAccountJson(
-            CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, PROJECT_ID, null, null);
+        writeServiceAccountJson(PROJECT_ID, null, null);
 
     GoogleCredentials credentials = ServiceAccountCredentials.fromJson(json, transportFactory);
 
@@ -532,13 +572,25 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void fromJSON_withUniverse_selfSignedJwt() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
+    GenericJson json =
+        writeServiceAccountJson(PROJECT_ID, null, "foo.bar");
+
+    GoogleCredentials credentials = ServiceAccountCredentials.fromJson(json, transportFactory);
+
+    credentials = credentials.createScoped(SCOPES);
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(null);
+    verifyJwtAccess(metadata, "dummy.scope");
+  }
+
+  @Test
   public void fromJSON_tokenServerUri() throws IOException {
     final String tokenServerUri = "https://foo.com/bar";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
-    GenericJson json =
-        writeServiceAccountJson(
-            CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, PROJECT_ID, null, null);
+    GenericJson json = writeServiceAccountJson(PROJECT_ID, null, null);
     json.put("token_uri", tokenServerUri);
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.fromJson(json, transportFactory);
@@ -549,6 +601,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   public void fromJson_hasQuotaProjectId() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
+<<<<<<< HEAD
     GenericJson json =
         writeServiceAccountJson(
             CLIENT_ID,
@@ -558,6 +611,9 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             PROJECT_ID,
             QUOTA_PROJECT,
             null);
+=======
+    GenericJson json = writeServiceAccountJson(PROJECT_ID, QUOTA_PROJECT, null);
+>>>>>>> 7959a6c (fix: move universe_domain to very base Credential, tests cleanup)
     GoogleCredentials credentials = ServiceAccountCredentials.fromJson(json, transportFactory);
     credentials = credentials.createScoped(SCOPES);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
@@ -570,20 +626,10 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void getRequestMetadata_hasAccessToken() throws IOException {
-    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-    transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
-    OAuth2Credentials credentials =
-        ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            SCOPES,
-            transportFactory,
-            null);
-
+    GoogleCredentials credentials = createDefaultBuilderWithToken(ACCESS_TOKEN)
+        .setScopes(SCOPES)
+        .build();
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
-
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
@@ -593,16 +639,11 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
     transportFactory.transport.setTokenServerUri(TOKEN_SERVER);
-    OAuth2Credentials credentials =
-        ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            SCOPES,
-            transportFactory,
-            TOKEN_SERVER);
-
+    OAuth2Credentials credentials = createDefaultBuilder()
+        .setScopes(SCOPES)
+        .setHttpTransportFactory(transportFactory)
+        .setTokenServerUri(TOKEN_SERVER)
+        .build();
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
@@ -610,16 +651,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void getUniverseDomain_defaultUniverse() throws IOException {
-    final URI TOKEN_SERVER = URI.create("https://foo.com/bar");
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            SCOPES,
-            new MockTokenServerTransportFactory(),
-            TOKEN_SERVER);
+    ServiceAccountCredentials credentials = createDefaultBuilder().build();
     assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
@@ -629,16 +661,10 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            SCOPES,
-            transportFactory,
-            null);
-
+    ServiceAccountCredentials credentials = createDefaultBuilder()
+        .setScopes(SCOPES)
+        .setHttpTransportFactory(transportFactory)
+        .build();
     transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
 
@@ -649,29 +675,23 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void refreshAccessToken_tokenExpiry() throws IOException {
-    final String tokenString = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            SCOPES,
-            transportFactory,
-            null);
+    transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
+    ServiceAccountCredentials credentials = createDefaultBuilder()
+        .setScopes(SCOPES)
+        .setHttpTransportFactory(transportFactory)
+        .build();
     credentials.clock = new FixedClock(0L);
 
-    transport.addServiceAccount(CLIENT_EMAIL, tokenString);
     AccessToken accessToken = credentials.refreshAccessToken();
-    assertEquals(tokenString, accessToken.getTokenValue());
+    assertEquals(ACCESS_TOKEN, accessToken.getTokenValue());
     assertEquals(3600 * 1000L, accessToken.getExpirationTimeMillis().longValue());
 
     // Test for large expires_in values (should not overflow).
     transport.setExpiresInSeconds(3600 * 1000);
     accessToken = credentials.refreshAccessToken();
-    assertEquals(tokenString, accessToken.getTokenValue());
+    assertEquals(ACCESS_TOKEN, accessToken.getTokenValue());
     assertEquals(3600 * 1000 * 1000L, accessToken.getExpirationTimeMillis().longValue());
   }
 
@@ -681,15 +701,10 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            SCOPES,
-            transportFactory,
-            null);
+    ServiceAccountCredentials credentials = createDefaultBuilder()
+        .setScopes(SCOPES)
+        .setHttpTransportFactory(transportFactory)
+        .build();;
 
     transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
@@ -706,15 +721,10 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            SCOPES,
-            transportFactory,
-            null);
+    ServiceAccountCredentials credentials = createDefaultBuilder()
+        .setScopes(SCOPES)
+        .setHttpTransportFactory(transportFactory)
+        .build();
 
     transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
@@ -733,15 +743,10 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            SCOPES,
-            transportFactory,
-            null);
+    ServiceAccountCredentials credentials = createDefaultBuilder()
+        .setScopes(SCOPES)
+        .setHttpTransportFactory(transportFactory)
+        .build();
 
     transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
@@ -760,16 +765,11 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.fromPkcs8(
-                CLIENT_ID,
-                CLIENT_EMAIL,
-                PRIVATE_KEY_PKCS8,
-                PRIVATE_KEY_ID,
-                SCOPES,
-                transportFactory,
-                null)
-            .createWithCustomRetryStrategy(false);
+    ServiceAccountCredentials credentials = createDefaultBuilder()
+        .setScopes(SCOPES)
+        .setHttpTransportFactory(transportFactory)
+        .build()
+        .createWithCustomRetryStrategy(false);
 
     transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
@@ -791,21 +791,15 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void refreshAccessToken_maxRetries_maxDelay() throws IOException {
-    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            SCOPES,
-            transportFactory,
-            null);
+    ServiceAccountCredentials credentials = createDefaultBuilder()
+        .setScopes(SCOPES)
+        .setHttpTransportFactory(transportFactory)
+        .build();
 
-    transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
-    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
+    transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), ACCESS_TOKEN);
 
     MockLowLevelHttpResponse response408 = new MockLowLevelHttpResponse().setStatusCode(408);
     MockLowLevelHttpResponse response429 = new MockLowLevelHttpResponse().setStatusCode(429);
@@ -832,21 +826,15 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void refreshAccessToken_RequestFailure_retried() throws IOException {
-    final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            SCOPES,
-            transportFactory,
-            null);
+    ServiceAccountCredentials credentials = createDefaultBuilder()
+        .setScopes(SCOPES)
+        .setHttpTransportFactory(transportFactory)
+        .build();
 
-    transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
-    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
+    transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), ACCESS_TOKEN);
 
     IOException error = new IOException("Invalid grant: Account not found");
     MockLowLevelHttpResponse response503 = new MockLowLevelHttpResponse().setStatusCode(503);
@@ -878,15 +866,10 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            SCOPES,
-            transportFactory,
-            null);
+    ServiceAccountCredentials credentials = createDefaultBuilder()
+        .setScopes(SCOPES)
+        .setHttpTransportFactory(transportFactory)
+        .build();
 
     transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
@@ -914,15 +897,10 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            SCOPES,
-            transportFactory,
-            null);
+    ServiceAccountCredentials credentials = createDefaultBuilder()
+        .setScopes(SCOPES)
+        .setHttpTransportFactory(transportFactory)
+        .build();
 
     transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
@@ -946,15 +924,10 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            SCOPES,
-            transportFactory,
-            null);
+    ServiceAccountCredentials credentials = createDefaultBuilder()
+        .setScopes(SCOPES)
+        .setHttpTransportFactory(transportFactory)
+        .build();
 
     transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
@@ -973,10 +946,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void getScopes_nullReturnsEmpty() throws IOException {
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, null);
-
+    ServiceAccountCredentials credentials = createDefaultBuilder().build();
     Collection<String> scopes = credentials.getScopes();
 
     assertNotNull(scopes);
@@ -985,9 +955,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void getAccount_sameAs() throws IOException {
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, null);
+    ServiceAccountCredentials credentials = createDefaultBuilder().build();
     assertEquals(CLIENT_EMAIL, credentials.getAccount());
   }
 
@@ -995,13 +963,13 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   public void sign_sameAs()
       throws IOException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
     byte[] toSign = {0xD, 0xE, 0xA, 0xD};
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, null);
+    ServiceAccountCredentials credentials = createDefaultBuilder().build();
+
     byte[] signedBytes = credentials.sign(toSign);
     Signature signature = Signature.getInstance(OAuth2Utils.SIGNATURE_ALGORITHM);
     signature.initSign(credentials.getPrivateKey());
     signature.update(toSign);
+
     assertArrayEquals(signature.sign(), signedBytes);
   }
 
@@ -1330,15 +1298,10 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
     transport.setError(new IOException("Invalid grant: Account not found"));
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            SCOPES,
-            transportFactory,
-            null);
+    ServiceAccountCredentials credentials = createDefaultBuilder()
+        .setScopes(SCOPES)
+        .setHttpTransportFactory(transportFactory)
+        .build();
 
     String targetAudience = "https://bar";
     IdTokenCredentials tokenCredential =
@@ -1397,7 +1360,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getRequestMetadataSetsQuotaProjectId() throws IOException {
+  public void getRequestMetadata_setsQuotaProjectId() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, "unused-client-secret");
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
@@ -1424,7 +1387,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getRequestMetadataNoQuotaProjectId() throws IOException {
+  public void getRequestMetadata_noQuotaProjectId() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, "unused-client-secret");
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
@@ -1447,7 +1410,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getRequestMetadataWithCallback() throws IOException {
+  public void getRequestMetadata_withCallback() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, "unused-client-secret");
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
@@ -1460,7 +1423,6 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             .setPrivateKey(privateKey)
             .setPrivateKeyId(PRIVATE_KEY_ID)
             .setScopes(SCOPES)
-            .setServiceAccountUser(USER)
             .setProjectId(PROJECT_ID)
             .setQuotaProjectId("my-quota-project-id")
             .setHttpTransportFactory(transportFactory)
@@ -1488,7 +1450,47 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getRequestMetadata_selfSignedJWT_withScopes() throws IOException {
+  public void getRequestMetadata_withScopes_withUniverseDomain_SelfSignedJwt() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID, "unused-client-secret");
+    transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
+
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    GoogleCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientEmail(CLIENT_EMAIL)
+            .setPrivateKey(privateKey)
+            .setPrivateKeyId(PRIVATE_KEY_ID)
+            .setScopes(SCOPES)
+            .setProjectId(PROJECT_ID)
+            .setHttpTransportFactory(transportFactory)
+            .setUniverseDomain("foo.bar")
+            .build();
+
+    final Map<String, List<String>> plainMetadata = credentials.getRequestMetadata();
+    final AtomicBoolean success = new AtomicBoolean(false);
+    credentials.getRequestMetadata(
+        null,
+        null,
+        new RequestMetadataCallback() {
+          @Override
+          public void onSuccess(Map<String, List<String>> metadata) {
+            assertEquals(plainMetadata, metadata);
+            success.set(true);
+          }
+
+          @Override
+          public void onFailure(Throwable exception) {
+            fail("Should not throw a failure.");
+          }
+        });
+
+    assertTrue("Should have run onSuccess() callback", success.get());
+  }
+
+  @Test
+  public void getRequestMetadata_withScopes_selfSignedJWT() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials =
         ServiceAccountCredentials.newBuilder()
@@ -1544,7 +1546,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getRequestMetadata_selfSignedJWT_withAudience() throws IOException {
+  public void getRequestMetadata_withAudience_selfSignedJWT() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials =
         ServiceAccountCredentials.newBuilder()
@@ -1562,7 +1564,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getRequestMetadata_selfSignedJWT_withDefaultScopes() throws IOException {
+  public void getRequestMetadata_withDefaultScopes_selfSignedJWT() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials =
         ServiceAccountCredentials.newBuilder()
@@ -1645,6 +1647,11 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
       assertFalse(signature.getPayload().containsKey("scope"));
     }
     assertEquals(PRIVATE_KEY_ID, signature.getHeader().getKeyId());
+  }
+
+  static GenericJson writeServiceAccountJson(String projectId, String quotaProjectId, String universeDomain) {
+    return writeServiceAccountJson(
+        CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, projectId, quotaProjectId, universeDomain);
   }
 
   static GenericJson writeServiceAccountJson(

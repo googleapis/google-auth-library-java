@@ -35,6 +35,7 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.Preconditions;
+import com.google.auth.Credentials;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -250,15 +251,25 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   /**
    * Returns the universe domain for the credential
    *
-   * @return An explicit universe domain if it was explicitly provided, {@code
-   *     GoogleAuthUtils.GOOGLE_DEFAULT_UNIVERSE} otherwise.
+   * @return An explicit universe domain if it was explicitly provided, invokes
+   * the super implementation otherwise.
    */
+  @Override
   public String getUniverseDomain() {
     if (this.universeDomain == null || universeDomain.trim().isEmpty()) {
-      return GoogleAuthUtils.GOOGLE_DEFAULT_UNIVERSE;
+      return super.getUniverseDomain();
     }
 
     return this.universeDomain;
+  }
+
+  /**
+   * Checks if universe domain equals to {@link Credentials#GOOGLE_DEFAULT_UNIVERSE}.
+   * @return true if universeDomain equals to {@link Credentials#GOOGLE_DEFAULT_UNIVERSE},
+   * false otherwise
+   */
+  boolean isDefaultUniverseDomain() {
+    return getUniverseDomain() == Credentials.GOOGLE_DEFAULT_UNIVERSE;
   }
 
   /**

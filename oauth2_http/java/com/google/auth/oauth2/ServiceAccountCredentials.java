@@ -49,6 +49,7 @@ import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Joiner;
 import com.google.api.client.util.Preconditions;
+import com.google.auth.Credentials;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
@@ -480,6 +481,12 @@ public class ServiceAccountCredentials extends GoogleCredentials
     return scopes.isEmpty() && defaultScopes.isEmpty();
   }
 
+  /** Returns true if credential is configured domain wide delegation */
+  @VisibleForTesting
+  boolean isConfiguredForDomainWideDelegation() {
+    return serviceAccountUser != null && serviceAccountUser.length() > 0;
+  }
+
   /**
    * Refreshes the OAuth2 access token by getting a new access token using a JSON Web Token (JWT).
    */
@@ -854,7 +861,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   }
 
   /**
-   * Self signed JWT uses uri as audience, which should have the "https://{host}/" format. For
+   * Self-signed JWT uses uri as audience, which should have the "https://{host}/" format. For
    * instance, if the uri is "https://compute.googleapis.com/compute/v1/projects/", then this
    * function returns "https://compute.googleapis.com/".
    */
@@ -872,7 +879,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   @VisibleForTesting
   JwtCredentials createSelfSignedJwtCredentials(final URI uri) {
-    // Create a JwtCredentials for self signed JWT. See https://google.aip.dev/auth/4111.
+    // Create a JwtCredentials for self-signed JWT. See https://google.aip.dev/auth/4111.
     JwtClaims.Builder claimsBuilder =
         JwtClaims.newBuilder().setIssuer(clientEmail).setSubject(clientEmail);
 
@@ -900,9 +907,12 @@ public class ServiceAccountCredentials extends GoogleCredentials
   @Override
   public void getRequestMetadata(
       final URI uri, Executor executor, final RequestMetadataCallback callback) {
-    if (useJwtAccessWithScope) {
-      // This will call getRequestMetadata(URI uri), which handles self signed JWT logic.
-      // Self signed JWT doesn't use network, so here we do a blocking call to improve
+    // For default universe Self-signed JWT could be explicitly disabled with
+    // {@code ServiceAccountCredentials.useJwtAccessWithScope} flag.
+    // If universe is non-default, it only supports self-signed JWT, and it is always allowed.
+    if (this.useJwtAccessWithScope || !isDefaultUniverseDomain()) {
+      // This will call getRequestMetadata(URI uri), which handles self-signed JWT logic.
+      // Self-signed JWT doesn't use network, so here we do a blocking call to improve
       // efficiency. executor will be ignored since it is intended for async operation.
       blockingGetToCallback(uri, callback);
     } else {
@@ -920,17 +930,44 @@ public class ServiceAccountCredentials extends GoogleCredentials
               + " providing uri to getRequestMetadata.");
     }
 
-    // If scopes are provided but we cannot use self signed JWT, then use scopes to get access
-    // token.
+    if (isDefaultUniverseDomain()) {
+      return getRequestMetadataForGdu(uri);
+    } else {
+      return getRequestMetadataForNonGdu(uri);
+    }
+  }
+
+  private Map<String, List<String>> getRequestMetadataForGdu(URI uri) throws IOException {
+    // If scopes are provided, but we cannot use self-signed JWT or domain-wide delegation is
+    // configured then use scopes to get access token.
     if ((!createScopedRequired() && !useJwtAccessWithScope)
-        || (serviceAccountUser != null && serviceAccountUser.length() > 0)) {
+        || isConfiguredForDomainWideDelegation()) {
       return super.getRequestMetadata(uri);
     }
 
-    // If scopes are provided and self signed JWT can be used, use self signed JWT with scopes.
-    // Otherwise, use self signed JWT with uri as the audience.
+    return getRequestMetadataWithSelfSignedJwt(uri);
+  }
+
+  private Map<String, List<String>> getRequestMetadataForNonGdu(URI uri) throws IOException {
+    // Self Signed JWT is not supported for domain-wide delegation for non-GDU universes
+    if (isConfiguredForDomainWideDelegation()) {
+      throw new IOException(
+          String.format("Service Account user is configured for the credential. "
+                  + "Domain-wide delegation is not supported in universes different than %s.",
+              Credentials.GOOGLE_DEFAULT_UNIVERSE));
+    }
+
+    return getRequestMetadataWithSelfSignedJwt(uri);
+  }
+
+  /** Provide the access JWT for scopes if provided, for uri as aud otherwise */
+  @VisibleForTesting
+  private Map<String, List<String>> getRequestMetadataWithSelfSignedJwt(URI uri)
+      throws IOException {
+    // If scopes are provided and self-signed JWT can be used, use self-signed JWT with scopes.
+    // Otherwise, use self-signed JWT with uri as the audience.
     JwtCredentials jwtCredentials;
-    if (!createScopedRequired() && useJwtAccessWithScope) {
+    if (!createScopedRequired()) {
       // Create selfSignedJwtCredentialsWithScope when needed and reuse it for better performance.
       if (selfSignedJwtCredentialsWithScope == null) {
         selfSignedJwtCredentialsWithScope = createSelfSignedJwtCredentials(null);
@@ -940,6 +977,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
       // Create JWT credentials with the uri as audience.
       jwtCredentials = createSelfSignedJwtCredentials(uri);
     }
+
     Map<String, List<String>> requestMetadata = jwtCredentials.getRequestMetadata(null);
     return addQuotaProjectIdToRequestMetadata(quotaProjectId, requestMetadata);
   }

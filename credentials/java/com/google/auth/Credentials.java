@@ -43,6 +43,8 @@ public abstract class Credentials implements Serializable {
 
   private static final long serialVersionUID = 808575179767517313L;
 
+  public static final String GOOGLE_DEFAULT_UNIVERSE = "googleapis.com";
+
   /**
    * A constant string name describing the authentication technology.
    *
@@ -53,6 +55,15 @@ public abstract class Credentials implements Serializable {
    * @return The type of authentication used.
    */
   public abstract String getAuthenticationType();
+
+  /**
+   * Returns the universe domain for the credential
+   *
+   * @return Return a default Google universe domain googleapis.com
+   */
+  public String getUniverseDomain() {
+    return GOOGLE_DEFAULT_UNIVERSE;
+  }
 
   /**
    * Get the current request metadata, refreshing tokens if required.
