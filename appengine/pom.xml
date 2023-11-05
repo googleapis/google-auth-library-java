@@ -79,5 +79,10 @@
       <type>test-jar</type>
       <classifier>testlib</classifier>
     </dependency>
+    <dependency>
+       <groupId>com.google.errorprone</groupId>
+       <artifactId>error_prone_annotations</artifactId>
+       <scope>compile</scope>
+    </dependency>
   </dependencies>
 </project>

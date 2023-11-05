@@ -396,6 +396,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
    * @param transportFactory HTTP transport factory, creates the transport used to get access tokens
    * @return the credentials defined by the JSON
    */
+  @SuppressWarnings("unchecked")
   static ExternalAccountCredentials fromJson(
       Map<String, Object> json, HttpTransportFactory transportFactory) {
     checkNotNull(json);

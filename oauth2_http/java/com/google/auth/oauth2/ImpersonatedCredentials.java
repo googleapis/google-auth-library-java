@@ -362,6 +362,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
    * @return the credentials defined by the JSON
    * @throws IOException if the credential cannot be created from the JSON.
    */
+  @SuppressWarnings("unchecked")
   static ImpersonatedCredentials fromJson(
       Map<String, Object> json, HttpTransportFactory transportFactory) throws IOException {
 
@@ -419,7 +420,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
   @Override
   public GoogleCredentials createScoped(Collection<String> scopes) {
     return toBuilder()
-        .setScopes(new ArrayList(scopes))
+        .setScopes(new ArrayList<>(scopes))
         .setLifetime(this.lifetime)
         .setDelegates(this.delegates)
         .setHttpTransportFactory(this.transportFactory)
