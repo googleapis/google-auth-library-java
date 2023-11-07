@@ -37,6 +37,7 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.collect.ImmutableList;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -359,6 +360,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       return new GoogleCredentials(this);
     }
 
+    @CanIgnoreReturnValue
     public Builder setQuotaProjectId(String quotaProjectId) {
       this.quotaProjectId = quotaProjectId;
       return this;
@@ -369,6 +371,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     }
 
     @Override
+    @CanIgnoreReturnValue
     public Builder setAccessToken(AccessToken token) {
       super.setAccessToken(token);
       return this;

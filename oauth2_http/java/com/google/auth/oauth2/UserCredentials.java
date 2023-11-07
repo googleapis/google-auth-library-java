@@ -47,6 +47,7 @@ import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -388,46 +389,55 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
       this.tokenServerUri = credentials.tokenServerUri;
     }
 
+    @CanIgnoreReturnValue
     public Builder setClientId(String clientId) {
       this.clientId = clientId;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setClientSecret(String clientSecret) {
       this.clientSecret = clientSecret;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setRefreshToken(String refreshToken) {
       this.refreshToken = refreshToken;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setTokenServerUri(URI tokenServerUri) {
       this.tokenServerUri = tokenServerUri;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
       this.transportFactory = transportFactory;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setAccessToken(AccessToken token) {
       super.setAccessToken(token);
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setExpirationMargin(Duration expirationMargin) {
       super.setExpirationMargin(expirationMargin);
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setRefreshMargin(Duration refreshMargin) {
       super.setRefreshMargin(refreshMargin);
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setQuotaProjectId(String quotaProjectId) {
       super.setQuotaProjectId(quotaProjectId);
       return this;
