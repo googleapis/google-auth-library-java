@@ -72,12 +72,12 @@ integration)
     ;;
 graalvm)
     # Run Unit and Integration Tests with Native Image
-    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Pnative-test test -pl 'oauth2_http'
+    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative-2 test -pl 'oauth2_http'
     RETURN_CODE=$?
     ;;
 graalvm17)
     # Run Unit and Integration Tests with Native Image
-    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Pnative-test test -pl 'oauth2_http'
+    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative-2 test -pl 'oauth2_http'
     RETURN_CODE=$?
     ;;
 samples)
