@@ -119,7 +119,6 @@
       <dependency>
         <groupId>com.google.auto.value</groupId>
         <artifactId>auto-value-annotations</artifactId>
-        <version>${auto-value-annotation.version}</version>
       </dependency>
       <dependency>
         <groupId>junit</groupId>
