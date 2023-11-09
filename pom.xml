@@ -117,10 +117,6 @@
         <version>${project.findbugs.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.google.auto.value</groupId>
-        <artifactId>auto-value-annotations</artifactId>
-      </dependency>
-      <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>${project.junit.version}</version>
