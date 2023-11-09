@@ -33,7 +33,7 @@
             <configuration>
               <excludes combine.self="override"></excludes>
               <includes>
-<!--                <include>**/IT*.java</include>-->
+                <include>**/IT*.java</include>
                 <include>**/functional/*.java</include>
             </includes>
             </configuration>
