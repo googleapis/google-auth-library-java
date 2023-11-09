@@ -17,7 +17,6 @@
     <groupId>com.google.cloud</groupId>
     <artifactId>google-cloud-shared-config</artifactId>
     <version>1.6.1</version>
-    <relativePath/>
   </parent>
 
   <distributionManagement>
