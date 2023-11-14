@@ -38,6 +38,8 @@ import com.google.api.client.util.Preconditions;
 import com.google.auth.Credentials;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,6 +50,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 /** Base type for credentials for authorizing calls to Google APIs using OAuth2. */
@@ -228,17 +231,6 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * Creates a credential with the provided universe domain.
-   *
-   * @param universeDomain the universe domain to set on the credential. Empty or null value will
-   *     result in the default universe domain 'googleapis.com'
-   * @return credential with the provided universe domain
-   */
-  public GoogleCredentials createWithUniverseDomain(String universeDomain) {
-    return this.toBuilder().setUniverseDomain(universeDomain).build();
-  }
-
-  /**
    * Creates a credential with the provided quota project.
    *
    * @param quotaProject the quota project to set on the credential
@@ -352,6 +344,38 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     super(accessToken, refreshMargin, expirationMargin);
     this.quotaProjectId = null;
     this.universeDomain = null;
+  }
+
+  /**
+   * A helper for overriding toString that allows inheritance of super class fields
+   * Extending classes can override this implementation and call super implementation and then
+   * add more fields. Same cannot be done with ToString() directly.
+   * @return an instance of the ToStringHelper that has all the relevant fields added
+   */
+  protected ToStringHelper toStringHelper() {
+    return MoreObjects.toStringHelper(this).omitNullValues()
+        .add("quotaProjectId", quotaProjectId)
+        .add("universeDomain", getUniverseDomain());
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper().toString();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof GoogleCredentials)) {
+      return false;
+    }
+    GoogleCredentials other = (GoogleCredentials) obj;
+    return Objects.equals(this.getQuotaProjectId(), other.getQuotaProjectId())
+        && Objects.equals(this.getUniverseDomain(), other.getUniverseDomain());
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(getQuotaProjectId(), getUniverseDomain());
   }
 
   public static Builder newBuilder() {

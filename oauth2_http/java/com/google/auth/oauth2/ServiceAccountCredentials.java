@@ -55,6 +55,7 @@ import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.io.InputStream;
@@ -754,28 +755,26 @@ public class ServiceAccountCredentials extends GoogleCredentials
         tokenServerUri,
         scopes,
         defaultScopes,
-        quotaProjectId,
         lifetime,
         useJwtAccessWithScope,
-        defaultRetriesEnabled);
+        defaultRetriesEnabled,
+        super.hashCode());
   }
 
   @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("clientId", clientId)
-        .add("clientEmail", clientEmail)
-        .add("privateKeyId", privateKeyId)
-        .add("transportFactoryClassName", transportFactoryClassName)
-        .add("tokenServerUri", tokenServerUri)
-        .add("scopes", scopes)
-        .add("defaultScopes", defaultScopes)
-        .add("serviceAccountUser", serviceAccountUser)
-        .add("quotaProjectId", quotaProjectId)
-        .add("lifetime", lifetime)
-        .add("useJwtAccessWithScope", useJwtAccessWithScope)
-        .add("defaultRetriesEnabled", defaultRetriesEnabled)
-        .toString();
+  protected ToStringHelper toStringHelper() {
+  return super.toStringHelper()
+      .add("clientId", clientId)
+      .add("clientEmail", clientEmail)
+      .add("privateKeyId", privateKeyId)
+      .add("transportFactoryClassName", transportFactoryClassName)
+      .add("tokenServerUri", tokenServerUri)
+      .add("scopes", scopes)
+      .add("defaultScopes", defaultScopes)
+      .add("serviceAccountUser", serviceAccountUser)
+      .add("lifetime", lifetime)
+      .add("useJwtAccessWithScope", useJwtAccessWithScope)
+      .add("defaultRetriesEnabled", defaultRetriesEnabled);
   }
 
   @Override
@@ -783,6 +782,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
     if (!(obj instanceof ServiceAccountCredentials)) {
       return false;
     }
+    if (!super.equals(obj)) {
+      return false;
+    }
+
     ServiceAccountCredentials other = (ServiceAccountCredentials) obj;
     return Objects.equals(this.clientId, other.clientId)
         && Objects.equals(this.clientEmail, other.clientEmail)
@@ -792,7 +795,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
         && Objects.equals(this.tokenServerUri, other.tokenServerUri)
         && Objects.equals(this.scopes, other.scopes)
         && Objects.equals(this.defaultScopes, other.defaultScopes)
-        && Objects.equals(this.quotaProjectId, other.quotaProjectId)
         && Objects.equals(this.lifetime, other.lifetime)
         && Objects.equals(this.useJwtAccessWithScope, other.useJwtAccessWithScope)
         && Objects.equals(this.defaultRetriesEnabled, other.defaultRetriesEnabled);

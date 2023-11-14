@@ -51,6 +51,7 @@ import com.google.api.client.testing.http.FixedClock;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.api.client.util.Joiner;
+import com.google.auth.Credentials;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.TestUtils;
 import com.google.auth.http.AuthHttpConstants;
@@ -414,8 +415,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void createdScoped_withUniverse_selfSignedJwt() throws IOException {
-    GoogleCredentials credentials = createDefaultBuilder().build();
-    credentials = credentials.createWithUniverseDomain("foo.bar");
+    GoogleCredentials credentials = createDefaultBuilder().setUniverseDomain("foo.bar").build();
 
     try {
       credentials.getRequestMetadata(null);
@@ -452,8 +452,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void noScopes_withUniverse_selfSignedJwt() throws IOException {
-    GoogleCredentials credentials = createDefaultBuilder().build();
-    credentials = credentials.createWithUniverseDomain("foo.bar");
+    GoogleCredentials credentials = createDefaultBuilder().setUniverseDomain("foo.bar").build();
 
     try {
       credentials.getRequestMetadata(null);
@@ -1028,6 +1027,35 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void equals_false_super() throws IOException {
+    final URI tokenServer1 = URI.create("https://foo1.com/bar");
+    MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
+    OAuth2Credentials credentials =
+        ServiceAccountCredentials.fromPkcs8(
+            CLIENT_ID,
+            CLIENT_EMAIL,
+            PRIVATE_KEY_PKCS8,
+            PRIVATE_KEY_ID,
+            SCOPES,
+            serverTransportFactory,
+            tokenServer1);
+    OAuth2Credentials otherCredentials =
+        ServiceAccountCredentials.fromPkcs8(
+            CLIENT_ID,
+            CLIENT_EMAIL,
+            PRIVATE_KEY_PKCS8,
+            PRIVATE_KEY_ID,
+            SCOPES,
+            serverTransportFactory,
+            tokenServer1)
+            .toBuilder()
+            .setUniverseDomain("universe.com")
+            .build();
+    assertFalse(credentials.equals(otherCredentials));
+    assertFalse(otherCredentials.equals(credentials));
+  }
+
+  @Test
   public void equals_false_keyId() throws IOException {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
     MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
@@ -1152,9 +1180,11 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(PRIVATE_KEY_PKCS8, builder);
     String expectedToString =
         String.format(
-            "ServiceAccountCredentials{clientId=%s, clientEmail=%s, privateKeyId=%s, "
-                + "transportFactoryClassName=%s, tokenServerUri=%s, scopes=%s, defaultScopes=%s, serviceAccountUser=%s, "
-                + "quotaProjectId=%s, lifetime=3600, useJwtAccessWithScope=false, defaultRetriesEnabled=true}",
+            "ServiceAccountCredentials{quotaProjectId=%s, universeDomain=%s, clientId=%s, clientEmail=%s, "
+                + "privateKeyId=%s, transportFactoryClassName=%s, tokenServerUri=%s, scopes=%s, defaultScopes=%s, "
+                + "serviceAccountUser=%s, lifetime=3600, useJwtAccessWithScope=false, defaultRetriesEnabled=true}",
+            QUOTA_PROJECT,
+            Credentials.GOOGLE_DEFAULT_UNIVERSE,
             CLIENT_ID,
             CLIENT_EMAIL,
             PRIVATE_KEY_ID,
@@ -1162,13 +1192,45 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             tokenServer,
             SCOPES,
             DEFAULT_SCOPES,
-            USER,
-            QUOTA_PROJECT);
+            USER);
     assertEquals(expectedToString, credentials.toString());
   }
 
   @Test
   public void hashCode_equals() throws IOException {
+    final URI tokenServer = URI.create("https://foo.com/bar");
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    OAuth2Credentials credentials =
+        ServiceAccountCredentials.fromPkcs8(
+            CLIENT_ID,
+            CLIENT_EMAIL,
+            PRIVATE_KEY_PKCS8,
+            PRIVATE_KEY_ID,
+            SCOPES,
+            transportFactory,
+            tokenServer)
+            .createWithQuotaProject(QUOTA_PROJECT)
+            .toBuilder()
+            .setUniverseDomain("universe.com")
+            .build();
+    OAuth2Credentials otherCredentials =
+        ServiceAccountCredentials.fromPkcs8(
+            CLIENT_ID,
+            CLIENT_EMAIL,
+            PRIVATE_KEY_PKCS8,
+            PRIVATE_KEY_ID,
+            SCOPES,
+            transportFactory,
+            tokenServer)
+            .createWithQuotaProject(QUOTA_PROJECT)
+            .toBuilder()
+            .setUniverseDomain("universe.com")
+            .build();
+    assertEquals(credentials.hashCode(), otherCredentials.hashCode());
+  }
+
+  @Test
+  public void hashCode_not_equals_quota() throws IOException {
     final URI tokenServer = URI.create("https://foo.com/bar");
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     OAuth2Credentials credentials =
@@ -1188,8 +1250,9 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             PRIVATE_KEY_ID,
             SCOPES,
             transportFactory,
-            tokenServer);
-    assertEquals(credentials.hashCode(), otherCredentials.hashCode());
+            tokenServer)
+            .createWithQuotaProject("some_quota");
+    assertNotEquals(credentials.hashCode(), otherCredentials.hashCode());
   }
 
   @Test
