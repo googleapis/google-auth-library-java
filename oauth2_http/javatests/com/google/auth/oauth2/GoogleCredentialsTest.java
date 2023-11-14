@@ -589,18 +589,18 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void createWithUniverseDomain() {
+  public void buildWithUniverseDomain() {
     final GoogleCredentials original =
         new GoogleCredentials.Builder().setUniverseDomain("universe1").build();
-    GoogleCredentials updated = original.createWithUniverseDomain("universe2");
+    GoogleCredentials updated = original.toBuilder().setUniverseDomain("universe2").build();
 
     assertEquals("universe1", original.getUniverseDomain());
     assertEquals("universe2", updated.getUniverseDomain());
 
-    GoogleCredentials withEmpty = original.createWithUniverseDomain("");
+    GoogleCredentials withEmpty = original.toBuilder().setUniverseDomain("").build();
     assertEquals(GOOGLE_DEFAULT_UNIVERSE, withEmpty.getUniverseDomain());
 
-    GoogleCredentials withNull = original.createWithUniverseDomain(null);
+    GoogleCredentials withNull = original.toBuilder().setUniverseDomain(null).build();
     assertEquals(GOOGLE_DEFAULT_UNIVERSE, withNull.getUniverseDomain());
   }
 

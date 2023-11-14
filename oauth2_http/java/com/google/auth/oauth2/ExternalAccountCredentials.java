@@ -392,7 +392,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
    * @return the credentials defined by the JSON
    */
   static ExternalAccountCredentials fromJson(
-      Map<String, Object> json, HttpTransportFactory transportFactory) {
+      Map<String, Object> json, HttpTransportFactory transportFactory) throws IOException {
     checkNotNull(json);
     checkNotNull(transportFactory);
 
@@ -409,9 +409,10 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     String clientSecret = (String) json.get("client_secret");
     String quotaProjectId = (String) json.get("quota_project_id");
     String userProject = (String) json.get("workforce_pool_user_project");
-    String universeDomain = (String) json.get("universe_domain");
     Map<String, Object> impersonationOptionsMap =
         (Map<String, Object>) json.get("service_account_impersonation");
+
+    GoogleCredentials baseCredential = GoogleCredentials.fromJson(json);
 
     if (impersonationOptionsMap == null) {
       impersonationOptionsMap = new HashMap<String, Object>();
@@ -430,7 +431,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
           .setClientId(clientId)
           .setClientSecret(clientSecret)
           .setServiceAccountImpersonationOptions(impersonationOptionsMap)
-          .setUniverseDomain(universeDomain)
+          .setUniverseDomain(baseCredential.getUniverseDomain())
           .build();
     } else if (isPluggableAuthCredential(credentialSourceMap)) {
       return PluggableAuthCredentials.newBuilder()
@@ -446,7 +447,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
           .setClientSecret(clientSecret)
           .setWorkforcePoolUserProject(userProject)
           .setServiceAccountImpersonationOptions(impersonationOptionsMap)
-          .setUniverseDomain(universeDomain)
+          .setUniverseDomain(baseCredential.getUniverseDomain())
           .build();
     }
     return IdentityPoolCredentials.newBuilder()
@@ -462,7 +463,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
         .setClientSecret(clientSecret)
         .setWorkforcePoolUserProject(userProject)
         .setServiceAccountImpersonationOptions(impersonationOptionsMap)
-        .setUniverseDomain(universeDomain)
+        .setUniverseDomain(baseCredential.getUniverseDomain())
         .build();
   }
 
@@ -723,7 +724,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     @Nullable protected Collection<String> scopes;
     @Nullable protected String workforcePoolUserProject;
     @Nullable protected ServiceAccountImpersonationOptions serviceAccountImpersonationOptions;
-    @Nullable protected String universeDomain;
     @Nullable protected ExternalAccountMetricsHandler metricsHandler;
 
     protected Builder() {}
