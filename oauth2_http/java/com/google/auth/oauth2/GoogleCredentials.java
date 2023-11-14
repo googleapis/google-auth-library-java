@@ -347,13 +347,15 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * A helper for overriding toString that allows inheritance of super class fields
-   * Extending classes can override this implementation and call super implementation and then
-   * add more fields. Same cannot be done with ToString() directly.
+   * A helper for overriding toString that allows inheritance of super class fields Extending
+   * classes can override this implementation and call super implementation and then add more
+   * fields. Same cannot be done with ToString() directly.
+   *
    * @return an instance of the ToStringHelper that has all the relevant fields added
    */
   protected ToStringHelper toStringHelper() {
-    return MoreObjects.toStringHelper(this).omitNullValues()
+    return MoreObjects.toStringHelper(this)
+        .omitNullValues()
         .add("quotaProjectId", quotaProjectId)
         .add("universeDomain", getUniverseDomain());
   }

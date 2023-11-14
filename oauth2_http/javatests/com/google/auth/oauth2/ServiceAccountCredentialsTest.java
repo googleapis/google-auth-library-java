@@ -1041,13 +1041,13 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             tokenServer1);
     OAuth2Credentials otherCredentials =
         ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            SCOPES,
-            serverTransportFactory,
-            tokenServer1)
+                CLIENT_ID,
+                CLIENT_EMAIL,
+                PRIVATE_KEY_PKCS8,
+                PRIVATE_KEY_ID,
+                SCOPES,
+                serverTransportFactory,
+                tokenServer1)
             .toBuilder()
             .setUniverseDomain("universe.com")
             .build();
@@ -1202,26 +1202,26 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     OAuth2Credentials credentials =
         ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            SCOPES,
-            transportFactory,
-            tokenServer)
+                CLIENT_ID,
+                CLIENT_EMAIL,
+                PRIVATE_KEY_PKCS8,
+                PRIVATE_KEY_ID,
+                SCOPES,
+                transportFactory,
+                tokenServer)
             .createWithQuotaProject(QUOTA_PROJECT)
             .toBuilder()
             .setUniverseDomain("universe.com")
             .build();
     OAuth2Credentials otherCredentials =
         ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            SCOPES,
-            transportFactory,
-            tokenServer)
+                CLIENT_ID,
+                CLIENT_EMAIL,
+                PRIVATE_KEY_PKCS8,
+                PRIVATE_KEY_ID,
+                SCOPES,
+                transportFactory,
+                tokenServer)
             .createWithQuotaProject(QUOTA_PROJECT)
             .toBuilder()
             .setUniverseDomain("universe.com")
@@ -1244,13 +1244,13 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             tokenServer);
     OAuth2Credentials otherCredentials =
         ServiceAccountCredentials.fromPkcs8(
-            CLIENT_ID,
-            CLIENT_EMAIL,
-            PRIVATE_KEY_PKCS8,
-            PRIVATE_KEY_ID,
-            SCOPES,
-            transportFactory,
-            tokenServer)
+                CLIENT_ID,
+                CLIENT_EMAIL,
+                PRIVATE_KEY_PKCS8,
+                PRIVATE_KEY_ID,
+                SCOPES,
+                transportFactory,
+                tokenServer)
             .createWithQuotaProject("some_quota");
     assertNotEquals(credentials.hashCode(), otherCredentials.hashCode());
   }

@@ -54,7 +54,6 @@ import com.google.auth.RequestMetadataCallback;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -763,18 +762,18 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   @Override
   protected ToStringHelper toStringHelper() {
-  return super.toStringHelper()
-      .add("clientId", clientId)
-      .add("clientEmail", clientEmail)
-      .add("privateKeyId", privateKeyId)
-      .add("transportFactoryClassName", transportFactoryClassName)
-      .add("tokenServerUri", tokenServerUri)
-      .add("scopes", scopes)
-      .add("defaultScopes", defaultScopes)
-      .add("serviceAccountUser", serviceAccountUser)
-      .add("lifetime", lifetime)
-      .add("useJwtAccessWithScope", useJwtAccessWithScope)
-      .add("defaultRetriesEnabled", defaultRetriesEnabled);
+    return super.toStringHelper()
+        .add("clientId", clientId)
+        .add("clientEmail", clientEmail)
+        .add("privateKeyId", privateKeyId)
+        .add("transportFactoryClassName", transportFactoryClassName)
+        .add("tokenServerUri", tokenServerUri)
+        .add("scopes", scopes)
+        .add("defaultScopes", defaultScopes)
+        .add("serviceAccountUser", serviceAccountUser)
+        .add("lifetime", lifetime)
+        .add("useJwtAccessWithScope", useJwtAccessWithScope)
+        .add("defaultRetriesEnabled", defaultRetriesEnabled);
   }
 
   @Override
