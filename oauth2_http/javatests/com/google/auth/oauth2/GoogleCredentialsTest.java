@@ -148,7 +148,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_serviceAccount_Universe_providesToken() throws IOException {
+  public void fromStream_serviceAccount_Universe_noToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     InputStream serviceAccountStream =
@@ -162,11 +162,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     assertEquals(TPC_UNIVERSE, credentials.getUniverseDomain());
     credentials = credentials.createScoped(SCOPES);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
-    TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
-
-    credentials = credentials.createScoped(SCOPES, DEFAULT_SCOPES);
-    metadata = credentials.getRequestMetadata(CALL_URI);
-    TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+    assertNotNull(((ServiceAccountCredentials) credentials).getSelfSignedJwtCredentialsWithScope());
   }
 
   @Test

@@ -343,34 +343,6 @@ public class UserCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void equals_false_accessToken() throws IOException {
-    final URI tokenServer1 = URI.create("https://foo1.com/bar");
-    AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
-    AccessToken otherAccessToken = new AccessToken("otherAccessToken", null);
-    MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
-    UserCredentials credentials =
-        UserCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientSecret(CLIENT_SECRET)
-            .setRefreshToken(REFRESH_TOKEN)
-            .setAccessToken(accessToken)
-            .setHttpTransportFactory(httpTransportFactory)
-            .setTokenServerUri(tokenServer1)
-            .build();
-    UserCredentials otherCredentials =
-        UserCredentials.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setClientSecret(CLIENT_SECRET)
-            .setRefreshToken(REFRESH_TOKEN)
-            .setAccessToken(otherAccessToken)
-            .setHttpTransportFactory(httpTransportFactory)
-            .setTokenServerUri(tokenServer1)
-            .build();
-    assertFalse(credentials.equals(otherCredentials));
-    assertFalse(otherCredentials.equals(credentials));
-  }
-
-  @Test
   public void equals_false_transportFactory() throws IOException {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
