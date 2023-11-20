@@ -57,9 +57,9 @@ public abstract class Credentials implements Serializable {
   public abstract String getAuthenticationType();
 
   /**
-   * Returns the universe domain for the credential
+   * Returns the universe domain for the credential.
    *
-   * @return Return a default Google universe domain googleapis.com
+   * @return a default Google universe domain googleapis.com
    */
   public String getUniverseDomain() {
     return GOOGLE_DEFAULT_UNIVERSE;

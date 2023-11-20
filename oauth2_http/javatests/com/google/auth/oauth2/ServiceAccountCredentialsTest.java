@@ -58,8 +58,10 @@ import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.collect.ImmutableSet;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.net.URI;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -154,32 +156,6 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     return createDefaultBuilderWithKey(privateKey);
   }
 
-  //
-  // private ServiceAccountCredentials createServiceAccountWithToken(Collection<String> scopes)
-  //     throws IOException {
-  //   MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
-  //   transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
-  //   return createServiceAccountFromPkcs8(scopes, transportFactory);
-  // }
-  //
-  // private ServiceAccountCredentials createServiceAccountFromPkcs8(Collection<String> scopes)
-  //     throws IOException {
-  //   return createServiceAccountFromPkcs8(scopes, new MockTokenServerTransportFactory());
-  // }
-  //
-  // private ServiceAccountCredentials createServiceAccountFromPkcs8(Collection<String> scopes,
-  // HttpTransportFactory transportFactory)
-  //     throws IOException {
-  //   return ServiceAccountCredentials.fromPkcs8(
-  //       CLIENT_ID,
-  //       CLIENT_EMAIL,
-  //       PRIVATE_KEY_PKCS8,
-  //       PRIVATE_KEY_ID,
-  //       scopes,
-  //       transportFactory,
-  //       null);
-  // }
-
   @Test
   public void setLifetime() throws IOException {
     ServiceAccountCredentials.Builder builder = createDefaultBuilder();
@@ -221,7 +197,6 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
         createDefaultBuilderWithKey(privateKey)
             .setServiceAccountUser(USER)
             .setScopes(SCOPES)
-            .setProjectId(PROJECT_ID)
             .build();
     List<String> newScopes = Arrays.asList("scope1", "scope2");
 
@@ -394,11 +369,9 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void createdScoped_withAud_noUniverse_jwtWithScopesDisabled_accessToken()
       throws IOException {
-    // TODO: this should not default to AUD and throw exception that scopes
-    // are provided, but cannot be used
     GoogleCredentials credentials = createDefaultBuilderWithToken(ACCESS_TOKEN).build();
 
-    // no aud, no scopes -> exception
+    // No aud, no scopes gives an exception.
     try {
       credentials.getRequestMetadata(null);
       fail("Should not be able to get token without scopes");
@@ -430,19 +403,19 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     Map<String, List<String>> metadata = scopedCredentials.getRequestMetadata(null);
     verifyJwtAccess(metadata, "dummy.scope");
 
-    // recreate to avoid jwt caching
+    // Recreate to avoid jwt caching.
     scopedCredentials = credentials.createScoped("dummy.scope2");
     metadata = scopedCredentials.getRequestMetadata(CALL_URI);
     verifyJwtAccess(metadata, "dummy.scope2");
 
-    // recreate to avoid jwt caching
+    // Recreate to avoid jwt caching.
     scopedCredentials =
         credentials.createScoped(
             Collections.<String>emptyList(), Arrays.asList("dummy.default.scope"));
     metadata = scopedCredentials.getRequestMetadata(null);
     verifyJwtAccess(metadata, "dummy.default.scope");
 
-    // recreate to avoid jwt caching
+    // Recreate to avoid jwt caching.
     scopedCredentials =
         credentials.createScoped(
             Collections.<String>emptyList(), Arrays.asList("dummy.default.scope2"));
@@ -1268,6 +1241,12 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             SCOPES,
             transportFactory,
             tokenServer);
+
+    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    try (ObjectOutputStream output = new ObjectOutputStream(bytes)) {
+      output.writeObject(credentials);
+      String s = output.toString();
+    }
     ServiceAccountCredentials deserializedCredentials = serializeAndDeserialize(credentials);
     assertEquals(credentials, deserializedCredentials);
     assertEquals(credentials.hashCode(), deserializedCredentials.hashCode());

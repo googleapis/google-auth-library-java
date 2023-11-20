@@ -985,7 +985,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     ExternalAccountAuthorizedUserCredentials secondCredentials =
         credentials.toBuilder().setAccessToken(new AccessToken("different", new Date())).build();
 
-    // credentials objects are still interchangeable even if access_tokens instances are different
+    // Even if access token are different, credentials objects are still interchangeable.
     assertEquals(secondCredentials, credentials);
     assertEquals(credentials.hashCode(), secondCredentials.hashCode());
   }

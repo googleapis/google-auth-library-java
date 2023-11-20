@@ -209,9 +209,9 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * Returns an instance of GoogleCredentials defined by JSON
+   * Returns an instance of GoogleCredentials defined by JSON.
    *
-   * <p>To be used to parse common credentials fields
+   * <p>To be used to parse common credentials fields.
    *
    * @param json a map from the JSON representing the credentials.
    * @return the credentials defined by the JSON.
@@ -232,6 +232,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
 
   /**
    * Creates a credential with the provided quota project.
+   * Expected format is: some-domain.xyz
    *
    * @param quotaProject the quota project to set on the credential
    * @return credential with the provided quota project
@@ -241,7 +242,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * Returns the universe domain for the credential
+   * Gets the universe domain for the credential.
    *
    * @return An explicit universe domain if it was explicitly provided, invokes the super
    *     implementation otherwise.
@@ -297,9 +298,9 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * Constructor with explicit access token and quotaProjectId
+   * Constructor with an explicit access token and quotaProjectId.
    *
-   * <p>Deprecated, please use the builder constructor whenever possible
+   * <p>Deprecated, please use the builder constructor whenever possible.
    *
    * @param accessToken initial or temporary access token
    * @param quotaProjectId a quotaProjectId, a project id to be used for billing purposes
@@ -321,7 +322,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * Constructor with using builder All the fields comes explicitly from builder
+   * Constructor with using builder All the fields comes explicitly from builder.
    *
    * @param builder an instance of a builder
    */
@@ -332,9 +333,9 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * Constructor with explicit access token and refresh times
+   * Constructor with explicit access token and refresh times.
    *
-   * <p>Deprecated, please use the builder constructor whenever possible
+   * <p>Deprecated, please use the builder constructor whenever possible.
    *
    * @param accessToken initial or temporary access token
    */
@@ -347,11 +348,11 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * A helper for overriding toString that allows inheritance of super class fields Extending
-   * classes can override this implementation and call super implementation and then add more
-   * fields. Same cannot be done with ToString() directly.
+   * A helper for overriding the toString() method. This allows inheritance of super class fields.
+   * Extending classes can override this implementation and call super implementation and add more
+   * fields. Same cannot be done with overriding the toString() directly.
    *
-   * @return an instance of the ToStringHelper that has all the relevant fields added
+   * @return an instance of the ToStringHelper that has public fields added
    */
   protected ToStringHelper toStringHelper() {
     return MoreObjects.toStringHelper(this)
