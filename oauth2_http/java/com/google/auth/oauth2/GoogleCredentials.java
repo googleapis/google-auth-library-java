@@ -231,8 +231,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * Creates a credential with the provided quota project.
-   * Expected format is: some-domain.xyz
+   * Creates a credential with the provided quota project. Expected format is: some-domain.xyz
    *
    * @param quotaProject the quota project to set on the credential
    * @return credential with the provided quota project
