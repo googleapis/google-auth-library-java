@@ -40,6 +40,7 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.auth.oauth2.IdentityPoolCredentialSource.CredentialFormatType;
 import com.google.auth.oauth2.IdentityPoolCredentialSource.IdentityPoolCredentialSourceType;
 import com.google.common.io.CharStreams;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -182,6 +183,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       super(credentials);
     }
 
+    @CanIgnoreReturnValue
     public Builder setWorkforcePoolUserProject(String workforcePoolUserProject) {
       super.setWorkforcePoolUserProject(workforcePoolUserProject);
       return this;

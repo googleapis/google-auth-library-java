@@ -56,6 +56,7 @@ import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -1005,78 +1006,93 @@ public class ServiceAccountCredentials extends GoogleCredentials
       this.defaultRetriesEnabled = credentials.defaultRetriesEnabled;
     }
 
+    @CanIgnoreReturnValue
     public Builder setClientId(String clientId) {
       this.clientId = clientId;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setClientEmail(String clientEmail) {
       this.clientEmail = clientEmail;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setPrivateKey(PrivateKey privateKey) {
       this.privateKey = privateKey;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setPrivateKeyString(String privateKeyPkcs8) throws IOException {
       this.privateKey = OAuth2Utils.privateKeyFromPkcs8(privateKeyPkcs8);
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setPrivateKeyId(String privateKeyId) {
       this.privateKeyId = privateKeyId;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setScopes(Collection<String> scopes) {
       this.scopes = scopes;
       this.defaultScopes = ImmutableSet.<String>of();
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setScopes(Collection<String> scopes, Collection<String> defaultScopes) {
       this.scopes = scopes;
       this.defaultScopes = defaultScopes;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setServiceAccountUser(String serviceAccountUser) {
       this.serviceAccountUser = serviceAccountUser;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setProjectId(String projectId) {
       this.projectId = projectId;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setTokenServerUri(URI tokenServerUri) {
       this.tokenServerUri = tokenServerUri;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
       this.transportFactory = transportFactory;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setQuotaProjectId(String quotaProjectId) {
       super.setQuotaProjectId(quotaProjectId);
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setLifetime(int lifetime) {
       this.lifetime = lifetime == 0 ? DEFAULT_LIFETIME_IN_SECONDS : lifetime;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setUseJwtAccessWithScope(boolean useJwtAccessWithScope) {
       this.useJwtAccessWithScope = useJwtAccessWithScope;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setDefaultRetriesEnabled(boolean defaultRetriesEnabled) {
       this.defaultRetriesEnabled = defaultRetriesEnabled;
       return this;

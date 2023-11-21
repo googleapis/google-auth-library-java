@@ -34,6 +34,7 @@ package com.google.auth.oauth2;
 import com.google.api.client.json.JsonParser;
 import com.google.common.base.Charsets;
 import com.google.common.base.MoreObjects;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -131,6 +132,7 @@ public class CloudShellCredentials extends GoogleCredentials {
       this.authPort = credentials.authPort;
     }
 
+    @CanIgnoreReturnValue
     public Builder setAuthPort(int authPort) {
       this.authPort = authPort;
       return this;

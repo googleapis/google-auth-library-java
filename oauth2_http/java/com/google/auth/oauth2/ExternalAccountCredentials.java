@@ -39,6 +39,7 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -395,6 +396,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
    * @param transportFactory HTTP transport factory, creates the transport used to get access tokens
    * @return the credentials defined by the JSON
    */
+  @SuppressWarnings("unchecked")
   static ExternalAccountCredentials fromJson(
       Map<String, Object> json, HttpTransportFactory transportFactory) {
     checkNotNull(json);
@@ -762,6 +764,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param transportFactory the {@code HttpTransportFactory} to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
       this.transportFactory = transportFactory;
       return this;
@@ -774,6 +777,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param audience the Security Token Service audience to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setAudience(String audience) {
       this.audience = audience;
       return this;
@@ -786,6 +790,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param subjectTokenType the Security Token Service subject token type to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setSubjectTokenType(String subjectTokenType) {
       this.subjectTokenType = subjectTokenType;
       return this;
@@ -797,6 +802,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param tokenUrl the Security Token Service token exchange url to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setTokenUrl(String tokenUrl) {
       this.tokenUrl = tokenUrl;
       return this;
@@ -808,6 +814,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param credentialSource the {@code CredentialSource} to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setCredentialSource(CredentialSource credentialSource) {
       this.credentialSource = credentialSource;
       return this;
@@ -821,6 +828,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param serviceAccountImpersonationUrl the service account impersonation url to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setServiceAccountImpersonationUrl(String serviceAccountImpersonationUrl) {
       this.serviceAccountImpersonationUrl = serviceAccountImpersonationUrl;
       return this;
@@ -833,6 +841,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param tokenInfoUrl the token info url to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setTokenInfoUrl(String tokenInfoUrl) {
       this.tokenInfoUrl = tokenInfoUrl;
       return this;
@@ -844,6 +853,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param quotaProjectId the quota and billing project id to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setQuotaProjectId(String quotaProjectId) {
       super.setQuotaProjectId(quotaProjectId);
       return this;
@@ -855,6 +865,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param clientId the service account client id to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setClientId(String clientId) {
       this.clientId = clientId;
       return this;
@@ -866,6 +877,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param clientSecret the service account client secret to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setClientSecret(String clientSecret) {
       this.clientSecret = clientSecret;
       return this;
@@ -877,6 +889,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param scopes the request scopes to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setScopes(Collection<String> scopes) {
       this.scopes = scopes;
       return this;
@@ -890,6 +903,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param workforcePoolUserProject the workforce pool user project number to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setWorkforcePoolUserProject(String workforcePoolUserProject) {
       this.workforcePoolUserProject = workforcePoolUserProject;
       return this;
@@ -901,6 +915,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param optionsMap the service account impersonation options to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setServiceAccountImpersonationOptions(Map<String, Object> optionsMap) {
       this.serviceAccountImpersonationOptions = new ServiceAccountImpersonationOptions(optionsMap);
       return this;
@@ -912,6 +927,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param universeDomain the universe domain to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setUniverseDomain(String universeDomain) {
       this.universeDomain = universeDomain;
       return this;
@@ -923,6 +939,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param environmentProvider the {@code EnvironmentProvider} to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     Builder setEnvironmentProvider(EnvironmentProvider environmentProvider) {
       this.environmentProvider = environmentProvider;
       return this;
