@@ -457,6 +457,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
     transportFactory = newInstance(transportFactoryClassName);
   }
 
+  @Override
   public Builder toBuilder() {
     return new Builder(this);
   }
@@ -570,6 +571,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
       return scopes;
     }
 
+    @Override
     public ComputeEngineCredentials build() {
       return new ComputeEngineCredentials(transportFactory, scopes, null);
     }

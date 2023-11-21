@@ -311,6 +311,7 @@ public class GdchCredentials extends GoogleCredentials {
     return new Builder();
   }
 
+  @Override
   public Builder toBuilder() {
     return new Builder(this);
   }
@@ -475,6 +476,7 @@ public class GdchCredentials extends GoogleCredentials {
       return lifetime;
     }
 
+    @Override
     public GdchCredentials build() {
       return new GdchCredentials(this);
     }

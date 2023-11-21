@@ -600,6 +600,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
         && Objects.equals(this.iamEndpointOverride, other.iamEndpointOverride);
   }
 
+  @Override
   public Builder toBuilder() {
     return new Builder(this.sourceCredentials, this.targetPrincipal);
   }
@@ -686,6 +687,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
       return transportFactory;
     }
 
+    @Override
     @CanIgnoreReturnValue
     public Builder setQuotaProjectId(String quotaProjectId) {
       super.setQuotaProjectId(quotaProjectId);
@@ -708,6 +710,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
       return this.calendar;
     }
 
+    @Override
     public ImpersonatedCredentials build() {
       return new ImpersonatedCredentials(this);
     }

@@ -967,6 +967,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     return new Builder();
   }
 
+  @Override
   public Builder toBuilder() {
     return new Builder(this);
   }
@@ -1074,6 +1075,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
       return this;
     }
 
+    @Override
     @CanIgnoreReturnValue
     public Builder setQuotaProjectId(String quotaProjectId) {
       super.setQuotaProjectId(quotaProjectId);
@@ -1150,6 +1152,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
       return defaultRetriesEnabled;
     }
 
+    @Override
     public ServiceAccountCredentials build() {
       return new ServiceAccountCredentials(this);
     }

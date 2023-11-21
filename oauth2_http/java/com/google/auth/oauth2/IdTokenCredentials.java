@@ -149,6 +149,7 @@ public class IdTokenCredentials extends OAuth2Credentials {
         && Objects.equals(this.targetAudience, other.targetAudience);
   }
 
+  @Override
   public Builder toBuilder() {
     return new Builder()
         .setIdTokenProvider(this.idTokenProvider)
@@ -198,6 +199,7 @@ public class IdTokenCredentials extends OAuth2Credentials {
       return this.options;
     }
 
+    @Override
     public IdTokenCredentials build() {
       return new IdTokenCredentials(this);
     }
