@@ -33,6 +33,7 @@ package com.google.auth.oauth2;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 
 /**
@@ -99,12 +100,14 @@ public class OAuth2CredentialsWithRefresh extends OAuth2Credentials {
      * {@link IllegalArgumentException} will be thrown.
      */
     @Override
+    @CanIgnoreReturnValue
     public Builder setAccessToken(AccessToken token) {
       super.setAccessToken(token);
       return this;
     }
 
     /** Sets the {@link OAuth2RefreshHandler} to be used for token refreshes. */
+    @CanIgnoreReturnValue
     public Builder setRefreshHandler(OAuth2RefreshHandler handler) {
       this.refreshHandler = handler;
       return this;

@@ -65,6 +65,7 @@ public class IdentityPoolCredentialSource extends ExternalAccountCredentials.Cre
    *
    * <p>Optional headers can be present, and should be keyed by `headers`.
    */
+  @SuppressWarnings("unchecked")
   public IdentityPoolCredentialSource(Map<String, Object> credentialSourceMap) {
     super(credentialSourceMap);
 

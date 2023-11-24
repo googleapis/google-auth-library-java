@@ -71,6 +71,7 @@
     <deploy.autorelease>false</deploy.autorelease>
     <project.autovalue.version>1.8.2</project.autovalue.version>
     <auto-value-annotation.version>1.10.4</auto-value-annotation.version>
+    <project.error-prone.version>2.18.0</project.error-prone.version>
   </properties>
 
   <dependencyManagement>
@@ -135,6 +136,12 @@
         <version>${project.version}</version>
         <type>test-jar</type>
         <classifier>testlib</classifier>
+      </dependency>
+      <dependency>
+          <groupId>com.google.errorprone</groupId>
+          <artifactId>error_prone_annotations</artifactId>
+          <version>${project.error-prone.version}</version>
+          <scope>compile</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -232,7 +239,6 @@
           <source>1.8</source>
           <target>1.8</target>
           <encoding>UTF-8</encoding>
-          <compilerArgument>-Xlint:unchecked</compilerArgument>
         </configuration>
       </plugin>
       <plugin>

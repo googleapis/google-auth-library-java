@@ -47,6 +47,7 @@ import com.google.api.client.util.Preconditions;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
 import com.google.common.io.BaseEncoding;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -401,6 +402,7 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
      * @param transportFactory the {@code HttpTransportFactory} to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
       this.transportFactory = transportFactory;
       return this;
@@ -413,6 +415,7 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
      * @param audience the audience to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setAudience(String audience) {
       this.audience = audience;
       return this;
@@ -424,6 +427,7 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
      * @param tokenUrl the token exchange url to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setTokenUrl(String tokenUrl) {
       this.tokenUrl = tokenUrl;
       return this;
@@ -435,6 +439,7 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
      * @param tokenInfoUrl the token info url to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setTokenInfoUrl(String tokenInfoUrl) {
       this.tokenInfoUrl = tokenInfoUrl;
       return this;
@@ -446,6 +451,7 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
      * @param revokeUrl the revoke url to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setRevokeUrl(String revokeUrl) {
       this.revokeUrl = revokeUrl;
       return this;
@@ -457,6 +463,7 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
      * @param refreshToken the refresh token
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setRefreshToken(String refreshToken) {
       this.refreshToken = refreshToken;
       return this;
@@ -468,6 +475,7 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
      * @param clientId the client ID
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setClientId(String clientId) {
       this.clientId = clientId;
       return this;
@@ -479,6 +487,7 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
      * @param clientSecret the client secret
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setClientSecret(String clientSecret) {
       this.clientSecret = clientSecret;
       return this;
@@ -490,6 +499,7 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
      * @param quotaProjectId the quota and billing project id to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setQuotaProjectId(String quotaProjectId) {
       super.setQuotaProjectId(quotaProjectId);
       return this;
@@ -501,6 +511,7 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
      * @param accessToken the access token
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setAccessToken(AccessToken accessToken) {
       super.setAccessToken(accessToken);
       return this;

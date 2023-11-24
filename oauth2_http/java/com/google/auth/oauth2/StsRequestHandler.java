@@ -43,6 +43,7 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.JsonParser;
 import com.google.api.client.util.GenericData;
 import com.google.common.base.Joiner;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -199,11 +200,13 @@ final class StsRequestHandler {
       this.httpRequestFactory = httpRequestFactory;
     }
 
+    @CanIgnoreReturnValue
     public StsRequestHandler.Builder setHeaders(HttpHeaders headers) {
       this.headers = headers;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public StsRequestHandler.Builder setInternalOptions(String internalOptions) {
       this.internalOptions = internalOptions;
       return this;

@@ -47,6 +47,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
@@ -648,11 +649,13 @@ public class OAuth2Credentials extends Credentials {
       this.expirationMargin = credentials.expirationMargin;
     }
 
+    @CanIgnoreReturnValue
     public Builder setAccessToken(AccessToken token) {
       this.accessToken = token;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setRefreshMargin(Duration refreshMargin) {
       this.refreshMargin = refreshMargin;
       return this;
@@ -662,6 +665,7 @@ public class OAuth2Credentials extends Credentials {
       return refreshMargin;
     }
 
+    @CanIgnoreReturnValue
     public Builder setExpirationMargin(Duration expirationMargin) {
       this.expirationMargin = expirationMargin;
       return this;
