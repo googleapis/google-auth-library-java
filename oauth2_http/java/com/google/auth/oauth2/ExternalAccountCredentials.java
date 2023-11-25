@@ -726,6 +726,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     @Nullable protected Collection<String> scopes;
     @Nullable protected String workforcePoolUserProject;
     @Nullable protected ServiceAccountImpersonationOptions serviceAccountImpersonationOptions;
+    @Nullable protected String universeDomain;
     @Nullable protected ExternalAccountMetricsHandler metricsHandler;
 
     protected Builder() {}
@@ -745,6 +746,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       this.environmentProvider = credentials.environmentProvider;
       this.workforcePoolUserProject = credentials.workforcePoolUserProject;
       this.serviceAccountImpersonationOptions = credentials.serviceAccountImpersonationOptions;
+      this.universeDomain = credentials.getUniverseDomain();
       this.metricsHandler = credentials.metricsHandler;
     }
 
