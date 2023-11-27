@@ -184,7 +184,6 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       super(credentials);
     }
 
-
     public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
       super.setHttpTransportFactory(transportFactory);
       return this;
@@ -250,8 +249,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       return this;
     }
 
-    public Builder setServiceAccountImpersonationOptions(
-        Map<String, Object> optionsMap) {
+    public Builder setServiceAccountImpersonationOptions(Map<String, Object> optionsMap) {
       super.setServiceAccountImpersonationOptions(optionsMap);
       return this;
     }

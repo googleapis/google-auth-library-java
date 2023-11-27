@@ -39,7 +39,6 @@ import com.google.api.client.json.GenericJson;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.ExecutableHandler.ExecutableOptions;
-import com.google.auth.oauth2.ExternalAccountCredentials.CredentialSource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.NotSerializableException;
@@ -62,15 +61,15 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
   private static final String STS_URL = "https://sts.googleapis.com";
 
   private static final PluggableAuthCredentials CREDENTIAL =
-          PluggableAuthCredentials.newBuilder()
-              .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-              .setAudience(
-                  "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
-              .setSubjectTokenType("subjectTokenType")
-              .setTokenUrl(STS_URL)
-              .setTokenInfoUrl("tokenInfoUrl")
-              .setCredentialSource(buildCredentialSource())
-              .build();
+      PluggableAuthCredentials.newBuilder()
+          .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+          .setAudience(
+              "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
+          .setSubjectTokenType("subjectTokenType")
+          .setTokenUrl(STS_URL)
+          .setTokenInfoUrl("tokenInfoUrl")
+          .setCredentialSource(buildCredentialSource())
+          .build();
 
   static class MockExternalAccountCredentialsTransportFactory implements HttpTransportFactory {
 
@@ -107,11 +106,11 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
         };
 
     PluggableAuthCredentials credential =
-            PluggableAuthCredentials.newBuilder(CREDENTIAL)
-                .setExecutableHandler(executableHandler)
-                .setCredentialSource(buildCredentialSource(command, timeout, outputFile))
-                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-                .build();
+        PluggableAuthCredentials.newBuilder(CREDENTIAL)
+            .setExecutableHandler(executableHandler)
+            .setCredentialSource(buildCredentialSource(command, timeout, outputFile))
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .build();
 
     String subjectToken = credential.retrieveSubjectToken();
 
@@ -147,11 +146,11 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
         };
 
     PluggableAuthCredentials credential =
-            PluggableAuthCredentials.newBuilder(CREDENTIAL)
-                .setExecutableHandler(executableHandler)
-                .setCredentialSource(
-                    buildCredentialSource(command, /* timeoutMs= */ null, /* outputFile= */ null))
-                .build();
+        PluggableAuthCredentials.newBuilder(CREDENTIAL)
+            .setExecutableHandler(executableHandler)
+            .setCredentialSource(
+                buildCredentialSource(command, /* timeoutMs= */ null, /* outputFile= */ null))
+            .build();
 
     String subjectToken = credential.retrieveSubjectToken();
 
@@ -181,11 +180,11 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
 
     PluggableAuthCredentials credential =
-            PluggableAuthCredentials.newBuilder(CREDENTIAL)
-                .setExecutableHandler(options -> "pluggableAuthToken")
-                .setTokenUrl(transportFactory.transport.getStsUrl())
-                .setHttpTransportFactory(transportFactory)
-                .build();
+        PluggableAuthCredentials.newBuilder(CREDENTIAL)
+            .setExecutableHandler(options -> "pluggableAuthToken")
+            .setTokenUrl(transportFactory.transport.getStsUrl())
+            .setHttpTransportFactory(transportFactory)
+            .build();
 
     AccessToken accessToken = credential.refreshAccessToken();
 
@@ -210,17 +209,17 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
 
     PluggableAuthCredentials credential =
-            PluggableAuthCredentials.newBuilder()
-                .setAudience(
-                    "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
-                .setSubjectTokenType("subjectTokenType")
-                .setTokenInfoUrl("tokenInfoUrl")
-                .setTokenUrl(transportFactory.transport.getStsUrl())
-                .setCredentialSource(buildCredentialSource())
-                .setServiceAccountImpersonationUrl(
-                    transportFactory.transport.getServiceAccountImpersonationUrl())
-                .setHttpTransportFactory(transportFactory)
-                .build();
+        PluggableAuthCredentials.newBuilder()
+            .setAudience(
+                "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setTokenUrl(transportFactory.transport.getStsUrl())
+            .setCredentialSource(buildCredentialSource())
+            .setServiceAccountImpersonationUrl(
+                transportFactory.transport.getServiceAccountImpersonationUrl())
+            .setHttpTransportFactory(transportFactory)
+            .build();
 
     credential =
         PluggableAuthCredentials.newBuilder(credential)
@@ -251,19 +250,19 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
 
     PluggableAuthCredentials credential =
-            PluggableAuthCredentials.newBuilder()
-                .setAudience(
-                    "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
-                .setSubjectTokenType("subjectTokenType")
-                .setTokenInfoUrl("tokenInfoUrl")
-                .setTokenUrl(transportFactory.transport.getStsUrl())
-                .setCredentialSource(buildCredentialSource())
-                .setServiceAccountImpersonationUrl(
-                    transportFactory.transport.getServiceAccountImpersonationUrl())
-                .setServiceAccountImpersonationOptions(
-                    ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(2800))
-                .setHttpTransportFactory(transportFactory)
-                .build();
+        PluggableAuthCredentials.newBuilder()
+            .setAudience(
+                "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setTokenUrl(transportFactory.transport.getStsUrl())
+            .setCredentialSource(buildCredentialSource())
+            .setServiceAccountImpersonationUrl(
+                transportFactory.transport.getServiceAccountImpersonationUrl())
+            .setServiceAccountImpersonationOptions(
+                ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(2800))
+            .setHttpTransportFactory(transportFactory)
+            .build();
 
     credential =
         PluggableAuthCredentials.newBuilder(credential)
@@ -399,20 +398,20 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
     ExecutableHandler handler = options -> "Token";
 
     PluggableAuthCredentials credentials =
-            PluggableAuthCredentials.newBuilder()
-                .setExecutableHandler(handler)
-                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-                .setAudience("audience")
-                .setSubjectTokenType("subjectTokenType")
-                .setTokenUrl(STS_URL)
-                .setTokenInfoUrl("tokenInfoUrl")
-                .setCredentialSource(source)
-                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-                .setQuotaProjectId("quotaProjectId")
-                .setClientId("clientId")
-                .setClientSecret("clientSecret")
-                .setScopes(scopes)
-                .build();
+        PluggableAuthCredentials.newBuilder()
+            .setExecutableHandler(handler)
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .setAudience("audience")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setCredentialSource(source)
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .setQuotaProjectId("quotaProjectId")
+            .setClientId("clientId")
+            .setClientSecret("clientSecret")
+            .setScopes(scopes)
+            .build();
 
     assertEquals(credentials.getExecutableHandler(), handler);
     assertEquals("audience", credentials.getAudience());
@@ -432,14 +431,14 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
   @Test
   public void createdScoped_clonedCredentialWithAddedScopes() {
     PluggableAuthCredentials credentials =
-            PluggableAuthCredentials.newBuilder(CREDENTIAL)
-                .setExecutableHandler(options -> "pluggableAuthToken")
-                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-                .setQuotaProjectId("quotaProjectId")
-                .setClientId("clientId")
-                .setClientSecret("clientSecret")
-                .setUniverseDomain("universeDomain")
-                .build();
+        PluggableAuthCredentials.newBuilder(CREDENTIAL)
+            .setExecutableHandler(options -> "pluggableAuthToken")
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .setQuotaProjectId("quotaProjectId")
+            .setClientId("clientId")
+            .setClientSecret("clientSecret")
+            .setUniverseDomain("universeDomain")
+            .build();
 
     List<String> newScopes = Arrays.asList("scope1", "scope2");
 
@@ -465,14 +464,14 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
   @Test
   public void serialize() throws IOException, ClassNotFoundException {
     PluggableAuthCredentials testCredentials =
-            PluggableAuthCredentials.newBuilder(CREDENTIAL)
-                .setExecutableHandler(options -> "pluggableAuthToken")
-                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-                .setQuotaProjectId("quotaProjectId")
-                .setClientId("clientId")
-                .setClientSecret("clientSecret")
-                .setUniverseDomain("universeDomain")
-                .build();
+        PluggableAuthCredentials.newBuilder(CREDENTIAL)
+            .setExecutableHandler(options -> "pluggableAuthToken")
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .setQuotaProjectId("quotaProjectId")
+            .setClientId("clientId")
+            .setClientSecret("clientSecret")
+            .setUniverseDomain("universeDomain")
+            .build();
 
     // PluggableAuthCredentials are not serializable
     assertThrows(NotSerializableException.class, () -> serializeAndDeserialize(testCredentials));

@@ -304,6 +304,7 @@ public class PluggableAuthCredentials extends ExternalAccountCredentials {
       super.setEnvironmentProvider(environmentProvider);
       return this;
     }
+
     @Override
     public PluggableAuthCredentials build() {
       return new PluggableAuthCredentials(this);
