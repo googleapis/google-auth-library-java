@@ -49,6 +49,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -58,7 +59,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class IdentityPoolCredentialsTest extends BaseSerializationTest {
 
-  private static final String STS_URL = "https://sts.googleapis.com";
+  private static final String STS_URL = "https://sts.googleapis.com/v1/token";
 
   private static final Map<String, Object> FILE_CREDENTIAL_SOURCE_MAP =
       new HashMap<String, Object>() {
@@ -81,6 +82,8 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
               .setTokenInfoUrl("tokenInfoUrl")
               .setCredentialSource(FILE_CREDENTIAL_SOURCE)
               .build();
+
+  private static final Supplier<String> testSupplier = () -> "testSubjectToken";
 
   static class MockExternalAccountCredentialsTransportFactory implements HttpTransportFactory {
 
@@ -311,6 +314,41 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void retrieveSubjectToken_supplier() throws IOException {
+
+    IdentityPoolCredentials credentials =
+        IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+            .setSubjectTokenSupplier(testSupplier)
+            .build();
+
+    String subjectToken = credentials.retrieveSubjectToken();
+
+    assertEquals(testSupplier.get(), subjectToken);
+  }
+
+  @Test
+  public void retrieveSubjectToken_supplierWrapsError() throws IOException {
+    RuntimeException testException = new RuntimeException("test");
+
+    Supplier<String> errorSupplier =
+        () -> {
+          throw testException;
+        };
+    IdentityPoolCredentials credentials =
+        IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+            .setSubjectTokenSupplier(errorSupplier)
+            .build();
+
+    try {
+      String subjectToken = credentials.retrieveSubjectToken();
+      fail("retrieveSubjectToken should fail.");
+    } catch (GoogleAuthException e) {
+      assertEquals("Error retrieving token from subject token supplier.", e.getMessage());
+      assertEquals(testException, e.getCause());
+    }
+  }
+
+  @Test
   public void refreshAccessToken_withoutServiceAccountImpersonation() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
@@ -445,6 +483,65 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     Map<String, List<String>> headers =
         transportFactory.transport.getRequests().get(2).getHeaders();
     ExternalAccountCredentialsTest.validateMetricsHeader(headers, "url", true, true);
+  }
+
+  @Test
+  public void refreshAccessToken_supplier() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
+    IdentityPoolCredentials credential =
+        (IdentityPoolCredentials)
+            IdentityPoolCredentials.newBuilder()
+                .setSubjectTokenSupplier(testSupplier)
+                .setAudience(
+                    "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setHttpTransportFactory(transportFactory)
+                .build();
+
+    AccessToken accessToken = credential.refreshAccessToken();
+
+    assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(0).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "programmatic", false, false);
+  }
+
+  @Test
+  public void refreshAccessToken_supplierWithServiceAccountImpersonation() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
+    IdentityPoolCredentials credential =
+        (IdentityPoolCredentials)
+            IdentityPoolCredentials.newBuilder()
+                .setSubjectTokenSupplier(testSupplier)
+                .setAudience(
+                    "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setServiceAccountImpersonationUrl(
+                    transportFactory.transport.getServiceAccountImpersonationUrl())
+                .setTokenUrl(transportFactory.transport.getStsUrl())
+                .setHttpTransportFactory(transportFactory)
+                .build();
+
+    AccessToken accessToken = credential.refreshAccessToken();
+
+    assertEquals(
+        transportFactory.transport.getServiceAccountAccessToken(), accessToken.getTokenValue());
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(0).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "programmatic", true, false);
   }
 
   @Test
@@ -703,6 +800,29 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     assertEquals(credentials.getClientSecret(), "clientSecret");
     assertEquals(credentials.getScopes(), scopes);
     assertEquals(credentials.getEnvironmentProvider(), SystemEnvironmentProvider.getInstance());
+  }
+
+  @Test
+  public void builder_subjectTokenSupplier() {
+    List<String> scopes = Arrays.asList("scope1", "scope2");
+
+    IdentityPoolCredentials credentials =
+        (IdentityPoolCredentials)
+            IdentityPoolCredentials.newBuilder()
+                .setSubjectTokenSupplier(testSupplier)
+                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+                .setAudience("audience")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenUrl(STS_URL)
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+                .setQuotaProjectId("quotaProjectId")
+                .setClientId("clientId")
+                .setClientSecret("clientSecret")
+                .setScopes(scopes)
+                .build();
+
+    assertEquals(testSupplier, credentials.getSubjectTokenSupplier());
   }
 
   @Test

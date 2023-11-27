@@ -64,16 +64,14 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   private static final long serialVersionUID = 2471046175477275881L;
 
-  @Nullable
-  private final IdentityPoolCredentialSource identityPoolCredentialSource;
+  @Nullable private final IdentityPoolCredentialSource identityPoolCredentialSource;
 
-  @Nullable
-  private final Supplier<String> subjectTokenSupplier;
+  @Nullable private final Supplier<String> subjectTokenSupplier;
 
   /** Internal constructor. See {@link Builder}. */
   IdentityPoolCredentials(Builder builder) {
     super(builder);
-    if (builder.subjectTokenSupplier != null){
+    if (builder.subjectTokenSupplier != null) {
       this.subjectTokenSupplier = builder.subjectTokenSupplier;
       this.identityPoolCredentialSource = null;
     } else {
@@ -99,14 +97,14 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   @Override
   public String retrieveSubjectToken() throws IOException {
-    if (this.subjectTokenSupplier != null){
+    if (this.subjectTokenSupplier != null) {
       try {
         return this.subjectTokenSupplier.get();
-      } catch (Throwable e){
-        throw new GoogleAuthException(false, 0, "Error retrieving token from custom token supplier.", e);
+      } catch (Throwable e) {
+        throw new GoogleAuthException(
+            false, 0, "Error retrieving token from subject token supplier.", e);
       }
-    }
-    else if (identityPoolCredentialSource.credentialSourceType
+    } else if (identityPoolCredentialSource.credentialSourceType
         == IdentityPoolCredentialSource.IdentityPoolCredentialSourceType.FILE) {
       return retrieveSubjectTokenFromCredentialFile();
     }
@@ -115,7 +113,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   @Override
   String getCredentialSourceType() {
-    if (this.subjectTokenSupplier != null){
+    if (this.subjectTokenSupplier != null) {
       return "programmatic";
     }
     if (((IdentityPoolCredentialSource) this.getCredentialSource()).credentialSourceType
@@ -124,6 +122,10 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
     } else {
       return "url";
     }
+  }
+
+  public Supplier<String> getSubjectTokenSupplier() {
+    return this.subjectTokenSupplier;
   }
 
   private String retrieveSubjectTokenFromCredentialFile() throws IOException {
@@ -204,6 +206,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
     Builder(IdentityPoolCredentials credentials) {
       super(credentials);
+      this.setSubjectTokenSupplier(credentials.subjectTokenSupplier);
     }
 
     public Builder setWorkforcePoolUserProject(String workforcePoolUserProject) {

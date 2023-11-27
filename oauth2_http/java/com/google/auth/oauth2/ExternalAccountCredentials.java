@@ -246,8 +246,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     this.serviceAccountImpersonationUrl = builder.serviceAccountImpersonationUrl;
     this.clientId = builder.clientId;
     this.clientSecret = builder.clientSecret;
-    this.tokenUrl = builder.tokenUrl == null
-        ? DEFAULT_TOKEN_URL : builder.tokenUrl;
+    this.tokenUrl = builder.tokenUrl == null ? DEFAULT_TOKEN_URL : builder.tokenUrl;
     this.scopes =
         (builder.scopes == null || builder.scopes.isEmpty())
             ? Arrays.asList(CLOUD_PLATFORM_SCOPE)
@@ -483,8 +482,10 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   protected AccessToken exchangeExternalCredentialForAccessToken(
       StsTokenExchangeRequest stsTokenExchangeRequest) throws IOException {
     // Handle service account impersonation if necessary.
-    this.impersonatedCredentials = (this.impersonatedCredentials != null) ?
-        this.impersonatedCredentials : this.buildImpersonatedCredentials();
+    this.impersonatedCredentials =
+        (this.impersonatedCredentials != null)
+            ? this.impersonatedCredentials
+            : this.buildImpersonatedCredentials();
     if (impersonatedCredentials != null) {
       return impersonatedCredentials.refreshAccessToken();
     }

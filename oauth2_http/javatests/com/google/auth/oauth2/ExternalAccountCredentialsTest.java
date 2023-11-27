@@ -49,7 +49,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -65,7 +64,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
-  private static final String STS_URL = "https://sts.googleapis.com";
+  private static final String STS_URL = "https://sts.googleapis.com/v1/token";
 
   private static final Map<String, Object> FILE_CREDENTIAL_SOURCE_MAP =
       new HashMap<String, Object>() {
@@ -556,6 +555,23 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals("workforcePoolUserProject", credentials.getWorkforcePoolUserProject());
     assertEquals("universeDomain", credentials.getUniverseDomain());
     assertNotNull(credentials.getCredentialSource());
+  }
+
+  @Test
+  public void constructor_builder_defaultTokenUrl() {
+    HashMap<String, Object> credentialSource = new HashMap<>();
+    credentialSource.put("file", "file");
+
+    ExternalAccountCredentials credentials =
+        IdentityPoolCredentials.newBuilder()
+            .setHttpTransportFactory(transportFactory)
+            .setAudience(
+                "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+            .setSubjectTokenType("subjectTokenType")
+            .setCredentialSource(new TestCredentialSource(credentialSource))
+            .build();
+
+    assertEquals(STS_URL, credentials.getTokenUrl());
   }
 
   @Test

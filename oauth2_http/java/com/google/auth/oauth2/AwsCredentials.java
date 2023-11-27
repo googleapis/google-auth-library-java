@@ -75,24 +75,21 @@ public class AwsCredentials extends ExternalAccountCredentials {
   static final String AWS_IMDSV2_SESSION_TOKEN_TTL = "300";
   private static final long serialVersionUID = -3670131891574618105L;
 
-  @Nullable
-  private final AwsCredentialSource awsCredentialSource;
-  @Nullable
-  private final Supplier<AwsSecurityCredentials> awsSecurityCredentialsSupplier;
-  @Nullable
-  private final String regionalCredentialVerificationUrlOverride;
-  @Nullable
-  private final String region;
+  @Nullable private final AwsCredentialSource awsCredentialSource;
+  @Nullable private final Supplier<AwsSecurityCredentials> awsSecurityCredentialsSupplier;
+  @Nullable private final String regionalCredentialVerificationUrlOverride;
+  @Nullable private final String region;
 
   /** Internal constructor. See {@link AwsCredentials.Builder}. */
   AwsCredentials(Builder builder) {
     super(builder);
     // If user has provided a security credential supplier, use that to retrieve the AWS security
     // credentials.
-    if (builder.awsSecurityCredentialsSupplier != null){
+    if (builder.awsSecurityCredentialsSupplier != null) {
       this.awsSecurityCredentialsSupplier = builder.awsSecurityCredentialsSupplier;
-      if (builder.region == null){
-        throw new IllegalArgumentException("A region must be specified when using a credential supplier.");
+      if (builder.region == null) {
+        throw new IllegalArgumentException(
+            "A region must be specified when using an aws security credential supplier.");
       }
       this.awsCredentialSource = null;
     } else {
@@ -100,7 +97,8 @@ public class AwsCredentials extends ExternalAccountCredentials {
       this.awsSecurityCredentialsSupplier = null;
     }
     this.region = builder.region;
-    this.regionalCredentialVerificationUrlOverride = builder.regionalCredentialVerificationUrlOverride;
+    this.regionalCredentialVerificationUrlOverride =
+        builder.regionalCredentialVerificationUrlOverride;
   }
 
   @Override
@@ -156,7 +154,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
   @Override
   String getCredentialSourceType() {
-    if (this.awsSecurityCredentialsSupplier != null){
+    if (this.awsSecurityCredentialsSupplier != null) {
       return "programmatic";
     }
     return "aws";
@@ -211,8 +209,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
     token.put("method", signature.getHttpMethod());
     token.put(
         "url",
-        this.getRegionalCredentialVerificationUrl().replace(
-            "{region}", signature.getRegion()));
+        this.getRegionalCredentialVerificationUrl().replace("{region}", signature.getRegion()));
     return URLEncoder.encode(token.toString(), "UTF-8");
   }
 
@@ -245,9 +242,9 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
   @VisibleForTesting
   boolean shouldUseMetadataServer() {
-    return this.awsSecurityCredentialsSupplier == null &&
-        (!canRetrieveRegionFromEnvironment() ||
-        !canRetrieveSecurityCredentialsFromEnvironment());
+    return this.awsSecurityCredentialsSupplier == null
+        && (!canRetrieveRegionFromEnvironment()
+            || !canRetrieveSecurityCredentialsFromEnvironment());
   }
 
   @VisibleForTesting
@@ -289,7 +286,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
   String getAwsRegion(Map<String, Object> metadataRequestHeaders) throws IOException {
     // If user has provided a region string, return that instead of checking environment or metadata
     // server.
-    if (this.region != null){
+    if (this.region != null) {
       return this.region;
     }
     String region;
@@ -318,11 +315,12 @@ public class AwsCredentials extends ExternalAccountCredentials {
   AwsSecurityCredentials getAwsSecurityCredentials(Map<String, Object> metadataRequestHeaders)
       throws IOException {
     // If this credential is using programmatic auth, call the user provided supplier.
-    if (this.awsSecurityCredentialsSupplier != null){
+    if (this.awsSecurityCredentialsSupplier != null) {
       try {
         return this.awsSecurityCredentialsSupplier.get();
-      } catch (Throwable e){
-        throw new GoogleAuthException(false, 0, "Error retrieving token from custom token supplier.", e);
+      } catch (Throwable e) {
+        throw new GoogleAuthException(
+            false, 0, "Error retrieving token from aws security credentials supplier.", e);
       }
     }
 
@@ -363,21 +361,34 @@ public class AwsCredentials extends ExternalAccountCredentials {
   }
 
   @VisibleForTesting
-  String getRegionalCredentialVerificationUrl(){
-    if (this.regionalCredentialVerificationUrlOverride != null){
+  String getRegionalCredentialVerificationUrl() {
+    if (this.regionalCredentialVerificationUrlOverride != null) {
       return this.regionalCredentialVerificationUrlOverride;
-    }
-    else if (this.awsCredentialSource != null){
+    } else if (this.awsCredentialSource != null) {
       return this.awsCredentialSource.regionalCredentialVerificationUrl;
-    }
-    else {
-      return  DEFAULT_REGIONAL_CREDENTIAL_VERIFICATION_URL;
+    } else {
+      return DEFAULT_REGIONAL_CREDENTIAL_VERIFICATION_URL;
     }
   }
 
   @VisibleForTesting
   String getEnv(String name) {
     return System.getenv(name);
+  }
+
+  @Nullable
+  public String getRegion() {
+    return this.region;
+  }
+
+  @Nullable
+  public String getRegionalCredentialVerificationUrlOverride() {
+    return this.regionalCredentialVerificationUrlOverride;
+  }
+
+  @Nullable
+  public Supplier<AwsSecurityCredentials> getAwsSecurityCredentialsSupplier() {
+    return this.awsSecurityCredentialsSupplier;
   }
 
   private static GenericJson formatTokenHeaderForSts(String key, String value) {
@@ -416,17 +427,19 @@ public class AwsCredentials extends ExternalAccountCredentials {
       super(credentials);
       this.region = credentials.region;
       this.awsSecurityCredentialsSupplier = credentials.awsSecurityCredentialsSupplier;
-      this.regionalCredentialVerificationUrlOverride = credentials.regionalCredentialVerificationUrlOverride;
+      this.regionalCredentialVerificationUrlOverride =
+          credentials.regionalCredentialVerificationUrlOverride;
     }
 
     /**
-     * Sets the AWS security credentials supplier. The supplier should return a valid
-     * {@code AwsSecurityCredentials} object. An AWS region also is required when using a supplier.
+     * Sets the AWS security credentials supplier. The supplier should return a valid {@code
+     * AwsSecurityCredentials} object. An AWS region also is required when using a supplier.
      *
      * @param awsSecurityCredentialsSupplier the supplier method to be called.
      * @return this {@code Builder} object
      */
-    public Builder setAwsSecurityCredentialsSupplier(Supplier<AwsSecurityCredentials> awsSecurityCredentialsSupplier){
+    public Builder setAwsSecurityCredentialsSupplier(
+        Supplier<AwsSecurityCredentials> awsSecurityCredentialsSupplier) {
       this.awsSecurityCredentialsSupplier = awsSecurityCredentialsSupplier;
       return this;
     }
@@ -438,7 +451,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
      * @param region the aws region to set.
      * @return this {@code Builder} object
      */
-    public Builder setRegion(String region){
+    public Builder setRegion(String region) {
       this.region = region;
       return this;
     }
@@ -452,7 +465,8 @@ public class AwsCredentials extends ExternalAccountCredentials {
      * @param regionalCredentialVerificationUrlOverride the AWS credential verification url to set.
      * @return this {@code Builder} object
      */
-    public Builder setRegionalCredentialVerificationUrlOverride(String regionalCredentialVerificationUrlOverride){
+    public Builder setRegionalCredentialVerificationUrlOverride(
+        String regionalCredentialVerificationUrlOverride) {
       this.regionalCredentialVerificationUrlOverride = regionalCredentialVerificationUrlOverride;
       return this;
     }
