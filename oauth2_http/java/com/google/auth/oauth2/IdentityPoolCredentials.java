@@ -40,6 +40,7 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.auth.oauth2.IdentityPoolCredentialSource.CredentialFormatType;
 import com.google.auth.oauth2.IdentityPoolCredentialSource.IdentityPoolCredentialSourceType;
 import com.google.common.io.CharStreams;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -220,6 +221,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
      * @param subjectTokenSupplier the supplier method to be called.
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setSubjectTokenSupplier(Supplier<String> subjectTokenSupplier) {
       this.subjectTokenSupplier = subjectTokenSupplier;
       return this;

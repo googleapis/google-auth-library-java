@@ -42,6 +42,7 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonParser;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -438,6 +439,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
      * @param awsSecurityCredentialsSupplier the supplier method to be called.
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setAwsSecurityCredentialsSupplier(
         Supplier<AwsSecurityCredentials> awsSecurityCredentialsSupplier) {
       this.awsSecurityCredentialsSupplier = awsSecurityCredentialsSupplier;
@@ -451,6 +453,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
      * @param region the aws region to set.
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setRegion(String region) {
       this.region = region;
       return this;
@@ -465,6 +468,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
      * @param regionalCredentialVerificationUrlOverride the AWS credential verification url to set.
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setRegionalCredentialVerificationUrlOverride(
         String regionalCredentialVerificationUrlOverride) {
       this.regionalCredentialVerificationUrlOverride = regionalCredentialVerificationUrlOverride;
