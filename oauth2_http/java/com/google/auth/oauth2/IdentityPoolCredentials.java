@@ -210,6 +210,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       this.setSubjectTokenSupplier(credentials.subjectTokenSupplier);
     }
 
+    @CanIgnoreReturnValue
     public Builder setWorkforcePoolUserProject(String workforcePoolUserProject) {
       super.setWorkforcePoolUserProject(workforcePoolUserProject);
       return this;

@@ -345,6 +345,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   public void fromJson_pluggableAuthCredentials_allExecutableOptionsSet() {
     GenericJson json = buildJsonPluggableAuthCredential();
     Map<String, Object> credentialSourceMap = (Map<String, Object>) json.get("credential_source");
@@ -399,6 +400,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   public void fromJson_pluggableAuthCredentials_withUniverseDomain() {
     GenericJson json = buildJsonPluggableAuthCredential();
     json.set("universe_domain", "universeDomain");

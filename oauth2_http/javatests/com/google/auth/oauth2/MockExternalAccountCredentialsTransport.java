@@ -112,6 +112,7 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public LowLevelHttpRequest buildRequest(final String method, final String url) {
     MockLowLevelHttpRequest request =
         new MockLowLevelHttpRequest(url) {

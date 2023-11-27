@@ -33,6 +33,7 @@ package com.google.auth.oauth2;
 
 import com.google.auth.oauth2.ExecutableHandler.ExecutableOptions;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -215,6 +216,7 @@ public class PluggableAuthCredentials extends ExternalAccountCredentials {
       this.handler = credentials.handler;
     }
 
+    @CanIgnoreReturnValue
     public Builder setExecutableHandler(ExecutableHandler handler) {
       this.handler = handler;
       return this;
