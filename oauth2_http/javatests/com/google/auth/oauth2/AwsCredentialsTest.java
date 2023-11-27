@@ -206,6 +206,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   public void retrieveSubjectToken() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
@@ -249,6 +250,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   public void retrieveSubjectTokenWithSessionTokenUrl() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
