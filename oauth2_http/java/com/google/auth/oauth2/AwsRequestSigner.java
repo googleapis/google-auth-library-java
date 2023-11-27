@@ -38,6 +38,7 @@ import com.google.auth.ServiceAccountSigner.SigningException;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.io.BaseEncoding;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.net.URI;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
@@ -298,11 +299,13 @@ class AwsRequestSigner {
       this.region = region;
     }
 
+    @CanIgnoreReturnValue
     Builder setRequestPayload(String requestPayload) {
       this.requestPayload = requestPayload;
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder setAdditionalHeaders(Map<String, String> additionalHeaders) {
       if (additionalHeaders.containsKey("date") && additionalHeaders.containsKey("x-amz-date")) {
         throw new IllegalArgumentException("One of {date, x-amz-date} can be specified, not both.");
