@@ -71,7 +71,6 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
       new IdentityPoolCredentialSource(FILE_CREDENTIAL_SOURCE_MAP);
 
   private static final IdentityPoolCredentials FILE_SOURCED_CREDENTIAL =
-      (IdentityPoolCredentials)
           IdentityPoolCredentials.newBuilder()
               .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
               .setAudience(
@@ -96,7 +95,6 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
   @Test
   public void createdScoped_clonedCredentialWithAddedScopes() {
     IdentityPoolCredentials credentials =
-        (IdentityPoolCredentials)
             IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
                 .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
                 .setQuotaProjectId("quotaProjectId")
@@ -142,7 +140,6 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
         new IdentityPoolCredentialSource(credentialSourceMap);
 
     IdentityPoolCredentials credentials =
-        (IdentityPoolCredentials)
             IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
                 .setCredentialSource(credentialSource)
                 .build();
@@ -183,7 +180,6 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
         file.getAbsolutePath());
 
     IdentityPoolCredentials credential =
-        (IdentityPoolCredentials)
             IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(credentialSource)
@@ -224,7 +220,6 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
         new IdentityPoolCredentialSource(credentialSourceMap);
 
     IdentityPoolCredentials credentials =
-        (IdentityPoolCredentials)
             IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
                 .setCredentialSource(credentialSource)
                 .build();
@@ -245,7 +240,6 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
         new MockExternalAccountCredentialsTransportFactory();
 
     IdentityPoolCredentials credential =
-        (IdentityPoolCredentials)
             IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(
@@ -272,7 +266,6 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
         buildUrlBasedCredentialSource(transportFactory.transport.getMetadataUrl(), formatMap);
 
     IdentityPoolCredentials credential =
-        (IdentityPoolCredentials)
             IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(credentialSource)
@@ -292,7 +285,6 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addResponseErrorSequence(response);
 
     IdentityPoolCredentials credential =
-        (IdentityPoolCredentials)
             IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(
@@ -316,7 +308,6 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
         new MockExternalAccountCredentialsTransportFactory();
 
     IdentityPoolCredentials credential =
-        (IdentityPoolCredentials)
             IdentityPoolCredentials.newBuilder()
                 .setAudience(
                     "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
@@ -345,7 +336,6 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
         new MockExternalAccountCredentialsTransportFactory();
 
     IdentityPoolCredentials credential =
-        (IdentityPoolCredentials)
             IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
                 .setWorkforcePoolUserProject("userProject")
                 .setAudience(
@@ -380,7 +370,6 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
 
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
     IdentityPoolCredentials credential =
-        (IdentityPoolCredentials)
             IdentityPoolCredentials.newBuilder()
                 .setAudience(
                     "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
@@ -412,7 +401,6 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
 
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
     IdentityPoolCredentials credential =
-        (IdentityPoolCredentials)
             IdentityPoolCredentials.newBuilder()
                 .setAudience(
                     "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
@@ -454,7 +442,6 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
 
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
     IdentityPoolCredentials credential =
-        (IdentityPoolCredentials)
             IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
                 .setAudience(
                     "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
@@ -491,7 +478,6 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
 
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
     IdentityPoolCredentials credential =
-        (IdentityPoolCredentials)
             IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
                 .setAudience(
                     "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
@@ -676,7 +662,6 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     IdentityPoolCredentials credentials =
-        (IdentityPoolCredentials)
             IdentityPoolCredentials.newBuilder()
                 .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
                 .setAudience("audience")
@@ -744,7 +729,6 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
   public void builder_emptyWorkforceUserProjectWithWorkforceAudience() {
     // No exception should be thrown.
     IdentityPoolCredentials credentials =
-        (IdentityPoolCredentials)
             IdentityPoolCredentials.newBuilder()
                 .setWorkforcePoolUserProject("")
                 .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
@@ -763,7 +747,6 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
   @Test
   public void serialize() throws IOException, ClassNotFoundException {
     IdentityPoolCredentials testCredentials =
-        (IdentityPoolCredentials)
             IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
                 .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
                 .setQuotaProjectId("quotaProjectId")

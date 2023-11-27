@@ -37,6 +37,7 @@ import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
+import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.IdentityPoolCredentialSource.CredentialFormatType;
 import com.google.auth.oauth2.IdentityPoolCredentialSource.IdentityPoolCredentialSourceType;
 import com.google.common.io.CharStreams;
@@ -52,6 +53,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * Url-sourced and file-sourced external account credentials.
@@ -182,8 +184,85 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       super(credentials);
     }
 
+
+    public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
+      super.setHttpTransportFactory(transportFactory);
+      return this;
+    }
+
+    public Builder setAudience(String audience) {
+      super.setAudience(audience);
+      return this;
+    }
+
+    public Builder setSubjectTokenType(String subjectTokenType) {
+      super.setSubjectTokenType(subjectTokenType);
+      return this;
+    }
+
+    public Builder setSubjectTokenType(SubjectTokenTypes subjectTokenType) {
+      super.setSubjectTokenType(subjectTokenType);
+      return this;
+    }
+
+    public Builder setTokenUrl(String tokenUrl) {
+      super.setTokenUrl(tokenUrl);
+      return this;
+    }
+
+    public Builder setCredentialSource(IdentityPoolCredentialSource credentialSource) {
+      super.setCredentialSource(credentialSource);
+      return this;
+    }
+
+    public Builder setServiceAccountImpersonationUrl(String serviceAccountImpersonationUrl) {
+      super.setServiceAccountImpersonationUrl(serviceAccountImpersonationUrl);
+      return this;
+    }
+
+    public Builder setTokenInfoUrl(String tokenInfoUrl) {
+      super.setTokenInfoUrl(tokenInfoUrl);
+      return this;
+    }
+
+    public Builder setQuotaProjectId(String quotaProjectId) {
+      super.setQuotaProjectId(quotaProjectId);
+      return this;
+    }
+
+    public Builder setClientId(String clientId) {
+      super.setClientId(clientId);
+      return this;
+    }
+
+    public Builder setClientSecret(String clientSecret) {
+      super.setClientSecret(clientSecret);
+      return this;
+    }
+
+    public Builder setScopes(Collection<String> scopes) {
+      super.setScopes(scopes);
+      return this;
+    }
+
     public Builder setWorkforcePoolUserProject(String workforcePoolUserProject) {
       super.setWorkforcePoolUserProject(workforcePoolUserProject);
+      return this;
+    }
+
+    public Builder setServiceAccountImpersonationOptions(
+        Map<String, Object> optionsMap) {
+      super.setServiceAccountImpersonationOptions(optionsMap);
+      return this;
+    }
+
+    public Builder setUniverseDomain(String universeDomain) {
+      super.setUniverseDomain(universeDomain);
+      return this;
+    }
+
+    Builder setEnvironmentProvider(EnvironmentProvider environmentProvider) {
+      super.setEnvironmentProvider(environmentProvider);
       return this;
     }
 

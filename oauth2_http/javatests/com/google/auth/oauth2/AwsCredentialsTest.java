@@ -92,7 +92,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
       new AwsCredentialSource(AWS_CREDENTIAL_SOURCE_MAP);
 
   private static final AwsCredentials AWS_CREDENTIAL =
-      (AwsCredentials)
           AwsCredentials.newBuilder()
               .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
               .setAudience("audience")
@@ -120,7 +119,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
         new MockExternalAccountCredentialsTransportFactory();
 
     AwsCredentials awsCredential =
-        (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setTokenUrl(transportFactory.transport.getStsUrl())
                 .setHttpTransportFactory(transportFactory)
@@ -145,7 +143,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
 
     AwsCredentials awsCredential =
-        (AwsCredentials)
             AwsCredentials.newBuilder()
                 .setHttpTransportFactory(transportFactory)
                 .setAudience("audience")
@@ -176,7 +173,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
 
     AwsCredentials awsCredential =
-        (AwsCredentials)
             AwsCredentials.newBuilder()
                 .setHttpTransportFactory(transportFactory)
                 .setAudience("audience")
@@ -215,7 +211,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
         new MockExternalAccountCredentialsTransportFactory();
 
     AwsCredentials awsCredential =
-        (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(buildAwsCredentialSource(transportFactory))
@@ -259,7 +254,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
         new MockExternalAccountCredentialsTransportFactory();
 
     AwsCredentials awsCredential =
-        (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(buildAwsImdsv2CredentialSource(transportFactory))
@@ -331,7 +325,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
         .setEnv("AWS_SESSION_TOKEN", "awsToken");
 
     AwsCredentials awsCredential =
-        (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(buildAwsCredentialSource(transportFactory))
@@ -378,7 +371,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
         .setEnv("AWS_SESSION_TOKEN", "awsToken");
 
     AwsCredentials awsCredential =
-        (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(buildAwsImdsv2CredentialSource(transportFactory))
@@ -419,7 +411,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addResponseErrorSequence(response);
 
     AwsCredentials awsCredential =
-        (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(buildAwsCredentialSource(transportFactory))
@@ -449,7 +440,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addResponseSequence(true, false);
 
     AwsCredentials awsCredential =
-        (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(buildAwsCredentialSource(transportFactory))
@@ -482,7 +472,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addResponseSequence(true, true, false);
 
     AwsCredentials awsCredential =
-        (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(buildAwsCredentialSource(transportFactory))
@@ -518,7 +507,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     credentialSource.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
 
     AwsCredentials awsCredential =
-        (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(new AwsCredentialSource(credentialSource))
@@ -547,7 +535,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
         .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey");
 
     AwsCredentials testAwsCredentials =
-        (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setEnvironmentProvider(environmentProvider)
                 .build();
@@ -580,7 +567,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             });
 
     AwsCredentials testAwsCredentials =
-        (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setEnvironmentProvider(environmentProvider)
                 .setCredentialSource(credSource)
@@ -604,7 +590,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
         .setEnv("AWS_SESSION_TOKEN", "awsSessionToken");
 
     AwsCredentials testAwsCredentials =
-        (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setEnvironmentProvider(environmentProvider)
                 .build();
@@ -623,7 +608,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
         new MockExternalAccountCredentialsTransportFactory();
 
     AwsCredentials awsCredential =
-        (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(buildAwsCredentialSource(transportFactory))
@@ -656,7 +640,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     credentialSource.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
 
     AwsCredentials awsCredential =
-        (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(new AwsCredentialSource(credentialSource))
@@ -685,7 +668,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
     AwsCredentials awsCredentials =
-        (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(buildAwsCredentialSource(transportFactory))
@@ -711,7 +693,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
     AwsCredentials awsCredentials =
-        (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(buildAwsCredentialSource(transportFactory))
@@ -734,7 +715,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
     AwsCredentials awsCredentials =
-        (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(buildAwsCredentialSource(transportFactory))
@@ -760,7 +740,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
   @Test
   public void createdScoped_clonedCredentialWithAddedScopes() {
     AwsCredentials credentials =
-        (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
                 .setQuotaProjectId("quotaProjectId")
@@ -848,7 +827,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
           .setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId")
           .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey");
       AwsCredentials awsCredential =
-          (AwsCredentials)
               AwsCredentials.newBuilder(AWS_CREDENTIAL)
                   .setHttpTransportFactory(transportFactory)
                   .setCredentialSource(buildAwsImdsv2CredentialSource(transportFactory))
@@ -868,7 +846,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
         .setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId")
         .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey");
     AwsCredentials awsCredential =
-        (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(buildAwsImdsv2CredentialSource(transportFactory))
@@ -891,7 +868,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
           .setEnv(regionKey, "awsRegion")
           .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey");
       AwsCredentials awsCredential =
-          (AwsCredentials)
               AwsCredentials.newBuilder(AWS_CREDENTIAL)
                   .setHttpTransportFactory(transportFactory)
                   .setCredentialSource(buildAwsImdsv2CredentialSource(transportFactory))
@@ -915,7 +891,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
           .setEnv(regionKey, "awsRegion")
           .setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId");
       AwsCredentials awsCredential =
-          (AwsCredentials)
               AwsCredentials.newBuilder(AWS_CREDENTIAL)
                   .setHttpTransportFactory(transportFactory)
                   .setCredentialSource(buildAwsImdsv2CredentialSource(transportFactory))
@@ -938,7 +913,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
       // Not set here.
       environmentProvider.setEnv(regionKey, "awsRegion");
       AwsCredentials awsCredential =
-          (AwsCredentials)
               AwsCredentials.newBuilder(AWS_CREDENTIAL)
                   .setHttpTransportFactory(transportFactory)
                   .setCredentialSource(buildAwsImdsv2CredentialSource(transportFactory))
@@ -953,7 +927,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
     AwsCredentials awsCredential =
-        (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)
                 .setHttpTransportFactory(transportFactory)
                 .setCredentialSource(buildAwsImdsv2CredentialSource(transportFactory))
@@ -966,7 +939,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     AwsCredentials credentials =
-        (AwsCredentials)
             AwsCredentials.newBuilder()
                 .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
                 .setAudience("audience")
@@ -1001,7 +973,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     AwsCredentials testCredentials =
-        (AwsCredentials)
             AwsCredentials.newBuilder()
                 .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
                 .setAudience("audience")

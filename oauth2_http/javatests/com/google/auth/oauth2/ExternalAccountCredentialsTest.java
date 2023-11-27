@@ -44,6 +44,7 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.oauth2.ExternalAccountCredentials.SubjectTokenTypes;
 import com.google.auth.oauth2.ExternalAccountCredentialsTest.TestExternalAccountCredentials.TestCredentialSource;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -556,6 +557,24 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals("workforcePoolUserProject", credentials.getWorkforcePoolUserProject());
     assertEquals("universeDomain", credentials.getUniverseDomain());
     assertNotNull(credentials.getCredentialSource());
+  }
+
+  @Test
+  public void constructor_builder_subjectTokenTypeEnum() {
+    HashMap<String, Object> credentialSource = new HashMap<>();
+    credentialSource.put("file", "file");
+
+    ExternalAccountCredentials credentials =
+        IdentityPoolCredentials.newBuilder()
+            .setHttpTransportFactory(transportFactory)
+            .setAudience(
+                "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+            .setSubjectTokenType(SubjectTokenTypes.SAML2)
+            .setTokenUrl(STS_URL)
+            .setCredentialSource(new TestCredentialSource(credentialSource))
+            .build();
+
+    assertEquals(SubjectTokenTypes.SAML2.value, credentials.getSubjectTokenType());
   }
 
   @Test

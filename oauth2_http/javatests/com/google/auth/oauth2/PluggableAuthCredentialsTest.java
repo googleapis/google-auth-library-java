@@ -62,7 +62,6 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
   private static final String STS_URL = "https://sts.googleapis.com";
 
   private static final PluggableAuthCredentials CREDENTIAL =
-      (PluggableAuthCredentials)
           PluggableAuthCredentials.newBuilder()
               .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
               .setAudience(
@@ -108,7 +107,6 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
         };
 
     PluggableAuthCredentials credential =
-        (PluggableAuthCredentials)
             PluggableAuthCredentials.newBuilder(CREDENTIAL)
                 .setExecutableHandler(executableHandler)
                 .setCredentialSource(buildCredentialSource(command, timeout, outputFile))
@@ -149,7 +147,6 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
         };
 
     PluggableAuthCredentials credential =
-        (PluggableAuthCredentials)
             PluggableAuthCredentials.newBuilder(CREDENTIAL)
                 .setExecutableHandler(executableHandler)
                 .setCredentialSource(
@@ -184,7 +181,6 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
 
     PluggableAuthCredentials credential =
-        (PluggableAuthCredentials)
             PluggableAuthCredentials.newBuilder(CREDENTIAL)
                 .setExecutableHandler(options -> "pluggableAuthToken")
                 .setTokenUrl(transportFactory.transport.getStsUrl())
@@ -214,7 +210,6 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
 
     PluggableAuthCredentials credential =
-        (PluggableAuthCredentials)
             PluggableAuthCredentials.newBuilder()
                 .setAudience(
                     "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
@@ -256,7 +251,6 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
 
     PluggableAuthCredentials credential =
-        (PluggableAuthCredentials)
             PluggableAuthCredentials.newBuilder()
                 .setAudience(
                     "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
@@ -401,11 +395,10 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
   public void builder_allFields() {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
-    CredentialSource source = buildCredentialSource();
+    PluggableAuthCredentialSource source = buildCredentialSource();
     ExecutableHandler handler = options -> "Token";
 
     PluggableAuthCredentials credentials =
-        (PluggableAuthCredentials)
             PluggableAuthCredentials.newBuilder()
                 .setExecutableHandler(handler)
                 .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
@@ -439,7 +432,6 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
   @Test
   public void createdScoped_clonedCredentialWithAddedScopes() {
     PluggableAuthCredentials credentials =
-        (PluggableAuthCredentials)
             PluggableAuthCredentials.newBuilder(CREDENTIAL)
                 .setExecutableHandler(options -> "pluggableAuthToken")
                 .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
@@ -473,7 +465,6 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
   @Test
   public void serialize() throws IOException, ClassNotFoundException {
     PluggableAuthCredentials testCredentials =
-        (PluggableAuthCredentials)
             PluggableAuthCredentials.newBuilder(CREDENTIAL)
                 .setExecutableHandler(options -> "pluggableAuthToken")
                 .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
@@ -487,11 +478,11 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
     assertThrows(NotSerializableException.class, () -> serializeAndDeserialize(testCredentials));
   }
 
-  private static CredentialSource buildCredentialSource() {
+  private static PluggableAuthCredentialSource buildCredentialSource() {
     return buildCredentialSource("command", null, null);
   }
 
-  private static CredentialSource buildCredentialSource(
+  private static PluggableAuthCredentialSource buildCredentialSource(
       String command, @Nullable String timeoutMs, @Nullable String outputFile) {
     Map<String, Object> source = new HashMap<>();
     Map<String, Object> executable = new HashMap<>();
