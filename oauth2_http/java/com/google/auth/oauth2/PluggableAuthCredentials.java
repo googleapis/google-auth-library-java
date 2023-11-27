@@ -110,10 +110,6 @@ public class PluggableAuthCredentials extends ExternalAccountCredentials {
     } else {
       handler = new PluggableAuthHandler(getEnvironmentProvider());
     }
-
-    // Re-initialize impersonated credentials as the handler hasn't been set yet when
-    // this is called in the base class.
-    overrideImpersonatedCredentials(buildImpersonatedCredentials());
   }
 
   @Override

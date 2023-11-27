@@ -1000,39 +1000,6 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void exchangeExternalCredentialForAccessToken_withServiceAccountImpersonationOverride()
-      throws IOException {
-    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
-
-    String serviceAccountEmail = "different@different.iam.gserviceaccount.com";
-    ExternalAccountCredentials credential =
-        ExternalAccountCredentials.fromStream(
-            IdentityPoolCredentialsTest.writeIdentityPoolCredentialsStream(
-                transportFactory.transport.getStsUrl(),
-                transportFactory.transport.getMetadataUrl(),
-                transportFactory.transport.getServiceAccountImpersonationUrl(),
-                /* serviceAccountImpersonationOptionsMap= */ null),
-            transportFactory);
-
-    // Override impersonated credentials.
-    ExternalAccountCredentials sourceCredentials =
-        IdentityPoolCredentials.newBuilder((IdentityPoolCredentials) credential)
-            .setServiceAccountImpersonationUrl(null)
-            .build();
-    credential.overrideImpersonatedCredentials(
-        new ImpersonatedCredentials.Builder(sourceCredentials, serviceAccountEmail)
-            .setScopes(new ArrayList<>(sourceCredentials.getScopes()))
-            .setHttpTransportFactory(transportFactory)
-            .build());
-
-    credential.exchangeExternalCredentialForAccessToken(
-        StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build());
-
-    assertTrue(
-        transportFactory.transport.getRequests().get(2).getUrl().contains(serviceAccountEmail));
-  }
-
-  @Test
   public void exchangeExternalCredentialForAccessToken_throws() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(buildJsonIdentityPoolCredential(), transportFactory);

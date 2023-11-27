@@ -54,6 +54,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -68,6 +69,8 @@ public class AwsCredentialsTest extends BaseSerializationTest {
   private static final String AWS_REGION_URL = "https://169.254.169.254/region";
   private static final String AWS_IMDSV2_SESSION_TOKEN_URL = "https://169.254.169.254/imdsv2";
   private static final String AWS_IMDSV2_SESSION_TOKEN = "sessiontoken";
+  private static final String DEFAULT_REGIONAL_CREDENTIAL_VERIFICATION_URL =
+      "https://sts.{region}.amazonaws.com?Action=GetCallerIdentity&Version=2011-06-15";
 
   private static final String GET_CALLER_IDENTITY_URL =
       "https://sts.amazonaws.com?Action=GetCallerIdentity&Version=2011-06-15";
@@ -101,6 +104,15 @@ public class AwsCredentialsTest extends BaseSerializationTest {
               .setTokenInfoUrl("tokenInfoUrl")
               .setCredentialSource(AWS_CREDENTIAL_SOURCE)
               .build();
+
+  private static final AwsSecurityCredentials ProgrammaticAwsCreds =
+      new AwsSecurityCredentials(
+          "testAccessKey",
+          "testSecretAccessKey",
+          null);
+
+  private static final Supplier<AwsSecurityCredentials> CredentialSupplier =
+      () -> ProgrammaticAwsCreds;
 
   @Test
   public void test_awsCredentialSource() {
@@ -207,6 +219,58 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     Map<String, List<String>> headers =
         transportFactory.transport.getRequests().get(6).getHeaders();
     ExternalAccountCredentialsTest.validateMetricsHeader(headers, "aws", true, true);
+  }
+
+  @Test
+  public void refreshAccessTokenProgrammaticRefresh_withoutServiceAccountImpersonation() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    AwsCredentials awsCredential = (AwsCredentials) AwsCredentials.newBuilder()
+        .setRegion("test")
+        .setAwsSecurityCredentialsSupplier(CredentialSupplier)
+        .setHttpTransportFactory(transportFactory)
+        .setAudience("audience")
+        .setTokenUrl(STS_URL)
+        .setSubjectTokenType("subjectTokenType")
+        .build();
+
+    AccessToken accessToken = awsCredential.refreshAccessToken();
+
+    assertEquals(transportFactory.transport.getAccessToken(), accessToken.getTokenValue());
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(0).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "programmatic", false, false);
+  }
+
+  @Test
+  public void refreshAccessTokenProgrammaticRefresh_withServiceAccountImpersonation() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
+
+    AwsCredentials awsCredential = (AwsCredentials) AwsCredentials.newBuilder()
+        .setRegion("test")
+        .setAwsSecurityCredentialsSupplier(CredentialSupplier)
+        .setHttpTransportFactory(transportFactory)
+        .setAudience("audience")
+        .setTokenUrl(STS_URL)
+        .setSubjectTokenType("subjectTokenType")
+        .setServiceAccountImpersonationUrl(
+            transportFactory.transport.getServiceAccountImpersonationUrl())
+        .build();
+
+    AccessToken accessToken = awsCredential.refreshAccessToken();
+
+    assertEquals(transportFactory.transport.getServiceAccountAccessToken(), accessToken.getTokenValue());
+
+    // Validate metrics header is set correctly on the sts request.
+    Map<String, List<String>> headers =
+        transportFactory.transport.getRequests().get(0).getHeaders();
+    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "programmatic", true, false);
   }
 
   @Test
@@ -537,6 +601,85 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     // No requests because the credential source does not contain region URL.
     List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
     assertTrue(requests.isEmpty());
+  }
+
+  @Test
+  public void retrieveSubjectToken_withProgrammaticRefresh() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    AwsCredentials awsCredential = (AwsCredentials) AwsCredentials.newBuilder()
+        .setRegion("test")
+        .setAwsSecurityCredentialsSupplier(CredentialSupplier)
+        .setHttpTransportFactory(transportFactory)
+        .setAudience("audience")
+        .setTokenUrl(STS_URL)
+        .setSubjectTokenType("subjectTokenType")
+        .build();
+
+    String subjectToken = URLDecoder.decode(awsCredential.retrieveSubjectToken(), "UTF-8");
+
+    JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser(subjectToken);
+    GenericJson json = parser.parseAndClose(GenericJson.class);
+
+    List<Map<String, String>> headersList = (List<Map<String, String>>) json.get("headers");
+    Map<String, String> headers = new HashMap<>();
+    for (Map<String, String> header : headersList) {
+      headers.put(header.get("key"), header.get("value"));
+    }
+
+    String expectedCredentialVerificationUrl = DEFAULT_REGIONAL_CREDENTIAL_VERIFICATION_URL.replace(
+        "{region}", "test");
+
+    assertEquals("POST", json.get("method"));
+    assertEquals(expectedCredentialVerificationUrl, json.get("url"));
+    assertEquals(URI.create(expectedCredentialVerificationUrl).getHost(), headers.get("host"));
+    assertEquals(awsCredential.getAudience(), headers.get("x-goog-cloud-target-resource"));
+    assertTrue(headers.containsKey("x-amz-date"));
+    assertNotNull(headers.get("Authorization"));
+  }
+
+  @Test
+  public void retrieveSubjectToken_withProgrammaticRefreshSessionToken() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    AwsSecurityCredentials securityCredentialsWithToken =
+        new AwsSecurityCredentials("accessToken", "secretAccessKey", "token");
+
+    Supplier<AwsSecurityCredentials> awsSecurityCredentialsSupplierWithToken
+        = () -> securityCredentialsWithToken;
+
+    AwsCredentials awsCredential = (AwsCredentials) AwsCredentials.newBuilder()
+        .setRegion("test")
+        .setAwsSecurityCredentialsSupplier(awsSecurityCredentialsSupplierWithToken)
+        .setHttpTransportFactory(transportFactory)
+        .setAudience("audience")
+        .setTokenUrl(STS_URL)
+        .setSubjectTokenType("subjectTokenType")
+        .build();
+
+    String subjectToken = URLDecoder.decode(awsCredential.retrieveSubjectToken(), "UTF-8");
+
+    JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser(subjectToken);
+    GenericJson json = parser.parseAndClose(GenericJson.class);
+
+    List<Map<String, String>> headersList = (List<Map<String, String>>) json.get("headers");
+    Map<String, String> headers = new HashMap<>();
+    for (Map<String, String> header : headersList) {
+      headers.put(header.get("key"), header.get("value"));
+    }
+
+    String expectedCredentialVerificationUrl = DEFAULT_REGIONAL_CREDENTIAL_VERIFICATION_URL.replace(
+        "{region}", "test");
+
+    assertEquals("POST", json.get("method"));
+    assertEquals(expectedCredentialVerificationUrl, json.get("url"));
+    assertEquals(URI.create(expectedCredentialVerificationUrl).getHost(), headers.get("host"));
+    assertEquals("token", headers.get("x-amz-security-token"));
+    assertEquals(awsCredential.getAudience(), headers.get("x-goog-cloud-target-resource"));
+    assertTrue(headers.containsKey("x-amz-date"));
+    assertNotNull(headers.get("Authorization"));
   }
 
   @Test

@@ -52,6 +52,8 @@ import java.nio.file.LinkOption;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.function.Supplier;
+import javax.annotation.Nullable;
 
 /**
  * Url-sourced and file-sourced external account credentials.
@@ -62,12 +64,22 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   private static final long serialVersionUID = 2471046175477275881L;
 
+  @Nullable
   private final IdentityPoolCredentialSource identityPoolCredentialSource;
+
+  @Nullable
+  private final Supplier<String> subjectTokenSupplier;
 
   /** Internal constructor. See {@link Builder}. */
   IdentityPoolCredentials(Builder builder) {
     super(builder);
-    this.identityPoolCredentialSource = (IdentityPoolCredentialSource) builder.credentialSource;
+    if (builder.subjectTokenSupplier != null){
+      this.subjectTokenSupplier = builder.subjectTokenSupplier;
+      this.identityPoolCredentialSource = null;
+    } else {
+      this.identityPoolCredentialSource = (IdentityPoolCredentialSource) builder.credentialSource;
+      this.subjectTokenSupplier = null;
+    }
   }
 
   @Override
@@ -87,7 +99,14 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   @Override
   public String retrieveSubjectToken() throws IOException {
-    if (identityPoolCredentialSource.credentialSourceType
+    if (this.subjectTokenSupplier != null){
+      try {
+        return this.subjectTokenSupplier.get();
+      } catch (Throwable e){
+        throw new GoogleAuthException(false, 0, "Error retrieving token from custom token supplier.", e);
+      }
+    }
+    else if (identityPoolCredentialSource.credentialSourceType
         == IdentityPoolCredentialSource.IdentityPoolCredentialSourceType.FILE) {
       return retrieveSubjectTokenFromCredentialFile();
     }
@@ -96,6 +115,9 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   @Override
   String getCredentialSourceType() {
+    if (this.subjectTokenSupplier != null){
+      return "programmatic";
+    }
     if (((IdentityPoolCredentialSource) this.getCredentialSource()).credentialSourceType
         == IdentityPoolCredentialSourceType.FILE) {
       return "file";
@@ -176,6 +198,8 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   public static class Builder extends ExternalAccountCredentials.Builder {
 
+    private Supplier<String> subjectTokenSupplier;
+
     Builder() {}
 
     Builder(IdentityPoolCredentials credentials) {
@@ -184,6 +208,17 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
     public Builder setWorkforcePoolUserProject(String workforcePoolUserProject) {
       super.setWorkforcePoolUserProject(workforcePoolUserProject);
+      return this;
+    }
+
+    /**
+     * Sets the subject token supplier. The supplier should return a valid subject token string.
+     *
+     * @param subjectTokenSupplier the supplier method to be called.
+     * @return this {@code Builder} object
+     */
+    public Builder setSubjectTokenSupplier(Supplier<String> subjectTokenSupplier) {
+      this.subjectTokenSupplier = subjectTokenSupplier;
       return this;
     }
 

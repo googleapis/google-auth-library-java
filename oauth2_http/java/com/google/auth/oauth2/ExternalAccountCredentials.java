@@ -81,6 +81,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   static final String EXTERNAL_ACCOUNT_FILE_TYPE = "external_account";
   static final String EXECUTABLE_SOURCE_KEY = "executable";
 
+  static final String DEFAULT_TOKEN_URL = "https://sts.googleapis.com/v1/token";
+
   private final String transportFactoryClassName;
   private final String audience;
   private final String subjectTokenType;
@@ -103,11 +105,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
   protected transient HttpTransportFactory transportFactory;
 
-  @Nullable protected final ImpersonatedCredentials impersonatedCredentials;
-
-  // Internal override for impersonated credentials. This is done to keep
-  // impersonatedCredentials final.
-  @Nullable private ImpersonatedCredentials impersonatedCredentialsOverride;
+  @Nullable protected ImpersonatedCredentials impersonatedCredentials;
 
   private EnvironmentProvider environmentProvider;
 
@@ -243,12 +241,13 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     this.transportFactoryClassName = checkNotNull(this.transportFactory.getClass().getName());
     this.audience = checkNotNull(builder.audience);
     this.subjectTokenType = checkNotNull(builder.subjectTokenType);
-    this.tokenUrl = checkNotNull(builder.tokenUrl);
-    this.credentialSource = checkNotNull(builder.credentialSource);
+    this.credentialSource = builder.credentialSource;
     this.tokenInfoUrl = builder.tokenInfoUrl;
     this.serviceAccountImpersonationUrl = builder.serviceAccountImpersonationUrl;
     this.clientId = builder.clientId;
     this.clientSecret = builder.clientSecret;
+    this.tokenUrl = builder.tokenUrl == null
+        ? DEFAULT_TOKEN_URL : builder.tokenUrl;
     this.scopes =
         (builder.scopes == null || builder.scopes.isEmpty())
             ? Arrays.asList(CLOUD_PLATFORM_SCOPE)
@@ -279,8 +278,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
         builder.metricsHandler == null
             ? new ExternalAccountMetricsHandler(this)
             : builder.metricsHandler;
-
-    this.impersonatedCredentials = buildImpersonatedCredentials();
   }
 
   ImpersonatedCredentials buildImpersonatedCredentials() {
@@ -316,10 +313,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
         .setLifetime(this.serviceAccountImpersonationOptions.lifetime)
         .setIamEndpointOverride(serviceAccountImpersonationUrl)
         .build();
-  }
-
-  void overrideImpersonatedCredentials(ImpersonatedCredentials credentials) {
-    this.impersonatedCredentialsOverride = credentials;
   }
 
   @Override
@@ -490,10 +483,9 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   protected AccessToken exchangeExternalCredentialForAccessToken(
       StsTokenExchangeRequest stsTokenExchangeRequest) throws IOException {
     // Handle service account impersonation if necessary.
-    // Internal override takes priority.
-    if (impersonatedCredentialsOverride != null) {
-      return impersonatedCredentialsOverride.refreshAccessToken();
-    } else if (impersonatedCredentials != null) {
+    this.impersonatedCredentials = (this.impersonatedCredentials != null) ?
+        this.impersonatedCredentials : this.buildImpersonatedCredentials();
+    if (impersonatedCredentials != null) {
       return impersonatedCredentials.refreshAccessToken();
     }
 
