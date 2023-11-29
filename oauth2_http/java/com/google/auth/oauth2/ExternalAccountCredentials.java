@@ -726,9 +726,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     @Nullable protected Collection<String> scopes;
     @Nullable protected String workforcePoolUserProject;
     @Nullable protected ServiceAccountImpersonationOptions serviceAccountImpersonationOptions;
-    @Nullable
-    @Deprecated
-    protected String universeDomain;
+    @Nullable @Deprecated protected String universeDomain;
     @Nullable protected ExternalAccountMetricsHandler metricsHandler;
 
     protected Builder() {}
