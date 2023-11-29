@@ -726,7 +726,9 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     @Nullable protected Collection<String> scopes;
     @Nullable protected String workforcePoolUserProject;
     @Nullable protected ServiceAccountImpersonationOptions serviceAccountImpersonationOptions;
-    @Nullable protected String universeDomain;
+    @Nullable
+    @Deprecated
+    protected String universeDomain;
     @Nullable protected ExternalAccountMetricsHandler metricsHandler;
 
     protected Builder() {}
@@ -920,8 +922,10 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @return this {@code Builder} object
      */
     @CanIgnoreReturnValue
+    @Override
     public Builder setUniverseDomain(String universeDomain) {
       this.universeDomain = universeDomain;
+      super.setUniverseDomain(universeDomain);
       return this;
     }
 
