@@ -1027,7 +1027,8 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void exchangeExternalCredentialForAccessToken_invalidImpersonatedCredentialsThrows() throws IOException {
+  public void exchangeExternalCredentialForAccessToken_invalidImpersonatedCredentialsThrows()
+      throws IOException {
     GenericJson json = buildJsonIdentityPoolCredential();
     json.put("service_account_impersonation_url", "https://iamcredentials.googleapis.com");
     ExternalAccountCredentials credential =
