@@ -40,6 +40,7 @@ import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonParser;
+import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -472,6 +473,102 @@ public class AwsCredentials extends ExternalAccountCredentials {
     public Builder setRegionalCredentialVerificationUrlOverride(
         String regionalCredentialVerificationUrlOverride) {
       this.regionalCredentialVerificationUrlOverride = regionalCredentialVerificationUrlOverride;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
+      super.setHttpTransportFactory(transportFactory);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setAudience(String audience) {
+      super.setAudience(audience);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setSubjectTokenType(String subjectTokenType) {
+      super.setSubjectTokenType(subjectTokenType);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setSubjectTokenType(SubjectTokenTypes subjectTokenType) {
+      super.setSubjectTokenType(subjectTokenType);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setTokenUrl(String tokenUrl) {
+      super.setTokenUrl(tokenUrl);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setCredentialSource(AwsCredentialSource credentialSource) {
+      super.setCredentialSource(credentialSource);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setServiceAccountImpersonationUrl(String serviceAccountImpersonationUrl) {
+      super.setServiceAccountImpersonationUrl(serviceAccountImpersonationUrl);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setTokenInfoUrl(String tokenInfoUrl) {
+      super.setTokenInfoUrl(tokenInfoUrl);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setQuotaProjectId(String quotaProjectId) {
+      super.setQuotaProjectId(quotaProjectId);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setClientId(String clientId) {
+      super.setClientId(clientId);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setClientSecret(String clientSecret) {
+      super.setClientSecret(clientSecret);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setScopes(Collection<String> scopes) {
+      super.setScopes(scopes);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setWorkforcePoolUserProject(String workforcePoolUserProject) {
+      super.setWorkforcePoolUserProject(workforcePoolUserProject);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setServiceAccountImpersonationOptions(Map<String, Object> optionsMap) {
+      super.setServiceAccountImpersonationOptions(optionsMap);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setUniverseDomain(String universeDomain) {
+      super.setUniverseDomain(universeDomain);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    Builder setEnvironmentProvider(EnvironmentProvider environmentProvider) {
+      super.setEnvironmentProvider(environmentProvider);
       return this;
     }
 

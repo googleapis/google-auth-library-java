@@ -64,6 +64,22 @@ import javax.annotation.Nullable;
  */
 public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
+  /**
+   * Enum to specify values for the subjectTokenType field in {@code ExternalAccountCredentials}.
+   */
+  public enum SubjectTokenTypes {
+    AWS4("urn:ietf:params:aws:token-type:aws4_request"),
+    JWT("urn:ietf:params:oauth:token-type:jwt"),
+    SAML2("urn:ietf:params:oauth:token-type:saml2"),
+    ID_TOKEN("urn:ietf:params:oauth:token-type:id_token");
+
+    public final String value;
+
+    private SubjectTokenTypes(String value) {
+      this.value = value;
+    }
+  }
+
   private static final long serialVersionUID = 8049126194174465023L;
 
   /** Base credential source class. Dictates the retrieval method of the external credential. */
@@ -786,6 +802,19 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     @CanIgnoreReturnValue
     public Builder setSubjectTokenType(String subjectTokenType) {
       this.subjectTokenType = subjectTokenType;
+      return this;
+    }
+
+    /**
+     * Sets the Security Token Service subject token type based on the OAuth 2.0 token exchange
+     * spec. Indicates the type of the security token in the credential file.
+     *
+     * @param subjectTokenType the {@code SubjectTokenType} to set
+     * @return this {@code Builder} object
+     */
+    @CanIgnoreReturnValue
+    public Builder setSubjectTokenType(SubjectTokenTypes subjectTokenType) {
+      this.subjectTokenType = subjectTokenType.value;
       return this;
     }
 
