@@ -465,21 +465,6 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromJson_invalidServiceAccountImpersonationUrl_throws() {
-    GenericJson json = buildJsonIdentityPoolCredential();
-    json.put("service_account_impersonation_url", "https://iamcredentials.googleapis.com");
-
-    try {
-      ExternalAccountCredentials.fromJson(json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
-      fail("Exception should be thrown.");
-    } catch (IllegalArgumentException e) {
-      assertEquals(
-          "Unable to determine target principal from service account impersonation URL.",
-          e.getMessage());
-    }
-  }
-
-  @Test
   public void fromJson_nullTransport_throws() {
     try {
       ExternalAccountCredentials.fromJson(
@@ -1038,6 +1023,26 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
       assertEquals(errorCode, e.getErrorCode());
       assertEquals(errorDescription, e.getErrorDescription());
       assertEquals(errorUri, e.getErrorUri());
+    }
+  }
+
+  @Test
+  public void exchangeExternalCredentialForAccessToken_invalidImpersonatedCredentialsThrows() throws IOException {
+    GenericJson json = buildJsonIdentityPoolCredential();
+    json.put("service_account_impersonation_url", "https://iamcredentials.googleapis.com");
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(json, transportFactory);
+
+    StsTokenExchangeRequest stsTokenExchangeRequest =
+        StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
+
+    try {
+      credential.exchangeExternalCredentialForAccessToken(stsTokenExchangeRequest);
+      fail("Exception should be thrown.");
+    } catch (IllegalArgumentException e) {
+      assertEquals(
+          "Unable to determine target principal from service account impersonation URL.",
+          e.getMessage());
     }
   }
 
