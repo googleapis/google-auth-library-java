@@ -480,16 +480,15 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
 
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
     IdentityPoolCredentials credential =
-        (IdentityPoolCredentials)
-            IdentityPoolCredentials.newBuilder()
-                .setSubjectTokenSupplier(testSupplier)
-                .setAudience(
-                    "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
-                .setSubjectTokenType("subjectTokenType")
-                .setTokenInfoUrl("tokenInfoUrl")
-                .setTokenUrl(transportFactory.transport.getStsUrl())
-                .setHttpTransportFactory(transportFactory)
-                .build();
+        IdentityPoolCredentials.newBuilder()
+            .setSubjectTokenSupplier(testSupplier)
+            .setAudience(
+                "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setTokenUrl(transportFactory.transport.getStsUrl())
+            .setHttpTransportFactory(transportFactory)
+            .build();
 
     AccessToken accessToken = credential.refreshAccessToken();
 
@@ -508,18 +507,17 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
 
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
     IdentityPoolCredentials credential =
-        (IdentityPoolCredentials)
-            IdentityPoolCredentials.newBuilder()
-                .setSubjectTokenSupplier(testSupplier)
-                .setAudience(
-                    "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
-                .setSubjectTokenType("subjectTokenType")
-                .setTokenInfoUrl("tokenInfoUrl")
-                .setServiceAccountImpersonationUrl(
-                    transportFactory.transport.getServiceAccountImpersonationUrl())
-                .setTokenUrl(transportFactory.transport.getStsUrl())
-                .setHttpTransportFactory(transportFactory)
-                .build();
+        IdentityPoolCredentials.newBuilder()
+            .setSubjectTokenSupplier(testSupplier)
+            .setAudience(
+                "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setServiceAccountImpersonationUrl(
+                transportFactory.transport.getServiceAccountImpersonationUrl())
+            .setTokenUrl(transportFactory.transport.getStsUrl())
+            .setHttpTransportFactory(transportFactory)
+            .build();
 
     AccessToken accessToken = credential.refreshAccessToken();
 
@@ -792,20 +790,19 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     IdentityPoolCredentials credentials =
-        (IdentityPoolCredentials)
-            IdentityPoolCredentials.newBuilder()
-                .setSubjectTokenSupplier(testSupplier)
-                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-                .setAudience("audience")
-                .setSubjectTokenType("subjectTokenType")
-                .setTokenUrl(STS_URL)
-                .setTokenInfoUrl("tokenInfoUrl")
-                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-                .setQuotaProjectId("quotaProjectId")
-                .setClientId("clientId")
-                .setClientSecret("clientSecret")
-                .setScopes(scopes)
-                .build();
+        IdentityPoolCredentials.newBuilder()
+            .setSubjectTokenSupplier(testSupplier)
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .setAudience("audience")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .setQuotaProjectId("quotaProjectId")
+            .setClientId("clientId")
+            .setClientSecret("clientSecret")
+            .setScopes(scopes)
+            .build();
 
     assertEquals(testSupplier, credentials.getSubjectTokenSupplier());
   }

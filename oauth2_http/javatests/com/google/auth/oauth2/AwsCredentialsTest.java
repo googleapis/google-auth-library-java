@@ -222,14 +222,14 @@ public class AwsCredentialsTest extends BaseSerializationTest {
         new MockExternalAccountCredentialsTransportFactory();
 
     AwsCredentials awsCredential =
-            AwsCredentials.newBuilder()
-                .setRegion("test")
-                .setAwsSecurityCredentialsSupplier(CredentialSupplier)
-                .setHttpTransportFactory(transportFactory)
-                .setAudience("audience")
-                .setTokenUrl(STS_URL)
-                .setSubjectTokenType("subjectTokenType")
-                .build();
+        AwsCredentials.newBuilder()
+            .setRegion("test")
+            .setAwsSecurityCredentialsSupplier(CredentialSupplier)
+            .setHttpTransportFactory(transportFactory)
+            .setAudience("audience")
+            .setTokenUrl(STS_URL)
+            .setSubjectTokenType("subjectTokenType")
+            .build();
 
     AccessToken accessToken = awsCredential.refreshAccessToken();
 
@@ -250,16 +250,16 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
 
     AwsCredentials awsCredential =
-            AwsCredentials.newBuilder()
-                .setRegion("test")
-                .setAwsSecurityCredentialsSupplier(CredentialSupplier)
-                .setHttpTransportFactory(transportFactory)
-                .setAudience("audience")
-                .setTokenUrl(STS_URL)
-                .setSubjectTokenType("subjectTokenType")
-                .setServiceAccountImpersonationUrl(
-                    transportFactory.transport.getServiceAccountImpersonationUrl())
-                .build();
+        AwsCredentials.newBuilder()
+            .setRegion("test")
+            .setAwsSecurityCredentialsSupplier(CredentialSupplier)
+            .setHttpTransportFactory(transportFactory)
+            .setAudience("audience")
+            .setTokenUrl(STS_URL)
+            .setSubjectTokenType("subjectTokenType")
+            .setServiceAccountImpersonationUrl(
+                transportFactory.transport.getServiceAccountImpersonationUrl())
+            .build();
 
     AccessToken accessToken = awsCredential.refreshAccessToken();
 
@@ -602,14 +602,14 @@ public class AwsCredentialsTest extends BaseSerializationTest {
         new MockExternalAccountCredentialsTransportFactory();
 
     AwsCredentials awsCredential =
-            AwsCredentials.newBuilder()
-                .setRegion("test")
-                .setAwsSecurityCredentialsSupplier(CredentialSupplier)
-                .setHttpTransportFactory(transportFactory)
-                .setAudience("audience")
-                .setTokenUrl(STS_URL)
-                .setSubjectTokenType("subjectTokenType")
-                .build();
+        AwsCredentials.newBuilder()
+            .setRegion("test")
+            .setAwsSecurityCredentialsSupplier(CredentialSupplier)
+            .setHttpTransportFactory(transportFactory)
+            .setAudience("audience")
+            .setTokenUrl(STS_URL)
+            .setSubjectTokenType("subjectTokenType")
+            .build();
 
     String subjectToken = URLDecoder.decode(awsCredential.retrieveSubjectToken(), "UTF-8");
 
@@ -645,14 +645,14 @@ public class AwsCredentialsTest extends BaseSerializationTest {
         () -> securityCredentialsWithToken;
 
     AwsCredentials awsCredential =
-            AwsCredentials.newBuilder()
-                .setRegion("test")
-                .setAwsSecurityCredentialsSupplier(awsSecurityCredentialsSupplierWithToken)
-                .setHttpTransportFactory(transportFactory)
-                .setAudience("audience")
-                .setTokenUrl(STS_URL)
-                .setSubjectTokenType("subjectTokenType")
-                .build();
+        AwsCredentials.newBuilder()
+            .setRegion("test")
+            .setAwsSecurityCredentialsSupplier(awsSecurityCredentialsSupplierWithToken)
+            .setHttpTransportFactory(transportFactory)
+            .setAudience("audience")
+            .setTokenUrl(STS_URL)
+            .setSubjectTokenType("subjectTokenType")
+            .build();
 
     String subjectToken = URLDecoder.decode(awsCredential.retrieveSubjectToken(), "UTF-8");
 
@@ -690,14 +690,14 @@ public class AwsCredentialsTest extends BaseSerializationTest {
         };
 
     AwsCredentials awsCredential =
-            AwsCredentials.newBuilder()
-                .setRegion("test")
-                .setAwsSecurityCredentialsSupplier(errorSupplier)
-                .setHttpTransportFactory(transportFactory)
-                .setAudience("audience")
-                .setTokenUrl(STS_URL)
-                .setSubjectTokenType("subjectTokenType")
-                .build();
+        AwsCredentials.newBuilder()
+            .setRegion("test")
+            .setAwsSecurityCredentialsSupplier(errorSupplier)
+            .setHttpTransportFactory(transportFactory)
+            .setAudience("audience")
+            .setTokenUrl(STS_URL)
+            .setSubjectTokenType("subjectTokenType")
+            .build();
 
     try {
       String subjectToken = URLDecoder.decode(awsCredential.retrieveSubjectToken(), "UTF-8");
@@ -1123,23 +1123,23 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     Supplier<AwsSecurityCredentials> testSupplier = () -> null;
 
     AwsCredentials credentials =
-            AwsCredentials.newBuilder()
-                .setRegionalCredentialVerificationUrlOverride("https://test.com")
-                .setRegion("region")
-                .setAwsSecurityCredentialsSupplier(testSupplier)
-                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-                .setAudience("audience")
-                .setSubjectTokenType("subjectTokenType")
-                .setTokenUrl(STS_URL)
-                .setTokenInfoUrl("tokenInfoUrl")
-                .setCredentialSource(AWS_CREDENTIAL_SOURCE)
-                .setTokenInfoUrl("tokenInfoUrl")
-                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-                .setQuotaProjectId("quotaProjectId")
-                .setClientId("clientId")
-                .setClientSecret("clientSecret")
-                .setScopes(scopes)
-                .build();
+        AwsCredentials.newBuilder()
+            .setRegionalCredentialVerificationUrlOverride("https://test.com")
+            .setRegion("region")
+            .setAwsSecurityCredentialsSupplier(testSupplier)
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .setAudience("audience")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setCredentialSource(AWS_CREDENTIAL_SOURCE)
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .setQuotaProjectId("quotaProjectId")
+            .setClientId("clientId")
+            .setClientSecret("clientSecret")
+            .setScopes(scopes)
+            .build();
 
     assertEquals("region", credentials.getRegion());
     assertEquals("https://test.com", credentials.getRegionalCredentialVerificationUrlOverride());
@@ -1165,22 +1165,22 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     Supplier<AwsSecurityCredentials> testSupplier = () -> null;
 
     AwsCredentials credentials =
-            AwsCredentials.newBuilder()
-                .setRegion("region")
-                .setAwsSecurityCredentialsSupplier(testSupplier)
-                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-                .setAudience("audience")
-                .setSubjectTokenType("subjectTokenType")
-                .setTokenUrl(STS_URL)
-                .setTokenInfoUrl("tokenInfoUrl")
-                .setCredentialSource(AWS_CREDENTIAL_SOURCE)
-                .setTokenInfoUrl("tokenInfoUrl")
-                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-                .setQuotaProjectId("quotaProjectId")
-                .setClientId("clientId")
-                .setClientSecret("clientSecret")
-                .setScopes(scopes)
-                .build();
+        AwsCredentials.newBuilder()
+            .setRegion("region")
+            .setAwsSecurityCredentialsSupplier(testSupplier)
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .setAudience("audience")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setCredentialSource(AWS_CREDENTIAL_SOURCE)
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .setQuotaProjectId("quotaProjectId")
+            .setClientId("clientId")
+            .setClientSecret("clientSecret")
+            .setScopes(scopes)
+            .build();
 
     assertNull(credentials.getRegionalCredentialVerificationUrlOverride());
     assertEquals(
@@ -1196,21 +1196,21 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
     try {
       AwsCredentials credentials =
-              AwsCredentials.newBuilder()
-                  .setAwsSecurityCredentialsSupplier(testSupplier)
-                  .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-                  .setAudience("audience")
-                  .setSubjectTokenType("subjectTokenType")
-                  .setTokenUrl(STS_URL)
-                  .setTokenInfoUrl("tokenInfoUrl")
-                  .setCredentialSource(AWS_CREDENTIAL_SOURCE)
-                  .setTokenInfoUrl("tokenInfoUrl")
-                  .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-                  .setQuotaProjectId("quotaProjectId")
-                  .setClientId("clientId")
-                  .setClientSecret("clientSecret")
-                  .setScopes(scopes)
-                  .build();
+          AwsCredentials.newBuilder()
+              .setAwsSecurityCredentialsSupplier(testSupplier)
+              .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+              .setAudience("audience")
+              .setSubjectTokenType("subjectTokenType")
+              .setTokenUrl(STS_URL)
+              .setTokenInfoUrl("tokenInfoUrl")
+              .setCredentialSource(AWS_CREDENTIAL_SOURCE)
+              .setTokenInfoUrl("tokenInfoUrl")
+              .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+              .setQuotaProjectId("quotaProjectId")
+              .setClientId("clientId")
+              .setClientSecret("clientSecret")
+              .setScopes(scopes)
+              .build();
       fail("Should not be able to continue without exception.");
     } catch (IllegalArgumentException exception) {
       assertEquals(

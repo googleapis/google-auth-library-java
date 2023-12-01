@@ -54,9 +54,9 @@ import java.nio.file.LinkOption;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
-import java.util.Map;
 
 /**
  * Url-sourced and file-sourced external account credentials.

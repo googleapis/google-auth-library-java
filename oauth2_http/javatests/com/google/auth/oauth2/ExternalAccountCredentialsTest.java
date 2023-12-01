@@ -564,21 +564,20 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void constructor_builder_subjectTokenTypeEnum() {
-      HashMap<String, Object> credentialSource = new HashMap<>();
-      credentialSource.put("file", "file");
+    HashMap<String, Object> credentialSource = new HashMap<>();
+    credentialSource.put("file", "file");
 
-      ExternalAccountCredentials credentials =
-          IdentityPoolCredentials.newBuilder()
-              .setHttpTransportFactory(transportFactory)
-              .setAudience(
-                  "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
-              .setSubjectTokenType(SubjectTokenTypes.SAML2)
-              .setTokenUrl(STS_URL)
-              .setCredentialSource(new TestCredentialSource(credentialSource))
-              .build();
+    ExternalAccountCredentials credentials =
+        IdentityPoolCredentials.newBuilder()
+            .setHttpTransportFactory(transportFactory)
+            .setAudience(
+                "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+            .setSubjectTokenType(SubjectTokenTypes.SAML2)
+            .setTokenUrl(STS_URL)
+            .setCredentialSource(new TestCredentialSource(credentialSource))
+            .build();
 
-      assertEquals(SubjectTokenTypes.SAML2.value, credentials.getSubjectTokenType());
-
+    assertEquals(SubjectTokenTypes.SAML2.value, credentials.getSubjectTokenType());
   }
 
   @Test
