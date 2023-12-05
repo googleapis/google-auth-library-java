@@ -310,6 +310,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
 
     IdentityPoolCredentials credentials =
         IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+            .setCredentialSource(null)
             .setSubjectTokenSupplier(testSupplier)
             .build();
 
@@ -328,6 +329,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
         };
     IdentityPoolCredentials credentials =
         IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+            .setCredentialSource(null)
             .setSubjectTokenSupplier(errorSupplier)
             .build();
 
@@ -859,6 +861,44 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
             .build();
 
     assertTrue(credentials.isWorkforcePoolConfiguration());
+  }
+
+  @Test
+  public void builder_supplierAndCredSourceThrows() throws IOException {
+    try {
+      IdentityPoolCredentials credentials =
+          IdentityPoolCredentials.newBuilder()
+              .setSubjectTokenSupplier(testSupplier)
+              .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+              .setAudience("audience")
+              .setSubjectTokenType("subjectTokenType")
+              .setTokenUrl(STS_URL)
+              .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+              .build();
+      fail("Should not be able to continue without exception.");
+    } catch (IllegalArgumentException exception) {
+      assertEquals(
+          "IdentityPoolCredentials cannot have both a subjectTokenSupplier and a credentialSource.",
+          exception.getMessage());
+    }
+  }
+
+  @Test
+  public void builder_noSupplierOrCredSourceThrows() throws IOException {
+
+    try {
+      IdentityPoolCredentials credentials =
+          IdentityPoolCredentials.newBuilder()
+              .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+              .setAudience("audience")
+              .setSubjectTokenType("subjectTokenType")
+              .setTokenUrl(STS_URL)
+              .build();
+      fail("Should not be able to continue without exception.");
+    } catch (IllegalArgumentException exception) {
+      assertEquals(
+          "A subjectTokenSupplier or a credentialSource must be provided.", exception.getMessage());
+    }
   }
 
   @Test

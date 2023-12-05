@@ -85,6 +85,15 @@ public class AwsCredentials extends ExternalAccountCredentials {
   /** Internal constructor. See {@link AwsCredentials.Builder}. */
   AwsCredentials(Builder builder) {
     super(builder);
+    // Check that one and only one of supplier or credential source are provided.
+    if (builder.awsSecurityCredentialsSupplier != null && builder.credentialSource != null) {
+      throw new IllegalArgumentException(
+          "AwsCredentials cannot have both an awsSecurityCredentialsSupplier and a credentialSource.");
+    }
+    if (builder.awsSecurityCredentialsSupplier == null && builder.credentialSource == null) {
+      throw new IllegalArgumentException(
+          "An awsSecurityCredentialsSupplier or a credentialSource must be provided.");
+    }
     // If user has provided a security credential supplier, use that to retrieve the AWS security
     // credentials.
     if (builder.awsSecurityCredentialsSupplier != null) {
@@ -322,7 +331,10 @@ public class AwsCredentials extends ExternalAccountCredentials {
         return this.awsSecurityCredentialsSupplier.get();
       } catch (Throwable e) {
         throw new GoogleAuthException(
-            /* isRetryable= */ false, /* retryCount= */ 0, "Error retrieving token from AWS security credentials supplier.", e);
+            /* isRetryable= */ false,
+            /* retryCount= */ 0,
+            "Error retrieving token from AWS security credentials supplier.",
+            e);
       }
     }
 

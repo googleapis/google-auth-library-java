@@ -704,7 +704,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
       fail("retrieveSubjectToken should not succeed");
     } catch (GoogleAuthException e) {
       assertEquals(
-          "Error retrieving token from aws security credentials supplier.", e.getMessage());
+          "Error retrieving token from AWS security credentials supplier.", e.getMessage());
       assertEquals(testException, e.getCause());
     }
   }
@@ -1126,7 +1126,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
         AwsCredentials.newBuilder()
             .setRegionalCredentialVerificationUrlOverride("https://test.com")
             .setRegion("region")
-            .setAwsSecurityCredentialsSupplier(testSupplier)
             .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
             .setAudience("audience")
             .setSubjectTokenType("subjectTokenType")
@@ -1143,7 +1142,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
     assertEquals("region", credentials.getRegion());
     assertEquals("https://test.com", credentials.getRegionalCredentialVerificationUrlOverride());
-    assertEquals(testSupplier, credentials.getAwsSecurityCredentialsSupplier());
     assertEquals("audience", credentials.getAudience());
     assertEquals("subjectTokenType", credentials.getSubjectTokenType());
     assertEquals(credentials.getTokenUrl(), STS_URL);
@@ -1173,7 +1171,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .setSubjectTokenType("subjectTokenType")
             .setTokenUrl(STS_URL)
             .setTokenInfoUrl("tokenInfoUrl")
-            .setCredentialSource(AWS_CREDENTIAL_SOURCE)
             .setTokenInfoUrl("tokenInfoUrl")
             .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
             .setQuotaProjectId("quotaProjectId")
@@ -1203,7 +1200,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
               .setSubjectTokenType("subjectTokenType")
               .setTokenUrl(STS_URL)
               .setTokenInfoUrl("tokenInfoUrl")
-              .setCredentialSource(AWS_CREDENTIAL_SOURCE)
               .setTokenInfoUrl("tokenInfoUrl")
               .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
               .setQuotaProjectId("quotaProjectId")
@@ -1215,6 +1211,66 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     } catch (IllegalArgumentException exception) {
       assertEquals(
           "A region must be specified when using an aws security credential supplier.",
+          exception.getMessage());
+    }
+  }
+
+  @Test
+  public void builder_supplierAndCredSourceThrows() throws IOException {
+    List<String> scopes = Arrays.asList("scope1", "scope2");
+
+    Supplier<AwsSecurityCredentials> testSupplier = () -> null;
+
+    try {
+      AwsCredentials credentials =
+          AwsCredentials.newBuilder()
+              .setAwsSecurityCredentialsSupplier(testSupplier)
+              .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+              .setAudience("audience")
+              .setSubjectTokenType("subjectTokenType")
+              .setTokenUrl(STS_URL)
+              .setTokenInfoUrl("tokenInfoUrl")
+              .setTokenInfoUrl("tokenInfoUrl")
+              .setCredentialSource(AWS_CREDENTIAL_SOURCE)
+              .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+              .setQuotaProjectId("quotaProjectId")
+              .setClientId("clientId")
+              .setClientSecret("clientSecret")
+              .setScopes(scopes)
+              .build();
+      fail("Should not be able to continue without exception.");
+    } catch (IllegalArgumentException exception) {
+      assertEquals(
+          "AwsCredentials cannot have both an awsSecurityCredentialsSupplier and a credentialSource.",
+          exception.getMessage());
+    }
+  }
+
+  @Test
+  public void builder_noSupplierOrCredSourceThrows() throws IOException {
+    List<String> scopes = Arrays.asList("scope1", "scope2");
+
+    Supplier<AwsSecurityCredentials> testSupplier = () -> null;
+
+    try {
+      AwsCredentials credentials =
+          AwsCredentials.newBuilder()
+              .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+              .setAudience("audience")
+              .setSubjectTokenType("subjectTokenType")
+              .setTokenUrl(STS_URL)
+              .setTokenInfoUrl("tokenInfoUrl")
+              .setTokenInfoUrl("tokenInfoUrl")
+              .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+              .setQuotaProjectId("quotaProjectId")
+              .setClientId("clientId")
+              .setClientSecret("clientSecret")
+              .setScopes(scopes)
+              .build();
+      fail("Should not be able to continue without exception.");
+    } catch (IllegalArgumentException exception) {
+      assertEquals(
+          "An awsSecurityCredentialsSupplier or a credentialSource must be provided.",
           exception.getMessage());
     }
   }

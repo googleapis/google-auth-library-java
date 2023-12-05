@@ -239,8 +239,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     }
 
     this.metricsHandler = new ExternalAccountMetricsHandler(this);
-
-    this.impersonatedCredentials = buildImpersonatedCredentials();
   }
 
   /**
@@ -490,6 +488,10 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
         && ((String) credentialSource.get("environment_id")).startsWith("aws");
   }
 
+  private boolean isImpersonationEnabled() {
+    return this.serviceAccountImpersonationUrl != null;
+  }
+
   /**
    * Exchanges the external credential for a Google Cloud access token.
    *
@@ -500,10 +502,9 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   protected AccessToken exchangeExternalCredentialForAccessToken(
       StsTokenExchangeRequest stsTokenExchangeRequest) throws IOException {
     // Handle service account impersonation if necessary.
-    this.impersonatedCredentials =
-        (this.impersonatedCredentials != null)
-            ? this.impersonatedCredentials
-            : this.buildImpersonatedCredentials();
+    if (this.isImpersonationEnabled() && this.impersonatedCredentials == null) {
+      this.impersonatedCredentials = this.buildImpersonatedCredentials();
+    }
     if (impersonatedCredentials != null) {
       return impersonatedCredentials.refreshAccessToken();
     }

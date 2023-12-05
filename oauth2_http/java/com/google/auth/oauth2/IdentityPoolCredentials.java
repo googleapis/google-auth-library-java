@@ -74,6 +74,15 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
   /** Internal constructor. See {@link Builder}. */
   IdentityPoolCredentials(Builder builder) {
     super(builder);
+    // Check that one and only one of supplier or credential source are provided.
+    if (builder.subjectTokenSupplier != null && builder.credentialSource != null) {
+      throw new IllegalArgumentException(
+          "IdentityPoolCredentials cannot have both a subjectTokenSupplier and a credentialSource.");
+    }
+    if (builder.subjectTokenSupplier == null && builder.credentialSource == null) {
+      throw new IllegalArgumentException(
+          "A subjectTokenSupplier or a credentialSource must be provided.");
+    }
     if (builder.subjectTokenSupplier != null) {
       this.subjectTokenSupplier = builder.subjectTokenSupplier;
       this.identityPoolCredentialSource = null;
