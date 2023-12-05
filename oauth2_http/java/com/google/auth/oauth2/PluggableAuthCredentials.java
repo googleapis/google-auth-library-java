@@ -98,6 +98,9 @@ import javax.annotation.Nullable;
  * <p>Please see this repositories README for a complete executable request/response specification.
  */
 public class PluggableAuthCredentials extends ExternalAccountCredentials {
+
+  static final String PLUGGABLE_AUTH_METRICS_HEADER_VALUE = "executable";
+
   private final PluggableAuthCredentialSource config;
 
   private final ExecutableHandler handler;
@@ -189,7 +192,7 @@ public class PluggableAuthCredentials extends ExternalAccountCredentials {
 
   @Override
   String getCredentialSourceType() {
-    return "executable";
+    return PLUGGABLE_AUTH_METRICS_HEADER_VALUE;
   }
 
   public static Builder newBuilder() {

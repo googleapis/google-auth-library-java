@@ -65,6 +65,8 @@ import javax.annotation.Nullable;
  */
 public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
+  static final String FILE_METRICS_HEADER_VALUE = "file";
+  static final String URL_METRICS_HEADER_VALUE = "url";
   private static final long serialVersionUID = 2471046175477275881L;
 
   @Nullable private final IdentityPoolCredentialSource identityPoolCredentialSource;
@@ -126,13 +128,13 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
   @Override
   String getCredentialSourceType() {
     if (this.subjectTokenSupplier != null) {
-      return "programmatic";
+      return PROGRAMMATIC_AUTH_METRICS_HEADER_VALUE;
     }
     if (((IdentityPoolCredentialSource) this.getCredentialSource()).credentialSourceType
         == IdentityPoolCredentialSourceType.FILE) {
-      return "file";
+      return FILE_METRICS_HEADER_VALUE;
     } else {
-      return "url";
+      return URL_METRICS_HEADER_VALUE;
     }
   }
 

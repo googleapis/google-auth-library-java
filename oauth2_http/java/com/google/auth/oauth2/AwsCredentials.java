@@ -75,6 +75,9 @@ public class AwsCredentials extends ExternalAccountCredentials {
   static final String AWS_IMDSV2_SESSION_TOKEN_HEADER = "x-aws-ec2-metadata-token";
   static final String AWS_IMDSV2_SESSION_TOKEN_TTL_HEADER = "x-aws-ec2-metadata-token-ttl-seconds";
   static final String AWS_IMDSV2_SESSION_TOKEN_TTL = "300";
+
+  static final String AWS_METRICS_HEADER_VALUE = "aws";
+
   private static final long serialVersionUID = -3670131891574618105L;
 
   @Nullable private final AwsCredentialSource awsCredentialSource;
@@ -166,9 +169,9 @@ public class AwsCredentials extends ExternalAccountCredentials {
   @Override
   String getCredentialSourceType() {
     if (this.awsSecurityCredentialsSupplier != null) {
-      return "programmatic";
+      return PROGRAMMATIC_AUTH_METRICS_HEADER_VALUE;
     }
-    return "aws";
+    return AWS_METRICS_HEADER_VALUE;
   }
 
   private String retrieveResource(String url, String resourceName, Map<String, Object> headers)
