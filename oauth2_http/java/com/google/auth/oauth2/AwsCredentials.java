@@ -322,7 +322,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
         return this.awsSecurityCredentialsSupplier.get();
       } catch (Throwable e) {
         throw new GoogleAuthException(
-            false, 0, "Error retrieving token from aws security credentials supplier.", e);
+            /* isRetryable= */ false, /* retryCount= */ 0, "Error retrieving token from AWS security credentials supplier.", e);
       }
     }
 
