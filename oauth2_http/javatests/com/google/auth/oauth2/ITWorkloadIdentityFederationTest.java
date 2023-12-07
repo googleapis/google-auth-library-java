@@ -155,7 +155,7 @@ public final class ITWorkloadIdentityFederationTest {
   }
 
   @Test
-  public void awsCredentials_withSupplier() throws Exception {
+  public void awsCredentials_withProgrammaticAuth() throws Exception {
     String idToken = generateGoogleIdToken(AWS_AUDIENCE);
 
     String url =
@@ -188,7 +188,7 @@ public final class ITWorkloadIdentityFederationTest {
             .setAwsSecurityCredentialsSupplier(credSupplier)
             .setRegion("us-east-2")
             .setSubjectTokenType(SubjectTokenTypes.AWS4)
-            .setAudience(OIDC_AUDIENCE)
+            .setAudience(AWS_AUDIENCE)
             .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
             .build();
 
@@ -252,6 +252,9 @@ public final class ITWorkloadIdentityFederationTest {
             .setSubjectTokenSupplier(tokenSupplier)
             .setAudience(OIDC_AUDIENCE)
             .setSubjectTokenType(SubjectTokenTypes.JWT)
+            .setServiceAccountImpersonationUrl(String.format(
+                "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken",
+                clientEmail))
             .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
             .build();
 
