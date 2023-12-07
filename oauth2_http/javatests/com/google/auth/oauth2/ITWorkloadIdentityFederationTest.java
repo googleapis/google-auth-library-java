@@ -46,6 +46,7 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.GenericData;
 import com.google.auth.http.HttpCredentialsAdapter;
+import com.google.auth.oauth2.ExternalAccountCredentials.SubjectTokenTypes;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -54,6 +55,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -145,10 +147,50 @@ public final class ITWorkloadIdentityFederationTest {
         .setEnv("AWS_REGION", "us-east-2");
 
     AwsCredentials awsCredential =
-        (AwsCredentials)
-            AwsCredentials.newBuilder(awsCredentialWithoutEnvProvider)
-                .setEnvironmentProvider(testEnvironmentProvider)
-                .build();
+        AwsCredentials.newBuilder(awsCredentialWithoutEnvProvider)
+            .setEnvironmentProvider(testEnvironmentProvider)
+            .build();
+
+    callGcs(awsCredential);
+  }
+
+  @Test
+  public void awsCredentials_withSupplier() throws Exception {
+    String idToken = generateGoogleIdToken(AWS_AUDIENCE);
+
+    String url =
+        String.format(
+            "https://sts.amazonaws.com/?Action=AssumeRoleWithWebIdentity"
+                + "&Version=2011-06-15&DurationSeconds=3600&RoleSessionName=%s"
+                + "&RoleArn=%s&WebIdentityToken=%s",
+            AWS_ROLE_NAME, AWS_ROLE_ARN, idToken);
+
+    HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
+    HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(url));
+
+    JsonObjectParser parser = new JsonObjectParser(GsonFactory.getDefaultInstance());
+    request.setParser(parser);
+
+    HttpResponse response = request.execute();
+    String rawXml = response.parseAsString();
+
+    String awsAccessKeyId = getXmlValueByTagName(rawXml, "AccessKeyId");
+    String awsSecretAccessKey = getXmlValueByTagName(rawXml, "SecretAccessKey");
+    String awsSessionToken = getXmlValueByTagName(rawXml, "SessionToken");
+
+    AwsSecurityCredentials credentials =
+        new AwsSecurityCredentials(awsAccessKeyId, awsSecretAccessKey, awsSessionToken);
+
+    Supplier<AwsSecurityCredentials> credSupplier = () -> credentials;
+
+    AwsCredentials awsCredential =
+        AwsCredentials.newBuilder()
+            .setAwsSecurityCredentialsSupplier(credSupplier)
+            .setRegion("us-east-2")
+            .setSubjectTokenType(SubjectTokenTypes.AWS4)
+            .setAudience(OIDC_AUDIENCE)
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .build();
 
     callGcs(awsCredential);
   }
@@ -191,6 +233,29 @@ public final class ITWorkloadIdentityFederationTest {
     callGcs(identityPoolCredentials);
     long tokenExpiry = identityPoolCredentials.getAccessToken().getExpirationTimeMillis();
     assertTrue(minExpirationtime <= tokenExpiry && tokenExpiry <= maxExpirationTime);
+  }
+
+  @Test
+  public void identityPoolCredentials_withProgrammaticAuth() throws IOException {
+
+    Supplier<String> tokenSupplier =
+        () -> {
+          try {
+            return generateGoogleIdToken(OIDC_AUDIENCE);
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        };
+
+    IdentityPoolCredentials identityPoolCredentials =
+        IdentityPoolCredentials.newBuilder()
+            .setSubjectTokenSupplier(tokenSupplier)
+            .setAudience(OIDC_AUDIENCE)
+            .setSubjectTokenType(SubjectTokenTypes.JWT)
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .build();
+
+    callGcs(identityPoolCredentials);
   }
 
   private GenericJson buildIdentityPoolCredentialConfig() throws IOException {
