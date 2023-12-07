@@ -641,8 +641,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
   }
 
   /**
-   * Clones the service account with a new useJwtAccessWithScope value. This flag will be ignored
-   * if universeDomain field is different from {@link Credentials.GOOGLE_DEFAULT_UNIVERSE}.
+   * Clones the service account with a new useJwtAccessWithScope value. This flag will be ignored if
+   * universeDomain field is different from {@link Credentials.GOOGLE_DEFAULT_UNIVERSE}.
    *
    * @param useJwtAccessWithScope whether self-signed JWT with scopes should be used
    * @return the cloned service account credentials with the given useJwtAccessWithScope
@@ -1117,8 +1117,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
     }
 
     /**
-     * Sets the useJwtAccessWithScope flag. This flag will be ignored if universeDomain field
-     * is different from {@link Credentials.GOOGLE_DEFAULT_UNIVERSE}.
+     * Sets the useJwtAccessWithScope flag. This flag will be ignored if universeDomain field is
+     * different from {@link Credentials.GOOGLE_DEFAULT_UNIVERSE}.
      */
     @CanIgnoreReturnValue
     public Builder setUseJwtAccessWithScope(boolean useJwtAccessWithScope) {
