@@ -184,8 +184,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
               + "expecting  'client_id', 'client_email', 'private_key' and 'private_key_id'.");
     }
 
-    GoogleCredentials baseCredential = GoogleCredentials.fromJson(json);
-
     ServiceAccountCredentials.Builder builder =
         ServiceAccountCredentials.newBuilder()
             .setClientId(clientId)
@@ -194,8 +192,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
             .setHttpTransportFactory(transportFactory)
             .setTokenServerUri(tokenServerUriFromCreds)
             .setProjectId(projectId)
-            .setQuotaProjectId(quotaProjectId)
-            .setUniverseDomain(baseCredential.getUniverseDomain());
+            .setQuotaProjectId(quotaProjectId);
+
+    GoogleCredentials baseCredential = GoogleCredentials.fromJson(json);
+    builder.setUniverseDomain(baseCredential.getUniverseDomain());
 
     return fromPkcs8(privateKeyPkcs8, builder);
   }
@@ -641,9 +641,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
   }
 
   /**
-   * Clones the service account with a new useJwtAccessWithScope value.
+   * Clones the service account with a new useJwtAccessWithScope value. This flag will be ignored
+   * if universeDomain field is different from {@link Credentials.GOOGLE_DEFAULT_UNIVERSE}.
    *
-   * @param useJwtAccessWithScope whether self signed JWT with scopes should be used
+   * @param useJwtAccessWithScope whether self-signed JWT with scopes should be used
    * @return the cloned service account credentials with the given useJwtAccessWithScope
    */
   public ServiceAccountCredentials createWithUseJwtAccessWithScope(boolean useJwtAccessWithScope) {
@@ -1115,6 +1116,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
       return this;
     }
 
+    /**
+     * Sets the useJwtAccessWithScope flag. This flag will be ignored if universeDomain field
+     * is different from {@link Credentials.GOOGLE_DEFAULT_UNIVERSE}.
+     */
     @CanIgnoreReturnValue
     public Builder setUseJwtAccessWithScope(boolean useJwtAccessWithScope) {
       this.useJwtAccessWithScope = useJwtAccessWithScope;
@@ -1128,7 +1133,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     }
 
     public Builder setUniverseDomain(String universeDomain) {
-      this.universeDomain = universeDomain;
+      super.universeDomain = universeDomain;
       return this;
     }
 

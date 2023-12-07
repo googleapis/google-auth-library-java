@@ -388,7 +388,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void createdScoped_withUniverse_selfSignedJwt() throws IOException {
-    GoogleCredentials credentials = createDefaultBuilder().setUniverseDomain("foo.bar").build();
+    ServiceAccountCredentials credentials = createDefaultBuilder().setUniverseDomain("foo.bar").build();
 
     try {
       credentials.getRequestMetadata(null);
