@@ -57,6 +57,8 @@ import javax.annotation.Nullable;
 
 /**
  * AWS credentials representing a third-party identity for calling Google APIs.
+ * AWS Security credentials are either sourced by calling EC2 metadata endpoints, environment
+ * variables, or a user provided supplier method.
  *
  * <p>By default, attempts to exchange the external credential for a GCP access token.
  */

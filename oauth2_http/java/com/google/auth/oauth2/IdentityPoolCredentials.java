@@ -59,7 +59,7 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
- * Url-sourced and file-sourced external account credentials.
+ * Url-sourced, file-sourced, or user provided supplier method-sourced external account credentials.
  *
  * <p>By default, attempts to exchange the external credential for a GCP access token.
  */
