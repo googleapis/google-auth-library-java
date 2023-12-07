@@ -154,6 +154,15 @@ public final class ITWorkloadIdentityFederationTest {
     callGcs(awsCredential);
   }
 
+  /**
+   * AwsCredentials (AWS Provider): Uses the service account keys to generate a Google ID token
+   * using the iamcredentials generateIdToken API. Exchanges the OIDC ID token for AWS security keys
+   * using AWS STS AssumeRoleWithWebIdentity API. These values will be returned as a
+   * AwsSecurityCredentials object and returned by a Supplier. The Auth library can now call get()
+   * from the supplier and create a signed request to AWS GetCallerIdentity. This will be used as
+   * the external subject token to be exchanged for a GCP access token via GCP STS endpoint and then
+   * to impersonate the original service account key.
+   */
   @Test
   public void awsCredentials_withProgrammaticAuth() throws Exception {
     String idToken = generateGoogleIdToken(AWS_AUDIENCE);
@@ -189,6 +198,10 @@ public final class ITWorkloadIdentityFederationTest {
             .setRegion("us-east-2")
             .setSubjectTokenType(SubjectTokenTypes.AWS4)
             .setAudience(AWS_AUDIENCE)
+            .setServiceAccountImpersonationUrl(
+                String.format(
+                    "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken",
+                    clientEmail))
             .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
             .build();
 
@@ -235,6 +248,14 @@ public final class ITWorkloadIdentityFederationTest {
     assertTrue(minExpirationtime <= tokenExpiry && tokenExpiry <= maxExpirationTime);
   }
 
+  /**
+   * IdentityPoolCredentials (OIDC provider): Uses the service account to generate a Google ID token
+   * using the iamcredentials generateIdToken API. This will use the service account client ID as
+   * the sub field of the token. This OIDC token will be used as the external subject token to be
+   * exchanged for a GCP access token via GCP STS endpoint and then to impersonate the original
+   * service account key. Retrieves the OIDC token from a Supplier that returns the subject token
+   * when get() is called.
+   */
   @Test
   public void identityPoolCredentials_withProgrammaticAuth() throws IOException {
 
@@ -252,9 +273,10 @@ public final class ITWorkloadIdentityFederationTest {
             .setSubjectTokenSupplier(tokenSupplier)
             .setAudience(OIDC_AUDIENCE)
             .setSubjectTokenType(SubjectTokenTypes.JWT)
-            .setServiceAccountImpersonationUrl(String.format(
-                "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken",
-                clientEmail))
+            .setServiceAccountImpersonationUrl(
+                String.format(
+                    "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken",
+                    clientEmail))
             .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
             .build();
 
