@@ -333,7 +333,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * Constructor with explicit access token and refresh times.
+   * Constructor with explicit access token and refresh margins.
    *
    * <p>Deprecated, please use the builder constructor whenever possible.
    *
