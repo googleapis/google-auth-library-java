@@ -232,7 +232,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * Creates a credential with the provided quota project. Expected format is: some-domain.xyz
+   * Creates a credential with the provided quota project.
    *
    * @param quotaProject the quota project to set on the credential
    * @return credential with the provided quota project
@@ -300,7 +300,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   /**
    * Constructor with an explicit access token and quotaProjectId.
    *
-   * <p>Deprecated, please use the builder constructor whenever possible.
+   * <p>Deprecated, please use the {@link GoogleCredentials#GoogleCredentials(Builder)} constructor
+   * whenever possible.
    *
    * @param accessToken initial or temporary access token
    * @param quotaProjectId a quotaProjectId, a project id to be used for billing purposes
@@ -322,7 +323,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * Constructor with using builder All the fields comes explicitly from builder.
+   * Constructor that relies on a {@link GoogleCredential.Builder} to
+   * provide all the necessary field values for initialization.
    *
    * @param builder an instance of a builder
    */
@@ -335,7 +337,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   /**
    * Constructor with explicit access token and refresh margins.
    *
-   * <p>Deprecated, please use the builder constructor whenever possible.
+   * <p>Deprecated, please use the {@link GoogleCredentials#GoogleCredentials(Builder)}
+   * constructor whenever possible.
    *
    * @param accessToken initial or temporary access token
    */
