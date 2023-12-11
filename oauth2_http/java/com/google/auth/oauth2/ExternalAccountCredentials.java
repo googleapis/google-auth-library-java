@@ -64,33 +64,7 @@ import javax.annotation.Nullable;
  */
 public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
-  /**
-   * Enum to specify values for the subjectTokenType field in {@code ExternalAccountCredentials}.
-   */
-  public enum SubjectTokenTypes {
-    AWS4("urn:ietf:params:aws:token-type:aws4_request"),
-    JWT("urn:ietf:params:oauth:token-type:jwt"),
-    SAML2("urn:ietf:params:oauth:token-type:saml2"),
-    ID_TOKEN("urn:ietf:params:oauth:token-type:id_token");
-
-    public final String value;
-
-    private SubjectTokenTypes(String value) {
-      this.value = value;
-    }
-  }
-
   private static final long serialVersionUID = 8049126194174465023L;
-
-  /** Base credential source class. Dictates the retrieval method of the external credential. */
-  abstract static class CredentialSource implements java.io.Serializable {
-
-    private static final long serialVersionUID = 8204657811562399944L;
-
-    CredentialSource(Map<String, Object> credentialSourceMap) {
-      checkNotNull(credentialSourceMap);
-    }
-  }
 
   private static final String CLOUD_PLATFORM_SCOPE =
       "https://www.googleapis.com/auth/cloud-platform";
@@ -489,8 +463,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
         && ((String) credentialSource.get("environment_id")).startsWith("aws");
   }
 
-  private boolean isImpersonationEnabled() {
-    return this.serviceAccountImpersonationUrl != null;
+  private boolean shouldBuildImpersonatedCredential() {
+    return this.serviceAccountImpersonationUrl != null && this.impersonatedCredentials == null;
   }
 
   /**
@@ -503,7 +477,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   protected AccessToken exchangeExternalCredentialForAccessToken(
       StsTokenExchangeRequest stsTokenExchangeRequest) throws IOException {
     // Handle service account impersonation if necessary.
-    if (this.isImpersonationEnabled() && this.impersonatedCredentials == null) {
+    if (this.shouldBuildImpersonatedCredential()) {
       this.impersonatedCredentials = this.buildImpersonatedCredentials();
     }
     if (impersonatedCredentials != null) {
@@ -970,5 +944,31 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     }
 
     public abstract ExternalAccountCredentials build();
+  }
+
+  /**
+   * Enum to specify values for the subjectTokenType field in {@code ExternalAccountCredentials}.
+   */
+  public enum SubjectTokenTypes {
+    AWS4("urn:ietf:params:aws:token-type:aws4_request"),
+    JWT("urn:ietf:params:oauth:token-type:jwt"),
+    SAML2("urn:ietf:params:oauth:token-type:saml2"),
+    ID_TOKEN("urn:ietf:params:oauth:token-type:id_token");
+
+    public final String value;
+
+    private SubjectTokenTypes(String value) {
+      this.value = value;
+    }
+  }
+
+  /** Base credential source class. Dictates the retrieval method of the external credential. */
+  abstract static class CredentialSource implements java.io.Serializable {
+
+    private static final long serialVersionUID = 8204657811562399944L;
+
+    CredentialSource(Map<String, Object> credentialSourceMap) {
+      checkNotNull(credentialSourceMap);
+    }
   }
 }
