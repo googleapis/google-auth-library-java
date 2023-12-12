@@ -182,7 +182,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
   @Override
   public String getUniverseDomain() throws IOException {
-      return Credentials.GOOGLE_DEFAULT_UNIVERSE;
+    return Credentials.GOOGLE_DEFAULT_UNIVERSE;
   }
 
   /**
