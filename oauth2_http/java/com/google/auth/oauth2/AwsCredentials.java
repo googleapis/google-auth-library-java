@@ -56,7 +56,7 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
- * AWS credentials representing a third-party identity for calling Google APIs. AWS Security
+ * Credentials representing an AWS third-party identity for calling Google APIs. 
  * credentials are either sourced by calling EC2 metadata endpoints, environment variables, or a
  * user provided supplier method.
  *
