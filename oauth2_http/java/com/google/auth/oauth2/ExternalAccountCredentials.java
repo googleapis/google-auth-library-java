@@ -947,7 +947,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   }
 
   /**
-   * Enum to specify values for the subjectTokenType field in {@code ExternalAccountCredentials}.
+   * Enum specifying values for the subjectTokenType field in {@code ExternalAccountCredentials}.
    */
   public enum SubjectTokenTypes {
     AWS4("urn:ietf:params:aws:token-type:aws4_request"),
