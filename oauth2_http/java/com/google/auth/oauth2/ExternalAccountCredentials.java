@@ -36,6 +36,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
+import com.google.auth.Credentials;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
@@ -747,8 +748,14 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       this.environmentProvider = credentials.environmentProvider;
       this.workforcePoolUserProject = credentials.workforcePoolUserProject;
       this.serviceAccountImpersonationOptions = credentials.serviceAccountImpersonationOptions;
-      this.universeDomain = credentials.getUniverseDomain();
       this.metricsHandler = credentials.metricsHandler;
+      try {
+        universeDomain = credentials.getUniverseDomain();
+      }
+      catch (IOException ex) {
+        throw new RuntimeException("Unexpected exception while getting universe domain", ex);
+      }
+      this.universeDomain = universeDomain;
     }
 
     /**
