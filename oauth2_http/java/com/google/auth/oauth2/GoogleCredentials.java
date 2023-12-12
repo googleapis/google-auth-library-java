@@ -227,9 +227,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
 
     // Parse fields that are common for all the types of GoogleCredentials.
     String universeDomain = (String) json.get("universe_domain");
-    if (universeDomain != null && !universeDomain.trim().isEmpty()) {
-      credentialsBuilder.setUniverseDomain(universeDomain);
-    }
+    credentialsBuilder.setUniverseDomain(universeDomain);
 
     return credentialsBuilder.build();
   }
@@ -309,7 +307,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   protected GoogleCredentials(AccessToken accessToken, String quotaProjectId) {
     super(accessToken);
     this.quotaProjectId = quotaProjectId;
-    this.universeDomain = null;
+    this.universeDomain = Credentials.GOOGLE_DEFAULT_UNIVERSE;
   }
 
   /**
@@ -346,7 +344,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       AccessToken accessToken, Duration refreshMargin, Duration expirationMargin) {
     super(accessToken, refreshMargin, expirationMargin);
     this.quotaProjectId = null;
-    this.universeDomain = null;
+    this.universeDomain = Credentials.GOOGLE_DEFAULT_UNIVERSE;
   }
 
   /**
