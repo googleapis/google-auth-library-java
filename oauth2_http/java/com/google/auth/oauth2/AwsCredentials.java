@@ -85,7 +85,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
   @Nullable private final AwsCredentialSource awsCredentialSource;
   @Nullable private final Supplier<AwsSecurityCredentials> awsSecurityCredentialsSupplier;
   @Nullable private final String regionalCredentialVerificationUrlOverride;
-  @Nullable private final String region;
+  @Nullable private final String awsRegion;
 
   /** Internal constructor. See {@link AwsCredentials.Builder}. */
   AwsCredentials(Builder builder) {
@@ -103,16 +103,16 @@ public class AwsCredentials extends ExternalAccountCredentials {
     // credentials.
     if (builder.awsSecurityCredentialsSupplier != null) {
       this.awsSecurityCredentialsSupplier = builder.awsSecurityCredentialsSupplier;
-      if (builder.region == null) {
+      if (builder.awsRegion == null) {
         throw new IllegalArgumentException(
-            "A region must be specified when using an aws security credential supplier.");
+            "An AWS region must be specified when using an aws security credential supplier.");
       }
       this.awsCredentialSource = null;
     } else {
       this.awsCredentialSource = (AwsCredentialSource) builder.credentialSource;
       this.awsSecurityCredentialsSupplier = null;
     }
-    this.region = builder.region;
+    this.awsRegion = builder.awsRegion;
     this.regionalCredentialVerificationUrlOverride =
         builder.regionalCredentialVerificationUrlOverride;
   }
@@ -302,8 +302,8 @@ public class AwsCredentials extends ExternalAccountCredentials {
   String getAwsRegion(Map<String, Object> metadataRequestHeaders) throws IOException {
     // If user has provided a region string, return that instead of checking environment or metadata
     // server.
-    if (this.region != null) {
-      return this.region;
+    if (this.awsRegion != null) {
+      return this.awsRegion;
     }
     String region;
     if (canRetrieveRegionFromEnvironment()) {
@@ -396,11 +396,6 @@ public class AwsCredentials extends ExternalAccountCredentials {
   }
 
   @Nullable
-  public String getRegion() {
-    return this.region;
-  }
-
-  @Nullable
   public String getRegionalCredentialVerificationUrlOverride() {
     return this.regionalCredentialVerificationUrlOverride;
   }
@@ -436,7 +431,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
     private Supplier<AwsSecurityCredentials> awsSecurityCredentialsSupplier;
 
-    private String region;
+    private String awsRegion;
 
     private String regionalCredentialVerificationUrlOverride;
 
@@ -444,7 +439,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
     Builder(AwsCredentials credentials) {
       super(credentials);
-      this.region = credentials.region;
+      this.awsRegion = credentials.awsRegion;
       this.awsSecurityCredentialsSupplier = credentials.awsSecurityCredentialsSupplier;
       this.regionalCredentialVerificationUrlOverride =
           credentials.regionalCredentialVerificationUrlOverride;
@@ -468,12 +463,12 @@ public class AwsCredentials extends ExternalAccountCredentials {
      * Sets the AWS region. Required when using an AWS Security Credentials Supplier. If set, will
      * override any region obtained via environment variables or the metadata endpoint.
      *
-     * @param region the aws region to set.
+     * @param awsRegion the aws region to set.
      * @return this {@code Builder} object
      */
     @CanIgnoreReturnValue
-    public Builder setRegion(String region) {
-      this.region = region;
+    public Builder setAwsRegion(String awsRegion) {
+      this.awsRegion = awsRegion;
       return this;
     }
 

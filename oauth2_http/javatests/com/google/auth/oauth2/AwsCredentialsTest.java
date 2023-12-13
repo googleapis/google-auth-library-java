@@ -223,7 +223,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
     AwsCredentials awsCredential =
         AwsCredentials.newBuilder()
-            .setRegion("test")
+            .setAwsRegion("test")
             .setAwsSecurityCredentialsSupplier(CredentialSupplier)
             .setHttpTransportFactory(transportFactory)
             .setAudience("audience")
@@ -251,7 +251,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
     AwsCredentials awsCredential =
         AwsCredentials.newBuilder()
-            .setRegion("test")
+            .setAwsRegion("test")
             .setAwsSecurityCredentialsSupplier(CredentialSupplier)
             .setHttpTransportFactory(transportFactory)
             .setAudience("audience")
@@ -603,7 +603,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
     AwsCredentials awsCredential =
         AwsCredentials.newBuilder()
-            .setRegion("test")
+            .setAwsRegion("test")
             .setAwsSecurityCredentialsSupplier(CredentialSupplier)
             .setHttpTransportFactory(transportFactory)
             .setAudience("audience")
@@ -646,7 +646,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
     AwsCredentials awsCredential =
         AwsCredentials.newBuilder()
-            .setRegion("test")
+            .setAwsRegion("test")
             .setAwsSecurityCredentialsSupplier(awsSecurityCredentialsSupplierWithToken)
             .setHttpTransportFactory(transportFactory)
             .setAudience("audience")
@@ -691,7 +691,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
     AwsCredentials awsCredential =
         AwsCredentials.newBuilder()
-            .setRegion("test")
+            .setAwsRegion("test")
             .setAwsSecurityCredentialsSupplier(errorSupplier)
             .setHttpTransportFactory(transportFactory)
             .setAudience("audience")
@@ -1125,7 +1125,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     AwsCredentials credentials =
         AwsCredentials.newBuilder()
             .setRegionalCredentialVerificationUrlOverride("https://test.com")
-            .setRegion("region")
+            .setAwsRegion("region")
             .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
             .setAudience("audience")
             .setSubjectTokenType("subjectTokenType")
@@ -1140,7 +1140,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .setScopes(scopes)
             .build();
 
-    assertEquals("region", credentials.getRegion());
+    assertEquals("region", credentials.getAwsRegion(null));
     assertEquals("https://test.com", credentials.getRegionalCredentialVerificationUrlOverride());
     assertEquals("audience", credentials.getAudience());
     assertEquals("subjectTokenType", credentials.getSubjectTokenType());
@@ -1164,7 +1164,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
     AwsCredentials credentials =
         AwsCredentials.newBuilder()
-            .setRegion("region")
+            .setAwsRegion("region")
             .setAwsSecurityCredentialsSupplier(testSupplier)
             .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
             .setAudience("audience")
@@ -1210,7 +1210,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
       fail("Should not be able to continue without exception.");
     } catch (IllegalArgumentException exception) {
       assertEquals(
-          "A region must be specified when using an aws security credential supplier.",
+          "An AWS region must be specified when using an aws security credential supplier.",
           exception.getMessage());
     }
   }

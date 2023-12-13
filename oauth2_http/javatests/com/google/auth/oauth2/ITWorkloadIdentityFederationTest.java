@@ -195,7 +195,7 @@ public final class ITWorkloadIdentityFederationTest {
     AwsCredentials awsCredential =
         AwsCredentials.newBuilder()
             .setAwsSecurityCredentialsSupplier(credSupplier)
-            .setRegion("us-east-2")
+            .setAwsRegion("us-east-2")
             .setSubjectTokenType(SubjectTokenTypes.AWS4)
             .setAudience(AWS_AUDIENCE)
             .setServiceAccountImpersonationUrl(
