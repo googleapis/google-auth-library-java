@@ -51,7 +51,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.MissingFormatArgumentException;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -116,10 +115,11 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
       GoogleCredentials.fromStream(stream, transportFactory);
       fail("Should throw if type is unknown.");
     } catch (IOException expected) {
-      String expectedError = "Error reading credentials from stream, 'type' value "
-          + "'unsupported_credential' not recognized. Valid values are 'authorized_user', "
-          + "'service_account', 'gdch_service_account', 'external_account', "
-          + "'external_account_authorized_user', 'impersonated_service_account'.";
+      String expectedError =
+          "Error reading credentials from stream, 'type' value "
+              + "'unsupported_credential' not recognized. Valid values are 'authorized_user', "
+              + "'service_account', 'gdch_service_account', 'external_account', "
+              + "'external_account_authorized_user', 'impersonated_service_account'.";
       assertTrue(expected.getMessage().contains(expectedError));
     }
   }
@@ -138,8 +138,9 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   @Test
   public void fromStream_noType_throws() throws IOException {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
-    GenericJson json = ServiceAccountCredentialsTest
-        .writeServiceAccountJson("project_id", QUOTA_PROJECT, "universe");
+    GenericJson json =
+        ServiceAccountCredentialsTest.writeServiceAccountJson(
+            "project_id", QUOTA_PROJECT, "universe");
     json.remove("type");
     InputStream stream = TestUtils.jsonToInputStream(json);
     try {
