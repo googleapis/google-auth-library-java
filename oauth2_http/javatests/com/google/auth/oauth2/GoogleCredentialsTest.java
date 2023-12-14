@@ -33,6 +33,7 @@ package com.google.auth.oauth2;
 
 import static org.junit.Assert.*;
 
+import com.google.api.client.json.GenericJson;
 import com.google.api.client.util.Clock;
 import com.google.auth.Credentials;
 import com.google.auth.TestUtils;
@@ -50,6 +51,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.MissingFormatArgumentException;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -105,6 +107,24 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void fromStream_unknownType_throws() throws IOException {
+    MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
+    GenericJson json = new GenericJson();
+    json.put("type", "unsupported_credential");
+    InputStream stream = TestUtils.jsonToInputStream(json);
+    try {
+      GoogleCredentials.fromStream(stream, transportFactory);
+      fail("Should throw if type is unknown.");
+    } catch (IOException expected) {
+      String expectedError = "Error reading credentials from stream, 'type' value "
+          + "'unsupported_credential' not recognized. Valid values are 'authorized_user', "
+          + "'service_account', 'gdch_service_account', 'external_account', "
+          + "'external_account_authorized_user', 'impersonated_service_account'.";
+      assertTrue(expected.getMessage().contains(expectedError));
+    }
+  }
+
+  @Test
   public void fromStream_nullTransport_throws() throws IOException {
     InputStream stream = new ByteArrayInputStream("foo".getBytes());
     try {
@@ -112,6 +132,22 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
       fail("Should throw if HttpTransportFactory is null");
     } catch (NullPointerException expected) {
       // Expected
+    }
+  }
+
+  @Test
+  public void fromStream_noType_throws() throws IOException {
+    MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
+    GenericJson json = ServiceAccountCredentialsTest
+        .writeServiceAccountJson("project_id", QUOTA_PROJECT, "universe");
+    json.remove("type");
+    InputStream stream = TestUtils.jsonToInputStream(json);
+    try {
+      GoogleCredentials.fromStream(stream, transportFactory);
+      fail("Should throw if type is unknown.");
+    } catch (IOException expected) {
+      String expectedError = "Error reading credentials from stream, 'type' field not specified.";
+      assertEquals(expectedError, expected.getMessage());
     }
   }
 
@@ -363,7 +399,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_user_providesToken() throws IOException {
+  public void fromStream_userCredentials_providesToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(USER_CLIENT_ID, USER_CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
@@ -379,7 +415,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_user_defaultUniverse() throws IOException {
+  public void fromStream_userCredentials_defaultUniverse() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     InputStream userStream =
         UserCredentialsTest.writeUserStream(
@@ -391,7 +427,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_userNoClientId_throws() throws IOException {
+  public void fromStream_userCredentials_NoClientId_throws() throws IOException {
     InputStream userStream =
         UserCredentialsTest.writeUserStream(null, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
 
@@ -399,7 +435,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_userNoClientSecret_throws() throws IOException {
+  public void fromStream_userCredentials_NoClientSecret_throws() throws IOException {
     InputStream userStream =
         UserCredentialsTest.writeUserStream(USER_CLIENT_ID, null, REFRESH_TOKEN, QUOTA_PROJECT);
 
@@ -407,7 +443,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_userNoRefreshToken_throws() throws IOException {
+  public void fromStream_userCredentials_NoRefreshToken_throws() throws IOException {
     InputStream userStream =
         UserCredentialsTest.writeUserStream(
             USER_CLIENT_ID, USER_CLIENT_SECRET, null, QUOTA_PROJECT);

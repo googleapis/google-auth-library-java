@@ -57,12 +57,13 @@ public abstract class Credentials implements Serializable {
   public abstract String getAuthenticationType();
 
   /**
-   * Returns the universe domain for the credential.
+   * Gets the universe domain for the credential in a blocking manner, refreshing tokens if
+   * required.
    *
    * @return a universe domain value in the format some-domain.xyz. By default, returns the Google
    *     universe domain googleapis.com.
    * @throws IOException extending classes might have to do remote calls to determine the universe
-   *     domain. The exception should implement {@link Retryable} and {@code isRetryable()} will
+   *     domain. The exception must implement {@link Retryable} and {@code isRetryable()} will
    *     return true if the operation may be retried.
    */
   public String getUniverseDomain() throws IOException {

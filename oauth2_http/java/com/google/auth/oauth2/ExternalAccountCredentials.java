@@ -413,9 +413,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     String userProject = (String) json.get("workforce_pool_user_project");
     Map<String, Object> impersonationOptionsMap =
         (Map<String, Object>) json.get("service_account_impersonation");
-
-    GoogleCredentials baseCredential = GoogleCredentials.fromJson(json);
-    String universeDomain = baseCredential.getUniverseDomain();
+    String universeDomain = (String) json.get("universe_domain");
 
     if (impersonationOptionsMap == null) {
       impersonationOptionsMap = new HashMap<String, Object>();
@@ -434,7 +432,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
           .setClientId(clientId)
           .setClientSecret(clientSecret)
           .setServiceAccountImpersonationOptions(impersonationOptionsMap)
-          .setUniverseDomain(baseCredential.getUniverseDomain())
+          .setUniverseDomain(universeDomain)
           .build();
     } else if (isPluggableAuthCredential(credentialSourceMap)) {
       return PluggableAuthCredentials.newBuilder()
@@ -749,11 +747,10 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       this.serviceAccountImpersonationOptions = credentials.serviceAccountImpersonationOptions;
       this.metricsHandler = credentials.metricsHandler;
       try {
-        universeDomain = credentials.getUniverseDomain();
+        this.universeDomain = credentials.getUniverseDomain();
       } catch (IOException ex) {
         throw new RuntimeException("Unexpected exception while getting universe domain", ex);
       }
-      this.universeDomain = universeDomain;
     }
 
     /**
@@ -928,8 +925,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     @CanIgnoreReturnValue
     @Override
     public Builder setUniverseDomain(String universeDomain) {
-      this.universeDomain = universeDomain;
       super.setUniverseDomain(universeDomain);
+      this.universeDomain = universeDomain;
       return this;
     }
 

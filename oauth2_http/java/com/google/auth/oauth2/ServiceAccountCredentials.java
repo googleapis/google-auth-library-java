@@ -166,6 +166,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     String projectId = (String) json.get("project_id");
     String tokenServerUriStringFromCreds = (String) json.get("token_uri");
     String quotaProjectId = (String) json.get("quota_project_id");
+    String universeDomain = (String) json.get("universe_domain");
     URI tokenServerUriFromCreds = null;
     try {
       if (tokenServerUriStringFromCreds != null) {
@@ -192,10 +193,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
             .setHttpTransportFactory(transportFactory)
             .setTokenServerUri(tokenServerUriFromCreds)
             .setProjectId(projectId)
-            .setQuotaProjectId(quotaProjectId);
-
-    GoogleCredentials baseCredential = GoogleCredentials.fromJson(json);
-    builder.setUniverseDomain(baseCredential.getUniverseDomain());
+            .setQuotaProjectId(quotaProjectId)
+            .setUniverseDomain(universeDomain);
 
     return fromPkcs8(privateKeyPkcs8, builder);
   }

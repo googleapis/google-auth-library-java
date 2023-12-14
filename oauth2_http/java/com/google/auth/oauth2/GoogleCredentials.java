@@ -63,6 +63,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   static final String USER_FILE_TYPE = "authorized_user";
   static final String SERVICE_ACCOUNT_FILE_TYPE = "service_account";
   static final String GDCH_SERVICE_ACCOUNT_FILE_TYPE = "gdch_service_account";
+
   private final String universeDomain;
 
   protected final String quotaProjectId;
@@ -202,7 +203,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     throw new IOException(
         String.format(
             "Error reading credentials from stream, 'type' value '%s' not recognized."
-                + " Valid values are '%s', '%s', '%s', '%s', '%s', 's'.",
+                + " Valid values are '%s', '%s', '%s', '%s', '%s', '%s'.",
             fileType,
             USER_FILE_TYPE,
             SERVICE_ACCOUNT_FILE_TYPE,
@@ -210,26 +211,6 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
             ExternalAccountCredentials.EXTERNAL_ACCOUNT_FILE_TYPE,
             ExternalAccountAuthorizedUserCredentials.EXTERNAL_ACCOUNT_AUTHORIZED_USER_FILE_TYPE,
             ImpersonatedCredentials.IMPERSONATED_CREDENTIALS_FILE_TYPE));
-  }
-
-  /**
-   * Returns an instance of GoogleCredentials defined by JSON.
-   *
-   * <p>To be used to parse common credentials fields.
-   *
-   * @param json a map from the JSON representing the credentials.
-   * @return the credentials defined by the JSON.
-   * @throws IOException if the credential cannot be created from the JSON.
-   */
-  @VisibleForTesting
-  static GoogleCredentials fromJson(Map<String, Object> json) throws IOException {
-    Builder credentialsBuilder = GoogleCredentials.newBuilder();
-
-    // Parse fields that are common for all the types of GoogleCredentials.
-    String universeDomain = (String) json.get("universe_domain");
-    credentialsBuilder.setUniverseDomain(universeDomain);
-
-    return credentialsBuilder.build();
   }
 
   /**
@@ -315,6 +296,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    *
    * @param accessToken initial or temporary access token
    */
+  @Deprecated
   public GoogleCredentials(AccessToken accessToken) {
     this(accessToken, null);
   }
@@ -328,7 +310,12 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   protected GoogleCredentials(Builder builder) {
     super(builder.getAccessToken());
     this.quotaProjectId = builder.getQuotaProjectId();
-    this.universeDomain = builder.getUniverseDomain();
+
+    if (builder.universeDomain == null || builder.universeDomain.trim().isEmpty()) {
+      this.universeDomain = Credentials.GOOGLE_DEFAULT_UNIVERSE;
+    } else {
+      this.universeDomain = builder.getUniverseDomain();
+    }
   }
 
   /**
@@ -372,13 +359,13 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       return false;
     }
     GoogleCredentials other = (GoogleCredentials) obj;
-    return Objects.equals(this.getQuotaProjectId(), other.getQuotaProjectId())
+    return Objects.equals(this.quotaProjectId, other.quotaProjectId)
         && Objects.equals(this.universeDomain, other.universeDomain);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getQuotaProjectId(), this.universeDomain);
+    return Objects.hash(this.quotaProjectId, this.universeDomain);
   }
 
   public static Builder newBuilder() {
@@ -499,10 +486,6 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     }
 
     public String getUniverseDomain() {
-      if (this.universeDomain == null || this.universeDomain.trim().isEmpty()) {
-        return Credentials.GOOGLE_DEFAULT_UNIVERSE;
-      }
-
       return this.universeDomain;
     }
 

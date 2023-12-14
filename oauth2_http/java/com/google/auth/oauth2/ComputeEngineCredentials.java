@@ -180,11 +180,6 @@ public class ComputeEngineCredentials extends GoogleCredentials
     return scopes;
   }
 
-  @Override
-  public String getUniverseDomain() throws IOException {
-    return Credentials.GOOGLE_DEFAULT_UNIVERSE;
-  }
-
   /**
    * If scopes is specified, add "?scopes=comma-separated-list-of-scopes" to the token url.
    *
