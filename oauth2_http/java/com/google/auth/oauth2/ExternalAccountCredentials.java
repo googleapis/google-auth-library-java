@@ -727,8 +727,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     @Nullable protected ServiceAccountImpersonationOptions serviceAccountImpersonationOptions;
 
     /* The field is not being used and value not set. Superseded by the same field in the
-     {@link GoogleCredential.Builder}.
-     */
+    {@link GoogleCredential.Builder}.
+    */
     @Nullable @Deprecated protected String universeDomain;
 
     @Nullable protected ExternalAccountMetricsHandler metricsHandler;
