@@ -394,7 +394,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
    */
   @SuppressWarnings("unchecked")
   static ExternalAccountCredentials fromJson(
-      Map<String, Object> json, HttpTransportFactory transportFactory) throws IOException {
+      Map<String, Object> json, HttpTransportFactory transportFactory) {
     checkNotNull(json);
     checkNotNull(transportFactory);
 
@@ -411,9 +411,9 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     String clientSecret = (String) json.get("client_secret");
     String quotaProjectId = (String) json.get("quota_project_id");
     String userProject = (String) json.get("workforce_pool_user_project");
+    String universeDomain = (String) json.get("universe_domain");
     Map<String, Object> impersonationOptionsMap =
         (Map<String, Object>) json.get("service_account_impersonation");
-    String universeDomain = (String) json.get("universe_domain");
 
     if (impersonationOptionsMap == null) {
       impersonationOptionsMap = new HashMap<String, Object>();
@@ -725,7 +725,12 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     @Nullable protected Collection<String> scopes;
     @Nullable protected String workforcePoolUserProject;
     @Nullable protected ServiceAccountImpersonationOptions serviceAccountImpersonationOptions;
+
+    /* The field is not being used and value not set. Superseded by the same field in the
+     {@link GoogleCredential.Builder}.
+     */
     @Nullable @Deprecated protected String universeDomain;
+
     @Nullable protected ExternalAccountMetricsHandler metricsHandler;
 
     protected Builder() {}
@@ -746,11 +751,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       this.workforcePoolUserProject = credentials.workforcePoolUserProject;
       this.serviceAccountImpersonationOptions = credentials.serviceAccountImpersonationOptions;
       this.metricsHandler = credentials.metricsHandler;
-      try {
-        this.universeDomain = credentials.getUniverseDomain();
-      } catch (IOException ex) {
-        throw new RuntimeException("Unexpected exception while getting universe domain", ex);
-      }
     }
 
     /**
@@ -926,7 +926,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     @Override
     public Builder setUniverseDomain(String universeDomain) {
       super.setUniverseDomain(universeDomain);
-      this.universeDomain = universeDomain;
       return this;
     }
 
