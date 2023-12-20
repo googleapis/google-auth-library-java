@@ -70,12 +70,12 @@ integration)
       verify
     RETURN_CODE=$?
     ;;
-graalvm)
+graalvmA)
     # Run Unit and Integration Tests with Native Image
     mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Pnative-test test -pl 'oauth2_http'
     RETURN_CODE=$?
     ;;
-graalvm17)
+graalvmB)
     # Run Unit and Integration Tests with Native Image
     mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Pnative-test test -pl 'oauth2_http'
     RETURN_CODE=$?
