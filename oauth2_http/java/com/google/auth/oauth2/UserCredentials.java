@@ -319,8 +319,12 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
 
   @Override
   public int hashCode() {
+    // We include access token explicitly here for backwards compatibility.
+    // For the rest of the credentials we don't include it because Credentials are
+    // equivalent with different valid active tokens if main and parent fields are equal.
     return Objects.hash(
         super.hashCode(),
+        getAccessToken(),
         clientId,
         clientSecret,
         refreshToken,
@@ -347,8 +351,10 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     if (!(obj instanceof UserCredentials)) {
       return false;
     }
+
     UserCredentials other = (UserCredentials) obj;
     return super.equals(other)
+        && Objects.equals(this.getAccessToken(), other.getAccessToken())
         && Objects.equals(this.clientId, other.clientId)
         && Objects.equals(this.clientSecret, other.clientSecret)
         && Objects.equals(this.refreshToken, other.refreshToken)
