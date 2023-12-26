@@ -72,7 +72,9 @@ public class OAuth2Credentials extends Credentials {
   static final Duration DEFAULT_REFRESH_MARGIN = Duration.ofMinutes(6);
   private static final ImmutableMap<String, List<String>> EMPTY_EXTRA_HEADERS = ImmutableMap.of();
 
+  @VisibleForTesting
   private final Duration expirationMargin;
+  @VisibleForTesting
   private final Duration refreshMargin;
 
   // byte[] is serializable, so the lock variable can be final

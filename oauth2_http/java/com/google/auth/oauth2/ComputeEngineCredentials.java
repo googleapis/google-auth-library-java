@@ -41,6 +41,8 @@ import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
+import com.google.auth.Credentials;
+import com.google.auth.Retryable;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
@@ -79,12 +81,12 @@ public class ComputeEngineCredentials extends GoogleCredentials
     implements ServiceAccountSigner, IdTokenProvider {
 
   // Decrease timing margins on GCE.
-  // This is needed because GCE VMs maintain their own OAuth cache that expires T-5mins, attempting
+  // This is needed because GCE VMs maintain their own OAuth cache that expires T-4 mins, attempting
   // to refresh a token before then, will yield the same stale token. To enable pre-emptive
   // refreshes, the margins must be shortened. This shouldn't cause problems since the clock skew
   // on the VM and metadata proxy should be non-existent.
   static final Duration COMPUTE_EXPIRATION_MARGIN = Duration.ofMinutes(3);
-  static final Duration COMPUTE_REFRESH_MARGIN = Duration.ofMinutes(4);
+  static final Duration COMPUTE_REFRESH_MARGIN = Duration.ofMinutes(3).plusSeconds(45);
 
   private static final Logger LOGGER = Logger.getLogger(ComputeEngineCredentials.class.getName());
 
@@ -120,34 +122,31 @@ public class ComputeEngineCredentials extends GoogleCredentials
   private transient HttpTransportFactory transportFactory;
   private transient String serviceAccountEmail;
 
+  private String universeDomainFromMetadata = null;
+
   /**
-   * Constructor with overridden transport.
+   * An internal constructor
    *
-   * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *     tokens.
-   * @param scopes scope strings for the APIs to be called. May be null or an empty collection.
-   * @param defaultScopes default scope strings for the APIs to be called. May be null or an empty
-   *     collection. Default scopes are ignored if scopes are provided.
+   * @param builder A builder for {@link ComputeEngineCredentials} See {@link
+   *     ComputeEngineCredentials.Builder}
    */
-  private ComputeEngineCredentials(
-      HttpTransportFactory transportFactory,
-      Collection<String> scopes,
-      Collection<String> defaultScopes) {
-    super(/* accessToken= */ null, COMPUTE_REFRESH_MARGIN, COMPUTE_EXPIRATION_MARGIN);
+  private ComputeEngineCredentials(ComputeEngineCredentials.Builder builder) {
+    super(builder);
 
     this.transportFactory =
         firstNonNull(
-            transportFactory,
+            builder.getHttpTransportFactory(),
             getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
     // Use defaultScopes only when scopes don't exist.
-    if (scopes == null || scopes.isEmpty()) {
-      scopes = defaultScopes;
+    Collection<String> scopesToUse = builder.scopes;
+    if (scopesToUse == null || scopesToUse.isEmpty()) {
+      scopesToUse = builder.getDefaultScopes();
     }
-    if (scopes == null) {
+    if (scopesToUse == null) {
       this.scopes = ImmutableSet.<String>of();
     } else {
-      List<String> scopeList = new ArrayList<String>(scopes);
+      List<String> scopeList = new ArrayList<String>(scopesToUse);
       scopeList.removeAll(Arrays.asList("", null));
       this.scopes = ImmutableSet.<String>copyOf(scopeList);
     }
@@ -156,14 +155,21 @@ public class ComputeEngineCredentials extends GoogleCredentials
   /** Clones the compute engine account with the specified scopes. */
   @Override
   public GoogleCredentials createScoped(Collection<String> newScopes) {
-    return new ComputeEngineCredentials(this.transportFactory, newScopes, null);
+    ComputeEngineCredentials.Builder builder = ComputeEngineCredentials.newBuilder()
+        .setHttpTransportFactory(transportFactory)
+        .setScopes(newScopes);
+    return new ComputeEngineCredentials(builder);
   }
 
-  /** Clones the compute engine account with the specified scopes. */
+  /** Clones the compute engine account with the specified scopes and default scopes. */
   @Override
   public GoogleCredentials createScoped(
       Collection<String> newScopes, Collection<String> newDefaultScopes) {
-    return new ComputeEngineCredentials(this.transportFactory, newScopes, newDefaultScopes);
+    ComputeEngineCredentials.Builder builder = ComputeEngineCredentials.newBuilder()
+        .setHttpTransportFactory(transportFactory)
+        .setScopes(newScopes)
+        .setDefaultScopes(newDefaultScopes);
+    return new ComputeEngineCredentials(builder);
   }
 
   /**
@@ -172,7 +178,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
    * @return new ComputeEngineCredentials
    */
   public static ComputeEngineCredentials create() {
-    return new ComputeEngineCredentials(null, null, null);
+    ComputeEngineCredentials.Builder builder = ComputeEngineCredentials.newBuilder();
+    return new ComputeEngineCredentials(builder);
   }
 
   public final Collection<String> getScopes() {
@@ -190,6 +197,56 @@ public class ComputeEngineCredentials extends GoogleCredentials
       tokenUrl.set("scopes", Joiner.on(',').join(scopes));
     }
     return tokenUrl.toString();
+  }
+
+  /** Gets the universe domain from the GCE metadata server.
+   *
+   * <p>Returns an explicit universe domain if it was provided during credential initialization.
+   *
+   * <p>Returns the {@link Credentials#GOOGLE_DEFAULT_UNIVERSE} if universe domain endpoint
+   * is unavailable or returns an empty string.
+   *
+   * <p>Otherwise, returns universe domain from GCE metadata service.
+   *
+   * <p>Any above value is cached for the credential lifetime.
+   *
+   * @throws IOException if a call to GCE metadata service was unsuccessful. Check if exception
+   * implements the {@link Retryable} and {@code isRetryable()} will return true if the operation
+   * may be retried.
+   * @return string representing a universe domain in the format some-domain.xyz
+   */
+  @Override
+  public String getUniverseDomain() throws IOException {
+    if (!isDefaultUniverseDomain()) {
+      return super.getUniverseDomain();
+    }
+
+    if (universeDomainFromMetadata != null) {
+      return universeDomainFromMetadata;
+    }
+
+    universeDomainFromMetadata = getUniverseDomainFromMetadata();
+    return universeDomainFromMetadata;
+  }
+
+  private String getUniverseDomainFromMetadata() throws IOException {
+    HttpResponse response = getMetadataResponse(getUniverseDomainEncodedUrl());
+    int statusCode = response.getStatusCode();
+    if (statusCode == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
+      return Credentials.GOOGLE_DEFAULT_UNIVERSE;
+    }
+    if (statusCode != HttpStatusCodes.STATUS_CODE_OK) {
+      IOException cause = new IOException(String.format(
+          "Unexpected Error code %s trying to get universe domain"
+              + " from Compute Engine metadata for the default service account: %s",
+          statusCode, response.parseAsString()));
+      throw new GoogleAuthException(true, cause);
+    }
+    String responseString = response.parseAsString();
+    if (responseString.isEmpty()) {
+      return Credentials.GOOGLE_DEFAULT_UNIVERSE;
+    }
+    return responseString;
   }
 
   /** Refresh the access token by getting it from the GCE metadata server */
@@ -420,6 +477,11 @@ public class ComputeEngineCredentials extends GoogleCredentials
     return getTokenServerEncodedUrl(DefaultCredentialsProvider.DEFAULT);
   }
 
+  public static String getUniverseDomainEncodedUrl() {
+    return getMetadataServerUrl(DefaultCredentialsProvider.DEFAULT)
+        + "/computeMetadata/v1/universe/universe_domain";
+  }
+
   public static String getServiceAccountsUrl() {
     return getMetadataServerUrl(DefaultCredentialsProvider.DEFAULT)
         + "/computeMetadata/v1/instance/service-accounts/?recursive=true";
@@ -542,8 +604,12 @@ public class ComputeEngineCredentials extends GoogleCredentials
   public static class Builder extends GoogleCredentials.Builder {
     private HttpTransportFactory transportFactory;
     private Collection<String> scopes;
+    private Collection<String> defaultScopes;
 
-    protected Builder() {}
+    protected Builder() {
+      setRefreshMargin(COMPUTE_REFRESH_MARGIN);
+      setExpirationMargin(COMPUTE_EXPIRATION_MARGIN);
+    }
 
     protected Builder(ComputeEngineCredentials credentials) {
       this.transportFactory = credentials.transportFactory;
@@ -562,6 +628,18 @@ public class ComputeEngineCredentials extends GoogleCredentials
       return this;
     }
 
+    @CanIgnoreReturnValue
+    public Builder setDefaultScopes(Collection<String> defaultScopes) {
+      this.defaultScopes = defaultScopes;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setUniverseDomain(String universeDomain) {
+      this.universeDomain = universeDomain;
+      return this;
+    }
+
     public HttpTransportFactory getHttpTransportFactory() {
       return transportFactory;
     }
@@ -570,8 +648,10 @@ public class ComputeEngineCredentials extends GoogleCredentials
       return scopes;
     }
 
+    public Collection<String> getDefaultScopes() { return defaultScopes; }
+
     public ComputeEngineCredentials build() {
-      return new ComputeEngineCredentials(transportFactory, scopes, null);
+      return new ComputeEngineCredentials(this);
     }
   }
 }

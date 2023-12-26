@@ -47,6 +47,7 @@ import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.ComputeEngineCredentialsTest.MockMetadataServerTransportFactory;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -105,16 +106,6 @@ public class DefaultCredentialsProviderTest {
   private static final String QUOTA_PROJECT_FROM_ENVIRONMENT = "environment-quota-project-id";
   private static final String QUOTA_PROJECT_EXPLICIT = "explicit-quota-project-id";
   private static final String SMBIOS_PATH_LINUX = "/sys/class/dmi/id/product_name";
-
-  static class MockRequestCountingTransportFactory implements HttpTransportFactory {
-
-    MockRequestCountingTransport transport = new MockRequestCountingTransport();
-
-    @Override
-    public HttpTransport create() {
-      return transport;
-    }
-  }
 
   @Test
   public void getDefaultCredentials_noCredentials_throws() {
@@ -760,7 +751,7 @@ public class DefaultCredentialsProviderTest {
    * End of types simulating SystemProperty.environment.value() to detect App Engine.
    */
 
-  private static class MockRequestCountingTransport extends MockHttpTransport {
+  static class MockRequestCountingTransport extends MockHttpTransport {
     int requestCount = 0;
 
     MockRequestCountingTransport() {}
@@ -854,6 +845,16 @@ public class DefaultCredentialsProviderTest {
 
     void setFileSandbox(boolean fileSandbox) {
       this.fileSandbox = fileSandbox;
+    }
+  }
+
+  static class MockRequestCountingTransportFactory implements HttpTransportFactory {
+
+    MockRequestCountingTransport transport = new MockRequestCountingTransport();
+
+    @Override
+    public HttpTransport create() {
+      return transport;
     }
   }
 }

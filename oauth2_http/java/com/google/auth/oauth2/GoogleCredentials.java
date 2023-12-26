@@ -307,7 +307,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    * @param builder an instance of a builder
    */
   protected GoogleCredentials(Builder builder) {
-    super(builder.getAccessToken());
+    super(builder.getAccessToken(), builder.getRefreshMargin(), builder.getExpirationMargin());
     this.quotaProjectId = builder.getQuotaProjectId();
 
     if (builder.universeDomain == null || builder.universeDomain.trim().isEmpty()) {
