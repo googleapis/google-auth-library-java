@@ -155,9 +155,10 @@ public class ComputeEngineCredentials extends GoogleCredentials
   /** Clones the compute engine account with the specified scopes. */
   @Override
   public GoogleCredentials createScoped(Collection<String> newScopes) {
-    ComputeEngineCredentials.Builder builder = ComputeEngineCredentials.newBuilder()
-        .setHttpTransportFactory(transportFactory)
-        .setScopes(newScopes);
+    ComputeEngineCredentials.Builder builder =
+        ComputeEngineCredentials.newBuilder()
+            .setHttpTransportFactory(transportFactory)
+            .setScopes(newScopes);
     return new ComputeEngineCredentials(builder);
   }
 
@@ -165,10 +166,11 @@ public class ComputeEngineCredentials extends GoogleCredentials
   @Override
   public GoogleCredentials createScoped(
       Collection<String> newScopes, Collection<String> newDefaultScopes) {
-    ComputeEngineCredentials.Builder builder = ComputeEngineCredentials.newBuilder()
-        .setHttpTransportFactory(transportFactory)
-        .setScopes(newScopes)
-        .setDefaultScopes(newDefaultScopes);
+    ComputeEngineCredentials.Builder builder =
+        ComputeEngineCredentials.newBuilder()
+            .setHttpTransportFactory(transportFactory)
+            .setScopes(newScopes)
+            .setDefaultScopes(newDefaultScopes);
     return new ComputeEngineCredentials(builder);
   }
 
@@ -199,20 +201,21 @@ public class ComputeEngineCredentials extends GoogleCredentials
     return tokenUrl.toString();
   }
 
-  /** Gets the universe domain from the GCE metadata server.
+  /**
+   * Gets the universe domain from the GCE metadata server.
    *
    * <p>Returns an explicit universe domain if it was provided during credential initialization.
    *
-   * <p>Returns the {@link Credentials#GOOGLE_DEFAULT_UNIVERSE} if universe domain endpoint
-   * is unavailable or returns an empty string.
+   * <p>Returns the {@link Credentials#GOOGLE_DEFAULT_UNIVERSE} if universe domain endpoint is
+   * unavailable or returns an empty string.
    *
    * <p>Otherwise, returns universe domain from GCE metadata service.
    *
    * <p>Any above value is cached for the credential lifetime.
    *
    * @throws IOException if a call to GCE metadata service was unsuccessful. Check if exception
-   * implements the {@link Retryable} and {@code isRetryable()} will return true if the operation
-   * may be retried.
+   *     implements the {@link Retryable} and {@code isRetryable()} will return true if the
+   *     operation may be retried.
    * @return string representing a universe domain in the format some-domain.xyz
    */
   @Override
@@ -238,10 +241,12 @@ public class ComputeEngineCredentials extends GoogleCredentials
       return Credentials.GOOGLE_DEFAULT_UNIVERSE;
     }
     if (statusCode != HttpStatusCodes.STATUS_CODE_OK) {
-      IOException cause = new IOException(String.format(
-          "Unexpected Error code %s trying to get universe domain"
-              + " from Compute Engine metadata for the default service account: %s",
-          statusCode, response.parseAsString()));
+      IOException cause =
+          new IOException(
+              String.format(
+                  "Unexpected Error code %s trying to get universe domain"
+                      + " from Compute Engine metadata for the default service account: %s",
+                  statusCode, response.parseAsString()));
       throw new GoogleAuthException(true, cause);
     }
     String responseString = response.parseAsString();
@@ -650,7 +655,9 @@ public class ComputeEngineCredentials extends GoogleCredentials
       return scopes;
     }
 
-    public Collection<String> getDefaultScopes() { return defaultScopes; }
+    public Collection<String> getDefaultScopes() {
+      return defaultScopes;
+    }
 
     public ComputeEngineCredentials build() {
       return new ComputeEngineCredentials(this);

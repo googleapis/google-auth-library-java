@@ -205,7 +205,8 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     GoogleCredentials credentials =
         ComputeEngineCredentials.create().createScoped(null, Arrays.asList("foo"));
 
-    assertEquals(ComputeEngineCredentials.COMPUTE_EXPIRATION_MARGIN, credentials.getExpirationMargin());
+    assertEquals(
+        ComputeEngineCredentials.COMPUTE_EXPIRATION_MARGIN, credentials.getExpirationMargin());
     assertEquals(ComputeEngineCredentials.COMPUTE_REFRESH_MARGIN, credentials.getRefreshMargin());
   }
 
@@ -661,7 +662,8 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void getUniverseDomain_explicitSet_NoMdsCall() throws IOException {
-    MockRequestCountingTransportFactory transportFactory = new MockRequestCountingTransportFactory();
+    MockRequestCountingTransportFactory transportFactory =
+        new MockRequestCountingTransportFactory();
 
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder()
