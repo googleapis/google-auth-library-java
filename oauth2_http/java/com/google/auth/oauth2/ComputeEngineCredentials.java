@@ -221,12 +221,14 @@ public class ComputeEngineCredentials extends GoogleCredentials
       return super.getUniverseDomain();
     }
 
-    if (universeDomainFromMetadata != null) {
+    synchronized (this) {
+      if (universeDomainFromMetadata != null) {
+        return universeDomainFromMetadata;
+      }
+
+      universeDomainFromMetadata = getUniverseDomainFromMetadata();
       return universeDomainFromMetadata;
     }
-
-    universeDomainFromMetadata = getUniverseDomainFromMetadata();
-    return universeDomainFromMetadata;
   }
 
   private String getUniverseDomainFromMetadata() throws IOException {
