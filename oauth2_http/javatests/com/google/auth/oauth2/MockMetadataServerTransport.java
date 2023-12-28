@@ -39,17 +39,13 @@ import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.common.io.BaseEncoding;
-import com.google.common.util.concurrent.Futures;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
-import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.Future;
 
 /** Transport that simulates the GCE metadata server for access tokens. */
 public class MockMetadataServerTransport extends MockHttpTransport {
@@ -124,9 +120,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
         String signature = signContents.toPrettyString();
 
-        return new MockLowLevelHttpResponse()
-            .setContentType(Json.MEDIA_TYPE)
-            .setContent(signature);
+        return new MockLowLevelHttpResponse().setContentType(Json.MEDIA_TYPE).setContent(signature);
       }
     };
   }
