@@ -235,7 +235,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
   }
 
   private String getUniverseDomainFromMetadata() throws IOException {
-    HttpResponse response = getMetadataResponse(getUniverseDomainEncodedUrl());
+    HttpResponse response = getMetadataResponse(getUniverseDomainUrl());
     int statusCode = response.getStatusCode();
     if (statusCode == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
       return Credentials.GOOGLE_DEFAULT_UNIVERSE;
@@ -484,7 +484,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
     return getTokenServerEncodedUrl(DefaultCredentialsProvider.DEFAULT);
   }
 
-  public static String getUniverseDomainEncodedUrl() {
+  public static String getUniverseDomainUrl() {
     return getMetadataServerUrl(DefaultCredentialsProvider.DEFAULT)
         + "/computeMetadata/v1/universe/universe_domain";
   }

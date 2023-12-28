@@ -227,7 +227,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setAccessToken(accessToken);
-    transportFactory.transport.setTokenRequestStatusCode(HttpStatusCodes.STATUS_CODE_NOT_FOUND);
+    transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_NOT_FOUND);
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
     try {
@@ -246,7 +246,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setAccessToken(accessToken);
-    transportFactory.transport.setTokenRequestStatusCode(HttpStatusCodes.STATUS_CODE_SERVER_ERROR);
+    transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_SERVER_ERROR);
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
     try {
@@ -663,6 +663,32 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void getUniverseDomain_fromMetadata_404_default() throws IOException {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+
+    transportFactory.transport =
+        new MockMetadataServerTransport() {
+          @Override
+          public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+            return new MockLowLevelHttpRequest(url) {
+              @Override
+              public LowLevelHttpResponse execute() throws IOException {
+                return new MockLowLevelHttpResponse()
+                    .setStatusCode(HttpStatusCodes.STATUS_CODE_NOT_FOUND)
+                    .setContent("some content");
+              }
+            };
+          }
+        };
+
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+    String universeDomain = credentials.getUniverseDomain();
+    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, universeDomain);
+  }
+
+  @Test
   public void getUniverseDomain_explicitSet_NoMdsCall() throws IOException {
     MockRequestCountingTransportFactory transportFactory =
         new MockRequestCountingTransportFactory();
@@ -676,6 +702,29 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     String universeDomain = credentials.getUniverseDomain();
     assertEquals("explicit.universe", universeDomain);
     assertEquals(0, transportFactory.transport.getRequestCount());
+  }
+
+  @Test
+  public void getUniverseDomain_fromMetadata_non404error_throws() throws IOException {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    MockMetadataServerTransport transport = transportFactory.transport;
+
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+    for (int status = 400; status < 600; status++) {
+      // 404 should not throw and tested separately
+      if (status == 404) {
+        continue;
+      }
+      try {
+        transportFactory.transport.setRequestStatusCode(status);
+        credentials.getUniverseDomain();
+        fail("Should not be able to use credential without exception.");
+      } catch (GoogleAuthException ex) {
+        assertTrue(ex.isRetryable());
+      }
+    }
   }
 
   @Test
