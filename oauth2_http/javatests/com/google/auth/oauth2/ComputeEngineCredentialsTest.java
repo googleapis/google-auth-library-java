@@ -284,19 +284,21 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     assertFalse(credentials.equals(otherCredentials));
     assertFalse(otherCredentials.equals(credentials));
   }
-
+  
   @Test
   public void toString_containsFields() throws IOException {
     MockMetadataServerTransportFactory serverTransportFactory =
         new MockMetadataServerTransportFactory();
     String expectedToString =
         String.format(
-            "ComputeEngineCredentials{transportFactoryClassName=%s}",
-            MockMetadataServerTransportFactory.class.getName());
-    ComputeEngineCredentials credentials =
+            "ComputeEngineCredentials{universeDomain=%s, transportFactoryClassName=%s, scopes=%s}",
+            "googleapis.com", MockMetadataServerTransportFactory.class.getName(), "[some scope]");
+    GoogleCredentials credentials =
         ComputeEngineCredentials.newBuilder()
             .setHttpTransportFactory(serverTransportFactory)
+            .setQuotaProjectId("some-project")
             .build();
+    credentials = credentials.createScoped("some scope");
     assertEquals(expectedToString, credentials.toString());
   }
 

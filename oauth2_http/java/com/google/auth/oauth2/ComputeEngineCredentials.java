@@ -47,7 +47,7 @@ import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.MoreObjects;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.BufferedReader;
@@ -505,10 +505,13 @@ public class ComputeEngineCredentials extends GoogleCredentials
   }
 
   @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("transportFactoryClassName", transportFactoryClassName)
-        .toString();
+  protected ToStringHelper toStringHelper() {
+    synchronized (this) {
+      return super.toStringHelper()
+          .add("transportFactoryClassName", transportFactoryClassName)
+          .add("scopes", scopes)
+          .add("universeDomainFromMetadata", universeDomainFromMetadata);
+    }
   }
 
   @Override
@@ -518,7 +521,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
     }
     ComputeEngineCredentials other = (ComputeEngineCredentials) obj;
     return Objects.equals(this.transportFactoryClassName, other.transportFactoryClassName)
-        && Objects.equals(this.scopes, other.scopes);
+        && Objects.equals(this.scopes, other.scopes)
+        && Objects.equals(this.universeDomainFromMetadata, other.universeDomainFromMetadata);
   }
 
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
