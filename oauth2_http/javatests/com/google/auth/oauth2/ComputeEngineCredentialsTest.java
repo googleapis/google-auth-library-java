@@ -284,7 +284,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     assertFalse(credentials.equals(otherCredentials));
     assertFalse(otherCredentials.equals(credentials));
   }
-  
+
   @Test
   public void toString_containsFields() throws IOException {
     MockMetadataServerTransportFactory serverTransportFactory =
