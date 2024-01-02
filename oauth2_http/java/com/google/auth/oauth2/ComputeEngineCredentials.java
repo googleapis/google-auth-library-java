@@ -205,8 +205,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
    *
    * <p>Returns an explicit universe domain if it was provided during credential initialization.
    *
-   * <p>Returns the {@link Credentials#GOOGLE_DEFAULT_UNIVERSE} if universe domain endpoint is
-   * not found (404) or returns an empty string.
+   * <p>Returns the {@link Credentials#GOOGLE_DEFAULT_UNIVERSE} if universe domain endpoint is not
+   * found (404) or returns an empty string.
    *
    * <p>Otherwise, returns universe domain from GCE metadata service.
    *
