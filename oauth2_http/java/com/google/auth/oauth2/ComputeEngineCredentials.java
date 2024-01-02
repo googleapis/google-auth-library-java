@@ -180,8 +180,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
    * @return new ComputeEngineCredentials
    */
   public static ComputeEngineCredentials create() {
-    ComputeEngineCredentials.Builder builder = ComputeEngineCredentials.newBuilder();
-    return new ComputeEngineCredentials(builder);
+    return new ComputeEngineCredentials(ComputeEngineCredentials.newBuilder());
   }
 
   public final Collection<String> getScopes() {
@@ -207,7 +206,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
    * <p>Returns an explicit universe domain if it was provided during credential initialization.
    *
    * <p>Returns the {@link Credentials#GOOGLE_DEFAULT_UNIVERSE} if universe domain endpoint is
-   * unavailable or returns an empty string.
+   * not found (404) or returns an empty string.
    *
    * <p>Otherwise, returns universe domain from GCE metadata service.
    *
@@ -225,13 +224,16 @@ public class ComputeEngineCredentials extends GoogleCredentials
     }
 
     synchronized (this) {
-      if (universeDomainFromMetadata != null) {
-        return universeDomainFromMetadata;
+      if (this.universeDomainFromMetadata != null) {
+        return this.universeDomainFromMetadata;
       }
-
-      universeDomainFromMetadata = getUniverseDomainFromMetadata();
-      return universeDomainFromMetadata;
     }
+
+    String universeDomainFromMetadata = getUniverseDomainFromMetadata();
+    synchronized (this) {
+      this.universeDomainFromMetadata = universeDomainFromMetadata;
+    }
+    return universeDomainFromMetadata;
   }
 
   private String getUniverseDomainFromMetadata() throws IOException {
