@@ -38,7 +38,6 @@ import com.google.api.client.util.Clock;
 import com.google.auth.Credentials;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
-import com.google.auth.oauth2.ComputeEngineCredentialsTest.MockMetadataServerTransportFactory;
 import com.google.auth.oauth2.ExternalAccountAuthorizedUserCredentialsTest.MockExternalAccountAuthorizedUserCredentialsTransportFactory;
 import com.google.auth.oauth2.IdentityPoolCredentialsTest.MockExternalAccountCredentialsTransportFactory;
 import com.google.auth.oauth2.ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory;
@@ -778,22 +777,16 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
             "GoogleCredentials{quotaProjectId=%s, universeDomain=%s, isExplicitUniverseDomain=%s}",
             "some-project", "googleapis.com", false, "[some scope]");
     GoogleCredentials credentials =
-        GoogleCredentials.newBuilder()
-            .setQuotaProjectId("some-project")
-            .build();
+        GoogleCredentials.newBuilder().setQuotaProjectId("some-project").build();
     assertEquals(expectedToString, credentials.toString());
   }
 
   @Test
   public void hashCode_equals() throws IOException {
     GoogleCredentials credentials =
-        GoogleCredentials.newBuilder()
-            .setUniverseDomain("some-domain")
-            .build();
+        GoogleCredentials.newBuilder().setUniverseDomain("some-domain").build();
     GoogleCredentials otherCredentials =
-        GoogleCredentials.newBuilder()
-            .setUniverseDomain("some-domain")
-            .build();
+        GoogleCredentials.newBuilder().setUniverseDomain("some-domain").build();
     assertEquals(credentials.hashCode(), otherCredentials.hashCode());
   }
 

@@ -197,8 +197,11 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     ComputeEngineCredentials scopedCredentials =
         (ComputeEngineCredentials) credentials.createScoped(Arrays.asList("foo"));
 
-    assertEquals(ComputeEngineCredentials.COMPUTE_EXPIRATION_MARGIN, scopedCredentials.getExpirationMargin());
-    assertEquals(ComputeEngineCredentials.COMPUTE_REFRESH_MARGIN, scopedCredentials.getRefreshMargin());
+    assertEquals(
+        ComputeEngineCredentials.COMPUTE_EXPIRATION_MARGIN,
+        scopedCredentials.getExpirationMargin());
+    assertEquals(
+        ComputeEngineCredentials.COMPUTE_REFRESH_MARGIN, scopedCredentials.getRefreshMargin());
   }
 
   @Test
@@ -328,7 +331,11 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     String expectedToString =
         String.format(
             "ComputeEngineCredentials{quotaProjectId=%s, universeDomain=%s, isExplicitUniverseDomain=%s, transportFactoryClassName=%s, scopes=%s}",
-            "some-project", "some-domain", true, MockMetadataServerTransportFactory.class.getName(), "[some scope]");
+            "some-project",
+            "some-domain",
+            true,
+            MockMetadataServerTransportFactory.class.getName(),
+            "[some scope]");
     GoogleCredentials credentials =
         ComputeEngineCredentials.newBuilder()
             .setHttpTransportFactory(serverTransportFactory)

@@ -79,9 +79,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    * @return the credentials instance
    */
   public static GoogleCredentials create(AccessToken accessToken) {
-    return GoogleCredentials.newBuilder()
-        .setAccessToken(accessToken)
-        .build();
+    return GoogleCredentials.newBuilder().setAccessToken(accessToken).build();
   }
 
   /**
@@ -305,9 +303,10 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    */
   @Deprecated
   protected GoogleCredentials(AccessToken accessToken, String quotaProjectId) {
-    this(GoogleCredentials.newBuilder()
-        .setAccessToken(accessToken)
-        .setQuotaProjectId(quotaProjectId));
+    this(
+        GoogleCredentials.newBuilder()
+            .setAccessToken(accessToken)
+            .setQuotaProjectId(quotaProjectId));
   }
 
   /**
@@ -350,10 +349,11 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   @Deprecated
   protected GoogleCredentials(
       AccessToken accessToken, Duration refreshMargin, Duration expirationMargin) {
-    this(GoogleCredentials.newBuilder()
-        .setAccessToken(accessToken)
-        .setRefreshMargin(refreshMargin)
-        .setExpirationMargin(expirationMargin));
+    this(
+        GoogleCredentials.newBuilder()
+            .setAccessToken(accessToken)
+            .setRefreshMargin(refreshMargin)
+            .setExpirationMargin(expirationMargin));
   }
 
   /**

@@ -156,9 +156,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
   @Override
   public GoogleCredentials createScoped(Collection<String> newScopes) {
     ComputeEngineCredentials.Builder builder =
-        this.toBuilder()
-            .setHttpTransportFactory(transportFactory)
-            .setScopes(newScopes);
+        this.toBuilder().setHttpTransportFactory(transportFactory).setScopes(newScopes);
     return new ComputeEngineCredentials(builder);
   }
 
