@@ -60,6 +60,7 @@ import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -359,6 +360,19 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
             .setHttpTransportFactory(serverTransportFactory)
             .build();
     assertEquals(credentials.hashCode(), otherCredentials.hashCode());
+  }
+
+  @Test
+  public void toBuilder() {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder()
+            .setHttpTransportFactory(new MockMetadataServerTransportFactory())
+            .setQuotaProjectId("quota-project")
+            .build();
+
+    ComputeEngineCredentials secondCredentials = credentials.toBuilder().build();
+
+    assertEquals(credentials, secondCredentials);
   }
 
   @Test

@@ -481,7 +481,9 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     protected Builder(GoogleCredentials credentials) {
       super(credentials);
       this.quotaProjectId = credentials.quotaProjectId;
-      this.universeDomain = credentials.universeDomain;
+      if (credentials.isExplicitUniverseDomain) {
+        this.universeDomain = credentials.universeDomain;
+      }
     }
 
     protected Builder(GoogleCredentials.Builder builder) {

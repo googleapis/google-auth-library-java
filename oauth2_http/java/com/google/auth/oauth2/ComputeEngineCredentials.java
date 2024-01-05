@@ -657,6 +657,12 @@ public class ComputeEngineCredentials extends GoogleCredentials
       return this;
     }
 
+    @CanIgnoreReturnValue
+    public Builder setQuotaProjectId(String quotaProjectId) {
+      super.quotaProjectId = quotaProjectId;
+      return this;
+    }
+
     public HttpTransportFactory getHttpTransportFactory() {
       return transportFactory;
     }
