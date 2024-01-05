@@ -156,7 +156,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
   @Override
   public GoogleCredentials createScoped(Collection<String> newScopes) {
     ComputeEngineCredentials.Builder builder =
-        ComputeEngineCredentials.newBuilder()
+        this.toBuilder()
             .setHttpTransportFactory(transportFactory)
             .setScopes(newScopes);
     return new ComputeEngineCredentials(builder);
@@ -219,7 +219,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
    */
   @Override
   public String getUniverseDomain() throws IOException {
-    if (!isDefaultUniverseDomain()) {
+    if (isExplicitUniverseDomain()) {
       return super.getUniverseDomain();
     }
 
@@ -252,6 +252,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
       throw new GoogleAuthException(true, cause);
     }
     String responseString = response.parseAsString();
+
+    /* Earlier versions of MDS that supports universe_domain return empty string instead of GDU. */
     if (responseString.isEmpty()) {
       return Credentials.GOOGLE_DEFAULT_UNIVERSE;
     }
@@ -521,6 +523,9 @@ public class ComputeEngineCredentials extends GoogleCredentials
     if (!(obj instanceof ComputeEngineCredentials)) {
       return false;
     }
+    if (!super.equals(obj)) {
+      return false;
+    }
     ComputeEngineCredentials other = (ComputeEngineCredentials) obj;
     return Objects.equals(this.transportFactoryClassName, other.transportFactoryClassName)
         && Objects.equals(this.scopes, other.scopes)
@@ -625,6 +630,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
     }
 
     protected Builder(ComputeEngineCredentials credentials) {
+      super(credentials);
       this.transportFactory = credentials.transportFactory;
       this.scopes = credentials.scopes;
     }

@@ -37,6 +37,7 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.Credentials;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
@@ -64,6 +65,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   static final String GDCH_SERVICE_ACCOUNT_FILE_TYPE = "gdch_service_account";
 
   private final String universeDomain;
+  private final boolean isExplicitUniverseDomain;
 
   protected final String quotaProjectId;
 
@@ -79,7 +81,20 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   public static GoogleCredentials create(AccessToken accessToken) {
     return GoogleCredentials.newBuilder()
         .setAccessToken(accessToken)
-        .setUniverseDomain(Credentials.GOOGLE_DEFAULT_UNIVERSE)
+        .build();
+  }
+
+  /**
+   * Returns the credentials instance from the given access token and universe domain.
+   *
+   * @param universeDomain the universe domain
+   * @param accessToken the access token
+   * @return the credentials instance
+   */
+  public static GoogleCredentials create(String universeDomain, AccessToken accessToken) {
+    return GoogleCredentials.newBuilder()
+        .setAccessToken(accessToken)
+        .setUniverseDomain(universeDomain)
         .build();
   }
 
@@ -233,6 +248,11 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     return this.universeDomain;
   }
 
+  @VisibleForTesting
+  protected boolean isExplicitUniverseDomain() {
+    return this.isExplicitUniverseDomain;
+  }
+
   /**
    * Checks if universe domain equals to {@link Credentials#GOOGLE_DEFAULT_UNIVERSE}.
    *
@@ -285,9 +305,9 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    */
   @Deprecated
   protected GoogleCredentials(AccessToken accessToken, String quotaProjectId) {
-    super(accessToken);
-    this.quotaProjectId = quotaProjectId;
-    this.universeDomain = Credentials.GOOGLE_DEFAULT_UNIVERSE;
+    this(GoogleCredentials.newBuilder()
+        .setAccessToken(accessToken)
+        .setQuotaProjectId(quotaProjectId));
   }
 
   /**
@@ -312,8 +332,10 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
 
     if (builder.universeDomain == null || builder.universeDomain.trim().isEmpty()) {
       this.universeDomain = Credentials.GOOGLE_DEFAULT_UNIVERSE;
+      this.isExplicitUniverseDomain = false;
     } else {
       this.universeDomain = builder.getUniverseDomain();
+      this.isExplicitUniverseDomain = true;
     }
   }
 
@@ -328,9 +350,10 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   @Deprecated
   protected GoogleCredentials(
       AccessToken accessToken, Duration refreshMargin, Duration expirationMargin) {
-    super(accessToken, refreshMargin, expirationMargin);
-    this.quotaProjectId = null;
-    this.universeDomain = Credentials.GOOGLE_DEFAULT_UNIVERSE;
+    this(GoogleCredentials.newBuilder()
+        .setAccessToken(accessToken)
+        .setRefreshMargin(refreshMargin)
+        .setExpirationMargin(expirationMargin));
   }
 
   /**
@@ -344,7 +367,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     return MoreObjects.toStringHelper(this)
         .omitNullValues()
         .add("quotaProjectId", this.quotaProjectId)
-        .add("universeDomain", this.universeDomain);
+        .add("universeDomain", this.universeDomain)
+        .add("isExplicitUniverseDomain", this.isExplicitUniverseDomain);
   }
 
   @Override
@@ -359,12 +383,13 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     }
     GoogleCredentials other = (GoogleCredentials) obj;
     return Objects.equals(this.quotaProjectId, other.quotaProjectId)
-        && Objects.equals(this.universeDomain, other.universeDomain);
+        && Objects.equals(this.universeDomain, other.universeDomain)
+        && Objects.equals(this.isExplicitUniverseDomain, other.isExplicitUniverseDomain);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(this.quotaProjectId, this.universeDomain);
+    return Objects.hash(this.quotaProjectId, this.universeDomain, this.isExplicitUniverseDomain);
   }
 
   public static Builder newBuilder() {
@@ -454,7 +479,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     protected Builder() {}
 
     protected Builder(GoogleCredentials credentials) {
-      setAccessToken(credentials.getAccessToken());
+      super(credentials);
       this.quotaProjectId = credentials.quotaProjectId;
       this.universeDomain = credentials.universeDomain;
     }
@@ -492,6 +517,18 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     @CanIgnoreReturnValue
     public Builder setAccessToken(AccessToken token) {
       super.setAccessToken(token);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setExpirationMargin(Duration expirationMargin) {
+      super.setExpirationMargin(expirationMargin);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setRefreshMargin(Duration refreshMargin) {
+      super.setRefreshMargin(refreshMargin);
       return this;
     }
   }
