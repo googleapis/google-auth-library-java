@@ -249,9 +249,10 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   /**
    * Gets the flag indicating whether universeDomain was explicitly set by the developer.
    *
-   * If subclass has requirements to give priority to developer-set universeDomain, this property
+   * <p>If subclass has requirements to give priority to developer-set universeDomain, this property
    * must be used to check if the universeDomain value was provided by the user. It could be a
    * default otherwise.
+   *
    * @return true if universeDomain value was provided by the developer, false otherwise
    */
   @VisibleForTesting
@@ -358,10 +359,11 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   protected GoogleCredentials(
       AccessToken accessToken, Duration refreshMargin, Duration expirationMargin) {
     this(
-        (Builder) GoogleCredentials.newBuilder()
-            .setAccessToken(accessToken)
-            .setRefreshMargin(refreshMargin)
-            .setExpirationMargin(expirationMargin));
+        (Builder)
+            GoogleCredentials.newBuilder()
+                .setAccessToken(accessToken)
+                .setRefreshMargin(refreshMargin)
+                .setExpirationMargin(expirationMargin));
   }
 
   /**
