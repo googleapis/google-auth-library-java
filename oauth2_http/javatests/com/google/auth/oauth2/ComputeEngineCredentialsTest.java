@@ -49,9 +49,11 @@ import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.ArrayMap;
 import com.google.api.client.util.Clock;
+import com.google.auth.Credentials;
 import com.google.auth.ServiceAccountSigner.SigningException;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.oauth2.DefaultCredentialsProviderTest.MockRequestCountingTransportFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayDeque;
@@ -110,18 +112,8 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
           + "sDQogICJpc3MiOiAiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwNCiAgInN1YiI6ICIxMTIxNzkwNjI3MjA"
           + "zOTEzMDU4ODUiDQp9.redacted";
 
-  static class MockMetadataServerTransportFactory implements HttpTransportFactory {
-
-    MockMetadataServerTransport transport = new MockMetadataServerTransport();
-
-    @Override
-    public HttpTransport create() {
-      return transport;
-    }
-  }
-
   @Test
-  public void createTokenUrlWithScopes_null_scopes() {
+  public void buildTokenUrlWithScopes_null_scopes() {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setScopes(null).build();
     Collection<String> scopes = credentials.getScopes();
@@ -132,7 +124,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void createTokenUrlWithScopes_empty_scopes() {
+  public void buildTokenUrlWithScopes_empty_scopes() {
     ComputeEngineCredentials.Builder builder =
         ComputeEngineCredentials.newBuilder().setScopes(Collections.<String>emptyList());
     ComputeEngineCredentials credentials = builder.build();
@@ -145,7 +137,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void createTokenUrlWithScopes_single_scope() {
+  public void buildTokenUrlWithScopes_single_scope() {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setScopes(Arrays.asList("foo")).build();
     String tokenUrlWithScopes = credentials.createTokenUrlWithScopes();
@@ -157,7 +149,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void createTokenUrlWithScopes_multiple_scopes() {
+  public void buildTokenUrlWithScopes_multiple_scopes() {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder()
             .setScopes(Arrays.asList(null, "foo", "", "bar"))
@@ -172,7 +164,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void createTokenUrlWithScopes_defaultScopes() {
+  public void buildTokenUrlWithScopes_defaultScopes() {
     ComputeEngineCredentials credentials = ComputeEngineCredentials.newBuilder().build();
     credentials =
         (ComputeEngineCredentials)
@@ -187,15 +179,43 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void createScoped() {
+  public void buildScoped_scopesPresent() throws IOException {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setScopes(null).build();
-    ComputeEngineCredentials credentialsWithScopes =
+    ComputeEngineCredentials scopedCredentials =
         (ComputeEngineCredentials) credentials.createScoped(Arrays.asList("foo"));
-    Collection<String> scopes = credentialsWithScopes.getScopes();
+    Collection<String> scopes = scopedCredentials.getScopes();
 
     assertEquals(1, scopes.size());
     assertEquals("foo", scopes.toArray()[0]);
+  }
+
+  @Test
+  public void buildScoped_correctMargins() throws IOException {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setScopes(null).build();
+    ComputeEngineCredentials scopedCredentials =
+        (ComputeEngineCredentials) credentials.createScoped(Arrays.asList("foo"));
+
+    assertEquals(
+        ComputeEngineCredentials.COMPUTE_EXPIRATION_MARGIN,
+        scopedCredentials.getExpirationMargin());
+    assertEquals(
+        ComputeEngineCredentials.COMPUTE_REFRESH_MARGIN, scopedCredentials.getRefreshMargin());
+  }
+
+  @Test
+  public void buildScoped_explicitUniverse() throws IOException {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder()
+            .setScopes(null)
+            .setUniverseDomain("some-universe")
+            .build();
+    ComputeEngineCredentials scopedCredentials =
+        (ComputeEngineCredentials) credentials.createScoped(Arrays.asList("foo"));
+
+    assertEquals("some-universe", scopedCredentials.getUniverseDomain());
+    assertEquals(true, scopedCredentials.isExplicitUniverseDomain());
   }
 
   @Test
@@ -206,6 +226,16 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
     assertEquals(1, scopes.size());
     assertEquals("foo", scopes.toArray()[0]);
+  }
+
+  @Test
+  public void create_scoped_correctMargins() {
+    GoogleCredentials credentials =
+        ComputeEngineCredentials.create().createScoped(null, Arrays.asList("foo"));
+
+    assertEquals(
+        ComputeEngineCredentials.COMPUTE_EXPIRATION_MARGIN, credentials.getExpirationMargin());
+    assertEquals(ComputeEngineCredentials.COMPUTE_REFRESH_MARGIN, credentials.getRefreshMargin());
   }
 
   @Test
@@ -225,7 +255,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setAccessToken(accessToken);
-    transportFactory.transport.setTokenRequestStatusCode(HttpStatusCodes.STATUS_CODE_NOT_FOUND);
+    transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_NOT_FOUND);
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
     try {
@@ -244,7 +274,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setAccessToken(accessToken);
-    transportFactory.transport.setTokenRequestStatusCode(HttpStatusCodes.STATUS_CODE_SERVER_ERROR);
+    transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_SERVER_ERROR);
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
     try {
@@ -260,12 +290,23 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   @Test
   public void equals_true() throws IOException {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-    ComputeEngineCredentials credentials =
-        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+    ComputeEngineCredentials explicitUniverseCredentials =
+        ComputeEngineCredentials.newBuilder()
+            .setUniverseDomain(Credentials.GOOGLE_DEFAULT_UNIVERSE)
+            .setHttpTransportFactory(transportFactory)
+            .build();
     ComputeEngineCredentials otherCredentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
-    assertTrue(credentials.equals(otherCredentials));
-    assertTrue(otherCredentials.equals(credentials));
+    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, otherCredentials.getUniverseDomain());
+    assertFalse(explicitUniverseCredentials.equals(otherCredentials));
+    assertFalse(otherCredentials.equals(explicitUniverseCredentials));
+    ComputeEngineCredentials otherExplicitUniverseCredentials =
+        ComputeEngineCredentials.newBuilder()
+            .setUniverseDomain(Credentials.GOOGLE_DEFAULT_UNIVERSE)
+            .setHttpTransportFactory(transportFactory)
+            .build();
+    assertTrue(explicitUniverseCredentials.equals(otherExplicitUniverseCredentials));
+    assertTrue(otherExplicitUniverseCredentials.equals(explicitUniverseCredentials));
   }
 
   @Test
@@ -284,17 +325,24 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void toString_containsFields() throws IOException {
+  public void toString_explicit_containsFields() throws IOException {
     MockMetadataServerTransportFactory serverTransportFactory =
         new MockMetadataServerTransportFactory();
     String expectedToString =
         String.format(
-            "ComputeEngineCredentials{transportFactoryClassName=%s}",
-            MockMetadataServerTransportFactory.class.getName());
-    ComputeEngineCredentials credentials =
+            "ComputeEngineCredentials{quotaProjectId=%s, universeDomain=%s, isExplicitUniverseDomain=%s, transportFactoryClassName=%s, scopes=%s}",
+            "some-project",
+            "some-domain",
+            true,
+            MockMetadataServerTransportFactory.class.getName(),
+            "[some scope]");
+    GoogleCredentials credentials =
         ComputeEngineCredentials.newBuilder()
             .setHttpTransportFactory(serverTransportFactory)
+            .setQuotaProjectId("some-project")
+            .setUniverseDomain("some-domain")
             .build();
+    credentials = credentials.createScoped("some scope");
     assertEquals(expectedToString, credentials.toString());
   }
 
@@ -311,6 +359,19 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
             .setHttpTransportFactory(serverTransportFactory)
             .build();
     assertEquals(credentials.hashCode(), otherCredentials.hashCode());
+  }
+
+  @Test
+  public void toBuilder() {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder()
+            .setHttpTransportFactory(new MockMetadataServerTransportFactory())
+            .setQuotaProjectId("quota-project")
+            .build();
+
+    ComputeEngineCredentials secondCredentials = credentials.toBuilder().build();
+
+    assertEquals(credentials, secondCredentials);
   }
 
   @Test
@@ -607,6 +668,144 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void getUniverseDomain_fromMetadata() throws IOException {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+
+    transportFactory.transport =
+        new MockMetadataServerTransport() {
+          @Override
+          public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+            return new MockLowLevelHttpRequest(url) {
+              @Override
+              public LowLevelHttpResponse execute() throws IOException {
+                return new MockLowLevelHttpResponse()
+                    .setStatusCode(HttpStatusCodes.STATUS_CODE_OK)
+                    .setContent("some-universe.xyz");
+              }
+            };
+          }
+        };
+
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+    String universeDomain = credentials.getUniverseDomain();
+    assertEquals("some-universe.xyz", universeDomain);
+    assertEquals(false, credentials.isExplicitUniverseDomain());
+  }
+
+  @Test
+  public void getUniverseDomain_fromMetadata_emptyBecomesDefault() throws IOException {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+
+    transportFactory.transport =
+        new MockMetadataServerTransport() {
+          @Override
+          public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+            return new MockLowLevelHttpRequest(url) {
+              @Override
+              public LowLevelHttpResponse execute() throws IOException {
+                return new MockLowLevelHttpResponse()
+                    .setStatusCode(HttpStatusCodes.STATUS_CODE_OK)
+                    .setContent("");
+              }
+            };
+          }
+        };
+
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+    String universeDomain = credentials.getUniverseDomain();
+    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, universeDomain);
+    assertEquals(false, credentials.isExplicitUniverseDomain());
+  }
+
+  @Test
+  public void getUniverseDomain_fromMetadata_404_default() throws IOException {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+
+    transportFactory.transport =
+        new MockMetadataServerTransport() {
+          @Override
+          public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+            return new MockLowLevelHttpRequest(url) {
+              @Override
+              public LowLevelHttpResponse execute() throws IOException {
+                return new MockLowLevelHttpResponse()
+                    .setStatusCode(HttpStatusCodes.STATUS_CODE_NOT_FOUND)
+                    .setContent("some content");
+              }
+            };
+          }
+        };
+
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+    String universeDomain = credentials.getUniverseDomain();
+    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, universeDomain);
+    assertEquals(false, credentials.isExplicitUniverseDomain());
+  }
+
+  @Test
+  public void getUniverseDomain_explicitSet_NoMdsCall() throws IOException {
+    MockRequestCountingTransportFactory transportFactory =
+        new MockRequestCountingTransportFactory();
+
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder()
+            .setHttpTransportFactory(transportFactory)
+            .setUniverseDomain("explicit.universe")
+            .build();
+
+    String universeDomain = credentials.getUniverseDomain();
+    assertEquals("explicit.universe", universeDomain);
+    assertEquals(true, credentials.isExplicitUniverseDomain());
+    assertEquals(0, transportFactory.transport.getRequestCount());
+  }
+
+  @Test
+  public void getUniverseDomain_explicitGduSet_NoMdsCall() throws IOException {
+    MockRequestCountingTransportFactory transportFactory =
+        new MockRequestCountingTransportFactory();
+
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder()
+            .setHttpTransportFactory(transportFactory)
+            .setUniverseDomain(Credentials.GOOGLE_DEFAULT_UNIVERSE)
+            .build();
+
+    String universeDomain = credentials.getUniverseDomain();
+    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, universeDomain);
+    assertEquals(true, credentials.isExplicitUniverseDomain());
+    assertEquals(0, transportFactory.transport.getRequestCount());
+  }
+
+  @Test
+  public void getUniverseDomain_fromMetadata_non404error_throws() throws IOException {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    MockMetadataServerTransport transport = transportFactory.transport;
+
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+    for (int status = 400; status < 600; status++) {
+      // 404 should not throw and tested separately
+      if (status == 404) {
+        continue;
+      }
+      try {
+        transportFactory.transport.setRequestStatusCode(status);
+        credentials.getUniverseDomain();
+        fail("Should not be able to use credential without exception.");
+      } catch (GoogleAuthException ex) {
+        assertTrue(ex.isRetryable());
+      }
+    }
+  }
+
+  @Test
   public void sign_emptyContent_throws() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
@@ -727,5 +926,15 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     assertTrue("Full ID Token format not provided", p.containsKey("google"));
     ArrayMap<String, ArrayMap> googleClaim = (ArrayMap<String, ArrayMap>) p.get("google");
     assertTrue(googleClaim.containsKey("license"));
+  }
+
+  static class MockMetadataServerTransportFactory implements HttpTransportFactory {
+
+    MockMetadataServerTransport transport = new MockMetadataServerTransport();
+
+    @Override
+    public HttpTransport create() {
+      return transport;
+    }
   }
 }

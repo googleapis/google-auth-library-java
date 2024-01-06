@@ -106,16 +106,6 @@ public class DefaultCredentialsProviderTest {
   private static final String QUOTA_PROJECT_EXPLICIT = "explicit-quota-project-id";
   private static final String SMBIOS_PATH_LINUX = "/sys/class/dmi/id/product_name";
 
-  static class MockRequestCountingTransportFactory implements HttpTransportFactory {
-
-    MockRequestCountingTransport transport = new MockRequestCountingTransport();
-
-    @Override
-    public HttpTransport create() {
-      return transport;
-    }
-  }
-
   @Test
   public void getDefaultCredentials_noCredentials_throws() {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
@@ -760,7 +750,7 @@ public class DefaultCredentialsProviderTest {
    * End of types simulating SystemProperty.environment.value() to detect App Engine.
    */
 
-  private static class MockRequestCountingTransport extends MockHttpTransport {
+  static class MockRequestCountingTransport extends MockHttpTransport {
     int requestCount = 0;
 
     MockRequestCountingTransport() {}
@@ -854,6 +844,16 @@ public class DefaultCredentialsProviderTest {
 
     void setFileSandbox(boolean fileSandbox) {
       this.fileSandbox = fileSandbox;
+    }
+  }
+
+  static class MockRequestCountingTransportFactory implements HttpTransportFactory {
+
+    MockRequestCountingTransport transport = new MockRequestCountingTransport();
+
+    @Override
+    public HttpTransport create() {
+      return transport;
     }
   }
 }
