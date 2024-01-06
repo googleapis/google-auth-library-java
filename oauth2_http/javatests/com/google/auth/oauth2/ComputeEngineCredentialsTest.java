@@ -305,8 +305,8 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
             .setUniverseDomain(Credentials.GOOGLE_DEFAULT_UNIVERSE)
             .setHttpTransportFactory(transportFactory)
             .build();
-    assertFalse(explicitUniverseCredentials.equals(otherCredentials));
-    assertFalse(otherCredentials.equals(explicitUniverseCredentials));
+    assertTrue(explicitUniverseCredentials.equals(otherExplicitUniverseCredentials));
+    assertTrue(otherExplicitUniverseCredentials.equals(explicitUniverseCredentials));
   }
 
   @Test
