@@ -197,6 +197,18 @@ public class DefaultCredentialsProviderTest {
   @Test
   public void getDefaultCredentials_static_linux() throws IOException {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setProperty("os.name", "linux");
+    String productFilePath = SMBIOS_PATH_LINUX;
+    File productFile = new File(productFilePath);
+    InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
+    testProvider.addFile(productFile.getAbsolutePath(), productStream);
+
+    assertTrue(ComputeEngineCredentials.checkStaticGceDetection(testProvider));
+  }
+
+  @Test
+  public void getDefaultCredentials_static_Linux() throws IOException {
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setProperty("os.name", "Linux");
     String productFilePath = SMBIOS_PATH_LINUX;
     File productFile = new File(productFilePath);
