@@ -429,7 +429,7 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void createdScoped_clonedCredentialWithAddedScopes() {
+  public void createdScoped_clonedCredentialWithAddedScopes() throws IOException {
     PluggableAuthCredentials credentials =
         PluggableAuthCredentials.newBuilder(CREDENTIAL)
             .setExecutableHandler(options -> "pluggableAuthToken")

@@ -96,7 +96,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void createdScoped_clonedCredentialWithAddedScopes() {
+  public void createdScoped_clonedCredentialWithAddedScopes() throws IOException {
     IdentityPoolCredentials credentials =
         IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
             .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)

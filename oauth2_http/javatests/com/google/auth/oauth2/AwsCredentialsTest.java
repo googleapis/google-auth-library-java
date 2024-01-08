@@ -921,7 +921,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void createdScoped_clonedCredentialWithAddedScopes() {
+  public void createdScoped_clonedCredentialWithAddedScopes() throws IOException {
     AwsCredentials credentials =
         AwsCredentials.newBuilder(AWS_CREDENTIAL)
             .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)

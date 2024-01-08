@@ -66,6 +66,7 @@ import org.junit.runners.JUnit4;
 public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
   private static final String STS_URL = "https://sts.googleapis.com/v1/token";
+  private static final String GOOGLE_DEFAULT_UNIVERSE = "googleapis.com";
 
   private static final Map<String, Object> FILE_CREDENTIAL_SOURCE_MAP =
       new HashMap<String, Object>() {
@@ -172,7 +173,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromJson_identityPoolCredentialsWorkload() {
+  public void fromJson_identityPoolCredentialsWorkload() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
             buildJsonIdentityPoolCredential(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
@@ -185,11 +186,11 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(STS_URL, credential.getTokenUrl());
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
     assertNotNull(credential.getCredentialSource());
-    assertNull(credential.getUniverseDomain());
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credential.getUniverseDomain());
   }
 
   @Test
-  public void fromJson_identityPoolCredentialsWorkforce() {
+  public void fromJson_identityPoolCredentialsWorkforce() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
             buildJsonIdentityPoolWorkforceCredential(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
@@ -203,11 +204,12 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
     assertEquals("userProject", credential.getWorkforcePoolUserProject());
     assertNotNull(credential.getCredentialSource());
-    assertNull(credential.getUniverseDomain());
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credential.getUniverseDomain());
   }
 
   @Test
-  public void fromJson_identityPoolCredentialsWithServiceAccountImpersonationOptions() {
+  public void fromJson_identityPoolCredentialsWithServiceAccountImpersonationOptions()
+      throws IOException {
     GenericJson identityPoolCredentialJson = buildJsonIdentityPoolCredential();
     identityPoolCredentialJson.set(
         "service_account_impersonation", buildServiceAccountImpersonationOptions(2800));
@@ -225,11 +227,11 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
     assertNotNull(credential.getCredentialSource());
     assertEquals(2800, credential.getServiceAccountImpersonationOptions().getLifetime());
-    assertNull(credential.getUniverseDomain());
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credential.getUniverseDomain());
   }
 
   @Test
-  public void fromJson_identityPoolCredentialsWithUniverseDomain() {
+  public void fromJson_identityPoolCredentialsWithUniverseDomain() throws IOException {
     GenericJson identityPoolCredentialJson = buildJsonIdentityPoolCredential();
     identityPoolCredentialJson.set("universe_domain", "universeDomain");
 
@@ -260,7 +262,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(STS_URL, credential.getTokenUrl());
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
     assertNotNull(credential.getCredentialSource());
-    assertNull(credential.getUniverseDomain());
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credential.getUniverseDomain());
   }
 
   @Test
@@ -279,11 +281,11 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals("tokenInfoUrl", credential.getTokenInfoUrl());
     assertNotNull(credential.getCredentialSource());
     assertEquals(2800, credential.getServiceAccountImpersonationOptions().getLifetime());
-    assertNull(credential.getUniverseDomain());
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credential.getUniverseDomain());
   }
 
   @Test
-  public void fromJson_awsCredentialsWithUniverseDomain() {
+  public void fromJson_awsCredentialsWithUniverseDomain() throws IOException {
     GenericJson awsCredentialJson = buildJsonAwsCredential();
     awsCredentialJson.set("universe_domain", "universeDomain");
 
@@ -300,7 +302,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromJson_pluggableAuthCredentials() {
+  public void fromJson_pluggableAuthCredentials() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
             buildJsonPluggableAuthCredential(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
@@ -317,11 +319,11 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals("command", source.getCommand());
     assertEquals(30000, source.getTimeoutMs()); // Default timeout is 30s.
     assertNull(source.getOutputFilePath());
-    assertNull(credential.getUniverseDomain());
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credential.getUniverseDomain());
   }
 
   @Test
-  public void fromJson_pluggableAuthCredentialsWorkforce() {
+  public void fromJson_pluggableAuthCredentialsWorkforce() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
             buildJsonPluggableAuthWorkforceCredential(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
@@ -342,12 +344,12 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals("command", source.getCommand());
     assertEquals(30000, source.getTimeoutMs()); // Default timeout is 30s.
     assertNull(source.getOutputFilePath());
-    assertNull(credential.getUniverseDomain());
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credential.getUniverseDomain());
   }
 
   @Test
   @SuppressWarnings("unchecked")
-  public void fromJson_pluggableAuthCredentials_allExecutableOptionsSet() {
+  public void fromJson_pluggableAuthCredentials_allExecutableOptionsSet() throws IOException {
     GenericJson json = buildJsonPluggableAuthCredential();
     Map<String, Object> credentialSourceMap = (Map<String, Object>) json.get("credential_source");
     // Add optional params to the executable config (timeout, output file path).
@@ -371,11 +373,12 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals("command", source.getCommand());
     assertEquals("path/to/output/file", source.getOutputFilePath());
     assertEquals(5000, source.getTimeoutMs());
-    assertNull(credential.getUniverseDomain());
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credential.getUniverseDomain());
   }
 
   @Test
-  public void fromJson_pluggableAuthCredentialsWithServiceAccountImpersonationOptions() {
+  public void fromJson_pluggableAuthCredentialsWithServiceAccountImpersonationOptions()
+      throws IOException {
     GenericJson pluggableAuthCredentialJson = buildJsonPluggableAuthCredential();
     pluggableAuthCredentialJson.set(
         "service_account_impersonation", buildServiceAccountImpersonationOptions(2800));
@@ -397,12 +400,12 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals("command", source.getCommand());
     assertEquals(30000, source.getTimeoutMs()); // Default timeout is 30s.
     assertNull(source.getOutputFilePath());
-    assertNull(credential.getUniverseDomain());
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credential.getUniverseDomain());
   }
 
   @Test
   @SuppressWarnings("unchecked")
-  public void fromJson_pluggableAuthCredentials_withUniverseDomain() {
+  public void fromJson_pluggableAuthCredentials_withUniverseDomain() throws IOException {
     GenericJson json = buildJsonPluggableAuthCredential();
     json.set("universe_domain", "universeDomain");
 
@@ -432,7 +435,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromJson_pluggableAuthCredentialsWithUniverseDomain() {
+  public void fromJson_pluggableAuthCredentialsWithUniverseDomain() throws IOException {
     GenericJson pluggableAuthCredentialJson = buildJsonPluggableAuthCredential();
     pluggableAuthCredentialJson.set("universe_domain", "universeDomain");
 
@@ -456,7 +459,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromJson_nullJson_throws() {
+  public void fromJson_nullJson_throws() throws IOException {
     try {
       ExternalAccountCredentials.fromJson(/* json= */ null, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
       fail("Exception should be thrown.");
@@ -466,7 +469,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromJson_nullTransport_throws() {
+  public void fromJson_nullTransport_throws() throws IOException {
     try {
       ExternalAccountCredentials.fromJson(
           new HashMap<String, Object>(), /* transportFactory= */ null);
@@ -477,7 +480,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromJson_invalidWorkforceAudiences_throws() {
+  public void fromJson_invalidWorkforceAudiences_throws() throws IOException {
     List<String> invalidAudiences =
         Arrays.asList(
             "//iam.googleapis.com/locations/global/workloadIdentityPools/pool/providers/provider",
@@ -506,7 +509,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void constructor_builder() {
+  public void constructor_builder() throws IOException {
     HashMap<String, Object> credentialSource = new HashMap<>();
     credentialSource.put("file", "file");
 

@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.21.0](https://github.com/googleapis/google-auth-library-java/compare/v1.20.0...v1.21.0) (2023-12-21)
+
+
+### Features
+
+* Add code sample and test for getting an access token from an impersonated SA ([#1289](https://github.com/googleapis/google-auth-library-java/issues/1289)) ([826ee40](https://github.com/googleapis/google-auth-library-java/commit/826ee4007d3e0600dfdf42383f56dbcf6cdd4cec))
+* Multi universe support, adding universe_domain field ([#1282](https://github.com/googleapis/google-auth-library-java/issues/1282)) ([7eb322e](https://github.com/googleapis/google-auth-library-java/commit/7eb322e3af6bce85774b2a1051242a4b62b53963))
+
+
+### Bug Fixes
+
+* Remove -Xlint:unchecked, suppress all existing violations, add @CanIgnoreReturnValue ([#1324](https://github.com/googleapis/google-auth-library-java/issues/1324)) ([04dfd40](https://github.com/googleapis/google-auth-library-java/commit/04dfd40c57b89c2d55327d5ea08036d749ebac02))
+
+
+### Documentation
+
+* Update README.md to link to Cloud authentication documentation rather than AIPs ([98fc7e1](https://github.com/googleapis/google-auth-library-java/commit/98fc7e1f2f551d59811de63eaef0df6bf8e21c2c))
+
 ## [1.20.0](https://github.com/googleapis/google-auth-library-java/compare/v1.19.0...v1.20.0) (2023-09-19)
 
 
