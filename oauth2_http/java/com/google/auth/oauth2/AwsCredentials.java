@@ -31,18 +31,9 @@
 
 package com.google.auth.oauth2;
 
-import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpContent;
-import com.google.api.client.http.HttpHeaders;
-import com.google.api.client.http.HttpMethods;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpRequestFactory;
-import com.google.api.client.http.HttpResponse;
 import com.google.api.client.json.GenericJson;
-import com.google.api.client.json.JsonParser;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -64,27 +55,18 @@ import javax.annotation.Nullable;
  */
 public class AwsCredentials extends ExternalAccountCredentials {
 
-  // Supported environment variables.
-  static final String AWS_REGION = "AWS_REGION";
-  static final String AWS_DEFAULT_REGION = "AWS_DEFAULT_REGION";
-  static final String AWS_ACCESS_KEY_ID = "AWS_ACCESS_KEY_ID";
-  static final String AWS_SECRET_ACCESS_KEY = "AWS_SECRET_ACCESS_KEY";
-  static final String AWS_SESSION_TOKEN = "AWS_SESSION_TOKEN";
-
   static final String DEFAULT_REGIONAL_CREDENTIAL_VERIFICATION_URL =
       "https://sts.{region}.amazonaws.com?Action=GetCallerIdentity&Version=2011-06-15";
-
-  static final String AWS_IMDSV2_SESSION_TOKEN_HEADER = "x-aws-ec2-metadata-token";
-  static final String AWS_IMDSV2_SESSION_TOKEN_TTL_HEADER = "x-aws-ec2-metadata-token-ttl-seconds";
-  static final String AWS_IMDSV2_SESSION_TOKEN_TTL = "300";
 
   static final String AWS_METRICS_HEADER_VALUE = "aws";
 
   private static final long serialVersionUID = -3670131891574618105L;
 
-  @Nullable private final AwsCredentialSource awsCredentialSource;
-  @Nullable private final Supplier<AwsSecurityCredentials> awsSecurityCredentialsSupplier;
+  @Nullable private final AwsSecurityCredentialsProvider awsSecurityCredentialsProvider;
+  // Regional credential verification url override. This needs to be its own value so we can
+  // correctly pass it to a builder.
   @Nullable private final String regionalCredentialVerificationUrlOverride;
+  @Nullable private final String regionalCredentialVerificationUrl;
   @Nullable private final String awsRegion;
 
   /** Internal constructor. See {@link AwsCredentials.Builder}. */
@@ -99,22 +81,36 @@ public class AwsCredentials extends ExternalAccountCredentials {
       throw new IllegalArgumentException(
           "An awsSecurityCredentialsSupplier or a credentialSource must be provided.");
     }
+
+    AwsCredentialSource credentialSource = (AwsCredentialSource) builder.credentialSource;
+    this.awsRegion = builder.awsRegion;
+    // Set regional credential verification url override if provided.
+    this.regionalCredentialVerificationUrlOverride =
+        builder.regionalCredentialVerificationUrlOverride;
+
+    // Set regional credential verification url depending on inputs.
+    if (this.regionalCredentialVerificationUrlOverride != null) {
+      this.regionalCredentialVerificationUrl = this.regionalCredentialVerificationUrlOverride;
+    } else if (credentialSource != null) {
+      this.regionalCredentialVerificationUrl = credentialSource.regionalCredentialVerificationUrl;
+    } else {
+      this.regionalCredentialVerificationUrl = DEFAULT_REGIONAL_CREDENTIAL_VERIFICATION_URL;
+    }
+
     // If user has provided a security credential supplier, use that to retrieve the AWS security
     // credentials.
     if (builder.awsSecurityCredentialsSupplier != null) {
-      this.awsSecurityCredentialsSupplier = builder.awsSecurityCredentialsSupplier;
-      if (builder.awsRegion == null) {
-        throw new IllegalArgumentException(
-            "An AWS region must be specified when using an aws security credential supplier.");
-      }
-      this.awsCredentialSource = null;
+      this.awsSecurityCredentialsProvider =
+          new UserAwsSecurityCredentialsProvider(
+              builder.awsSecurityCredentialsSupplier, this.awsRegion);
     } else {
-      this.awsCredentialSource = (AwsCredentialSource) builder.credentialSource;
-      this.awsSecurityCredentialsSupplier = null;
+      this.awsSecurityCredentialsProvider =
+          new InternalAwsSecurityCredentialsProvider(
+              credentialSource,
+              this.getEnvironmentProvider(),
+              this.transportFactory,
+              builder.awsRegion);
     }
-    this.awsRegion = builder.awsRegion;
-    this.regionalCredentialVerificationUrlOverride =
-        builder.regionalCredentialVerificationUrlOverride;
   }
 
   @Override
@@ -134,16 +130,12 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
   @Override
   public String retrieveSubjectToken() throws IOException {
-    Map<String, Object> metadataRequestHeaders = new HashMap<>();
-    if (shouldUseMetadataServer()) {
-      metadataRequestHeaders = createMetadataRequestHeaders(awsCredentialSource);
-    }
 
     // The targeted region is required to generate the signed request. The regional
     // endpoint must also be used.
-    String region = getAwsRegion(metadataRequestHeaders);
+    String region = awsSecurityCredentialsProvider.getRegion();
 
-    AwsSecurityCredentials credentials = getAwsSecurityCredentials(metadataRequestHeaders);
+    AwsSecurityCredentials credentials = awsSecurityCredentialsProvider.getCredentials();
 
     // Generate the signed request to the AWS STS GetCallerIdentity API.
     Map<String, String> headers = new HashMap<>();
@@ -153,7 +145,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
         AwsRequestSigner.newBuilder(
                 credentials,
                 "POST",
-                this.getRegionalCredentialVerificationUrl().replace("{region}", region),
+                this.regionalCredentialVerificationUrl.replace("{region}", region),
                 region)
             .setAdditionalHeaders(headers)
             .build();
@@ -170,39 +162,10 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
   @Override
   String getCredentialSourceType() {
-    if (this.awsSecurityCredentialsSupplier != null) {
+    if (this.awsSecurityCredentialsProvider.isUserSupplied()) {
       return PROGRAMMATIC_AUTH_METRICS_HEADER_VALUE;
     }
     return AWS_METRICS_HEADER_VALUE;
-  }
-
-  private String retrieveResource(String url, String resourceName, Map<String, Object> headers)
-      throws IOException {
-    return retrieveResource(url, resourceName, HttpMethods.GET, headers, /* content= */ null);
-  }
-
-  private String retrieveResource(
-      String url,
-      String resourceName,
-      String requestMethod,
-      Map<String, Object> headers,
-      @Nullable HttpContent content)
-      throws IOException {
-    try {
-      HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
-      HttpRequest request =
-          requestFactory.buildRequest(requestMethod, new GenericUrl(url), content);
-
-      HttpHeaders requestHeaders = request.getHeaders();
-      for (Map.Entry<String, Object> header : headers.entrySet()) {
-        requestHeaders.set(header.getKey(), header.getValue());
-      }
-
-      HttpResponse response = request.execute();
-      return response.parseAsString();
-    } catch (IOException e) {
-      throw new IOException(String.format("Failed to retrieve AWS %s.", resourceName), e);
-    }
   }
 
   private String buildSubjectToken(AwsRequestSignature signature)
@@ -224,170 +187,13 @@ public class AwsCredentials extends ExternalAccountCredentials {
     token.put("headers", headerList);
     token.put("method", signature.getHttpMethod());
     token.put(
-        "url",
-        this.getRegionalCredentialVerificationUrl().replace("{region}", signature.getRegion()));
+        "url", this.regionalCredentialVerificationUrl.replace("{region}", signature.getRegion()));
     return URLEncoder.encode(token.toString(), "UTF-8");
-  }
-
-  private boolean canRetrieveRegionFromEnvironment() {
-    // The AWS region can be provided through AWS_REGION or AWS_DEFAULT_REGION. Only one is
-    // required.
-    List<String> keys = ImmutableList.of(AWS_REGION, AWS_DEFAULT_REGION);
-    for (String env : keys) {
-      String value = getEnvironmentProvider().getEnv(env);
-      if (value != null && value.trim().length() > 0) {
-        // Region available.
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private boolean canRetrieveSecurityCredentialsFromEnvironment() {
-    // Check if both AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are available.
-    List<String> keys = ImmutableList.of(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY);
-    for (String env : keys) {
-      String value = getEnvironmentProvider().getEnv(env);
-      if (value == null || value.trim().length() == 0) {
-        // Return false if one of them are missing.
-        return false;
-      }
-    }
-    return true;
-  }
-
-  @VisibleForTesting
-  boolean shouldUseMetadataServer() {
-    return this.awsSecurityCredentialsSupplier == null
-        && (!canRetrieveRegionFromEnvironment()
-            || !canRetrieveSecurityCredentialsFromEnvironment());
-  }
-
-  @VisibleForTesting
-  Map<String, Object> createMetadataRequestHeaders(AwsCredentialSource awsCredentialSource)
-      throws IOException {
-    Map<String, Object> metadataRequestHeaders = new HashMap<>();
-
-    // AWS IDMSv2 introduced a requirement for a session token to be present
-    // with the requests made to metadata endpoints. This requirement is to help
-    // prevent SSRF attacks.
-    // Presence of "imdsv2_session_token_url" in Credential Source of config file
-    // will trigger a flow with session token, else there will not be a session
-    // token with the metadata requests.
-    // Both flows work for IDMS v1 and v2. But if IDMSv2 is enabled, then if
-    // session token is not present, Unauthorized exception will be thrown.
-    if (awsCredentialSource.imdsv2SessionTokenUrl != null) {
-      Map<String, Object> tokenRequestHeaders =
-          new HashMap<String, Object>() {
-            {
-              put(AWS_IMDSV2_SESSION_TOKEN_TTL_HEADER, AWS_IMDSV2_SESSION_TOKEN_TTL);
-            }
-          };
-
-      String imdsv2SessionToken =
-          retrieveResource(
-              awsCredentialSource.imdsv2SessionTokenUrl,
-              "Session Token",
-              HttpMethods.PUT,
-              tokenRequestHeaders,
-              /* content= */ null);
-
-      metadataRequestHeaders.put(AWS_IMDSV2_SESSION_TOKEN_HEADER, imdsv2SessionToken);
-    }
-
-    return metadataRequestHeaders;
-  }
-
-  @VisibleForTesting
-  String getAwsRegion(Map<String, Object> metadataRequestHeaders) throws IOException {
-    // If user has provided a region string, return that instead of checking environment or metadata
-    // server.
-    if (this.awsRegion != null) {
-      return this.awsRegion;
-    }
-    String region;
-    if (canRetrieveRegionFromEnvironment()) {
-      // For AWS Lambda, the region is retrieved through the AWS_REGION environment variable.
-      region = getEnvironmentProvider().getEnv(AWS_REGION);
-      if (region != null && region.trim().length() > 0) {
-        return region;
-      }
-      return getEnvironmentProvider().getEnv(AWS_DEFAULT_REGION);
-    }
-
-    if (awsCredentialSource.regionUrl == null || awsCredentialSource.regionUrl.isEmpty()) {
-      throw new IOException(
-          "Unable to determine the AWS region. The credential source does not contain the region URL.");
-    }
-
-    region = retrieveResource(awsCredentialSource.regionUrl, "region", metadataRequestHeaders);
-
-    // There is an extra appended character that must be removed. If `us-east-1b` is returned,
-    // we want `us-east-1`.
-    return region.substring(0, region.length() - 1);
-  }
-
-  @VisibleForTesting
-  AwsSecurityCredentials getAwsSecurityCredentials(Map<String, Object> metadataRequestHeaders)
-      throws IOException {
-    // If this credential is using programmatic auth, call the user provided supplier.
-    if (this.awsSecurityCredentialsSupplier != null) {
-      try {
-        return this.awsSecurityCredentialsSupplier.get();
-      } catch (Throwable e) {
-        throw new GoogleAuthException(
-            /* isRetryable= */ false,
-            /* retryCount= */ 0,
-            "Error retrieving token from AWS security credentials supplier.",
-            e);
-      }
-    }
-
-    // Check environment variables for credentials first.
-    if (canRetrieveSecurityCredentialsFromEnvironment()) {
-      String accessKeyId = getEnvironmentProvider().getEnv(AWS_ACCESS_KEY_ID);
-      String secretAccessKey = getEnvironmentProvider().getEnv(AWS_SECRET_ACCESS_KEY);
-      String token = getEnvironmentProvider().getEnv(AWS_SESSION_TOKEN);
-      return new AwsSecurityCredentials(accessKeyId, secretAccessKey, token);
-    }
-
-    // Credentials not retrievable from environment variables - call metadata server.
-    // Retrieve the IAM role that is attached to the VM. This is required to retrieve the AWS
-    // security credentials.
-    if (awsCredentialSource.url == null || awsCredentialSource.url.isEmpty()) {
-      throw new IOException(
-          "Unable to determine the AWS IAM role name. The credential source does not contain the"
-              + " url field.");
-    }
-    String roleName = retrieveResource(awsCredentialSource.url, "IAM role", metadataRequestHeaders);
-
-    // Retrieve the AWS security credentials by calling the endpoint specified by the credential
-    // source.
-    String awsCredentials =
-        retrieveResource(
-            awsCredentialSource.url + "/" + roleName, "credentials", metadataRequestHeaders);
-
-    JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser(awsCredentials);
-    GenericJson genericJson = parser.parseAndClose(GenericJson.class);
-
-    String accessKeyId = (String) genericJson.get("AccessKeyId");
-    String secretAccessKey = (String) genericJson.get("SecretAccessKey");
-    String token = (String) genericJson.get("Token");
-
-    // These credentials last for a few hours - we may consider caching these in the
-    // future.
-    return new AwsSecurityCredentials(accessKeyId, secretAccessKey, token);
   }
 
   @VisibleForTesting
   String getRegionalCredentialVerificationUrl() {
-    if (this.regionalCredentialVerificationUrlOverride != null) {
-      return this.regionalCredentialVerificationUrlOverride;
-    } else if (this.awsCredentialSource != null) {
-      return this.awsCredentialSource.regionalCredentialVerificationUrl;
-    } else {
-      return DEFAULT_REGIONAL_CREDENTIAL_VERIFICATION_URL;
-    }
+    return this.regionalCredentialVerificationUrl;
   }
 
   @VisibleForTesting
@@ -395,14 +201,14 @@ public class AwsCredentials extends ExternalAccountCredentials {
     return System.getenv(name);
   }
 
-  @Nullable
-  public String getRegionalCredentialVerificationUrlOverride() {
-    return this.regionalCredentialVerificationUrlOverride;
+  @VisibleForTesting
+  AwsSecurityCredentialsProvider getAwsSecurityCredentialsProvider() {
+    return this.awsSecurityCredentialsProvider;
   }
 
   @Nullable
-  public Supplier<AwsSecurityCredentials> getAwsSecurityCredentialsSupplier() {
-    return this.awsSecurityCredentialsSupplier;
+  public String getRegionalCredentialVerificationUrlOverride() {
+    return this.regionalCredentialVerificationUrlOverride;
   }
 
   private static GenericJson formatTokenHeaderForSts(String key, String value) {
@@ -440,7 +246,10 @@ public class AwsCredentials extends ExternalAccountCredentials {
     Builder(AwsCredentials credentials) {
       super(credentials);
       this.awsRegion = credentials.awsRegion;
-      this.awsSecurityCredentialsSupplier = credentials.awsSecurityCredentialsSupplier;
+      if (credentials.awsSecurityCredentialsProvider.isUserSupplied()) {
+        this.awsSecurityCredentialsSupplier =
+            credentials.awsSecurityCredentialsProvider.getSupplier();
+      }
       this.regionalCredentialVerificationUrlOverride =
           credentials.regionalCredentialVerificationUrlOverride;
     }

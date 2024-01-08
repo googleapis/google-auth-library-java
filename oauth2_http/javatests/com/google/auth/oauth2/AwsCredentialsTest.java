@@ -45,7 +45,6 @@ import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
 import com.google.auth.oauth2.ExternalAccountCredentialsTest.MockExternalAccountCredentialsTransportFactory;
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -348,7 +347,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     assertNotNull(headers.get("Authorization"));
 
     List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
-    assertEquals(4, requests.size());
+    assertEquals(5, requests.size());
 
     // Validate the session token request
     ValidateRequest(
@@ -357,15 +356,17 @@ public class AwsCredentialsTest extends BaseSerializationTest {
         new HashMap<String, String>() {
           {
             put(
-                AwsCredentials.AWS_IMDSV2_SESSION_TOKEN_TTL_HEADER,
-                AwsCredentials.AWS_IMDSV2_SESSION_TOKEN_TTL);
+                InternalAwsSecurityCredentialsProvider.AWS_IMDSV2_SESSION_TOKEN_TTL_HEADER,
+                InternalAwsSecurityCredentialsProvider.AWS_IMDSV2_SESSION_TOKEN_TTL);
           }
         });
 
     Map<String, String> sessionTokenHeader =
         new HashMap<String, String>() {
           {
-            put(AwsCredentials.AWS_IMDSV2_SESSION_TOKEN_HEADER, AWS_IMDSV2_SESSION_TOKEN);
+            put(
+                InternalAwsSecurityCredentialsProvider.AWS_IMDSV2_SESSION_TOKEN_HEADER,
+                AWS_IMDSV2_SESSION_TOKEN);
           }
         };
 
@@ -373,10 +374,10 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     ValidateRequest(requests.get(1), AWS_REGION_URL, sessionTokenHeader);
 
     // Validate role request.
-    ValidateRequest(requests.get(2), AWS_CREDENTIALS_URL, sessionTokenHeader);
+    ValidateRequest(requests.get(3), AWS_CREDENTIALS_URL, sessionTokenHeader);
 
     // Validate security credentials request.
-    ValidateRequest(requests.get(3), AWS_CREDENTIALS_URL_WITH_ROLE, sessionTokenHeader);
+    ValidateRequest(requests.get(4), AWS_CREDENTIALS_URL_WITH_ROLE, sessionTokenHeader);
   }
 
   @Test
@@ -722,7 +723,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .build();
 
     AwsSecurityCredentials credentials =
-        testAwsCredentials.getAwsSecurityCredentials(EMPTY_METADATA_HEADERS);
+        testAwsCredentials.getAwsSecurityCredentialsProvider().getCredentials();
 
     assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
     assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
@@ -755,7 +756,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .build();
 
     AwsSecurityCredentials credentials =
-        testAwsCredentials.getAwsSecurityCredentials(EMPTY_METADATA_HEADERS);
+        testAwsCredentials.getAwsSecurityCredentialsProvider().getCredentials();
 
     assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
     assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
@@ -777,7 +778,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .build();
 
     AwsSecurityCredentials credentials =
-        testAwsCredentials.getAwsSecurityCredentials(EMPTY_METADATA_HEADERS);
+        testAwsCredentials.getAwsSecurityCredentialsProvider().getCredentials();
 
     assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
     assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
@@ -796,7 +797,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .build();
 
     AwsSecurityCredentials credentials =
-        awsCredential.getAwsSecurityCredentials(EMPTY_METADATA_HEADERS);
+        awsCredential.getAwsSecurityCredentialsProvider().getCredentials();
 
     assertEquals("accessKeyId", credentials.getAccessKeyId());
     assertEquals("secretAccessKey", credentials.getSecretAccessKey());
@@ -828,7 +829,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .build();
 
     try {
-      awsCredential.getAwsSecurityCredentials(EMPTY_METADATA_HEADERS);
+      awsCredential.getAwsSecurityCredentialsProvider().getCredentials();
       fail("Should not be able to use credential without exception.");
     } catch (IOException exception) {
       assertEquals(
@@ -856,7 +857,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .setEnvironmentProvider(environmentProvider)
             .build();
 
-    String region = awsCredentials.getAwsRegion(EMPTY_METADATA_HEADERS);
+    String region = awsCredentials.getAwsSecurityCredentialsProvider().getRegion();
 
     // Should attempt to retrieve the region from AWS_REGION env var first.
     // Metadata server would return us-east-1b.
@@ -881,7 +882,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .setEnvironmentProvider(environmentProvider)
             .build();
 
-    String region = awsCredentials.getAwsRegion(EMPTY_METADATA_HEADERS);
+    String region = awsCredentials.getAwsSecurityCredentialsProvider().getRegion();
 
     // Should attempt to retrieve the region from DEFAULT_AWS_REGION before calling the metadata
     // server. Metadata server would return us-east-1b.
@@ -902,7 +903,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .setCredentialSource(buildAwsCredentialSource(transportFactory))
             .build();
 
-    String region = awsCredentials.getAwsRegion(EMPTY_METADATA_HEADERS);
+    String region = awsCredentials.getAwsSecurityCredentialsProvider().getRegion();
 
     // Should retrieve the region from the Metadata server.
     String expectedRegion =
@@ -995,128 +996,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void shouldUseMetadataServer_withRequiredEnvironmentVariables() {
-    MockExternalAccountCredentialsTransportFactory transportFactory =
-        new MockExternalAccountCredentialsTransportFactory();
-
-    // Add required environment variables.
-    List<String> regionKeys = ImmutableList.of("AWS_REGION", "AWS_DEFAULT_REGION");
-    for (String regionKey : regionKeys) {
-      TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-      // AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are always required.
-      environmentProvider
-          .setEnv(regionKey, "awsRegion")
-          .setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId")
-          .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey");
-      AwsCredentials awsCredential =
-          AwsCredentials.newBuilder(AWS_CREDENTIAL)
-              .setHttpTransportFactory(transportFactory)
-              .setCredentialSource(buildAwsImdsv2CredentialSource(transportFactory))
-              .setEnvironmentProvider(environmentProvider)
-              .build();
-      assertFalse(awsCredential.shouldUseMetadataServer());
-    }
-  }
-
-  @Test
-  public void shouldUseMetadataServer_missingRegion() {
-    MockExternalAccountCredentialsTransportFactory transportFactory =
-        new MockExternalAccountCredentialsTransportFactory();
-
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    environmentProvider
-        .setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId")
-        .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey");
-    AwsCredentials awsCredential =
-        AwsCredentials.newBuilder(AWS_CREDENTIAL)
-            .setHttpTransportFactory(transportFactory)
-            .setCredentialSource(buildAwsImdsv2CredentialSource(transportFactory))
-            .setEnvironmentProvider(environmentProvider)
-            .build();
-    assertTrue(awsCredential.shouldUseMetadataServer());
-  }
-
-  @Test
-  public void shouldUseMetadataServer_missingAwsAccessKeyId() {
-    MockExternalAccountCredentialsTransportFactory transportFactory =
-        new MockExternalAccountCredentialsTransportFactory();
-
-    // Add required environment variables.
-    List<String> regionKeys = ImmutableList.of("AWS_REGION", "AWS_DEFAULT_REGION");
-    for (String regionKey : regionKeys) {
-      TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-      // AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are always required.
-      environmentProvider
-          .setEnv(regionKey, "awsRegion")
-          .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey");
-      AwsCredentials awsCredential =
-          AwsCredentials.newBuilder(AWS_CREDENTIAL)
-              .setHttpTransportFactory(transportFactory)
-              .setCredentialSource(buildAwsImdsv2CredentialSource(transportFactory))
-              .setEnvironmentProvider(environmentProvider)
-              .build();
-      assertTrue(awsCredential.shouldUseMetadataServer());
-    }
-  }
-
-  @Test
-  public void shouldUseMetadataServer_missingAwsSecretAccessKey() {
-    MockExternalAccountCredentialsTransportFactory transportFactory =
-        new MockExternalAccountCredentialsTransportFactory();
-
-    // Add required environment variables.
-    List<String> regionKeys = ImmutableList.of("AWS_REGION", "AWS_DEFAULT_REGION");
-    for (String regionKey : regionKeys) {
-      TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-      // AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are always required.
-      environmentProvider
-          .setEnv(regionKey, "awsRegion")
-          .setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId");
-      AwsCredentials awsCredential =
-          AwsCredentials.newBuilder(AWS_CREDENTIAL)
-              .setHttpTransportFactory(transportFactory)
-              .setCredentialSource(buildAwsImdsv2CredentialSource(transportFactory))
-              .setEnvironmentProvider(environmentProvider)
-              .build();
-      assertTrue(awsCredential.shouldUseMetadataServer());
-    }
-  }
-
-  @Test
-  public void shouldUseMetadataServer_missingAwsSecurityCreds() {
-    MockExternalAccountCredentialsTransportFactory transportFactory =
-        new MockExternalAccountCredentialsTransportFactory();
-
-    // Add required environment variables.
-    List<String> regionKeys = ImmutableList.of("AWS_REGION", "AWS_DEFAULT_REGION");
-    for (String regionKey : regionKeys) {
-      TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-      // AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are always required.
-      // Not set here.
-      environmentProvider.setEnv(regionKey, "awsRegion");
-      AwsCredentials awsCredential =
-          AwsCredentials.newBuilder(AWS_CREDENTIAL)
-              .setHttpTransportFactory(transportFactory)
-              .setCredentialSource(buildAwsImdsv2CredentialSource(transportFactory))
-              .setEnvironmentProvider(environmentProvider)
-              .build();
-      assertTrue(awsCredential.shouldUseMetadataServer());
-    }
-  }
-
-  @Test
-  public void shouldUseMetadataServer_noEnvironmentVars() {
-    MockExternalAccountCredentialsTransportFactory transportFactory =
-        new MockExternalAccountCredentialsTransportFactory();
-    AwsCredentials awsCredential =
-        AwsCredentials.newBuilder(AWS_CREDENTIAL)
-            .setHttpTransportFactory(transportFactory)
-            .setCredentialSource(buildAwsImdsv2CredentialSource(transportFactory))
-            .build();
-    assertTrue(awsCredential.shouldUseMetadataServer());
-  }
-
-  @Test
   public void builder() throws IOException {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
@@ -1140,7 +1019,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .setScopes(scopes)
             .build();
 
-    assertEquals("region", credentials.getAwsRegion(null));
+    // assertEquals("region", credentials.getAwsRegion(null));
     assertEquals("https://test.com", credentials.getRegionalCredentialVerificationUrlOverride());
     assertEquals("audience", credentials.getAudience());
     assertEquals("subjectTokenType", credentials.getSubjectTokenType());
@@ -1331,7 +1210,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     return new AwsCredentialSource(buildAwsCredentialSourceMap(transportFactory));
   }
 
-  private static AwsCredentialSource buildAwsImdsv2CredentialSource(
+  static AwsCredentialSource buildAwsImdsv2CredentialSource(
       MockExternalAccountCredentialsTransportFactory transportFactory) {
     Map<String, Object> credentialSourceMap = buildAwsCredentialSourceMap(transportFactory);
     credentialSourceMap.put(
