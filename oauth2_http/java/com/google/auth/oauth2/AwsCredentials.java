@@ -101,7 +101,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
     // credentials.
     if (builder.awsSecurityCredentialsSupplier != null) {
       this.awsSecurityCredentialsProvider =
-          new UserAwsSecurityCredentialsProvider(
+          new ProgrammaticAwsSecurityCredentialsProvider(
               builder.awsSecurityCredentialsSupplier, this.awsRegion);
     } else {
       this.awsSecurityCredentialsProvider =

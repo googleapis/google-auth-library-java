@@ -31,44 +31,37 @@
 
 package com.google.auth.oauth2;
 
+import java.io.IOException;
 import java.util.function.Supplier;
 
-class UserAwsSecurityCredentialsProvider implements AwsSecurityCredentialsProvider {
-  private static final long serialVersionUID = 6699948149655089007L;
+class ProgrammaticIdentityPoolSubjectTokenProvider extends IdentityPoolSubjectTokenProvider {
 
-  private final String region;
-  private final transient Supplier<AwsSecurityCredentials> awsSecurityCredentialsSupplier;
+  private final Supplier<String> subjectTokenSupplier;
 
-  UserAwsSecurityCredentialsProvider(Supplier<AwsSecurityCredentials> supplier, String region) {
-    if (region == null || region.trim().isEmpty()) {
-      throw new IllegalArgumentException(
-          "An AWS region must be specified when using an aws security credential supplier.");
-    }
-    this.region = region;
-    this.awsSecurityCredentialsSupplier = supplier;
+  ProgrammaticIdentityPoolSubjectTokenProvider(Supplier<String> subjectTokenSupplier) {
+    this.subjectTokenSupplier = subjectTokenSupplier;
   }
 
-  public String getRegion() {
-    return this.region;
-  }
-
-  public AwsSecurityCredentials getCredentials() throws GoogleAuthException {
+  @Override
+  String getSubjectToken() throws IOException {
     try {
-      return this.awsSecurityCredentialsSupplier.get();
+      return this.subjectTokenSupplier.get();
     } catch (RuntimeException e) {
       throw new GoogleAuthException(
           /* isRetryable= */ false,
           /* retryCount= */ 0,
-          "Error retrieving token from AWS security credentials supplier.",
+          "Error retrieving token from subject token supplier.",
           e);
     }
   }
 
-  public boolean isUserSupplied() {
+  @Override
+  boolean isUserSupplied() {
     return true;
   }
 
-  public Supplier<AwsSecurityCredentials> getSupplier() {
-    return this.awsSecurityCredentialsSupplier;
+  @Override
+  Supplier<String> getSupplier() {
+    return this.subjectTokenSupplier;
   }
 }

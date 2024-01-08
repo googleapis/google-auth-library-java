@@ -31,32 +31,14 @@
 
 package com.google.auth.oauth2;
 
-import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpHeaders;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpResponse;
-import com.google.api.client.json.GenericJson;
-import com.google.api.client.json.JsonObjectParser;
 import com.google.auth.http.HttpTransportFactory;
-import com.google.auth.oauth2.IdentityPoolCredentialSource.CredentialFormatType;
 import com.google.auth.oauth2.IdentityPoolCredentialSource.IdentityPoolCredentialSourceType;
-import com.google.common.io.CharStreams;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Supplier;
-import javax.annotation.Nullable;
 
 /**
  * Url-sourced, file-sourced, or user provided supplier method-sourced external account credentials.
@@ -69,28 +51,32 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
   static final String URL_METRICS_HEADER_VALUE = "url";
   private static final long serialVersionUID = 2471046175477275881L;
 
-  @Nullable private final IdentityPoolCredentialSource identityPoolCredentialSource;
-
-  @Nullable private final Supplier<String> subjectTokenSupplier;
+  private final IdentityPoolSubjectTokenProvider subjectTokenProvider;
 
   /** Internal constructor. See {@link Builder}. */
   IdentityPoolCredentials(Builder builder) {
     super(builder);
+    IdentityPoolCredentialSource credentialSource =
+        (IdentityPoolCredentialSource) builder.credentialSource;
+
     // Check that one and only one of supplier or credential source are provided.
-    if (builder.subjectTokenSupplier != null && builder.credentialSource != null) {
+    if (builder.subjectTokenSupplier != null && credentialSource != null) {
       throw new IllegalArgumentException(
           "IdentityPoolCredentials cannot have both a subjectTokenSupplier and a credentialSource.");
     }
-    if (builder.subjectTokenSupplier == null && builder.credentialSource == null) {
+    if (builder.subjectTokenSupplier == null && credentialSource == null) {
       throw new IllegalArgumentException(
           "A subjectTokenSupplier or a credentialSource must be provided.");
     }
     if (builder.subjectTokenSupplier != null) {
-      this.subjectTokenSupplier = builder.subjectTokenSupplier;
-      this.identityPoolCredentialSource = null;
+      this.subjectTokenProvider =
+          new ProgrammaticIdentityPoolSubjectTokenProvider(builder.subjectTokenSupplier);
+    } else if (credentialSource.credentialSourceType
+        == IdentityPoolCredentialSource.IdentityPoolCredentialSourceType.FILE) {
+      this.subjectTokenProvider = new FileIdentityPoolSubjectTokenProvider(credentialSource);
     } else {
-      this.identityPoolCredentialSource = (IdentityPoolCredentialSource) builder.credentialSource;
-      this.subjectTokenSupplier = null;
+      this.subjectTokenProvider =
+          new UrlIdentityPoolSubjectTokenProvider(credentialSource, this.transportFactory);
     }
   }
 
@@ -111,23 +97,12 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   @Override
   public String retrieveSubjectToken() throws IOException {
-    if (this.subjectTokenSupplier != null) {
-      try {
-        return this.subjectTokenSupplier.get();
-      } catch (Throwable e) {
-        throw new GoogleAuthException(
-            false, 0, "Error retrieving token from subject token supplier.", e);
-      }
-    } else if (identityPoolCredentialSource.credentialSourceType
-        == IdentityPoolCredentialSource.IdentityPoolCredentialSourceType.FILE) {
-      return retrieveSubjectTokenFromCredentialFile();
-    }
-    return getSubjectTokenFromMetadataServer();
+    return this.subjectTokenProvider.getSubjectToken();
   }
 
   @Override
   String getCredentialSourceType() {
-    if (this.subjectTokenSupplier != null) {
+    if (this.subjectTokenProvider.isUserSupplied()) {
       return PROGRAMMATIC_AUTH_METRICS_HEADER_VALUE;
     }
     if (((IdentityPoolCredentialSource) this.getCredentialSource()).credentialSourceType
@@ -135,65 +110,6 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       return FILE_METRICS_HEADER_VALUE;
     } else {
       return URL_METRICS_HEADER_VALUE;
-    }
-  }
-
-  public Supplier<String> getSubjectTokenSupplier() {
-    return this.subjectTokenSupplier;
-  }
-
-  private String retrieveSubjectTokenFromCredentialFile() throws IOException {
-    String credentialFilePath = identityPoolCredentialSource.credentialLocation;
-    if (!Files.exists(Paths.get(credentialFilePath), LinkOption.NOFOLLOW_LINKS)) {
-      throw new IOException(
-          String.format(
-              "Invalid credential location. The file at %s does not exist.", credentialFilePath));
-    }
-    try {
-      return parseToken(new FileInputStream(new File(credentialFilePath)));
-    } catch (IOException e) {
-      throw new IOException(
-          "Error when attempting to read the subject token from the credential file.", e);
-    }
-  }
-
-  private String parseToken(InputStream inputStream) throws IOException {
-    if (identityPoolCredentialSource.credentialFormatType == CredentialFormatType.TEXT) {
-      BufferedReader reader =
-          new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-      return CharStreams.toString(reader);
-    }
-
-    JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
-    GenericJson fileContents =
-        parser.parseAndClose(inputStream, StandardCharsets.UTF_8, GenericJson.class);
-
-    if (!fileContents.containsKey(identityPoolCredentialSource.subjectTokenFieldName)) {
-      throw new IOException("Invalid subject token field name. No subject token was found.");
-    }
-    return (String) fileContents.get(identityPoolCredentialSource.subjectTokenFieldName);
-  }
-
-  private String getSubjectTokenFromMetadataServer() throws IOException {
-    HttpRequest request =
-        transportFactory
-            .create()
-            .createRequestFactory()
-            .buildGetRequest(new GenericUrl(identityPoolCredentialSource.credentialLocation));
-    request.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
-
-    if (identityPoolCredentialSource.hasHeaders()) {
-      HttpHeaders headers = new HttpHeaders();
-      headers.putAll(identityPoolCredentialSource.headers);
-      request.setHeaders(headers);
-    }
-
-    try {
-      HttpResponse response = request.execute();
-      return parseToken(response.getContent());
-    } catch (IOException e) {
-      throw new IOException(
-          String.format("Error getting subject token from metadata server: %s", e.getMessage()), e);
     }
   }
 
@@ -220,7 +136,9 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
     Builder(IdentityPoolCredentials credentials) {
       super(credentials);
-      this.setSubjectTokenSupplier(credentials.subjectTokenSupplier);
+      if (credentials.subjectTokenProvider.isUserSupplied()) {
+        this.setSubjectTokenSupplier(credentials.subjectTokenProvider.getSupplier());
+      }
     }
 
     /**

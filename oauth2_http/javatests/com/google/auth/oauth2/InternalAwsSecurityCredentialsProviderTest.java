@@ -4,8 +4,8 @@ import static com.google.auth.oauth2.AwsCredentialsTest.buildAwsImdsv2Credential
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.google.appengine.repackaged.com.google.common.collect.ImmutableList;
 import com.google.auth.oauth2.ExternalAccountCredentialsTest.MockExternalAccountCredentialsTransportFactory;
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
