@@ -113,6 +113,7 @@ public class OAuth2CredentialsWithRefresh extends OAuth2Credentials {
       return this;
     }
 
+    @Override
     public OAuth2CredentialsWithRefresh build() {
       return new OAuth2CredentialsWithRefresh(this);
     }

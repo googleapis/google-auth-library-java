@@ -406,6 +406,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     return new Builder();
   }
 
+  @Override
   public Builder toBuilder() {
     return new Builder(this);
   }
@@ -502,6 +503,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       this.universeDomain = builder.universeDomain;
     }
 
+    @Override
     public GoogleCredentials build() {
       return new GoogleCredentials(this);
     }

@@ -606,6 +606,7 @@ public class DefaultCredentialsProviderTest {
   private class LogHandler extends Handler {
     LogRecord lastRecord;
 
+    @Override
     public void publish(LogRecord record) {
       lastRecord = record;
     }
@@ -614,8 +615,10 @@ public class DefaultCredentialsProviderTest {
       return lastRecord;
     }
 
+    @Override
     public void close() {}
 
+    @Override
     public void flush() {}
   }
 
