@@ -31,13 +31,26 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.oauth2.ExternalAccountCredentials.PROGRAMMATIC_METRICS_HEADER_VALUE;
+
 import java.io.IOException;
 import java.util.function.Supplier;
 
+/**
+ * Provider for retrieving subject tokens for {@Link IdentityPoolCredentials} to exchange for GCP
+ * access tokens. The subject token is retrieved by calling a user provided Supplier.
+ */
 class ProgrammaticIdentityPoolSubjectTokenProvider extends IdentityPoolSubjectTokenProvider {
+
+  private final long serialVersionUID = 9009530138782505571L;
 
   private final Supplier<String> subjectTokenSupplier;
 
+  /**
+   * Constructor for ProgrammaticIdentityPoolSubjectTokenProvider.
+   *
+   * @param subjectTokenSupplier the user defined supplier that returns a subject token.
+   */
   ProgrammaticIdentityPoolSubjectTokenProvider(Supplier<String> subjectTokenSupplier) {
     this.subjectTokenSupplier = subjectTokenSupplier;
   }
@@ -56,8 +69,8 @@ class ProgrammaticIdentityPoolSubjectTokenProvider extends IdentityPoolSubjectTo
   }
 
   @Override
-  boolean isUserSupplied() {
-    return true;
+  String getMetricsHeaderValue() {
+    return PROGRAMMATIC_METRICS_HEADER_VALUE;
   }
 
   @Override

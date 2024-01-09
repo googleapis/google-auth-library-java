@@ -31,14 +31,27 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.oauth2.ExternalAccountCredentials.PROGRAMMATIC_METRICS_HEADER_VALUE;
+
 import java.util.function.Supplier;
 
-class ProgrammaticAwsSecurityCredentialsProvider implements AwsSecurityCredentialsProvider {
+/**
+ * Provider for retrieving AWS security credentials for {@Link AwsCredentials} to exchange for GCP
+ * access tokens. The credentials are retrieved by calling a Supplier that has been defined by users
+ * when creating the AwsCredential.
+ */
+class ProgrammaticAwsSecurityCredentialsProvider extends AwsSecurityCredentialsProvider {
   private static final long serialVersionUID = 6699948149655089007L;
 
   private final String region;
   private final transient Supplier<AwsSecurityCredentials> awsSecurityCredentialsSupplier;
 
+  /**
+   * Constructor for ProgrammaticAwsSecurityCredentialsProvider
+   *
+   * @param supplier the user defined supplier that returns AWS security credentials.
+   * @param region the AWS region that should be returned by getRegion().
+   */
   ProgrammaticAwsSecurityCredentialsProvider(
       Supplier<AwsSecurityCredentials> supplier, String region) {
     if (region == null || region.trim().isEmpty()) {
@@ -49,11 +62,13 @@ class ProgrammaticAwsSecurityCredentialsProvider implements AwsSecurityCredentia
     this.awsSecurityCredentialsSupplier = supplier;
   }
 
-  public String getRegion() {
+  @Override
+  String getRegion() {
     return this.region;
   }
 
-  public AwsSecurityCredentials getCredentials() throws GoogleAuthException {
+  @Override
+  AwsSecurityCredentials getCredentials() throws GoogleAuthException {
     try {
       return this.awsSecurityCredentialsSupplier.get();
     } catch (RuntimeException e) {
@@ -65,8 +80,9 @@ class ProgrammaticAwsSecurityCredentialsProvider implements AwsSecurityCredentia
     }
   }
 
-  public boolean isUserSupplied() {
-    return true;
+  @Override
+  String getMetricsHeaderValue() {
+    return PROGRAMMATIC_METRICS_HEADER_VALUE;
   }
 
   public Supplier<AwsSecurityCredentials> getSupplier() {

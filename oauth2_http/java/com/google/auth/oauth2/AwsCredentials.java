@@ -69,6 +69,10 @@ public class AwsCredentials extends ExternalAccountCredentials {
   @Nullable private final String regionalCredentialVerificationUrl;
   @Nullable private final String awsRegion;
 
+  // Boolean to tell if a Supplier was provided to build the credential. This is needed to tell
+  // whether the supplier should be passed when creating a new builder from this credential.
+  private final boolean builtWithSupplier;
+
   /** Internal constructor. See {@link AwsCredentials.Builder}. */
   AwsCredentials(Builder builder) {
     super(builder);
@@ -103,6 +107,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
       this.awsSecurityCredentialsProvider =
           new ProgrammaticAwsSecurityCredentialsProvider(
               builder.awsSecurityCredentialsSupplier, this.awsRegion);
+      this.builtWithSupplier = true;
     } else {
       this.awsSecurityCredentialsProvider =
           new InternalAwsSecurityCredentialsProvider(
@@ -110,6 +115,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
               this.getEnvironmentProvider(),
               this.transportFactory,
               builder.awsRegion);
+      this.builtWithSupplier = false;
     }
   }
 
@@ -162,10 +168,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
   @Override
   String getCredentialSourceType() {
-    if (this.awsSecurityCredentialsProvider.isUserSupplied()) {
-      return PROGRAMMATIC_AUTH_METRICS_HEADER_VALUE;
-    }
-    return AWS_METRICS_HEADER_VALUE;
+    return this.awsSecurityCredentialsProvider.getMetricsHeaderValue();
   }
 
   private String buildSubjectToken(AwsRequestSignature signature)
@@ -246,7 +249,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
     Builder(AwsCredentials credentials) {
       super(credentials);
       this.awsRegion = credentials.awsRegion;
-      if (credentials.awsSecurityCredentialsProvider.isUserSupplied()) {
+      if (credentials.builtWithSupplier) {
         this.awsSecurityCredentialsSupplier =
             credentials.awsSecurityCredentialsProvider.getSupplier();
       }

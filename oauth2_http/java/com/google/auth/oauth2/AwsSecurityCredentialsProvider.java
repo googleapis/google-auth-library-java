@@ -35,13 +35,39 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.function.Supplier;
 
-interface AwsSecurityCredentialsProvider extends Serializable {
+/**
+ * Provider for retrieving AWS Security credentials for {@Link AwsCredentials} to exchange for GCP
+ * access tokens.
+ */
+abstract class AwsSecurityCredentialsProvider implements Serializable {
 
-  String getRegion() throws IOException;
+  /**
+   * Gets the AWS region to use.
+   *
+   * @return the AWS region that should be used for the credential.
+   * @throws IOException
+   */
+  abstract String getRegion() throws IOException;
 
-  AwsSecurityCredentials getCredentials() throws IOException;
+  /**
+   * Gets AWS security credentials.
+   *
+   * @return valid AWS security credentials that can be exchanged for a GCP access token.
+   * @throws IOException
+   */
+  abstract AwsSecurityCredentials getCredentials() throws IOException;
 
-  boolean isUserSupplied();
+  /**
+   * Gets the metrics header value that should be used for the sts request.
+   *
+   * @return the metrics header value.
+   */
+  abstract String getMetricsHeaderValue();
 
-  Supplier<AwsSecurityCredentials> getSupplier();
+  /**
+   * Gets the Aws security credential supplier.
+   *
+   * @return the Supplier used to retrieve the AWS security credentials.
+   */
+  abstract Supplier<AwsSecurityCredentials> getSupplier();
 }

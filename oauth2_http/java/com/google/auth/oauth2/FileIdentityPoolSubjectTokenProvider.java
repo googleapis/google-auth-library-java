@@ -31,6 +31,8 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.oauth2.IdentityPoolCredentials.FILE_METRICS_HEADER_VALUE;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -39,26 +41,37 @@ import java.nio.file.LinkOption;
 import java.nio.file.Paths;
 import java.util.function.Supplier;
 
+/**
+ * Internal provider for retrieving subject tokens for {@Link IdentityPoolCredentials} to exchange
+ * for GCP access tokens via a local file.
+ */
 class FileIdentityPoolSubjectTokenProvider extends IdentityPoolSubjectTokenProvider {
+
+  private final long serialVersionUID = 2475549052347431992L;
 
   private final IdentityPoolCredentialSource credentialSource;
 
+  /**
+   * Constructor for FileIdentitySubjectTokenProvider
+   *
+   * @param credentialSource the credential source to use.
+   */
   FileIdentityPoolSubjectTokenProvider(IdentityPoolCredentialSource credentialSource) {
     this.credentialSource = credentialSource;
   }
 
   @Override
-  public String getSubjectToken() throws IOException {
+  String getSubjectToken() throws IOException {
     return this.retrieveSubjectTokenFromCredentialFile();
   }
 
   @Override
-  public boolean isUserSupplied() {
-    return false;
+  String getMetricsHeaderValue() {
+    return FILE_METRICS_HEADER_VALUE;
   }
 
   @Override
-  public Supplier<String> getSupplier() {
+  Supplier<String> getSupplier() {
     return () -> {
       try {
         return this.getSubjectToken();

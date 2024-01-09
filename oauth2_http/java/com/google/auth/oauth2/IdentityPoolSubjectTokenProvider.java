@@ -43,11 +43,32 @@ import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Supplier;
 
+/**
+ * Provider for retrieving subject tokens for {@Link IdentityPoolCredentials} to exchange for GCP
+ * access tokens.
+ */
 abstract class IdentityPoolSubjectTokenProvider implements Serializable {
+
+  /**
+   * Gets a subject token that can be exchanged for a GCP access token.
+   *
+   * @return a valid subject token.
+   * @throws IOException
+   */
   abstract String getSubjectToken() throws IOException;
 
-  abstract boolean isUserSupplied();
+  /**
+   * Gets the metrics header value that should be used for the sts request.
+   *
+   * @return the metrics header value.
+   */
+  abstract String getMetricsHeaderValue();
 
+  /**
+   * Gets the supplier used to retrieve the subject token.
+   *
+   * @return the supplier used for getSubjectToken.
+   */
   abstract Supplier<String> getSupplier();
 
   protected static String parseToken(

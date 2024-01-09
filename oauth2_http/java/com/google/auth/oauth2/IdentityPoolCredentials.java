@@ -32,7 +32,7 @@
 package com.google.auth.oauth2;
 
 import com.google.auth.http.HttpTransportFactory;
-import com.google.auth.oauth2.IdentityPoolCredentialSource.IdentityPoolCredentialSourceType;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -52,6 +52,9 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
   private static final long serialVersionUID = 2471046175477275881L;
 
   private final IdentityPoolSubjectTokenProvider subjectTokenProvider;
+  // Boolean to tell if a Supplier was provided to build the credential. This is needed to tell
+  // whether the supplier should be passed when creating a new builder from this credential.
+  private final boolean builtWithSupplier;
 
   /** Internal constructor. See {@link Builder}. */
   IdentityPoolCredentials(Builder builder) {
@@ -71,12 +74,15 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
     if (builder.subjectTokenSupplier != null) {
       this.subjectTokenProvider =
           new ProgrammaticIdentityPoolSubjectTokenProvider(builder.subjectTokenSupplier);
+      this.builtWithSupplier = true;
     } else if (credentialSource.credentialSourceType
         == IdentityPoolCredentialSource.IdentityPoolCredentialSourceType.FILE) {
       this.subjectTokenProvider = new FileIdentityPoolSubjectTokenProvider(credentialSource);
+      this.builtWithSupplier = false;
     } else {
       this.subjectTokenProvider =
           new UrlIdentityPoolSubjectTokenProvider(credentialSource, this.transportFactory);
+      this.builtWithSupplier = false;
     }
   }
 
@@ -102,15 +108,12 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   @Override
   String getCredentialSourceType() {
-    if (this.subjectTokenProvider.isUserSupplied()) {
-      return PROGRAMMATIC_AUTH_METRICS_HEADER_VALUE;
-    }
-    if (((IdentityPoolCredentialSource) this.getCredentialSource()).credentialSourceType
-        == IdentityPoolCredentialSourceType.FILE) {
-      return FILE_METRICS_HEADER_VALUE;
-    } else {
-      return URL_METRICS_HEADER_VALUE;
-    }
+    return this.subjectTokenProvider.getMetricsHeaderValue();
+  }
+
+  @VisibleForTesting
+  IdentityPoolSubjectTokenProvider getIdentityPoolSubjectTokenProvider() {
+    return this.subjectTokenProvider;
   }
 
   /** Clones the IdentityPoolCredentials with the specified scopes. */
@@ -136,7 +139,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
     Builder(IdentityPoolCredentials credentials) {
       super(credentials);
-      if (credentials.subjectTokenProvider.isUserSupplied()) {
+      if (credentials.builtWithSupplier) {
         this.setSubjectTokenSupplier(credentials.subjectTokenProvider.getSupplier());
       }
     }

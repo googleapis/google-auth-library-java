@@ -31,6 +31,8 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.oauth2.IdentityPoolCredentials.URL_METRICS_HEADER_VALUE;
+
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
@@ -40,11 +42,23 @@ import com.google.auth.http.HttpTransportFactory;
 import java.io.IOException;
 import java.util.function.Supplier;
 
+/**
+ * Provider for retrieving subject tokens for {@Link IdentityPoolCredentials} to exchange for GCP
+ * access tokens. The subject token is retrieved by calling a URL that returns the token.
+ */
 class UrlIdentityPoolSubjectTokenProvider extends IdentityPoolSubjectTokenProvider {
+
+  private static final long serialVersionUID = 4964578313468011844L;
 
   private final IdentityPoolCredentialSource credentialSource;
   private final transient HttpTransportFactory transportFactory;
 
+  /**
+   * Constructor for UrlIdentityPoolSubjectTokenProvider.
+   *
+   * @param credentialSource the credential source to use.
+   * @param transportFactory the transport factory to use for calling the URL.
+   */
   UrlIdentityPoolSubjectTokenProvider(
       IdentityPoolCredentialSource credentialSource, HttpTransportFactory transportFactory) {
     this.credentialSource = credentialSource;
@@ -52,17 +66,17 @@ class UrlIdentityPoolSubjectTokenProvider extends IdentityPoolSubjectTokenProvid
   }
 
   @Override
-  public String getSubjectToken() throws IOException {
+  String getSubjectToken() throws IOException {
     return this.getSubjectTokenFromMetadataServer();
   }
 
   @Override
-  public boolean isUserSupplied() {
-    return false;
+  String getMetricsHeaderValue() {
+    return URL_METRICS_HEADER_VALUE;
   }
 
   @Override
-  public Supplier<String> getSupplier() {
+  Supplier<String> getSupplier() {
     return () -> {
       try {
         return this.getSubjectToken();

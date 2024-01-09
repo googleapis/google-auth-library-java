@@ -73,7 +73,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   static final String EXECUTABLE_SOURCE_KEY = "executable";
 
   static final String DEFAULT_TOKEN_URL = "https://sts.googleapis.com/v1/token";
-  static final String PROGRAMMATIC_AUTH_METRICS_HEADER_VALUE = "programmatic";
+  static final String PROGRAMMATIC_METRICS_HEADER_VALUE = "programmatic";
 
   private final String transportFactoryClassName;
   private final String audience;
