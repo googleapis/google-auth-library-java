@@ -806,7 +806,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
             .setScopes(scopes)
             .build();
 
-    // assertEquals(testSupplier, credentials.getSubjectTokenSupplier());
+    assertEquals(testSupplier, credentials.getIdentityPoolSubjectTokenProvider().getSupplier());
   }
 
   @Test
