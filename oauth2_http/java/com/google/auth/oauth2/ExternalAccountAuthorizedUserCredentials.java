@@ -245,6 +245,7 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
   public int hashCode() {
     return Objects.hash(
         super.hashCode(),
+        getAccessToken(),
         clientId,
         clientSecret,
         refreshToken,
@@ -281,6 +282,7 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
     ExternalAccountAuthorizedUserCredentials credentials =
         (ExternalAccountAuthorizedUserCredentials) obj;
     return super.equals(credentials)
+        && Objects.equals(this.getAccessToken(), credentials.getAccessToken())
         && Objects.equals(this.clientId, credentials.clientId)
         && Objects.equals(this.clientSecret, credentials.clientSecret)
         && Objects.equals(this.refreshToken, credentials.refreshToken)
