@@ -38,7 +38,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
-import java.util.function.Supplier;
 
 /**
  * Url-sourced, file-sourced, or user provided supplier method-sourced external account credentials.
@@ -51,10 +50,8 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
   static final String URL_METRICS_HEADER_VALUE = "url";
   private static final long serialVersionUID = 2471046175477275881L;
 
-  private final IdentityPoolSubjectTokenProvider subjectTokenProvider;
-  // Boolean to tell if a Supplier was provided to build the credential. This is needed to tell
-  // whether the supplier should be passed when creating a new builder from this credential.
-  private final boolean builtWithSupplier;
+  private final IdentityPoolSubjectTokenSupplier subjectTokenSupplier;
+  private final String metricsHeaderValue;
 
   /** Internal constructor. See {@link Builder}. */
   IdentityPoolCredentials(Builder builder) {
@@ -72,17 +69,16 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
           "A subjectTokenSupplier or a credentialSource must be provided.");
     }
     if (builder.subjectTokenSupplier != null) {
-      this.subjectTokenProvider =
-          new ProgrammaticIdentityPoolSubjectTokenProvider(builder.subjectTokenSupplier);
-      this.builtWithSupplier = true;
+      this.subjectTokenSupplier = builder.subjectTokenSupplier;
+      this.metricsHeaderValue = PROGRAMMATIC_METRICS_HEADER_VALUE;
     } else if (credentialSource.credentialSourceType
         == IdentityPoolCredentialSource.IdentityPoolCredentialSourceType.FILE) {
-      this.subjectTokenProvider = new FileIdentityPoolSubjectTokenProvider(credentialSource);
-      this.builtWithSupplier = false;
+      this.subjectTokenSupplier = new FileIdentityPoolSubjectTokenSupplier(credentialSource);
+      this.metricsHeaderValue = FILE_METRICS_HEADER_VALUE;
     } else {
-      this.subjectTokenProvider =
-          new UrlIdentityPoolSubjectTokenProvider(credentialSource, this.transportFactory);
-      this.builtWithSupplier = false;
+      this.subjectTokenSupplier =
+          new UrlIdentityPoolSubjectTokenSupplier(credentialSource, this.transportFactory);
+      this.metricsHeaderValue = URL_METRICS_HEADER_VALUE;
     }
   }
 
@@ -103,17 +99,17 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   @Override
   public String retrieveSubjectToken() throws IOException {
-    return this.subjectTokenProvider.getSubjectToken();
+    return this.subjectTokenSupplier.getSubjectToken();
   }
 
   @Override
   String getCredentialSourceType() {
-    return this.subjectTokenProvider.getMetricsHeaderValue();
+    return this.metricsHeaderValue;
   }
 
   @VisibleForTesting
-  IdentityPoolSubjectTokenProvider getIdentityPoolSubjectTokenProvider() {
-    return this.subjectTokenProvider;
+  IdentityPoolSubjectTokenSupplier getIdentityPoolSubjectTokenSupplier() {
+    return this.subjectTokenSupplier;
   }
 
   /** Clones the IdentityPoolCredentials with the specified scopes. */
@@ -133,25 +129,25 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   public static class Builder extends ExternalAccountCredentials.Builder {
 
-    private Supplier<String> subjectTokenSupplier;
+    private IdentityPoolSubjectTokenSupplier subjectTokenSupplier;
 
     Builder() {}
 
     Builder(IdentityPoolCredentials credentials) {
       super(credentials);
-      if (credentials.builtWithSupplier) {
-        this.setSubjectTokenSupplier(credentials.subjectTokenProvider.getSupplier());
+      if (this.credentialSource == null) {
+        this.subjectTokenSupplier = credentials.subjectTokenSupplier;
       }
     }
 
     /**
      * Sets the subject token supplier. The supplier should return a valid subject token string.
      *
-     * @param subjectTokenSupplier the supplier method to be called.
+     * @param subjectTokenSupplier the supplier to use.
      * @return this {@code Builder} object
      */
     @CanIgnoreReturnValue
-    public Builder setSubjectTokenSupplier(Supplier<String> subjectTokenSupplier) {
+    public Builder setSubjectTokenSupplier(IdentityPoolSubjectTokenSupplier subjectTokenSupplier) {
       this.subjectTokenSupplier = subjectTokenSupplier;
       return this;
     }

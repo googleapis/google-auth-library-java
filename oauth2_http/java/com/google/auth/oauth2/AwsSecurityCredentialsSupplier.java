@@ -33,13 +33,12 @@ package com.google.auth.oauth2;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.function.Supplier;
 
 /**
- * Provider for retrieving AWS Security credentials for {@Link AwsCredentials} to exchange for GCP
+ * Supplier for retrieving AWS Security credentials for {@Link AwsCredentials} to exchange for GCP
  * access tokens.
  */
-abstract class AwsSecurityCredentialsProvider implements Serializable {
+public interface AwsSecurityCredentialsSupplier extends Serializable {
 
   /**
    * Gets the AWS region to use.
@@ -47,7 +46,7 @@ abstract class AwsSecurityCredentialsProvider implements Serializable {
    * @return the AWS region that should be used for the credential.
    * @throws IOException
    */
-  abstract String getRegion() throws IOException;
+  String getRegion() throws IOException;
 
   /**
    * Gets AWS security credentials.
@@ -55,19 +54,5 @@ abstract class AwsSecurityCredentialsProvider implements Serializable {
    * @return valid AWS security credentials that can be exchanged for a GCP access token.
    * @throws IOException
    */
-  abstract AwsSecurityCredentials getCredentials() throws IOException;
-
-  /**
-   * Gets the metrics header value that should be used for the sts request.
-   *
-   * @return the metrics header value.
-   */
-  abstract String getMetricsHeaderValue();
-
-  /**
-   * Gets the Aws security credential supplier.
-   *
-   * @return the Supplier used to retrieve the AWS security credentials.
-   */
-  abstract Supplier<AwsSecurityCredentials> getSupplier();
+  AwsSecurityCredentials getCredentials() throws IOException;
 }

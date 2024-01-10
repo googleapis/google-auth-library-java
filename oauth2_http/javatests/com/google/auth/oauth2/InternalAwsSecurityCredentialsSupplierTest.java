@@ -42,9 +42,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Tests for {@link InternalAwsSecurityCredentialsProvider}. */
+/** Tests for {@link InternalAwsSecurityCredentialsSupplier}. */
 @RunWith(JUnit4.class)
-public class InternalAwsSecurityCredentialsProviderTest {
+public class InternalAwsSecurityCredentialsSupplierTest {
   @Test
   public void shouldUseMetadataServer_withRequiredEnvironmentVariables() {
     MockExternalAccountCredentialsTransportFactory transportFactory =
@@ -59,13 +59,12 @@ public class InternalAwsSecurityCredentialsProviderTest {
           .setEnv(regionKey, "awsRegion")
           .setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId")
           .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey");
-      InternalAwsSecurityCredentialsProvider provider =
-          new InternalAwsSecurityCredentialsProvider(
+      InternalAwsSecurityCredentialsSupplier supplier =
+          new InternalAwsSecurityCredentialsSupplier(
               buildAwsImdsv2CredentialSource(transportFactory),
               environmentProvider,
-              transportFactory,
-              null);
-      assertFalse(provider.shouldUseMetadataServer());
+              transportFactory);
+      assertFalse(supplier.shouldUseMetadataServer());
     }
   }
 
@@ -78,13 +77,12 @@ public class InternalAwsSecurityCredentialsProviderTest {
     environmentProvider
         .setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId")
         .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey");
-    InternalAwsSecurityCredentialsProvider provider =
-        new InternalAwsSecurityCredentialsProvider(
+    InternalAwsSecurityCredentialsSupplier supplier =
+        new InternalAwsSecurityCredentialsSupplier(
             buildAwsImdsv2CredentialSource(transportFactory),
             environmentProvider,
-            transportFactory,
-            null);
-    assertTrue(provider.shouldUseMetadataServer());
+            transportFactory);
+    assertTrue(supplier.shouldUseMetadataServer());
   }
 
   @Test
@@ -100,13 +98,12 @@ public class InternalAwsSecurityCredentialsProviderTest {
       environmentProvider
           .setEnv(regionKey, "awsRegion")
           .setEnv("AWS_SECRET_ACCESS_KEY", "awsSecretAccessKey");
-      InternalAwsSecurityCredentialsProvider provider =
-          new InternalAwsSecurityCredentialsProvider(
+      InternalAwsSecurityCredentialsSupplier supplier =
+          new InternalAwsSecurityCredentialsSupplier(
               buildAwsImdsv2CredentialSource(transportFactory),
               environmentProvider,
-              transportFactory,
-              null);
-      assertTrue(provider.shouldUseMetadataServer());
+              transportFactory);
+      assertTrue(supplier.shouldUseMetadataServer());
     }
   }
 
@@ -123,13 +120,12 @@ public class InternalAwsSecurityCredentialsProviderTest {
       environmentProvider
           .setEnv(regionKey, "awsRegion")
           .setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId");
-      InternalAwsSecurityCredentialsProvider provider =
-          new InternalAwsSecurityCredentialsProvider(
+      InternalAwsSecurityCredentialsSupplier supplier =
+          new InternalAwsSecurityCredentialsSupplier(
               buildAwsImdsv2CredentialSource(transportFactory),
               environmentProvider,
-              transportFactory,
-              null);
-      assertTrue(provider.shouldUseMetadataServer());
+              transportFactory);
+      assertTrue(supplier.shouldUseMetadataServer());
     }
   }
 
@@ -145,13 +141,12 @@ public class InternalAwsSecurityCredentialsProviderTest {
       // AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are always required.
       // Not set here.
       environmentProvider.setEnv(regionKey, "awsRegion");
-      InternalAwsSecurityCredentialsProvider provider =
-          new InternalAwsSecurityCredentialsProvider(
+      InternalAwsSecurityCredentialsSupplier supplier =
+          new InternalAwsSecurityCredentialsSupplier(
               buildAwsImdsv2CredentialSource(transportFactory),
               environmentProvider,
-              transportFactory,
-              null);
-      assertTrue(provider.shouldUseMetadataServer());
+              transportFactory);
+      assertTrue(supplier.shouldUseMetadataServer());
     }
   }
 
@@ -160,12 +155,11 @@ public class InternalAwsSecurityCredentialsProviderTest {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
-    InternalAwsSecurityCredentialsProvider provider =
-        new InternalAwsSecurityCredentialsProvider(
+    InternalAwsSecurityCredentialsSupplier supplier =
+        new InternalAwsSecurityCredentialsSupplier(
             buildAwsImdsv2CredentialSource(transportFactory),
             environmentProvider,
-            transportFactory,
-            null);
-    assertTrue(provider.shouldUseMetadataServer());
+            transportFactory);
+    assertTrue(supplier.shouldUseMetadataServer());
   }
 }

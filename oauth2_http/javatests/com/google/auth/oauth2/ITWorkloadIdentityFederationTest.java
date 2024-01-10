@@ -190,12 +190,10 @@ public final class ITWorkloadIdentityFederationTest {
     AwsSecurityCredentials credentials =
         new AwsSecurityCredentials(awsAccessKeyId, awsSecretAccessKey, awsSessionToken);
 
-    Supplier<AwsSecurityCredentials> credSupplier = () -> credentials;
-
+    AwsSecurityCredentialsSupplier provider = new ITAwsSecurityCredentialsProvider("us-east-2", credentials);
     AwsCredentials awsCredential =
         AwsCredentials.newBuilder()
-            .setAwsSecurityCredentialsSupplier(credSupplier)
-            .setAwsRegion("us-east-2")
+            .setAwsSecurityCredentialsSupplier(provider)
             .setSubjectTokenType(SubjectTokenTypes.AWS4)
             .setAudience(AWS_AUDIENCE)
             .setServiceAccountImpersonationUrl(
@@ -259,7 +257,7 @@ public final class ITWorkloadIdentityFederationTest {
   @Test
   public void identityPoolCredentials_withProgrammaticAuth() throws IOException {
 
-    Supplier<String> tokenSupplier =
+    IdentityPoolSubjectTokenSupplier tokenSupplier =
         () -> {
           try {
             return generateGoogleIdToken(OIDC_AUDIENCE);
@@ -452,5 +450,26 @@ public final class ITWorkloadIdentityFederationTest {
       return rawXml.substring(startIndex + tagName.length() + 2, endIndex);
     }
     return null;
+  }
+
+  private class ITAwsSecurityCredentialsProvider implements AwsSecurityCredentialsSupplier {
+
+    private String region;
+    private AwsSecurityCredentials credentials;
+
+    ITAwsSecurityCredentialsProvider(String region, AwsSecurityCredentials credentials){
+      this.region = region;
+      this.credentials = credentials;
+    }
+
+    @Override
+    public String getRegion(){
+      return this.region;
+    }
+
+    @Override
+    public AwsSecurityCredentials getCredentials(){
+      return this.credentials;
+    }
   }
 }

@@ -36,42 +36,52 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.auth.oauth2.IdentityPoolCredentialSource.CredentialFormatType;
 import com.google.common.io.CharStreams;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
-import java.util.function.Supplier;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Paths;
 
 /**
- * Provider for retrieving subject tokens for {@Link IdentityPoolCredentials} to exchange for GCP
- * access tokens.
+ * Internal provider for retrieving subject tokens for {@Link IdentityPoolCredentials} to exchange
+ * for GCP access tokens via a local file.
  */
-abstract class IdentityPoolSubjectTokenProvider implements Serializable {
+class FileIdentityPoolSubjectTokenSupplier implements IdentityPoolSubjectTokenSupplier {
+
+  private final long serialVersionUID = 2475549052347431992L;
+
+  private final IdentityPoolCredentialSource credentialSource;
 
   /**
-   * Gets a subject token that can be exchanged for a GCP access token.
+   * Constructor for FileIdentitySubjectTokenProvider
    *
-   * @return a valid subject token.
-   * @throws IOException
+   * @param credentialSource the credential source to use.
    */
-  abstract String getSubjectToken() throws IOException;
+  FileIdentityPoolSubjectTokenSupplier(IdentityPoolCredentialSource credentialSource) {
+    this.credentialSource = credentialSource;
+  }
 
-  /**
-   * Gets the metrics header value that should be used for the sts request.
-   *
-   * @return the metrics header value.
-   */
-  abstract String getMetricsHeaderValue();
+  @Override
+  public String getSubjectToken() throws IOException {
+    String credentialFilePath = this.credentialSource.credentialLocation;
+    if (!Files.exists(Paths.get(credentialFilePath), LinkOption.NOFOLLOW_LINKS)) {
+      throw new IOException(
+          String.format(
+              "Invalid credential location. The file at %s does not exist.", credentialFilePath));
+    }
+    try {
+      return parseToken(new FileInputStream(new File(credentialFilePath)), this.credentialSource);
+    } catch (IOException e) {
+      throw new IOException(
+          "Error when attempting to read the subject token from the credential file.", e);
+    }
+  }
 
-  /**
-   * Gets the supplier used to retrieve the subject token.
-   *
-   * @return the supplier used for getSubjectToken.
-   */
-  abstract Supplier<String> getSupplier();
-
-  protected static String parseToken(
+  static String parseToken(
       InputStream inputStream, IdentityPoolCredentialSource credentialSource) throws IOException {
     if (credentialSource.credentialFormatType == CredentialFormatType.TEXT) {
       BufferedReader reader =

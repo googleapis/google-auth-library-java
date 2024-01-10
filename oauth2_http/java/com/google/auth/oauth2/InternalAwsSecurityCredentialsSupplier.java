@@ -31,8 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.auth.oauth2.AwsCredentials.AWS_METRICS_HEADER_VALUE;
-
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpHeaders;
@@ -49,7 +47,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -57,7 +54,7 @@ import javax.annotation.Nullable;
  * for GCP access tokens. The credentials are retrieved either via environment variables or metadata
  * endpoints.
  */
-class InternalAwsSecurityCredentialsProvider extends AwsSecurityCredentialsProvider {
+class InternalAwsSecurityCredentialsSupplier implements AwsSecurityCredentialsSupplier {
   private static final long serialVersionUID = 4438370785261365013L;
 
   // Supported environment variables.
@@ -74,7 +71,6 @@ class InternalAwsSecurityCredentialsProvider extends AwsSecurityCredentialsProvi
   private final AwsCredentialSource awsCredentialSource;
   private EnvironmentProvider environmentProvider;
   private transient HttpTransportFactory transportFactory;
-  private final String region;
 
   /**
    * Constructor for InternalAwsSecurityCredentialsProvider
@@ -82,22 +78,18 @@ class InternalAwsSecurityCredentialsProvider extends AwsSecurityCredentialsProvi
    * @param awsCredentialSource the credential source to use.
    * @param environmentProvider the environment provider to use for environment variables.
    * @param transportFactory the transport factory to use for metadata requests.
-   * @param region an AWS region to use. If provided, getRegion will return this value instead of
-   *     retrieving it via environment variables or metadata endpoints.
    */
-  InternalAwsSecurityCredentialsProvider(
+  InternalAwsSecurityCredentialsSupplier(
       AwsCredentialSource awsCredentialSource,
       EnvironmentProvider environmentProvider,
-      HttpTransportFactory transportFactory,
-      String region) {
+      HttpTransportFactory transportFactory) {
     this.environmentProvider = environmentProvider;
     this.awsCredentialSource = awsCredentialSource;
     this.transportFactory = transportFactory;
-    this.region = region;
   }
 
   @Override
-  AwsSecurityCredentials getCredentials() throws IOException {
+  public AwsSecurityCredentials getCredentials() throws IOException {
     // Check environment variables for credentials first.
     if (canRetrieveSecurityCredentialsFromEnvironment()) {
       String accessKeyId = environmentProvider.getEnv(AWS_ACCESS_KEY_ID);
@@ -137,12 +129,7 @@ class InternalAwsSecurityCredentialsProvider extends AwsSecurityCredentialsProvi
   }
 
   @Override
-  String getRegion() throws IOException {
-    // If user has provided a region string, return that instead of checking environment or metadata
-    // server.
-    if (this.region != null) {
-      return this.region;
-    }
+  public String getRegion() throws IOException {
     String region;
     if (canRetrieveRegionFromEnvironment()) {
       // For AWS Lambda, the region is retrieved through the AWS_REGION environment variable.
@@ -179,22 +166,6 @@ class InternalAwsSecurityCredentialsProvider extends AwsSecurityCredentialsProvi
       }
     }
     return false;
-  }
-
-  @Override
-  String getMetricsHeaderValue() {
-    return AWS_METRICS_HEADER_VALUE;
-  }
-
-  @Override
-  Supplier<AwsSecurityCredentials> getSupplier() {
-    return () -> {
-      try {
-        return this.getCredentials();
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    };
   }
 
   private boolean canRetrieveSecurityCredentialsFromEnvironment() {

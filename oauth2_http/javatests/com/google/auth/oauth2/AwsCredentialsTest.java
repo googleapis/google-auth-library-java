@@ -31,7 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -104,11 +103,8 @@ public class AwsCredentialsTest extends BaseSerializationTest {
           .setCredentialSource(AWS_CREDENTIAL_SOURCE)
           .build();
 
-  private static final AwsSecurityCredentials ProgrammaticAwsCreds =
+  private static final AwsSecurityCredentials programmaticAwsCreds =
       new AwsSecurityCredentials("testAccessKey", "testSecretAccessKey", null);
-
-  private static final Supplier<AwsSecurityCredentials> CredentialSupplier =
-      () -> ProgrammaticAwsCreds;
 
   @Test
   public void test_awsCredentialSource() {
@@ -220,10 +216,11 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
+    AwsSecurityCredentialsSupplier supplier = new TestAwsSecurityCredentialsSupplier("test", programmaticAwsCreds, null);
+
     AwsCredentials awsCredential =
         AwsCredentials.newBuilder()
-            .setAwsRegion("test")
-            .setAwsSecurityCredentialsSupplier(CredentialSupplier)
+            .setAwsSecurityCredentialsSupplier(supplier)
             .setHttpTransportFactory(transportFactory)
             .setAudience("audience")
             .setTokenUrl(STS_URL)
@@ -248,10 +245,11 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
 
+    AwsSecurityCredentialsSupplier supplier = new TestAwsSecurityCredentialsSupplier("test", programmaticAwsCreds, null);
+
     AwsCredentials awsCredential =
         AwsCredentials.newBuilder()
-            .setAwsRegion("test")
-            .setAwsSecurityCredentialsSupplier(CredentialSupplier)
+            .setAwsSecurityCredentialsSupplier(supplier)
             .setHttpTransportFactory(transportFactory)
             .setAudience("audience")
             .setTokenUrl(STS_URL)
@@ -356,8 +354,8 @@ public class AwsCredentialsTest extends BaseSerializationTest {
         new HashMap<String, String>() {
           {
             put(
-                InternalAwsSecurityCredentialsProvider.AWS_IMDSV2_SESSION_TOKEN_TTL_HEADER,
-                InternalAwsSecurityCredentialsProvider.AWS_IMDSV2_SESSION_TOKEN_TTL);
+                InternalAwsSecurityCredentialsSupplier.AWS_IMDSV2_SESSION_TOKEN_TTL_HEADER,
+                InternalAwsSecurityCredentialsSupplier.AWS_IMDSV2_SESSION_TOKEN_TTL);
           }
         });
 
@@ -365,7 +363,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
         new HashMap<String, String>() {
           {
             put(
-                InternalAwsSecurityCredentialsProvider.AWS_IMDSV2_SESSION_TOKEN_HEADER,
+                InternalAwsSecurityCredentialsSupplier.AWS_IMDSV2_SESSION_TOKEN_HEADER,
                 AWS_IMDSV2_SESSION_TOKEN);
           }
         };
@@ -602,10 +600,11 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
+    AwsSecurityCredentialsSupplier supplier = new TestAwsSecurityCredentialsSupplier("test", programmaticAwsCreds, null);
+
     AwsCredentials awsCredential =
         AwsCredentials.newBuilder()
-            .setAwsRegion("test")
-            .setAwsSecurityCredentialsSupplier(CredentialSupplier)
+            .setAwsSecurityCredentialsSupplier(supplier)
             .setHttpTransportFactory(transportFactory)
             .setAudience("audience")
             .setTokenUrl(STS_URL)
@@ -642,13 +641,11 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     AwsSecurityCredentials securityCredentialsWithToken =
         new AwsSecurityCredentials("accessToken", "secretAccessKey", "token");
 
-    Supplier<AwsSecurityCredentials> awsSecurityCredentialsSupplierWithToken =
-        () -> securityCredentialsWithToken;
+    AwsSecurityCredentialsSupplier supplier = new TestAwsSecurityCredentialsSupplier("test", securityCredentialsWithToken, null);
 
     AwsCredentials awsCredential =
         AwsCredentials.newBuilder()
-            .setAwsRegion("test")
-            .setAwsSecurityCredentialsSupplier(awsSecurityCredentialsSupplierWithToken)
+            .setAwsSecurityCredentialsSupplier(supplier)
             .setHttpTransportFactory(transportFactory)
             .setAudience("audience")
             .setTokenUrl(STS_URL)
@@ -679,21 +676,17 @@ public class AwsCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void retrieveSubjectToken_withProgrammaticRefreshWrapsError() throws IOException {
+  public void retrieveSubjectToken_withProgrammaticRefreshThrowsError() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
-    RuntimeException testException = new RuntimeException("test");
+    IOException testException = new IOException("test");
 
-    Supplier<AwsSecurityCredentials> errorSupplier =
-        () -> {
-          throw testException;
-        };
+    AwsSecurityCredentialsSupplier supplier = new TestAwsSecurityCredentialsSupplier("test", null, testException);
 
     AwsCredentials awsCredential =
         AwsCredentials.newBuilder()
-            .setAwsRegion("test")
-            .setAwsSecurityCredentialsSupplier(errorSupplier)
+            .setAwsSecurityCredentialsSupplier(supplier)
             .setHttpTransportFactory(transportFactory)
             .setAudience("audience")
             .setTokenUrl(STS_URL)
@@ -703,10 +696,9 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     try {
       String subjectToken = URLDecoder.decode(awsCredential.retrieveSubjectToken(), "UTF-8");
       fail("retrieveSubjectToken should not succeed");
-    } catch (GoogleAuthException e) {
+    } catch (IOException e) {
       assertEquals(
-          "Error retrieving token from AWS security credentials supplier.", e.getMessage());
-      assertEquals(testException, e.getCause());
+          "test", e.getMessage());
     }
   }
 
@@ -723,7 +715,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .build();
 
     AwsSecurityCredentials credentials =
-        testAwsCredentials.getAwsSecurityCredentialsProvider().getCredentials();
+        testAwsCredentials.getAwsSecurityCredentialsSupplier().getCredentials();
 
     assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
     assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
@@ -756,7 +748,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .build();
 
     AwsSecurityCredentials credentials =
-        testAwsCredentials.getAwsSecurityCredentialsProvider().getCredentials();
+        testAwsCredentials.getAwsSecurityCredentialsSupplier().getCredentials();
 
     assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
     assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
@@ -778,7 +770,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .build();
 
     AwsSecurityCredentials credentials =
-        testAwsCredentials.getAwsSecurityCredentialsProvider().getCredentials();
+        testAwsCredentials.getAwsSecurityCredentialsSupplier().getCredentials();
 
     assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
     assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
@@ -797,7 +789,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .build();
 
     AwsSecurityCredentials credentials =
-        awsCredential.getAwsSecurityCredentialsProvider().getCredentials();
+        awsCredential.getAwsSecurityCredentialsSupplier().getCredentials();
 
     assertEquals("accessKeyId", credentials.getAccessKeyId());
     assertEquals("secretAccessKey", credentials.getSecretAccessKey());
@@ -829,7 +821,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .build();
 
     try {
-      awsCredential.getAwsSecurityCredentialsProvider().getCredentials();
+      awsCredential.getAwsSecurityCredentialsSupplier().getCredentials();
       fail("Should not be able to use credential without exception.");
     } catch (IOException exception) {
       assertEquals(
@@ -857,7 +849,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .setEnvironmentProvider(environmentProvider)
             .build();
 
-    String region = awsCredentials.getAwsSecurityCredentialsProvider().getRegion();
+    String region = awsCredentials.getAwsSecurityCredentialsSupplier().getRegion();
 
     // Should attempt to retrieve the region from AWS_REGION env var first.
     // Metadata server would return us-east-1b.
@@ -882,7 +874,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .setEnvironmentProvider(environmentProvider)
             .build();
 
-    String region = awsCredentials.getAwsSecurityCredentialsProvider().getRegion();
+    String region = awsCredentials.getAwsSecurityCredentialsSupplier().getRegion();
 
     // Should attempt to retrieve the region from DEFAULT_AWS_REGION before calling the metadata
     // server. Metadata server would return us-east-1b.
@@ -903,7 +895,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .setCredentialSource(buildAwsCredentialSource(transportFactory))
             .build();
 
-    String region = awsCredentials.getAwsSecurityCredentialsProvider().getRegion();
+    String region = awsCredentials.getAwsSecurityCredentialsSupplier().getRegion();
 
     // Should retrieve the region from the Metadata server.
     String expectedRegion =
@@ -999,12 +991,9 @@ public class AwsCredentialsTest extends BaseSerializationTest {
   public void builder() throws IOException {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
-    Supplier<AwsSecurityCredentials> testSupplier = () -> null;
-
     AwsCredentials credentials =
         AwsCredentials.newBuilder()
             .setRegionalCredentialVerificationUrlOverride("https://test.com")
-            .setAwsRegion("region")
             .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
             .setAudience("audience")
             .setSubjectTokenType("subjectTokenType")
@@ -1019,7 +1008,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .setScopes(scopes)
             .build();
 
-    // assertEquals("region", credentials.getAwsRegion(null));
     assertEquals("https://test.com", credentials.getRegionalCredentialVerificationUrlOverride());
     assertEquals("audience", credentials.getAudience());
     assertEquals("subjectTokenType", credentials.getSubjectTokenType());
@@ -1039,17 +1027,15 @@ public class AwsCredentialsTest extends BaseSerializationTest {
   public void builder_defaultRegionalCredentialVerificationUrlOverride() throws IOException {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
-    Supplier<AwsSecurityCredentials> testSupplier = () -> null;
+    AwsSecurityCredentialsSupplier supplier = new TestAwsSecurityCredentialsSupplier("region", null, null);
 
     AwsCredentials credentials =
         AwsCredentials.newBuilder()
-            .setAwsRegion("region")
-            .setAwsSecurityCredentialsSupplier(testSupplier)
+            .setAwsSecurityCredentialsSupplier(supplier)
             .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
             .setAudience("audience")
             .setSubjectTokenType("subjectTokenType")
             .setTokenUrl(STS_URL)
-            .setTokenInfoUrl("tokenInfoUrl")
             .setTokenInfoUrl("tokenInfoUrl")
             .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
             .setQuotaProjectId("quotaProjectId")
@@ -1065,50 +1051,19 @@ public class AwsCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void builder_regionRequiredWithSupplier() throws IOException {
-    List<String> scopes = Arrays.asList("scope1", "scope2");
-
-    Supplier<AwsSecurityCredentials> testSupplier = () -> null;
-
-    try {
-      AwsCredentials credentials =
-          AwsCredentials.newBuilder()
-              .setAwsSecurityCredentialsSupplier(testSupplier)
-              .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-              .setAudience("audience")
-              .setSubjectTokenType("subjectTokenType")
-              .setTokenUrl(STS_URL)
-              .setTokenInfoUrl("tokenInfoUrl")
-              .setTokenInfoUrl("tokenInfoUrl")
-              .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-              .setQuotaProjectId("quotaProjectId")
-              .setClientId("clientId")
-              .setClientSecret("clientSecret")
-              .setScopes(scopes)
-              .build();
-      fail("Should not be able to continue without exception.");
-    } catch (IllegalArgumentException exception) {
-      assertEquals(
-          "An AWS region must be specified when using an aws security credential supplier.",
-          exception.getMessage());
-    }
-  }
-
-  @Test
   public void builder_supplierAndCredSourceThrows() throws IOException {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
-    Supplier<AwsSecurityCredentials> testSupplier = () -> null;
+    AwsSecurityCredentialsSupplier supplier = new TestAwsSecurityCredentialsSupplier("region", null, null);
 
     try {
       AwsCredentials credentials =
           AwsCredentials.newBuilder()
-              .setAwsSecurityCredentialsSupplier(testSupplier)
+              .setAwsSecurityCredentialsSupplier(supplier)
               .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
               .setAudience("audience")
               .setSubjectTokenType("subjectTokenType")
               .setTokenUrl(STS_URL)
-              .setTokenInfoUrl("tokenInfoUrl")
               .setTokenInfoUrl("tokenInfoUrl")
               .setCredentialSource(AWS_CREDENTIAL_SOURCE)
               .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
@@ -1126,7 +1081,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void builder_noSupplierOrCredSourceThrows() throws IOException {
+  public void builder_noSupplieOrCredSourceThrows() throws IOException {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     Supplier<AwsSecurityCredentials> testSupplier = () -> null;
@@ -1249,5 +1204,31 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     json.put("credential_source", credentialSource);
 
     return TestUtils.jsonToInputStream(json);
+  }
+
+  class TestAwsSecurityCredentialsSupplier implements AwsSecurityCredentialsSupplier {
+
+    private String region;
+    private AwsSecurityCredentials credentials;
+    private IOException credentialException;
+
+    TestAwsSecurityCredentialsSupplier(String region, AwsSecurityCredentials credentials, IOException credentialException){
+      this.region = region;
+      this.credentials = credentials;
+      this.credentialException = credentialException;
+    }
+
+    @Override
+    public String getRegion() throws IOException {
+      return this.region;
+    }
+
+    @Override
+    public AwsSecurityCredentials getCredentials() throws IOException {
+      if (this.credentialException != null){
+        throw this.credentialException;
+      }
+      return this.credentials;
+    }
   }
 }

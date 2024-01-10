@@ -49,7 +49,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -82,7 +81,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
           .setCredentialSource(FILE_CREDENTIAL_SOURCE)
           .build();
 
-  private static final Supplier<String> testSupplier = () -> "testSubjectToken";
+  private static final IdentityPoolSubjectTokenSupplier testProvider = () -> "testSubjectToken";
 
   static class MockExternalAccountCredentialsTransportFactory implements HttpTransportFactory {
 
@@ -306,39 +305,38 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void retrieveSubjectToken_supplier() throws IOException {
+  public void retrieveSubjectToken_provider() throws IOException {
 
     IdentityPoolCredentials credentials =
         IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
             .setCredentialSource(null)
-            .setSubjectTokenSupplier(testSupplier)
+            .setSubjectTokenSupplier(testProvider)
             .build();
 
     String subjectToken = credentials.retrieveSubjectToken();
 
-    assertEquals(testSupplier.get(), subjectToken);
+    assertEquals(testProvider.getSubjectToken(), subjectToken);
   }
 
   @Test
-  public void retrieveSubjectToken_supplierWrapsError() throws IOException {
-    RuntimeException testException = new RuntimeException("test");
+  public void retrieveSubjectToken_providerThrowsError() throws IOException {
+    IOException testException = new IOException("test");
 
-    Supplier<String> errorSupplier =
+    IdentityPoolSubjectTokenSupplier errorProvider =
         () -> {
           throw testException;
         };
     IdentityPoolCredentials credentials =
         IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
             .setCredentialSource(null)
-            .setSubjectTokenSupplier(errorSupplier)
+            .setSubjectTokenSupplier(errorProvider)
             .build();
 
     try {
       String subjectToken = credentials.retrieveSubjectToken();
       fail("retrieveSubjectToken should fail.");
-    } catch (GoogleAuthException e) {
-      assertEquals("Error retrieving token from subject token supplier.", e.getMessage());
-      assertEquals(testException, e.getCause());
+    } catch (IOException e) {
+      assertEquals("test", e.getMessage());
     }
   }
 
@@ -476,14 +474,14 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void refreshAccessToken_supplier() throws IOException {
+  public void refreshAccessToken_Provider() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
     IdentityPoolCredentials credential =
         IdentityPoolCredentials.newBuilder()
-            .setSubjectTokenSupplier(testSupplier)
+            .setSubjectTokenSupplier(testProvider)
             .setAudience(
                 "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
             .setSubjectTokenType("subjectTokenType")
@@ -503,14 +501,14 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void refreshAccessToken_supplierWithServiceAccountImpersonation() throws IOException {
+  public void refreshAccessToken_providerWithServiceAccountImpersonation() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
     IdentityPoolCredentials credential =
         IdentityPoolCredentials.newBuilder()
-            .setSubjectTokenSupplier(testSupplier)
+            .setSubjectTokenSupplier(testProvider)
             .setAudience(
                 "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
             .setSubjectTokenType("subjectTokenType")
@@ -793,7 +791,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
 
     IdentityPoolCredentials credentials =
         IdentityPoolCredentials.newBuilder()
-            .setSubjectTokenSupplier(testSupplier)
+            .setSubjectTokenSupplier(testProvider)
             .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
             .setAudience("audience")
             .setSubjectTokenType("subjectTokenType")
@@ -806,7 +804,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
             .setScopes(scopes)
             .build();
 
-    assertEquals(testSupplier, credentials.getIdentityPoolSubjectTokenProvider().getSupplier());
+    assertEquals(testProvider, credentials.getIdentityPoolSubjectTokenSupplier());
   }
 
   @Test
@@ -868,7 +866,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     try {
       IdentityPoolCredentials credentials =
           IdentityPoolCredentials.newBuilder()
-              .setSubjectTokenSupplier(testSupplier)
+              .setSubjectTokenSupplier(testProvider)
               .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
               .setAudience("audience")
               .setSubjectTokenType("subjectTokenType")

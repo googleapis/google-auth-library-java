@@ -43,7 +43,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -62,16 +61,12 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
   private static final long serialVersionUID = -3670131891574618105L;
 
-  @Nullable private final AwsSecurityCredentialsProvider awsSecurityCredentialsProvider;
+  @Nullable private final AwsSecurityCredentialsSupplier awsSecurityCredentialsSupplier;
   // Regional credential verification url override. This needs to be its own value so we can
   // correctly pass it to a builder.
   @Nullable private final String regionalCredentialVerificationUrlOverride;
   @Nullable private final String regionalCredentialVerificationUrl;
-  @Nullable private final String awsRegion;
-
-  // Boolean to tell if a Supplier was provided to build the credential. This is needed to tell
-  // whether the supplier should be passed when creating a new builder from this credential.
-  private final boolean builtWithSupplier;
+  private final String metricsHeaderValue;
 
   /** Internal constructor. See {@link AwsCredentials.Builder}. */
   AwsCredentials(Builder builder) {
@@ -87,7 +82,6 @@ public class AwsCredentials extends ExternalAccountCredentials {
     }
 
     AwsCredentialSource credentialSource = (AwsCredentialSource) builder.credentialSource;
-    this.awsRegion = builder.awsRegion;
     // Set regional credential verification url override if provided.
     this.regionalCredentialVerificationUrlOverride =
         builder.regionalCredentialVerificationUrlOverride;
@@ -104,18 +98,15 @@ public class AwsCredentials extends ExternalAccountCredentials {
     // If user has provided a security credential supplier, use that to retrieve the AWS security
     // credentials.
     if (builder.awsSecurityCredentialsSupplier != null) {
-      this.awsSecurityCredentialsProvider =
-          new ProgrammaticAwsSecurityCredentialsProvider(
-              builder.awsSecurityCredentialsSupplier, this.awsRegion);
-      this.builtWithSupplier = true;
+      this.awsSecurityCredentialsSupplier = builder.awsSecurityCredentialsSupplier;
+      this.metricsHeaderValue = PROGRAMMATIC_METRICS_HEADER_VALUE;
     } else {
-      this.awsSecurityCredentialsProvider =
-          new InternalAwsSecurityCredentialsProvider(
+      this.awsSecurityCredentialsSupplier =
+          new InternalAwsSecurityCredentialsSupplier(
               credentialSource,
               this.getEnvironmentProvider(),
-              this.transportFactory,
-              builder.awsRegion);
-      this.builtWithSupplier = false;
+              this.transportFactory);
+      this.metricsHeaderValue = AWS_METRICS_HEADER_VALUE;
     }
   }
 
@@ -139,9 +130,9 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
     // The targeted region is required to generate the signed request. The regional
     // endpoint must also be used.
-    String region = awsSecurityCredentialsProvider.getRegion();
+    String region = awsSecurityCredentialsSupplier.getRegion();
 
-    AwsSecurityCredentials credentials = awsSecurityCredentialsProvider.getCredentials();
+    AwsSecurityCredentials credentials = awsSecurityCredentialsSupplier.getCredentials();
 
     // Generate the signed request to the AWS STS GetCallerIdentity API.
     Map<String, String> headers = new HashMap<>();
@@ -168,7 +159,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
   @Override
   String getCredentialSourceType() {
-    return this.awsSecurityCredentialsProvider.getMetricsHeaderValue();
+    return this.metricsHeaderValue;
   }
 
   private String buildSubjectToken(AwsRequestSignature signature)
@@ -205,8 +196,8 @@ public class AwsCredentials extends ExternalAccountCredentials {
   }
 
   @VisibleForTesting
-  AwsSecurityCredentialsProvider getAwsSecurityCredentialsProvider() {
-    return this.awsSecurityCredentialsProvider;
+  AwsSecurityCredentialsSupplier getAwsSecurityCredentialsSupplier() {
+    return this.awsSecurityCredentialsSupplier;
   }
 
   @Nullable
@@ -238,9 +229,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
   public static class Builder extends ExternalAccountCredentials.Builder {
 
-    private Supplier<AwsSecurityCredentials> awsSecurityCredentialsSupplier;
-
-    private String awsRegion;
+    private AwsSecurityCredentialsSupplier awsSecurityCredentialsSupplier;
 
     private String regionalCredentialVerificationUrlOverride;
 
@@ -248,10 +237,8 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
     Builder(AwsCredentials credentials) {
       super(credentials);
-      this.awsRegion = credentials.awsRegion;
-      if (credentials.builtWithSupplier) {
-        this.awsSecurityCredentialsSupplier =
-            credentials.awsSecurityCredentialsProvider.getSupplier();
+      if (this.credentialSource == null) {
+        this.awsSecurityCredentialsSupplier = credentials.awsSecurityCredentialsSupplier;
       }
       this.regionalCredentialVerificationUrlOverride =
           credentials.regionalCredentialVerificationUrlOverride;
@@ -259,28 +246,16 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
     /**
      * Sets the AWS security credentials supplier. The supplier should return a valid {@code
-     * AwsSecurityCredentials} object. An AWS region also is required when using a supplier.
+     * AwsSecurityCredentials} object and a valid AWS region.
      *
-     * @param awsSecurityCredentialsSupplier the supplier method to be called.
+     * @param awsSecurityCredentialsSupplier the supplier to use.
      * @return this {@code Builder} object
      */
     @CanIgnoreReturnValue
-    public Builder setAwsSecurityCredentialsSupplier(
-        Supplier<AwsSecurityCredentials> awsSecurityCredentialsSupplier) {
+    public Builder setAwsSecurityCredentialsSupplier
+    (
+        AwsSecurityCredentialsSupplier awsSecurityCredentialsSupplier) {
       this.awsSecurityCredentialsSupplier = awsSecurityCredentialsSupplier;
-      return this;
-    }
-
-    /**
-     * Sets the AWS region. Required when using an AWS Security Credentials Supplier. If set, will
-     * override any region obtained via environment variables or the metadata endpoint.
-     *
-     * @param awsRegion the aws region to set.
-     * @return this {@code Builder} object
-     */
-    @CanIgnoreReturnValue
-    public Builder setAwsRegion(String awsRegion) {
-      this.awsRegion = awsRegion;
       return this;
     }
 

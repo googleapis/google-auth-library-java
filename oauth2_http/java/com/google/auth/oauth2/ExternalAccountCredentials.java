@@ -476,8 +476,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     if (this.shouldBuildImpersonatedCredential()) {
       this.impersonatedCredentials = this.buildImpersonatedCredentials();
     }
-    if (impersonatedCredentials != null) {
-      return impersonatedCredentials.refreshAccessToken();
+    if (this.impersonatedCredentials != null) {
+      return this.impersonatedCredentials.refreshAccessToken();
     }
 
     StsRequestHandler.Builder requestHandler =

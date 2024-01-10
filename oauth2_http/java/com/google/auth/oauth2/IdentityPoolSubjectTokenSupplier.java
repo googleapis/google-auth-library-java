@@ -31,50 +31,21 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.auth.oauth2.ExternalAccountCredentials.PROGRAMMATIC_METRICS_HEADER_VALUE;
-
 import java.io.IOException;
-import java.util.function.Supplier;
+import java.io.Serializable;
 
+@FunctionalInterface
 /**
  * Provider for retrieving subject tokens for {@Link IdentityPoolCredentials} to exchange for GCP
- * access tokens. The subject token is retrieved by calling a user provided Supplier.
+ * access tokens.
  */
-class ProgrammaticIdentityPoolSubjectTokenProvider extends IdentityPoolSubjectTokenProvider {
-
-  private final long serialVersionUID = 9009530138782505571L;
-
-  private final Supplier<String> subjectTokenSupplier;
+interface IdentityPoolSubjectTokenSupplier extends Serializable {
 
   /**
-   * Constructor for ProgrammaticIdentityPoolSubjectTokenProvider.
+   * Gets a subject token that can be exchanged for a GCP access token.
    *
-   * @param subjectTokenSupplier the user defined supplier that returns a subject token.
+   * @return a valid subject token.
+   * @throws IOException
    */
-  ProgrammaticIdentityPoolSubjectTokenProvider(Supplier<String> subjectTokenSupplier) {
-    this.subjectTokenSupplier = subjectTokenSupplier;
-  }
-
-  @Override
-  String getSubjectToken() throws IOException {
-    try {
-      return this.subjectTokenSupplier.get();
-    } catch (RuntimeException e) {
-      throw new GoogleAuthException(
-          /* isRetryable= */ false,
-          /* retryCount= */ 0,
-          "Error retrieving token from subject token supplier.",
-          e);
-    }
-  }
-
-  @Override
-  String getMetricsHeaderValue() {
-    return PROGRAMMATIC_METRICS_HEADER_VALUE;
-  }
-
-  @Override
-  Supplier<String> getSupplier() {
-    return this.subjectTokenSupplier;
-  }
+  String getSubjectToken() throws IOException;
 }

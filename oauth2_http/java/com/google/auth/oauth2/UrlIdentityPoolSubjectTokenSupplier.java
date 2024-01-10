@@ -31,68 +31,60 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.auth.oauth2.IdentityPoolCredentials.FILE_METRICS_HEADER_VALUE;
+import static com.google.auth.oauth2.FileIdentityPoolSubjectTokenSupplier.parseToken;
 
-import java.io.File;
-import java.io.FileInputStream;
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpHeaders;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpResponse;
+import com.google.api.client.json.JsonObjectParser;
+import com.google.auth.http.HttpTransportFactory;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.Paths;
-import java.util.function.Supplier;
 
 /**
- * Internal provider for retrieving subject tokens for {@Link IdentityPoolCredentials} to exchange
- * for GCP access tokens via a local file.
+ * Provider for retrieving subject tokens for {@Link IdentityPoolCredentials} to exchange for GCP
+ * access tokens. The subject token is retrieved by calling a URL that returns the token.
  */
-class FileIdentityPoolSubjectTokenProvider extends IdentityPoolSubjectTokenProvider {
+class UrlIdentityPoolSubjectTokenSupplier implements IdentityPoolSubjectTokenSupplier {
 
-  private final long serialVersionUID = 2475549052347431992L;
+  private static final long serialVersionUID = 4964578313468011844L;
 
   private final IdentityPoolCredentialSource credentialSource;
+  private final transient HttpTransportFactory transportFactory;
 
   /**
-   * Constructor for FileIdentitySubjectTokenProvider
+   * Constructor for UrlIdentityPoolSubjectTokenProvider.
    *
    * @param credentialSource the credential source to use.
+   * @param transportFactory the transport factory to use for calling the URL.
    */
-  FileIdentityPoolSubjectTokenProvider(IdentityPoolCredentialSource credentialSource) {
+  UrlIdentityPoolSubjectTokenSupplier(
+      IdentityPoolCredentialSource credentialSource, HttpTransportFactory transportFactory) {
     this.credentialSource = credentialSource;
+    this.transportFactory = transportFactory;
   }
 
   @Override
-  String getSubjectToken() throws IOException {
-    return this.retrieveSubjectTokenFromCredentialFile();
-  }
+  public String getSubjectToken() throws IOException {
+    HttpRequest request =
+        transportFactory
+            .create()
+            .createRequestFactory()
+            .buildGetRequest(new GenericUrl(credentialSource.credentialLocation));
+    request.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
 
-  @Override
-  String getMetricsHeaderValue() {
-    return FILE_METRICS_HEADER_VALUE;
-  }
-
-  @Override
-  Supplier<String> getSupplier() {
-    return () -> {
-      try {
-        return this.getSubjectToken();
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    };
-  }
-
-  private String retrieveSubjectTokenFromCredentialFile() throws IOException {
-    String credentialFilePath = this.credentialSource.credentialLocation;
-    if (!Files.exists(Paths.get(credentialFilePath), LinkOption.NOFOLLOW_LINKS)) {
-      throw new IOException(
-          String.format(
-              "Invalid credential location. The file at %s does not exist.", credentialFilePath));
+    if (credentialSource.hasHeaders()) {
+      HttpHeaders headers = new HttpHeaders();
+      headers.putAll(credentialSource.headers);
+      request.setHeaders(headers);
     }
+
     try {
-      return parseToken(new FileInputStream(new File(credentialFilePath)), this.credentialSource);
+      HttpResponse response = request.execute();
+      return parseToken(response.getContent(), this.credentialSource);
     } catch (IOException e) {
       throw new IOException(
-          "Error when attempting to read the subject token from the credential file.", e);
+          String.format("Error getting subject token from metadata server: %s", e.getMessage()), e);
     }
   }
 }
