@@ -55,7 +55,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -190,7 +189,8 @@ public final class ITWorkloadIdentityFederationTest {
     AwsSecurityCredentials credentials =
         new AwsSecurityCredentials(awsAccessKeyId, awsSecretAccessKey, awsSessionToken);
 
-    AwsSecurityCredentialsSupplier provider = new ITAwsSecurityCredentialsProvider("us-east-2", credentials);
+    AwsSecurityCredentialsSupplier provider =
+        new ITAwsSecurityCredentialsProvider("us-east-2", credentials);
     AwsCredentials awsCredential =
         AwsCredentials.newBuilder()
             .setAwsSecurityCredentialsSupplier(provider)
@@ -457,18 +457,18 @@ public final class ITWorkloadIdentityFederationTest {
     private String region;
     private AwsSecurityCredentials credentials;
 
-    ITAwsSecurityCredentialsProvider(String region, AwsSecurityCredentials credentials){
+    ITAwsSecurityCredentialsProvider(String region, AwsSecurityCredentials credentials) {
       this.region = region;
       this.credentials = credentials;
     }
 
     @Override
-    public String getRegion(){
+    public String getRegion() {
       return this.region;
     }
 
     @Override
-    public AwsSecurityCredentials getCredentials(){
+    public AwsSecurityCredentials getCredentials() {
       return this.credentials;
     }
   }

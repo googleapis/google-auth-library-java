@@ -103,9 +103,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
     } else {
       this.awsSecurityCredentialsSupplier =
           new InternalAwsSecurityCredentialsSupplier(
-              credentialSource,
-              this.getEnvironmentProvider(),
-              this.transportFactory);
+              credentialSource, this.getEnvironmentProvider(), this.transportFactory);
       this.metricsHeaderValue = AWS_METRICS_HEADER_VALUE;
     }
   }
@@ -252,8 +250,7 @@ public class AwsCredentials extends ExternalAccountCredentials {
      * @return this {@code Builder} object
      */
     @CanIgnoreReturnValue
-    public Builder setAwsSecurityCredentialsSupplier
-    (
+    public Builder setAwsSecurityCredentialsSupplier(
         AwsSecurityCredentialsSupplier awsSecurityCredentialsSupplier) {
       this.awsSecurityCredentialsSupplier = awsSecurityCredentialsSupplier;
       return this;

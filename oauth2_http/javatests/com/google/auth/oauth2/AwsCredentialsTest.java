@@ -216,7 +216,8 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
-    AwsSecurityCredentialsSupplier supplier = new TestAwsSecurityCredentialsSupplier("test", programmaticAwsCreds, null);
+    AwsSecurityCredentialsSupplier supplier =
+        new TestAwsSecurityCredentialsSupplier("test", programmaticAwsCreds, null);
 
     AwsCredentials awsCredential =
         AwsCredentials.newBuilder()
@@ -245,7 +246,8 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
 
-    AwsSecurityCredentialsSupplier supplier = new TestAwsSecurityCredentialsSupplier("test", programmaticAwsCreds, null);
+    AwsSecurityCredentialsSupplier supplier =
+        new TestAwsSecurityCredentialsSupplier("test", programmaticAwsCreds, null);
 
     AwsCredentials awsCredential =
         AwsCredentials.newBuilder()
@@ -600,7 +602,8 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
-    AwsSecurityCredentialsSupplier supplier = new TestAwsSecurityCredentialsSupplier("test", programmaticAwsCreds, null);
+    AwsSecurityCredentialsSupplier supplier =
+        new TestAwsSecurityCredentialsSupplier("test", programmaticAwsCreds, null);
 
     AwsCredentials awsCredential =
         AwsCredentials.newBuilder()
@@ -641,7 +644,8 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     AwsSecurityCredentials securityCredentialsWithToken =
         new AwsSecurityCredentials("accessToken", "secretAccessKey", "token");
 
-    AwsSecurityCredentialsSupplier supplier = new TestAwsSecurityCredentialsSupplier("test", securityCredentialsWithToken, null);
+    AwsSecurityCredentialsSupplier supplier =
+        new TestAwsSecurityCredentialsSupplier("test", securityCredentialsWithToken, null);
 
     AwsCredentials awsCredential =
         AwsCredentials.newBuilder()
@@ -682,7 +686,8 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
     IOException testException = new IOException("test");
 
-    AwsSecurityCredentialsSupplier supplier = new TestAwsSecurityCredentialsSupplier("test", null, testException);
+    AwsSecurityCredentialsSupplier supplier =
+        new TestAwsSecurityCredentialsSupplier("test", null, testException);
 
     AwsCredentials awsCredential =
         AwsCredentials.newBuilder()
@@ -697,8 +702,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
       String subjectToken = URLDecoder.decode(awsCredential.retrieveSubjectToken(), "UTF-8");
       fail("retrieveSubjectToken should not succeed");
     } catch (IOException e) {
-      assertEquals(
-          "test", e.getMessage());
+      assertEquals("test", e.getMessage());
     }
   }
 
@@ -1027,7 +1031,8 @@ public class AwsCredentialsTest extends BaseSerializationTest {
   public void builder_defaultRegionalCredentialVerificationUrlOverride() throws IOException {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
-    AwsSecurityCredentialsSupplier supplier = new TestAwsSecurityCredentialsSupplier("region", null, null);
+    AwsSecurityCredentialsSupplier supplier =
+        new TestAwsSecurityCredentialsSupplier("region", null, null);
 
     AwsCredentials credentials =
         AwsCredentials.newBuilder()
@@ -1054,7 +1059,8 @@ public class AwsCredentialsTest extends BaseSerializationTest {
   public void builder_supplierAndCredSourceThrows() throws IOException {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
-    AwsSecurityCredentialsSupplier supplier = new TestAwsSecurityCredentialsSupplier("region", null, null);
+    AwsSecurityCredentialsSupplier supplier =
+        new TestAwsSecurityCredentialsSupplier("region", null, null);
 
     try {
       AwsCredentials credentials =
@@ -1212,7 +1218,8 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     private AwsSecurityCredentials credentials;
     private IOException credentialException;
 
-    TestAwsSecurityCredentialsSupplier(String region, AwsSecurityCredentials credentials, IOException credentialException){
+    TestAwsSecurityCredentialsSupplier(
+        String region, AwsSecurityCredentials credentials, IOException credentialException) {
       this.region = region;
       this.credentials = credentials;
       this.credentialException = credentialException;
@@ -1225,7 +1232,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
     @Override
     public AwsSecurityCredentials getCredentials() throws IOException {
-      if (this.credentialException != null){
+      if (this.credentialException != null) {
         throw this.credentialException;
       }
       return this.credentials;

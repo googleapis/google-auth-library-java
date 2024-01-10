@@ -81,8 +81,8 @@ class FileIdentityPoolSubjectTokenSupplier implements IdentityPoolSubjectTokenSu
     }
   }
 
-  static String parseToken(
-      InputStream inputStream, IdentityPoolCredentialSource credentialSource) throws IOException {
+  static String parseToken(InputStream inputStream, IdentityPoolCredentialSource credentialSource)
+      throws IOException {
     if (credentialSource.credentialFormatType == CredentialFormatType.TEXT) {
       BufferedReader reader =
           new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
