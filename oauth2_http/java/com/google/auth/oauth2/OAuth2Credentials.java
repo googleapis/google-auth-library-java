@@ -68,7 +68,7 @@ import javax.annotation.Nullable;
 public class OAuth2Credentials extends Credentials {
 
   private static final long serialVersionUID = 4556936364828217687L;
-  static final Duration DEFAULT_EXPIRATION_MARGIN = Duration.ofMinutes(5);
+  static final Duration DEFAULT_EXPIRATION_MARGIN = Duration.ofMinutes(4);
   static final Duration DEFAULT_REFRESH_MARGIN = Duration.ofMinutes(6);
   private static final ImmutableMap<String, List<String>> EMPTY_EXTRA_HEADERS = ImmutableMap.of();
 
