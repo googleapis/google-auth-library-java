@@ -139,6 +139,7 @@ public class AppEngineCredentials extends GoogleCredentials implements ServiceAc
     return new Builder();
   }
 
+  @Override
   public Builder toBuilder() {
     return new Builder(this);
   }
@@ -175,6 +176,7 @@ public class AppEngineCredentials extends GoogleCredentials implements ServiceAc
       return appIdentityService;
     }
 
+    @Override
     public AppEngineCredentials build() {
       return new AppEngineCredentials(scopes, appIdentityService);
     }

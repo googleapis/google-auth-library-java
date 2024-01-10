@@ -224,6 +224,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       return this;
     }
 
+    @Override
     @CanIgnoreReturnValue
     public Builder setWorkforcePoolUserProject(String workforcePoolUserProject) {
       super.setWorkforcePoolUserProject(workforcePoolUserProject);

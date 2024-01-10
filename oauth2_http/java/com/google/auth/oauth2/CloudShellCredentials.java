@@ -115,6 +115,7 @@ public class CloudShellCredentials extends GoogleCredentials {
     return this.authPort == other.authPort;
   }
 
+  @Override
   public Builder toBuilder() {
     return new Builder(this);
   }
@@ -142,6 +143,7 @@ public class CloudShellCredentials extends GoogleCredentials {
       return authPort;
     }
 
+    @Override
     public CloudShellCredentials build() {
       return new CloudShellCredentials(authPort);
     }

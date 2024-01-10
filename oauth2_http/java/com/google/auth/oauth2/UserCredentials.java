@@ -372,6 +372,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     return new Builder();
   }
 
+  @Override
   public Builder toBuilder() {
     return new Builder(this);
   }
@@ -425,24 +426,28 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
       return this;
     }
 
+    @Override
     @CanIgnoreReturnValue
     public Builder setAccessToken(AccessToken token) {
       super.setAccessToken(token);
       return this;
     }
 
+    @Override
     @CanIgnoreReturnValue
     public Builder setExpirationMargin(Duration expirationMargin) {
       super.setExpirationMargin(expirationMargin);
       return this;
     }
 
+    @Override
     @CanIgnoreReturnValue
     public Builder setRefreshMargin(Duration refreshMargin) {
       super.setRefreshMargin(refreshMargin);
       return this;
     }
 
+    @Override
     @CanIgnoreReturnValue
     public Builder setQuotaProjectId(String quotaProjectId) {
       super.setQuotaProjectId(quotaProjectId);
@@ -469,6 +474,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
       return transportFactory;
     }
 
+    @Override
     public UserCredentials build() {
       return new UserCredentials(this);
     }

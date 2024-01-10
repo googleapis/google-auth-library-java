@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.22.0](https://github.com/googleapis/google-auth-library-java/compare/v1.21.0...v1.22.0) (2024-01-09)
+
+
+### Features
+
+* Adds universe domain support for compute credentials ([#1346](https://github.com/googleapis/google-auth-library-java/issues/1346)) ([7e26861](https://github.com/googleapis/google-auth-library-java/commit/7e268611d2c2152e84702b1c67ca846902bbe2d5))
+
+
+### Bug Fixes
+
+* Handle error-prone warnings ([#1334](https://github.com/googleapis/google-auth-library-java/issues/1334)) ([927cad8](https://github.com/googleapis/google-auth-library-java/commit/927cad835567cd6619ca51c97546831b0f13edec))
+
 ## [1.21.0](https://github.com/googleapis/google-auth-library-java/compare/v1.20.0...v1.21.0) (2023-12-21)
 
 
