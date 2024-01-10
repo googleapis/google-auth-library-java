@@ -639,8 +639,8 @@ public class OAuth2Credentials extends Credentials {
   public static class Builder {
 
     private AccessToken accessToken;
-    protected Duration refreshMargin = DEFAULT_REFRESH_MARGIN;
-    protected Duration expirationMargin = DEFAULT_EXPIRATION_MARGIN;
+    private Duration refreshMargin = DEFAULT_REFRESH_MARGIN;
+    private Duration expirationMargin = DEFAULT_EXPIRATION_MARGIN;
 
     protected Builder() {}
 
