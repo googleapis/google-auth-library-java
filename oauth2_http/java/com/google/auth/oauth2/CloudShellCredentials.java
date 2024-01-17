@@ -67,8 +67,9 @@ public class CloudShellCredentials extends GoogleCredentials {
     return CloudShellCredentials.newBuilder().setAuthPort(authPort).build();
   }
 
-  private CloudShellCredentials(int authPort) {
-    this.authPort = authPort;
+  private CloudShellCredentials(Builder builder) {
+    super(builder);
+    this.authPort = builder.getAuthPort();
   }
 
   protected int getAuthPort() {
@@ -139,13 +140,19 @@ public class CloudShellCredentials extends GoogleCredentials {
       return this;
     }
 
+    @CanIgnoreReturnValue
+    public Builder setQuotaProjectId(String quotaProjectId) {
+      super.quotaProjectId = quotaProjectId;
+      return this;
+    }
+
     public int getAuthPort() {
       return authPort;
     }
 
     @Override
     public CloudShellCredentials build() {
-      return new CloudShellCredentials(authPort);
+      return new CloudShellCredentials(this);
     }
   }
 }
