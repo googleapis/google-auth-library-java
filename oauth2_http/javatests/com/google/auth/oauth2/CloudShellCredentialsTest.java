@@ -128,7 +128,7 @@ public class CloudShellCredentialsTest extends BaseSerializationTest {
   @Test
   public void toBuilder() {
     CloudShellCredentials credentials =
-      CloudShellCredentials.newBuilder()
+        CloudShellCredentials.newBuilder()
             .setAuthPort(42)
             .setQuotaProjectId("quota-project")
             .build();
