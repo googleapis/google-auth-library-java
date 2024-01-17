@@ -124,4 +124,20 @@ public class CloudShellCredentialsTest extends BaseSerializationTest {
     assertEquals(credentials.toString(), deserializedCredentials.toString());
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
   }
+
+  @Test
+  public void toBuilder() {
+    CloudShellCredentials credentials =
+      CloudShellCredentials.newBuilder()
+            .setAuthPort(42)
+            .setQuotaProjectId("quota-project")
+            .build();
+
+    assertEquals(42, credentials.getAuthPort());
+    assertEquals("quota-project", credentials.getQuotaProjectId());
+
+    CloudShellCredentials secondCredentials = credentials.toBuilder().build();
+
+    assertEquals(credentials, secondCredentials);
+  }
 }

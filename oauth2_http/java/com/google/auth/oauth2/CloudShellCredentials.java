@@ -140,6 +140,12 @@ public class CloudShellCredentials extends GoogleCredentials {
       return this;
     }
 
+    @CanIgnoreReturnValue
+    public Builder setQuotaProjectId(String quotaProjectId) {
+      super.quotaProjectId = quotaProjectId;
+      return this;
+    }
+
     public int getAuthPort() {
       return authPort;
     }
