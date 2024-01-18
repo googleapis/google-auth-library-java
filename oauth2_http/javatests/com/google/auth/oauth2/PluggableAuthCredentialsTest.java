@@ -461,7 +461,6 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
                 .setClientId("clientId")
                 .setClientSecret("clientSecret")
                 .setScopes(scopes)
-                .setUniverseDomain("universeDomain")
                 .build();
 
     assertEquals(handler, credentials.getExecutableHandler());

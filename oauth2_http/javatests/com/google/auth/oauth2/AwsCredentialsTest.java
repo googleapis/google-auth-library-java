@@ -1020,7 +1020,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
                 .setClientId("clientId")
                 .setClientSecret("clientSecret")
                 .setScopes(scopes)
-                .setUniverseDomain("universeDomain")
                 .build();
 
     assertEquals("audience", credentials.getAudience());
