@@ -294,6 +294,7 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
         && Objects.equals(this.quotaProjectId, credentials.quotaProjectId);
   }
 
+  @Override
   public Builder toBuilder() {
     return new Builder(this);
   }
@@ -503,6 +504,7 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
      * @param quotaProjectId the quota and billing project id to set
      * @return this {@code Builder} object
      */
+    @Override
     @CanIgnoreReturnValue
     public Builder setQuotaProjectId(String quotaProjectId) {
       super.setQuotaProjectId(quotaProjectId);
@@ -515,6 +517,7 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
      * @param accessToken the access token
      * @return this {@code Builder} object
      */
+    @Override
     @CanIgnoreReturnValue
     public Builder setAccessToken(AccessToken accessToken) {
       super.setAccessToken(accessToken);
@@ -534,6 +537,7 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
       return this;
     }
 
+    @Override
     public ExternalAccountAuthorizedUserCredentials build() {
       return new ExternalAccountAuthorizedUserCredentials(this);
     }

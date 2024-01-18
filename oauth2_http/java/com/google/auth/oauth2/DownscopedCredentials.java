@@ -238,6 +238,7 @@ public final class DownscopedCredentials extends OAuth2Credentials {
       return this;
     }
 
+    @Override
     public DownscopedCredentials build() {
       return new DownscopedCredentials(this);
     }

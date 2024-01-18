@@ -382,6 +382,8 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     }
 
     GoogleCredentials scopedCredentials = credentials.createScoped(SCOPES);
+    assertEquals(false, credentials.isExplicitUniverseDomain());
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
     Map<String, List<String>> metadata = scopedCredentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
@@ -406,6 +408,8 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
     // Recreate to avoid jwt caching.
     scopedCredentials = credentials.createScoped("dummy.scope2");
+    assertEquals(true, scopedCredentials.isExplicitUniverseDomain());
+    assertEquals("foo.bar", scopedCredentials.getUniverseDomain());
     metadata = scopedCredentials.getRequestMetadata(CALL_URI);
     verifyJwtAccess(metadata, "dummy.scope2");
 
@@ -1154,7 +1158,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     OAuth2Credentials credentials = ServiceAccountCredentials.fromPkcs8(PRIVATE_KEY_PKCS8, builder);
     String expectedToString =
         String.format(
-            "ServiceAccountCredentials{quotaProjectId=%s, universeDomain=%s, clientId=%s, clientEmail=%s, "
+            "ServiceAccountCredentials{quotaProjectId=%s, universeDomain=%s, isExplicitUniverseDomain=false, clientId=%s, clientEmail=%s, "
                 + "privateKeyId=%s, transportFactoryClassName=%s, tokenServerUri=%s, scopes=%s, defaultScopes=%s, "
                 + "serviceAccountUser=%s, lifetime=3600, useJwtAccessWithScope=false, defaultRetriesEnabled=true}",
             QUOTA_PROJECT,

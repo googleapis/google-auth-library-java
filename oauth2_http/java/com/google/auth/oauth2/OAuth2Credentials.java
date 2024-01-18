@@ -68,12 +68,12 @@ import javax.annotation.Nullable;
 public class OAuth2Credentials extends Credentials {
 
   private static final long serialVersionUID = 4556936364828217687L;
-  static final Duration DEFAULT_EXPIRATION_MARGIN = Duration.ofMinutes(5);
-  static final Duration DEFAULT_REFRESH_MARGIN = Duration.ofMinutes(6);
+  static final Duration DEFAULT_EXPIRATION_MARGIN = Duration.ofMinutes(3);
+  static final Duration DEFAULT_REFRESH_MARGIN = Duration.ofMinutes(3).plusSeconds(45);
   private static final ImmutableMap<String, List<String>> EMPTY_EXTRA_HEADERS = ImmutableMap.of();
 
-  private final Duration expirationMargin;
-  private final Duration refreshMargin;
+  @VisibleForTesting private final Duration expirationMargin;
+  @VisibleForTesting private final Duration refreshMargin;
 
   // byte[] is serializable, so the lock variable can be final
   @VisibleForTesting final Object lock = new byte[0];
@@ -630,6 +630,7 @@ public class OAuth2Credentials extends Credentials {
       return this.task;
     }
 
+    @Override
     public void run() {
       task.run();
     }

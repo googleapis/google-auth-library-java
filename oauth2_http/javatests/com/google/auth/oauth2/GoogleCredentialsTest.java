@@ -176,6 +176,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     assertNotNull(credentials);
     assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
+    assertEquals(false, credentials.isExplicitUniverseDomain());
     credentials = credentials.createScoped(SCOPES);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
@@ -198,6 +199,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     assertNotNull(credentials);
     assertEquals(TPC_UNIVERSE, credentials.getUniverseDomain());
+    assertEquals(true, credentials.isExplicitUniverseDomain());
     credentials = credentials.createScoped(SCOPES);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     assertNotNull(((ServiceAccountCredentials) credentials).getSelfSignedJwtCredentialsWithScope());
@@ -705,7 +707,25 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void createWithQuotaProject() {
+  public void create_withoutUniverse() throws IOException {
+    AccessToken token = AccessToken.newBuilder().setTokenValue(ACCESS_TOKEN).build();
+    GoogleCredentials credentials = GoogleCredentials.create(token);
+
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
+    assertEquals(false, credentials.isExplicitUniverseDomain());
+  }
+
+  @Test
+  public void create_withUniverse() throws IOException {
+    AccessToken token = AccessToken.newBuilder().setTokenValue(ACCESS_TOKEN).build();
+    GoogleCredentials credentials = GoogleCredentials.create("some-universe", token);
+
+    assertEquals("some-universe", credentials.getUniverseDomain());
+    assertEquals(true, credentials.isExplicitUniverseDomain());
+  }
+
+  @Test
+  public void buildWithQuotaProject() {
     final GoogleCredentials googleCredentials =
         new GoogleCredentials.Builder().setQuotaProjectId("old_quota").build();
     GoogleCredentials withUpdatedQuota = googleCredentials.createWithQuotaProject("new_quota");
@@ -727,13 +747,17 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     GoogleCredentials updated = original.toBuilder().setUniverseDomain("universe2").build();
 
     assertEquals("universe1", original.getUniverseDomain());
+    assertEquals(true, original.isExplicitUniverseDomain());
     assertEquals("universe2", updated.getUniverseDomain());
+    assertEquals(true, updated.isExplicitUniverseDomain());
 
     GoogleCredentials withEmpty = original.toBuilder().setUniverseDomain("").build();
     assertEquals(GOOGLE_DEFAULT_UNIVERSE, withEmpty.getUniverseDomain());
+    assertEquals(false, withEmpty.isExplicitUniverseDomain());
 
     GoogleCredentials withNull = original.toBuilder().setUniverseDomain(null).build();
     assertEquals(GOOGLE_DEFAULT_UNIVERSE, withNull.getUniverseDomain());
+    assertEquals(false, withNull.isExplicitUniverseDomain());
   }
 
   @Test
@@ -744,6 +768,36 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     assertEquals(testCredentials.hashCode(), deserializedCredentials.hashCode());
     assertEquals(testCredentials.toString(), deserializedCredentials.toString());
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
+  }
+
+  @Test
+  public void toString_containsFields() throws IOException {
+    String expectedToString =
+        String.format(
+            "GoogleCredentials{quotaProjectId=%s, universeDomain=%s, isExplicitUniverseDomain=%s}",
+            "some-project", "googleapis.com", false, "[some scope]");
+    GoogleCredentials credentials =
+        GoogleCredentials.newBuilder().setQuotaProjectId("some-project").build();
+    assertEquals(expectedToString, credentials.toString());
+  }
+
+  @Test
+  public void hashCode_equals() throws IOException {
+    GoogleCredentials credentials =
+        GoogleCredentials.newBuilder().setUniverseDomain("some-domain").build();
+    GoogleCredentials otherCredentials =
+        GoogleCredentials.newBuilder().setUniverseDomain("some-domain").build();
+    assertEquals(credentials.hashCode(), otherCredentials.hashCode());
+  }
+
+  @Test
+  public void equals_true() throws IOException {
+    GoogleCredentials credentials =
+        GoogleCredentials.newBuilder().setUniverseDomain("some-domain").build();
+    GoogleCredentials otherCredentials =
+        GoogleCredentials.newBuilder().setUniverseDomain("some-domain").build();
+    assertTrue(credentials.equals(otherCredentials));
+    assertTrue(otherCredentials.equals(credentials));
   }
 
   private static void testFromStreamException(InputStream stream, String expectedMessageContent) {

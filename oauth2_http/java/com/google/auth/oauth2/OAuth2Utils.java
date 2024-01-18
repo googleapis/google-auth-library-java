@@ -99,6 +99,7 @@ class OAuth2Utils {
 
   static class DefaultHttpTransportFactory implements HttpTransportFactory {
 
+    @Override
     public HttpTransport create() {
       return HTTP_TRANSPORT;
     }

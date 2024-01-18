@@ -848,6 +848,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param quotaProjectId the quota and billing project id to set
      * @return this {@code Builder} object
      */
+    @Override
     @CanIgnoreReturnValue
     public Builder setQuotaProjectId(String quotaProjectId) {
       super.setQuotaProjectId(quotaProjectId);
@@ -941,6 +942,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       return this;
     }
 
+    @Override
     public abstract ExternalAccountCredentials build();
   }
 }
