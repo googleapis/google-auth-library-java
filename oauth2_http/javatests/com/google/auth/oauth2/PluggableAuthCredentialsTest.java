@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.Credentials.GOOGLE_DEFAULT_UNIVERSE;
 import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
 import static org.junit.Assert.*;
 
@@ -398,7 +399,7 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void builder_allFields() {
+  public void builder_allFields() throws IOException {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     CredentialSource source = buildCredentialSource();
@@ -419,21 +420,64 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
                 .setClientId("clientId")
                 .setClientSecret("clientSecret")
                 .setScopes(scopes)
+                .setUniverseDomain("universeDomain")
                 .build();
 
-    assertEquals(credentials.getExecutableHandler(), handler);
+    assertEquals(handler, credentials.getExecutableHandler());
     assertEquals("audience", credentials.getAudience());
     assertEquals("subjectTokenType", credentials.getSubjectTokenType());
-    assertEquals(credentials.getTokenUrl(), STS_URL);
-    assertEquals(credentials.getTokenInfoUrl(), "tokenInfoUrl");
+    assertEquals(STS_URL, credentials.getTokenUrl());
+    assertEquals("tokenInfoUrl", credentials.getTokenInfoUrl());
     assertEquals(
-        credentials.getServiceAccountImpersonationUrl(), SERVICE_ACCOUNT_IMPERSONATION_URL);
-    assertEquals(credentials.getCredentialSource(), source);
-    assertEquals(credentials.getQuotaProjectId(), "quotaProjectId");
-    assertEquals(credentials.getClientId(), "clientId");
-    assertEquals(credentials.getClientSecret(), "clientSecret");
-    assertEquals(credentials.getScopes(), scopes);
-    assertEquals(credentials.getEnvironmentProvider(), SystemEnvironmentProvider.getInstance());
+        SERVICE_ACCOUNT_IMPERSONATION_URL, credentials.getServiceAccountImpersonationUrl());
+    assertEquals(source, credentials.getCredentialSource());
+    assertEquals("quotaProjectId", credentials.getQuotaProjectId());
+    assertEquals("clientId", credentials.getClientId());
+    assertEquals("clientSecret", credentials.getClientSecret());
+    assertEquals(scopes, credentials.getScopes());
+    assertEquals(SystemEnvironmentProvider.getInstance(), credentials.getEnvironmentProvider());
+    assertEquals("universeDomain", credentials.getUniverseDomain());
+  }
+
+  @Test
+  public void builder_missingUniverseDomain_defaults() throws IOException {
+    List<String> scopes = Arrays.asList("scope1", "scope2");
+
+    CredentialSource source = buildCredentialSource();
+    ExecutableHandler handler = options -> "Token";
+
+    PluggableAuthCredentials credentials =
+        (PluggableAuthCredentials)
+            PluggableAuthCredentials.newBuilder()
+                .setExecutableHandler(handler)
+                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+                .setAudience("audience")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenUrl(STS_URL)
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setCredentialSource(source)
+                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+                .setQuotaProjectId("quotaProjectId")
+                .setClientId("clientId")
+                .setClientSecret("clientSecret")
+                .setScopes(scopes)
+                .setUniverseDomain("universeDomain")
+                .build();
+
+    assertEquals(handler, credentials.getExecutableHandler());
+    assertEquals("audience", credentials.getAudience());
+    assertEquals("subjectTokenType", credentials.getSubjectTokenType());
+    assertEquals(STS_URL, credentials.getTokenUrl());
+    assertEquals("tokenInfoUrl", credentials.getTokenInfoUrl());
+    assertEquals(
+        SERVICE_ACCOUNT_IMPERSONATION_URL, credentials.getServiceAccountImpersonationUrl());
+    assertEquals(source, credentials.getCredentialSource());
+    assertEquals("quotaProjectId", credentials.getQuotaProjectId());
+    assertEquals("clientId", credentials.getClientId());
+    assertEquals("clientSecret", credentials.getClientSecret());
+    assertEquals(scopes, credentials.getScopes());
+    assertEquals(SystemEnvironmentProvider.getInstance(), credentials.getEnvironmentProvider());
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
   @Test
