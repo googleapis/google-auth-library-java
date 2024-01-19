@@ -39,7 +39,7 @@ import java.io.Serializable;
  * Provider for retrieving subject tokens for {@Link IdentityPoolCredentials} to exchange for GCP
  * access tokens.
  */
-interface IdentityPoolSubjectTokenSupplier extends Serializable {
+public interface IdentityPoolSubjectTokenSupplier extends Serializable {
 
   /**
    * Gets a subject token that can be exchanged for a GCP access token.
