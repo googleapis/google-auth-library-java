@@ -723,7 +723,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
     assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
     assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
-    assertNull(credentials.getToken());
+    assertNull(credentials.getSessionToken());
   }
 
   @Test
@@ -756,7 +756,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
     assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
     assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
-    assertEquals("awsSessionToken", credentials.getToken());
+    assertEquals("awsSessionToken", credentials.getSessionToken());
   }
 
   @Test
@@ -778,7 +778,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
     assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
     assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
-    assertEquals("awsSessionToken", credentials.getToken());
+    assertEquals("awsSessionToken", credentials.getSessionToken());
   }
 
   @Test
@@ -797,7 +797,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
     assertEquals("accessKeyId", credentials.getAccessKeyId());
     assertEquals("secretAccessKey", credentials.getSecretAccessKey());
-    assertEquals("token", credentials.getToken());
+    assertEquals("token", credentials.getSessionToken());
 
     List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
     assertEquals(2, requests.size());

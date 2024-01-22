@@ -37,29 +37,48 @@ import javax.annotation.Nullable;
  * Defines AWS security credentials. These are either retrieved from the AWS security_credentials
  * endpoint or AWS environment variables.
  */
-class AwsSecurityCredentials {
+public class AwsSecurityCredentials {
 
   private final String accessKeyId;
   private final String secretAccessKey;
 
-  @Nullable private final String token;
+  @Nullable private final String sessionToken;
 
-  AwsSecurityCredentials(String accessKeyId, String secretAccessKey, @Nullable String token) {
+  /**
+   * Constructor for AWSSecurityCredentials.
+   *
+   * @param accessKeyId the AWS access Key Id.
+   * @param secretAccessKey the AWS secret access key.
+   * @param sessionToken the AWS session token. Optional.
+   */
+  public AwsSecurityCredentials(String accessKeyId, String secretAccessKey, @Nullable String sessionToken) {
     this.accessKeyId = accessKeyId;
     this.secretAccessKey = secretAccessKey;
-    this.token = token;
+    this.sessionToken = sessionToken;
   }
 
-  String getAccessKeyId() {
+  /**
+   * Gets the AWS access key id.
+   * @return the AWS access key id.
+   */
+  public String getAccessKeyId() {
     return accessKeyId;
   }
 
-  String getSecretAccessKey() {
+  /**
+   * Gets the AWS secret access key.
+   * @return the AWS secret access key.
+   */
+  public String getSecretAccessKey() {
     return secretAccessKey;
   }
 
+  /**
+   * Gets the AWS session token.
+   * @return the AWS session token.
+   */
   @Nullable
-  String getToken() {
-    return token;
+  public String getSessionToken() {
+    return sessionToken;
   }
 }
