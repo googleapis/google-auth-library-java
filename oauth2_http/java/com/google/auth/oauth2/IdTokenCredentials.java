@@ -33,6 +33,7 @@ package com.google.auth.oauth2;
 
 import com.google.api.client.util.Preconditions;
 import com.google.common.base.MoreObjects;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
@@ -148,6 +149,7 @@ public class IdTokenCredentials extends OAuth2Credentials {
         && Objects.equals(this.targetAudience, other.targetAudience);
   }
 
+  @Override
   public Builder toBuilder() {
     return new Builder()
         .setIdTokenProvider(this.idTokenProvider)
@@ -167,6 +169,7 @@ public class IdTokenCredentials extends OAuth2Credentials {
 
     protected Builder() {}
 
+    @CanIgnoreReturnValue
     public Builder setIdTokenProvider(IdTokenProvider idTokenProvider) {
       this.idTokenProvider = idTokenProvider;
       return this;
@@ -176,6 +179,7 @@ public class IdTokenCredentials extends OAuth2Credentials {
       return this.idTokenProvider;
     }
 
+    @CanIgnoreReturnValue
     public Builder setTargetAudience(String targetAudience) {
       this.targetAudience = targetAudience;
       return this;
@@ -185,6 +189,7 @@ public class IdTokenCredentials extends OAuth2Credentials {
       return this.targetAudience;
     }
 
+    @CanIgnoreReturnValue
     public Builder setOptions(List<IdTokenProvider.Option> options) {
       this.options = options;
       return this;
@@ -194,6 +199,7 @@ public class IdTokenCredentials extends OAuth2Credentials {
       return this.options;
     }
 
+    @Override
     public IdTokenCredentials build() {
       return new IdTokenCredentials(this);
     }

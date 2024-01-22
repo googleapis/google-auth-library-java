@@ -40,7 +40,6 @@ import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.ExecutableHandler.ExecutableOptions;
 import com.google.auth.oauth2.ExternalAccountCredentials.CredentialSource;
-import com.google.auth.oauth2.PluggableAuthCredentials.PluggableAuthCredentialSource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.NotSerializableException;
@@ -438,7 +437,7 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void createdScoped_clonedCredentialWithAddedScopes() {
+  public void createdScoped_clonedCredentialWithAddedScopes() throws IOException {
     PluggableAuthCredentials credentials =
         (PluggableAuthCredentials)
             PluggableAuthCredentials.newBuilder(CREDENTIAL)

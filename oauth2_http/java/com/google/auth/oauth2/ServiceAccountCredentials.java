@@ -41,7 +41,6 @@ import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.UrlEncodedContent;
-import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.webtoken.JsonWebSignature;
@@ -50,18 +49,19 @@ import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Joiner;
 import com.google.api.client.util.Preconditions;
+import com.google.auth.Credentials;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.MoreObjects;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableSet;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -166,6 +166,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     String projectId = (String) json.get("project_id");
     String tokenServerUriStringFromCreds = (String) json.get("token_uri");
     String quotaProjectId = (String) json.get("quota_project_id");
+    String universeDomain = (String) json.get("universe_domain");
     URI tokenServerUriFromCreds = null;
     try {
       if (tokenServerUriStringFromCreds != null) {
@@ -192,7 +193,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
             .setHttpTransportFactory(transportFactory)
             .setTokenServerUri(tokenServerUriFromCreds)
             .setProjectId(projectId)
-            .setQuotaProjectId(quotaProjectId);
+            .setQuotaProjectId(quotaProjectId)
+            .setUniverseDomain(universeDomain);
 
     return fromPkcs8(privateKeyPkcs8, builder);
   }
@@ -462,32 +464,27 @@ public class ServiceAccountCredentials extends GoogleCredentials
    */
   public static ServiceAccountCredentials fromStream(
       InputStream credentialsStream, HttpTransportFactory transportFactory) throws IOException {
-    Preconditions.checkNotNull(credentialsStream);
-    Preconditions.checkNotNull(transportFactory);
-
-    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
-    JsonObjectParser parser = new JsonObjectParser(jsonFactory);
-    GenericJson fileContents =
-        parser.parseAndClose(credentialsStream, StandardCharsets.UTF_8, GenericJson.class);
-
-    String fileType = (String) fileContents.get("type");
-    if (fileType == null) {
-      throw new IOException("Error reading credentials from stream, 'type' field not specified.");
+    ServiceAccountCredentials credential =
+        (ServiceAccountCredentials)
+            GoogleCredentials.fromStream(credentialsStream, transportFactory);
+    if (credential == null) {
+      throw new IOException(
+          String.format(
+              "Error reading credentials from stream, ServiceAccountCredentials type is not recognized."));
     }
-    if (SERVICE_ACCOUNT_FILE_TYPE.equals(fileType)) {
-      return fromJson(fileContents, transportFactory);
-    }
-    throw new IOException(
-        String.format(
-            "Error reading credentials from stream, 'type' value '%s' not recognized."
-                + " Expecting '%s'.",
-            fileType, SERVICE_ACCOUNT_FILE_TYPE));
+    return credential;
   }
 
   /** Returns whether the scopes are empty, meaning createScoped must be called before use. */
   @Override
   public boolean createScopedRequired() {
     return scopes.isEmpty() && defaultScopes.isEmpty();
+  }
+
+  /** Returns true if credential is configured domain wide delegation */
+  @VisibleForTesting
+  boolean isConfiguredForDomainWideDelegation() {
+    return serviceAccountUser != null && serviceAccountUser.length() > 0;
   }
 
   /**
@@ -643,9 +640,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
   }
 
   /**
-   * Clones the service account with a new useJwtAccessWithScope value.
+   * Clones the service account with a new useJwtAccessWithScope value. This flag will be ignored if
+   * universeDomain field is different from {@link Credentials.GOOGLE_DEFAULT_UNIVERSE}.
    *
-   * @param useJwtAccessWithScope whether self signed JWT with scopes should be used
+   * @param useJwtAccessWithScope whether self-signed JWT with scopes should be used
    * @return the cloned service account credentials with the given useJwtAccessWithScope
    */
   public ServiceAccountCredentials createWithUseJwtAccessWithScope(boolean useJwtAccessWithScope) {
@@ -731,8 +729,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   /**
    * Returns a new JwtCredentials instance with modified claims.
    *
-   * @param newClaims new claims. Any unspecified claim fields will default to the the current
-   *     values.
+   * @param newClaims new claims. Any unspecified claim fields will default to the current values.
    * @return new credentials
    */
   @Override
@@ -758,15 +755,15 @@ public class ServiceAccountCredentials extends GoogleCredentials
         tokenServerUri,
         scopes,
         defaultScopes,
-        quotaProjectId,
         lifetime,
         useJwtAccessWithScope,
-        defaultRetriesEnabled);
+        defaultRetriesEnabled,
+        super.hashCode());
   }
 
   @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
+  protected ToStringHelper toStringHelper() {
+    return super.toStringHelper()
         .add("clientId", clientId)
         .add("clientEmail", clientEmail)
         .add("privateKeyId", privateKeyId)
@@ -775,11 +772,9 @@ public class ServiceAccountCredentials extends GoogleCredentials
         .add("scopes", scopes)
         .add("defaultScopes", defaultScopes)
         .add("serviceAccountUser", serviceAccountUser)
-        .add("quotaProjectId", quotaProjectId)
         .add("lifetime", lifetime)
         .add("useJwtAccessWithScope", useJwtAccessWithScope)
-        .add("defaultRetriesEnabled", defaultRetriesEnabled)
-        .toString();
+        .add("defaultRetriesEnabled", defaultRetriesEnabled);
   }
 
   @Override
@@ -787,6 +782,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
     if (!(obj instanceof ServiceAccountCredentials)) {
       return false;
     }
+    if (!super.equals(obj)) {
+      return false;
+    }
+
     ServiceAccountCredentials other = (ServiceAccountCredentials) obj;
     return Objects.equals(this.clientId, other.clientId)
         && Objects.equals(this.clientEmail, other.clientEmail)
@@ -796,7 +795,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
         && Objects.equals(this.tokenServerUri, other.tokenServerUri)
         && Objects.equals(this.scopes, other.scopes)
         && Objects.equals(this.defaultScopes, other.defaultScopes)
-        && Objects.equals(this.quotaProjectId, other.quotaProjectId)
         && Objects.equals(this.lifetime, other.lifetime)
         && Objects.equals(this.useJwtAccessWithScope, other.useJwtAccessWithScope)
         && Objects.equals(this.defaultRetriesEnabled, other.defaultRetriesEnabled);
@@ -865,7 +863,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   }
 
   /**
-   * Self signed JWT uses uri as audience, which should have the "https://{host}/" format. For
+   * Self-signed JWT uses uri as audience, which should have the "https://{host}/" format. For
    * instance, if the uri is "https://compute.googleapis.com/compute/v1/projects/", then this
    * function returns "https://compute.googleapis.com/".
    */
@@ -883,7 +881,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   @VisibleForTesting
   JwtCredentials createSelfSignedJwtCredentials(final URI uri) {
-    // Create a JwtCredentials for self signed JWT. See https://google.aip.dev/auth/4111.
+    // Create a JwtCredentials for self-signed JWT. See https://google.aip.dev/auth/4111.
     JwtClaims.Builder claimsBuilder =
         JwtClaims.newBuilder().setIssuer(clientEmail).setSubject(clientEmail);
 
@@ -911,9 +909,12 @@ public class ServiceAccountCredentials extends GoogleCredentials
   @Override
   public void getRequestMetadata(
       final URI uri, Executor executor, final RequestMetadataCallback callback) {
-    if (useJwtAccessWithScope) {
-      // This will call getRequestMetadata(URI uri), which handles self signed JWT logic.
-      // Self signed JWT doesn't use network, so here we do a blocking call to improve
+    // For default universe Self-signed JWT could be explicitly disabled with
+    // {@code ServiceAccountCredentials.useJwtAccessWithScope} flag.
+    // If universe is non-default, it only supports self-signed JWT, and it is always allowed.
+    if (this.useJwtAccessWithScope || !isDefaultUniverseDomain()) {
+      // This will call getRequestMetadata(URI uri), which handles self-signed JWT logic.
+      // Self-signed JWT doesn't use network, so here we do a blocking call to improve
       // efficiency. executor will be ignored since it is intended for async operation.
       blockingGetToCallback(uri, callback);
     } else {
@@ -931,17 +932,45 @@ public class ServiceAccountCredentials extends GoogleCredentials
               + " providing uri to getRequestMetadata.");
     }
 
-    // If scopes are provided but we cannot use self signed JWT, then use scopes to get access
-    // token.
+    if (isDefaultUniverseDomain()) {
+      return getRequestMetadataForGdu(uri);
+    } else {
+      return getRequestMetadataForNonGdu(uri);
+    }
+  }
+
+  private Map<String, List<String>> getRequestMetadataForGdu(URI uri) throws IOException {
+    // If scopes are provided, but we cannot use self-signed JWT or domain-wide delegation is
+    // configured then use scopes to get access token.
     if ((!createScopedRequired() && !useJwtAccessWithScope)
-        || (serviceAccountUser != null && serviceAccountUser.length() > 0)) {
+        || isConfiguredForDomainWideDelegation()) {
       return super.getRequestMetadata(uri);
     }
 
-    // If scopes are provided and self signed JWT can be used, use self signed JWT with scopes.
-    // Otherwise, use self signed JWT with uri as the audience.
+    return getRequestMetadataWithSelfSignedJwt(uri);
+  }
+
+  private Map<String, List<String>> getRequestMetadataForNonGdu(URI uri) throws IOException {
+    // Self Signed JWT is not supported for domain-wide delegation for non-GDU universes
+    if (isConfiguredForDomainWideDelegation()) {
+      throw new IOException(
+          String.format(
+              "Service Account user is configured for the credential. "
+                  + "Domain-wide delegation is not supported in universes different than %s.",
+              Credentials.GOOGLE_DEFAULT_UNIVERSE));
+    }
+
+    return getRequestMetadataWithSelfSignedJwt(uri);
+  }
+
+  /** Provide the access JWT for scopes if provided, for uri as aud otherwise */
+  @VisibleForTesting
+  private Map<String, List<String>> getRequestMetadataWithSelfSignedJwt(URI uri)
+      throws IOException {
+    // If scopes are provided and self-signed JWT can be used, use self-signed JWT with scopes.
+    // Otherwise, use self-signed JWT with uri as the audience.
     JwtCredentials jwtCredentials;
-    if (!createScopedRequired() && useJwtAccessWithScope) {
+    if (!createScopedRequired()) {
       // Create selfSignedJwtCredentialsWithScope when needed and reuse it for better performance.
       if (selfSignedJwtCredentialsWithScope == null) {
         selfSignedJwtCredentialsWithScope = createSelfSignedJwtCredentials(null);
@@ -951,6 +980,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
       // Create JWT credentials with the uri as audience.
       jwtCredentials = createSelfSignedJwtCredentials(uri);
     }
+
     Map<String, List<String>> requestMetadata = jwtCredentials.getRequestMetadata(null);
     return addQuotaProjectIdToRequestMetadata(quotaProjectId, requestMetadata);
   }
@@ -966,6 +996,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     return new Builder();
   }
 
+  @Override
   public Builder toBuilder() {
     return new Builder(this);
   }
@@ -1005,80 +1036,105 @@ public class ServiceAccountCredentials extends GoogleCredentials
       this.defaultRetriesEnabled = credentials.defaultRetriesEnabled;
     }
 
+    @CanIgnoreReturnValue
     public Builder setClientId(String clientId) {
       this.clientId = clientId;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setClientEmail(String clientEmail) {
       this.clientEmail = clientEmail;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setPrivateKey(PrivateKey privateKey) {
       this.privateKey = privateKey;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setPrivateKeyString(String privateKeyPkcs8) throws IOException {
       this.privateKey = OAuth2Utils.privateKeyFromPkcs8(privateKeyPkcs8);
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setPrivateKeyId(String privateKeyId) {
       this.privateKeyId = privateKeyId;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setScopes(Collection<String> scopes) {
       this.scopes = scopes;
       this.defaultScopes = ImmutableSet.<String>of();
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setScopes(Collection<String> scopes, Collection<String> defaultScopes) {
       this.scopes = scopes;
       this.defaultScopes = defaultScopes;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setServiceAccountUser(String serviceAccountUser) {
       this.serviceAccountUser = serviceAccountUser;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setProjectId(String projectId) {
       this.projectId = projectId;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setTokenServerUri(URI tokenServerUri) {
       this.tokenServerUri = tokenServerUri;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
       this.transportFactory = transportFactory;
       return this;
     }
 
+    @Override
+    @CanIgnoreReturnValue
     public Builder setQuotaProjectId(String quotaProjectId) {
       super.setQuotaProjectId(quotaProjectId);
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setLifetime(int lifetime) {
       this.lifetime = lifetime == 0 ? DEFAULT_LIFETIME_IN_SECONDS : lifetime;
       return this;
     }
 
+    /**
+     * Sets the useJwtAccessWithScope flag. This flag will be ignored if universeDomain field is
+     * different from {@link Credentials.GOOGLE_DEFAULT_UNIVERSE}.
+     */
+    @CanIgnoreReturnValue
     public Builder setUseJwtAccessWithScope(boolean useJwtAccessWithScope) {
       this.useJwtAccessWithScope = useJwtAccessWithScope;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setDefaultRetriesEnabled(boolean defaultRetriesEnabled) {
       this.defaultRetriesEnabled = defaultRetriesEnabled;
+      return this;
+    }
+
+    public Builder setUniverseDomain(String universeDomain) {
+      super.universeDomain = universeDomain;
       return this;
     }
 
@@ -1134,6 +1190,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
       return defaultRetriesEnabled;
     }
 
+    @Override
     public ServiceAccountCredentials build() {
       return new ServiceAccountCredentials(this);
     }

@@ -1,5 +1,52 @@
 # Changelog
 
+## [1.22.0](https://github.com/googleapis/google-auth-library-java/compare/v1.21.0...v1.22.0) (2024-01-09)
+
+
+### Features
+
+* Adds universe domain support for compute credentials ([#1346](https://github.com/googleapis/google-auth-library-java/issues/1346)) ([7e26861](https://github.com/googleapis/google-auth-library-java/commit/7e268611d2c2152e84702b1c67ca846902bbe2d5))
+
+
+### Bug Fixes
+
+* Handle error-prone warnings ([#1334](https://github.com/googleapis/google-auth-library-java/issues/1334)) ([927cad8](https://github.com/googleapis/google-auth-library-java/commit/927cad835567cd6619ca51c97546831b0f13edec))
+
+## [1.21.0](https://github.com/googleapis/google-auth-library-java/compare/v1.20.0...v1.21.0) (2023-12-21)
+
+
+### Features
+
+* Add code sample and test for getting an access token from an impersonated SA ([#1289](https://github.com/googleapis/google-auth-library-java/issues/1289)) ([826ee40](https://github.com/googleapis/google-auth-library-java/commit/826ee4007d3e0600dfdf42383f56dbcf6cdd4cec))
+* Multi universe support, adding universe_domain field ([#1282](https://github.com/googleapis/google-auth-library-java/issues/1282)) ([7eb322e](https://github.com/googleapis/google-auth-library-java/commit/7eb322e3af6bce85774b2a1051242a4b62b53963))
+
+
+### Bug Fixes
+
+* Remove -Xlint:unchecked, suppress all existing violations, add @CanIgnoreReturnValue ([#1324](https://github.com/googleapis/google-auth-library-java/issues/1324)) ([04dfd40](https://github.com/googleapis/google-auth-library-java/commit/04dfd40c57b89c2d55327d5ea08036d749ebac02))
+
+
+### Documentation
+
+* Update README.md to link to Cloud authentication documentation rather than AIPs ([98fc7e1](https://github.com/googleapis/google-auth-library-java/commit/98fc7e1f2f551d59811de63eaef0df6bf8e21c2c))
+
+## [1.20.0](https://github.com/googleapis/google-auth-library-java/compare/v1.19.0...v1.20.0) (2023-09-19)
+
+
+### Features
+
+* Byoid metrics framework ([#1232](https://github.com/googleapis/google-auth-library-java/issues/1232)) ([38bdf60](https://github.com/googleapis/google-auth-library-java/commit/38bdf60189b44171f5d481fa934f4ece60553653))
+
+
+### Bug Fixes
+
+* Make derived classes of CredentialSource public ([#1236](https://github.com/googleapis/google-auth-library-java/issues/1236)) ([9bb9e0a](https://github.com/googleapis/google-auth-library-java/commit/9bb9e0a67c503415a69f35e390f6c64357fc7be1))
+
+
+### Documentation
+
+* Update library definitions in README to the latest version ([#1239](https://github.com/googleapis/google-auth-library-java/issues/1239)) ([0c5cff2](https://github.com/googleapis/google-auth-library-java/commit/0c5cff26fc66ad90d2dbccd374c6ead81f66d569))
+
 ## [1.19.0](https://github.com/googleapis/google-auth-library-java/compare/v1.18.0...v1.19.0) (2023-06-27)
 
 

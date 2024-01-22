@@ -43,7 +43,6 @@ import com.google.api.client.json.JsonParser;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
-import com.google.auth.oauth2.AwsCredentials.AwsCredentialSource;
 import com.google.auth.oauth2.ExternalAccountCredentialsTest.MockExternalAccountCredentialsTransportFactory;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -211,6 +210,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   public void retrieveSubjectToken() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
@@ -255,6 +255,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   public void retrieveSubjectTokenWithSessionTokenUrl() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
@@ -759,7 +760,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void createdScoped_clonedCredentialWithAddedScopes() {
+  public void createdScoped_clonedCredentialWithAddedScopes() throws IOException {
     AwsCredentials credentials =
         (AwsCredentials)
             AwsCredentials.newBuilder(AWS_CREDENTIAL)

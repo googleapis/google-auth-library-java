@@ -47,6 +47,7 @@ import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -318,8 +319,12 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
 
   @Override
   public int hashCode() {
+    // We include access token explicitly here for backwards compatibility.
+    // For the rest of the credentials we don't include it because Credentials are
+    // equivalent with different valid active tokens if main and parent fields are equal.
     return Objects.hash(
         super.hashCode(),
+        getAccessToken(),
         clientId,
         clientSecret,
         refreshToken,
@@ -346,8 +351,10 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     if (!(obj instanceof UserCredentials)) {
       return false;
     }
+
     UserCredentials other = (UserCredentials) obj;
     return super.equals(other)
+        && Objects.equals(this.getAccessToken(), other.getAccessToken())
         && Objects.equals(this.clientId, other.clientId)
         && Objects.equals(this.clientSecret, other.clientSecret)
         && Objects.equals(this.refreshToken, other.refreshToken)
@@ -365,6 +372,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     return new Builder();
   }
 
+  @Override
   public Builder toBuilder() {
     return new Builder(this);
   }
@@ -388,46 +396,59 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
       this.tokenServerUri = credentials.tokenServerUri;
     }
 
+    @CanIgnoreReturnValue
     public Builder setClientId(String clientId) {
       this.clientId = clientId;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setClientSecret(String clientSecret) {
       this.clientSecret = clientSecret;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setRefreshToken(String refreshToken) {
       this.refreshToken = refreshToken;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setTokenServerUri(URI tokenServerUri) {
       this.tokenServerUri = tokenServerUri;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
       this.transportFactory = transportFactory;
       return this;
     }
 
+    @Override
+    @CanIgnoreReturnValue
     public Builder setAccessToken(AccessToken token) {
       super.setAccessToken(token);
       return this;
     }
 
+    @Override
+    @CanIgnoreReturnValue
     public Builder setExpirationMargin(Duration expirationMargin) {
       super.setExpirationMargin(expirationMargin);
       return this;
     }
 
+    @Override
+    @CanIgnoreReturnValue
     public Builder setRefreshMargin(Duration refreshMargin) {
       super.setRefreshMargin(refreshMargin);
       return this;
     }
 
+    @Override
+    @CanIgnoreReturnValue
     public Builder setQuotaProjectId(String quotaProjectId) {
       super.setQuotaProjectId(quotaProjectId);
       return this;
@@ -453,6 +474,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
       return transportFactory;
     }
 
+    @Override
     public UserCredentials build() {
       return new UserCredentials(this);
     }

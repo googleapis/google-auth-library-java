@@ -47,7 +47,8 @@ set +e
 
 case ${JOB_TYPE} in
 test)
-    mvn test -B -ntp -Dclirr.skip=true -Denforcer.skip=true
+    echo "SUREFIRE_JVM_OPT: ${SUREFIRE_JVM_OPT}"
+    mvn test -B -ntp -Dclirr.skip=true -Denforcer.skip=true ${SUREFIRE_JVM_OPT}
     RETURN_CODE=$?
     ;;
 lint)
@@ -69,14 +70,14 @@ integration)
       verify
     RETURN_CODE=$?
     ;;
-graalvm)
+graalvmA)
     # Run Unit and Integration Tests with Native Image
-    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative test
+    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Pnative-test test -pl 'oauth2_http'
     RETURN_CODE=$?
     ;;
-graalvm17)
+graalvmB)
     # Run Unit and Integration Tests with Native Image
-    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative test
+    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Pnative-test test -pl 'oauth2_http'
     RETURN_CODE=$?
     ;;
 samples)

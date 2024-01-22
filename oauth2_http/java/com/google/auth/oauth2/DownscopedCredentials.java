@@ -36,6 +36,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 
 /**
@@ -166,21 +167,25 @@ public final class DownscopedCredentials extends OAuth2Credentials {
 
     private Builder() {}
 
+    @CanIgnoreReturnValue
     public Builder setSourceCredential(GoogleCredentials sourceCredential) {
       this.sourceCredential = sourceCredential;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setCredentialAccessBoundary(CredentialAccessBoundary credentialAccessBoundary) {
       this.credentialAccessBoundary = credentialAccessBoundary;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
       this.transportFactory = transportFactory;
       return this;
     }
 
+    @Override
     public DownscopedCredentials build() {
       return new DownscopedCredentials(
           sourceCredential, credentialAccessBoundary, transportFactory);
