@@ -237,7 +237,8 @@ class AwsRequestSigner {
       headers.put("x-amz-date", defaultDate);
     }
 
-    if (awsSecurityCredentials.getSessionToken() != null && !awsSecurityCredentials.getSessionToken().isEmpty()) {
+    if (awsSecurityCredentials.getSessionToken() != null
+        && !awsSecurityCredentials.getSessionToken().isEmpty()) {
       headers.put("x-amz-security-token", awsSecurityCredentials.getSessionToken());
     }
 

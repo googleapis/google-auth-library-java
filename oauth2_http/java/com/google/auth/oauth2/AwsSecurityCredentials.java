@@ -51,7 +51,8 @@ public class AwsSecurityCredentials {
    * @param secretAccessKey the AWS secret access key.
    * @param sessionToken the AWS session token. Optional.
    */
-  public AwsSecurityCredentials(String accessKeyId, String secretAccessKey, @Nullable String sessionToken) {
+  public AwsSecurityCredentials(
+      String accessKeyId, String secretAccessKey, @Nullable String sessionToken) {
     this.accessKeyId = accessKeyId;
     this.secretAccessKey = secretAccessKey;
     this.sessionToken = sessionToken;
@@ -59,6 +60,7 @@ public class AwsSecurityCredentials {
 
   /**
    * Gets the AWS access key id.
+   *
    * @return the AWS access key id.
    */
   public String getAccessKeyId() {
@@ -67,6 +69,7 @@ public class AwsSecurityCredentials {
 
   /**
    * Gets the AWS secret access key.
+   *
    * @return the AWS secret access key.
    */
   public String getSecretAccessKey() {
@@ -75,6 +78,7 @@ public class AwsSecurityCredentials {
 
   /**
    * Gets the AWS session token.
+   *
    * @return the AWS session token.
    */
   @Nullable
