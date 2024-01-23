@@ -112,6 +112,18 @@ public final class DownscopedCredentials extends OAuth2Credentials {
     } else {
       this.universeDomain = builder.universeDomain;
     }
+
+    // Ensure source credential's universe domain matches.
+    try {
+      if (!this.universeDomain.equals(sourceCredential.getUniverseDomain())) {
+        throw new IllegalArgumentException(
+            "The downscoped credential's universe domain must be the same as the source "
+                + "credential.");
+      }
+    } catch (IOException e) {
+      throw new IllegalStateException(
+          "Error occurred when attempting to retrieve source credential universe domain.");
+    }
     this.tokenExchangeEndpoint =
         TOKEN_EXCHANGE_URL_FORMAT.replace("{universe_domain}", universeDomain);
   }

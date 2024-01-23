@@ -118,16 +118,19 @@ public class DownscopedCredentialsTest {
   @Test
   public void refreshAccessToken_withCustomUniverseDomain() throws IOException {
     MockStsTransportFactory transportFactory = new MockStsTransportFactory();
-
+    String universeDomain = "foobar";
     GoogleCredentials sourceCredentials =
-        getServiceAccountSourceCredentials(/* canRefresh= */ true);
+        getServiceAccountSourceCredentials(/* canRefresh= */ true)
+            .toBuilder()
+            .setUniverseDomain(universeDomain)
+            .build();
 
     DownscopedCredentials downscopedCredentials =
         DownscopedCredentials.newBuilder()
             .setSourceCredential(sourceCredentials)
             .setCredentialAccessBoundary(CREDENTIAL_ACCESS_BOUNDARY)
             .setHttpTransportFactory(transportFactory)
-            .setUniverseDomain("universe_domain")
+            .setUniverseDomain(universeDomain)
             .build();
 
     AccessToken accessToken = downscopedCredentials.refreshAccessToken();
@@ -144,7 +147,7 @@ public class DownscopedCredentialsTest {
 
     // Verify domain.
     String url = transportFactory.transport.getRequest().getUrl();
-    assertEquals(url, String.format(TOKEN_EXCHANGE_URL_FORMAT, "universe_domain"));
+    assertEquals(url, String.format(TOKEN_EXCHANGE_URL_FORMAT, universeDomain));
   }
 
   @Test
@@ -259,6 +262,44 @@ public class DownscopedCredentialsTest {
     assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
+  @Test
+  public void builder_universeDomainMismatch_throws() throws IOException {
+    GoogleCredentials sourceCredentials =
+        getServiceAccountSourceCredentials(/* canRefresh= */ true);
+
+    try {
+      DownscopedCredentials.newBuilder()
+          .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+          .setSourceCredential(sourceCredentials)
+          .setCredentialAccessBoundary(CREDENTIAL_ACCESS_BOUNDARY)
+          .setUniverseDomain("differentUniverseDomain")
+          .build();
+      fail("Should fail with universe domain mismatch.");
+    } catch (IllegalArgumentException e) {
+      assertEquals(
+          "The downscoped credential's universe domain must be the same as the source credential.",
+          e.getMessage());
+    }
+  }
+
+  @Test
+  public void builder_sourceUniverseDomainUnavailable_throws() throws IOException {
+    GoogleCredentials sourceCredentials = new MockSourceCredentialWithoutUniverseDomain();
+
+    try {
+      DownscopedCredentials.newBuilder()
+          .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+          .setSourceCredential(sourceCredentials)
+          .setCredentialAccessBoundary(CREDENTIAL_ACCESS_BOUNDARY)
+          .build();
+      fail("Should fail to retrieve source credential universe domain.");
+    } catch (IllegalStateException e) {
+      assertEquals(
+          "Error occurred when attempting to retrieve source credential universe domain.",
+          e.getMessage());
+    }
+  }
+
   private static GoogleCredentials getServiceAccountSourceCredentials(boolean canRefresh)
       throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -295,5 +336,12 @@ public class DownscopedCredentialsTest {
         .setAccessToken(accessToken)
         .setHttpTransportFactory(transportFactory)
         .build();
+  }
+
+  static class MockSourceCredentialWithoutUniverseDomain extends GoogleCredentials {
+    @Override
+    public String getUniverseDomain() throws IOException {
+      throw new IOException();
+    }
   }
 }
