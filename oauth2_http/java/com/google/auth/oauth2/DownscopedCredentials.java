@@ -122,7 +122,7 @@ public final class DownscopedCredentials extends OAuth2Credentials {
       }
     } catch (IOException e) {
       throw new IllegalStateException(
-          "Error occurred when attempting to retrieve source credential universe domain.");
+          "Error occurred when attempting to retrieve source credential universe domain.", e);
     }
     this.tokenExchangeEndpoint =
         TOKEN_EXCHANGE_URL_FORMAT.replace("{universe_domain}", universeDomain);
