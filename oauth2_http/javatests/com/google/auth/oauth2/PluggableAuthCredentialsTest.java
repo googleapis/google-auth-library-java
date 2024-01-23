@@ -480,6 +480,91 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void newBuilder_allFields() throws IOException {
+    List<String> scopes = Arrays.asList("scope1", "scope2");
+
+    CredentialSource source = buildCredentialSource();
+    ExecutableHandler handler = options -> "Token";
+
+    PluggableAuthCredentials credentials =
+        (PluggableAuthCredentials)
+            PluggableAuthCredentials.newBuilder()
+                .setExecutableHandler(handler)
+                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+                .setAudience("audience")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenUrl(STS_URL)
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setCredentialSource(source)
+                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+                .setQuotaProjectId("quotaProjectId")
+                .setClientId("clientId")
+                .setClientSecret("clientSecret")
+                .setScopes(scopes)
+                .setUniverseDomain("universeDomain")
+                .build();
+
+    PluggableAuthCredentials newBuilderCreds =
+        PluggableAuthCredentials.newBuilder(credentials).build();
+    assertEquals(credentials.getAudience(), newBuilderCreds.getAudience());
+    assertEquals(credentials.getSubjectTokenType(), newBuilderCreds.getSubjectTokenType());
+    assertEquals(credentials.getTokenUrl(), newBuilderCreds.getTokenUrl());
+    assertEquals(credentials.getTokenInfoUrl(), newBuilderCreds.getTokenInfoUrl());
+    assertEquals(
+        credentials.getServiceAccountImpersonationUrl(),
+        newBuilderCreds.getServiceAccountImpersonationUrl());
+    assertEquals(credentials.getCredentialSource(), newBuilderCreds.getCredentialSource());
+    assertEquals(credentials.getQuotaProjectId(), newBuilderCreds.getQuotaProjectId());
+    assertEquals(credentials.getClientId(), newBuilderCreds.getClientId());
+    assertEquals(credentials.getClientSecret(), newBuilderCreds.getClientSecret());
+    assertEquals(credentials.getScopes(), newBuilderCreds.getScopes());
+    assertEquals(credentials.getEnvironmentProvider(), newBuilderCreds.getEnvironmentProvider());
+    assertEquals(credentials.getUniverseDomain(), newBuilderCreds.getUniverseDomain());
+  }
+
+  @Test
+  public void newBuilder_noUniverseDomain_defaults() throws IOException {
+    List<String> scopes = Arrays.asList("scope1", "scope2");
+
+    CredentialSource source = buildCredentialSource();
+    ExecutableHandler handler = options -> "Token";
+
+    PluggableAuthCredentials credentials =
+        (PluggableAuthCredentials)
+            PluggableAuthCredentials.newBuilder()
+                .setExecutableHandler(handler)
+                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+                .setAudience("audience")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenUrl(STS_URL)
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setCredentialSource(source)
+                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+                .setQuotaProjectId("quotaProjectId")
+                .setClientId("clientId")
+                .setClientSecret("clientSecret")
+                .setScopes(scopes)
+                .build();
+
+    PluggableAuthCredentials newBuilderCreds =
+        PluggableAuthCredentials.newBuilder(credentials).build();
+    assertEquals(credentials.getAudience(), newBuilderCreds.getAudience());
+    assertEquals(credentials.getSubjectTokenType(), newBuilderCreds.getSubjectTokenType());
+    assertEquals(credentials.getTokenUrl(), newBuilderCreds.getTokenUrl());
+    assertEquals(credentials.getTokenInfoUrl(), newBuilderCreds.getTokenInfoUrl());
+    assertEquals(
+        credentials.getServiceAccountImpersonationUrl(),
+        newBuilderCreds.getServiceAccountImpersonationUrl());
+    assertEquals(credentials.getCredentialSource(), newBuilderCreds.getCredentialSource());
+    assertEquals(credentials.getQuotaProjectId(), newBuilderCreds.getQuotaProjectId());
+    assertEquals(credentials.getClientId(), newBuilderCreds.getClientId());
+    assertEquals(credentials.getClientSecret(), newBuilderCreds.getClientSecret());
+    assertEquals(credentials.getScopes(), newBuilderCreds.getScopes());
+    assertEquals(credentials.getEnvironmentProvider(), newBuilderCreds.getEnvironmentProvider());
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, newBuilderCreds.getUniverseDomain());
+  }
+
+  @Test
   public void createdScoped_clonedCredentialWithAddedScopes() throws IOException {
     PluggableAuthCredentials credentials =
         (PluggableAuthCredentials)

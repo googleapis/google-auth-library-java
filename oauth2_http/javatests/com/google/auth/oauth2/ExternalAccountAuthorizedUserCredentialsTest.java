@@ -321,7 +321,28 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
   }
 
   @Test
-  public void toBuilder() {
+  public void toBuilder_allFields() {
+    ExternalAccountAuthorizedUserCredentials credentials =
+        ExternalAccountAuthorizedUserCredentials.newBuilder()
+            .setAudience(AUDIENCE)
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setTokenUrl(TOKEN_URL)
+            .setTokenInfoUrl(TOKEN_INFO_URL)
+            .setRevokeUrl(REVOKE_URL)
+            .setAccessToken(new AccessToken(ACCESS_TOKEN, new Date()))
+            .setQuotaProjectId(QUOTA_PROJECT)
+            .setUniverseDomain(UNIVERSE_DOMAIN)
+            .build();
+
+    ExternalAccountAuthorizedUserCredentials secondCredentials = credentials.toBuilder().build();
+
+    assertEquals(credentials, secondCredentials);
+  }
+
+  @Test
+  public void toBuilder_missingUniverseDomain_defaults() throws IOException {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setAudience(AUDIENCE)
@@ -338,6 +359,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     ExternalAccountAuthorizedUserCredentials secondCredentials = credentials.toBuilder().build();
 
     assertEquals(credentials, secondCredentials);
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, secondCredentials.getUniverseDomain());
   }
 
   @Test

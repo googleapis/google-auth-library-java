@@ -167,6 +167,7 @@ public final class DownscopedCredentials extends OAuth2Credentials {
    * @return An explicit universe domain if it was explicitly provided, otherwise the default Google
    *     universe will be returned.
    */
+  @Override
   public String getUniverseDomain() {
     return universeDomain;
   }
