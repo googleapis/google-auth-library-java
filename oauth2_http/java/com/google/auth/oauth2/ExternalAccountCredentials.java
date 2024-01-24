@@ -558,7 +558,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
   @SuppressWarnings("unused")
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
-    // properly deserialize the transient transportFactory
+    // Properly deserialize the transient transportFactory.
     input.defaultReadObject();
     transportFactory = newInstance(transportFactoryClassName);
   }
