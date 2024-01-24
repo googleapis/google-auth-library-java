@@ -121,6 +121,7 @@ public final class DownscopedCredentials extends OAuth2Credentials {
                 + "credential.");
       }
     } catch (IOException e) {
+      // Throwing an IOException would be a breaking change, so wrap it here.
       throw new IllegalStateException(
           "Error occurred when attempting to retrieve source credential universe domain.", e);
     }

@@ -1132,6 +1132,31 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
   }
 
   @Test
+  public void equals_differentUniverseDomain() {
+    ExternalAccountAuthorizedUserCredentials credentials =
+        ExternalAccountAuthorizedUserCredentials.newBuilder()
+            .setAudience(AUDIENCE)
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setTokenUrl(TOKEN_URL)
+            .setTokenInfoUrl(TOKEN_INFO_URL)
+            .setRevokeUrl(REVOKE_URL)
+            .setAccessToken(new AccessToken(ACCESS_TOKEN, /* expirationTime= */ null))
+            .setQuotaProjectId(QUOTA_PROJECT)
+            .setHttpTransportFactory(transportFactory)
+            .setUniverseDomain(UNIVERSE_DOMAIN)
+            .build();
+
+    ExternalAccountAuthorizedUserCredentials secondCredentials =
+        credentials.toBuilder().setUniverseDomain("different").build();
+
+    assertNotEquals(secondCredentials, credentials);
+    assertNotEquals(credentials, secondCredentials);
+    assertNotEquals(credentials.hashCode(), secondCredentials.hashCode());
+  }
+
+  @Test
   public void toString_expectedFormat() {
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, new Date());
     ExternalAccountAuthorizedUserCredentials credentials =
