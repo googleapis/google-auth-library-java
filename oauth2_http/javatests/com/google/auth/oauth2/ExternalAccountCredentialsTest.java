@@ -1322,6 +1322,10 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
       public TestExternalAccountCredentials build() {
         return new TestExternalAccountCredentials(this);
       }
+
+      public HttpTransportFactory getHttpTransportFactory() {
+        return transportFactory;
+      }
     }
 
     protected TestExternalAccountCredentials(ExternalAccountCredentials.Builder builder) {

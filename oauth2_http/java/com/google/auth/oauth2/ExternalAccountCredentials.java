@@ -950,10 +950,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       return this;
     }
 
-    public HttpTransportFactory getHttpTransportFactory() {
-      return transportFactory;
-    }
-
     @Override
     public abstract ExternalAccountCredentials build();
   }
