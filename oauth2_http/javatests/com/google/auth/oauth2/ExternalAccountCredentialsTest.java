@@ -1312,9 +1312,9 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     }
 
     static class Builder extends ExternalAccountCredentials.Builder {
-      public Builder() {}
+      Builder() {}
 
-      public Builder(TestExternalAccountCredentials credentials) {
+      Builder(TestExternalAccountCredentials credentials) {
         super(credentials);
       }
 
