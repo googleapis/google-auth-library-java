@@ -1109,7 +1109,8 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
         testCredentials.getServiceAccountImpersonationOptions().getLifetime(),
         deserializedCredentials.getServiceAccountImpersonationOptions().getLifetime());
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
-    assertEquals(MockExternalAccountCredentialsTransportFactory.class,
+    assertEquals(
+        MockExternalAccountCredentialsTransportFactory.class,
         deserializedCredentials.toBuilder().getHttpTransportFactory().getClass());
   }
 
@@ -1312,6 +1313,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
     static class Builder extends ExternalAccountCredentials.Builder {
       public Builder() {}
+
       public Builder(TestExternalAccountCredentials credentials) {
         super(credentials);
       }
