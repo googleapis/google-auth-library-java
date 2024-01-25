@@ -997,21 +997,21 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     AwsCredentials credentials =
-            AwsCredentials.newBuilder()
-                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-                .setAudience("audience")
-                .setSubjectTokenType("subjectTokenType")
-                .setTokenUrl(STS_URL)
-                .setTokenInfoUrl("tokenInfoUrl")
-                .setCredentialSource(AWS_CREDENTIAL_SOURCE)
-                .setTokenInfoUrl("tokenInfoUrl")
-                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-                .setQuotaProjectId("quotaProjectId")
-                .setClientId("clientId")
-                .setClientSecret("clientSecret")
-                .setScopes(scopes)
-                .setUniverseDomain("universeDomain")
-                .build();
+        AwsCredentials.newBuilder()
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .setAudience("audience")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setCredentialSource(AWS_CREDENTIAL_SOURCE)
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .setQuotaProjectId("quotaProjectId")
+            .setClientId("clientId")
+            .setClientSecret("clientSecret")
+            .setScopes(scopes)
+            .setUniverseDomain("universeDomain")
+            .build();
 
     assertEquals("audience", credentials.getAudience());
     assertEquals("subjectTokenType", credentials.getSubjectTokenType());
@@ -1070,21 +1070,21 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     AwsCredentials credentials =
-            AwsCredentials.newBuilder()
-                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-                .setAudience("audience")
-                .setSubjectTokenType("subjectTokenType")
-                .setTokenUrl(STS_URL)
-                .setTokenInfoUrl("tokenInfoUrl")
-                .setCredentialSource(AWS_CREDENTIAL_SOURCE)
-                .setTokenInfoUrl("tokenInfoUrl")
-                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-                .setQuotaProjectId("quotaProjectId")
-                .setClientId("clientId")
-                .setClientSecret("clientSecret")
-                .setScopes(scopes)
-                .setUniverseDomain("universeDomain")
-                .build();
+        AwsCredentials.newBuilder()
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .setAudience("audience")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setCredentialSource(AWS_CREDENTIAL_SOURCE)
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .setQuotaProjectId("quotaProjectId")
+            .setClientId("clientId")
+            .setClientSecret("clientSecret")
+            .setScopes(scopes)
+            .setUniverseDomain("universeDomain")
+            .build();
 
     AwsCredentials newBuilderCreds = AwsCredentials.newBuilder(credentials).build();
     assertEquals(credentials.getAudience(), newBuilderCreds.getAudience());
@@ -1108,20 +1108,20 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     AwsCredentials credentials =
-            AwsCredentials.newBuilder()
-                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-                .setAudience("audience")
-                .setSubjectTokenType("subjectTokenType")
-                .setTokenUrl(STS_URL)
-                .setTokenInfoUrl("tokenInfoUrl")
-                .setCredentialSource(AWS_CREDENTIAL_SOURCE)
-                .setTokenInfoUrl("tokenInfoUrl")
-                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-                .setQuotaProjectId("quotaProjectId")
-                .setClientId("clientId")
-                .setClientSecret("clientSecret")
-                .setScopes(scopes)
-                .build();
+        AwsCredentials.newBuilder()
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .setAudience("audience")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setCredentialSource(AWS_CREDENTIAL_SOURCE)
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .setQuotaProjectId("quotaProjectId")
+            .setClientId("clientId")
+            .setClientSecret("clientSecret")
+            .setScopes(scopes)
+            .build();
 
     AwsCredentials newBuilderCreds = AwsCredentials.newBuilder(credentials).build();
     assertEquals(credentials.getAudience(), newBuilderCreds.getAudience());

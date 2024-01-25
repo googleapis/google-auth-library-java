@@ -758,20 +758,20 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     IdentityPoolCredentials credentials =
-            IdentityPoolCredentials.newBuilder()
-                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-                .setAudience("audience")
-                .setSubjectTokenType("subjectTokenType")
-                .setTokenUrl(STS_URL)
-                .setTokenInfoUrl("tokenInfoUrl")
-                .setCredentialSource(FILE_CREDENTIAL_SOURCE)
-                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-                .setQuotaProjectId("quotaProjectId")
-                .setClientId("clientId")
-                .setClientSecret("clientSecret")
-                .setScopes(scopes)
-                .setUniverseDomain("universeDomain")
-                .build();
+        IdentityPoolCredentials.newBuilder()
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .setAudience("audience")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .setQuotaProjectId("quotaProjectId")
+            .setClientId("clientId")
+            .setClientSecret("clientSecret")
+            .setScopes(scopes)
+            .setUniverseDomain("universeDomain")
+            .build();
 
     assertEquals("audience", credentials.getAudience());
     assertEquals("subjectTokenType", credentials.getSubjectTokenType());
@@ -906,19 +906,19 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     IdentityPoolCredentials credentials =
-            IdentityPoolCredentials.newBuilder()
-                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-                .setAudience("audience")
-                .setSubjectTokenType("subjectTokenType")
-                .setTokenUrl(STS_URL)
-                .setTokenInfoUrl("tokenInfoUrl")
-                .setCredentialSource(FILE_CREDENTIAL_SOURCE)
-                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-                .setQuotaProjectId("quotaProjectId")
-                .setClientId("clientId")
-                .setClientSecret("clientSecret")
-                .setScopes(scopes)
-                .build();
+        IdentityPoolCredentials.newBuilder()
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .setAudience("audience")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .setQuotaProjectId("quotaProjectId")
+            .setClientId("clientId")
+            .setClientSecret("clientSecret")
+            .setScopes(scopes)
+            .build();
 
     assertEquals("audience", credentials.getAudience());
     assertEquals("subjectTokenType", credentials.getSubjectTokenType());
@@ -940,22 +940,22 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     IdentityPoolCredentials credentials =
-            IdentityPoolCredentials.newBuilder()
-                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-                .setAudience(
-                    "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
-                .setSubjectTokenType("subjectTokenType")
-                .setTokenUrl(STS_URL)
-                .setTokenInfoUrl("tokenInfoUrl")
-                .setCredentialSource(FILE_CREDENTIAL_SOURCE)
-                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-                .setQuotaProjectId("quotaProjectId")
-                .setClientId("clientId")
-                .setClientSecret("clientSecret")
-                .setScopes(scopes)
-                .setWorkforcePoolUserProject("workforcePoolUserProject")
-                .setUniverseDomain("universeDomain")
-                .build();
+        IdentityPoolCredentials.newBuilder()
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .setAudience(
+                "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .setQuotaProjectId("quotaProjectId")
+            .setClientId("clientId")
+            .setClientSecret("clientSecret")
+            .setScopes(scopes)
+            .setWorkforcePoolUserProject("workforcePoolUserProject")
+            .setUniverseDomain("universeDomain")
+            .build();
 
     IdentityPoolCredentials newBuilderCreds =
         IdentityPoolCredentials.newBuilder(credentials).build();
@@ -982,21 +982,21 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     IdentityPoolCredentials credentials =
-            IdentityPoolCredentials.newBuilder()
-                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-                .setAudience(
-                    "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
-                .setSubjectTokenType("subjectTokenType")
-                .setTokenUrl(STS_URL)
-                .setTokenInfoUrl("tokenInfoUrl")
-                .setCredentialSource(FILE_CREDENTIAL_SOURCE)
-                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-                .setQuotaProjectId("quotaProjectId")
-                .setClientId("clientId")
-                .setClientSecret("clientSecret")
-                .setScopes(scopes)
-                .setWorkforcePoolUserProject("workforcePoolUserProject")
-                .build();
+        IdentityPoolCredentials.newBuilder()
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .setAudience(
+                "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .setQuotaProjectId("quotaProjectId")
+            .setClientId("clientId")
+            .setClientSecret("clientSecret")
+            .setScopes(scopes)
+            .setWorkforcePoolUserProject("workforcePoolUserProject")
+            .build();
 
     IdentityPoolCredentials newBuilderCreds =
         IdentityPoolCredentials.newBuilder(credentials).build();

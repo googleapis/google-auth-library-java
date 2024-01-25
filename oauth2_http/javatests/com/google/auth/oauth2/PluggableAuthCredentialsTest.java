@@ -399,21 +399,21 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
     ExecutableHandler handler = options -> "Token";
 
     PluggableAuthCredentials credentials =
-            PluggableAuthCredentials.newBuilder()
-                .setExecutableHandler(handler)
-                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-                .setAudience("audience")
-                .setSubjectTokenType("subjectTokenType")
-                .setTokenUrl(STS_URL)
-                .setTokenInfoUrl("tokenInfoUrl")
-                .setCredentialSource(source)
-                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-                .setQuotaProjectId("quotaProjectId")
-                .setClientId("clientId")
-                .setClientSecret("clientSecret")
-                .setScopes(scopes)
-                .setUniverseDomain("universeDomain")
-                .build();
+        PluggableAuthCredentials.newBuilder()
+            .setExecutableHandler(handler)
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .setAudience("audience")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setCredentialSource(source)
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .setQuotaProjectId("quotaProjectId")
+            .setClientId("clientId")
+            .setClientSecret("clientSecret")
+            .setScopes(scopes)
+            .setUniverseDomain("universeDomain")
+            .build();
 
     assertEquals(handler, credentials.getExecutableHandler());
     assertEquals("audience", credentials.getAudience());
@@ -478,21 +478,21 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
     ExecutableHandler handler = options -> "Token";
 
     PluggableAuthCredentials credentials =
-            PluggableAuthCredentials.newBuilder()
-                .setExecutableHandler(handler)
-                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-                .setAudience("audience")
-                .setSubjectTokenType("subjectTokenType")
-                .setTokenUrl(STS_URL)
-                .setTokenInfoUrl("tokenInfoUrl")
-                .setCredentialSource(source)
-                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-                .setQuotaProjectId("quotaProjectId")
-                .setClientId("clientId")
-                .setClientSecret("clientSecret")
-                .setScopes(scopes)
-                .setUniverseDomain("universeDomain")
-                .build();
+        PluggableAuthCredentials.newBuilder()
+            .setExecutableHandler(handler)
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .setAudience("audience")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setCredentialSource(source)
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .setQuotaProjectId("quotaProjectId")
+            .setClientId("clientId")
+            .setClientSecret("clientSecret")
+            .setScopes(scopes)
+            .setUniverseDomain("universeDomain")
+            .build();
 
     PluggableAuthCredentials newBuilderCreds =
         PluggableAuthCredentials.newBuilder(credentials).build();
@@ -520,20 +520,20 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
     ExecutableHandler handler = options -> "Token";
 
     PluggableAuthCredentials credentials =
-            PluggableAuthCredentials.newBuilder()
-                .setExecutableHandler(handler)
-                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-                .setAudience("audience")
-                .setSubjectTokenType("subjectTokenType")
-                .setTokenUrl(STS_URL)
-                .setTokenInfoUrl("tokenInfoUrl")
-                .setCredentialSource(source)
-                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-                .setQuotaProjectId("quotaProjectId")
-                .setClientId("clientId")
-                .setClientSecret("clientSecret")
-                .setScopes(scopes)
-                .build();
+        PluggableAuthCredentials.newBuilder()
+            .setExecutableHandler(handler)
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .setAudience("audience")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setCredentialSource(source)
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .setQuotaProjectId("quotaProjectId")
+            .setClientId("clientId")
+            .setClientSecret("clientSecret")
+            .setScopes(scopes)
+            .build();
 
     PluggableAuthCredentials newBuilderCreds =
         PluggableAuthCredentials.newBuilder(credentials).build();
