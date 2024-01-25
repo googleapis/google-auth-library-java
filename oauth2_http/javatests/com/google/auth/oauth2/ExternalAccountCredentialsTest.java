@@ -44,12 +44,12 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.oauth2.ExternalAccountCredentials.SubjectTokenTypes;
 import com.google.auth.oauth2.ExternalAccountCredentialsTest.TestExternalAccountCredentials.TestCredentialSource;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -65,7 +65,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
-  private static final String STS_URL = "https://sts.googleapis.com";
+  private static final String STS_URL = "https://sts.googleapis.com/v1/token";
   private static final String GOOGLE_DEFAULT_UNIVERSE = "googleapis.com";
 
   private static final Map<String, Object> FILE_CREDENTIAL_SOURCE_MAP =
@@ -469,21 +469,6 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromJson_invalidServiceAccountImpersonationUrl_throws() throws IOException {
-    GenericJson json = buildJsonIdentityPoolCredential();
-    json.put("service_account_impersonation_url", "https://iamcredentials.googleapis.com");
-
-    try {
-      ExternalAccountCredentials.fromJson(json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
-      fail("Exception should be thrown.");
-    } catch (IllegalArgumentException e) {
-      assertEquals(
-          "Unable to determine target principal from service account impersonation URL.",
-          e.getMessage());
-    }
-  }
-
-  @Test
   public void fromJson_nullTransport_throws() throws IOException {
     try {
       ExternalAccountCredentials.fromJson(
@@ -561,6 +546,41 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals("workforcePoolUserProject", credentials.getWorkforcePoolUserProject());
     assertEquals("universeDomain", credentials.getUniverseDomain());
     assertNotNull(credentials.getCredentialSource());
+  }
+
+  @Test
+  public void constructor_builder_defaultTokenUrl() {
+    HashMap<String, Object> credentialSource = new HashMap<>();
+    credentialSource.put("file", "file");
+
+    ExternalAccountCredentials credentials =
+        IdentityPoolCredentials.newBuilder()
+            .setHttpTransportFactory(transportFactory)
+            .setAudience(
+                "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+            .setSubjectTokenType("subjectTokenType")
+            .setCredentialSource(new TestCredentialSource(credentialSource))
+            .build();
+
+    assertEquals(STS_URL, credentials.getTokenUrl());
+  }
+
+  @Test
+  public void constructor_builder_subjectTokenTypeEnum() {
+    HashMap<String, Object> credentialSource = new HashMap<>();
+    credentialSource.put("file", "file");
+
+    ExternalAccountCredentials credentials =
+        IdentityPoolCredentials.newBuilder()
+            .setHttpTransportFactory(transportFactory)
+            .setAudience(
+                "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+            .setSubjectTokenType(SubjectTokenTypes.SAML2)
+            .setTokenUrl(STS_URL)
+            .setCredentialSource(new TestCredentialSource(credentialSource))
+            .build();
+
+    assertEquals(SubjectTokenTypes.SAML2.value, credentials.getSubjectTokenType());
   }
 
   @Test
@@ -1005,39 +1025,6 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void exchangeExternalCredentialForAccessToken_withServiceAccountImpersonationOverride()
-      throws IOException {
-    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
-
-    String serviceAccountEmail = "different@different.iam.gserviceaccount.com";
-    ExternalAccountCredentials credential =
-        ExternalAccountCredentials.fromStream(
-            IdentityPoolCredentialsTest.writeIdentityPoolCredentialsStream(
-                transportFactory.transport.getStsUrl(),
-                transportFactory.transport.getMetadataUrl(),
-                transportFactory.transport.getServiceAccountImpersonationUrl(),
-                /* serviceAccountImpersonationOptionsMap= */ null),
-            transportFactory);
-
-    // Override impersonated credentials.
-    ExternalAccountCredentials sourceCredentials =
-        IdentityPoolCredentials.newBuilder((IdentityPoolCredentials) credential)
-            .setServiceAccountImpersonationUrl(null)
-            .build();
-    credential.overrideImpersonatedCredentials(
-        new ImpersonatedCredentials.Builder(sourceCredentials, serviceAccountEmail)
-            .setScopes(new ArrayList<>(sourceCredentials.getScopes()))
-            .setHttpTransportFactory(transportFactory)
-            .build());
-
-    credential.exchangeExternalCredentialForAccessToken(
-        StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build());
-
-    assertTrue(
-        transportFactory.transport.getRequests().get(2).getUrl().contains(serviceAccountEmail));
-  }
-
-  @Test
   public void exchangeExternalCredentialForAccessToken_throws() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(buildJsonIdentityPoolCredential(), transportFactory);
@@ -1058,6 +1045,27 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
       assertEquals(errorCode, e.getErrorCode());
       assertEquals(errorDescription, e.getErrorDescription());
       assertEquals(errorUri, e.getErrorUri());
+    }
+  }
+
+  @Test
+  public void exchangeExternalCredentialForAccessToken_invalidImpersonatedCredentialsThrows()
+      throws IOException {
+    GenericJson json = buildJsonIdentityPoolCredential();
+    json.put("service_account_impersonation_url", "https://iamcredentials.googleapis.com");
+    ExternalAccountCredentials credential =
+        ExternalAccountCredentials.fromJson(json, transportFactory);
+
+    StsTokenExchangeRequest stsTokenExchangeRequest =
+        StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
+
+    try {
+      credential.exchangeExternalCredentialForAccessToken(stsTokenExchangeRequest);
+      fail("Exception should be thrown.");
+    } catch (IllegalArgumentException e) {
+      assertEquals(
+          "Unable to determine target principal from service account impersonation URL.",
+          e.getMessage());
     }
   }
 

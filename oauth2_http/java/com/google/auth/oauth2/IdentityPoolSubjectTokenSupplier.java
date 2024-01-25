@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Google LLC
+ * Copyright 2024 Google LLC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -31,58 +31,21 @@
 
 package com.google.auth.oauth2;
 
-import javax.annotation.Nullable;
+import java.io.IOException;
+import java.io.Serializable;
 
+@FunctionalInterface
 /**
- * Defines AWS security credentials. These are either retrieved from the AWS security_credentials
- * endpoint or AWS environment variables.
+ * Provider for retrieving subject tokens for {@Link IdentityPoolCredentials} to exchange for GCP
+ * access tokens.
  */
-public class AwsSecurityCredentials {
-
-  private final String accessKeyId;
-  private final String secretAccessKey;
-
-  @Nullable private final String sessionToken;
+public interface IdentityPoolSubjectTokenSupplier extends Serializable {
 
   /**
-   * Constructor for AWSSecurityCredentials.
+   * Gets a subject token that can be exchanged for a GCP access token.
    *
-   * @param accessKeyId the AWS access Key Id.
-   * @param secretAccessKey the AWS secret access key.
-   * @param sessionToken the AWS session token. Optional.
+   * @return a valid subject token.
+   * @throws IOException
    */
-  public AwsSecurityCredentials(
-      String accessKeyId, String secretAccessKey, @Nullable String sessionToken) {
-    this.accessKeyId = accessKeyId;
-    this.secretAccessKey = secretAccessKey;
-    this.sessionToken = sessionToken;
-  }
-
-  /**
-   * Gets the AWS access key id.
-   *
-   * @return the AWS access key id.
-   */
-  public String getAccessKeyId() {
-    return accessKeyId;
-  }
-
-  /**
-   * Gets the AWS secret access key.
-   *
-   * @return the AWS secret access key.
-   */
-  public String getSecretAccessKey() {
-    return secretAccessKey;
-  }
-
-  /**
-   * Gets the AWS session token.
-   *
-   * @return the AWS session token.
-   */
-  @Nullable
-  public String getSessionToken() {
-    return sessionToken;
-  }
+  String getSubjectToken() throws IOException;
 }
