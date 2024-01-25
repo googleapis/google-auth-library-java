@@ -584,9 +584,10 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
       throws IOException {
     MockExternalAccountAuthorizedUserCredentialsTransportFactory transportFactory =
         new MockExternalAccountAuthorizedUserCredentialsTransportFactory();
-    InputStream stream =
-        TestUtils.jsonToInputStream(
-            ExternalAccountAuthorizedUserCredentialsTest.buildJsonCredentials());
+
+    GenericJson json = ExternalAccountAuthorizedUserCredentialsTest.buildJsonCredentials();
+    json.remove("universe_domain");
+    InputStream stream = TestUtils.jsonToInputStream(json);
 
     GoogleCredentials credentials = GoogleCredentials.fromStream(stream, transportFactory);
 
