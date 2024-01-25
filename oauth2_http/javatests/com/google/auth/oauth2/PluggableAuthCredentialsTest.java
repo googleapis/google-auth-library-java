@@ -395,11 +395,10 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
   public void builder_allFields() throws IOException {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
-    CredentialSource source = buildCredentialSource();
+    PluggableAuthCredentialSource source = buildCredentialSource();
     ExecutableHandler handler = options -> "Token";
 
     PluggableAuthCredentials credentials =
-        (PluggableAuthCredentials)
             PluggableAuthCredentials.newBuilder()
                 .setExecutableHandler(handler)
                 .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
@@ -475,11 +474,10 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
   public void newBuilder_allFields() throws IOException {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
-    CredentialSource source = buildCredentialSource();
+    PluggableAuthCredentialSource source = buildCredentialSource();
     ExecutableHandler handler = options -> "Token";
 
     PluggableAuthCredentials credentials =
-        (PluggableAuthCredentials)
             PluggableAuthCredentials.newBuilder()
                 .setExecutableHandler(handler)
                 .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
@@ -518,11 +516,10 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
   public void newBuilder_noUniverseDomain_defaults() throws IOException {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
-    CredentialSource source = buildCredentialSource();
+    PluggableAuthCredentialSource source = buildCredentialSource();
     ExecutableHandler handler = options -> "Token";
 
     PluggableAuthCredentials credentials =
-        (PluggableAuthCredentials)
             PluggableAuthCredentials.newBuilder()
                 .setExecutableHandler(handler)
                 .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
