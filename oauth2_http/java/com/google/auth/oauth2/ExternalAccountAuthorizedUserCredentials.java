@@ -317,6 +317,7 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
     String clientId = (String) json.get("client_id");
     String clientSecret = (String) json.get("client_secret");
     String quotaProjectId = (String) json.get("quota_project_id");
+    String universeDomain = (String) json.get("universe_domain");
 
     return ExternalAccountAuthorizedUserCredentials.newBuilder()
         .setAudience(audience)
@@ -329,6 +330,7 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
         .setRefreshToken(refreshToken)
         .setHttpTransportFactory(transportFactory)
         .setQuotaProjectId(quotaProjectId)
+        .setUniverseDomain(universeDomain)
         .build();
   }
 
@@ -519,6 +521,19 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
     @CanIgnoreReturnValue
     public Builder setAccessToken(AccessToken accessToken) {
       super.setAccessToken(accessToken);
+      return this;
+    }
+
+    /**
+     * Sets the optional universe domain. The Google Default Universe is used when not provided.
+     *
+     * @param universeDomain the universe domain to set
+     * @return this {@code Builder} object
+     */
+    @CanIgnoreReturnValue
+    @Override
+    public Builder setUniverseDomain(String universeDomain) {
+      super.setUniverseDomain(universeDomain);
       return this;
     }
 

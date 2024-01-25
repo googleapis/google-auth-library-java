@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.Credentials.GOOGLE_DEFAULT_UNIVERSE;
 import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
 import static com.google.auth.oauth2.OAuth2Utils.JSON_FACTORY;
 import static org.junit.Assert.*;
@@ -753,36 +754,38 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void builder() {
+  public void builder_allFields() throws IOException {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     IdentityPoolCredentials credentials =
-        IdentityPoolCredentials.newBuilder()
-            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-            .setAudience("audience")
-            .setSubjectTokenType("subjectTokenType")
-            .setTokenUrl(STS_URL)
-            .setTokenInfoUrl("tokenInfoUrl")
-            .setCredentialSource(FILE_CREDENTIAL_SOURCE)
-            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-            .setQuotaProjectId("quotaProjectId")
-            .setClientId("clientId")
-            .setClientSecret("clientSecret")
-            .setScopes(scopes)
-            .build();
+            IdentityPoolCredentials.newBuilder()
+                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+                .setAudience("audience")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenUrl(STS_URL)
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+                .setQuotaProjectId("quotaProjectId")
+                .setClientId("clientId")
+                .setClientSecret("clientSecret")
+                .setScopes(scopes)
+                .setUniverseDomain("universeDomain")
+                .build();
 
     assertEquals("audience", credentials.getAudience());
     assertEquals("subjectTokenType", credentials.getSubjectTokenType());
-    assertEquals(credentials.getTokenUrl(), STS_URL);
-    assertEquals(credentials.getTokenInfoUrl(), "tokenInfoUrl");
+    assertEquals(STS_URL, credentials.getTokenUrl());
+    assertEquals("tokenInfoUrl", credentials.getTokenInfoUrl());
     assertEquals(
-        credentials.getServiceAccountImpersonationUrl(), SERVICE_ACCOUNT_IMPERSONATION_URL);
-    assertEquals(credentials.getCredentialSource(), FILE_CREDENTIAL_SOURCE);
-    assertEquals(credentials.getQuotaProjectId(), "quotaProjectId");
-    assertEquals(credentials.getClientId(), "clientId");
-    assertEquals(credentials.getClientSecret(), "clientSecret");
-    assertEquals(credentials.getScopes(), scopes);
-    assertEquals(credentials.getEnvironmentProvider(), SystemEnvironmentProvider.getInstance());
+        SERVICE_ACCOUNT_IMPERSONATION_URL, credentials.getServiceAccountImpersonationUrl());
+    assertEquals(FILE_CREDENTIAL_SOURCE, credentials.getCredentialSource());
+    assertEquals("quotaProjectId", credentials.getQuotaProjectId());
+    assertEquals("clientId", credentials.getClientId());
+    assertEquals("clientSecret", credentials.getClientSecret());
+    assertEquals(scopes, credentials.getScopes());
+    assertEquals(SystemEnvironmentProvider.getInstance(), credentials.getEnvironmentProvider());
+    assertEquals("universeDomain", credentials.getUniverseDomain());
   }
 
   @Test
@@ -897,6 +900,122 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
       assertEquals(
           "A subjectTokenSupplier or a credentialSource must be provided.", exception.getMessage());
     }
+  }
+
+  public void builder_missingUniverseDomain_defaults() throws IOException {
+    List<String> scopes = Arrays.asList("scope1", "scope2");
+
+    IdentityPoolCredentials credentials =
+            IdentityPoolCredentials.newBuilder()
+                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+                .setAudience("audience")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenUrl(STS_URL)
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+                .setQuotaProjectId("quotaProjectId")
+                .setClientId("clientId")
+                .setClientSecret("clientSecret")
+                .setScopes(scopes)
+                .build();
+
+    assertEquals("audience", credentials.getAudience());
+    assertEquals("subjectTokenType", credentials.getSubjectTokenType());
+    assertEquals(STS_URL, credentials.getTokenUrl());
+    assertEquals("tokenInfoUrl", credentials.getTokenInfoUrl());
+    assertEquals(
+        SERVICE_ACCOUNT_IMPERSONATION_URL, credentials.getServiceAccountImpersonationUrl());
+    assertEquals(FILE_CREDENTIAL_SOURCE, credentials.getCredentialSource());
+    assertEquals("quotaProjectId", credentials.getQuotaProjectId());
+    assertEquals("clientId", credentials.getClientId());
+    assertEquals("clientSecret", credentials.getClientSecret());
+    assertEquals(scopes, credentials.getScopes());
+    assertEquals(SystemEnvironmentProvider.getInstance(), credentials.getEnvironmentProvider());
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
+  }
+
+  @Test
+  public void newBuilder_allFields() throws IOException {
+    List<String> scopes = Arrays.asList("scope1", "scope2");
+
+    IdentityPoolCredentials credentials =
+            IdentityPoolCredentials.newBuilder()
+                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+                .setAudience(
+                    "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenUrl(STS_URL)
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+                .setQuotaProjectId("quotaProjectId")
+                .setClientId("clientId")
+                .setClientSecret("clientSecret")
+                .setScopes(scopes)
+                .setWorkforcePoolUserProject("workforcePoolUserProject")
+                .setUniverseDomain("universeDomain")
+                .build();
+
+    IdentityPoolCredentials newBuilderCreds =
+        IdentityPoolCredentials.newBuilder(credentials).build();
+    assertEquals(credentials.getAudience(), newBuilderCreds.getAudience());
+    assertEquals(credentials.getSubjectTokenType(), newBuilderCreds.getSubjectTokenType());
+    assertEquals(credentials.getTokenUrl(), newBuilderCreds.getTokenUrl());
+    assertEquals(credentials.getTokenInfoUrl(), newBuilderCreds.getTokenInfoUrl());
+    assertEquals(
+        credentials.getServiceAccountImpersonationUrl(),
+        newBuilderCreds.getServiceAccountImpersonationUrl());
+    assertEquals(credentials.getCredentialSource(), newBuilderCreds.getCredentialSource());
+    assertEquals(credentials.getQuotaProjectId(), newBuilderCreds.getQuotaProjectId());
+    assertEquals(credentials.getClientId(), newBuilderCreds.getClientId());
+    assertEquals(credentials.getClientSecret(), newBuilderCreds.getClientSecret());
+    assertEquals(credentials.getScopes(), newBuilderCreds.getScopes());
+    assertEquals(credentials.getEnvironmentProvider(), newBuilderCreds.getEnvironmentProvider());
+    assertEquals(
+        credentials.getWorkforcePoolUserProject(), newBuilderCreds.getWorkforcePoolUserProject());
+    assertEquals(credentials.getUniverseDomain(), newBuilderCreds.getUniverseDomain());
+  }
+
+  @Test
+  public void newBuilder_noUniverseDomain_defaults() throws IOException {
+    List<String> scopes = Arrays.asList("scope1", "scope2");
+
+    IdentityPoolCredentials credentials =
+            IdentityPoolCredentials.newBuilder()
+                .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+                .setAudience(
+                    "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+                .setSubjectTokenType("subjectTokenType")
+                .setTokenUrl(STS_URL)
+                .setTokenInfoUrl("tokenInfoUrl")
+                .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+                .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+                .setQuotaProjectId("quotaProjectId")
+                .setClientId("clientId")
+                .setClientSecret("clientSecret")
+                .setScopes(scopes)
+                .setWorkforcePoolUserProject("workforcePoolUserProject")
+                .build();
+
+    IdentityPoolCredentials newBuilderCreds =
+        IdentityPoolCredentials.newBuilder(credentials).build();
+    assertEquals(credentials.getAudience(), newBuilderCreds.getAudience());
+    assertEquals(credentials.getSubjectTokenType(), newBuilderCreds.getSubjectTokenType());
+    assertEquals(credentials.getTokenUrl(), newBuilderCreds.getTokenUrl());
+    assertEquals(credentials.getTokenInfoUrl(), newBuilderCreds.getTokenInfoUrl());
+    assertEquals(
+        credentials.getServiceAccountImpersonationUrl(),
+        newBuilderCreds.getServiceAccountImpersonationUrl());
+    assertEquals(credentials.getCredentialSource(), newBuilderCreds.getCredentialSource());
+    assertEquals(credentials.getQuotaProjectId(), newBuilderCreds.getQuotaProjectId());
+    assertEquals(credentials.getClientId(), newBuilderCreds.getClientId());
+    assertEquals(credentials.getClientSecret(), newBuilderCreds.getClientSecret());
+    assertEquals(credentials.getScopes(), newBuilderCreds.getScopes());
+    assertEquals(credentials.getEnvironmentProvider(), newBuilderCreds.getEnvironmentProvider());
+    assertEquals(
+        credentials.getWorkforcePoolUserProject(), newBuilderCreds.getWorkforcePoolUserProject());
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, newBuilderCreds.getUniverseDomain());
   }
 
   @Test

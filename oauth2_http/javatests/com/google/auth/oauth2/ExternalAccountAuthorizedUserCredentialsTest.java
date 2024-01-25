@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.Credentials.GOOGLE_DEFAULT_UNIVERSE;
 import static com.google.auth.oauth2.ExternalAccountAuthorizedUserCredentials.EXTERNAL_ACCOUNT_AUTHORIZED_USER_FILE_TYPE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -79,6 +80,8 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
   private static final String TOKEN_INFO_URL = "https://sts.googleapis.com/v1/introspect";
   private static final String REVOKE_URL = "https://sts.googleapis.com/v1/revoke";
   private static final String QUOTA_PROJECT = "sample-quota-project-id";
+  private static final String UNIVERSE_DOMAIN = "foo.bar";
+
   private static final String BASIC_AUTH =
       String.format(
           "Basic %s",
@@ -109,7 +112,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
   }
 
   @Test
-  public void builder_allFields() {
+  public void builder_allFields() throws IOException {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setAudience(AUDIENCE)
@@ -121,6 +124,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
             .setRevokeUrl(REVOKE_URL)
             .setAccessToken(new AccessToken(ACCESS_TOKEN, /* expirationTime= */ null))
             .setQuotaProjectId(QUOTA_PROJECT)
+            .setUniverseDomain(UNIVERSE_DOMAIN)
             .build();
 
     assertEquals(AUDIENCE, credentials.getAudience());
@@ -132,6 +136,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertEquals(REVOKE_URL, credentials.getRevokeUrl());
     assertEquals(ACCESS_TOKEN, credentials.getAccessToken().getTokenValue());
     assertEquals(QUOTA_PROJECT, credentials.getQuotaProjectId());
+    assertEquals(UNIVERSE_DOMAIN, credentials.getUniverseDomain());
   }
 
   @Test
@@ -289,7 +294,55 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
   }
 
   @Test
-  public void toBuilder() {
+  public void builder_missingUniverseDomain_defaults() throws IOException {
+    ExternalAccountAuthorizedUserCredentials credentials =
+        ExternalAccountAuthorizedUserCredentials.newBuilder()
+            .setAudience(AUDIENCE)
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setTokenUrl(TOKEN_URL)
+            .setTokenInfoUrl(TOKEN_INFO_URL)
+            .setRevokeUrl(REVOKE_URL)
+            .setAccessToken(new AccessToken(ACCESS_TOKEN, /* expirationTime= */ null))
+            .setQuotaProjectId(QUOTA_PROJECT)
+            .build();
+
+    assertEquals(AUDIENCE, credentials.getAudience());
+    assertEquals(CLIENT_ID, credentials.getClientId());
+    assertEquals(CLIENT_SECRET, credentials.getClientSecret());
+    assertEquals(REFRESH_TOKEN, credentials.getRefreshToken());
+    assertEquals(TOKEN_URL, credentials.getTokenUrl());
+    assertEquals(TOKEN_INFO_URL, credentials.getTokenInfoUrl());
+    assertEquals(REVOKE_URL, credentials.getRevokeUrl());
+    assertEquals(ACCESS_TOKEN, credentials.getAccessToken().getTokenValue());
+    assertEquals(QUOTA_PROJECT, credentials.getQuotaProjectId());
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
+  }
+
+  @Test
+  public void toBuilder_allFields() {
+    ExternalAccountAuthorizedUserCredentials credentials =
+        ExternalAccountAuthorizedUserCredentials.newBuilder()
+            .setAudience(AUDIENCE)
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setTokenUrl(TOKEN_URL)
+            .setTokenInfoUrl(TOKEN_INFO_URL)
+            .setRevokeUrl(REVOKE_URL)
+            .setAccessToken(new AccessToken(ACCESS_TOKEN, new Date()))
+            .setQuotaProjectId(QUOTA_PROJECT)
+            .setUniverseDomain(UNIVERSE_DOMAIN)
+            .build();
+
+    ExternalAccountAuthorizedUserCredentials secondCredentials = credentials.toBuilder().build();
+
+    assertEquals(credentials, secondCredentials);
+  }
+
+  @Test
+  public void toBuilder_missingUniverseDomain_defaults() throws IOException {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setAudience(AUDIENCE)
@@ -306,6 +359,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     ExternalAccountAuthorizedUserCredentials secondCredentials = credentials.toBuilder().build();
 
     assertEquals(credentials, secondCredentials);
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, secondCredentials.getUniverseDomain());
   }
 
   @Test
@@ -322,6 +376,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertEquals(TOKEN_INFO_URL, credentials.getTokenInfoUrl());
     assertEquals(REVOKE_URL, credentials.getRevokeUrl());
     assertEquals(QUOTA_PROJECT, credentials.getQuotaProjectId());
+    assertEquals(UNIVERSE_DOMAIN, credentials.getUniverseDomain());
   }
 
   @Test
@@ -425,6 +480,25 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
               + "('refresh_token', 'token_url', 'client_id', 'client_secret').",
           exception.getMessage());
     }
+  }
+
+  @Test
+  public void fromJson_missingUniverseDomain_defaults() throws IOException {
+    GenericJson json = buildJsonCredentials();
+    json.remove("universe_domain");
+
+    ExternalAccountAuthorizedUserCredentials credentials =
+        ExternalAccountAuthorizedUserCredentials.fromJson(json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+
+    assertEquals(AUDIENCE, credentials.getAudience());
+    assertEquals(CLIENT_ID, credentials.getClientId());
+    assertEquals(CLIENT_SECRET, credentials.getClientSecret());
+    assertEquals(REFRESH_TOKEN, credentials.getRefreshToken());
+    assertEquals(TOKEN_URL, credentials.getTokenUrl());
+    assertEquals(TOKEN_INFO_URL, credentials.getTokenInfoUrl());
+    assertEquals(REVOKE_URL, credentials.getRevokeUrl());
+    assertEquals(QUOTA_PROJECT, credentials.getQuotaProjectId());
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
   @Test
@@ -544,6 +618,25 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
               + "('refresh_token', 'token_url', 'client_id', 'client_secret').",
           exception.getMessage());
     }
+  }
+
+  @Test
+  public void fromStream_missingUniverseDomain_defaults() throws IOException {
+    GenericJson json = buildJsonCredentials();
+    json.remove("universe_domain");
+
+    ExternalAccountAuthorizedUserCredentials credentials =
+        ExternalAccountAuthorizedUserCredentials.fromStream(TestUtils.jsonToInputStream(json));
+
+    assertEquals(AUDIENCE, credentials.getAudience());
+    assertEquals(CLIENT_ID, credentials.getClientId());
+    assertEquals(CLIENT_SECRET, credentials.getClientSecret());
+    assertEquals(REFRESH_TOKEN, credentials.getRefreshToken());
+    assertEquals(TOKEN_URL, credentials.getTokenUrl());
+    assertEquals(TOKEN_INFO_URL, credentials.getTokenInfoUrl());
+    assertEquals(REVOKE_URL, credentials.getRevokeUrl());
+    assertEquals(QUOTA_PROJECT, credentials.getQuotaProjectId());
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
   @Test
@@ -1039,6 +1132,31 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
   }
 
   @Test
+  public void equals_differentUniverseDomain() {
+    ExternalAccountAuthorizedUserCredentials credentials =
+        ExternalAccountAuthorizedUserCredentials.newBuilder()
+            .setAudience(AUDIENCE)
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setTokenUrl(TOKEN_URL)
+            .setTokenInfoUrl(TOKEN_INFO_URL)
+            .setRevokeUrl(REVOKE_URL)
+            .setAccessToken(new AccessToken(ACCESS_TOKEN, /* expirationTime= */ null))
+            .setQuotaProjectId(QUOTA_PROJECT)
+            .setHttpTransportFactory(transportFactory)
+            .setUniverseDomain(UNIVERSE_DOMAIN)
+            .build();
+
+    ExternalAccountAuthorizedUserCredentials secondCredentials =
+        credentials.toBuilder().setUniverseDomain("different").build();
+
+    assertNotEquals(secondCredentials, credentials);
+    assertNotEquals(credentials, secondCredentials);
+    assertNotEquals(credentials.hashCode(), secondCredentials.hashCode());
+  }
+
+  @Test
   public void toString_expectedFormat() {
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, new Date());
     ExternalAccountAuthorizedUserCredentials credentials =
@@ -1111,6 +1229,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     json.put("token_info_url", TOKEN_INFO_URL);
     json.put("revoke_url", REVOKE_URL);
     json.put("quota_project_id", QUOTA_PROJECT);
+    json.put("universe_domain", UNIVERSE_DOMAIN);
     return json;
   }
 
