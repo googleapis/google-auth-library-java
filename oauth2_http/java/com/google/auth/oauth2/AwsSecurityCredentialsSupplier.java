@@ -46,7 +46,7 @@ public interface AwsSecurityCredentialsSupplier extends Serializable {
    * @return the AWS region that should be used for the credential.
    * @throws IOException
    */
-  String getRegion() throws IOException;
+  String getRegion(ExternalAccountSupplierContext context) throws IOException;
 
   /**
    * Gets AWS security credentials.
@@ -54,5 +54,5 @@ public interface AwsSecurityCredentialsSupplier extends Serializable {
    * @return valid AWS security credentials that can be exchanged for a GCP access token.
    * @throws IOException
    */
-  AwsSecurityCredentials getCredentials() throws IOException;
+  AwsSecurityCredentials getCredentials(ExternalAccountSupplierContext context) throws IOException;
 }

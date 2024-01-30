@@ -82,7 +82,11 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
           .setCredentialSource(FILE_CREDENTIAL_SOURCE)
           .build();
 
-  private static final IdentityPoolSubjectTokenSupplier testProvider = () -> "testSubjectToken";
+  private static final IdentityPoolSubjectTokenSupplier testProvider =
+      (ExternalAccountSupplierContext context) -> "testSubjectToken";
+
+  private static final ExternalAccountSupplierContext emptyContext =
+      new ExternalAccountSupplierContext("", "");
 
   static class MockExternalAccountCredentialsTransportFactory implements HttpTransportFactory {
 
@@ -316,7 +320,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
 
     String subjectToken = credentials.retrieveSubjectToken();
 
-    assertEquals(testProvider.getSubjectToken(), subjectToken);
+    assertEquals(testProvider.getSubjectToken(emptyContext), subjectToken);
   }
 
   @Test
@@ -324,7 +328,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     IOException testException = new IOException("test");
 
     IdentityPoolSubjectTokenSupplier errorProvider =
-        () -> {
+        (ExternalAccountSupplierContext context) -> {
           throw testException;
         };
     IdentityPoolCredentials credentials =
@@ -339,6 +343,27 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     } catch (IOException e) {
       assertEquals("test", e.getMessage());
     }
+  }
+
+  @Test
+  public void retrieveSubjectToken_supplierPassesContext() throws IOException {
+    ExternalAccountSupplierContext expectedContext =
+        new ExternalAccountSupplierContext(
+            FILE_SOURCED_CREDENTIAL.getAudience(), FILE_SOURCED_CREDENTIAL.getSubjectTokenType());
+
+    IdentityPoolSubjectTokenSupplier testSupplier =
+        (ExternalAccountSupplierContext context) -> {
+          assertEquals(expectedContext.getAudience(), context.getAudience());
+          assertEquals(expectedContext.getSubjectTokenType(), context.getSubjectTokenType());
+          return "token";
+        };
+    IdentityPoolCredentials credentials =
+        IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+            .setCredentialSource(null)
+            .setSubjectTokenSupplier(testSupplier)
+            .build();
+
+    credentials.retrieveSubjectToken();
   }
 
   @Test

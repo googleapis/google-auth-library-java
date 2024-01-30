@@ -107,6 +107,9 @@ public class AwsCredentialsTest extends BaseSerializationTest {
   private static final AwsSecurityCredentials programmaticAwsCreds =
       new AwsSecurityCredentials("testAccessKey", "testSecretAccessKey", null);
 
+  private static final ExternalAccountSupplierContext emptyContext =
+      new ExternalAccountSupplierContext("", "");
+
   @Test
   public void test_awsCredentialSource() {
     String keys[] = {"region_url", "url", "imdsv2_session_token_url"};
@@ -218,7 +221,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
         new MockExternalAccountCredentialsTransportFactory();
 
     AwsSecurityCredentialsSupplier supplier =
-        new TestAwsSecurityCredentialsSupplier("test", programmaticAwsCreds, null);
+        new TestAwsSecurityCredentialsSupplier("test", programmaticAwsCreds, null, null);
 
     AwsCredentials awsCredential =
         AwsCredentials.newBuilder()
@@ -248,7 +251,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
 
     AwsSecurityCredentialsSupplier supplier =
-        new TestAwsSecurityCredentialsSupplier("test", programmaticAwsCreds, null);
+        new TestAwsSecurityCredentialsSupplier("test", programmaticAwsCreds, null, null);
 
     AwsCredentials awsCredential =
         AwsCredentials.newBuilder()
@@ -604,7 +607,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
         new MockExternalAccountCredentialsTransportFactory();
 
     AwsSecurityCredentialsSupplier supplier =
-        new TestAwsSecurityCredentialsSupplier("test", programmaticAwsCreds, null);
+        new TestAwsSecurityCredentialsSupplier("test", programmaticAwsCreds, null, null);
 
     AwsCredentials awsCredential =
         AwsCredentials.newBuilder()
@@ -646,7 +649,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
         new AwsSecurityCredentials("accessToken", "secretAccessKey", "token");
 
     AwsSecurityCredentialsSupplier supplier =
-        new TestAwsSecurityCredentialsSupplier("test", securityCredentialsWithToken, null);
+        new TestAwsSecurityCredentialsSupplier("test", securityCredentialsWithToken, null, null);
 
     AwsCredentials awsCredential =
         AwsCredentials.newBuilder()
@@ -681,6 +684,33 @@ public class AwsCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void retrieveSubjectToken_passesContext() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    AwsSecurityCredentials securityCredentialsWithToken =
+        new AwsSecurityCredentials("accessToken", "secretAccessKey", "token");
+
+    ExternalAccountSupplierContext expectedContext =
+        new ExternalAccountSupplierContext("audience", "subjectTokenType");
+
+    AwsSecurityCredentialsSupplier supplier =
+        new TestAwsSecurityCredentialsSupplier(
+            "test", securityCredentialsWithToken, null, expectedContext);
+
+    AwsCredentials awsCredential =
+        AwsCredentials.newBuilder()
+            .setAwsSecurityCredentialsSupplier(supplier)
+            .setHttpTransportFactory(transportFactory)
+            .setAudience("audience")
+            .setTokenUrl(STS_URL)
+            .setSubjectTokenType("subjectTokenType")
+            .build();
+
+    awsCredential.retrieveSubjectToken();
+  }
+
+  @Test
   public void retrieveSubjectToken_withProgrammaticRefreshThrowsError() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
@@ -688,7 +718,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     IOException testException = new IOException("test");
 
     AwsSecurityCredentialsSupplier supplier =
-        new TestAwsSecurityCredentialsSupplier("test", null, testException);
+        new TestAwsSecurityCredentialsSupplier("test", null, testException, null);
 
     AwsCredentials awsCredential =
         AwsCredentials.newBuilder()
@@ -720,7 +750,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .build();
 
     AwsSecurityCredentials credentials =
-        testAwsCredentials.getAwsSecurityCredentialsSupplier().getCredentials();
+        testAwsCredentials.getAwsSecurityCredentialsSupplier().getCredentials(emptyContext);
 
     assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
     assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
@@ -753,7 +783,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .build();
 
     AwsSecurityCredentials credentials =
-        testAwsCredentials.getAwsSecurityCredentialsSupplier().getCredentials();
+        testAwsCredentials.getAwsSecurityCredentialsSupplier().getCredentials(emptyContext);
 
     assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
     assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
@@ -775,7 +805,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .build();
 
     AwsSecurityCredentials credentials =
-        testAwsCredentials.getAwsSecurityCredentialsSupplier().getCredentials();
+        testAwsCredentials.getAwsSecurityCredentialsSupplier().getCredentials(emptyContext);
 
     assertEquals("awsAccessKeyId", credentials.getAccessKeyId());
     assertEquals("awsSecretAccessKey", credentials.getSecretAccessKey());
@@ -794,7 +824,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .build();
 
     AwsSecurityCredentials credentials =
-        awsCredential.getAwsSecurityCredentialsSupplier().getCredentials();
+        awsCredential.getAwsSecurityCredentialsSupplier().getCredentials(emptyContext);
 
     assertEquals("accessKeyId", credentials.getAccessKeyId());
     assertEquals("secretAccessKey", credentials.getSecretAccessKey());
@@ -826,7 +856,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .build();
 
     try {
-      awsCredential.getAwsSecurityCredentialsSupplier().getCredentials();
+      awsCredential.getAwsSecurityCredentialsSupplier().getCredentials(emptyContext);
       fail("Should not be able to use credential without exception.");
     } catch (IOException exception) {
       assertEquals(
@@ -854,7 +884,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .setEnvironmentProvider(environmentProvider)
             .build();
 
-    String region = awsCredentials.getAwsSecurityCredentialsSupplier().getRegion();
+    String region = awsCredentials.getAwsSecurityCredentialsSupplier().getRegion(emptyContext);
 
     // Should attempt to retrieve the region from AWS_REGION env var first.
     // Metadata server would return us-east-1b.
@@ -879,7 +909,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .setEnvironmentProvider(environmentProvider)
             .build();
 
-    String region = awsCredentials.getAwsSecurityCredentialsSupplier().getRegion();
+    String region = awsCredentials.getAwsSecurityCredentialsSupplier().getRegion(emptyContext);
 
     // Should attempt to retrieve the region from DEFAULT_AWS_REGION before calling the metadata
     // server. Metadata server would return us-east-1b.
@@ -900,7 +930,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .setCredentialSource(buildAwsCredentialSource(transportFactory))
             .build();
 
-    String region = awsCredentials.getAwsSecurityCredentialsSupplier().getRegion();
+    String region = awsCredentials.getAwsSecurityCredentialsSupplier().getRegion(emptyContext);
 
     // Should retrieve the region from the Metadata server.
     String expectedRegion =
@@ -1145,7 +1175,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     AwsSecurityCredentialsSupplier supplier =
-        new TestAwsSecurityCredentialsSupplier("region", null, null);
+        new TestAwsSecurityCredentialsSupplier("region", null, null, null);
 
     AwsCredentials credentials =
         AwsCredentials.newBuilder()
@@ -1173,7 +1203,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     AwsSecurityCredentialsSupplier supplier =
-        new TestAwsSecurityCredentialsSupplier("region", null, null);
+        new TestAwsSecurityCredentialsSupplier("region", null, null, null);
 
     try {
       AwsCredentials credentials =
@@ -1330,25 +1360,39 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     private String region;
     private AwsSecurityCredentials credentials;
     private IOException credentialException;
+    private ExternalAccountSupplierContext expectedContext;
 
     TestAwsSecurityCredentialsSupplier(
-        String region, AwsSecurityCredentials credentials, IOException credentialException) {
+        String region,
+        AwsSecurityCredentials credentials,
+        IOException credentialException,
+        ExternalAccountSupplierContext expectedContext) {
       this.region = region;
       this.credentials = credentials;
       this.credentialException = credentialException;
+      this.expectedContext = expectedContext;
     }
 
     @Override
-    public String getRegion() throws IOException {
-      return this.region;
-    }
-
-    @Override
-    public AwsSecurityCredentials getCredentials() throws IOException {
-      if (this.credentialException != null) {
-        throw this.credentialException;
+    public String getRegion(ExternalAccountSupplierContext context) throws IOException {
+      if (expectedContext != null) {
+        assertEquals(expectedContext.getAudience(), context.getAudience());
+        assertEquals(expectedContext.getSubjectTokenType(), context.getSubjectTokenType());
       }
-      return this.credentials;
+      return region;
+    }
+
+    @Override
+    public AwsSecurityCredentials getCredentials(ExternalAccountSupplierContext context)
+        throws IOException {
+      if (credentialException != null) {
+        throw credentialException;
+      }
+      if (expectedContext != null) {
+        assertEquals(expectedContext.getAudience(), context.getAudience());
+        assertEquals(expectedContext.getSubjectTokenType(), context.getSubjectTokenType());
+      }
+      return credentials;
     }
   }
 }

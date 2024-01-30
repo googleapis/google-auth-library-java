@@ -47,5 +47,5 @@ public interface IdentityPoolSubjectTokenSupplier extends Serializable {
    * @return a valid subject token.
    * @throws IOException
    */
-  String getSubjectToken() throws IOException;
+  String getSubjectToken(ExternalAccountSupplierContext context) throws IOException;
 }
