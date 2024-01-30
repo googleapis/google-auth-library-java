@@ -470,6 +470,63 @@ credentials unless they do not meet your specific requirements.
 You can now [use the Auth library](#using-external-identities) to call Google Cloud
 resources from an OIDC or SAML provider.
 
+#### Using a custom supplier with OIDC and SAML
+A custom implementation of IdentityPoolSubjectTokenSupplier can be used while building IdentityPoolCredentials
+to supply a subject token which can be exchanged for a GCP access token.
+
+```java
+class TokenSupplier implements IdentityPoolSubjectTokenSupplier {
+  @Override
+  String getSubjectToken(){
+    // return a valid subject token for the configured identity.
+  }
+}
+```
+```java
+TokenSupplier tokenSupplier = new TokenSupplier();
+  IdentityPoolCredentials identityPoolCredentials =
+      IdentityPoolCredentials.newBuilder()
+          .setSubjectTokenSupplier(tokenSupplier) // Set token supplier.
+          .setAudience(...) // Set GCP audience
+          .setSubjectTokenType(SubjectTokenTypes.JWT) // Set subject token type.
+          .build();
+```
+Where the audience is the url of the [workload pool](https://cloud.google.com/iam/docs/best-practices-for-using-workload-identity-federation#provider-audience).
+
+The values for audience, service account impersonation URL, and any other builder field can also be found by
+generating a credential configuration file with the gcloud CLI.
+
+#### Using a custom supplier with AWS
+A custom implementation of AWSSecurityCredentialsSupplier can be used while building AWSCredentials to supply
+AWS security credentials which can be exchanged for a GCP access token.
+
+```java
+class AwsSupplier implements AwsSecurityCredentialsSupplier {
+  @Override
+  AwsSecurityCredentials getAwsSecurityCredentials(){
+    // return valid AwsSecurityCredentials for the configured identity.
+  }
+
+  @Override
+  String getRegion(){
+    // return the current AWS region, i.e. "us-east-2"
+  }
+}
+```
+```java
+AwsSecurityCredentialsSupplier awsSupplier = new AwsSupplier();
+AwsCredentials credentials = AwsCredentials.newBuilder()
+    .setSubjectTokenType(SubjectTokenTypes.AWS4) // Set subject token type.
+    .setAudience(...) // Set GCP audience.
+    .setAwsSecurityCredentialsSupplier(supplier) // Set supplier.
+    .build();
+```
+
+Where the audience is the url of the [workload pool](https://cloud.google.com/iam/docs/best-practices-for-using-workload-identity-federation#provider-audience).
+
+The values for audience, service account impersonation URL, and any other builder field can also be found by
+generating a credential configuration file with the gcloud CLI.
+
 #### Configurable Token Lifetime
 When creating a credential configuration with workload identity federation using service account impersonation, you can provide an optional argument to configure the service account access token lifetime.
 
