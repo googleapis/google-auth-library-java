@@ -1,5 +1,6 @@
 package com.google.auth.oauth2;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.Serializable;
 
 /** Context object to pass relevant variables from external account credentials to suppliers. */
@@ -10,15 +11,10 @@ public class ExternalAccountSupplierContext implements Serializable {
   private final String audience;
   private final String subjectTokenType;
 
-  /**
-   * Basic constructor for ExternalAccountSupplierContext.
-   *
-   * @param audience expected audience for the token exchange.
-   * @param subjectTokenType expected token type for the token exchange.
-   */
-  public ExternalAccountSupplierContext(String audience, String subjectTokenType) {
-    this.audience = audience;
-    this.subjectTokenType = subjectTokenType;
+  /** Internal constructor. See {@link ExternalAccountSupplierContext.Builder}. */
+  ExternalAccountSupplierContext(Builder builder) {
+    this.audience = builder.audience;
+    this.subjectTokenType = builder.subjectTokenType;
   }
 
   /**
@@ -37,5 +33,44 @@ public class ExternalAccountSupplierContext implements Serializable {
    */
   public String getSubjectTokenType() {
     return subjectTokenType;
+  }
+
+  public static Builder newBuilder() {
+    return new Builder();
+  }
+
+  /** Builder for external account supplier context. */
+  public static class Builder {
+
+    protected String audience;
+    protected String subjectTokenType;
+
+    public Builder() {}
+
+    /**
+     * Sets the Audience.
+     *
+     * @param audience the audience to set
+     * @return this {@code Builder} object
+     */
+    @CanIgnoreReturnValue
+    public Builder setAudience(String audience) {
+      this.audience = audience;
+      return this;
+    }
+
+    /**
+     * Sets the subject token type.
+     *
+     * @param subjectTokenType the subjectTokenType to set.
+     * @return this {@code Builder} object
+     */
+    @CanIgnoreReturnValue
+    public Builder setSubjectTokenType(String subjectTokenType) {
+      this.subjectTokenType = subjectTokenType;
+      return this;
+    }
+
+    public ExternalAccountSupplierContext build() {return new ExternalAccountSupplierContext(this);}
   }
 }

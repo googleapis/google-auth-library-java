@@ -107,8 +107,10 @@ public class AwsCredentialsTest extends BaseSerializationTest {
   private static final AwsSecurityCredentials programmaticAwsCreds =
       new AwsSecurityCredentials("testAccessKey", "testSecretAccessKey", null);
 
-  private static final ExternalAccountSupplierContext emptyContext =
-      new ExternalAccountSupplierContext("", "");
+  private static final ExternalAccountSupplierContext emptyContext = ExternalAccountSupplierContext.newBuilder()
+      .setAudience("")
+      .setSubjectTokenType("")
+      .build();
 
   @Test
   public void test_awsCredentialSource() {
@@ -692,7 +694,10 @@ public class AwsCredentialsTest extends BaseSerializationTest {
         new AwsSecurityCredentials("accessToken", "secretAccessKey", "token");
 
     ExternalAccountSupplierContext expectedContext =
-        new ExternalAccountSupplierContext("audience", "subjectTokenType");
+        ExternalAccountSupplierContext.newBuilder()
+            .setAudience("audience")
+            .setSubjectTokenType("subjectTokenType")
+            .build();
 
     AwsSecurityCredentialsSupplier supplier =
         new TestAwsSecurityCredentialsSupplier(
