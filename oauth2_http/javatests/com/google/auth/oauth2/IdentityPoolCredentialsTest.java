@@ -85,10 +85,8 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
   private static final IdentityPoolSubjectTokenSupplier testProvider =
       (ExternalAccountSupplierContext context) -> "testSubjectToken";
 
-  private static final ExternalAccountSupplierContext emptyContext = ExternalAccountSupplierContext.newBuilder()
-      .setAudience("")
-      .setSubjectTokenType("")
-      .build();
+  private static final ExternalAccountSupplierContext emptyContext =
+      ExternalAccountSupplierContext.newBuilder().setAudience("").setSubjectTokenType("").build();
 
   static class MockExternalAccountCredentialsTransportFactory implements HttpTransportFactory {
 
@@ -350,10 +348,10 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
   @Test
   public void retrieveSubjectToken_supplierPassesContext() throws IOException {
     ExternalAccountSupplierContext expectedContext =
-         ExternalAccountSupplierContext.newBuilder()
-             .setAudience(FILE_SOURCED_CREDENTIAL.getAudience())
-             .setSubjectTokenType(FILE_SOURCED_CREDENTIAL.getSubjectTokenType())
-             .build();
+        ExternalAccountSupplierContext.newBuilder()
+            .setAudience(FILE_SOURCED_CREDENTIAL.getAudience())
+            .setSubjectTokenType(FILE_SOURCED_CREDENTIAL.getSubjectTokenType())
+            .build();
 
     IdentityPoolSubjectTokenSupplier testSupplier =
         (ExternalAccountSupplierContext context) -> {

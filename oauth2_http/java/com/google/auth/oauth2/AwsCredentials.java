@@ -72,10 +72,11 @@ public class AwsCredentials extends ExternalAccountCredentials {
   /** Internal constructor. See {@link AwsCredentials.Builder}. */
   AwsCredentials(Builder builder) {
     super(builder);
-    this.supplierContext = ExternalAccountSupplierContext.newBuilder()
-        .setAudience(this.getAudience())
-        .setSubjectTokenType(this.getSubjectTokenType())
-        .build();
+    this.supplierContext =
+        ExternalAccountSupplierContext.newBuilder()
+            .setAudience(this.getAudience())
+            .setSubjectTokenType(this.getSubjectTokenType())
+            .build();
 
     // Check that one and only one of supplier or credential source are provided.
     if (builder.awsSecurityCredentialsSupplier != null && builder.credentialSource != null) {

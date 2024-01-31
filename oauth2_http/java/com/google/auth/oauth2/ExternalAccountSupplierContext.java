@@ -71,6 +71,8 @@ public class ExternalAccountSupplierContext implements Serializable {
       return this;
     }
 
-    public ExternalAccountSupplierContext build() {return new ExternalAccountSupplierContext(this);}
+    public ExternalAccountSupplierContext build() {
+      return new ExternalAccountSupplierContext(this);
+    }
   }
 }

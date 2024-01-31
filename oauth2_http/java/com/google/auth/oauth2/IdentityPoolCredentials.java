@@ -58,10 +58,11 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
     super(builder);
     IdentityPoolCredentialSource credentialSource =
         (IdentityPoolCredentialSource) builder.credentialSource;
-    this.supplierContext = ExternalAccountSupplierContext.newBuilder()
-        .setAudience(this.getAudience())
-        .setSubjectTokenType(this.getSubjectTokenType())
-        .build();
+    this.supplierContext =
+        ExternalAccountSupplierContext.newBuilder()
+            .setAudience(this.getAudience())
+            .setSubjectTokenType(this.getSubjectTokenType())
+            .build();
     // Check that one and only one of supplier or credential source are provided.
     if (builder.subjectTokenSupplier != null && credentialSource != null) {
       throw new IllegalArgumentException(
