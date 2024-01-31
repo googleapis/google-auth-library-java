@@ -44,6 +44,7 @@ public interface IdentityPoolSubjectTokenSupplier extends Serializable {
   /**
    * Gets a subject token that can be exchanged for a GCP access token.
    *
+   * @param context relevant context from the calling credential.
    * @return a valid subject token.
    * @throws IOException
    */

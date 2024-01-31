@@ -43,6 +43,7 @@ public interface AwsSecurityCredentialsSupplier extends Serializable {
   /**
    * Gets the AWS region to use.
    *
+   * @param context relevant context from the calling credential.
    * @return the AWS region that should be used for the credential.
    * @throws IOException
    */
@@ -51,6 +52,7 @@ public interface AwsSecurityCredentialsSupplier extends Serializable {
   /**
    * Gets AWS security credentials.
    *
+   * @param context relevant context from the calling credential.
    * @return valid AWS security credentials that can be exchanged for a GCP access token.
    * @throws IOException
    */
