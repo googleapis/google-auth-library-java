@@ -1,5 +1,6 @@
 package com.google.auth.oauth2;
 
+import com.google.auth.oauth2.ExternalAccountCredentials.SubjectTokenTypes;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.Serializable;
 
@@ -72,6 +73,18 @@ public class ExternalAccountSupplierContext implements Serializable {
     @CanIgnoreReturnValue
     public Builder setSubjectTokenType(String subjectTokenType) {
       this.subjectTokenType = subjectTokenType;
+      return this;
+    }
+
+    /**
+     * Sets the subject token type.
+     *
+     * @param subjectTokenType the subjectTokenType to set.
+     * @return this {@code Builder} object
+     */
+    @CanIgnoreReturnValue
+    public Builder setSubjectTokenType(SubjectTokenTypes subjectTokenType) {
+      this.subjectTokenType = subjectTokenType.value;
       return this;
     }
 
