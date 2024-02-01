@@ -472,18 +472,19 @@ resources from an OIDC or SAML provider.
 
 #### Using a custom supplier with OIDC and SAML
 A custom implementation of IdentityPoolSubjectTokenSupplier can be used while building IdentityPoolCredentials
-to supply a subject token which can be exchanged for a GCP access token.
+to supply a subject token which can be exchanged for a GCP access token. The supplier must return a valid,
+unexpired subject token when called by the GCP credential.
 
 ```java
-class TokenSupplier implements IdentityPoolSubjectTokenSupplier {
+class CustomTokenSupplier implements IdentityPoolSubjectTokenSupplier {
   @Override
-  String getSubjectToken(){
+  String getSubjectToken() {
     // Return a valid subject token for the configured identity.
   }
 }
 ```
 ```java
-TokenSupplier tokenSupplier = new TokenSupplier();
+CustomTokenSupplier tokenSupplier = new CustomTokenSupplier();
 IdentityPoolCredentials identityPoolCredentials =
     IdentityPoolCredentials.newBuilder()
         .setSubjectTokenSupplier(tokenSupplier) // Set token supplier.
@@ -494,26 +495,27 @@ IdentityPoolCredentials identityPoolCredentials =
 Where the audience is the URL of the [workload pool](https://cloud.google.com/iam/docs/best-practices-for-using-workload-identity-federation#provider-audience).
 
 The values for audience, service account impersonation URL, and any other builder field can also be found by
-generating a credential configuration file with the gcloud CLI.
+generating a [credential configuration file with the gcloud CLI](https://cloud.google.com/sdk/gcloud/reference/iam/workload-identity-pools/create-cred-config).
 
 #### Using a custom supplier with AWS
 A custom implementation of AwsSecurityCredentialsSupplier can be provided when initializing AwsCredentials. If provided, the AwsCredentials instance will defer to the supplier to retrieve AWS security credentials to exchange for a GCP access token.
+The supplier must return valid, unexpired AWS security credentials when called by the GCP credential.
 
 ```java
-class AwsSupplier implements AwsSecurityCredentialsSupplier {
+class CustomAwsSupplier implements AwsSecurityCredentialsSupplier {
   @Override
-  AwsSecurityCredentials getAwsSecurityCredentials(){
+  AwsSecurityCredentials getAwsSecurityCredentials() {
     // Return valid AwsSecurityCredentials for the configured identity.
   }
 
   @Override
-  String getRegion(){
+  String getRegion() {
     // Return the current AWS region, i.e. "us-east-2".
   }
 }
 ```
 ```java
-AwsSecurityCredentialsSupplier awsSupplier = new AwsSupplier();
+CustomAwsSupplier awsSupplier = new CustomAwsSupplier();
 AwsCredentials credentials = AwsCredentials.newBuilder()
     .setSubjectTokenType(SubjectTokenTypes.AWS4) // Set subject token type.
     .setAudience(...) // Set GCP audience.
@@ -524,7 +526,7 @@ AwsCredentials credentials = AwsCredentials.newBuilder()
 Where the audience is the url of the [workload pool](https://cloud.google.com/iam/docs/best-practices-for-using-workload-identity-federation#provider-audience).
 
 The values for audience, service account impersonation URL, and any other builder field can also be found by
-generating a credential configuration file with the gcloud CLI.
+generating a [credential configuration file with the gcloud CLI](https://cloud.google.com/sdk/gcloud/reference/iam/workload-identity-pools/create-cred-config).
 
 #### Configurable Token Lifetime
 When creating a credential configuration with workload identity federation using service account impersonation, you can provide an optional argument to configure the service account access token lifetime.
@@ -759,6 +761,34 @@ specified below. It must output the response to stdout.
 
 Refer to the [using executable-sourced credentials with Workload Identity Federation](#using-executable-sourced-credentials-with-oidc-and-saml)
 above for the executable response specification.
+
+#### Using a custom supplier with OIDC and SAML
+A custom implementation of IdentityPoolSubjectTokenSupplier can be used while building IdentityPoolCredentials
+to supply a subject token which can be exchanged for a GCP access token. The supplier must return a valid,
+unexpired subject token when called by the GCP credential.
+
+```java
+class CustomTokenSupplier implements IdentityPoolSubjectTokenSupplier {
+  @Override
+  String getSubjectToken() {
+    // Return a valid subject token for the configured identity.
+  }
+}
+```
+```java
+CustomTokenSupplier tokenSupplier = new CustomTokenSupplier();
+IdentityPoolCredentials identityPoolCredentials =
+    IdentityPoolCredentials.newBuilder()
+        .setSubjectTokenSupplier(tokenSupplier) // Set token supplier.
+        .setAudience(...) // Set GCP audience
+        .setSubjectTokenType(SubjectTokenTypes.JWT) // Set subject token type.
+        .setWorkforcePoolUserProject(...) // Set workforce pool user project.
+        .build();
+```
+Where the audience is the URL of the [workforce pool](https://cloud.google.com/iam/docs/best-practices-for-using-workload-identity-federation#provider-audience).
+
+The values for audience, service account impersonation URL, and any other builder field can also be found by
+generating a [credential configuration file with the gcloud CLI](https://cloud.google.com/iam/docs/workforce-obtaining-short-lived-credentials#use_configuration_files_for_sign-in).
 
 ##### Security considerations
 The following security practices are highly recommended:
