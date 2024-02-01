@@ -491,7 +491,7 @@ IdentityPoolCredentials identityPoolCredentials =
         .setSubjectTokenType(SubjectTokenTypes.JWT) // Set subject token type.
         .build();
 ```
-Where the audience is the url of the [workload pool](https://cloud.google.com/iam/docs/best-practices-for-using-workload-identity-federation#provider-audience).
+Where the audience is the URL of the [workload pool](https://cloud.google.com/iam/docs/best-practices-for-using-workload-identity-federation#provider-audience).
 
 The values for audience, service account impersonation URL, and any other builder field can also be found by
 generating a credential configuration file with the gcloud CLI.
