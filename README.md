@@ -509,7 +509,7 @@ class AwsSupplier implements AwsSecurityCredentialsSupplier {
 
   @Override
   String getRegion(){
-    // return the current AWS region, i.e. "us-east-2"
+    // Return the current AWS region, i.e. "us-east-2".
   }
 }
 ```
