@@ -475,11 +475,34 @@ A custom implementation of IdentityPoolSubjectTokenSupplier can be used while bu
 to supply a subject token which can be exchanged for a GCP access token. The supplier must return a valid,
 unexpired subject token when called by the GCP credential.
 
+IdentityPoolCredentials do not cache the returned token, so caching logic should be
+implemented in the token supplier to prevent multiple requests for the same subject token.
+
 ```java
-class CustomTokenSupplier implements IdentityPoolSubjectTokenSupplier {
+import java.io.IOException;
+
+public class CustomTokenSupplier implements IdentityPoolSubjectTokenSupplier {
+
   @Override
-  String getSubjectToken() {
-    // Return a valid subject token for the configured identity.
+  public String getSubjectToken(ExternalAccountSupplierContext context) throws IOException {
+    // Any call to the supplier will pass a context object with the requested
+    // audience and subject token type.
+    string audience = context.getAudience();
+    string tokenType = context.getSubjectTokenType();
+
+    try {
+      // Return a valid, unexpected token for the requested audience and token type.
+      // Note that IdentityPoolCredentials do not cache the subject token so
+      // any caching logic needs to be implemented in the token supplier.
+      return retrieveToken(audience, tokenType);
+    } catch (exception e) {
+      // If token cannot be retrieved, throw IOException.
+      throw new IOException(e);
+    }
+  }
+
+  private String retrieveToken(string tokenType, string audience) {
+    // Retrieve a subject token of the requested type for the requested audience.
   }
 }
 ```
@@ -501,16 +524,47 @@ generating a [credential configuration file with the gcloud CLI](https://cloud.g
 A custom implementation of AwsSecurityCredentialsSupplier can be provided when initializing AwsCredentials. If provided, the AwsCredentials instance will defer to the supplier to retrieve AWS security credentials to exchange for a GCP access token.
 The supplier must return valid, unexpired AWS security credentials when called by the GCP credential.
 
+AwsCredentials do not cache the returned AWS security credentials or region, so caching logic should be
+implemented in the supplier to prevent multiple requests for the same resources.
+
 ```java
 class CustomAwsSupplier implements AwsSecurityCredentialsSupplier {
   @Override
-  AwsSecurityCredentials getAwsSecurityCredentials() {
-    // Return valid AwsSecurityCredentials for the configured identity.
+  AwsSecurityCredentials getAwsSecurityCredentials(ExternalAccountSupplierContext context) throws IOException {
+    // Any call to the supplier will pass a context object with the requested
+    // audience
+    string audience = context.getAudience();
+
+    try {
+      // Return valid, unexpired AWS security credentials for the requested audience.
+      // Note that AwsCredentials do not cache the AWS security credentials so
+      // any caching logic needs to be implemented in the credentials' supplier.
+      return retrieveAwsSecurityCredentials(audience);
+    } catch (exception e) {
+      // If credentials cannot be retrieved, throw IOException.
+      throw new IOException(e);
+    }
   }
 
   @Override
-  String getRegion() {
-    // Return the current AWS region, i.e. "us-east-2".
+  String getRegion(ExternalAccountSupplierContext context) throws IOException {
+    try {
+      // Return a valid AWS region. i.e. "us-east-2"
+      // Note that AwsCredentials do not cache the region so
+      // any caching logic needs to be implemented in the credentials' supplier.
+      return retrieveAwsRegion();
+    } catch (exception e) {
+      // If token cannot be retrieved, throw IOException.
+      throw new IOException(e);
+    }
+  }
+
+  private AwsSecurityCredentials retrieveAwsSecurityCredentials(string audience) {
+    // Retrieve Aws security credentials for the requested audience.
+  }
+
+  private String retrieveAwsRegion() {
+    // Retrieve current AWS region.
   }
 }
 ```
@@ -767,11 +821,34 @@ A custom implementation of IdentityPoolSubjectTokenSupplier can be used while bu
 to supply a subject token which can be exchanged for a GCP access token. The supplier must return a valid,
 unexpired subject token when called by the GCP credential.
 
+IdentityPoolCredentials do not cache the returned token, so caching logic should be
+implemented in the token supplier to prevent multiple requests for the same subject token.
+
 ```java
-class CustomTokenSupplier implements IdentityPoolSubjectTokenSupplier {
+import java.io.IOException;
+
+public class CustomTokenSupplier implements IdentityPoolSubjectTokenSupplier {
+
   @Override
-  String getSubjectToken() {
-    // Return a valid subject token for the configured identity.
+  public String getSubjectToken(ExternalAccountSupplierContext context) throws IOException {
+    // Any call to supplier will pass a context object with the requested
+    // audience and subject token type.
+    string audience = context.getAudience();
+    string tokenType = context.getSubjectTokenType();
+
+    try {
+      // Return a valid, unexpected token for the requested audience and token type.
+      // Note that the IdentityPoolCredential does not cache the subject token so
+      // any caching logic needs to be implemented in the token supplier.
+      return retrieveToken(audience, tokenType);
+    } catch (exception e) {
+      // If token cannot be retrieved, throw IOException.
+      throw new IOException(e);
+    }
+  }
+
+  private String retrieveToken(string tokenType, string audience) {
+    // Retrieve a subject token of the requested type for the requested audience.
   }
 }
 ```
