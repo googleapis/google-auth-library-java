@@ -484,12 +484,12 @@ class TokenSupplier implements IdentityPoolSubjectTokenSupplier {
 ```
 ```java
 TokenSupplier tokenSupplier = new TokenSupplier();
-  IdentityPoolCredentials identityPoolCredentials =
-      IdentityPoolCredentials.newBuilder()
-          .setSubjectTokenSupplier(tokenSupplier) // Set token supplier.
-          .setAudience(...) // Set GCP audience
-          .setSubjectTokenType(SubjectTokenTypes.JWT) // Set subject token type.
-          .build();
+IdentityPoolCredentials identityPoolCredentials =
+    IdentityPoolCredentials.newBuilder()
+        .setSubjectTokenSupplier(tokenSupplier) // Set token supplier.
+        .setAudience(...) // Set GCP audience
+        .setSubjectTokenType(SubjectTokenTypes.JWT) // Set subject token type.
+        .build();
 ```
 Where the audience is the url of the [workload pool](https://cloud.google.com/iam/docs/best-practices-for-using-workload-identity-federation#provider-audience).
 
