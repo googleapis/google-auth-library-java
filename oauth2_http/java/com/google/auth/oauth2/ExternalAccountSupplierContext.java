@@ -3,7 +3,11 @@ package com.google.auth.oauth2;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.Serializable;
 
-/** Context object to pass relevant variables from external account credentials to suppliers. */
+/**
+ * Context object to pass relevant variables from external account credentials to suppliers.
+ * This will be passed on any call made to {@link IdentityPoolSubjectTokenSupplier} or
+ * {@link AwsSecurityCredentialsSupplier}.
+ * */
 public class ExternalAccountSupplierContext implements Serializable {
 
   private static final long serialVersionUID = -7852130853542313494L;
@@ -12,13 +16,13 @@ public class ExternalAccountSupplierContext implements Serializable {
   private final String subjectTokenType;
 
   /** Internal constructor. See {@link ExternalAccountSupplierContext.Builder}. */
-  ExternalAccountSupplierContext(Builder builder) {
+  private ExternalAccountSupplierContext(Builder builder) {
     this.audience = builder.audience;
     this.subjectTokenType = builder.subjectTokenType;
   }
 
   /**
-   * Gets the credentials expected audience.
+   * Returns the credentials' expected audience.
    *
    * @return the audience.
    */
@@ -27,7 +31,7 @@ public class ExternalAccountSupplierContext implements Serializable {
   }
 
   /**
-   * Gets the credentials expected subject token type.
+   * Returns the credentials' expected subject token type.
    *
    * @return the subject token type.
    */
