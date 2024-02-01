@@ -504,7 +504,7 @@ AWS security credentials which can be exchanged for a GCP access token.
 class AwsSupplier implements AwsSecurityCredentialsSupplier {
   @Override
   AwsSecurityCredentials getAwsSecurityCredentials(){
-    // return valid AwsSecurityCredentials for the configured identity.
+    // Return valid AwsSecurityCredentials for the configured identity.
   }
 
   @Override
