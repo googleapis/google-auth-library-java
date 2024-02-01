@@ -5,10 +5,10 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.Serializable;
 
 /**
- * Context object to pass relevant variables from external account credentials to suppliers.
- * This will be passed on any call made to {@link IdentityPoolSubjectTokenSupplier} or
- * {@link AwsSecurityCredentialsSupplier}.
- * */
+ * Context object to pass relevant variables from external account credentials to suppliers. This
+ * will be passed on any call made to {@link IdentityPoolSubjectTokenSupplier} or {@link
+ * AwsSecurityCredentialsSupplier}.
+ */
 public class ExternalAccountSupplierContext implements Serializable {
 
   private static final long serialVersionUID = -7852130853542313494L;
@@ -49,8 +49,6 @@ public class ExternalAccountSupplierContext implements Serializable {
 
     protected String audience;
     protected String subjectTokenType;
-
-    public Builder() {}
 
     /**
      * Sets the Audience.
