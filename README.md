@@ -478,7 +478,7 @@ to supply a subject token which can be exchanged for a GCP access token.
 class TokenSupplier implements IdentityPoolSubjectTokenSupplier {
   @Override
   String getSubjectToken(){
-    // return a valid subject token for the configured identity.
+    // Return a valid subject token for the configured identity.
   }
 }
 ```
