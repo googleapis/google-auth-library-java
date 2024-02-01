@@ -497,8 +497,7 @@ The values for audience, service account impersonation URL, and any other builde
 generating a credential configuration file with the gcloud CLI.
 
 #### Using a custom supplier with AWS
-A custom implementation of AWSSecurityCredentialsSupplier can be used while building AWSCredentials to supply
-AWS security credentials which can be exchanged for a GCP access token.
+A custom implementation of AwsSecurityCredentialsSupplier can be provided when initializing AwsCredentials. If provided, the AwsCredentials instance will defer to the supplier to retrieve AWS security credentials to exchange for a GCP access token.
 
 ```java
 class AwsSupplier implements AwsSecurityCredentialsSupplier {
