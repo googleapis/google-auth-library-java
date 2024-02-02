@@ -511,7 +511,7 @@ CustomTokenSupplier tokenSupplier = new CustomTokenSupplier();
 IdentityPoolCredentials identityPoolCredentials =
     IdentityPoolCredentials.newBuilder()
         .setSubjectTokenSupplier(tokenSupplier) // Set token supplier.
-        .setAudience(...) // Set GCP audience
+        .setAudience(...) // Set GCP audience.
         .setSubjectTokenType(SubjectTokenTypes.JWT) // Set subject token type.
         .build();
 ```
@@ -577,7 +577,7 @@ AwsCredentials credentials = AwsCredentials.newBuilder()
     .build();
 ```
 
-Where the audience is the url of the [workload pool](https://cloud.google.com/iam/docs/best-practices-for-using-workload-identity-federation#provider-audience).
+Where the audience is the URL of the [workload pool](https://cloud.google.com/iam/docs/best-practices-for-using-workload-identity-federation#provider-audience).
 
 The values for audience, service account impersonation URL, and any other builder field can also be found by
 generating a [credential configuration file with the gcloud CLI](https://cloud.google.com/sdk/gcloud/reference/iam/workload-identity-pools/create-cred-config).
@@ -856,10 +856,10 @@ public class CustomTokenSupplier implements IdentityPoolSubjectTokenSupplier {
 CustomTokenSupplier tokenSupplier = new CustomTokenSupplier();
 IdentityPoolCredentials identityPoolCredentials =
     IdentityPoolCredentials.newBuilder()
-        .setSubjectTokenSupplier(tokenSupplier) // Set token supplier.
-        .setAudience(...) // Set GCP audience
-        .setSubjectTokenType(SubjectTokenTypes.JWT) // Set subject token type.
-        .setWorkforcePoolUserProject(...) // Set workforce pool user project.
+        .setSubjectTokenSupplier(tokenSupplier) // Sets the token supplier.
+        .setAudience(...) // Sets the GCP audience.
+        .setSubjectTokenType(SubjectTokenTypes.JWT) // Sets the subject token type.
+        .setWorkforcePoolUserProject(...) // Sets the workforce pool user project.
         .build();
 ```
 Where the audience is the URL of the [workforce pool](https://cloud.google.com/iam/docs/best-practices-for-using-workload-identity-federation#provider-audience).
