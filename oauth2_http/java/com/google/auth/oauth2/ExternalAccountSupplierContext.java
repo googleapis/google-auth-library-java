@@ -33,7 +33,8 @@ public class ExternalAccountSupplierContext implements Serializable {
   }
 
   /**
-   * Returns the credentials' expected subject token type.
+   * Returns the credentials' expected Security Token Service subject token type based on the OAuth
+   * 2.0 token exchange spec.
    *
    * @return the requested subject token type. For example: "urn:ietf:params:oauth:token-type:jwt".
    */
