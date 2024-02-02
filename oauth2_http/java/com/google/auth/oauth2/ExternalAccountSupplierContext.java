@@ -40,12 +40,12 @@ public class ExternalAccountSupplierContext implements Serializable {
     return subjectTokenType;
   }
 
-  public static Builder newBuilder() {
+  static Builder newBuilder() {
     return new Builder();
   }
 
   /** Builder for external account supplier context. */
-  public static class Builder {
+  static class Builder {
 
     protected String audience;
     protected String subjectTokenType;
@@ -57,7 +57,7 @@ public class ExternalAccountSupplierContext implements Serializable {
      * @return this {@code Builder} object
      */
     @CanIgnoreReturnValue
-    public Builder setAudience(String audience) {
+    Builder setAudience(String audience) {
       this.audience = audience;
       return this;
     }
@@ -69,7 +69,7 @@ public class ExternalAccountSupplierContext implements Serializable {
      * @return this {@code Builder} object
      */
     @CanIgnoreReturnValue
-    public Builder setSubjectTokenType(String subjectTokenType) {
+    Builder setSubjectTokenType(String subjectTokenType) {
       this.subjectTokenType = subjectTokenType;
       return this;
     }
@@ -81,12 +81,12 @@ public class ExternalAccountSupplierContext implements Serializable {
      * @return this {@code Builder} object
      */
     @CanIgnoreReturnValue
-    public Builder setSubjectTokenType(SubjectTokenTypes subjectTokenType) {
+    Builder setSubjectTokenType(SubjectTokenTypes subjectTokenType) {
       this.subjectTokenType = subjectTokenType.value;
       return this;
     }
 
-    public ExternalAccountSupplierContext build() {
+    ExternalAccountSupplierContext build() {
       return new ExternalAccountSupplierContext(this);
     }
   }
