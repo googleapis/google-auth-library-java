@@ -89,7 +89,8 @@ class InternalAwsSecurityCredentialsSupplier implements AwsSecurityCredentialsSu
   }
 
   @Override
-  public AwsSecurityCredentials getCredentials() throws IOException {
+  public AwsSecurityCredentials getCredentials(ExternalAccountSupplierContext context)
+      throws IOException {
     // Check environment variables for credentials first.
     if (canRetrieveSecurityCredentialsFromEnvironment()) {
       String accessKeyId = environmentProvider.getEnv(AWS_ACCESS_KEY_ID);
@@ -129,7 +130,7 @@ class InternalAwsSecurityCredentialsSupplier implements AwsSecurityCredentialsSu
   }
 
   @Override
-  public String getRegion() throws IOException {
+  public String getRegion(ExternalAccountSupplierContext context) throws IOException {
     String region;
     if (canRetrieveRegionFromEnvironment()) {
       // For AWS Lambda, the region is retrieved through the AWS_REGION environment variable.

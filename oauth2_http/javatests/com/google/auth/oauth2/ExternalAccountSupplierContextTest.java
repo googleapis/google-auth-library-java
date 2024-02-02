@@ -31,22 +31,40 @@
 
 package com.google.auth.oauth2;
 
-import java.io.IOException;
-import java.io.Serializable;
+import static org.junit.Assert.assertEquals;
 
-@FunctionalInterface
-/**
- * Provider for retrieving subject tokens for {@Link IdentityPoolCredentials} to exchange for GCP
- * access tokens.
- */
-public interface IdentityPoolSubjectTokenSupplier extends Serializable {
+import com.google.auth.oauth2.ExternalAccountCredentials.SubjectTokenTypes;
+import org.junit.Test;
 
-  /**
-   * Gets a subject token that can be exchanged for a GCP access token.
-   *
-   * @param context relevant context from the calling credential.
-   * @return a valid subject token.
-   * @throws IOException
-   */
-  String getSubjectToken(ExternalAccountSupplierContext context) throws IOException;
+public class ExternalAccountSupplierContextTest {
+
+  @Test
+  public void constructor_builder() {
+    String expectedAudience =
+        "//iam.googleapis.com/locations/global/workloadPools/pool/providers/provider";
+    String expectedTokenType = SubjectTokenTypes.JWT.value;
+    ExternalAccountSupplierContext context =
+        ExternalAccountSupplierContext.newBuilder()
+            .setAudience(expectedAudience)
+            .setSubjectTokenType(expectedTokenType)
+            .build();
+
+    assertEquals(expectedAudience, context.getAudience());
+    assertEquals(expectedTokenType, context.getSubjectTokenType());
+  }
+
+  @Test
+  public void constructor_builder_subjectTokenEnum() {
+    String expectedAudience =
+        "//iam.googleapis.com/locations/global/workloadPools/pool/providers/provider";
+    SubjectTokenTypes expectedTokenType = SubjectTokenTypes.JWT;
+    ExternalAccountSupplierContext context =
+        ExternalAccountSupplierContext.newBuilder()
+            .setAudience(expectedAudience)
+            .setSubjectTokenType(expectedTokenType)
+            .build();
+
+    assertEquals(expectedAudience, context.getAudience());
+    assertEquals(expectedTokenType.value, context.getSubjectTokenType());
+  }
 }

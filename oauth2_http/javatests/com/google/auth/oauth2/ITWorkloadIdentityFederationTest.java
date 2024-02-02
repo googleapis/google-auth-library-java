@@ -258,7 +258,7 @@ public final class ITWorkloadIdentityFederationTest {
   public void identityPoolCredentials_withProgrammaticAuth() throws IOException {
 
     IdentityPoolSubjectTokenSupplier tokenSupplier =
-        () -> {
+        (ExternalAccountSupplierContext context) -> {
           try {
             return generateGoogleIdToken(OIDC_AUDIENCE);
           } catch (IOException e) {
@@ -463,12 +463,12 @@ public final class ITWorkloadIdentityFederationTest {
     }
 
     @Override
-    public String getRegion() {
+    public String getRegion(ExternalAccountSupplierContext context) {
       return this.region;
     }
 
     @Override
-    public AwsSecurityCredentials getCredentials() {
+    public AwsSecurityCredentials getCredentials(ExternalAccountSupplierContext context) {
       return this.credentials;
     }
   }
