@@ -491,12 +491,12 @@ public class CustomTokenSupplier implements IdentityPoolSubjectTokenSupplier {
     string tokenType = context.getSubjectTokenType();
 
     try {
-      // Return a valid, unexpected token for the requested audience and token type.
+      // Return a valid, unexpired token for the requested audience and token type.
       // Note that IdentityPoolCredentials do not cache the subject token so
       // any caching logic needs to be implemented in the token supplier.
       return retrieveToken(audience, tokenType);
-    } catch (exception e) {
-      // If token cannot be retrieved, throw IOException.
+    } catch (Exception e) {
+      // If token is unavailable, throw IOException.
       throw new IOException(e);
     }
   }
@@ -540,8 +540,8 @@ class CustomAwsSupplier implements AwsSecurityCredentialsSupplier {
       // Note that AwsCredentials do not cache the AWS security credentials so
       // any caching logic needs to be implemented in the credentials' supplier.
       return retrieveAwsSecurityCredentials(audience);
-    } catch (exception e) {
-      // If credentials cannot be retrieved, throw IOException.
+    } catch (Exception e) {
+      // If credentials are unavailable, throw IOException.
       throw new IOException(e);
     }
   }
@@ -553,8 +553,8 @@ class CustomAwsSupplier implements AwsSecurityCredentialsSupplier {
       // Note that AwsCredentials do not cache the region so
       // any caching logic needs to be implemented in the credentials' supplier.
       return retrieveAwsRegion();
-    } catch (exception e) {
-      // If token cannot be retrieved, throw IOException.
+    } catch (Exception e) {
+      // If region is unavailable, throw IOException.
       throw new IOException(e);
     }
   }
@@ -837,12 +837,12 @@ public class CustomTokenSupplier implements IdentityPoolSubjectTokenSupplier {
     string tokenType = context.getSubjectTokenType();
 
     try {
-      // Return a valid, unexpected token for the requested audience and token type.
+      // Return a valid, unexpired token for the requested audience and token type.
       // Note that the IdentityPoolCredential does not cache the subject token so
       // any caching logic needs to be implemented in the token supplier.
       return retrieveToken(audience, tokenType);
-    } catch (exception e) {
-      // If token cannot be retrieved, throw IOException.
+    } catch (Exception e) {
+      // If token is unavailable, throw IOException.
       throw new IOException(e);
     }
   }
