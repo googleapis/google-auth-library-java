@@ -25,7 +25,8 @@ public class ExternalAccountSupplierContext implements Serializable {
   /**
    * Returns the credentials' expected audience.
    *
-   * @return the audience.
+   * @return the requested audience. For example:
+   *     "//iam.googleapis.com/locations/global/workforcePools/$WORKFORCE_POOL_ID/providers/$PROVIDER_ID".
    */
   public String getAudience() {
     return audience;
@@ -34,7 +35,7 @@ public class ExternalAccountSupplierContext implements Serializable {
   /**
    * Returns the credentials' expected subject token type.
    *
-   * @return the subject token type.
+   * @return the requested subject token type. For example: "urn:ietf:params:oauth:token-type:jwt".
    */
   public String getSubjectTokenType() {
     return subjectTokenType;
