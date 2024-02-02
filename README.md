@@ -862,7 +862,14 @@ IdentityPoolCredentials identityPoolCredentials =
         .setWorkforcePoolUserProject(...) // Sets the workforce pool user project.
         .build();
 ```
-Where the audience is the URL of the [workforce pool](https://cloud.google.com/iam/docs/best-practices-for-using-workload-identity-federation#provider-audience).
+Where the audience is:
+```//iam.googleapis.com/locations/global/workforcePools/WORKFORCE_POOL_ID/providers/PROVIDER_ID```
+
+Where the following variables need to be substituted:
+- `WORKFORCE_POOL_ID`: The workforce pool ID.
+- `PROVIDER_ID`: The provider ID.
+
+and the workforce pool user project is the project number associated with the [workforce pools user project](https://cloud.google.com/iam/docs/workforce-identity-federation#workforce-pools-user-project).
 
 The values for audience, service account impersonation URL, and any other builder field can also be found by
 generating a [credential configuration file with the gcloud CLI](https://cloud.google.com/iam/docs/workforce-obtaining-short-lived-credentials#use_configuration_files_for_sign-in).
