@@ -510,9 +510,9 @@ public class CustomTokenSupplier implements IdentityPoolSubjectTokenSupplier {
 CustomTokenSupplier tokenSupplier = new CustomTokenSupplier();
 IdentityPoolCredentials identityPoolCredentials =
     IdentityPoolCredentials.newBuilder()
-        .setSubjectTokenSupplier(tokenSupplier) // Set token supplier.
-        .setAudience(...) // Set GCP audience.
-        .setSubjectTokenType(SubjectTokenTypes.JWT) // Set subject token type.
+        .setSubjectTokenSupplier(tokenSupplier) // Sets the token supplier.
+        .setAudience(...) // Sets the GCP audience.
+        .setSubjectTokenType(SubjectTokenTypes.JWT) // Sets the subject token type.
         .build();
 ```
 Where the audience is the URL of the [workload pool](https://cloud.google.com/iam/docs/best-practices-for-using-workload-identity-federation#provider-audience).
@@ -532,7 +532,7 @@ class CustomAwsSupplier implements AwsSecurityCredentialsSupplier {
   @Override
   AwsSecurityCredentials getAwsSecurityCredentials(ExternalAccountSupplierContext context) throws IOException {
     // Any call to the supplier will pass a context object with the requested
-    // audience
+    // audience.
     string audience = context.getAudience();
 
     try {
@@ -549,7 +549,7 @@ class CustomAwsSupplier implements AwsSecurityCredentialsSupplier {
   @Override
   String getRegion(ExternalAccountSupplierContext context) throws IOException {
     try {
-      // Return a valid AWS region. i.e. "us-east-2"
+      // Return a valid AWS region. i.e. "us-east-2".
       // Note that AwsCredentials do not cache the region so
       // any caching logic needs to be implemented in the credentials' supplier.
       return retrieveAwsRegion();
@@ -571,9 +571,9 @@ class CustomAwsSupplier implements AwsSecurityCredentialsSupplier {
 ```java
 CustomAwsSupplier awsSupplier = new CustomAwsSupplier();
 AwsCredentials credentials = AwsCredentials.newBuilder()
-    .setSubjectTokenType(SubjectTokenTypes.AWS4) // Set subject token type.
-    .setAudience(...) // Set GCP audience.
-    .setAwsSecurityCredentialsSupplier(supplier) // Set supplier.
+    .setSubjectTokenType(SubjectTokenTypes.AWS4) // Sets the subject token type.
+    .setAudience(...) // Sets the GCP audience.
+    .setAwsSecurityCredentialsSupplier(supplier) // Sets the supplier.
     .build();
 ```
 
@@ -863,11 +863,11 @@ IdentityPoolCredentials identityPoolCredentials =
         .build();
 ```
 Where the audience is:
-```//iam.googleapis.com/locations/global/workforcePools/WORKFORCE_POOL_ID/providers/PROVIDER_ID```
+```//iam.googleapis.com/locations/global/workforcePools/$WORKFORCE_POOL_ID/providers/$PROVIDER_ID```
 
 Where the following variables need to be substituted:
-- `WORKFORCE_POOL_ID`: The workforce pool ID.
-- `PROVIDER_ID`: The provider ID.
+- `$WORKFORCE_POOL_ID`: The workforce pool ID.
+- `$PROVIDER_ID`: The provider ID.
 
 and the workforce pool user project is the project number associated with the [workforce pools user project](https://cloud.google.com/iam/docs/workforce-identity-federation#workforce-pools-user-project).
 
