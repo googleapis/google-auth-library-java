@@ -49,8 +49,8 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
   static final String FILE_METRICS_HEADER_VALUE = "file";
   static final String URL_METRICS_HEADER_VALUE = "url";
   private static final long serialVersionUID = 2471046175477275881L;
-
   private final IdentityPoolSubjectTokenSupplier subjectTokenSupplier;
+  private final ExternalAccountSupplierContext supplierContext;
   private final String metricsHeaderValue;
 
   /** Internal constructor. See {@link Builder}. */
@@ -58,7 +58,11 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
     super(builder);
     IdentityPoolCredentialSource credentialSource =
         (IdentityPoolCredentialSource) builder.credentialSource;
-
+    this.supplierContext =
+        ExternalAccountSupplierContext.newBuilder()
+            .setAudience(this.getAudience())
+            .setSubjectTokenType(this.getSubjectTokenType())
+            .build();
     // Check that one and only one of supplier or credential source are provided.
     if (builder.subjectTokenSupplier != null && credentialSource != null) {
       throw new IllegalArgumentException(
@@ -99,7 +103,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   @Override
   public String retrieveSubjectToken() throws IOException {
-    return this.subjectTokenSupplier.getSubjectToken();
+    return this.subjectTokenSupplier.getSubjectToken(supplierContext);
   }
 
   @Override

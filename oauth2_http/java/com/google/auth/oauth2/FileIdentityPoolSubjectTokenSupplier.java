@@ -66,7 +66,7 @@ class FileIdentityPoolSubjectTokenSupplier implements IdentityPoolSubjectTokenSu
   }
 
   @Override
-  public String getSubjectToken() throws IOException {
+  public String getSubjectToken(ExternalAccountSupplierContext context) throws IOException {
     String credentialFilePath = this.credentialSource.credentialLocation;
     if (!Files.exists(Paths.get(credentialFilePath), LinkOption.NOFOLLOW_LINKS)) {
       throw new IOException(
