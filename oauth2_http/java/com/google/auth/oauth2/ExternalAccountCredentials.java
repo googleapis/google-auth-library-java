@@ -42,6 +42,7 @@ import com.google.common.base.MoreObjects;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -538,6 +539,13 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
   public CredentialSource getCredentialSource() {
     return credentialSource;
+  }
+
+  @SuppressWarnings("unused")
+  private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
+    // Properly deserialize the transient transportFactory.
+    input.defaultReadObject();
+    transportFactory = newInstance(transportFactoryClassName);
   }
 
   @Nullable
