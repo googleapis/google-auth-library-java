@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.23.0](https://github.com/googleapis/google-auth-library-java/compare/v1.22.0...v1.23.0) (2024-02-05)
+
+
+### Features
+
+* Add context object to pass to supplier functions ([#1363](https://github.com/googleapis/google-auth-library-java/issues/1363)) ([1d9efc7](https://github.com/googleapis/google-auth-library-java/commit/1d9efc78aa6ab24fc2aab5f081240a815c394c95))
+* Adds support for user defined subject token suppliers in AWSCredentials and IdentityPoolCredentials ([#1336](https://github.com/googleapis/google-auth-library-java/issues/1336)) ([64ce8a1](https://github.com/googleapis/google-auth-library-java/commit/64ce8a1fbb82cb19e17ca0c6713c7c187078c28b))
+* Adds universe domain for DownscopedCredentials and ExternalAccountAuthorizedUserCredentials ([#1355](https://github.com/googleapis/google-auth-library-java/issues/1355)) ([17ef707](https://github.com/googleapis/google-auth-library-java/commit/17ef70748aae4820f10694ae99c82ed7ca89dbce))
+* Modify the refresh window to match go/async-token-refresh. Serverless tokens are cached until 4 minutes before expiration, so 4 minutes is the ideal refresh window. ([#1352](https://github.com/googleapis/google-auth-library-java/issues/1352)) ([a7a8d7a](https://github.com/googleapis/google-auth-library-java/commit/a7a8d7a4102b0b7c1b83791947ccb662f060eca7))
+
+
+### Bug Fixes
+
+* Add missing copyright header ([#1364](https://github.com/googleapis/google-auth-library-java/issues/1364)) ([a24e563](https://github.com/googleapis/google-auth-library-java/commit/a24e5631b8198d988a7b82deab5453e43917b0d2))
+* Issue [#1347](https://github.com/googleapis/google-auth-library-java/issues/1347): ExternalAccountCredentials serialization is broken ([#1358](https://github.com/googleapis/google-auth-library-java/issues/1358)) ([e3a2e9c](https://github.com/googleapis/google-auth-library-java/commit/e3a2e9cbdd767c4664d895f98f69d8b742d645f0))
+* Refactor compute and cloudshell credentials to pass quota project to base class ([#1284](https://github.com/googleapis/google-auth-library-java/issues/1284)) ([fb75239](https://github.com/googleapis/google-auth-library-java/commit/fb75239ead37b6677a392f38ea2ef2012b3f21e0))
+
 ## [1.22.0](https://github.com/googleapis/google-auth-library-java/compare/v1.21.0...v1.22.0) (2024-01-09)
 
 
