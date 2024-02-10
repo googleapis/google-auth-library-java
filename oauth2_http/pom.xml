@@ -14,6 +14,13 @@
   <artifactId>google-auth-library-oauth2-http</artifactId>
   <name>Google Auth Library for Java - OAuth2 HTTP</name>
 
+  <properties>
+    <sonar.coverage.jacoco.xmlReportPaths>
+      ${project.basedir}/oauth2_http/target/site/
+      jacoco-aggregate/jacoco.xml
+    </sonar.coverage.jacoco.xmlReportPaths>
+  </properties>
+
   <distributionManagement>
     <snapshotRepository>
       <id>ossrh</id>
