@@ -30,11 +30,6 @@ jobs:
         path: ~/.m2
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
         restore-keys: ${{ runner.os }}-m2
-    - name: Install modules to local maven
-      run: |
-        mvn install -T 1C -DskipTests -ntp -B
-        cd showcase
-        mvn install -T 1C -DskipTests -ntp -B
     - name: Build and analyze for full test coverage
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
