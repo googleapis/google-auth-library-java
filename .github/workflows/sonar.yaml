@@ -37,7 +37,6 @@ jobs:
       run: |
         mvn -B verify -Dcheckstyle.skip \
             -DenableFullTestCoverage \
-            -Penable-integration-tests \
             org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
             -Dsonar.projectKey=googleapis_google-auth-library-java \
             -Dsonar.organization=googleapis \
