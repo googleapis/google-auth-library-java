@@ -33,6 +33,7 @@ package com.google.auth.oauth2;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -154,31 +155,37 @@ final class StsTokenExchangeRequest {
       this.subjectTokenType = subjectTokenType;
     }
 
+    @CanIgnoreReturnValue
     public StsTokenExchangeRequest.Builder setResource(String resource) {
       this.resource = resource;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public StsTokenExchangeRequest.Builder setAudience(String audience) {
       this.audience = audience;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public StsTokenExchangeRequest.Builder setRequestTokenType(String requestedTokenType) {
       this.requestedTokenType = requestedTokenType;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public StsTokenExchangeRequest.Builder setScopes(List<String> scopes) {
       this.scopes = scopes;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public StsTokenExchangeRequest.Builder setActingParty(ActingParty actingParty) {
       this.actingParty = actingParty;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public StsTokenExchangeRequest.Builder setInternalOptions(String internalOptions) {
       this.internalOptions = internalOptions;
       return this;

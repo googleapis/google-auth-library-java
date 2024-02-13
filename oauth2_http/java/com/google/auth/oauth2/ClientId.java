@@ -34,6 +34,7 @@ package com.google.auth.oauth2;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.Preconditions;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -184,11 +185,13 @@ public class ClientId {
       this.clientSecret = clientId.getClientSecret();
     }
 
+    @CanIgnoreReturnValue
     public Builder setClientId(String clientId) {
       this.clientId = clientId;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setClientSecret(String clientSecret) {
       this.clientSecret = clientSecret;
       return this;

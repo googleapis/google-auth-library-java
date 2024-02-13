@@ -106,16 +106,6 @@ public class DefaultCredentialsProviderTest {
   private static final String QUOTA_PROJECT_EXPLICIT = "explicit-quota-project-id";
   private static final String SMBIOS_PATH_LINUX = "/sys/class/dmi/id/product_name";
 
-  static class MockRequestCountingTransportFactory implements HttpTransportFactory {
-
-    MockRequestCountingTransport transport = new MockRequestCountingTransport();
-
-    @Override
-    public HttpTransport create() {
-      return transport;
-    }
-  }
-
   @Test
   public void getDefaultCredentials_noCredentials_throws() {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
@@ -471,6 +461,34 @@ public class DefaultCredentialsProviderTest {
   }
 
   @Test
+  public void getDefaultCredentials_compute_quotaProject() throws IOException {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    transportFactory.transport.setAccessToken(ACCESS_TOKEN);
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setEnv(
+        DefaultCredentialsProvider.QUOTA_PROJECT_ENV_VAR, QUOTA_PROJECT_FROM_ENVIRONMENT);
+
+    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory);
+
+    assertTrue(defaultCredentials instanceof ComputeEngineCredentials);
+    assertEquals(QUOTA_PROJECT_FROM_ENVIRONMENT, defaultCredentials.getQuotaProjectId());
+  }
+
+  @Test
+  public void getDefaultCredentials_cloudshell_quotaProject() throws IOException {
+    MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    testProvider.setEnv(DefaultCredentialsProvider.CLOUD_SHELL_ENV_VAR, "4");
+    testProvider.setEnv(
+        DefaultCredentialsProvider.QUOTA_PROJECT_ENV_VAR, QUOTA_PROJECT_FROM_ENVIRONMENT);
+
+    GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory);
+
+    assertTrue(defaultCredentials instanceof CloudShellCredentials);
+    assertEquals(QUOTA_PROJECT_FROM_ENVIRONMENT, defaultCredentials.getQuotaProjectId());
+  }
+
+  @Test
   public void getDefaultCredentials_envNoGceCheck_noGceRequest() throws IOException {
     MockRequestCountingTransportFactory transportFactory =
         new MockRequestCountingTransportFactory();
@@ -616,6 +634,7 @@ public class DefaultCredentialsProviderTest {
   private class LogHandler extends Handler {
     LogRecord lastRecord;
 
+    @Override
     public void publish(LogRecord record) {
       lastRecord = record;
     }
@@ -624,8 +643,10 @@ public class DefaultCredentialsProviderTest {
       return lastRecord;
     }
 
+    @Override
     public void close() {}
 
+    @Override
     public void flush() {}
   }
 
@@ -760,7 +781,7 @@ public class DefaultCredentialsProviderTest {
    * End of types simulating SystemProperty.environment.value() to detect App Engine.
    */
 
-  private static class MockRequestCountingTransport extends MockHttpTransport {
+  static class MockRequestCountingTransport extends MockHttpTransport {
     int requestCount = 0;
 
     MockRequestCountingTransport() {}
@@ -854,6 +875,16 @@ public class DefaultCredentialsProviderTest {
 
     void setFileSandbox(boolean fileSandbox) {
       this.fileSandbox = fileSandbox;
+    }
+  }
+
+  static class MockRequestCountingTransportFactory implements HttpTransportFactory {
+
+    MockRequestCountingTransport transport = new MockRequestCountingTransport();
+
+    @Override
+    public HttpTransport create() {
+      return transport;
     }
   }
 }

@@ -47,6 +47,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
@@ -67,12 +68,12 @@ import javax.annotation.Nullable;
 public class OAuth2Credentials extends Credentials {
 
   private static final long serialVersionUID = 4556936364828217687L;
-  static final Duration DEFAULT_EXPIRATION_MARGIN = Duration.ofMinutes(5);
-  static final Duration DEFAULT_REFRESH_MARGIN = Duration.ofMinutes(6);
+  static final Duration DEFAULT_EXPIRATION_MARGIN = Duration.ofMinutes(3);
+  static final Duration DEFAULT_REFRESH_MARGIN = Duration.ofMinutes(3).plusSeconds(45);
   private static final ImmutableMap<String, List<String>> EMPTY_EXTRA_HEADERS = ImmutableMap.of();
 
-  private final Duration expirationMargin;
-  private final Duration refreshMargin;
+  @VisibleForTesting private final Duration expirationMargin;
+  @VisibleForTesting private final Duration refreshMargin;
 
   // byte[] is serializable, so the lock variable can be final
   @VisibleForTesting final Object lock = new byte[0];
@@ -629,6 +630,7 @@ public class OAuth2Credentials extends Credentials {
       return this.task;
     }
 
+    @Override
     public void run() {
       task.run();
     }
@@ -648,11 +650,13 @@ public class OAuth2Credentials extends Credentials {
       this.expirationMargin = credentials.expirationMargin;
     }
 
+    @CanIgnoreReturnValue
     public Builder setAccessToken(AccessToken token) {
       this.accessToken = token;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setRefreshMargin(Duration refreshMargin) {
       this.refreshMargin = refreshMargin;
       return this;
@@ -662,6 +666,7 @@ public class OAuth2Credentials extends Credentials {
       return refreshMargin;
     }
 
+    @CanIgnoreReturnValue
     public Builder setExpirationMargin(Duration expirationMargin) {
       this.expirationMargin = expirationMargin;
       return this;

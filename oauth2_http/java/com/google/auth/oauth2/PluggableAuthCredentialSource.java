@@ -80,6 +80,7 @@ public class PluggableAuthCredentialSource extends ExternalAccountCredentials.Cr
   // location.
   @Nullable final String outputFilePath;
 
+  @SuppressWarnings("unchecked")
   public PluggableAuthCredentialSource(Map<String, Object> credentialSourceMap) {
     super(credentialSourceMap);
 

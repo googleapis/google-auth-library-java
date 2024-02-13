@@ -35,6 +35,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.api.client.json.GenericJson;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -124,11 +125,13 @@ public final class CredentialAccessBoundary {
      * @param rule the collection of rules to be set, should not be null
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setRules(List<AccessBoundaryRule> rule) {
       accessBoundaryRules = new ArrayList<>(checkNotNull(rule));
       return this;
     }
 
+    @CanIgnoreReturnValue
     public CredentialAccessBoundary.Builder addRule(AccessBoundaryRule rule) {
       if (accessBoundaryRules == null) {
         accessBoundaryRules = new ArrayList<>();
@@ -218,6 +221,7 @@ public final class CredentialAccessBoundary {
        * @param availableResource the resource name to set
        * @return this {@code Builder} object
        */
+      @CanIgnoreReturnValue
       public Builder setAvailableResource(String availableResource) {
         this.availableResource = availableResource;
         return this;
@@ -232,6 +236,7 @@ public final class CredentialAccessBoundary {
        * @param availablePermissions the collection of permissions to set, should not be null
        * @return this {@code Builder} object
        */
+      @CanIgnoreReturnValue
       public Builder setAvailablePermissions(List<String> availablePermissions) {
         this.availablePermissions = new ArrayList<>(checkNotNull(availablePermissions));
         return this;
@@ -261,6 +266,7 @@ public final class CredentialAccessBoundary {
        * @param availabilityCondition the {@code AvailabilityCondition} to set
        * @return this {@code Builder} object
        */
+      @CanIgnoreReturnValue
       public Builder setAvailabilityCondition(AvailabilityCondition availabilityCondition) {
         this.availabilityCondition = availabilityCondition;
         return this;
@@ -337,6 +343,7 @@ public final class CredentialAccessBoundary {
          * @param expression the expression to set
          * @return this {@code Builder} object
          */
+        @CanIgnoreReturnValue
         public Builder setExpression(String expression) {
           this.expression = expression;
           return this;
@@ -348,6 +355,7 @@ public final class CredentialAccessBoundary {
          * @param title the title to set
          * @return this {@code Builder} object
          */
+        @CanIgnoreReturnValue
         public Builder setTitle(String title) {
           this.title = title;
           return this;
@@ -359,6 +367,7 @@ public final class CredentialAccessBoundary {
          * @param description the description to set
          * @return this {@code Builder} object
          */
+        @CanIgnoreReturnValue
         public Builder setDescription(String description) {
           this.description = description;
           return this;

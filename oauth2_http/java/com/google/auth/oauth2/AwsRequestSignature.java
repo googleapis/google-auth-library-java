@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -130,46 +131,55 @@ class AwsRequestSignature {
     private String region;
     private String authorizationHeader;
 
+    @CanIgnoreReturnValue
     Builder setSignature(String signature) {
       this.signature = signature;
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder setCredentialScope(String credentialScope) {
       this.credentialScope = credentialScope;
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder setSecurityCredentials(AwsSecurityCredentials awsSecurityCredentials) {
       this.awsSecurityCredentials = awsSecurityCredentials;
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder setUrl(String url) {
       this.url = url;
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder setHttpMethod(String httpMethod) {
       this.httpMethod = httpMethod;
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder setCanonicalHeaders(Map<String, String> canonicalHeaders) {
       this.canonicalHeaders = new HashMap<>(canonicalHeaders);
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder setDate(String date) {
       this.date = date;
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder setRegion(String region) {
       this.region = region;
       return this;
     }
 
+    @CanIgnoreReturnValue
     Builder setAuthorizationHeader(String authorizationHeader) {
       this.authorizationHeader = authorizationHeader;
       return this;

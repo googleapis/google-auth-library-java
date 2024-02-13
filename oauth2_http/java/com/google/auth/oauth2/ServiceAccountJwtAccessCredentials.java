@@ -50,6 +50,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -485,31 +486,37 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
       this.quotaProjectId = credentials.quotaProjectId;
     }
 
+    @CanIgnoreReturnValue
     public Builder setClientId(String clientId) {
       this.clientId = clientId;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setClientEmail(String clientEmail) {
       this.clientEmail = clientEmail;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setPrivateKey(PrivateKey privateKey) {
       this.privateKey = privateKey;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setPrivateKeyId(String privateKeyId) {
       this.privateKeyId = privateKeyId;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setDefaultAudience(URI defaultAudience) {
       this.defaultAudience = defaultAudience;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setQuotaProjectId(String quotaProjectId) {
       this.quotaProjectId = quotaProjectId;
       return this;

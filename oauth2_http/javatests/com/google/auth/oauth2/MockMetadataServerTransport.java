@@ -40,6 +40,8 @@ import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.common.io.BaseEncoding;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.HashMap;
@@ -50,7 +52,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
   private String accessToken;
 
-  private Integer tokenRequestStatusCode;
+  private Integer requestStatusCode;
 
   private String serviceAccountEmail;
 
@@ -64,8 +66,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
     this.accessToken = accessToken;
   }
 
-  public void setTokenRequestStatusCode(Integer tokenRequestStatusCode) {
-    this.tokenRequestStatusCode = tokenRequestStatusCode;
+  public void setRequestStatusCode(Integer requestStatusCode) {
+    this.requestStatusCode = requestStatusCode;
   }
 
   public void setServiceAccountEmail(String serviceAccountEmail) {
@@ -83,134 +85,152 @@ public class MockMetadataServerTransport extends MockHttpTransport {
   @Override
   public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
     if (url.equals(ComputeEngineCredentials.getTokenServerEncodedUrl())) {
-
-      return new MockLowLevelHttpRequest(url) {
-        @Override
-        public LowLevelHttpResponse execute() throws IOException {
-
-          if (tokenRequestStatusCode != null) {
-            return new MockLowLevelHttpResponse()
-                .setStatusCode(tokenRequestStatusCode)
-                .setContent("Token Fetch Error");
-          }
-
-          String metadataRequestHeader = getFirstHeaderValue("Metadata-Flavor");
-          if (!"Google".equals(metadataRequestHeader)) {
-            throw new IOException("Metadata request header not found.");
-          }
-
-          // Create the JSON response
-          GenericJson refreshContents = new GenericJson();
-          refreshContents.setFactory(OAuth2Utils.JSON_FACTORY);
-          refreshContents.put("access_token", accessToken);
-          refreshContents.put("expires_in", 3600000);
-          refreshContents.put("token_type", "Bearer");
-          String refreshText = refreshContents.toPrettyString();
-
-          return new MockLowLevelHttpResponse()
-              .setContentType(Json.MEDIA_TYPE)
-              .setContent(refreshText);
-        }
-      };
-    } else if (url.equals(ComputeEngineCredentials.getMetadataServerUrl())) {
-      return new MockLowLevelHttpRequest(url) {
-        @Override
-        public LowLevelHttpResponse execute() {
-          MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-          response.addHeader("Metadata-Flavor", "Google");
-          return response;
-        }
-      };
+      return getMockRequestForTokenEndpoint(url);
     } else if (isGetServiceAccountsUrl(url)) {
-      return new MockLowLevelHttpRequest(url) {
-        @Override
-        public LowLevelHttpResponse execute() throws IOException {
-          // Create the JSON response
-          GenericJson serviceAccountsContents = new GenericJson();
-          serviceAccountsContents.setFactory(OAuth2Utils.JSON_FACTORY);
-          GenericJson defaultAccount = new GenericJson();
-          defaultAccount.put("email", serviceAccountEmail);
-          serviceAccountsContents.put("default", defaultAccount);
-
-          String serviceAccounts = serviceAccountsContents.toPrettyString();
-
-          return new MockLowLevelHttpResponse()
-              .setContentType(Json.MEDIA_TYPE)
-              .setContent(serviceAccounts);
-        }
-      };
+      return getMockRequestForServiceAccount(url);
     } else if (isSignRequestUrl(url)) {
-      return new MockLowLevelHttpRequest(url) {
-        @Override
-        public LowLevelHttpResponse execute() throws IOException {
-          // Create the JSON response
-          GenericJson signContents = new GenericJson();
-          signContents.setFactory(OAuth2Utils.JSON_FACTORY);
-          signContents.put("signedBlob", BaseEncoding.base64().encode(signature));
-
-          String signature = signContents.toPrettyString();
-
-          return new MockLowLevelHttpResponse()
-              .setContentType(Json.MEDIA_TYPE)
-              .setContent(signature);
-        }
-      };
+      return getMockRequestForSign(url);
     } else if (isIdentityDocumentUrl(url)) {
-      if (idToken != null) {
-        return new MockLowLevelHttpRequest(url) {
-          @Override
-          public LowLevelHttpResponse execute() throws IOException {
-            return new MockLowLevelHttpResponse().setContent(idToken);
-          }
-        };
-      }
-
-      // https://cloud.google.com/compute/docs/instances/verifying-instance-identity#token_format
-      Map<String, String> queryPairs = new HashMap<String, String>();
-      String query = (new URL(url)).getQuery();
-      String[] pairs = query.split("&");
-      for (String pair : pairs) {
-        int idx = pair.indexOf("=");
-        queryPairs.put(
-            URLDecoder.decode(pair.substring(0, idx), "UTF-8"),
-            URLDecoder.decode(pair.substring(idx + 1), "UTF-8"));
-      }
-
-      if (queryPairs.containsKey("format")) {
-        if (((String) queryPairs.get("format")).equals("full")) {
-
-          // return license only if format=full is set
-          if (queryPairs.containsKey("license")) {
-            if (((String) queryPairs.get("license")).equals("TRUE")) {
-              return new MockLowLevelHttpRequest(url) {
-                @Override
-                public LowLevelHttpResponse execute() throws IOException {
-                  return new MockLowLevelHttpResponse()
-                      .setContent(ComputeEngineCredentialsTest.FULL_ID_TOKEN_WITH_LICENSE);
-                }
-              };
-            }
-          }
-          // otherwise return full format
-          return new MockLowLevelHttpRequest(url) {
-            @Override
-            public LowLevelHttpResponse execute() throws IOException {
-              return new MockLowLevelHttpResponse()
-                  .setContent(ComputeEngineCredentialsTest.FULL_ID_TOKEN);
-            }
-          };
+      return getMockRequestForIdentityDocument(url);
+    }
+    return new MockLowLevelHttpRequest(url) {
+      @Override
+      public LowLevelHttpResponse execute() {
+        if (requestStatusCode != null) {
+          return new MockLowLevelHttpResponse()
+              .setStatusCode(requestStatusCode)
+              .setContent("Metadata Error");
         }
+
+        MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+        response.addHeader("Metadata-Flavor", "Google");
+        return response;
       }
-      // Return default format if nothing is set
+    };
+  }
+
+  private MockLowLevelHttpRequest getMockRequestForSign(String url) {
+    return new MockLowLevelHttpRequest(url) {
+      @Override
+      public LowLevelHttpResponse execute() throws IOException {
+        // Create the JSON response
+        GenericJson signContents = new GenericJson();
+        signContents.setFactory(OAuth2Utils.JSON_FACTORY);
+        signContents.put("signedBlob", BaseEncoding.base64().encode(signature));
+
+        String signature = signContents.toPrettyString();
+
+        return new MockLowLevelHttpResponse().setContentType(Json.MEDIA_TYPE).setContent(signature);
+      }
+    };
+  }
+
+  private MockLowLevelHttpRequest getMockRequestForServiceAccount(String url) {
+    return new MockLowLevelHttpRequest(url) {
+      @Override
+      public LowLevelHttpResponse execute() throws IOException {
+        // Create the JSON response
+        GenericJson serviceAccountsContents = new GenericJson();
+        serviceAccountsContents.setFactory(OAuth2Utils.JSON_FACTORY);
+        GenericJson defaultAccount = new GenericJson();
+        defaultAccount.put("email", serviceAccountEmail);
+        serviceAccountsContents.put("default", defaultAccount);
+
+        String serviceAccounts = serviceAccountsContents.toPrettyString();
+
+        return new MockLowLevelHttpResponse()
+            .setContentType(Json.MEDIA_TYPE)
+            .setContent(serviceAccounts);
+      }
+    };
+  }
+
+  private MockLowLevelHttpRequest getMockRequestForTokenEndpoint(String url) {
+    return new MockLowLevelHttpRequest(url) {
+      @Override
+      public LowLevelHttpResponse execute() throws IOException {
+
+        if (requestStatusCode != null) {
+          return new MockLowLevelHttpResponse()
+              .setStatusCode(requestStatusCode)
+              .setContent("Token Fetch Error");
+        }
+
+        String metadataRequestHeader = getFirstHeaderValue("Metadata-Flavor");
+        if (!"Google".equals(metadataRequestHeader)) {
+          throw new IOException("Metadata request header not found.");
+        }
+
+        // Create the JSON response
+        GenericJson refreshContents = new GenericJson();
+        refreshContents.setFactory(OAuth2Utils.JSON_FACTORY);
+        refreshContents.put("access_token", accessToken);
+        refreshContents.put("expires_in", 3600000);
+        refreshContents.put("token_type", "Bearer");
+        String refreshText = refreshContents.toPrettyString();
+
+        return new MockLowLevelHttpResponse()
+            .setContentType(Json.MEDIA_TYPE)
+            .setContent(refreshText);
+      }
+    };
+  }
+
+  private MockLowLevelHttpRequest getMockRequestForIdentityDocument(String url)
+      throws MalformedURLException, UnsupportedEncodingException {
+    if (idToken != null) {
       return new MockLowLevelHttpRequest(url) {
         @Override
         public LowLevelHttpResponse execute() throws IOException {
-          return new MockLowLevelHttpResponse()
-              .setContent(ComputeEngineCredentialsTest.STANDARD_ID_TOKEN);
+          return new MockLowLevelHttpResponse().setContent(idToken);
         }
       };
     }
-    return super.buildRequest(method, url);
+
+    // https://cloud.google.com/compute/docs/instances/verifying-instance-identity#token_format
+    Map<String, String> queryPairs = new HashMap<String, String>();
+    String query = (new URL(url)).getQuery();
+    String[] pairs = query.split("&");
+    for (String pair : pairs) {
+      int idx = pair.indexOf("=");
+      queryPairs.put(
+          URLDecoder.decode(pair.substring(0, idx), "UTF-8"),
+          URLDecoder.decode(pair.substring(idx + 1), "UTF-8"));
+    }
+
+    if (queryPairs.containsKey("format")) {
+      if (((String) queryPairs.get("format")).equals("full")) {
+
+        // return license only if format=full is set
+        if (queryPairs.containsKey("license")) {
+          if (((String) queryPairs.get("license")).equals("TRUE")) {
+            return new MockLowLevelHttpRequest(url) {
+              @Override
+              public LowLevelHttpResponse execute() throws IOException {
+                return new MockLowLevelHttpResponse()
+                    .setContent(ComputeEngineCredentialsTest.FULL_ID_TOKEN_WITH_LICENSE);
+              }
+            };
+          }
+        }
+        // otherwise return full format
+        return new MockLowLevelHttpRequest(url) {
+          @Override
+          public LowLevelHttpResponse execute() throws IOException {
+            return new MockLowLevelHttpResponse()
+                .setContent(ComputeEngineCredentialsTest.FULL_ID_TOKEN);
+          }
+        };
+      }
+    }
+    // Return default format if nothing is set
+    return new MockLowLevelHttpRequest(url) {
+      @Override
+      public LowLevelHttpResponse execute() throws IOException {
+        return new MockLowLevelHttpResponse()
+            .setContent(ComputeEngineCredentialsTest.STANDARD_ID_TOKEN);
+      }
+    };
   }
 
   protected boolean isGetServiceAccountsUrl(String url) {

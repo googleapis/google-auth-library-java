@@ -48,6 +48,7 @@ import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -310,6 +311,7 @@ public class GdchCredentials extends GoogleCredentials {
     return new Builder();
   }
 
+  @Override
   public Builder toBuilder() {
     return new Builder(this);
   }
@@ -394,41 +396,49 @@ public class GdchCredentials extends GoogleCredentials {
       this.lifetime = credentials.lifetime;
     }
 
+    @CanIgnoreReturnValue
     public Builder setProjectId(String projectId) {
       this.projectId = projectId;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setPrivateKeyId(String privateKeyId) {
       this.privateKeyId = privateKeyId;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setPrivateKey(PrivateKey privateKey) {
       this.privateKey = privateKey;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setServiceIdentityName(String name) {
       this.serviceIdentityName = name;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setTokenServerUri(URI tokenServerUri) {
       this.tokenServerUri = tokenServerUri;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
       this.transportFactory = transportFactory;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setCaCertPath(String caCertPath) {
       this.caCertPath = caCertPath;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setGdchAudience(URI apiAudience) {
       this.apiAudience = apiAudience;
       return this;
@@ -466,6 +476,7 @@ public class GdchCredentials extends GoogleCredentials {
       return lifetime;
     }
 
+    @Override
     public GdchCredentials build() {
       return new GdchCredentials(this);
     }

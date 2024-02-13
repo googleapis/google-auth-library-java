@@ -32,6 +32,7 @@
 package com.google.auth.oauth2;
 
 import com.google.common.base.MoreObjects;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -158,11 +159,13 @@ public class AccessToken implements Serializable {
       return this.expirationTime;
     }
 
+    @CanIgnoreReturnValue
     public Builder setTokenValue(String tokenValue) {
       this.tokenValue = tokenValue;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setScopes(String scopes) {
       if (scopes != null && scopes.trim().length() > 0) {
         this.scopes = Arrays.asList(scopes.split(" "));
@@ -170,6 +173,7 @@ public class AccessToken implements Serializable {
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setScopes(List<String> scopes) {
       if (scopes == null) {
         this.scopes = new ArrayList<>();
@@ -180,6 +184,7 @@ public class AccessToken implements Serializable {
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setExpirationTime(Date expirationTime) {
       this.expirationTime = expirationTime;
       return this;

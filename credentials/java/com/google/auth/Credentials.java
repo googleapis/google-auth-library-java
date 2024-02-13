@@ -43,6 +43,8 @@ public abstract class Credentials implements Serializable {
 
   private static final long serialVersionUID = 808575179767517313L;
 
+  public static final String GOOGLE_DEFAULT_UNIVERSE = "googleapis.com";
+
   /**
    * A constant string name describing the authentication technology.
    *
@@ -53,6 +55,20 @@ public abstract class Credentials implements Serializable {
    * @return The type of authentication used.
    */
   public abstract String getAuthenticationType();
+
+  /**
+   * Gets the universe domain for the credential in a blocking manner, refreshing tokens if
+   * required.
+   *
+   * @return a universe domain value in the format some-domain.xyz. By default, returns the Google
+   *     universe domain googleapis.com.
+   * @throws IOException extending classes might have to do remote calls to determine the universe
+   *     domain. The exception must implement {@link Retryable} and {@code isRetryable()} will
+   *     return true if the operation may be retried.
+   */
+  public String getUniverseDomain() throws IOException {
+    return GOOGLE_DEFAULT_UNIVERSE;
+  }
 
   /**
    * Get the current request metadata, refreshing tokens if required.

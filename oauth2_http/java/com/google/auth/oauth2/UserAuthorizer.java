@@ -43,6 +43,7 @@ import com.google.api.client.util.Joiner;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.collect.ImmutableList;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
@@ -501,41 +502,49 @@ public class UserAuthorizer {
       this.pkce = new DefaultPKCEProvider();
     }
 
+    @CanIgnoreReturnValue
     public Builder setClientId(ClientId clientId) {
       this.clientId = clientId;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setTokenStore(TokenStore tokenStore) {
       this.tokenStore = tokenStore;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setScopes(Collection<String> scopes) {
       this.scopes = scopes;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setTokenServerUri(URI tokenServerUri) {
       this.tokenServerUri = tokenServerUri;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setCallbackUri(URI callbackUri) {
       this.callbackUri = callbackUri;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setUserAuthUri(URI userAuthUri) {
       this.userAuthUri = userAuthUri;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
       this.transportFactory = transportFactory;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setPKCEProvider(PKCEProvider pkce) {
       if (pkce != null) {
         if (pkce.getCodeChallenge() == null

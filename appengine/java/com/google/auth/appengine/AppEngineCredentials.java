@@ -40,6 +40,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.Collection;
@@ -138,6 +139,7 @@ public class AppEngineCredentials extends GoogleCredentials implements ServiceAc
     return new Builder();
   }
 
+  @Override
   public Builder toBuilder() {
     return new Builder(this);
   }
@@ -154,11 +156,13 @@ public class AppEngineCredentials extends GoogleCredentials implements ServiceAc
       this.appIdentityService = credentials.appIdentityService;
     }
 
+    @CanIgnoreReturnValue
     public Builder setScopes(Collection<String> scopes) {
       this.scopes = scopes;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setAppIdentityService(AppIdentityService appIdentityService) {
       this.appIdentityService = appIdentityService;
       return this;
@@ -172,6 +176,7 @@ public class AppEngineCredentials extends GoogleCredentials implements ServiceAc
       return appIdentityService;
     }
 
+    @Override
     public AppEngineCredentials build() {
       return new AppEngineCredentials(scopes, appIdentityService);
     }

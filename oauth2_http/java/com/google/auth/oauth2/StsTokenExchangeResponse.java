@@ -33,6 +33,7 @@ package com.google.auth.oauth2;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -121,16 +122,19 @@ final class StsTokenExchangeResponse {
       this.tokenType = tokenType;
     }
 
+    @CanIgnoreReturnValue
     public StsTokenExchangeResponse.Builder setExpiresInSeconds(long expiresInSeconds) {
       this.expiresInSeconds = expiresInSeconds;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public StsTokenExchangeResponse.Builder setRefreshToken(String refreshToken) {
       this.refreshToken = refreshToken;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public StsTokenExchangeResponse.Builder setScopes(List<String> scopes) {
       if (scopes != null) {
         this.scopes = new ArrayList<>(scopes);
