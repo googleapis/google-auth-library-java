@@ -51,6 +51,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** Transport that mocks a basic STS endpoint. */
 public final class MockStsTransport extends MockHttpTransport {
@@ -58,8 +60,8 @@ public final class MockStsTransport extends MockHttpTransport {
   private static final String EXPECTED_GRANT_TYPE =
       "urn:ietf:params:oauth:grant-type:token-exchange";
   private static final String ISSUED_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:access_token";
-  private static final String STS_URL = "https://sts.googleapis.com/v1/token";
-  private static final String STS_OAUTHTOKEN_URL = "https://sts.googleapis.com/v1/oauthtoken";
+  private static final String VALID_STS_PATTERN =
+      "https:\\/\\/sts.[a-z-_\\.]+\\/v1\\/(token|oauthtoken)";
   private static final String ACCESS_TOKEN = "accessToken";
   private static final String TOKEN_TYPE = "Bearer";
   private static final Long EXPIRES_IN = 3600L;
@@ -89,7 +91,9 @@ public final class MockStsTransport extends MockHttpTransport {
         new MockLowLevelHttpRequest(url) {
           @Override
           public LowLevelHttpResponse execute() throws IOException {
-            if (!STS_URL.equals(url) && !STS_OAUTHTOKEN_URL.equals(url)) {
+            // Environment version is prefixed by "aws". e.g. "aws1".
+            Matcher matcher = Pattern.compile(VALID_STS_PATTERN).matcher(url);
+            if (!matcher.matches()) {
               return makeErrorResponse();
             }
 
@@ -101,7 +105,7 @@ public final class MockStsTransport extends MockHttpTransport {
             response.setFactory(new GsonFactory());
 
             Map<String, String> query = TestUtils.parseQuery(getContentAsString());
-            if (STS_URL.equals(url)) {
+            if (!url.contains("v1/oauthtoken")) {
               assertEquals(EXPECTED_GRANT_TYPE, query.get("grant_type"));
               assertNotNull(query.get("subject_token_type"));
               assertNotNull(query.get("subject_token"));

@@ -42,6 +42,7 @@ import com.google.common.base.MoreObjects;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -66,21 +67,14 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
   private static final long serialVersionUID = 8049126194174465023L;
 
-  /** Base credential source class. Dictates the retrieval method of the external credential. */
-  abstract static class CredentialSource implements java.io.Serializable {
-
-    private static final long serialVersionUID = 8204657811562399944L;
-
-    CredentialSource(Map<String, Object> credentialSourceMap) {
-      checkNotNull(credentialSourceMap);
-    }
-  }
-
   private static final String CLOUD_PLATFORM_SCOPE =
       "https://www.googleapis.com/auth/cloud-platform";
 
   static final String EXTERNAL_ACCOUNT_FILE_TYPE = "external_account";
   static final String EXECUTABLE_SOURCE_KEY = "executable";
+
+  static final String DEFAULT_TOKEN_URL = "https://sts.googleapis.com/v1/token";
+  static final String PROGRAMMATIC_METRICS_HEADER_VALUE = "programmatic";
 
   private final String transportFactoryClassName;
   private final String audience;
@@ -103,11 +97,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
   protected transient HttpTransportFactory transportFactory;
 
-  @Nullable protected final ImpersonatedCredentials impersonatedCredentials;
-
-  // Internal override for impersonated credentials. This is done to keep
-  // impersonatedCredentials final.
-  @Nullable private ImpersonatedCredentials impersonatedCredentialsOverride;
+  @Nullable protected ImpersonatedCredentials impersonatedCredentials;
 
   private EnvironmentProvider environmentProvider;
 
@@ -223,8 +213,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     }
 
     this.metricsHandler = new ExternalAccountMetricsHandler(this);
-
-    this.impersonatedCredentials = buildImpersonatedCredentials();
   }
 
   /**
@@ -242,12 +230,12 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     this.transportFactoryClassName = checkNotNull(this.transportFactory.getClass().getName());
     this.audience = checkNotNull(builder.audience);
     this.subjectTokenType = checkNotNull(builder.subjectTokenType);
-    this.tokenUrl = checkNotNull(builder.tokenUrl);
-    this.credentialSource = checkNotNull(builder.credentialSource);
+    this.credentialSource = builder.credentialSource;
     this.tokenInfoUrl = builder.tokenInfoUrl;
     this.serviceAccountImpersonationUrl = builder.serviceAccountImpersonationUrl;
     this.clientId = builder.clientId;
     this.clientSecret = builder.clientSecret;
+    this.tokenUrl = builder.tokenUrl == null ? DEFAULT_TOKEN_URL : builder.tokenUrl;
     this.scopes =
         (builder.scopes == null || builder.scopes.isEmpty())
             ? Arrays.asList(CLOUD_PLATFORM_SCOPE)
@@ -276,8 +264,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
         builder.metricsHandler == null
             ? new ExternalAccountMetricsHandler(this)
             : builder.metricsHandler;
-
-    this.impersonatedCredentials = buildImpersonatedCredentials();
   }
 
   ImpersonatedCredentials buildImpersonatedCredentials() {
@@ -313,10 +299,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
         .setLifetime(this.serviceAccountImpersonationOptions.lifetime)
         .setIamEndpointOverride(serviceAccountImpersonationUrl)
         .build();
-  }
-
-  void overrideImpersonatedCredentials(ImpersonatedCredentials credentials) {
-    this.impersonatedCredentialsOverride = credentials;
   }
 
   @Override
@@ -478,6 +460,10 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
         && ((String) credentialSource.get("environment_id")).startsWith("aws");
   }
 
+  private boolean shouldBuildImpersonatedCredential() {
+    return this.serviceAccountImpersonationUrl != null && this.impersonatedCredentials == null;
+  }
+
   /**
    * Exchanges the external credential for a Google Cloud access token.
    *
@@ -488,11 +474,11 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   protected AccessToken exchangeExternalCredentialForAccessToken(
       StsTokenExchangeRequest stsTokenExchangeRequest) throws IOException {
     // Handle service account impersonation if necessary.
-    // Internal override takes priority.
-    if (impersonatedCredentialsOverride != null) {
-      return impersonatedCredentialsOverride.refreshAccessToken();
-    } else if (impersonatedCredentials != null) {
-      return impersonatedCredentials.refreshAccessToken();
+    if (this.shouldBuildImpersonatedCredential()) {
+      this.impersonatedCredentials = this.buildImpersonatedCredentials();
+    }
+    if (this.impersonatedCredentials != null) {
+      return this.impersonatedCredentials.refreshAccessToken();
     }
 
     StsRequestHandler.Builder requestHandler =
@@ -553,6 +539,13 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
   public CredentialSource getCredentialSource() {
     return credentialSource;
+  }
+
+  @SuppressWarnings("unused")
+  private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
+    // Properly deserialize the transient transportFactory.
+    input.defaultReadObject();
+    transportFactory = newInstance(transportFactoryClassName);
   }
 
   @Nullable
@@ -792,6 +785,19 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     }
 
     /**
+     * Sets the Security Token Service subject token type based on the OAuth 2.0 token exchange
+     * spec. Indicates the type of the security token in the credential file.
+     *
+     * @param subjectTokenType the {@code SubjectTokenType} to set
+     * @return this {@code Builder} object
+     */
+    @CanIgnoreReturnValue
+    public Builder setSubjectTokenType(SubjectTokenTypes subjectTokenType) {
+      this.subjectTokenType = subjectTokenType.value;
+      return this;
+    }
+
+    /**
      * Sets the Security Token Service token exchange endpoint.
      *
      * @param tokenUrl the Security Token Service token exchange url to set
@@ -944,5 +950,31 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
     @Override
     public abstract ExternalAccountCredentials build();
+  }
+
+  /**
+   * Enum specifying values for the subjectTokenType field in {@code ExternalAccountCredentials}.
+   */
+  public enum SubjectTokenTypes {
+    AWS4("urn:ietf:params:aws:token-type:aws4_request"),
+    JWT("urn:ietf:params:oauth:token-type:jwt"),
+    SAML2("urn:ietf:params:oauth:token-type:saml2"),
+    ID_TOKEN("urn:ietf:params:oauth:token-type:id_token");
+
+    public final String value;
+
+    private SubjectTokenTypes(String value) {
+      this.value = value;
+    }
+  }
+
+  /** Base credential source class. Dictates the retrieval method of the external credential. */
+  abstract static class CredentialSource implements java.io.Serializable {
+
+    private static final long serialVersionUID = 8204657811562399944L;
+
+    CredentialSource(Map<String, Object> credentialSourceMap) {
+      checkNotNull(credentialSourceMap);
+    }
   }
 }

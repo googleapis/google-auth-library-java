@@ -31,44 +31,59 @@
 
 package com.google.auth.oauth2;
 
-import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpHeaders;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpResponse;
-import com.google.api.client.json.GenericJson;
-import com.google.api.client.json.JsonObjectParser;
-import com.google.auth.oauth2.IdentityPoolCredentialSource.CredentialFormatType;
-import com.google.auth.oauth2.IdentityPoolCredentialSource.IdentityPoolCredentialSourceType;
-import com.google.common.io.CharStreams;
+import com.google.auth.http.HttpTransportFactory;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 
 /**
- * Url-sourced and file-sourced external account credentials.
+ * Url-sourced, file-sourced, or user provided supplier method-sourced external account credentials.
  *
  * <p>By default, attempts to exchange the external credential for a GCP access token.
  */
 public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
+  static final String FILE_METRICS_HEADER_VALUE = "file";
+  static final String URL_METRICS_HEADER_VALUE = "url";
   private static final long serialVersionUID = 2471046175477275881L;
-
-  private final IdentityPoolCredentialSource identityPoolCredentialSource;
+  private final IdentityPoolSubjectTokenSupplier subjectTokenSupplier;
+  private final ExternalAccountSupplierContext supplierContext;
+  private final String metricsHeaderValue;
 
   /** Internal constructor. See {@link Builder}. */
   IdentityPoolCredentials(Builder builder) {
     super(builder);
-    this.identityPoolCredentialSource = (IdentityPoolCredentialSource) builder.credentialSource;
+    IdentityPoolCredentialSource credentialSource =
+        (IdentityPoolCredentialSource) builder.credentialSource;
+    this.supplierContext =
+        ExternalAccountSupplierContext.newBuilder()
+            .setAudience(this.getAudience())
+            .setSubjectTokenType(this.getSubjectTokenType())
+            .build();
+    // Check that one and only one of supplier or credential source are provided.
+    if (builder.subjectTokenSupplier != null && credentialSource != null) {
+      throw new IllegalArgumentException(
+          "IdentityPoolCredentials cannot have both a subjectTokenSupplier and a credentialSource.");
+    }
+    if (builder.subjectTokenSupplier == null && credentialSource == null) {
+      throw new IllegalArgumentException(
+          "A subjectTokenSupplier or a credentialSource must be provided.");
+    }
+    if (builder.subjectTokenSupplier != null) {
+      this.subjectTokenSupplier = builder.subjectTokenSupplier;
+      this.metricsHeaderValue = PROGRAMMATIC_METRICS_HEADER_VALUE;
+    } else if (credentialSource.credentialSourceType
+        == IdentityPoolCredentialSource.IdentityPoolCredentialSourceType.FILE) {
+      this.subjectTokenSupplier = new FileIdentityPoolSubjectTokenSupplier(credentialSource);
+      this.metricsHeaderValue = FILE_METRICS_HEADER_VALUE;
+    } else {
+      this.subjectTokenSupplier =
+          new UrlIdentityPoolSubjectTokenSupplier(credentialSource, this.transportFactory);
+      this.metricsHeaderValue = URL_METRICS_HEADER_VALUE;
+    }
   }
 
   @Override
@@ -88,76 +103,17 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   @Override
   public String retrieveSubjectToken() throws IOException {
-    if (identityPoolCredentialSource.credentialSourceType
-        == IdentityPoolCredentialSource.IdentityPoolCredentialSourceType.FILE) {
-      return retrieveSubjectTokenFromCredentialFile();
-    }
-    return getSubjectTokenFromMetadataServer();
+    return this.subjectTokenSupplier.getSubjectToken(supplierContext);
   }
 
   @Override
   String getCredentialSourceType() {
-    if (((IdentityPoolCredentialSource) this.getCredentialSource()).credentialSourceType
-        == IdentityPoolCredentialSourceType.FILE) {
-      return "file";
-    } else {
-      return "url";
-    }
+    return this.metricsHeaderValue;
   }
 
-  private String retrieveSubjectTokenFromCredentialFile() throws IOException {
-    String credentialFilePath = identityPoolCredentialSource.credentialLocation;
-    if (!Files.exists(Paths.get(credentialFilePath), LinkOption.NOFOLLOW_LINKS)) {
-      throw new IOException(
-          String.format(
-              "Invalid credential location. The file at %s does not exist.", credentialFilePath));
-    }
-    try {
-      return parseToken(new FileInputStream(new File(credentialFilePath)));
-    } catch (IOException e) {
-      throw new IOException(
-          "Error when attempting to read the subject token from the credential file.", e);
-    }
-  }
-
-  private String parseToken(InputStream inputStream) throws IOException {
-    if (identityPoolCredentialSource.credentialFormatType == CredentialFormatType.TEXT) {
-      BufferedReader reader =
-          new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-      return CharStreams.toString(reader);
-    }
-
-    JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
-    GenericJson fileContents =
-        parser.parseAndClose(inputStream, StandardCharsets.UTF_8, GenericJson.class);
-
-    if (!fileContents.containsKey(identityPoolCredentialSource.subjectTokenFieldName)) {
-      throw new IOException("Invalid subject token field name. No subject token was found.");
-    }
-    return (String) fileContents.get(identityPoolCredentialSource.subjectTokenFieldName);
-  }
-
-  private String getSubjectTokenFromMetadataServer() throws IOException {
-    HttpRequest request =
-        transportFactory
-            .create()
-            .createRequestFactory()
-            .buildGetRequest(new GenericUrl(identityPoolCredentialSource.credentialLocation));
-    request.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
-
-    if (identityPoolCredentialSource.hasHeaders()) {
-      HttpHeaders headers = new HttpHeaders();
-      headers.putAll(identityPoolCredentialSource.headers);
-      request.setHeaders(headers);
-    }
-
-    try {
-      HttpResponse response = request.execute();
-      return parseToken(response.getContent());
-    } catch (IOException e) {
-      throw new IOException(
-          String.format("Error getting subject token from metadata server: %s", e.getMessage()), e);
-    }
+  @VisibleForTesting
+  IdentityPoolSubjectTokenSupplier getIdentityPoolSubjectTokenSupplier() {
+    return this.subjectTokenSupplier;
   }
 
   /** Clones the IdentityPoolCredentials with the specified scopes. */
@@ -177,16 +133,123 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   public static class Builder extends ExternalAccountCredentials.Builder {
 
+    private IdentityPoolSubjectTokenSupplier subjectTokenSupplier;
+
     Builder() {}
 
     Builder(IdentityPoolCredentials credentials) {
       super(credentials);
+      if (this.credentialSource == null) {
+        this.subjectTokenSupplier = credentials.subjectTokenSupplier;
+      }
+    }
+
+    /**
+     * Sets the subject token supplier. The supplier should return a valid subject token string.
+     *
+     * @param subjectTokenSupplier the supplier to use.
+     * @return this {@code Builder} object
+     */
+    @CanIgnoreReturnValue
+    public Builder setSubjectTokenSupplier(IdentityPoolSubjectTokenSupplier subjectTokenSupplier) {
+      this.subjectTokenSupplier = subjectTokenSupplier;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
+      super.setHttpTransportFactory(transportFactory);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setAudience(String audience) {
+      super.setAudience(audience);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setSubjectTokenType(String subjectTokenType) {
+      super.setSubjectTokenType(subjectTokenType);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setSubjectTokenType(SubjectTokenTypes subjectTokenType) {
+      super.setSubjectTokenType(subjectTokenType);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setTokenUrl(String tokenUrl) {
+      super.setTokenUrl(tokenUrl);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setCredentialSource(IdentityPoolCredentialSource credentialSource) {
+      super.setCredentialSource(credentialSource);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setServiceAccountImpersonationUrl(String serviceAccountImpersonationUrl) {
+      super.setServiceAccountImpersonationUrl(serviceAccountImpersonationUrl);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setTokenInfoUrl(String tokenInfoUrl) {
+      super.setTokenInfoUrl(tokenInfoUrl);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setQuotaProjectId(String quotaProjectId) {
+      super.setQuotaProjectId(quotaProjectId);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setClientId(String clientId) {
+      super.setClientId(clientId);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setClientSecret(String clientSecret) {
+      super.setClientSecret(clientSecret);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setScopes(Collection<String> scopes) {
+      super.setScopes(scopes);
+      return this;
     }
 
     @Override
     @CanIgnoreReturnValue
     public Builder setWorkforcePoolUserProject(String workforcePoolUserProject) {
       super.setWorkforcePoolUserProject(workforcePoolUserProject);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setServiceAccountImpersonationOptions(Map<String, Object> optionsMap) {
+      super.setServiceAccountImpersonationOptions(optionsMap);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setUniverseDomain(String universeDomain) {
+      super.setUniverseDomain(universeDomain);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    Builder setEnvironmentProvider(EnvironmentProvider environmentProvider) {
+      super.setEnvironmentProvider(environmentProvider);
       return this;
     }
 
