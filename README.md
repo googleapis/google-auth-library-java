@@ -29,11 +29,14 @@ credentials as well as utility methods to create them and to get Application Def
       * [Accessing resources from Azure](#access-resources-from-microsoft-azure)
       * [Accessing resources from an OIDC identity provider](#accessing-resources-from-an-oidc-identity-provider)
       * [Accessing resources using Executable-sourced credentials](#using-executable-sourced-credentials-with-oidc-and-saml)
+      * [Accessing resources using a custom supplier for OIDC or SAML](#using-a-custom-supplier-with-oidc-and-saml)
+      * [Accessing resources using a custom supplier with AWS](#using-a-custom-supplier-with-aws)
       * [Configurable Token Lifetime](#configurable-token-lifetime)
   * [Workforce Identity Federation](#workforce-identity-federation)
       * [Accessing resources using an OIDC or SAML 2.0 identity provider](#accessing-resources-using-an-oidc-or-saml-20-identity-provider)
       * [Accessing resources using external account authorized user workforce credentials](#using-external-account-authorized-user-workforce-credentials)
       * [Accessing resources using Executable-sourced credentials](#using-executable-sourced-workforce-credentials-with-oidc-and-saml)
+      * [Accessing resources using a custom supplier for OIDC or SAML](#using-a-custom-supplier-for-workforce-credentials-with-oidc-and-saml)
   * [Downscoping with Credential Access Boundaries](#downscoping-with-credential-access-boundaries)
   * [Configuring a Proxy](#configuring-a-proxy)
   * [Using Credentials with google-http-client](#using-credentials-with-google-http-client)
@@ -826,7 +829,7 @@ specified below. It must output the response to stdout.
 Refer to the [using executable-sourced credentials with Workload Identity Federation](#using-executable-sourced-credentials-with-oidc-and-saml)
 above for the executable response specification.
 
-#### Using a custom supplier with OIDC and SAML
+#### Using a custom supplier for workforce credentials with OIDC and SAML
 A custom implementation of IdentityPoolSubjectTokenSupplier can be used while building IdentityPoolCredentials
 to supply a subject token which can be exchanged for a GCP access token. The supplier must return a valid,
 unexpired subject token when called by the GCP credential.
