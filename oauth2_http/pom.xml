@@ -14,13 +14,6 @@
   <artifactId>google-auth-library-oauth2-http</artifactId>
   <name>Google Auth Library for Java - OAuth2 HTTP</name>
 
-  <properties>
-    <sonar.coverage.jacoco.xmlReportPaths>
-      ${project.basedir}/oauth2_http/target/site/
-      jacoco-aggregate/jacoco.xml
-    </sonar.coverage.jacoco.xmlReportPaths>
-  </properties>
-
   <distributionManagement>
     <snapshotRepository>
       <id>ossrh</id>
@@ -208,7 +201,7 @@
                     <limit>
                       <counter>LINE</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.910</minimum>
+                      <minimum>0.912</minimum>
                     </limit>
                   </limits>
                 </rule>
