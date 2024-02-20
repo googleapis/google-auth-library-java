@@ -65,7 +65,7 @@ class UrlIdentityPoolSubjectTokenSupplier implements IdentityPoolSubjectTokenSup
   }
 
   @Override
-  public String getSubjectToken() throws IOException {
+  public String getSubjectToken(ExternalAccountSupplierContext context) throws IOException {
     HttpRequest request =
         transportFactory
             .create()

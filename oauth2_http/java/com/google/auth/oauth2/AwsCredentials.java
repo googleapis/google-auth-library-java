@@ -61,7 +61,8 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
   private static final long serialVersionUID = -3670131891574618105L;
 
-  @Nullable private final AwsSecurityCredentialsSupplier awsSecurityCredentialsSupplier;
+  private final AwsSecurityCredentialsSupplier awsSecurityCredentialsSupplier;
+  private final ExternalAccountSupplierContext supplierContext;
   // Regional credential verification url override. This needs to be its own value so we can
   // correctly pass it to a builder.
   @Nullable private final String regionalCredentialVerificationUrlOverride;
@@ -71,6 +72,12 @@ public class AwsCredentials extends ExternalAccountCredentials {
   /** Internal constructor. See {@link AwsCredentials.Builder}. */
   AwsCredentials(Builder builder) {
     super(builder);
+    this.supplierContext =
+        ExternalAccountSupplierContext.newBuilder()
+            .setAudience(this.getAudience())
+            .setSubjectTokenType(this.getSubjectTokenType())
+            .build();
+
     // Check that one and only one of supplier or credential source are provided.
     if (builder.awsSecurityCredentialsSupplier != null && builder.credentialSource != null) {
       throw new IllegalArgumentException(
@@ -128,9 +135,10 @@ public class AwsCredentials extends ExternalAccountCredentials {
 
     // The targeted region is required to generate the signed request. The regional
     // endpoint must also be used.
-    String region = awsSecurityCredentialsSupplier.getRegion();
+    String region = awsSecurityCredentialsSupplier.getRegion(supplierContext);
 
-    AwsSecurityCredentials credentials = awsSecurityCredentialsSupplier.getCredentials();
+    AwsSecurityCredentials credentials =
+        awsSecurityCredentialsSupplier.getCredentials(supplierContext);
 
     // Generate the signed request to the AWS STS GetCallerIdentity API.
     Map<String, String> headers = new HashMap<>();
