@@ -37,7 +37,9 @@ jobs:
       run: |
         mvn -B verify -Dcheckstyle.skip \
             -DenableFullTestCoverage \
+            -Dsonar.coverage.jacoco.xmlReportPaths=oauth2_http/target/site/jacoco-aggregate/jacoco.xml \
             org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            -Pcoverage \
             -Dsonar.projectKey=googleapis_google-auth-library-java \
             -Dsonar.organization=googleapis \
             -Dsonar.host.url=https://sonarcloud.io
