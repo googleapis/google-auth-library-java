@@ -45,7 +45,7 @@ class ExternalAccountMetricsHandler implements java.io.Serializable {
 
   private final boolean configLifetime;
   private final boolean saImpersonation;
-  private String credentialSourceType;
+  private ExternalAccountCredentials credentials;
 
   /**
    * Constructor for the external account metrics handler.
@@ -57,7 +57,7 @@ class ExternalAccountMetricsHandler implements java.io.Serializable {
     this.saImpersonation = creds.getServiceAccountImpersonationUrl() != null;
     this.configLifetime =
         creds.getServiceAccountImpersonationOptions().customTokenLifetimeRequested;
-    this.credentialSourceType = creds.getCredentialSourceType();
+    this.credentials = creds;
   }
 
   /**
@@ -71,7 +71,7 @@ class ExternalAccountMetricsHandler implements java.io.Serializable {
         MetricsUtils.getLanguageAndAuthLibraryVersions(),
         BYOID_METRICS_SECTION,
         SOURCE_KEY,
-        this.credentialSourceType,
+        this.credentials.getCredentialSourceType(),
         IMPERSONATION_KEY,
         this.saImpersonation,
         CONFIG_LIFETIME_KEY,

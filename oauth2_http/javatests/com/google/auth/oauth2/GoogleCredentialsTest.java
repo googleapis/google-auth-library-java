@@ -33,7 +33,9 @@ package com.google.auth.oauth2;
 
 import static org.junit.Assert.*;
 
+import com.google.api.client.json.GenericJson;
 import com.google.api.client.util.Clock;
+import com.google.auth.Credentials;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.ExternalAccountAuthorizedUserCredentialsTest.MockExternalAccountAuthorizedUserCredentialsTransportFactory;
@@ -90,6 +92,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
       Collections.unmodifiableCollection(Arrays.asList("scope1", "scope2"));
   private static final Collection<String> DEFAULT_SCOPES =
       Collections.unmodifiableCollection(Arrays.asList("scope3"));
+  private static final String GOOGLE_DEFAULT_UNIVERSE = "googleapis.com";
+  private static final String TPC_UNIVERSE = "foo.bar";
 
   @Test
   public void getApplicationDefault_nullTransport_throws() throws IOException {
@@ -98,6 +102,25 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
       fail();
     } catch (NullPointerException expected) {
       // Expected
+    }
+  }
+
+  @Test
+  public void fromStream_unknownType_throws() throws IOException {
+    MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
+    GenericJson json = new GenericJson();
+    json.put("type", "unsupported_credential");
+    InputStream stream = TestUtils.jsonToInputStream(json);
+    try {
+      GoogleCredentials.fromStream(stream, transportFactory);
+      fail("Should throw if type is unknown.");
+    } catch (IOException expected) {
+      String expectedError =
+          "Error reading credentials from stream, 'type' value "
+              + "'unsupported_credential' not recognized. Valid values are 'authorized_user', "
+              + "'service_account', 'gdch_service_account', 'external_account', "
+              + "'external_account_authorized_user', 'impersonated_service_account'.";
+      assertTrue(expected.getMessage().contains(expectedError));
     }
   }
 
@@ -113,6 +136,23 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void fromStream_noType_throws() throws IOException {
+    MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
+    GenericJson json =
+        ServiceAccountCredentialsTest.writeServiceAccountJson(
+            "project_id", QUOTA_PROJECT, "universe");
+    json.remove("type");
+    InputStream stream = TestUtils.jsonToInputStream(json);
+    try {
+      GoogleCredentials.fromStream(stream, transportFactory);
+      fail("Should throw if type is unknown.");
+    } catch (IOException expected) {
+      String expectedError = "Error reading credentials from stream, 'type' field not specified.";
+      assertEquals(expectedError, expected.getMessage());
+    }
+  }
+
+  @Test
   public void fromStream_nullStream_throws() throws IOException {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     try {
@@ -124,7 +164,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_serviceAccount_providesToken() throws IOException {
+  public void fromStream_serviceAccount_noUniverse_providesToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     InputStream serviceAccountStream =
@@ -135,6 +175,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
         GoogleCredentials.fromStream(serviceAccountStream, transportFactory);
 
     assertNotNull(credentials);
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
+    assertEquals(false, credentials.isExplicitUniverseDomain());
     credentials = credentials.createScoped(SCOPES);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
@@ -142,6 +184,25 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     credentials = credentials.createScoped(SCOPES, DEFAULT_SCOPES);
     metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+  }
+
+  @Test
+  public void fromStream_serviceAccount_Universe_noToken() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    InputStream serviceAccountStream =
+        ServiceAccountCredentialsTest.writeServiceAccountStream(
+            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID, TPC_UNIVERSE);
+
+    GoogleCredentials credentials =
+        GoogleCredentials.fromStream(serviceAccountStream, transportFactory);
+
+    assertNotNull(credentials);
+    assertEquals(TPC_UNIVERSE, credentials.getUniverseDomain());
+    assertEquals(true, credentials.isExplicitUniverseDomain());
+    credentials = credentials.createScoped(SCOPES);
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+    assertNotNull(((ServiceAccountCredentials) credentials).getSelfSignedJwtCredentialsWithScope());
   }
 
   @Test
@@ -202,6 +263,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
         GDCH_SA_SERVICE_IDENTITY_NAME, ((GdchCredentials) credentials).getServiceIdentityName());
     assertEquals(GDCH_SA_TOKEN_SERVER_URI, ((GdchCredentials) credentials).getTokenServerUri());
     assertEquals(GDCH_SA_CA_CERT_PATH, ((GdchCredentials) credentials).getCaCertPath());
+    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
     assertNull(((GdchCredentials) credentials).getApiAudience());
 
     credentials = ((GdchCredentials) credentials).createWithGdchAudience(GDCH_API_AUDIENCE);
@@ -340,7 +402,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_user_providesToken() throws IOException {
+  public void fromStream_userCredentials_providesToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(USER_CLIENT_ID, USER_CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
@@ -356,7 +418,19 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_userNoClientId_throws() throws IOException {
+  public void fromStream_userCredentials_defaultUniverse() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    InputStream userStream =
+        UserCredentialsTest.writeUserStream(
+            USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, null);
+
+    GoogleCredentials credentials = GoogleCredentials.fromStream(userStream, transportFactory);
+
+    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
+  }
+
+  @Test
+  public void fromStream_userCredentials_NoClientId_throws() throws IOException {
     InputStream userStream =
         UserCredentialsTest.writeUserStream(null, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
 
@@ -364,7 +438,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_userNoClientSecret_throws() throws IOException {
+  public void fromStream_userCredentials_NoClientSecret_throws() throws IOException {
     InputStream userStream =
         UserCredentialsTest.writeUserStream(USER_CLIENT_ID, null, REFRESH_TOKEN, QUOTA_PROJECT);
 
@@ -372,7 +446,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_userNoRefreshToken_throws() throws IOException {
+  public void fromStream_userCredentials_NoRefreshToken_throws() throws IOException {
     InputStream userStream =
         UserCredentialsTest.writeUserStream(
             USER_CLIENT_ID, USER_CLIENT_SECRET, null, QUOTA_PROJECT);
@@ -401,6 +475,23 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void fromStream_identityPoolCredentials_defaultUniverse() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+    InputStream identityPoolCredentialStream =
+        IdentityPoolCredentialsTest.writeIdentityPoolCredentialsStream(
+            transportFactory.transport.getStsUrl(),
+            transportFactory.transport.getMetadataUrl(),
+            /* serviceAccountImpersonationUrl= */ null,
+            /* serviceAccountImpersonationOptionsMap= */ null);
+
+    GoogleCredentials credentials =
+        GoogleCredentials.fromStream(identityPoolCredentialStream, transportFactory);
+
+    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
+  }
+
+  @Test
   public void fromStream_awsCredentials_providesToken() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
@@ -418,6 +509,23 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     credentials = credentials.createScoped(SCOPES);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, transportFactory.transport.getAccessToken());
+  }
+
+  @Test
+  public void fromStream_awsCredentials_defaultUniverse() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    InputStream awsCredentialStream =
+        AwsCredentialsTest.writeAwsCredentialsStream(
+            transportFactory.transport.getStsUrl(),
+            transportFactory.transport.getAwsRegionUrl(),
+            transportFactory.transport.getAwsCredentialsUrl());
+
+    GoogleCredentials credentials =
+        GoogleCredentials.fromStream(awsCredentialStream, transportFactory);
+
+    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
   @Test
@@ -444,6 +552,19 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void fromStream_pluggableAuthCredentials_defaultUniverse() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    InputStream stream =
+        PluggableAuthCredentialsTest.writeCredentialsStream(transportFactory.transport.getStsUrl());
+
+    GoogleCredentials credentials = GoogleCredentials.fromStream(stream, transportFactory);
+
+    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
+  }
+
+  @Test
   public void fromStream_externalAccountAuthorizedUserCredentials_providesToken()
       throws IOException {
     MockExternalAccountAuthorizedUserCredentialsTransportFactory transportFactory =
@@ -456,6 +577,21 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, transportFactory.transport.getAccessToken());
+  }
+
+  @Test
+  public void fromStream_externalAccountAuthorizedUserCredentials_defaultUniverse()
+      throws IOException {
+    MockExternalAccountAuthorizedUserCredentialsTransportFactory transportFactory =
+        new MockExternalAccountAuthorizedUserCredentialsTransportFactory();
+
+    GenericJson json = ExternalAccountAuthorizedUserCredentialsTest.buildJsonCredentials();
+    json.remove("universe_domain");
+    InputStream stream = TestUtils.jsonToInputStream(json);
+
+    GoogleCredentials credentials = GoogleCredentials.fromStream(stream, transportFactory);
+
+    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
   @Test
@@ -492,6 +628,30 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     List<String> headerValues = metadata.get("x-goog-user-project");
     assertEquals(1, headerValues.size());
     assertEquals(ImpersonatedCredentialsTest.QUOTA_PROJECT_ID, headerValues.get(0));
+  }
+
+  @Test
+  public void fromStream_Impersonation_defaultUniverse() throws IOException {
+    MockTokenServerTransportFactory transportFactoryForSource =
+        new MockTokenServerTransportFactory();
+    transportFactoryForSource.transport.addServiceAccount(
+        ImpersonatedCredentialsTest.SA_CLIENT_EMAIL, ImpersonatedCredentialsTest.ACCESS_TOKEN);
+
+    MockIAMCredentialsServiceTransportFactory transportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+
+    InputStream impersonationCredentialsStream =
+        ImpersonatedCredentialsTest.writeImpersonationCredentialsStream(
+            ImpersonatedCredentialsTest.IMPERSONATION_URL,
+            ImpersonatedCredentialsTest.DELEGATES,
+            ImpersonatedCredentialsTest.QUOTA_PROJECT_ID);
+
+    ImpersonatedCredentials credentials =
+        (ImpersonatedCredentials)
+            GoogleCredentials.fromStream(impersonationCredentialsStream, transportFactoryForSource);
+    credentials.setTransportFactory(transportFactory);
+
+    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
   @Test
@@ -548,7 +708,25 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void createWithQuotaProject() {
+  public void create_withoutUniverse() throws IOException {
+    AccessToken token = AccessToken.newBuilder().setTokenValue(ACCESS_TOKEN).build();
+    GoogleCredentials credentials = GoogleCredentials.create(token);
+
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
+    assertEquals(false, credentials.isExplicitUniverseDomain());
+  }
+
+  @Test
+  public void create_withUniverse() throws IOException {
+    AccessToken token = AccessToken.newBuilder().setTokenValue(ACCESS_TOKEN).build();
+    GoogleCredentials credentials = GoogleCredentials.create("some-universe", token);
+
+    assertEquals("some-universe", credentials.getUniverseDomain());
+    assertEquals(true, credentials.isExplicitUniverseDomain());
+  }
+
+  @Test
+  public void buildWithQuotaProject() {
     final GoogleCredentials googleCredentials =
         new GoogleCredentials.Builder().setQuotaProjectId("old_quota").build();
     GoogleCredentials withUpdatedQuota = googleCredentials.createWithQuotaProject("new_quota");
@@ -564,6 +742,26 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void buildWithUniverseDomain() throws IOException {
+    final GoogleCredentials original =
+        new GoogleCredentials.Builder().setUniverseDomain("universe1").build();
+    GoogleCredentials updated = original.toBuilder().setUniverseDomain("universe2").build();
+
+    assertEquals("universe1", original.getUniverseDomain());
+    assertEquals(true, original.isExplicitUniverseDomain());
+    assertEquals("universe2", updated.getUniverseDomain());
+    assertEquals(true, updated.isExplicitUniverseDomain());
+
+    GoogleCredentials withEmpty = original.toBuilder().setUniverseDomain("").build();
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, withEmpty.getUniverseDomain());
+    assertEquals(false, withEmpty.isExplicitUniverseDomain());
+
+    GoogleCredentials withNull = original.toBuilder().setUniverseDomain(null).build();
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, withNull.getUniverseDomain());
+    assertEquals(false, withNull.isExplicitUniverseDomain());
+  }
+
+  @Test
   public void serialize() throws IOException, ClassNotFoundException {
     final GoogleCredentials testCredentials = new GoogleCredentials.Builder().build();
     GoogleCredentials deserializedCredentials = serializeAndDeserialize(testCredentials);
@@ -571,6 +769,36 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     assertEquals(testCredentials.hashCode(), deserializedCredentials.hashCode());
     assertEquals(testCredentials.toString(), deserializedCredentials.toString());
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
+  }
+
+  @Test
+  public void toString_containsFields() throws IOException {
+    String expectedToString =
+        String.format(
+            "GoogleCredentials{quotaProjectId=%s, universeDomain=%s, isExplicitUniverseDomain=%s}",
+            "some-project", "googleapis.com", false, "[some scope]");
+    GoogleCredentials credentials =
+        GoogleCredentials.newBuilder().setQuotaProjectId("some-project").build();
+    assertEquals(expectedToString, credentials.toString());
+  }
+
+  @Test
+  public void hashCode_equals() throws IOException {
+    GoogleCredentials credentials =
+        GoogleCredentials.newBuilder().setUniverseDomain("some-domain").build();
+    GoogleCredentials otherCredentials =
+        GoogleCredentials.newBuilder().setUniverseDomain("some-domain").build();
+    assertEquals(credentials.hashCode(), otherCredentials.hashCode());
+  }
+
+  @Test
+  public void equals_true() throws IOException {
+    GoogleCredentials credentials =
+        GoogleCredentials.newBuilder().setUniverseDomain("some-domain").build();
+    GoogleCredentials otherCredentials =
+        GoogleCredentials.newBuilder().setUniverseDomain("some-domain").build();
+    assertTrue(credentials.equals(otherCredentials));
+    assertTrue(otherCredentials.equals(credentials));
   }
 
   private static void testFromStreamException(InputStream stream, String expectedMessageContent) {

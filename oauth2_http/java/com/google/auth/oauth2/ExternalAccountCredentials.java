@@ -39,8 +39,10 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -65,21 +67,14 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
   private static final long serialVersionUID = 8049126194174465023L;
 
-  /** Base credential source class. Dictates the retrieval method of the external credential. */
-  abstract static class CredentialSource implements java.io.Serializable {
-
-    private static final long serialVersionUID = 8204657811562399944L;
-
-    CredentialSource(Map<String, Object> credentialSourceMap) {
-      checkNotNull(credentialSourceMap);
-    }
-  }
-
   private static final String CLOUD_PLATFORM_SCOPE =
       "https://www.googleapis.com/auth/cloud-platform";
 
   static final String EXTERNAL_ACCOUNT_FILE_TYPE = "external_account";
   static final String EXECUTABLE_SOURCE_KEY = "executable";
+
+  static final String DEFAULT_TOKEN_URL = "https://sts.googleapis.com/v1/token";
+  static final String PROGRAMMATIC_METRICS_HEADER_VALUE = "programmatic";
 
   private final String transportFactoryClassName;
   private final String audience;
@@ -94,7 +89,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   @Nullable private final String serviceAccountImpersonationUrl;
   @Nullable private final String clientId;
   @Nullable private final String clientSecret;
-  @Nullable private final String universeDomain;
 
   // This is used for Workforce Pools. It is passed to the Security Token Service during token
   // exchange in the `options` param and will be embedded in the token by the Security Token
@@ -103,11 +97,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
   protected transient HttpTransportFactory transportFactory;
 
-  @Nullable protected final ImpersonatedCredentials impersonatedCredentials;
-
-  // Internal override for impersonated credentials. This is done to keep
-  // impersonatedCredentials final.
-  @Nullable private ImpersonatedCredentials impersonatedCredentialsOverride;
+  @Nullable protected ImpersonatedCredentials impersonatedCredentials;
 
   private EnvironmentProvider environmentProvider;
 
@@ -214,7 +204,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     this.environmentProvider =
         environmentProvider == null ? SystemEnvironmentProvider.getInstance() : environmentProvider;
     this.workforcePoolUserProject = null;
-    this.universeDomain = null;
     this.serviceAccountImpersonationOptions =
         new ServiceAccountImpersonationOptions(new HashMap<String, Object>());
 
@@ -224,8 +213,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     }
 
     this.metricsHandler = new ExternalAccountMetricsHandler(this);
-
-    this.impersonatedCredentials = buildImpersonatedCredentials();
   }
 
   /**
@@ -243,12 +230,12 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     this.transportFactoryClassName = checkNotNull(this.transportFactory.getClass().getName());
     this.audience = checkNotNull(builder.audience);
     this.subjectTokenType = checkNotNull(builder.subjectTokenType);
-    this.tokenUrl = checkNotNull(builder.tokenUrl);
-    this.credentialSource = checkNotNull(builder.credentialSource);
+    this.credentialSource = builder.credentialSource;
     this.tokenInfoUrl = builder.tokenInfoUrl;
     this.serviceAccountImpersonationUrl = builder.serviceAccountImpersonationUrl;
     this.clientId = builder.clientId;
     this.clientSecret = builder.clientSecret;
+    this.tokenUrl = builder.tokenUrl == null ? DEFAULT_TOKEN_URL : builder.tokenUrl;
     this.scopes =
         (builder.scopes == null || builder.scopes.isEmpty())
             ? Arrays.asList(CLOUD_PLATFORM_SCOPE)
@@ -268,8 +255,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
           "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.");
     }
 
-    this.universeDomain = builder.universeDomain;
-
     validateTokenUrl(tokenUrl);
     if (serviceAccountImpersonationUrl != null) {
       validateServiceAccountImpersonationInfoUrl(serviceAccountImpersonationUrl);
@@ -279,8 +264,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
         builder.metricsHandler == null
             ? new ExternalAccountMetricsHandler(this)
             : builder.metricsHandler;
-
-    this.impersonatedCredentials = buildImpersonatedCredentials();
   }
 
   ImpersonatedCredentials buildImpersonatedCredentials() {
@@ -316,10 +299,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
         .setLifetime(this.serviceAccountImpersonationOptions.lifetime)
         .setIamEndpointOverride(serviceAccountImpersonationUrl)
         .build();
-  }
-
-  void overrideImpersonatedCredentials(ImpersonatedCredentials credentials) {
-    this.impersonatedCredentialsOverride = credentials;
   }
 
   @Override
@@ -395,6 +374,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
    * @param transportFactory HTTP transport factory, creates the transport used to get access tokens
    * @return the credentials defined by the JSON
    */
+  @SuppressWarnings("unchecked")
   static ExternalAccountCredentials fromJson(
       Map<String, Object> json, HttpTransportFactory transportFactory) {
     checkNotNull(json);
@@ -480,6 +460,10 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
         && ((String) credentialSource.get("environment_id")).startsWith("aws");
   }
 
+  private boolean shouldBuildImpersonatedCredential() {
+    return this.serviceAccountImpersonationUrl != null && this.impersonatedCredentials == null;
+  }
+
   /**
    * Exchanges the external credential for a Google Cloud access token.
    *
@@ -490,11 +474,11 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   protected AccessToken exchangeExternalCredentialForAccessToken(
       StsTokenExchangeRequest stsTokenExchangeRequest) throws IOException {
     // Handle service account impersonation if necessary.
-    // Internal override takes priority.
-    if (impersonatedCredentialsOverride != null) {
-      return impersonatedCredentialsOverride.refreshAccessToken();
-    } else if (impersonatedCredentials != null) {
-      return impersonatedCredentials.refreshAccessToken();
+    if (this.shouldBuildImpersonatedCredential()) {
+      this.impersonatedCredentials = this.buildImpersonatedCredentials();
+    }
+    if (this.impersonatedCredentials != null) {
+      return this.impersonatedCredentials.refreshAccessToken();
     }
 
     StsRequestHandler.Builder requestHandler =
@@ -557,6 +541,13 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     return credentialSource;
   }
 
+  @SuppressWarnings("unused")
+  private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
+    // Properly deserialize the transient transportFactory.
+    input.defaultReadObject();
+    transportFactory = newInstance(transportFactoryClassName);
+  }
+
   @Nullable
   public String getServiceAccountImpersonationUrl() {
     return serviceAccountImpersonationUrl;
@@ -589,11 +580,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   @Nullable
   public String getWorkforcePoolUserProject() {
     return workforcePoolUserProject;
-  }
-
-  @Nullable
-  String getUniverseDomain() {
-    return universeDomain;
   }
 
   @Nullable
@@ -732,7 +718,12 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     @Nullable protected Collection<String> scopes;
     @Nullable protected String workforcePoolUserProject;
     @Nullable protected ServiceAccountImpersonationOptions serviceAccountImpersonationOptions;
-    @Nullable protected String universeDomain;
+
+    /* The field is not being used and value not set. Superseded by the same field in the
+    {@link GoogleCredential.Builder}.
+    */
+    @Nullable @Deprecated protected String universeDomain;
+
     @Nullable protected ExternalAccountMetricsHandler metricsHandler;
 
     protected Builder() {}
@@ -752,7 +743,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       this.environmentProvider = credentials.environmentProvider;
       this.workforcePoolUserProject = credentials.workforcePoolUserProject;
       this.serviceAccountImpersonationOptions = credentials.serviceAccountImpersonationOptions;
-      this.universeDomain = credentials.universeDomain;
       this.metricsHandler = credentials.metricsHandler;
     }
 
@@ -762,6 +752,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param transportFactory the {@code HttpTransportFactory} to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
       this.transportFactory = transportFactory;
       return this;
@@ -774,6 +765,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param audience the Security Token Service audience to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setAudience(String audience) {
       this.audience = audience;
       return this;
@@ -786,8 +778,22 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param subjectTokenType the Security Token Service subject token type to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setSubjectTokenType(String subjectTokenType) {
       this.subjectTokenType = subjectTokenType;
+      return this;
+    }
+
+    /**
+     * Sets the Security Token Service subject token type based on the OAuth 2.0 token exchange
+     * spec. Indicates the type of the security token in the credential file.
+     *
+     * @param subjectTokenType the {@code SubjectTokenType} to set
+     * @return this {@code Builder} object
+     */
+    @CanIgnoreReturnValue
+    public Builder setSubjectTokenType(SubjectTokenTypes subjectTokenType) {
+      this.subjectTokenType = subjectTokenType.value;
       return this;
     }
 
@@ -797,6 +803,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param tokenUrl the Security Token Service token exchange url to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setTokenUrl(String tokenUrl) {
       this.tokenUrl = tokenUrl;
       return this;
@@ -808,6 +815,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param credentialSource the {@code CredentialSource} to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setCredentialSource(CredentialSource credentialSource) {
       this.credentialSource = credentialSource;
       return this;
@@ -821,6 +829,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param serviceAccountImpersonationUrl the service account impersonation url to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setServiceAccountImpersonationUrl(String serviceAccountImpersonationUrl) {
       this.serviceAccountImpersonationUrl = serviceAccountImpersonationUrl;
       return this;
@@ -833,6 +842,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param tokenInfoUrl the token info url to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setTokenInfoUrl(String tokenInfoUrl) {
       this.tokenInfoUrl = tokenInfoUrl;
       return this;
@@ -844,6 +854,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param quotaProjectId the quota and billing project id to set
      * @return this {@code Builder} object
      */
+    @Override
+    @CanIgnoreReturnValue
     public Builder setQuotaProjectId(String quotaProjectId) {
       super.setQuotaProjectId(quotaProjectId);
       return this;
@@ -855,6 +867,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param clientId the service account client id to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setClientId(String clientId) {
       this.clientId = clientId;
       return this;
@@ -866,6 +879,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param clientSecret the service account client secret to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setClientSecret(String clientSecret) {
       this.clientSecret = clientSecret;
       return this;
@@ -877,6 +891,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param scopes the request scopes to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setScopes(Collection<String> scopes) {
       this.scopes = scopes;
       return this;
@@ -890,6 +905,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param workforcePoolUserProject the workforce pool user project number to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setWorkforcePoolUserProject(String workforcePoolUserProject) {
       this.workforcePoolUserProject = workforcePoolUserProject;
       return this;
@@ -901,6 +917,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param optionsMap the service account impersonation options to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setServiceAccountImpersonationOptions(Map<String, Object> optionsMap) {
       this.serviceAccountImpersonationOptions = new ServiceAccountImpersonationOptions(optionsMap);
       return this;
@@ -912,8 +929,10 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param universeDomain the universe domain to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
+    @Override
     public Builder setUniverseDomain(String universeDomain) {
-      this.universeDomain = universeDomain;
+      super.setUniverseDomain(universeDomain);
       return this;
     }
 
@@ -923,11 +942,39 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
      * @param environmentProvider the {@code EnvironmentProvider} to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     Builder setEnvironmentProvider(EnvironmentProvider environmentProvider) {
       this.environmentProvider = environmentProvider;
       return this;
     }
 
+    @Override
     public abstract ExternalAccountCredentials build();
+  }
+
+  /**
+   * Enum specifying values for the subjectTokenType field in {@code ExternalAccountCredentials}.
+   */
+  public enum SubjectTokenTypes {
+    AWS4("urn:ietf:params:aws:token-type:aws4_request"),
+    JWT("urn:ietf:params:oauth:token-type:jwt"),
+    SAML2("urn:ietf:params:oauth:token-type:saml2"),
+    ID_TOKEN("urn:ietf:params:oauth:token-type:id_token");
+
+    public final String value;
+
+    private SubjectTokenTypes(String value) {
+      this.value = value;
+    }
+  }
+
+  /** Base credential source class. Dictates the retrieval method of the external credential. */
+  abstract static class CredentialSource implements java.io.Serializable {
+
+    private static final long serialVersionUID = 8204657811562399944L;
+
+    CredentialSource(Map<String, Object> credentialSourceMap) {
+      checkNotNull(credentialSourceMap);
+    }
   }
 }

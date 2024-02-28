@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Google LLC
+ * Copyright 2024 Google LLC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -31,58 +31,40 @@
 
 package com.google.auth.oauth2;
 
-import javax.annotation.Nullable;
+import static org.junit.Assert.assertEquals;
 
-/**
- * Defines AWS security credentials. These are either retrieved from the AWS security_credentials
- * endpoint or AWS environment variables.
- */
-public class AwsSecurityCredentials {
+import com.google.auth.oauth2.ExternalAccountCredentials.SubjectTokenTypes;
+import org.junit.Test;
 
-  private final String accessKeyId;
-  private final String secretAccessKey;
+public class ExternalAccountSupplierContextTest {
 
-  @Nullable private final String sessionToken;
+  @Test
+  public void constructor_builder() {
+    String expectedAudience =
+        "//iam.googleapis.com/locations/global/workloadPools/pool/providers/provider";
+    String expectedTokenType = SubjectTokenTypes.JWT.value;
+    ExternalAccountSupplierContext context =
+        ExternalAccountSupplierContext.newBuilder()
+            .setAudience(expectedAudience)
+            .setSubjectTokenType(expectedTokenType)
+            .build();
 
-  /**
-   * Constructor for AWSSecurityCredentials.
-   *
-   * @param accessKeyId the AWS access Key Id.
-   * @param secretAccessKey the AWS secret access key.
-   * @param sessionToken the AWS session token. Optional.
-   */
-  public AwsSecurityCredentials(
-      String accessKeyId, String secretAccessKey, @Nullable String sessionToken) {
-    this.accessKeyId = accessKeyId;
-    this.secretAccessKey = secretAccessKey;
-    this.sessionToken = sessionToken;
+    assertEquals(expectedAudience, context.getAudience());
+    assertEquals(expectedTokenType, context.getSubjectTokenType());
   }
 
-  /**
-   * Gets the AWS access key id.
-   *
-   * @return the AWS access key id.
-   */
-  public String getAccessKeyId() {
-    return accessKeyId;
-  }
+  @Test
+  public void constructor_builder_subjectTokenEnum() {
+    String expectedAudience =
+        "//iam.googleapis.com/locations/global/workloadPools/pool/providers/provider";
+    SubjectTokenTypes expectedTokenType = SubjectTokenTypes.JWT;
+    ExternalAccountSupplierContext context =
+        ExternalAccountSupplierContext.newBuilder()
+            .setAudience(expectedAudience)
+            .setSubjectTokenType(expectedTokenType)
+            .build();
 
-  /**
-   * Gets the AWS secret access key.
-   *
-   * @return the AWS secret access key.
-   */
-  public String getSecretAccessKey() {
-    return secretAccessKey;
-  }
-
-  /**
-   * Gets the AWS session token.
-   *
-   * @return the AWS session token.
-   */
-  @Nullable
-  public String getSessionToken() {
-    return sessionToken;
+    assertEquals(expectedAudience, context.getAudience());
+    assertEquals(expectedTokenType.value, context.getSubjectTokenType());
   }
 }

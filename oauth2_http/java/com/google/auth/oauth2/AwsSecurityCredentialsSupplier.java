@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Google LLC
+ * Copyright 2024 Google LLC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -31,58 +31,30 @@
 
 package com.google.auth.oauth2;
 
-import javax.annotation.Nullable;
+import java.io.IOException;
+import java.io.Serializable;
 
 /**
- * Defines AWS security credentials. These are either retrieved from the AWS security_credentials
- * endpoint or AWS environment variables.
+ * Supplier for retrieving AWS Security credentials for {@Link AwsCredentials} to exchange for GCP
+ * access tokens.
  */
-public class AwsSecurityCredentials {
-
-  private final String accessKeyId;
-  private final String secretAccessKey;
-
-  @Nullable private final String sessionToken;
+public interface AwsSecurityCredentialsSupplier extends Serializable {
 
   /**
-   * Constructor for AWSSecurityCredentials.
+   * Gets the AWS region to use.
    *
-   * @param accessKeyId the AWS access Key Id.
-   * @param secretAccessKey the AWS secret access key.
-   * @param sessionToken the AWS session token. Optional.
+   * @param context relevant context from the calling credential.
+   * @return the AWS region that should be used for the credential.
+   * @throws IOException
    */
-  public AwsSecurityCredentials(
-      String accessKeyId, String secretAccessKey, @Nullable String sessionToken) {
-    this.accessKeyId = accessKeyId;
-    this.secretAccessKey = secretAccessKey;
-    this.sessionToken = sessionToken;
-  }
+  String getRegion(ExternalAccountSupplierContext context) throws IOException;
 
   /**
-   * Gets the AWS access key id.
+   * Gets AWS security credentials.
    *
-   * @return the AWS access key id.
+   * @param context relevant context from the calling credential.
+   * @return valid AWS security credentials that can be exchanged for a GCP access token.
+   * @throws IOException
    */
-  public String getAccessKeyId() {
-    return accessKeyId;
-  }
-
-  /**
-   * Gets the AWS secret access key.
-   *
-   * @return the AWS secret access key.
-   */
-  public String getSecretAccessKey() {
-    return secretAccessKey;
-  }
-
-  /**
-   * Gets the AWS session token.
-   *
-   * @return the AWS session token.
-   */
-  @Nullable
-  public String getSessionToken() {
-    return sessionToken;
-  }
+  AwsSecurityCredentials getCredentials(ExternalAccountSupplierContext context) throws IOException;
 }

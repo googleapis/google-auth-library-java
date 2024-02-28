@@ -49,6 +49,7 @@ import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.text.DateFormat;
@@ -91,6 +92,8 @@ import java.util.Objects;
  */
 public class ImpersonatedCredentials extends GoogleCredentials
     implements ServiceAccountSigner, IdTokenProvider {
+
+  static final String IMPERSONATED_CREDENTIALS_FILE_TYPE = "impersonated_service_account";
 
   private static final long serialVersionUID = -2133257318957488431L;
   private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ssX";
@@ -361,6 +364,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
    * @return the credentials defined by the JSON
    * @throws IOException if the credential cannot be created from the JSON.
    */
+  @SuppressWarnings("unchecked")
   static ImpersonatedCredentials fromJson(
       Map<String, Object> json, HttpTransportFactory transportFactory) throws IOException {
 
@@ -418,7 +422,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
   @Override
   public GoogleCredentials createScoped(Collection<String> scopes) {
     return toBuilder()
-        .setScopes(new ArrayList(scopes))
+        .setScopes(new ArrayList<>(scopes))
         .setLifetime(this.lifetime)
         .setDelegates(this.delegates)
         .setHttpTransportFactory(this.transportFactory)
@@ -598,6 +602,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
         && Objects.equals(this.iamEndpointOverride, other.iamEndpointOverride);
   }
 
+  @Override
   public Builder toBuilder() {
     return new Builder(this.sourceCredentials, this.targetPrincipal);
   }
@@ -624,6 +629,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
       this.targetPrincipal = targetPrincipal;
     }
 
+    @CanIgnoreReturnValue
     public Builder setSourceCredentials(GoogleCredentials sourceCredentials) {
       this.sourceCredentials = sourceCredentials;
       return this;
@@ -633,6 +639,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
       return this.sourceCredentials;
     }
 
+    @CanIgnoreReturnValue
     public Builder setTargetPrincipal(String targetPrincipal) {
       this.targetPrincipal = targetPrincipal;
       return this;
@@ -642,6 +649,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
       return this.targetPrincipal;
     }
 
+    @CanIgnoreReturnValue
     public Builder setDelegates(List<String> delegates) {
       this.delegates = delegates;
       return this;
@@ -651,6 +659,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
       return this.delegates;
     }
 
+    @CanIgnoreReturnValue
     public Builder setScopes(List<String> scopes) {
       this.scopes = scopes;
       return this;
@@ -660,6 +669,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
       return this.scopes;
     }
 
+    @CanIgnoreReturnValue
     public Builder setLifetime(int lifetime) {
       this.lifetime = lifetime == 0 ? DEFAULT_LIFETIME_IN_SECONDS : lifetime;
       return this;
@@ -669,6 +679,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
       return this.lifetime;
     }
 
+    @CanIgnoreReturnValue
     public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
       this.transportFactory = transportFactory;
       return this;
@@ -678,16 +689,20 @@ public class ImpersonatedCredentials extends GoogleCredentials
       return transportFactory;
     }
 
+    @Override
+    @CanIgnoreReturnValue
     public Builder setQuotaProjectId(String quotaProjectId) {
       super.setQuotaProjectId(quotaProjectId);
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setIamEndpointOverride(String iamEndpointOverride) {
       this.iamEndpointOverride = iamEndpointOverride;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder setCalendar(Calendar calendar) {
       this.calendar = calendar;
       return this;
@@ -697,6 +712,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
       return this.calendar;
     }
 
+    @Override
     public ImpersonatedCredentials build() {
       return new ImpersonatedCredentials(this);
     }

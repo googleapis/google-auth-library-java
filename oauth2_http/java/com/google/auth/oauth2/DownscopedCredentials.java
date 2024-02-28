@@ -34,8 +34,10 @@ package com.google.auth.oauth2;
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.auth.Credentials;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 
 /**
@@ -86,22 +88,45 @@ import java.io.IOException;
  */
 public final class DownscopedCredentials extends OAuth2Credentials {
 
-  private static final String TOKEN_EXCHANGE_ENDPOINT = "https://sts.googleapis.com/v1/token";
-
+  private final String TOKEN_EXCHANGE_URL_FORMAT = "https://sts.{universe_domain}/v1/token";
   private final GoogleCredentials sourceCredential;
   private final CredentialAccessBoundary credentialAccessBoundary;
+  private final String universeDomain;
+
   private final transient HttpTransportFactory transportFactory;
 
-  private DownscopedCredentials(
-      GoogleCredentials sourceCredential,
-      CredentialAccessBoundary credentialAccessBoundary,
-      HttpTransportFactory transportFactory) {
+  private final String tokenExchangeEndpoint;
+
+  /** Internal constructor. See {@link Builder}. */
+  private DownscopedCredentials(Builder builder) {
     this.transportFactory =
         firstNonNull(
-            transportFactory,
+            builder.transportFactory,
             getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
-    this.sourceCredential = checkNotNull(sourceCredential);
-    this.credentialAccessBoundary = checkNotNull(credentialAccessBoundary);
+    this.sourceCredential = checkNotNull(builder.sourceCredential);
+    this.credentialAccessBoundary = checkNotNull(builder.credentialAccessBoundary);
+
+    // Default to GDU when not supplied.
+    if (builder.universeDomain == null || builder.universeDomain.trim().isEmpty()) {
+      this.universeDomain = Credentials.GOOGLE_DEFAULT_UNIVERSE;
+    } else {
+      this.universeDomain = builder.universeDomain;
+    }
+
+    // Ensure source credential's universe domain matches.
+    try {
+      if (!this.universeDomain.equals(sourceCredential.getUniverseDomain())) {
+        throw new IllegalArgumentException(
+            "The downscoped credential's universe domain must be the same as the source "
+                + "credential.");
+      }
+    } catch (IOException e) {
+      // Throwing an IOException would be a breaking change, so wrap it here.
+      throw new IllegalStateException(
+          "Error occurred when attempting to retrieve source credential universe domain.", e);
+    }
+    this.tokenExchangeEndpoint =
+        TOKEN_EXCHANGE_URL_FORMAT.replace("{universe_domain}", universeDomain);
   }
 
   @Override
@@ -121,7 +146,7 @@ public final class DownscopedCredentials extends OAuth2Credentials {
 
     StsRequestHandler handler =
         StsRequestHandler.newBuilder(
-                TOKEN_EXCHANGE_ENDPOINT, request, transportFactory.create().createRequestFactory())
+                tokenExchangeEndpoint, request, transportFactory.create().createRequestFactory())
             .setInternalOptions(credentialAccessBoundary.toJson())
             .build();
 
@@ -149,6 +174,17 @@ public final class DownscopedCredentials extends OAuth2Credentials {
     return credentialAccessBoundary;
   }
 
+  /**
+   * Returns the universe domain for the credential.
+   *
+   * @return An explicit universe domain if it was explicitly provided, otherwise the default Google
+   *     universe will be returned.
+   */
+  @Override
+  public String getUniverseDomain() {
+    return universeDomain;
+  }
+
   @VisibleForTesting
   HttpTransportFactory getTransportFactory() {
     return transportFactory;
@@ -163,27 +199,62 @@ public final class DownscopedCredentials extends OAuth2Credentials {
     private GoogleCredentials sourceCredential;
     private CredentialAccessBoundary credentialAccessBoundary;
     private HttpTransportFactory transportFactory;
+    private String universeDomain;
 
     private Builder() {}
 
+    /**
+     * Sets the required source credential used to acquire the downscoped credential.
+     *
+     * @param sourceCredential the {@code GoogleCredentials} to set
+     * @return this {@code Builder} object
+     */
+    @CanIgnoreReturnValue
     public Builder setSourceCredential(GoogleCredentials sourceCredential) {
       this.sourceCredential = sourceCredential;
       return this;
     }
 
+    /**
+     * Sets the required credential access boundary which specifies the upper bound of permissions
+     * that the credential can access. See {@link CredentialAccessBoundary} for more information.
+     *
+     * @param credentialAccessBoundary the {@code CredentialAccessBoundary} to set
+     * @return this {@code Builder} object
+     */
+    @CanIgnoreReturnValue
     public Builder setCredentialAccessBoundary(CredentialAccessBoundary credentialAccessBoundary) {
       this.credentialAccessBoundary = credentialAccessBoundary;
       return this;
     }
 
+    /**
+     * Sets the HTTP transport factory.
+     *
+     * @param transportFactory the {@code HttpTransportFactory} to set
+     * @return this {@code Builder} object
+     */
+    @CanIgnoreReturnValue
     public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
       this.transportFactory = transportFactory;
       return this;
     }
 
+    /**
+     * Sets the optional universe domain.
+     *
+     * @param universeDomain the universe domain to set
+     * @return this {@code Builder} object
+     */
+    @CanIgnoreReturnValue
+    public Builder setUniverseDomain(String universeDomain) {
+      this.universeDomain = universeDomain;
+      return this;
+    }
+
+    @Override
     public DownscopedCredentials build() {
-      return new DownscopedCredentials(
-          sourceCredential, credentialAccessBoundary, transportFactory);
+      return new DownscopedCredentials(this);
     }
   }
 }

@@ -99,6 +99,7 @@ class OAuth2Utils {
 
   static class DefaultHttpTransportFactory implements HttpTransportFactory {
 
+    @Override
     public HttpTransport create() {
       return HTTP_TRANSPORT;
     }
@@ -170,6 +171,7 @@ class OAuth2Utils {
   }
 
   /** Return the specified list of strings from JSON or throw a helpful error message. */
+  @SuppressWarnings("unchecked")
   static List<String> validateOptionalListString(
       Map<String, Object> map, String key, String errorPrefix) throws IOException {
     Object value = map.get(key);

@@ -38,6 +38,7 @@ import com.google.auth.Credentials;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.net.URI;
 import java.security.GeneralSecurityException;
@@ -210,6 +211,7 @@ public class JwtCredentials extends Credentials implements JwtProvider {
 
     protected Builder() {}
 
+    @CanIgnoreReturnValue
     public Builder setPrivateKey(PrivateKey privateKey) {
       this.privateKey = Preconditions.checkNotNull(privateKey);
       return this;
@@ -219,6 +221,7 @@ public class JwtCredentials extends Credentials implements JwtProvider {
       return privateKey;
     }
 
+    @CanIgnoreReturnValue
     public Builder setPrivateKeyId(String privateKeyId) {
       this.privateKeyId = privateKeyId;
       return this;
@@ -228,6 +231,7 @@ public class JwtCredentials extends Credentials implements JwtProvider {
       return privateKeyId;
     }
 
+    @CanIgnoreReturnValue
     public Builder setJwtClaims(JwtClaims claims) {
       this.jwtClaims = Preconditions.checkNotNull(claims);
       return this;
@@ -237,6 +241,7 @@ public class JwtCredentials extends Credentials implements JwtProvider {
       return jwtClaims;
     }
 
+    @CanIgnoreReturnValue
     public Builder setLifeSpanSeconds(Long lifeSpanSeconds) {
       this.lifeSpanSeconds = Preconditions.checkNotNull(lifeSpanSeconds);
       return this;
@@ -246,6 +251,7 @@ public class JwtCredentials extends Credentials implements JwtProvider {
       return lifeSpanSeconds;
     }
 
+    @CanIgnoreReturnValue
     Builder setClock(Clock clock) {
       this.clock = Preconditions.checkNotNull(clock);
       return this;

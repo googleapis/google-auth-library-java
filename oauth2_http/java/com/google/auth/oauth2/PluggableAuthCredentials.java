@@ -31,8 +31,10 @@
 
 package com.google.auth.oauth2;
 
+import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.ExecutableHandler.ExecutableOptions;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -96,6 +98,9 @@ import javax.annotation.Nullable;
  * <p>Please see this repositories README for a complete executable request/response specification.
  */
 public class PluggableAuthCredentials extends ExternalAccountCredentials {
+
+  static final String PLUGGABLE_AUTH_METRICS_HEADER_VALUE = "executable";
+
   private final PluggableAuthCredentialSource config;
 
   private final ExecutableHandler handler;
@@ -110,10 +115,6 @@ public class PluggableAuthCredentials extends ExternalAccountCredentials {
     } else {
       handler = new PluggableAuthHandler(getEnvironmentProvider());
     }
-
-    // Re-initialize impersonated credentials as the handler hasn't been set yet when
-    // this is called in the base class.
-    overrideImpersonatedCredentials(buildImpersonatedCredentials());
   }
 
   @Override
@@ -191,7 +192,7 @@ public class PluggableAuthCredentials extends ExternalAccountCredentials {
 
   @Override
   String getCredentialSourceType() {
-    return "executable";
+    return PLUGGABLE_AUTH_METRICS_HEADER_VALUE;
   }
 
   public static Builder newBuilder() {
@@ -219,8 +220,105 @@ public class PluggableAuthCredentials extends ExternalAccountCredentials {
       this.handler = credentials.handler;
     }
 
+    @CanIgnoreReturnValue
     public Builder setExecutableHandler(ExecutableHandler handler) {
       this.handler = handler;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
+      super.setHttpTransportFactory(transportFactory);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setAudience(String audience) {
+      super.setAudience(audience);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setSubjectTokenType(String subjectTokenType) {
+      super.setSubjectTokenType(subjectTokenType);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setSubjectTokenType(SubjectTokenTypes subjectTokenType) {
+      super.setSubjectTokenType(subjectTokenType);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setTokenUrl(String tokenUrl) {
+      super.setTokenUrl(tokenUrl);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setCredentialSource(PluggableAuthCredentialSource credentialSource) {
+      super.setCredentialSource(credentialSource);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setServiceAccountImpersonationUrl(String serviceAccountImpersonationUrl) {
+      super.setServiceAccountImpersonationUrl(serviceAccountImpersonationUrl);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setTokenInfoUrl(String tokenInfoUrl) {
+      super.setTokenInfoUrl(tokenInfoUrl);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setQuotaProjectId(String quotaProjectId) {
+      super.setQuotaProjectId(quotaProjectId);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setClientId(String clientId) {
+      super.setClientId(clientId);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setClientSecret(String clientSecret) {
+      super.setClientSecret(clientSecret);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setScopes(Collection<String> scopes) {
+      super.setScopes(scopes);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setWorkforcePoolUserProject(String workforcePoolUserProject) {
+      super.setWorkforcePoolUserProject(workforcePoolUserProject);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setServiceAccountImpersonationOptions(Map<String, Object> optionsMap) {
+      super.setServiceAccountImpersonationOptions(optionsMap);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setUniverseDomain(String universeDomain) {
+      super.setUniverseDomain(universeDomain);
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    Builder setEnvironmentProvider(EnvironmentProvider environmentProvider) {
+      super.setEnvironmentProvider(environmentProvider);
       return this;
     }
 
