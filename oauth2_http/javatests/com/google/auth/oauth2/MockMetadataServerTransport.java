@@ -61,7 +61,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
   private byte[] signature;
 
   private String s2aAddress;
-  
+
   private boolean emptyContent;
 
   public MockMetadataServerTransport() {}
@@ -87,23 +87,23 @@ public class MockMetadataServerTransport extends MockHttpTransport {
   }
 
   public void setS2AAddress(String address) {
-	  this.s2aAddress = address;
+    this.s2aAddress = address;
   }
- 
+
   public void setEmptyContent(boolean emptyContent) {
-  	this.emptyContent = emptyContent;
+    this.emptyContent = emptyContent;
   }
 
   public String getAddr() {
-  	return s2aAddress;
+    return s2aAddress;
   }
 
   public Integer getCode() {
-  	return requestStatusCode;
+    return requestStatusCode;
   }
 
   public boolean getEmpty() {
-  	return emptyContent;
+    return emptyContent;
   }
 
   @Override
@@ -264,31 +264,29 @@ public class MockMetadataServerTransport extends MockHttpTransport {
       @Override
       public LowLevelHttpResponse execute() throws IOException {
 
-	String metadataRequestHeader = getFirstHeaderValue("Metadata-Flavor");
-	if (!"Google".equals(metadataRequestHeader)) {
-		throw new IOException("Metadata request header not found");
-	}
-	
+        String metadataRequestHeader = getFirstHeaderValue("Metadata-Flavor");
+        if (!"Google".equals(metadataRequestHeader)) {
+          throw new IOException("Metadata request header not found");
+        }
+
         // Create the JSON response
         GenericJson content = new GenericJson();
         content.setFactory(OAuth2Utils.JSON_FACTORY);
         content.put("s2a", s2aAddress);
-	String contentText = content.toPrettyString();
+        String contentText = content.toPrettyString();
 
-	MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+        MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
 
-	if(requestStatusCode != null) {	
-		response.setStatusCode(requestStatusCode);
-	}
-	if(emptyContent == true) {
-		return response.setZeroContent();
-	}
-        response.setContentType(Json.MEDIA_TYPE)
-		.setContent(contentText);
-	return response;
+        if (requestStatusCode != null) {
+          response.setStatusCode(requestStatusCode);
+        }
+        if (emptyContent == true) {
+          return response.setZeroContent();
+        }
+        response.setContentType(Json.MEDIA_TYPE).setContent(contentText);
+        return response;
       }
     };
-  	
   }
 
   protected boolean isGetServiceAccountsUrl(String url) {
@@ -306,6 +304,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
   }
 
   protected boolean isMtlsConfigRequestUrl(String url) {
-  	return s2aAddress != null && url.equals(String.format(S2A.DEFAULT_METADATA_SERVER_URL + S2A.MTLS_CONFIG_ENDPOINT));
+    return s2aAddress != null
+        && url.equals(String.format(S2A.DEFAULT_METADATA_SERVER_URL + S2A.MTLS_CONFIG_ENDPOINT));
   }
 }
