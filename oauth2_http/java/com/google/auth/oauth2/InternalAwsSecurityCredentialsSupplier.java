@@ -109,14 +109,8 @@ class InternalAwsSecurityCredentialsSupplier implements AwsSecurityCredentialsSu
           "Unable to determine the AWS IAM role name. The credential source does not contain the"
               + " url field.");
     }
-    String roleName = retrieveResource(awsCredentialSource.url, "IAM role", metadataRequestHeaders);
 
-    // Retrieve the AWS security credentials by calling the endpoint specified by the credential
-    // source.
-    String awsCredentials =
-        retrieveResource(
-            awsCredentialSource.url + "/" + roleName, "credentials", metadataRequestHeaders);
-
+    String awsCredentials = retrieveCredentials(metadataRequestHeaders);
     JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser(awsCredentials);
     GenericJson genericJson = parser.parseAndClose(GenericJson.class);
 
@@ -186,6 +180,36 @@ class InternalAwsSecurityCredentialsSupplier implements AwsSecurityCredentialsSu
   boolean shouldUseMetadataServer() {
     return (!canRetrieveRegionFromEnvironment()
         || !canRetrieveSecurityCredentialsFromEnvironment());
+  }
+
+  private boolean isECSEnvironment() {
+    return environmentProvider.getEnv("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI") != null
+        || environmentProvider.getEnv("AWS_CONTAINER_CREDENTIALS_FULL_URI") != null;
+  }
+
+  private String ecsCredentialsUrl() {
+    return environmentProvider.getEnv("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI") != null
+        ? "http://169.254.170.2"
+            + environmentProvider.getEnv("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI")
+        : environmentProvider.getEnv("AWS_CONTAINER_CREDENTIALS_FULL_URI");
+  }
+
+  private String retrieveCredentials(Map<String, Object> metadataRequestHeaders)
+      throws IOException {
+
+    if (isECSEnvironment()) {
+      // On ECS, credentials are available from a local container endpoint which is exposed in an
+      // environment variable.
+      return retrieveResource(ecsCredentialsUrl(), "credentials", metadataRequestHeaders);
+    } else {
+      String roleName =
+          retrieveResource(awsCredentialSource.url, "IAM role", metadataRequestHeaders);
+
+      // Retrieve the AWS security credentials by calling the endpoint specified by the credential
+      // source.
+      return retrieveResource(
+          awsCredentialSource.url + "/" + roleName, "credentials", metadataRequestHeaders);
+    }
   }
 
   private String retrieveResource(String url, String resourceName, Map<String, Object> headers)

@@ -66,6 +66,8 @@ public class AwsCredentialsTest extends BaseSerializationTest {
   private static final String STS_URL = "https://sts.googleapis.com/v1/token";
   private static final String AWS_CREDENTIALS_URL = "https://169.254.169.254";
   private static final String AWS_CREDENTIALS_URL_WITH_ROLE = "https://169.254.169.254/roleName";
+  private static final String AWS_CREDENTIALS_URL_ON_ECS =
+      "http://169.254.170.2/v2/credentials/some-uuid";
   private static final String AWS_REGION_URL = "https://169.254.169.254/region";
   private static final String AWS_IMDSV2_SESSION_TOKEN_URL = "https://169.254.169.254/imdsv2";
   private static final String AWS_IMDSV2_SESSION_TOKEN = "sessiontoken";
@@ -841,6 +843,65 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
     // Validate security credentials request.
     ValidateRequest(requests.get(1), AWS_CREDENTIALS_URL_WITH_ROLE, EMPTY_STRING_HEADERS);
+  }
+
+  @Test
+  public void getAwsSecurityCredentials_onECS_fromMetadataServerRelativeUrl() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    environmentProvider.setEnv(
+        "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI", "/v2/credentials/some-uuid");
+
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    AwsCredentials awsCredential =
+        AwsCredentials.newBuilder(AWS_CREDENTIAL)
+            .setHttpTransportFactory(transportFactory)
+            .setCredentialSource(buildAwsCredentialSource(transportFactory))
+            .setEnvironmentProvider(environmentProvider)
+            .build();
+
+    AwsSecurityCredentials credentials =
+        awsCredential.getAwsSecurityCredentialsSupplier().getCredentials(emptyContext);
+
+    assertEquals("accessKeyId", credentials.getAccessKeyId());
+    assertEquals("secretAccessKey", credentials.getSecretAccessKey());
+    assertEquals("token", credentials.getSessionToken());
+
+    List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
+    assertEquals(1, requests.size());
+
+    // Validate security credentials request (only one request is made on ECS).
+    ValidateRequest(requests.get(0), AWS_CREDENTIALS_URL_ON_ECS, EMPTY_STRING_HEADERS);
+  }
+
+  @Test
+  public void getAwsSecurityCredentials_onECS_fromMetadataServerFullUrl() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    environmentProvider.setEnv("AWS_CONTAINER_CREDENTIALS_FULL_URI", AWS_CREDENTIALS_URL_ON_ECS);
+
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    AwsCredentials awsCredential =
+        AwsCredentials.newBuilder(AWS_CREDENTIAL)
+            .setHttpTransportFactory(transportFactory)
+            .setCredentialSource(buildAwsCredentialSource(transportFactory))
+            .setEnvironmentProvider(environmentProvider)
+            .build();
+
+    AwsSecurityCredentials credentials =
+        awsCredential.getAwsSecurityCredentialsSupplier().getCredentials(emptyContext);
+
+    assertEquals("accessKeyId", credentials.getAccessKeyId());
+    assertEquals("secretAccessKey", credentials.getSecretAccessKey());
+    assertEquals("token", credentials.getSessionToken());
+
+    List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
+    assertEquals(1, requests.size());
+
+    // Validate security credentials request (only one request is made on ECS).
+    ValidateRequest(requests.get(0), AWS_CREDENTIALS_URL_ON_ECS, EMPTY_STRING_HEADERS);
   }
 
   @Test
