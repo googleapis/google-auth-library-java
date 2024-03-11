@@ -90,7 +90,7 @@ public class DefaultPKCEProvider implements PKCEProvider {
 
         byte[] digest = md.digest();
 
-        this.codeChallenge = Base64.getUrlEncoder().encodeToString(digest);
+        this.codeChallenge = Base64.getUrlEncoder().encodeToString(digest).replace("=", "");
         this.codeChallengeMethod = "S256";
       } catch (NoSuchAlgorithmException e) {
         this.codeChallenge = codeVerifier;

@@ -32,6 +32,7 @@
 package com.google.auth.oauth2;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -57,5 +58,12 @@ public final class DefaultPKCEProviderTest {
 
     assertEquals(pkce.getCodeChallenge(), expectedCodeChallenge);
     assertEquals(pkce.getCodeChallengeMethod(), expectedCodeChallengeMethod);
+  }
+
+  @Test
+  public void testNoBase64Padding() throws NoSuchAlgorithmException {
+    PKCEProvider pkce = new DefaultPKCEProvider();
+    assertFalse(pkce.getCodeChallenge().endsWith("="));
+    assertFalse(pkce.getCodeChallenge().contains("="));
   }
 }
