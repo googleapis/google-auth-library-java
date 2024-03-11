@@ -53,7 +53,7 @@ public final class DefaultPKCEProviderTest {
 
     byte[] digest = md.digest();
 
-    String expectedCodeChallenge = Base64.getUrlEncoder().encodeToString(digest);
+    String expectedCodeChallenge = Base64.getUrlEncoder().encodeToString(digest).replace("=", "");
     String expectedCodeChallengeMethod = "S256";
 
     assertEquals(pkce.getCodeChallenge(), expectedCodeChallenge);
