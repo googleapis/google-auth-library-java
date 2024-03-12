@@ -15,8 +15,7 @@ import javax.annotation.concurrent.ThreadSafe;
 /**
  * Utilities to fetch the S2A (Secure Session Agent) address from the mTLS configuration.
  *
- * <p>Periodically refresh the mTLS configuration by getting a new one from the MDS mTLS autoconfig
- * endpoint.
+ * <p>mTLS configuration is queried from the MDS MTLS Autoconfiguration endpoint.
  */
 @ThreadSafe
 public final class S2A {
@@ -24,34 +23,39 @@ public final class S2A {
   public static final String MTLS_CONFIG_ENDPOINT =
       "/instance/platform-security/auto-mtls-configuration";
 
-  private static final String METADATA_FLAVOR = "Metadata-Flavor";
-  private static final String GOOGLE = "Google";
+  public static final String METADATA_FLAVOR = "Metadata-Flavor";
+  public static final String GOOGLE = "Google";
   private static final String PARSE_ERROR_S2A = "Error parsing Mtls Auto Config response.";
 
   private MtlsConfig config;
 
   private transient HttpTransportFactory transportFactory;
 
-  public S2A() {
-    config = MtlsConfig.createNullMtlsConfig();
-  }
+  public S2A() {}
 
   public void setHttpTransportFactory(HttpTransportFactory tf) {
     this.transportFactory = tf;
   }
 
-  /** Returns the S2A Address from the mTLS config. Refreshes the config if it is expired. */
+  /**
+   * Returns the S2A Address from the mTLS config.
+   *
+   * @return the S2A address.
+   */
   public synchronized String getS2AAddress() {
-    if (!config.isValid()) {
+    if (config == null) {
       String addr = getMdsMtlsConfigData();
-      config.reset(addr);
+      config = MtlsConfig.createMtlsConfig(addr);
     }
     return config.getS2AAddress();
   }
 
   /**
-   * Queries the MDS mTLS Autoconfiguration endpoint and returns the S2A address. Returns an empty
-   * address on error.
+   * Queries the MDS mTLS Autoconfiguration endpoint and returns the S2A address.
+   *
+   * <p>Returns an empty address on error.
+   *
+   * @return the S2A address.
    */
   private String getMdsMtlsConfigData() {
     String s2aAddress = "";
@@ -61,7 +65,7 @@ public final class S2A {
             Iterables.getFirst(
                 ServiceLoader.load(HttpTransportFactory.class), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
       }
-      String url = getMdsMtlsEndpoint(DefaultCredentialsProvider.DEFAULT);
+      String url = getMdsMtlsEndpoint();
       GenericUrl genericUrl = new GenericUrl(url);
       HttpRequest request =
           transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
@@ -88,12 +92,7 @@ public final class S2A {
   }
 
   /** @return MDS mTLS autoconfig endpoint. */
-  private String getMdsMtlsEndpoint(DefaultCredentialsProvider provider) {
-    String metadataServerAddress =
-        provider.getEnv(DefaultCredentialsProvider.GCE_METADATA_HOST_ENV_VAR);
-    if (metadataServerAddress != null) {
-      return "http://" + metadataServerAddress + MTLS_CONFIG_ENDPOINT;
-    }
+  private String getMdsMtlsEndpoint() {
     return DEFAULT_METADATA_SERVER_URL + MTLS_CONFIG_ENDPOINT;
   }
 }
