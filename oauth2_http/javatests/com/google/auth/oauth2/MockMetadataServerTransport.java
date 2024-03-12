@@ -94,18 +94,6 @@ public class MockMetadataServerTransport extends MockHttpTransport {
     this.emptyContent = emptyContent;
   }
 
-  public String getAddr() {
-    return s2aAddress;
-  }
-
-  public Integer getCode() {
-    return requestStatusCode;
-  }
-
-  public boolean getEmpty() {
-    return emptyContent;
-  }
-
   @Override
   public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
     if (url.equals(ComputeEngineCredentials.getTokenServerEncodedUrl())) {
@@ -264,8 +252,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
       @Override
       public LowLevelHttpResponse execute() throws IOException {
 
-        String metadataRequestHeader = getFirstHeaderValue("Metadata-Flavor");
-        if (!"Google".equals(metadataRequestHeader)) {
+        String metadataRequestHeader = getFirstHeaderValue(S2A.METADATA_FLAVOR);
+        if (!S2A.GOOGLE.equals(metadataRequestHeader)) {
           throw new IOException("Metadata request header not found");
         }
 
