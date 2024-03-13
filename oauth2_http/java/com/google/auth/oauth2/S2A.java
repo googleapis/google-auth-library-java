@@ -19,9 +19,9 @@ import javax.annotation.concurrent.ThreadSafe;
  */
 @ThreadSafe
 public final class S2A {
-  public static final String DEFAULT_METADATA_SERVER_URL = "http://metadata.google.internal";
+  public static final String DEFAULT_METADATA_SERVER_URL = "http://169.254.169.254";
   public static final String MTLS_CONFIG_ENDPOINT =
-      "/instance/platform-security/auto-mtls-configuration";
+      "/computeMetadata/v1/instance/platform-security/auto-mtls-configuration";
 
   public static final String METADATA_FLAVOR = "Metadata-Flavor";
   public static final String GOOGLE = "Google";
