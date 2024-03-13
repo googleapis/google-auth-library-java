@@ -60,7 +60,9 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
   private byte[] signature;
 
-  private String s2aAddress;
+  private String plaintextS2AAddress;
+
+  private String mtlsS2AAddress;
 
   private boolean emptyContent;
 
@@ -86,8 +88,12 @@ public class MockMetadataServerTransport extends MockHttpTransport {
     this.idToken = idToken;
   }
 
-  public void setS2AAddress(String address) {
-    this.s2aAddress = address;
+  public void setPlaintextS2AAddress(String address) {
+    this.plaintextS2AAddress = address;
+  }
+
+  public void setMtlsS2AAddress(String address) {
+    this.mtlsS2AAddress = address;
   }
 
   public void setEmptyContent(boolean emptyContent) {
@@ -260,7 +266,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
         // Create the JSON response
         GenericJson content = new GenericJson();
         content.setFactory(OAuth2Utils.JSON_FACTORY);
-        content.put("s2a", s2aAddress);
+        content.put("plaintext_address", plaintextS2AAddress);
+        content.put("mtls_address", mtlsS2AAddress);
         String contentText = content.toPrettyString();
 
         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
@@ -292,7 +299,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
   }
 
   protected boolean isMtlsConfigRequestUrl(String url) {
-    return s2aAddress != null
+    return plaintextS2AAddress != null
+        && mtlsS2AAddress != null
         && url.equals(String.format(S2A.DEFAULT_METADATA_SERVER_URL + S2A.MTLS_CONFIG_ENDPOINT));
   }
 }

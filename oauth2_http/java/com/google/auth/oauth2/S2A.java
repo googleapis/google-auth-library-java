@@ -37,28 +37,32 @@ public final class S2A {
     this.transportFactory = tf;
   }
 
-  /**
-   * Returns the S2A Address from the mTLS config.
-   *
-   * @return the S2A address.
-   */
-  public synchronized String getS2AAddress() {
+  /** @return the mTLS S2A Address from the mTLS config. */
+  public synchronized String getMtlsS2AAddress() {
     if (config == null) {
-      String addr = getMdsMtlsConfigData();
-      config = MtlsConfig.createMtlsConfig(addr);
+      config = getMdsMtlsConfig();
     }
-    return config.getS2AAddress();
+    return config.getMtlsS2AAddress();
+  }
+
+  /** @return the plaintext S2A Address from the mTLS config. */
+  public synchronized String getPlaintextS2AAddress() {
+    if (config == null) {
+      config = getMdsMtlsConfig();
+    }
+    return config.getPlaintextS2AAddress();
   }
 
   /**
-   * Queries the MDS mTLS Autoconfiguration endpoint and returns the S2A address.
+   * Queries the MDS mTLS Autoconfiguration endpoint and returns the {@link MtlsConfig}.
    *
-   * <p>Returns an empty address on error.
+   * <p>Returns {@link MtlsConfig} with empty addresses on error.
    *
-   * @return the S2A address.
+   * @return the {@link MtlsConfig}.
    */
-  private String getMdsMtlsConfigData() {
-    String s2aAddress = "";
+  private MtlsConfig getMdsMtlsConfig() {
+    String plaintextS2AAddress = "";
+    String mtlsS2AAddress = "";
     try {
       if (transportFactory == null) {
         transportFactory =
@@ -76,19 +80,24 @@ public final class S2A {
       HttpResponse response = request.execute();
 
       if (!response.isSuccessStatusCode()) {
-        return "";
+        return MtlsConfig.createBuilder().build();
       }
 
       InputStream content = response.getContent();
       if (content == null) {
-        return "";
+        return MtlsConfig.createBuilder().build();
       }
       GenericData responseData = response.parseAs(GenericData.class);
-      s2aAddress = OAuth2Utils.validateString(responseData, "s2a", PARSE_ERROR_S2A);
+      plaintextS2AAddress =
+          OAuth2Utils.validateString(responseData, "plaintext_address", PARSE_ERROR_S2A);
+      mtlsS2AAddress = OAuth2Utils.validateString(responseData, "mtls_address", PARSE_ERROR_S2A);
     } catch (IOException e) {
-      return "";
+      return MtlsConfig.createBuilder().build();
     }
-    return s2aAddress;
+    return MtlsConfig.createBuilder()
+        .setPlaintextS2AAddress(plaintextS2AAddress)
+        .setMtlsS2AAddress(mtlsS2AAddress)
+        .build();
   }
 
   /** @return MDS mTLS autoconfig endpoint. */
