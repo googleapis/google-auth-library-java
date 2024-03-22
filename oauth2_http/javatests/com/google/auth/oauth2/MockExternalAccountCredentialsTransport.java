@@ -66,6 +66,9 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
       "https://www.googleapis.com/auth/cloud-platform";
   private static final String ISSUED_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:access_token";
   private static final String AWS_CREDENTIALS_URL = "https://169.254.169.254";
+
+  private static final String AWS_CREDENTIALS_URL_ON_ECS =
+      "http://169.254.170.2/v2/credentials/some-uuid";
   private static final String AWS_REGION_URL = "https://169.254.169.254/region";
   private static final String AWS_IMDSV2_SESSION_TOKEN_URL = "https://169.254.169.254/imdsv2";
   private static final String METADATA_SERVER_URL = "https://www.metadata.google.com";
@@ -142,6 +145,18 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
             if ((AWS_CREDENTIALS_URL + "/" + "roleName").equals(url)) {
               GenericJson response = new GenericJson();
               response.setFactory(JSON_FACTORY);
+              response.put("AccessKeyId", "accessKeyId");
+              response.put("SecretAccessKey", "secretAccessKey");
+              response.put("Token", "token");
+
+              return new MockLowLevelHttpResponse()
+                  .setContentType(Json.MEDIA_TYPE)
+                  .setContent(response.toString());
+            }
+            if ((AWS_CREDENTIALS_URL_ON_ECS).equals(url)) {
+              GenericJson response = new GenericJson();
+              response.setFactory(JSON_FACTORY);
+              response.put("RoleArn", "arn:aws:iam::012345678912:role/ecs-task-role");
               response.put("AccessKeyId", "accessKeyId");
               response.put("SecretAccessKey", "secretAccessKey");
               response.put("Token", "token");
