@@ -57,6 +57,7 @@
     <module>credentials</module>
     <module>oauth2_http</module>
     <module>appengine</module>
+    <module>reactor</module>
     <module>bom</module>
   </modules>
 
