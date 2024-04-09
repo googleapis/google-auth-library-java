@@ -236,16 +236,16 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     this.clientId = builder.clientId;
     this.clientSecret = builder.clientSecret;
 
-    if (builder.tokenUrl == null) {
+    this.tokenUrl = builder.tokenUrl;
+    if (this.tokenUrl == null) {
       try {
         this.tokenUrl = DEFAULT_TOKEN_URL.replace("{UNIVERSE_DOMAIN}", this.getUniverseDomain());
       } catch (IOException e) {
         // Throwing an IOException would be a breaking change, so wrap it here.
+        // This should not happen for this credential type.
         throw new IllegalStateException(
             "Error occurred when attempting to retrieve universe domain.", e);
       }
-    } else {
-      this.tokenUrl = builder.tokenUrl;
     }
 
     this.scopes =
