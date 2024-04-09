@@ -584,6 +584,26 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void constructor_builder_getUniverseDomainFails() {
+    HashMap<String, Object> credentialSource = new HashMap<>();
+    credentialSource.put("file", "file");
+
+    try {
+      UniverseDomainErrorTestCredentials.newBuilder()
+          .setHttpTransportFactory(transportFactory)
+          .setAudience(
+              "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+          .setSubjectTokenType("subjectTokenType")
+          .setUniverseDomain("testdomain.org")
+          .build();
+      fail("Should not be able to continue without exception.");
+    } catch (IllegalStateException exception) {
+      assertEquals(
+          "Error occurred when attempting to retrieve universe domain.", exception.getMessage());
+    }
+  }
+
+  @Test
   public void constructor_builder_subjectTokenTypeEnum() {
     HashMap<String, Object> credentialSource = new HashMap<>();
     credentialSource.put("file", "file");
@@ -1366,6 +1386,30 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     @Override
     public String retrieveSubjectToken() {
       return "subjectToken";
+    }
+  }
+
+  static class UniverseDomainErrorTestCredentials extends TestExternalAccountCredentials {
+    protected UniverseDomainErrorTestCredentials(TestExternalAccountCredentials.Builder builder) {
+      super(builder);
+    }
+
+    public static UniverseDomainErrorTestCredentials.Builder newBuilder() {
+      return new UniverseDomainErrorTestCredentials.Builder();
+    }
+
+    static class Builder extends TestExternalAccountCredentials.Builder {
+      Builder() {}
+
+      @Override
+      public UniverseDomainErrorTestCredentials build() {
+        return new UniverseDomainErrorTestCredentials(this);
+      }
+    }
+
+    @Override
+    public String getUniverseDomain() throws IOException {
+      throw new IOException("Test error");
     }
   }
 }

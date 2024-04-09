@@ -236,7 +236,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     this.clientId = builder.clientId;
     this.clientSecret = builder.clientSecret;
 
-    if (builder.tokenUrl == null){
+    if (builder.tokenUrl == null) {
       try {
         this.tokenUrl = DEFAULT_TOKEN_URL.replace("{UNIVERSE_DOMAIN}", this.getUniverseDomain());
       } catch (IOException e) {
