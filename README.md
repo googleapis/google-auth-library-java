@@ -519,11 +519,13 @@ IdentityPoolCredentials identityPoolCredentials =
         .build();
 ```
 Where the [audience](https://cloud.google.com/iam/docs/best-practices-for-using-workload-identity-federation#provider-audience) is:
-```//iam.googleapis.com/locations/global/workforcePools/$WORKLOAD_POOL_ID/providers/$PROVIDER_ID```
+```///iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$WORKLOAD_POOL_ID/providers/$PROVIDER_ID```
 
 Where the following variables need to be substituted:
-- `$WORKLOAD_POOL_ID`: The workload pool ID.
+- `$PROJECT_NUMBER`: The Google Cloud project number.
+- `$WORKLOAD_POOL_ID`: The workload identity pool ID.
 - `$PROVIDER_ID`: The provider ID.
+
 
 The values for audience, service account impersonation URL, and any other builder field can also be found by
 generating a [credential configuration file with the gcloud CLI](https://cloud.google.com/sdk/gcloud/reference/iam/workload-identity-pools/create-cred-config).
@@ -586,10 +588,11 @@ AwsCredentials credentials = AwsCredentials.newBuilder()
 ```
 
 Where the [audience](https://cloud.google.com/iam/docs/best-practices-for-using-workload-identity-federation#provider-audience) is:
-```//iam.googleapis.com/locations/global/workforcePools/$WORKLOAD_POOL_ID/providers/$PROVIDER_ID```
+```///iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$WORKLOAD_POOL_ID/providers/$PROVIDER_ID```
 
 Where the following variables need to be substituted:
-- `$WORKLOAD_POOL_ID`: The workload pool ID.
+- `$PROJECT_NUMBER`: The Google Cloud project number.
+- `$WORKLOAD_POOL_ID`: The workload identity pool ID.
 - `$PROVIDER_ID`: The provider ID.
 
 The values for audience, service account impersonation URL, and any other builder field can also be found by
