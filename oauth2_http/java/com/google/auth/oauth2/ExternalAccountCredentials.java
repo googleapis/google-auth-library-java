@@ -73,7 +73,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   static final String EXTERNAL_ACCOUNT_FILE_TYPE = "external_account";
   static final String EXECUTABLE_SOURCE_KEY = "executable";
 
-  static final String DEFAULT_TOKEN_URL = "https://sts.googleapis.com/v1/token";
+  static final String DEFAULT_TOKEN_URL = "https://sts.{UNIVERSE_DOMAIN}/v1/token";
   static final String PROGRAMMATIC_METRICS_HEADER_VALUE = "programmatic";
 
   private final String transportFactoryClassName;
@@ -235,7 +235,13 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     this.serviceAccountImpersonationUrl = builder.serviceAccountImpersonationUrl;
     this.clientId = builder.clientId;
     this.clientSecret = builder.clientSecret;
-    this.tokenUrl = builder.tokenUrl == null ? DEFAULT_TOKEN_URL : builder.tokenUrl;
+
+    if (builder.tokenUrl == null) {
+      this.tokenUrl = DEFAULT_TOKEN_URL.replace("{UNIVERSE_DOMAIN}", this.getUniverseDomain());
+    } else {
+      this.tokenUrl = builder.tokenUrl;
+    }
+
     this.scopes =
         (builder.scopes == null || builder.scopes.isEmpty())
             ? Arrays.asList(CLOUD_PLATFORM_SCOPE)
@@ -319,6 +325,17 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
             callback.onFailure(exception);
           }
         });
+  }
+
+  @Override
+  public String getUniverseDomain() {
+    try {
+      return super.getUniverseDomain();
+    } catch (IOException e) {
+      // Throwing an IOException would be a breaking change, so wrap it here.
+      // This should not happen for this credential type.
+      throw new IllegalStateException(e);
+    }
   }
 
   @Override

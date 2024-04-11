@@ -566,6 +566,24 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void constructor_builder_defaultTokenUrlwithUniverseDomain() {
+    HashMap<String, Object> credentialSource = new HashMap<>();
+    credentialSource.put("file", "file");
+
+    ExternalAccountCredentials credentials =
+        IdentityPoolCredentials.newBuilder()
+            .setHttpTransportFactory(transportFactory)
+            .setAudience(
+                "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+            .setSubjectTokenType("subjectTokenType")
+            .setCredentialSource(new TestCredentialSource(credentialSource))
+            .setUniverseDomain("testdomain.org")
+            .build();
+
+    assertEquals("https://sts.testdomain.org/v1/token", credentials.getTokenUrl());
+  }
+
+  @Test
   public void constructor_builder_subjectTokenTypeEnum() {
     HashMap<String, Object> credentialSource = new HashMap<>();
     credentialSource.put("file", "file");
