@@ -16,7 +16,7 @@
   <parent>
     <groupId>com.google.cloud</groupId>
     <artifactId>google-cloud-shared-config</artifactId>
-    <version>1.7.6</version>
+    <version>1.7.7</version>
   </parent>
 
   <distributionManagement>
@@ -72,10 +72,10 @@
     <project.google.http.version>1.43.3</project.google.http.version>
     <project.junit.version>4.13.2</project.junit.version>
     <project.guava.version>32.0.0-android</project.guava.version>
-    <project.appengine.version>2.0.21</project.appengine.version>
+    <project.appengine.version>2.0.26</project.appengine.version>
     <project.findbugs.version>3.0.2</project.findbugs.version>
     <deploy.autorelease>false</deploy.autorelease>
-    <project.error-prone.version>2.18.0</project.error-prone.version>
+    <project.error-prone.version>2.27.1</project.error-prone.version>
   </properties>
 
   <dependencyManagement>
@@ -163,7 +163,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-source-plugin</artifactId>
-          <version>3.3.0</version>
+          <version>3.3.1</version>
           <executions>
             <execution>
               <id>attach-sources</id>
@@ -381,7 +381,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-source-plugin</artifactId>
-            <version>3.3.0</version>
+            <version>3.3.1</version>
             <executions>
               <execution>
                 <id>attach-sources</id>
@@ -407,7 +407,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
-            <version>3.1.0</version>
+            <version>3.2.4</version>
             <executions>
               <execution>
                 <id>sign-artifacts</id>
