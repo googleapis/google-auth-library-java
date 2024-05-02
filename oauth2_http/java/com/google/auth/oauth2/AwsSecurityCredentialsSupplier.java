@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Google LLC
+ * Copyright 2024 Google LLC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -31,48 +31,30 @@
 
 package com.google.auth.oauth2;
 
+import java.io.IOException;
+import java.io.Serializable;
+
 /**
- * A handler for generating the x-goog-api-client header value for BYOID external account
- * credentials.
+ * Supplier for retrieving AWS Security credentials for {@Link AwsCredentials} to exchange for GCP
+ * access tokens.
  */
-class ExternalAccountMetricsHandler implements java.io.Serializable {
-  private static final String SOURCE_KEY = "source";
-  private static final String IMPERSONATION_KEY = "sa-impersonation";
-  private static final String CONFIG_LIFETIME_KEY = "config-lifetime";
-  private static final String BYOID_METRICS_SECTION = "google-byoid-sdk";
-
-  private final boolean configLifetime;
-  private final boolean saImpersonation;
-  private ExternalAccountCredentials credentials;
+public interface AwsSecurityCredentialsSupplier extends Serializable {
 
   /**
-   * Constructor for the external account metrics handler.
+   * Gets the AWS region to use.
    *
-   * @param creds the {@code ExternalAccountCredentials} object to set the external account metrics
-   *     options from.
+   * @param context relevant context from the calling credential.
+   * @return the AWS region that should be used for the credential.
+   * @throws IOException
    */
-  ExternalAccountMetricsHandler(ExternalAccountCredentials creds) {
-    this.saImpersonation = creds.getServiceAccountImpersonationUrl() != null;
-    this.configLifetime =
-        creds.getServiceAccountImpersonationOptions().customTokenLifetimeRequested;
-    this.credentials = creds;
-  }
+  String getRegion(ExternalAccountSupplierContext context) throws IOException;
 
   /**
-   * Gets the external account metrics header value for the x-goog-api-client header.
+   * Gets AWS security credentials.
    *
-   * @return the header value.
+   * @param context relevant context from the calling credential.
+   * @return valid AWS security credentials that can be exchanged for a GCP access token.
+   * @throws IOException
    */
-  String getExternalAccountMetricsHeader() {
-    return String.format(
-        "%s %s %s/%s %s/%s %s/%s",
-        MetricsUtils.getLanguageAndAuthLibraryVersions(),
-        BYOID_METRICS_SECTION,
-        SOURCE_KEY,
-        this.credentials.getCredentialSourceType(),
-        IMPERSONATION_KEY,
-        this.saImpersonation,
-        CONFIG_LIFETIME_KEY,
-        this.configLifetime);
-  }
+  AwsSecurityCredentials getCredentials(ExternalAccountSupplierContext context) throws IOException;
 }

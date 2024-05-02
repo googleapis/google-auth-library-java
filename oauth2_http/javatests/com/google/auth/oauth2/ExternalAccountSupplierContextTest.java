@@ -1,5 +1,5 @@
 /*
- * Copyright 2023, Google Inc. All rights reserved.
+ * Copyright 2024 Google LLC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -12,7 +12,7 @@
  * in the documentation and/or other materials provided with the
  * distribution.
  *
- *    * Neither the name of Google Inc. nor the names of its
+ *    * Neither the name of Google LLC nor the names of its
  * contributors may be used to endorse or promote products derived from
  * this software without specific prior written permission.
  *
@@ -32,38 +32,39 @@
 package com.google.auth.oauth2;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
+import com.google.auth.oauth2.ExternalAccountCredentials.SubjectTokenTypes;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
-@RunWith(JUnit4.class)
-public final class DefaultPKCEProviderTest {
+public class ExternalAccountSupplierContextTest {
+
   @Test
-  public void testPkceExpected() throws NoSuchAlgorithmException {
-    PKCEProvider pkce = new DefaultPKCEProvider();
+  public void constructor_builder() {
+    String expectedAudience =
+        "//iam.googleapis.com/locations/global/workloadPools/pool/providers/provider";
+    String expectedTokenType = SubjectTokenTypes.JWT.value;
+    ExternalAccountSupplierContext context =
+        ExternalAccountSupplierContext.newBuilder()
+            .setAudience(expectedAudience)
+            .setSubjectTokenType(expectedTokenType)
+            .build();
 
-    byte[] bytes = pkce.getCodeVerifier().getBytes();
-    MessageDigest md = MessageDigest.getInstance("SHA-256");
-    md.update(bytes);
-
-    byte[] digest = md.digest();
-
-    String expectedCodeChallenge = Base64.getUrlEncoder().encodeToString(digest).replace("=", "");
-    String expectedCodeChallengeMethod = "S256";
-
-    assertEquals(pkce.getCodeChallenge(), expectedCodeChallenge);
-    assertEquals(pkce.getCodeChallengeMethod(), expectedCodeChallengeMethod);
+    assertEquals(expectedAudience, context.getAudience());
+    assertEquals(expectedTokenType, context.getSubjectTokenType());
   }
 
   @Test
-  public void testNoBase64Padding() throws NoSuchAlgorithmException {
-    PKCEProvider pkce = new DefaultPKCEProvider();
-    assertFalse(pkce.getCodeChallenge().endsWith("="));
-    assertFalse(pkce.getCodeChallenge().contains("="));
+  public void constructor_builder_subjectTokenEnum() {
+    String expectedAudience =
+        "//iam.googleapis.com/locations/global/workloadPools/pool/providers/provider";
+    SubjectTokenTypes expectedTokenType = SubjectTokenTypes.JWT;
+    ExternalAccountSupplierContext context =
+        ExternalAccountSupplierContext.newBuilder()
+            .setAudience(expectedAudience)
+            .setSubjectTokenType(expectedTokenType)
+            .build();
+
+    assertEquals(expectedAudience, context.getAudience());
+    assertEquals(expectedTokenType.value, context.getSubjectTokenType());
   }
 }

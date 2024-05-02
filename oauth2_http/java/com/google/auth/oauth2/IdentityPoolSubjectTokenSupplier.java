@@ -1,5 +1,5 @@
 /*
- * Copyright 2023, Google Inc. All rights reserved.
+ * Copyright 2024 Google LLC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -12,7 +12,7 @@
  * in the documentation and/or other materials provided with the
  * distribution.
  *
- *    * Neither the name of Google Inc. nor the names of its
+ *    * Neither the name of Google LLC nor the names of its
  * contributors may be used to endorse or promote products derived from
  * this software without specific prior written permission.
  *
@@ -31,39 +31,22 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import java.io.IOException;
+import java.io.Serializable;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+@FunctionalInterface
+/**
+ * Provider for retrieving subject tokens for {@Link IdentityPoolCredentials} to exchange for GCP
+ * access tokens.
+ */
+public interface IdentityPoolSubjectTokenSupplier extends Serializable {
 
-@RunWith(JUnit4.class)
-public final class DefaultPKCEProviderTest {
-  @Test
-  public void testPkceExpected() throws NoSuchAlgorithmException {
-    PKCEProvider pkce = new DefaultPKCEProvider();
-
-    byte[] bytes = pkce.getCodeVerifier().getBytes();
-    MessageDigest md = MessageDigest.getInstance("SHA-256");
-    md.update(bytes);
-
-    byte[] digest = md.digest();
-
-    String expectedCodeChallenge = Base64.getUrlEncoder().encodeToString(digest).replace("=", "");
-    String expectedCodeChallengeMethod = "S256";
-
-    assertEquals(pkce.getCodeChallenge(), expectedCodeChallenge);
-    assertEquals(pkce.getCodeChallengeMethod(), expectedCodeChallengeMethod);
-  }
-
-  @Test
-  public void testNoBase64Padding() throws NoSuchAlgorithmException {
-    PKCEProvider pkce = new DefaultPKCEProvider();
-    assertFalse(pkce.getCodeChallenge().endsWith("="));
-    assertFalse(pkce.getCodeChallenge().contains("="));
-  }
+  /**
+   * Gets a subject token that can be exchanged for a GCP access token.
+   *
+   * @param context relevant context from the calling credential.
+   * @return a valid subject token.
+   * @throws IOException
+   */
+  String getSubjectToken(ExternalAccountSupplierContext context) throws IOException;
 }
