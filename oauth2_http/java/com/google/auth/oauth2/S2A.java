@@ -24,6 +24,7 @@ public final class S2A {
 
   public static final String METADATA_FLAVOR = "Metadata-Flavor";
   public static final String GOOGLE = "Google";
+  private static final int MAX_MDS_PING_TRIES = 3;
   private static final String PARSE_ERROR_S2A = "Error parsing Mtls Auto Config response.";
 
   private MtlsConfig config;
@@ -62,41 +63,46 @@ public final class S2A {
   private MtlsConfig getMdsMtlsConfig() {
     String plaintextS2AAddress = "";
     String mtlsS2AAddress = "";
-    try {
-      if (transportFactory == null) {
-        transportFactory =
-            Iterables.getFirst(
-                ServiceLoader.load(HttpTransportFactory.class), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
-      }
-      String url = getMdsMtlsEndpoint();
-      GenericUrl genericUrl = new GenericUrl(url);
-      HttpRequest request =
-          transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
-      JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
-      request.setParser(parser);
-      request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
-      request.setThrowExceptionOnExecuteError(false);
-      HttpResponse response = request.execute();
 
-      if (!response.isSuccessStatusCode()) {
-        return MtlsConfig.createBuilder().build();
-      }
+    String url = getMdsMtlsEndpoint();
+    GenericUrl genericUrl = new GenericUrl(url);
+    
+    for (int i = 0; i < MAX_MDS_PING_TRIES; i++) {
+      try {
+        if (transportFactory == null) {
+          transportFactory =
+              Iterables.getFirst(
+                  ServiceLoader.load(HttpTransportFactory.class), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+        }
+        HttpRequest request =
+            transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
+        JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
+        request.setParser(parser);
+        request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
+        request.setThrowExceptionOnExecuteError(false);
+        HttpResponse response = request.execute();
 
-      InputStream content = response.getContent();
-      if (content == null) {
-        return MtlsConfig.createBuilder().build();
+        if (!response.isSuccessStatusCode()) {
+          continue;
+        }
+
+        InputStream content = response.getContent();
+        if (content == null) {
+          continue;
+        }
+        GenericData responseData = response.parseAs(GenericData.class);
+        plaintextS2AAddress =
+            OAuth2Utils.validateString(responseData, "plaintext_address", PARSE_ERROR_S2A);
+        mtlsS2AAddress = OAuth2Utils.validateString(responseData, "mtls_address", PARSE_ERROR_S2A);
+      } catch (IOException e) {
+        continue;
       }
-      GenericData responseData = response.parseAs(GenericData.class);
-      plaintextS2AAddress =
-          OAuth2Utils.validateString(responseData, "plaintext_address", PARSE_ERROR_S2A);
-      mtlsS2AAddress = OAuth2Utils.validateString(responseData, "mtls_address", PARSE_ERROR_S2A);
-    } catch (IOException e) {
-      return MtlsConfig.createBuilder().build();
+      return MtlsConfig.createBuilder()
+          .setPlaintextS2AAddress(plaintextS2AAddress)
+          .setMtlsS2AAddress(mtlsS2AAddress)
+          .build();
     }
-    return MtlsConfig.createBuilder()
-        .setPlaintextS2AAddress(plaintextS2AAddress)
-        .setMtlsS2AAddress(mtlsS2AAddress)
-        .build();
+    return MtlsConfig.createBuilder().build();
   }
 
   /** @return MDS mTLS autoconfig endpoint. */
