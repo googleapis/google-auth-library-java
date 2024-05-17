@@ -29,11 +29,14 @@ credentials as well as utility methods to create them and to get Application Def
       * [Accessing resources from Azure](#access-resources-from-microsoft-azure)
       * [Accessing resources from an OIDC identity provider](#accessing-resources-from-an-oidc-identity-provider)
       * [Accessing resources using Executable-sourced credentials](#using-executable-sourced-credentials-with-oidc-and-saml)
+      * [Accessing resources using a custom supplier for OIDC or SAML](#using-a-custom-supplier-with-oidc-and-saml)
+      * [Accessing resources using a custom supplier with AWS](#using-a-custom-supplier-with-aws)
       * [Configurable Token Lifetime](#configurable-token-lifetime)
   * [Workforce Identity Federation](#workforce-identity-federation)
       * [Accessing resources using an OIDC or SAML 2.0 identity provider](#accessing-resources-using-an-oidc-or-saml-20-identity-provider)
       * [Accessing resources using external account authorized user workforce credentials](#using-external-account-authorized-user-workforce-credentials)
       * [Accessing resources using Executable-sourced credentials](#using-executable-sourced-workforce-credentials-with-oidc-and-saml)
+      * [Accessing resources using a custom supplier for OIDC or SAML](#using-a-custom-supplier-for-workforce-credentials-with-oidc-and-saml)
   * [Downscoping with Credential Access Boundaries](#downscoping-with-credential-access-boundaries)
   * [Configuring a Proxy](#configuring-a-proxy)
   * [Using Credentials with google-http-client](#using-credentials-with-google-http-client)
@@ -470,6 +473,131 @@ credentials unless they do not meet your specific requirements.
 You can now [use the Auth library](#using-external-identities) to call Google Cloud
 resources from an OIDC or SAML provider.
 
+#### Using a custom supplier with OIDC and SAML
+A custom implementation of IdentityPoolSubjectTokenSupplier can be used while building IdentityPoolCredentials
+to supply a subject token which can be exchanged for a GCP access token. The supplier must return a valid,
+unexpired subject token when called by the GCP credential.
+
+IdentityPoolCredentials do not cache the returned token, so caching logic should be
+implemented in the token supplier to prevent multiple requests for the same subject token.
+
+```java
+import java.io.IOException;
+
+public class CustomTokenSupplier implements IdentityPoolSubjectTokenSupplier {
+
+  @Override
+  public String getSubjectToken(ExternalAccountSupplierContext context) throws IOException {
+    // Any call to the supplier will pass a context object with the requested
+    // audience and subject token type.
+    string audience = context.getAudience();
+    string tokenType = context.getSubjectTokenType();
+
+    try {
+      // Return a valid, unexpired token for the requested audience and token type.
+      // Note that IdentityPoolCredentials do not cache the subject token so
+      // any caching logic needs to be implemented in the token supplier.
+      return retrieveToken(audience, tokenType);
+    } catch (Exception e) {
+      // If token is unavailable, throw IOException.
+      throw new IOException(e);
+    }
+  }
+
+  private String retrieveToken(string tokenType, string audience) {
+    // Retrieve a subject token of the requested type for the requested audience.
+  }
+}
+```
+```java
+CustomTokenSupplier tokenSupplier = new CustomTokenSupplier();
+IdentityPoolCredentials identityPoolCredentials =
+    IdentityPoolCredentials.newBuilder()
+        .setSubjectTokenSupplier(tokenSupplier) // Sets the token supplier.
+        .setAudience(...) // Sets the GCP audience.
+        .setSubjectTokenType(SubjectTokenTypes.JWT) // Sets the subject token type.
+        .build();
+```
+Where the [audience](https://cloud.google.com/iam/docs/best-practices-for-using-workload-identity-federation#provider-audience) is:
+```//iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$WORKLOAD_POOL_ID/providers/$PROVIDER_ID```
+
+Where the following variables need to be substituted:
+- `$PROJECT_NUMBER`: The Google Cloud project number.
+- `$WORKLOAD_POOL_ID`: The workload identity pool ID.
+- `$PROVIDER_ID`: The provider ID.
+
+
+The values for audience, service account impersonation URL, and any other builder field can also be found by
+generating a [credential configuration file with the gcloud CLI](https://cloud.google.com/sdk/gcloud/reference/iam/workload-identity-pools/create-cred-config).
+
+#### Using a custom supplier with AWS
+A custom implementation of AwsSecurityCredentialsSupplier can be provided when initializing AwsCredentials. If provided, the AwsCredentials instance will defer to the supplier to retrieve AWS security credentials to exchange for a GCP access token.
+The supplier must return valid, unexpired AWS security credentials when called by the GCP credential.
+
+AwsCredentials do not cache the returned AWS security credentials or region, so caching logic should be
+implemented in the supplier to prevent multiple requests for the same resources.
+
+```java
+class CustomAwsSupplier implements AwsSecurityCredentialsSupplier {
+  @Override
+  AwsSecurityCredentials getAwsSecurityCredentials(ExternalAccountSupplierContext context) throws IOException {
+    // Any call to the supplier will pass a context object with the requested
+    // audience.
+    string audience = context.getAudience();
+
+    try {
+      // Return valid, unexpired AWS security credentials for the requested audience.
+      // Note that AwsCredentials do not cache the AWS security credentials so
+      // any caching logic needs to be implemented in the credentials' supplier.
+      return retrieveAwsSecurityCredentials(audience);
+    } catch (Exception e) {
+      // If credentials are unavailable, throw IOException.
+      throw new IOException(e);
+    }
+  }
+
+  @Override
+  String getRegion(ExternalAccountSupplierContext context) throws IOException {
+    try {
+      // Return a valid AWS region. i.e. "us-east-2".
+      // Note that AwsCredentials do not cache the region so
+      // any caching logic needs to be implemented in the credentials' supplier.
+      return retrieveAwsRegion();
+    } catch (Exception e) {
+      // If region is unavailable, throw IOException.
+      throw new IOException(e);
+    }
+  }
+
+  private AwsSecurityCredentials retrieveAwsSecurityCredentials(string audience) {
+    // Retrieve Aws security credentials for the requested audience.
+  }
+
+  private String retrieveAwsRegion() {
+    // Retrieve current AWS region.
+  }
+}
+```
+```java
+CustomAwsSupplier awsSupplier = new CustomAwsSupplier();
+AwsCredentials credentials = AwsCredentials.newBuilder()
+    .setSubjectTokenType(SubjectTokenTypes.AWS4) // Sets the subject token type.
+    .setAudience(...) // Sets the GCP audience.
+    .setAwsSecurityCredentialsSupplier(supplier) // Sets the supplier.
+    .build();
+```
+
+Where the [audience](https://cloud.google.com/iam/docs/best-practices-for-using-workload-identity-federation#provider-audience) is:
+```//iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$WORKLOAD_POOL_ID/providers/$PROVIDER_ID```
+
+Where the following variables need to be substituted:
+- `$PROJECT_NUMBER`: The Google Cloud project number.
+- `$WORKLOAD_POOL_ID`: The workload identity pool ID.
+- `$PROVIDER_ID`: The provider ID.
+
+The values for audience, service account impersonation URL, and any other builder field can also be found by
+generating a [credential configuration file with the gcloud CLI](https://cloud.google.com/sdk/gcloud/reference/iam/workload-identity-pools/create-cred-config).
+
 #### Configurable Token Lifetime
 When creating a credential configuration with workload identity federation using service account impersonation, you can provide an optional argument to configure the service account access token lifetime.
 
@@ -703,6 +831,64 @@ specified below. It must output the response to stdout.
 
 Refer to the [using executable-sourced credentials with Workload Identity Federation](#using-executable-sourced-credentials-with-oidc-and-saml)
 above for the executable response specification.
+
+#### Using a custom supplier for workforce credentials with OIDC and SAML
+A custom implementation of IdentityPoolSubjectTokenSupplier can be used while building IdentityPoolCredentials
+to supply a subject token which can be exchanged for a GCP access token. The supplier must return a valid,
+unexpired subject token when called by the GCP credential.
+
+IdentityPoolCredentials do not cache the returned token, so caching logic should be
+implemented in the token supplier to prevent multiple requests for the same subject token.
+
+```java
+import java.io.IOException;
+
+public class CustomTokenSupplier implements IdentityPoolSubjectTokenSupplier {
+
+  @Override
+  public String getSubjectToken(ExternalAccountSupplierContext context) throws IOException {
+    // Any call to supplier will pass a context object with the requested
+    // audience and subject token type.
+    string audience = context.getAudience();
+    string tokenType = context.getSubjectTokenType();
+
+    try {
+      // Return a valid, unexpired token for the requested audience and token type.
+      // Note that the IdentityPoolCredential does not cache the subject token so
+      // any caching logic needs to be implemented in the token supplier.
+      return retrieveToken(audience, tokenType);
+    } catch (Exception e) {
+      // If token is unavailable, throw IOException.
+      throw new IOException(e);
+    }
+  }
+
+  private String retrieveToken(string tokenType, string audience) {
+    // Retrieve a subject token of the requested type for the requested audience.
+  }
+}
+```
+```java
+CustomTokenSupplier tokenSupplier = new CustomTokenSupplier();
+IdentityPoolCredentials identityPoolCredentials =
+    IdentityPoolCredentials.newBuilder()
+        .setSubjectTokenSupplier(tokenSupplier) // Sets the token supplier.
+        .setAudience(...) // Sets the GCP audience.
+        .setSubjectTokenType(SubjectTokenTypes.JWT) // Sets the subject token type.
+        .setWorkforcePoolUserProject(...) // Sets the workforce pool user project.
+        .build();
+```
+Where the audience is:
+```//iam.googleapis.com/locations/global/workforcePools/$WORKFORCE_POOL_ID/providers/$PROVIDER_ID```
+
+Where the following variables need to be substituted:
+- `$WORKFORCE_POOL_ID`: The workforce pool ID.
+- `$PROVIDER_ID`: The provider ID.
+
+and the workforce pool user project is the project number associated with the [workforce pools user project](https://cloud.google.com/iam/docs/workforce-identity-federation#workforce-pools-user-project).
+
+The values for audience, service account impersonation URL, and any other builder field can also be found by
+generating a [credential configuration file with the gcloud CLI](https://cloud.google.com/iam/docs/workforce-obtaining-short-lived-credentials#use_configuration_files_for_sign-in).
 
 ##### Security considerations
 The following security practices are highly recommended:

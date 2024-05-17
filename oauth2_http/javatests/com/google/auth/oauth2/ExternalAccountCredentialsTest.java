@@ -566,6 +566,24 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void constructor_builder_defaultTokenUrlwithUniverseDomain() {
+    HashMap<String, Object> credentialSource = new HashMap<>();
+    credentialSource.put("file", "file");
+
+    ExternalAccountCredentials credentials =
+        IdentityPoolCredentials.newBuilder()
+            .setHttpTransportFactory(transportFactory)
+            .setAudience(
+                "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+            .setSubjectTokenType("subjectTokenType")
+            .setCredentialSource(new TestCredentialSource(credentialSource))
+            .setUniverseDomain("testdomain.org")
+            .build();
+
+    assertEquals("https://sts.testdomain.org/v1/token", credentials.getTokenUrl());
+  }
+
+  @Test
   public void constructor_builder_subjectTokenTypeEnum() {
     HashMap<String, Object> credentialSource = new HashMap<>();
     credentialSource.put("file", "file");
@@ -1117,6 +1135,9 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
         testCredentials.getServiceAccountImpersonationOptions().getLifetime(),
         deserializedCredentials.getServiceAccountImpersonationOptions().getLifetime());
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
+    assertEquals(
+        MockExternalAccountCredentialsTransportFactory.class,
+        deserializedCredentials.toBuilder().getHttpTransportFactory().getClass());
   }
 
   @Test
@@ -1307,6 +1328,11 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
       }
     }
 
+    @Override
+    public Builder toBuilder() {
+      return new Builder(this);
+    }
+
     public static Builder newBuilder() {
       return new Builder();
     }
@@ -1314,9 +1340,17 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     static class Builder extends ExternalAccountCredentials.Builder {
       Builder() {}
 
+      Builder(TestExternalAccountCredentials credentials) {
+        super(credentials);
+      }
+
       @Override
       public TestExternalAccountCredentials build() {
         return new TestExternalAccountCredentials(this);
+      }
+
+      public HttpTransportFactory getHttpTransportFactory() {
+        return transportFactory;
       }
     }
 

@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.auth</groupId>
   <artifactId>google-auth-library-parent</artifactId>
-  <version>1.22.1-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
+  <version>1.23.1-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
   <packaging>pom</packaging>
   <name>Google Auth Library for Java</name>
   <description>Client libraries providing authentication and
@@ -16,7 +16,7 @@
   <parent>
     <groupId>com.google.cloud</groupId>
     <artifactId>google-cloud-shared-config</artifactId>
-    <version>1.6.1</version>
+    <version>1.7.7</version>
   </parent>
 
   <distributionManagement>
@@ -72,10 +72,10 @@
     <project.google.http.version>1.43.3</project.google.http.version>
     <project.junit.version>4.13.2</project.junit.version>
     <project.guava.version>32.0.0-android</project.guava.version>
-    <project.appengine.version>2.0.21</project.appengine.version>
+    <project.appengine.version>2.0.26</project.appengine.version>
     <project.findbugs.version>3.0.2</project.findbugs.version>
     <deploy.autorelease>false</deploy.autorelease>
-    <project.error-prone.version>2.18.0</project.error-prone.version>
+    <project.error-prone.version>2.27.1</project.error-prone.version>
   </properties>
 
   <dependencyManagement>
@@ -163,7 +163,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-source-plugin</artifactId>
-          <version>3.3.0</version>
+          <version>3.3.1</version>
           <executions>
             <execution>
               <id>attach-sources</id>
@@ -176,7 +176,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>3.6.0</version>
+          <version>3.6.3</version>
           <configuration>
             <source>8</source>
             <failOnError>false</failOnError>
@@ -193,7 +193,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
-          <version>3.3.0</version>
+          <version>3.4.1</version>
           <executions>
             <execution>
               <goals>
@@ -205,7 +205,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.0.0-M7</version>
+          <version>3.2.5</version>
           <configuration>
             <reportNameSuffix>sponge_log</reportNameSuffix>
           </configuration>
@@ -225,7 +225,7 @@
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.11.0</version>
+        <version>3.13.0</version>
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
@@ -282,7 +282,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.11</version>
+        <version>0.8.12</version>
         <executions>
           <execution>
             <goals>
@@ -326,7 +326,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.6.0</version>
+        <version>3.6.3</version>
         <reportSets>
           <reportSet>
             <id>html</id>
@@ -381,7 +381,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-source-plugin</artifactId>
-            <version>3.3.0</version>
+            <version>3.3.1</version>
             <executions>
               <execution>
                 <id>attach-sources</id>
@@ -394,7 +394,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
-            <version>3.6.0</version>
+            <version>3.6.3</version>
             <executions>
               <execution>
                 <id>attach-javadocs</id>
@@ -407,7 +407,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
-            <version>3.1.0</version>
+            <version>3.2.4</version>
             <executions>
               <execution>
                 <id>sign-artifacts</id>
@@ -423,55 +423,6 @@
                 </configuration>
               </execution>
             </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-
-    <profile>
-      <id>docFX</id>
-      <activation>
-        <property>
-          <!-- Activate with -P docFX -->
-          <name>docFX</name>
-        </property>
-      </activation>
-      <properties>
-        <!-- default config values -->
-        <docletName>java-docfx-doclet-1.9.0</docletName>
-        <outputpath>${project.build.directory}/docfx-yml</outputpath>
-        <projectname>${project.artifactId}</projectname>
-        <excludeclasses></excludeclasses>
-        <excludePackages></excludePackages>
-        <source>8</source>
-        <sourceFileExclude></sourceFileExclude>
-      </properties>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <version>3.6.0</version>
-            <configuration>
-              <doclet>com.microsoft.doclet.DocFxDoclet</doclet>
-              <useStandardDocletOptions>false</useStandardDocletOptions>
-              <!-- custom config with -Dproperty=value -->
-              <docletPath>${env.KOKORO_GFILE_DIR}/${docletName}.jar</docletPath>
-              <additionalOptions>
-                -outputpath ${outputpath}
-                -projectname ${projectname}
-                -excludeclasses ${excludeclasses}:
-                -excludepackages ${excludePackages}:
-              </additionalOptions>
-              <doclint>none</doclint>
-              <show>protected</show>
-              <nohelp>true</nohelp>
-              <source>${source}</source>
-              <sourceFileExcludes>
-                <exclude>${sourceFileExclude}</exclude>
-              </sourceFileExcludes>
-              <failOnError>false</failOnError>
-            </configuration>
           </plugin>
         </plugins>
       </build>
