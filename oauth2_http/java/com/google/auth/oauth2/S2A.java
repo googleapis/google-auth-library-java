@@ -19,7 +19,6 @@ import javax.annotation.concurrent.ThreadSafe;
  */
 @ThreadSafe
 public final class S2A {
-  public static final String DEFAULT_METADATA_SERVER_URL = "http://169.254.169.254";
   public static final String MTLS_CONFIG_ENDPOINT =
       "/computeMetadata/v1/instance/platform-security/auto-mtls-configuration";
 
@@ -102,6 +101,6 @@ public final class S2A {
 
   /** @return MDS mTLS autoconfig endpoint. */
   private String getMdsMtlsEndpoint() {
-    return DEFAULT_METADATA_SERVER_URL + MTLS_CONFIG_ENDPOINT;
+    return ComputeEngineCredentials.getMetadataServerUrl() + MTLS_CONFIG_ENDPOINT;
   }
 }
