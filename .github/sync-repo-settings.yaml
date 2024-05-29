@@ -117,6 +117,6 @@ permissionRules:
   - team: yoshi-admins
     permission: admin
   - team: googleapis-auth
-    permission: push
+    permission: admin
   - team: aion-sdk
     permission: push
