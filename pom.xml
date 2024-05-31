@@ -69,13 +69,13 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.google.http.version>1.43.3</project.google.http.version>
+    <project.google.http.version>1.44.2</project.google.http.version>
     <project.junit.version>4.13.2</project.junit.version>
     <project.guava.version>33.2.0-android</project.guava.version>
     <project.appengine.version>2.0.27</project.appengine.version>
     <project.findbugs.version>3.0.2</project.findbugs.version>
     <deploy.autorelease>false</deploy.autorelease>
-    <project.error-prone.version>2.27.1</project.error-prone.version>
+    <project.error-prone.version>2.28.0</project.error-prone.version>
   </properties>
 
   <dependencyManagement>
