@@ -31,6 +31,10 @@
 
 package com.google.auth.oauth2;
 
+import com.google.api.client.json.GenericJson;
+import com.google.auth.http.HttpTransportFactory;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -39,13 +43,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.annotation.Nullable;
-
-import com.google.api.client.json.GenericJson;
-import com.google.auth.http.HttpTransportFactory;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 
 /**
  * Credentials representing an AWS third-party identity for calling Google APIs. AWS security
@@ -270,9 +268,8 @@ public class AwsCredentials extends ExternalAccountCredentials {
      * Sets the AWS regional credential verification URL. If set, will override any credential
      * verification URL provided in the credential source. If not set, the credential verification
      * URL will default to
-     * <p>
-     * {@code https://sts.{region}.amazonaws.com?Action=GetCallerIdentity&Version=2011-06-15}
-     * </p>
+     *
+     * <p>{@code https://sts.{region}.amazonaws.com?Action=GetCallerIdentity&Version=2011-06-15}
      *
      * @param regionalCredentialVerificationUrlOverride the AWS credential verification url to set.
      * @return this {@code Builder} object

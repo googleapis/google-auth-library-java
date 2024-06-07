@@ -31,19 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
-import javax.annotation.Nullable;
-
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
@@ -55,6 +42,17 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import javax.annotation.Nullable;
 
 /** Base type for credentials for authorizing calls to Google APIs using OAuth2. */
 public class GoogleCredentials extends OAuth2Credentials implements QuotaProjectIdProvider {
@@ -331,8 +329,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * Constructor that relies on a {@link Builder} to provide all the necessary
-   * field values for initialization.
+   * Constructor that relies on a {@link Builder} to provide all the necessary field values for
+   * initialization.
    *
    * @param builder an instance of a builder
    */

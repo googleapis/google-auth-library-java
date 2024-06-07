@@ -31,6 +31,10 @@
 
 package com.google.auth.oauth2;
 
+import com.google.api.client.json.GenericJson;
+import com.google.api.client.json.JsonObjectParser;
+import com.google.auth.oauth2.IdentityPoolCredentialSource.CredentialFormatType;
+import com.google.common.io.CharStreams;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,11 +45,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Paths;
-
-import com.google.api.client.json.GenericJson;
-import com.google.api.client.json.JsonObjectParser;
-import com.google.auth.oauth2.IdentityPoolCredentialSource.CredentialFormatType;
-import com.google.common.io.CharStreams;
 
 /**
  * Internal provider for retrieving subject tokens for {@link IdentityPoolCredentials} to exchange

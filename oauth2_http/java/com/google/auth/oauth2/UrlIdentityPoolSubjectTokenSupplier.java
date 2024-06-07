@@ -31,7 +31,7 @@
 
 package com.google.auth.oauth2;
 
-import java.io.IOException;
+import static com.google.auth.oauth2.FileIdentityPoolSubjectTokenSupplier.parseToken;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpHeaders;
@@ -39,7 +39,7 @@ import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.auth.http.HttpTransportFactory;
-import static com.google.auth.oauth2.FileIdentityPoolSubjectTokenSupplier.parseToken;
+import java.io.IOException;
 
 /**
  * Provider for retrieving subject tokens for {@link IdentityPoolCredentials} to exchange for GCP
