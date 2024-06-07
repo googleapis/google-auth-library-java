@@ -43,6 +43,7 @@ import com.google.api.client.util.Joiner;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.BaseEncoding;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.net.URI;
@@ -70,6 +71,7 @@ public class UserAuthorizer {
   private final URI tokenServerUri;
   private final URI userAuthUri;
   private final PKCEProvider pkce;
+  private final ClientAuthenticationType clientAuthenticationType;
 
   /**
    * Constructor with all parameters.
@@ -83,6 +85,8 @@ public class UserAuthorizer {
    * @param tokenServerUri URI of the end point that provides tokens
    * @param userAuthUri URI of the Web UI for user consent
    * @param pkce PKCE implementation
+   * @param clientAuthenticationType ClientAuthentication type in RFC7591. Choice from
+   *     basic/post/none
    */
   private UserAuthorizer(
       ClientId clientId,
@@ -92,7 +96,8 @@ public class UserAuthorizer {
       HttpTransportFactory transportFactory,
       URI tokenServerUri,
       URI userAuthUri,
-      PKCEProvider pkce) {
+      PKCEProvider pkce,
+      ClientAuthenticationType clientAuthentication) {
     this.clientId = Preconditions.checkNotNull(clientId);
     this.scopes = ImmutableList.copyOf(Preconditions.checkNotNull(scopes));
     this.callbackUri = (callbackUri == null) ? DEFAULT_CALLBACK_URI : callbackUri;
@@ -102,6 +107,10 @@ public class UserAuthorizer {
     this.userAuthUri = (userAuthUri == null) ? OAuth2Utils.USER_AUTH_URI : userAuthUri;
     this.tokenStore = (tokenStore == null) ? new MemoryTokensStorage() : tokenStore;
     this.pkce = pkce;
+    this.clientAuthenticationType =
+        (clientAuthentication == null)
+            ? ClientAuthenticationType.CLIENT_SECRET_POST
+            : clientAuthentication;
   }
 
   /**
@@ -159,6 +168,15 @@ public class UserAuthorizer {
    */
   public TokenStore getTokenStore() {
     return tokenStore;
+  }
+
+  /**
+   * Returns the client authentication type in RFC7591
+   *
+   * @return The ClientAuthenticationType
+   */
+  public ClientAuthenticationType getClientAuthenticationType() {
+    return clientAuthenticationType;
   }
 
   /**
@@ -291,9 +309,11 @@ public class UserAuthorizer {
     GenericData tokenData = new GenericData();
     tokenData.put("code", code);
     tokenData.put("client_id", clientId.getClientId());
-    tokenData.put("client_secret", clientId.getClientSecret());
     tokenData.put("redirect_uri", resolvedCallbackUri);
     tokenData.put("grant_type", "authorization_code");
+    if (this.clientAuthenticationType == ClientAuthenticationType.CLIENT_SECRET_POST) {
+      tokenData.put("client_secret", clientId.getClientSecret());
+    }
 
     if (additionalParameters != null) {
       for (Map.Entry<String, String> entry : additionalParameters.entrySet()) {
@@ -310,6 +330,13 @@ public class UserAuthorizer {
     HttpRequest tokenRequest =
         requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), tokenContent);
     tokenRequest.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
+
+    if (this.clientAuthenticationType == ClientAuthenticationType.CLIENT_SECRET_BASIC) {
+      BaseEncoding base64 = BaseEncoding.base64();
+      String encodedCredentials =
+          base64.encode((clientId.getClientId() + ":" + clientId.getClientSecret()).getBytes());
+      tokenRequest.getHeaders().setAuthorization("Basic " + encodedCredentials);
+    }
 
     HttpResponse tokenResponse = tokenRequest.execute();
 
@@ -418,7 +445,6 @@ public class UserAuthorizer {
     }
     AccessToken accessToken = credentials.getAccessToken();
     String acessTokenValue = null;
-    String scopes = null;
     Date expiresBy = null;
     List<String> grantedScopes = new ArrayList<>();
 
@@ -488,6 +514,7 @@ public class UserAuthorizer {
     private Collection<String> scopes;
     private HttpTransportFactory transportFactory;
     private PKCEProvider pkce;
+    private ClientAuthenticationType clientAuthenticationType;
 
     protected Builder() {}
 
@@ -500,6 +527,7 @@ public class UserAuthorizer {
       this.callbackUri = authorizer.callbackUri;
       this.userAuthUri = authorizer.userAuthUri;
       this.pkce = new DefaultPKCEProvider();
+      this.clientAuthenticationType = authorizer.clientAuthenticationType;
     }
 
     @CanIgnoreReturnValue
@@ -559,6 +587,12 @@ public class UserAuthorizer {
       return this;
     }
 
+    @CanIgnoreReturnValue
+    public Builder setClientAuthenticationType(ClientAuthenticationType clientAuthenticationType) {
+      this.clientAuthenticationType = clientAuthenticationType;
+      return this;
+    }
+
     public ClientId getClientId() {
       return clientId;
     }
@@ -591,6 +625,10 @@ public class UserAuthorizer {
       return pkce;
     }
 
+    public ClientAuthenticationType getClientAuthenticationType() {
+      return clientAuthenticationType;
+    }
+
     public UserAuthorizer build() {
       return new UserAuthorizer(
           clientId,
@@ -600,7 +638,14 @@ public class UserAuthorizer {
           transportFactory,
           tokenServerUri,
           userAuthUri,
-          pkce);
+          pkce,
+          clientAuthenticationType);
     }
+  }
+
+  public enum ClientAuthenticationType {
+    CLIENT_SECRET_POST,
+    CLIENT_SECRET_BASIC,
+    NONE
   }
 }
