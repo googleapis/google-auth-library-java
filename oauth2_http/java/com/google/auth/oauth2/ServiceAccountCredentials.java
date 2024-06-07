@@ -31,7 +31,24 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.common.base.MoreObjects.firstNonNull;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.Executor;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpBackOffIOExceptionHandler;
@@ -55,26 +72,9 @@ import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects.ToStringHelper;
+import static com.google.common.base.MoreObjects.firstNonNull;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.GeneralSecurityException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.Signature;
-import java.security.SignatureException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.Executor;
 
 /**
  * OAuth2 credentials representing a Service Account for calling Google APIs.
@@ -641,7 +641,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   /**
    * Clones the service account with a new useJwtAccessWithScope value. This flag will be ignored if
-   * universeDomain field is different from {@link Credentials.GOOGLE_DEFAULT_UNIVERSE}.
+   * universeDomain field is different from {@link Credentials#GOOGLE_DEFAULT_UNIVERSE}.
    *
    * @param useJwtAccessWithScope whether self-signed JWT with scopes should be used
    * @return the cloned service account credentials with the given useJwtAccessWithScope
@@ -1119,7 +1119,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
     /**
      * Sets the useJwtAccessWithScope flag. This flag will be ignored if universeDomain field is
-     * different from {@link Credentials.GOOGLE_DEFAULT_UNIVERSE}.
+     * different from {@link Credentials#GOOGLE_DEFAULT_UNIVERSE}.
      */
     @CanIgnoreReturnValue
     public Builder setUseJwtAccessWithScope(boolean useJwtAccessWithScope) {
