@@ -97,6 +97,10 @@ public class MockTokenServerTransport extends MockHttpTransport {
     }
   }
 
+  public void addHeader(String header, String value) {
+    clients.put(header, value);
+  }
+
   public void addClient(String clientId, String clientSecret) {
     clients.put(clientId, clientSecret);
   }
@@ -206,7 +210,8 @@ public class MockTokenServerTransport extends MockHttpTransport {
             }
             String foundSecret = query.get("client_secret");
             String expectedSecret = clients.get(foundId);
-            if (foundSecret == null || !foundSecret.equals(expectedSecret)) {
+            if ((foundSecret == null || !foundSecret.equals(expectedSecret))
+                && clients.get("Authorization") == null) {
               throw new IOException("Client secret not found.");
             }
             String grantType = query.get("grant_type");

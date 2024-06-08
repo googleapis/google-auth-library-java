@@ -38,6 +38,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
 import com.google.auth.TestUtils;
+import com.google.common.io.BaseEncoding;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
@@ -504,6 +505,50 @@ public class UserAuthorizerTest {
             .setScopes(DUMMY_SCOPES)
             .setTokenStore(tokenStore)
             .setHttpTransportFactory(transportFactory)
+            .build();
+
+    UserCredentials credentials1 =
+        authorizer.getAndStoreCredentialsFromCode(USER_ID, CODE, BASE_URI);
+
+    assertEquals(REFRESH_TOKEN, credentials1.getRefreshToken());
+    assertEquals(GRANTED_SCOPES, credentials1.getAccessToken().getScopes());
+    assertEquals(accessTokenValue1, credentials1.getAccessToken().getTokenValue());
+
+    // Refresh the token to get update from token server
+    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessTokenValue2);
+    credentials1.refresh();
+    assertEquals(REFRESH_TOKEN, credentials1.getRefreshToken());
+    assertEquals(accessTokenValue2, credentials1.getAccessToken().getTokenValue());
+
+    // Load a second credentials instance
+    UserCredentials credentials2 = authorizer.getCredentials(USER_ID);
+
+    // Verify that token refresh stored the updated tokens
+    assertEquals(REFRESH_TOKEN, credentials2.getRefreshToken());
+    assertEquals(GRANTED_SCOPES, credentials2.getAccessToken().getScopes());
+    assertEquals(accessTokenValue2, credentials2.getAccessToken().getTokenValue());
+  }
+
+  @Test
+  public void getAndStoreCredentialsFromCodeBasicAuth_getAndStoresCredentials() throws IOException {
+    final String accessTokenValue1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    final String accessTokenValue2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
+    BaseEncoding base64 = BaseEncoding.base64();
+    String encodedCredentials = base64.encode((CLIENT_ID_VALUE + ":" + CLIENT_SECRET).getBytes());
+    transportFactory.transport.addHeader("Authorization", "Basic " + encodedCredentials);
+    transportFactory.transport.addAuthorizationCode(
+        CODE, REFRESH_TOKEN, accessTokenValue1, GRANTED_SCOPES_STRING, null);
+    TokenStore tokenStore = new MemoryTokensStorage();
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(DUMMY_SCOPES)
+            .setTokenStore(tokenStore)
+            .setHttpTransportFactory(transportFactory)
+            .setClientAuthenticationType(
+                UserAuthorizer.ClientAuthenticationType.CLIENT_SECRET_BASIC)
             .build();
 
     UserCredentials credentials1 =
