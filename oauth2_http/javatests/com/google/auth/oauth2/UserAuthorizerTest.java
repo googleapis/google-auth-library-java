@@ -573,6 +573,27 @@ public class UserAuthorizerTest {
     assertEquals(accessTokenValue2, credentials2.getAccessToken().getTokenValue());
   }
 
+  @Test(expected = IOException.class)
+  public void getAndStoreCredentialsFromCodeNoneAuth_throws() throws IOException {
+    final String accessTokenValue1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
+    transportFactory.transport.addAuthorizationCode(
+        CODE, REFRESH_TOKEN, accessTokenValue1, GRANTED_SCOPES_STRING, null);
+
+    TokenStore tokenStore = new MemoryTokensStorage();
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(DUMMY_SCOPES)
+            .setTokenStore(tokenStore)
+            .setHttpTransportFactory(transportFactory)
+            .setClientAuthenticationType(UserAuthorizer.ClientAuthenticationType.NONE)
+            .build();
+
+    authorizer.getAndStoreCredentialsFromCode(USER_ID, CODE, BASE_URI);
+  }
+
   @Test(expected = NullPointerException.class)
   public void getAndStoreCredentialsFromCode_nullCode_throws() throws IOException {
     UserAuthorizer authorizer =
