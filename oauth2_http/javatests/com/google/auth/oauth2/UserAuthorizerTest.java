@@ -90,6 +90,9 @@ public class UserAuthorizerTest {
     assertSame(store, authorizer.getTokenStore());
     assertEquals(DUMMY_SCOPES, authorizer.getScopes());
     assertEquals(UserAuthorizer.DEFAULT_CALLBACK_URI, authorizer.getCallbackUri());
+    assertEquals(
+        UserAuthorizer.ClientAuthenticationType.CLIENT_SECRET_POST,
+        authorizer.getClientAuthenticationType());
   }
 
   @Test
@@ -102,12 +105,38 @@ public class UserAuthorizerTest {
             .setScopes(DUMMY_SCOPES)
             .setTokenStore(store)
             .setCallbackUri(CALLBACK_URI)
+            .setClientAuthenticationType(
+                UserAuthorizer.ClientAuthenticationType.CLIENT_SECRET_BASIC)
             .build();
 
     assertSame(CLIENT_ID, authorizer.getClientId());
     assertSame(store, authorizer.getTokenStore());
     assertEquals(DUMMY_SCOPES, authorizer.getScopes());
     assertEquals(CALLBACK_URI, authorizer.getCallbackUri());
+    assertEquals(
+        UserAuthorizer.ClientAuthenticationType.CLIENT_SECRET_BASIC,
+        authorizer.getClientAuthenticationType());
+  }
+
+  @Test
+  public void constructorWithClientAuthenticationTypeNone() {
+    TokenStore store = new MemoryTokensStorage();
+
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(DUMMY_SCOPES)
+            .setTokenStore(store)
+            .setCallbackUri(CALLBACK_URI)
+            .setClientAuthenticationType(UserAuthorizer.ClientAuthenticationType.NONE)
+            .build();
+
+    assertSame(CLIENT_ID, authorizer.getClientId());
+    assertSame(store, authorizer.getTokenStore());
+    assertEquals(DUMMY_SCOPES, authorizer.getScopes());
+    assertEquals(CALLBACK_URI, authorizer.getCallbackUri());
+    assertEquals(
+        UserAuthorizer.ClientAuthenticationType.NONE, authorizer.getClientAuthenticationType());
   }
 
   @Test(expected = NullPointerException.class)
