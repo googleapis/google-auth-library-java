@@ -332,9 +332,8 @@ public class UserAuthorizer {
     tokenRequest.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
 
     if (this.clientAuthenticationType == ClientAuthenticationType.CLIENT_SECRET_BASIC) {
-      BaseEncoding base64 = BaseEncoding.base64();
       String encodedCredentials =
-          base64.encode((clientId.getClientId() + ":" + clientId.getClientSecret()).getBytes());
+          BaseEncoding.base64().encode((clientId.getClientId() + ":" + clientId.getClientSecret()).getBytes());
       tokenRequest.getHeaders().setAuthorization("Basic " + encodedCredentials);
     }
 
