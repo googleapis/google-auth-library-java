@@ -57,6 +57,17 @@ import java.util.Map;
 /** Handles an interactive 3-Legged-OAuth2 (3LO) user consent authorization. */
 public class UserAuthorizer {
 
+  /**
+   * Represents the client authentication types as specified in RFC 7591.
+   *
+   * <p>For more details, see <a href="https://tools.ietf.org/html/rfc7591">RFC 7591</a>.
+   */
+  public enum ClientAuthenticationType {
+    CLIENT_SECRET_POST,
+    CLIENT_SECRET_BASIC,
+    NONE
+  }
+
   static final URI DEFAULT_CALLBACK_URI = URI.create("/oauth2callback");
 
   private final String TOKEN_STORE_ERROR = "Error parsing stored token data.";
@@ -171,9 +182,9 @@ public class UserAuthorizer {
   }
 
   /**
-   * Returns the client authentication type in RFC7591
+   * Returns the client authentication type as defined in RFC 7591.
    *
-   * @return The ClientAuthenticationType
+   * @return The {@link ClientAuthenticationType}
    */
   public ClientAuthenticationType getClientAuthenticationType() {
     return clientAuthenticationType;
@@ -333,7 +344,8 @@ public class UserAuthorizer {
 
     if (this.clientAuthenticationType == ClientAuthenticationType.CLIENT_SECRET_BASIC) {
       String encodedCredentials =
-          BaseEncoding.base64().encode((clientId.getClientId() + ":" + clientId.getClientSecret()).getBytes());
+          BaseEncoding.base64()
+              .encode((clientId.getClientId() + ":" + clientId.getClientSecret()).getBytes());
       tokenRequest.getHeaders().setAuthorization("Basic " + encodedCredentials);
     }
 
@@ -640,11 +652,5 @@ public class UserAuthorizer {
           pkce,
           clientAuthenticationType);
     }
-  }
-
-  public enum ClientAuthenticationType {
-    CLIENT_SECRET_POST,
-    CLIENT_SECRET_BASIC,
-    NONE
   }
 }
