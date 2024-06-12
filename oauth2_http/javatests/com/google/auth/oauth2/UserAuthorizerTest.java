@@ -37,6 +37,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
+import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.auth.TestUtils;
 import com.google.common.io.BaseEncoding;
 import java.io.IOException;
@@ -543,10 +544,6 @@ public class UserAuthorizerTest {
     final String accessTokenValue2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
-    BaseEncoding base64 = BaseEncoding.base64();
-    String encodedCredentials = base64.encode((CLIENT_ID_VALUE + ":" + CLIENT_SECRET).getBytes());
-    transportFactory.transport.addHeader(
-        CLIENT_ID_VALUE, "Authorization", "Basic " + encodedCredentials);
     transportFactory.transport.addAuthorizationCode(
         CODE, REFRESH_TOKEN, accessTokenValue1, GRANTED_SCOPES_STRING, null);
     TokenStore tokenStore = new MemoryTokensStorage();
@@ -566,6 +563,14 @@ public class UserAuthorizerTest {
     assertEquals(REFRESH_TOKEN, credentials1.getRefreshToken());
     assertEquals(GRANTED_SCOPES, credentials1.getAccessToken().getScopes());
     assertEquals(accessTokenValue1, credentials1.getAccessToken().getTokenValue());
+
+    // Validate request auth header
+    MockLowLevelHttpRequest request = transportFactory.transport.getRequest();
+    Map<String, List<String>> requestHeaders = request.getHeaders();
+    String basicAuth = requestHeaders.get("Authorization").get(0);
+    String expectedAuthHeader =
+        "Basic " + BaseEncoding.base64().encode((CLIENT_ID_VALUE + ":" + CLIENT_SECRET).getBytes());
+    assertEquals(expectedAuthHeader, basicAuth);
 
     // Refresh the token to get update from token server
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessTokenValue2);
