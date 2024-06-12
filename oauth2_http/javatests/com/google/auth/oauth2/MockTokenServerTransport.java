@@ -106,7 +106,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
       String clientSecret = clients.get(clientId);
       String expectValue =
           "Basic " + BaseEncoding.base64().encode((clientId + ":" + clientSecret).getBytes());
-      if (expectValue.equalsIgnoreCase(value)) {
+      if (!expectValue.equalsIgnoreCase(value)) {
         throw new IOException("Unexpected Auth header");
       }
     }
