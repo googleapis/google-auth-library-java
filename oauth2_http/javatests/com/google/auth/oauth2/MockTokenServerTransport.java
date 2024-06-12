@@ -42,6 +42,7 @@ import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.auth.TestUtils;
+import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.Futures;
 import java.io.IOException;
 import java.net.URI;
@@ -97,8 +98,21 @@ public class MockTokenServerTransport extends MockHttpTransport {
     }
   }
 
-  public void addHeader(String header, String value) {
-    clients.put(header, value);
+  public void addHeader(String clientId, String header, String value) throws IOException {
+    if (!clients.containsKey(clientId)) {
+      throw new IOException("No such client Id");
+    }
+    if (header.equalsIgnoreCase("Authorization")) {
+      String clientSecret = clients.get(clientId);
+      String expectValue =
+          "Basic " + BaseEncoding.base64().encode((clientId + ":" + clientSecret).getBytes());
+      if (expectValue.equalsIgnoreCase(value)) {
+        throw new IOException("Unexpected Auth header");
+      }
+    }
+    Map<String, String> headers = new HashMap<>();
+    headers.put(header, value);
+    additionalParameters.put(clientId, headers);
   }
 
   public void addClient(String clientId, String clientSecret) {
@@ -211,7 +225,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
             String foundSecret = query.get("client_secret");
             String expectedSecret = clients.get(foundId);
             if ((foundSecret == null || !foundSecret.equals(expectedSecret))
-                && clients.get("Authorization") == null) {
+                && !authorized(foundId)) {
               throw new IOException("Client secret not found.");
             }
             String grantType = query.get("grant_type");
@@ -341,5 +355,12 @@ public class MockTokenServerTransport extends MockHttpTransport {
       };
     }
     return super.buildRequest(method, url);
+  }
+
+  protected boolean authorized(String foundId) {
+    if (!additionalParameters.containsKey(foundId)) {
+      return false;
+    }
+    return !additionalParameters.get(foundId).containsKey("Authorization");
   }
 }

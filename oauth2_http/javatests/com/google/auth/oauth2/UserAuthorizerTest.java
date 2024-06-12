@@ -167,6 +167,14 @@ public class UserAuthorizerTest {
   }
 
   @Test
+  public void getBasicAuthTest() {
+    String expectBasicAuthHeader =
+        "Basic " + BaseEncoding.base64().encode((CLIENT_ID_VALUE + ":" + CLIENT_SECRET).getBytes());
+
+    assertEquals(expectBasicAuthHeader, UserAuthorizer.getBasicAuthString(CLIENT_ID));
+  }
+
+  @Test
   public void getAuthorizationUrl() throws IOException {
     final String CUSTOM_STATE = "custom_state";
     final String PROTOCOL = "https";
@@ -537,7 +545,8 @@ public class UserAuthorizerTest {
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
     BaseEncoding base64 = BaseEncoding.base64();
     String encodedCredentials = base64.encode((CLIENT_ID_VALUE + ":" + CLIENT_SECRET).getBytes());
-    transportFactory.transport.addHeader("Authorization", "Basic " + encodedCredentials);
+    transportFactory.transport.addHeader(
+        CLIENT_ID_VALUE, "Authorization", "Basic " + encodedCredentials);
     transportFactory.transport.addAuthorizationCode(
         CODE, REFRESH_TOKEN, accessTokenValue1, GRANTED_SCOPES_STRING, null);
     TokenStore tokenStore = new MemoryTokensStorage();

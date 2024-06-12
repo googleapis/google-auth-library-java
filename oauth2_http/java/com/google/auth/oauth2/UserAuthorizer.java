@@ -322,6 +322,10 @@ public class UserAuthorizer {
     tokenData.put("client_id", clientId.getClientId());
     tokenData.put("redirect_uri", resolvedCallbackUri);
     tokenData.put("grant_type", "authorization_code");
+    // If the token request is sent to STS. STS will fail by design if the `client_secret` in post
+    // body.
+    // Sending client_secret when the client authentication type is post is to maintain existing
+    // behavior for existing code.
     if (this.clientAuthenticationType == ClientAuthenticationType.CLIENT_SECRET_POST) {
       tokenData.put("client_secret", clientId.getClientSecret());
     }
@@ -343,10 +347,7 @@ public class UserAuthorizer {
     tokenRequest.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
 
     if (this.clientAuthenticationType == ClientAuthenticationType.CLIENT_SECRET_BASIC) {
-      String encodedCredentials =
-          BaseEncoding.base64()
-              .encode((clientId.getClientId() + ":" + clientId.getClientSecret()).getBytes());
-      tokenRequest.getHeaders().setAuthorization("Basic " + encodedCredentials);
+      tokenRequest.getHeaders().setAuthorization(getBasicAuthString(clientId));
     }
 
     HttpResponse tokenResponse = tokenRequest.execute();
@@ -505,6 +506,19 @@ public class UserAuthorizer {
       UserCredentials userCredentials = (UserCredentials) credentials;
       storeCredentials(userId, userCredentials);
     }
+  }
+
+  /**
+   * A helper function to get a base64 encoded basic auth.
+   *
+   * @param clientId A ClientId object which contains a string value and a secret
+   * @return The basic auth header
+   */
+  public static String getBasicAuthString(ClientId clientId) {
+    String encodedCredentials =
+        BaseEncoding.base64()
+            .encode((clientId.getClientId() + ":" + clientId.getClientSecret()).getBytes());
+    return "Basic " + encodedCredentials;
   }
 
   public static Builder newBuilder() {
