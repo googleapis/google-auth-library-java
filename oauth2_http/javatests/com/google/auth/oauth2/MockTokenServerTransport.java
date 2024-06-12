@@ -99,23 +99,6 @@ public class MockTokenServerTransport extends MockHttpTransport {
     }
   }
 
-  public void addHeader(String clientId, String header, String value) throws IOException {
-    if (!clients.containsKey(clientId)) {
-      throw new IOException("No such client Id");
-    }
-    if (header.equalsIgnoreCase("Authorization")) {
-      String clientSecret = clients.get(clientId);
-      String expectValue =
-          "Basic " + BaseEncoding.base64().encode((clientId + ":" + clientSecret).getBytes());
-      if (!expectValue.equalsIgnoreCase(value)) {
-        throw new IOException("Unexpected Auth header");
-      }
-    }
-    Map<String, String> headers = new HashMap<>();
-    headers.put(header, value);
-    additionalParameters.put(clientId, headers);
-  }
-
   public void addClient(String clientId, String clientSecret) {
     clients.put(clientId, clientSecret);
   }
