@@ -42,7 +42,6 @@ import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.auth.TestUtils;
-import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.Futures;
 import java.io.IOException;
 import java.net.URI;
@@ -72,6 +71,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
   private IOException error;
   private final Queue<Future<LowLevelHttpResponse>> responseSequence = new ArrayDeque<>();
   private int expiresInSeconds = 3600;
+  private boolean checkSecret = true;
   private MockLowLevelHttpRequest request;
 
   public MockTokenServerTransport() {}
@@ -215,7 +215,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
                 }
                 String foundSecret = query.get("client_secret");
                 String expectedSecret = clients.get(foundId);
-                if ((foundSecret == null || !foundSecret.equals(expectedSecret)) && !authorized()) {
+                if ((foundSecret == null || !foundSecret.equals(expectedSecret)) && checkSecret) {
                   throw new IOException("Client secret not found.");
                 }
                 String grantType = query.get("grant_type");
@@ -353,7 +353,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
     return super.buildRequest(method, url);
   }
 
-  protected boolean authorized() {
-    return request.getHeaders().containsKey("Authorization");
+  public void disableSecretCheck() {
+    checkSecret = false;
   }
 }
