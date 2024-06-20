@@ -191,6 +191,22 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void createScoped_shouldInvalidateAccessToken() throws IOException {
+    List<String> scopes = Arrays.asList(null, "foo", "", "bar");
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    ComputeEngineCredentials credentials =
+        (ComputeEngineCredentials)
+            ComputeEngineCredentials.newBuilder()
+                .setHttpTransportFactory(transportFactory)
+                .setQuotaProjectId("quota-project")
+                .setAccessToken(AccessToken.newBuilder().build())
+                .build();
+    assertNotNull(credentials.getAccessToken());
+    GoogleCredentials credentialsScoped = credentials.createScoped(scopes);
+    assertNull(credentialsScoped.getAccessToken());
+  }
+
+  @Test
   public void buildScoped_correctMargins() throws IOException {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setScopes(null).build();
