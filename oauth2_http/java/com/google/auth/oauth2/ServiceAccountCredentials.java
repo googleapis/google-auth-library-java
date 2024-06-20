@@ -623,7 +623,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   @Override
   public GoogleCredentials createScoped(
       Collection<String> newScopes, Collection<String> newDefaultScopes) {
-    return this.toBuilder().setScopes(newScopes, newDefaultScopes).build();
+    return this.toBuilder().setScopes(newScopes, newDefaultScopes).setAccessToken(null).build();
   }
 
   /**
