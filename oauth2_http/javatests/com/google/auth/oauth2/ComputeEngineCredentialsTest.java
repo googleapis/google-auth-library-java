@@ -231,7 +231,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
         (ComputeEngineCredentials) credentials.createScoped(Arrays.asList("foo"));
 
     assertEquals("some-universe", scopedCredentials.getUniverseDomain());
-    assertEquals(true, scopedCredentials.isExplicitUniverseDomain());
+    assertTrue(scopedCredentials.isExplicitUniverseDomain());
   }
 
   @Test
@@ -242,6 +242,20 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
     assertEquals(1, scopes.size());
     assertEquals("foo", scopes.toArray()[0]);
+  }
+  @Test
+  public void buildDefaultScoped_explicitUniverse() throws IOException {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder()
+            .setScopes(null)
+            .setUniverseDomain("some-universe")
+            .build();
+    ComputeEngineCredentials scopedCredentials =
+        (ComputeEngineCredentials) credentials.createScoped(null, Arrays.asList("foo"));
+    Collection<String> scopes = ((ComputeEngineCredentials) scopedCredentials).getScopes();
+
+    assertEquals("some-universe", scopedCredentials.getUniverseDomain());
+    assertTrue(scopedCredentials.isExplicitUniverseDomain());
   }
 
   @Test

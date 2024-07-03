@@ -155,13 +155,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
   /** Clones the compute engine account with the specified scopes. */
   @Override
   public GoogleCredentials createScoped(Collection<String> newScopes) {
-    ComputeEngineCredentials.Builder builder =
-        (Builder)
-            this.toBuilder()
-                .setHttpTransportFactory(transportFactory)
-                .setScopes(newScopes)
-                .setAccessToken(null);
-    return new ComputeEngineCredentials(builder);
+    return createScoped(newScopes, null);
   }
 
   /** Clones the compute engine account with the specified scopes and default scopes. */
@@ -170,7 +164,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
       Collection<String> newScopes, Collection<String> newDefaultScopes) {
     ComputeEngineCredentials.Builder builder =
         (Builder)
-            ComputeEngineCredentials.newBuilder()
+            this.toBuilder()
                 .setHttpTransportFactory(transportFactory)
                 .setScopes(newScopes)
                 .setDefaultScopes(newDefaultScopes)
