@@ -243,6 +243,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     assertEquals(1, scopes.size());
     assertEquals("foo", scopes.toArray()[0]);
   }
+
   @Test
   public void buildDefaultScoped_explicitUniverse() throws IOException {
     ComputeEngineCredentials credentials =
