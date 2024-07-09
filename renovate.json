@@ -8,7 +8,8 @@
     ":automergeDisabled",
     ":ignoreModulesAndTests",
     ":maintainLockFilesDisabled",
-    ":autodetectPinVersions"
+    ":autodetectPinVersions",
+    ":dependencyDashboard"
   ],
   "ignorePaths": [".kokoro/requirements.txt"],
   "customManagers": [
