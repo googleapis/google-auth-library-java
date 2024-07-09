@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.24.0](https://github.com/googleapis/google-auth-library-java/compare/v1.23.0...v1.24.0) (2024-07-09)
+
+
+### Features
+
+* [java] allow passing libraries_bom_version from env ([#1967](https://github.com/googleapis/google-auth-library-java/issues/1967)) ([#1407](https://github.com/googleapis/google-auth-library-java/issues/1407)) ([d92b421](https://github.com/googleapis/google-auth-library-java/commit/d92b421c8fa9c22dda47b49f5ebec7f6ac2658a9))
+* Next release from main branch is 1.21.0 ([#1372](https://github.com/googleapis/google-auth-library-java/issues/1372)) ([23c3cbe](https://github.com/googleapis/google-auth-library-java/commit/23c3cbe70fdce49a3075e15ba965739704a87ace))
+
+
+### Bug Fixes
+
+* Makes default token url universe aware ([#1383](https://github.com/googleapis/google-auth-library-java/issues/1383)) ([e3caf05](https://github.com/googleapis/google-auth-library-java/commit/e3caf05831011dc05d3a8b01ebf79305eda70183))
+* Remove Base64 padding in DefaultPKCEProvider ([#1375](https://github.com/googleapis/google-auth-library-java/issues/1375)) ([1405378](https://github.com/googleapis/google-auth-library-java/commit/1405378b05469841a3683bc914f47b92437abcfc))
+
+
+### Documentation
+
+* Add supplier sections to table of contents ([#1371](https://github.com/googleapis/google-auth-library-java/issues/1371)) ([9e11763](https://github.com/googleapis/google-auth-library-java/commit/9e11763e79127b3691533488482575adef6f73d2))
+* Adds docs for supplier based external account credentials ([#1362](https://github.com/googleapis/google-auth-library-java/issues/1362)) ([bd898c6](https://github.com/googleapis/google-auth-library-java/commit/bd898c64875a87414f84ca0787ba6c140e05921b))
+* Fix readme documentation for workload custom suppliers. ([#1382](https://github.com/googleapis/google-auth-library-java/issues/1382)) ([75bd749](https://github.com/googleapis/google-auth-library-java/commit/75bd749985e2d507dc48863408067950fcda3ef1))
+
 ## [1.23.0](https://github.com/googleapis/google-auth-library-java/compare/v1.22.0...v1.23.0) (2024-02-05)
 
 
