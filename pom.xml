@@ -72,7 +72,7 @@
     <project.google.http.version>1.44.2</project.google.http.version>
     <project.junit.version>4.13.2</project.junit.version>
     <project.guava.version>33.2.0-android</project.guava.version>
-    <project.appengine.version>2.0.27</project.appengine.version>
+    <project.appengine.version>2.0.29</project.appengine.version>
     <project.findbugs.version>3.0.2</project.findbugs.version>
     <deploy.autorelease>false</deploy.autorelease>
     <project.error-prone.version>2.28.0</project.error-prone.version>
@@ -199,7 +199,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
-          <version>3.4.1</version>
+          <version>3.4.2</version>
           <executions>
             <execution>
               <goals>
@@ -211,7 +211,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.2.5</version>
+          <version>3.3.0</version>
           <configuration>
             <reportNameSuffix>sponge_log</reportNameSuffix>
           </configuration>
@@ -219,7 +219,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
-          <version>3.6.1</version>
+          <version>3.7.1</version>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
