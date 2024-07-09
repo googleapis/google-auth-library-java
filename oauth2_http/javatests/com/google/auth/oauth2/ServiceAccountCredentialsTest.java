@@ -310,8 +310,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
     String assertion =
-        credentials.createAssertionForIdToken(
-            jsonFactory, currentTimeMillis, null, "https://foo.com/bar");
+        credentials.createAssertionForIdToken(currentTimeMillis, null, "https://foo.com/bar");
 
     JsonWebSignature signature = JsonWebSignature.parse(jsonFactory, assertion);
     JsonWebToken.Payload payload = signature.getPayload();
@@ -329,8 +328,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
     String assertion =
-        credentials.createAssertionForIdToken(
-            jsonFactory, currentTimeMillis, null, "https://foo.com/bar");
+        credentials.createAssertionForIdToken(currentTimeMillis, null, "https://foo.com/bar");
 
     JsonWebSignature signature = JsonWebSignature.parse(jsonFactory, assertion);
     JsonWebToken.Payload payload = signature.getPayload();
@@ -353,8 +351,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
     String assertion =
-        credentials.createAssertionForIdToken(
-            jsonFactory, currentTimeMillis, null, "https://foo.com/bar");
+        credentials.createAssertionForIdToken(currentTimeMillis, null, "https://foo.com/bar");
 
     JsonWebSignature signature = JsonWebSignature.parse(jsonFactory, assertion);
     JsonWebToken.Payload payload = signature.getPayload();
@@ -850,7 +847,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void idTokenWithAudience_correct() throws IOException {
+  public void idTokenWithAudience_oauthFlow_correct() throws IOException {
     String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
@@ -869,13 +866,15 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     tokenCredential.refresh();
     assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getAccessToken().getTokenValue());
     assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getIdToken().getTokenValue());
+
+    // ID Token's aud claim is `https://foo.bar`
     assertEquals(
         targetAudience,
         (String) tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
   }
 
   @Test
-  public void idTokenWithAudience_incorrect() throws IOException {
+  public void idTokenWithAudience_oauthFlow_incorrect() throws IOException {
     String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
@@ -892,9 +891,75 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             .setTargetAudience(targetAudience)
             .build();
     tokenCredential.refresh();
+
+    // ID Token's aud claim is `https://foo.bar`
     assertNotEquals(
         targetAudience,
         (String) tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
+  }
+
+  @Test
+  public void idTokenWithAudience_iamFlow_correct() throws IOException {
+    String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransport transport =
+        new MockTokenServerTransport(
+            URI.create(String.format(OAuth2Utils.IAM_ID_TOKEN_URI_FORMAT, CLIENT_EMAIL)));
+    MockTokenServerTransportFactory transportFactory =
+        new MockTokenServerTransportFactory(transport);
+    ServiceAccountCredentials credentials =
+        createDefaultBuilder()
+            .setScopes(SCOPES)
+            .setHttpTransportFactory(transportFactory)
+            .setUniverseDomain("notGDU.com")
+            .build();
+
+    transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
+
+    String targetAudience = "https://foo.bar";
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(credentials)
+            .setTargetAudience(targetAudience)
+            .build();
+    tokenCredential.refresh();
+    assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getAccessToken().getTokenValue());
+    assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getIdToken().getTokenValue());
+
+    // ID Token's aud claim is `https://foo.bar`
+    assertEquals(
+        targetAudience,
+        tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
+  }
+
+  @Test
+  public void idTokenWithAudience_iamFlow_incorrect() throws IOException {
+    String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransport transport =
+        new MockTokenServerTransport(
+            URI.create(String.format(OAuth2Utils.IAM_ID_TOKEN_URI_FORMAT, CLIENT_EMAIL)));
+    MockTokenServerTransportFactory transportFactory =
+        new MockTokenServerTransportFactory(transport);
+    ServiceAccountCredentials credentials =
+        createDefaultBuilder()
+            .setScopes(SCOPES)
+            .setHttpTransportFactory(transportFactory)
+            .setUniverseDomain("notGDU.com")
+            .build();
+
+    transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
+
+    String targetAudience = "https://bar";
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(credentials)
+            .setTargetAudience(targetAudience)
+            .build();
+    tokenCredential.refresh();
+
+    // ID Token's aud claim is `https://foo.bar`
+    assertNotEquals(
+        targetAudience,
+        tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
   }
 
   @Test

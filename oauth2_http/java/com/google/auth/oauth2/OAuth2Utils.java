@@ -75,6 +75,10 @@ class OAuth2Utils {
   static final String TOKEN_TYPE_TOKEN_EXCHANGE = "urn:ietf:params:oauth:token-type:token-exchange";
   static final String GRANT_TYPE_JWT_BEARER = "urn:ietf:params:oauth:grant-type:jwt-bearer";
 
+  // generateIdToken endpoint is to be spliced with the client email
+  static final String IAM_ID_TOKEN_URI_FORMAT =
+      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateIdToken";
+
   static final URI TOKEN_SERVER_URI = URI.create("https://oauth2.googleapis.com/token");
   static final URI TOKEN_REVOKE_URI = URI.create("https://oauth2.googleapis.com/revoke");
   static final URI USER_AUTH_URI = URI.create("https://accounts.google.com/o/oauth2/auth");

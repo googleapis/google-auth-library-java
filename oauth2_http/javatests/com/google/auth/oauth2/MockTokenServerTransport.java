@@ -52,6 +52,8 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** Mock transport to simulate providing Google OAuth2 access tokens */
 public class MockTokenServerTransport extends MockHttpTransport {
@@ -67,12 +69,22 @@ public class MockTokenServerTransport extends MockHttpTransport {
   final Map<String, String> codes = new HashMap<String, String>();
   final Map<String, Map<String, String>> additionalParameters =
       new HashMap<String, Map<String, String>>();
-  URI tokenServerUri = OAuth2Utils.TOKEN_SERVER_URI;
+  private URI tokenServerUri;
   private IOException error;
   private final Queue<Future<LowLevelHttpResponse>> responseSequence = new ArrayDeque<>();
   private int expiresInSeconds = 3600;
 
-  public MockTokenServerTransport() {}
+  private Pattern iamEndpointRegex =
+      Pattern.compile(
+          "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/(.*):generateIdToken");
+
+  public MockTokenServerTransport() {
+    this(OAuth2Utils.TOKEN_SERVER_URI);
+  }
+
+  MockTokenServerTransport(URI tokenServerUri) {
+    this.tokenServerUri = tokenServerUri;
+  }
 
   public URI getTokenServerUri() {
     return tokenServerUri;
@@ -173,6 +185,9 @@ public class MockTokenServerTransport extends MockHttpTransport {
         }
       };
     }
+
+    Matcher matcher = iamEndpointRegex.matcher(tokenServerUri.toString());
+    boolean useIamEndpoint = matcher.matches();
 
     if (urlWithoutQuery.equals(tokenServerUri.toString())) {
       return new MockLowLevelHttpRequest(url) {
@@ -290,6 +305,12 @@ public class MockTokenServerTransport extends MockHttpTransport {
             } else {
               throw new IOException("Service Account Email not found as issuer.");
             }
+          } else if (useIamEndpoint) {
+            String clientEmail = matcher.group(1);
+            if (!serviceAccounts.containsKey(clientEmail)) {
+              throw new IOException("Client Email " + clientEmail + " does not exist");
+            }
+            generateAccessToken = false;
           } else {
             throw new IOException("Unknown token type.");
           }
@@ -310,7 +331,11 @@ public class MockTokenServerTransport extends MockHttpTransport {
             }
           }
           if (isUserEmailScope || !generateAccessToken) {
-            responseContents.put("id_token", ServiceAccountCredentialsTest.DEFAULT_ID_TOKEN);
+            String fieldName = "id_token";
+            if (useIamEndpoint) {
+              fieldName = "token";
+            }
+            responseContents.put(fieldName, ServiceAccountCredentialsTest.DEFAULT_ID_TOKEN);
           }
           String refreshText = responseContents.toPrettyString();
 
