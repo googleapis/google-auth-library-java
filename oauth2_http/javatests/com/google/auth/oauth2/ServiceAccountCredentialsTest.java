@@ -904,9 +904,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransport transport =
         new MockTokenServerTransport(
-            URI.create(
-                String.format(
-                    OAuth2Utils.IAM_ID_TOKEN_URI_FORMAT, nonGDU, CLIENT_EMAIL)));
+            URI.create(String.format(OAuth2Utils.IAM_ID_TOKEN_URI_FORMAT, nonGDU, CLIENT_EMAIL)));
     MockTokenServerTransportFactory transportFactory =
         new MockTokenServerTransportFactory(transport);
     ServiceAccountCredentials credentials =
@@ -940,9 +938,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransport transport =
         new MockTokenServerTransport(
-            URI.create(
-                String.format(
-                    OAuth2Utils.IAM_ID_TOKEN_URI_FORMAT, nonGDU, CLIENT_EMAIL)));
+            URI.create(String.format(OAuth2Utils.IAM_ID_TOKEN_URI_FORMAT, nonGDU, CLIENT_EMAIL)));
     MockTokenServerTransportFactory transportFactory =
         new MockTokenServerTransportFactory(transport);
     ServiceAccountCredentials credentials =

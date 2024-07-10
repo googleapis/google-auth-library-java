@@ -309,7 +309,8 @@ public class MockTokenServerTransport extends MockHttpTransport {
             // Group 1 is the universe domain and group 2 is the client email
             String universeDomain = matcher.group(1);
             if (universeDomain.equals("googleapis.com")) {
-              throw new IOException("Universe Domain is GDU. Iam Token Endpoint flow should no be invoked");
+              throw new IOException(
+                  "IAM Token Endpoint is in GDU. Iam Token Endpoint flow should not be invoked");
             }
             String clientEmail = matcher.group(2);
             if (!serviceAccounts.containsKey(clientEmail)) {

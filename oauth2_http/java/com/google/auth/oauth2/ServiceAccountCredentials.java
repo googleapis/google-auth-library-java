@@ -583,14 +583,17 @@ public class ServiceAccountCredentials extends GoogleCredentials
     String assertion =
         createAssertionForIdToken(currentTime, tokenServerUri.toString(), targetAudience);
 
-    GenericData tokenRequest =
-        buildRequestBody(ImmutableMap.of("grant_type", GRANT_TYPE, "assertion", assertion));
+    Map<String, Object> requestParams =
+        ImmutableMap.of("grant_type", GRANT_TYPE, "assertion", assertion);
+    GenericData tokenRequest = new GenericData();
+    requestParams.forEach(tokenRequest::set);
     UrlEncodedContent content = new UrlEncodedContent(tokenRequest);
 
-    HttpRequest request = buildHttpRequest(tokenServerUri, content);
+    HttpRequest request = buildIdTokenRequest(tokenServerUri, transportFactory, content);
     HttpResponse httpResponse = executeRequest(request);
-    String rawToken = parseResponseData(httpResponse, "id_token");
 
+    GenericData responseData = httpResponse.parseAs(GenericData.class);
+    String rawToken = OAuth2Utils.validateString(responseData, "id_token", PARSE_ERROR_PREFIX);
     return IdToken.create(rawToken);
   }
 
@@ -612,27 +615,33 @@ public class ServiceAccountCredentials extends GoogleCredentials
         createSelfSignedJwtCredentials(
             null, ImmutableList.of("https://www.googleapis.com/auth/iam"));
     Map<String, List<String>> responseMetadata = selfSignedJwtCredentials.getRequestMetadata(null);
+    // JwtCredentials will return a map with one entry ("Authorization" -> List with size 1)
     String accessToken = responseMetadata.get(AuthHttpConstants.AUTHORIZATION).get(0);
 
-    GenericData tokenRequest =
-        buildRequestBody(
-            ImmutableMap.of(
-                "audience", targetAudience, "includeEmail", "true", "useEmailAzp", "true"));
+    // Do not check user options. These params are always set regardless of options configured
+    Map<String, Object> requestParams =
+        ImmutableMap.of("audience", targetAudience, "includeEmail", "true", "useEmailAzp", "true");
+    GenericData tokenRequest = new GenericData();
+    requestParams.forEach(tokenRequest::set);
     UrlEncodedContent content = new UrlEncodedContent(tokenRequest);
 
     URI iamIdTokenUri =
         URI.create(
             String.format(OAuth2Utils.IAM_ID_TOKEN_URI_FORMAT, getUniverseDomain(), clientEmail));
-    HttpRequest request = buildHttpRequest(iamIdTokenUri, content);
+    HttpRequest request = buildIdTokenRequest(iamIdTokenUri, transportFactory, content);
     // Use the Access Token from the SSJWT to request the ID Token from IAM Endpoint
     request.setHeaders(new HttpHeaders().set(AuthHttpConstants.AUTHORIZATION, accessToken));
     HttpResponse httpResponse = executeRequest(request);
-    String rawToken = parseResponseData(httpResponse, "token");
 
+    GenericData responseData = httpResponse.parseAs(GenericData.class);
+    // IAM Endpoint returns `token` instead of `id_token`
+    String rawToken = OAuth2Utils.validateString(responseData, "token", PARSE_ERROR_PREFIX);
     return IdToken.create(rawToken);
   }
 
-  private HttpRequest buildHttpRequest(URI uri, HttpContent content) throws IOException {
+  // Build a default POST HttpRequest to be used for both Oauth and IAM endpoints
+  private HttpRequest buildIdTokenRequest(
+      URI uri, HttpTransportFactory transportFactory, HttpContent content) throws IOException {
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(uri), content);
@@ -652,19 +661,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
           e);
     }
     return response;
-  }
-
-  private String parseResponseData(HttpResponse httpResponse, String key) throws IOException {
-    GenericData responseData = httpResponse.parseAs(GenericData.class);
-    return OAuth2Utils.validateString(responseData, key, PARSE_ERROR_PREFIX);
-  }
-
-  private GenericData buildRequestBody(Map<String, Object> body) {
-    GenericData tokenRequest = new GenericData();
-    for (Map.Entry<String, Object> entry : body.entrySet()) {
-      tokenRequest.set(entry.getKey(), entry.getValue());
-    }
-    return tokenRequest;
   }
 
   /**
