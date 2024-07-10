@@ -620,7 +620,9 @@ public class ServiceAccountCredentials extends GoogleCredentials
                 "audience", targetAudience, "includeEmail", "true", "useEmailAzp", "true"));
     UrlEncodedContent content = new UrlEncodedContent(tokenRequest);
 
-    URI iamIdTokenUri = URI.create(String.format(OAuth2Utils.IAM_ID_TOKEN_URI_FORMAT, clientEmail));
+    URI iamIdTokenUri =
+        URI.create(
+            String.format(OAuth2Utils.IAM_ID_TOKEN_URI_FORMAT, getUniverseDomain(), clientEmail));
     HttpRequest request = buildHttpRequest(iamIdTokenUri, content);
     // Use the Access Token from the SSJWT to request the ID Token from IAM Endpoint
     request.setHeaders(new HttpHeaders().set(AuthHttpConstants.AUTHORIZATION, accessToken));

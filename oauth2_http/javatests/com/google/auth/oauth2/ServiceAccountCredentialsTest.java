@@ -900,17 +900,20 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void idTokenWithAudience_iamFlow_correct() throws IOException {
+    String nonGDU = "test.com";
     String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransport transport =
         new MockTokenServerTransport(
-            URI.create(String.format(OAuth2Utils.IAM_ID_TOKEN_URI_FORMAT, CLIENT_EMAIL)));
+            URI.create(
+                String.format(
+                    OAuth2Utils.IAM_ID_TOKEN_URI_FORMAT, nonGDU, CLIENT_EMAIL)));
     MockTokenServerTransportFactory transportFactory =
         new MockTokenServerTransportFactory(transport);
     ServiceAccountCredentials credentials =
         createDefaultBuilder()
             .setScopes(SCOPES)
             .setHttpTransportFactory(transportFactory)
-            .setUniverseDomain("notGDU.com")
+            .setUniverseDomain(nonGDU)
             .build();
 
     transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
@@ -933,17 +936,20 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void idTokenWithAudience_iamFlow_incorrect() throws IOException {
+    String nonGDU = "test.com";
     String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransport transport =
         new MockTokenServerTransport(
-            URI.create(String.format(OAuth2Utils.IAM_ID_TOKEN_URI_FORMAT, CLIENT_EMAIL)));
+            URI.create(
+                String.format(
+                    OAuth2Utils.IAM_ID_TOKEN_URI_FORMAT, nonGDU, CLIENT_EMAIL)));
     MockTokenServerTransportFactory transportFactory =
         new MockTokenServerTransportFactory(transport);
     ServiceAccountCredentials credentials =
         createDefaultBuilder()
             .setScopes(SCOPES)
             .setHttpTransportFactory(transportFactory)
-            .setUniverseDomain("notGDU.com")
+            .setUniverseDomain(nonGDU)
             .build();
 
     transport.addServiceAccount(CLIENT_EMAIL, accessToken1);

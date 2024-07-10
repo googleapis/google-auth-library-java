@@ -76,7 +76,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
 
   private Pattern iamEndpointRegex =
       Pattern.compile(
-          "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/(.*):generateIdToken");
+          "https://iamcredentials.(.*).com/v1/projects/-/serviceAccounts/(.*):generateIdToken");
 
   public MockTokenServerTransport() {
     this(OAuth2Utils.TOKEN_SERVER_URI);
@@ -306,7 +306,12 @@ public class MockTokenServerTransport extends MockHttpTransport {
               throw new IOException("Service Account Email not found as issuer.");
             }
           } else if (useIamEndpoint) {
-            String clientEmail = matcher.group(1);
+            // Group 1 is the universe domain and group 2 is the client email
+            String universeDomain = matcher.group(1);
+            if (universeDomain.equals("googleapis.com")) {
+              throw new IOException("Universe Domain is GDU. Iam Token Endpoint flow should no be invoked");
+            }
+            String clientEmail = matcher.group(2);
             if (!serviceAccounts.containsKey(clientEmail)) {
               throw new IOException("Client Email " + clientEmail + " does not exist");
             }
