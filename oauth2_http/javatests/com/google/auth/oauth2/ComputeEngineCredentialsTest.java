@@ -282,6 +282,29 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void getRequestMetadata_invalidatedAccessTokenWhenScoped() throws IOException {
+    String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    transportFactory.transport.setAccessToken(accessToken);
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+
+    TestUtils.assertContainsBearerToken(metadata, accessToken);
+
+    credentials.getRequestMetadata(CALL_URI);
+    ComputeEngineCredentials copy =
+        (ComputeEngineCredentials) credentials.createScoped(Arrays.asList("foo", "bar"));
+    try {
+      copy.getRequestMetadata(CALL_URI);
+      fail("Expected empty content error while refreshing token due to mock transport.");
+    } catch (IOException expected) {
+      String message = expected.getMessage();
+      assertTrue(message.contains("Empty content"));
+    }
+  }
+
+  @Test
   public void getRequestMetadata_missingServiceAccount_throws() {
     String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
