@@ -902,8 +902,8 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     String nonGDU = "test.com";
     MockIAMCredentialsServiceTransportFactory transportFactory =
         new MockIAMCredentialsServiceTransportFactory(nonGDU);
-    transportFactory.transport.setTargetPrincipal(CLIENT_EMAIL);
-    transportFactory.transport.setIdToken(DEFAULT_ID_TOKEN);
+    transportFactory.getTransport().setTargetPrincipal(CLIENT_EMAIL);
+    transportFactory.getTransport().setIdToken(DEFAULT_ID_TOKEN);
     ServiceAccountCredentials credentials =
         createDefaultBuilder()
             .setScopes(SCOPES)
@@ -932,8 +932,8 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     String nonGDU = "test.com";
     MockIAMCredentialsServiceTransportFactory transportFactory =
         new MockIAMCredentialsServiceTransportFactory(nonGDU);
-    transportFactory.transport.setTargetPrincipal(CLIENT_EMAIL);
-    transportFactory.transport.setIdToken(DEFAULT_ID_TOKEN);
+    transportFactory.getTransport().setTargetPrincipal(CLIENT_EMAIL);
+    transportFactory.getTransport().setIdToken(DEFAULT_ID_TOKEN);
     ServiceAccountCredentials credentials =
         createDefaultBuilder()
             .setScopes(SCOPES)

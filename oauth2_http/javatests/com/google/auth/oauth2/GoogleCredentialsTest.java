@@ -602,11 +602,11 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     MockIAMCredentialsServiceTransportFactory transportFactory =
         new MockIAMCredentialsServiceTransportFactory();
-    transportFactory.transport.setTargetPrincipal(
+    transportFactory.getTransport().setTargetPrincipal(
         ImpersonatedCredentialsTest.IMPERSONATED_CLIENT_EMAIL);
-    transportFactory.transport.setAccessToken(ImpersonatedCredentialsTest.ACCESS_TOKEN);
-    transportFactory.transport.setExpireTime(ImpersonatedCredentialsTest.getDefaultExpireTime());
-    transportFactory.transport.setAccessTokenEndpoint(
+    transportFactory.getTransport().setAccessToken(ImpersonatedCredentialsTest.ACCESS_TOKEN);
+    transportFactory.getTransport().setExpireTime(ImpersonatedCredentialsTest.getDefaultExpireTime());
+    transportFactory.getTransport().setAccessTokenEndpoint(
         ImpersonatedCredentialsTest.IMPERSONATION_URL);
 
     InputStream impersonationCredentialsStream =
@@ -662,11 +662,11 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     MockIAMCredentialsServiceTransportFactory transportFactory =
         new MockIAMCredentialsServiceTransportFactory();
-    transportFactory.transport.setTargetPrincipal(
+    transportFactory.getTransport().setTargetPrincipal(
         ImpersonatedCredentialsTest.IMPERSONATED_CLIENT_EMAIL);
-    transportFactory.transport.setAccessToken(ImpersonatedCredentialsTest.ACCESS_TOKEN);
-    transportFactory.transport.setExpireTime(ImpersonatedCredentialsTest.getDefaultExpireTime());
-    transportFactory.transport.setAccessTokenEndpoint(
+    transportFactory.getTransport().setAccessToken(ImpersonatedCredentialsTest.ACCESS_TOKEN);
+    transportFactory.getTransport().setExpireTime(ImpersonatedCredentialsTest.getDefaultExpireTime());
+    transportFactory.getTransport().setAccessTokenEndpoint(
         ImpersonatedCredentialsTest.IMPERSONATION_URL);
 
     InputStream impersonationCredentialsStream =

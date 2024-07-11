@@ -35,7 +35,7 @@ import com.google.auth.Credentials;
 import com.google.auth.http.HttpTransportFactory;
 
 public class MockIAMCredentialsServiceTransportFactory implements HttpTransportFactory {
-  MockIAMCredentialsServiceTransport transport;
+  private MockIAMCredentialsServiceTransport transport;
 
   MockIAMCredentialsServiceTransportFactory() {
     this(Credentials.GOOGLE_DEFAULT_UNIVERSE);
@@ -43,6 +43,10 @@ public class MockIAMCredentialsServiceTransportFactory implements HttpTransportF
 
   MockIAMCredentialsServiceTransportFactory(String universeDomain) {
     this.transport = new MockIAMCredentialsServiceTransport(universeDomain);
+  }
+
+  public MockIAMCredentialsServiceTransport getTransport() {
+    return transport;
   }
 
   @Override
