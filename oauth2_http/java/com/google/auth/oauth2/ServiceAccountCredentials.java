@@ -627,7 +627,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
     URI iamIdTokenUri =
         URI.create(
-            String.format(OAuth2Utils.IAM_ID_TOKEN_ENDPOINT_FORMAT, getUniverseDomain(), clientEmail));
+            String.format(
+                OAuth2Utils.IAM_ID_TOKEN_ENDPOINT_FORMAT, getUniverseDomain(), clientEmail));
     HttpRequest request = buildIdTokenRequest(iamIdTokenUri, transportFactory, content);
     // Use the Access Token from the SSJWT to request the ID Token from IAM Endpoint
     request.setHeaders(new HttpHeaders().set(AuthHttpConstants.AUTHORIZATION, accessToken));

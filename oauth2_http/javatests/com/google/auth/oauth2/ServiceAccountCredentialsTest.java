@@ -846,7 +846,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void idTokenWithAudience_oauthFlow_correct() throws IOException {
+  public void idTokenWithAudience_oauthFlow_targetAudienceMatchesAudClaim() throws IOException {
     String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
@@ -869,11 +869,12 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     // ID Token's aud claim is `https://foo.bar`
     assertEquals(
         targetAudience,
-        (String) tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
+        tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
   }
 
   @Test
-  public void idTokenWithAudience_oauthFlow_incorrect() throws IOException {
+  public void idTokenWithAudience_oauthFlow_targetAudienceDoesNotMatchAudClaim()
+      throws IOException {
     String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
@@ -883,7 +884,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
 
-    String targetAudience = "https://bar";
+    String targetAudience = "differentAudience";
     IdTokenCredentials tokenCredential =
         IdTokenCredentials.newBuilder()
             .setIdTokenProvider(credentials)
@@ -894,11 +895,11 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     // ID Token's aud claim is `https://foo.bar`
     assertNotEquals(
         targetAudience,
-        (String) tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
+        tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
   }
 
   @Test
-  public void idTokenWithAudience_iamFlow_correct() throws IOException {
+  public void idTokenWithAudience_iamFlow_targetAudienceMatchesAudClaim() throws IOException {
     String nonGDU = "test.com";
     MockIAMCredentialsServiceTransportFactory transportFactory =
         new MockIAMCredentialsServiceTransportFactory(nonGDU);
@@ -928,7 +929,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void idTokenWithAudience_iamFlow_incorrect() throws IOException {
+  public void idTokenWithAudience_iamFlow_targetAudienceDoesNotMatchAudClaim() throws IOException {
     String nonGDU = "test.com";
     MockIAMCredentialsServiceTransportFactory transportFactory =
         new MockIAMCredentialsServiceTransportFactory(nonGDU);
@@ -941,7 +942,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             .setUniverseDomain(nonGDU)
             .build();
 
-    String targetAudience = "https://bar";
+    String targetAudience = "differentAudience";
     IdTokenCredentials tokenCredential =
         IdTokenCredentials.newBuilder()
             .setIdTokenProvider(credentials)

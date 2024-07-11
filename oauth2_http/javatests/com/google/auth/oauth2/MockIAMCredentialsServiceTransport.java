@@ -122,7 +122,8 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
     String iamSignBlobformattedUrl =
         String.format(IAM_SIGN_ENDPOINT, universeDomain, this.targetPrincipal);
     String iamIdTokenformattedUrl =
-        String.format(OAuth2Utils.IAM_ID_TOKEN_ENDPOINT_FORMAT, universeDomain, this.targetPrincipal);
+        String.format(
+            OAuth2Utils.IAM_ID_TOKEN_ENDPOINT_FORMAT, universeDomain, this.targetPrincipal);
     if (url.equals(iamAccesssTokenformattedUrl)) {
       this.request =
           new MockLowLevelHttpRequest(url) {
