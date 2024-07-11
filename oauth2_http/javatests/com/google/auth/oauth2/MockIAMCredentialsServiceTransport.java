@@ -48,8 +48,6 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
 
   private static final String DEFAULT_IAM_ACCESS_TOKEN_ENDPOINT =
       "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:generateAccessToken";
-  private static final String IAM_ID_TOKEN_ENDPOINT =
-      "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:generateIdToken";
   private static final String IAM_SIGN_ENDPOINT =
       "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:signBlob";
   private Integer tokenResponseErrorCode;
@@ -124,7 +122,7 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
     String iamSignBlobformattedUrl =
         String.format(IAM_SIGN_ENDPOINT, universeDomain, this.targetPrincipal);
     String iamIdTokenformattedUrl =
-        String.format(IAM_ID_TOKEN_ENDPOINT, universeDomain, this.targetPrincipal);
+        String.format(OAuth2Utils.IAM_ID_TOKEN_ENDPOINT_FORMAT, universeDomain, this.targetPrincipal);
     if (url.equals(iamAccesssTokenformattedUrl)) {
       this.request =
           new MockLowLevelHttpRequest(url) {
