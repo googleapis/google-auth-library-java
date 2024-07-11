@@ -251,7 +251,6 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
             .build();
     ComputeEngineCredentials scopedCredentials =
         (ComputeEngineCredentials) credentials.createScoped(null, Arrays.asList("foo"));
-    Collection<String> scopes = ((ComputeEngineCredentials) scopedCredentials).getScopes();
 
     assertEquals("some-universe", scopedCredentials.getUniverseDomain());
     assertTrue(scopedCredentials.isExplicitUniverseDomain());
