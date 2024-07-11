@@ -84,7 +84,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
   @Override
   public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
-    if (url.equals(ComputeEngineCredentials.getTokenServerEncodedUrl())) {
+    if (url.startsWith(ComputeEngineCredentials.getTokenServerEncodedUrl())) {
       return getMockRequestForTokenEndpoint(url);
     } else if (isGetServiceAccountsUrl(url)) {
       return getMockRequestForServiceAccount(url);
@@ -150,6 +150,9 @@ public class MockMetadataServerTransport extends MockHttpTransport {
       @Override
       public LowLevelHttpResponse execute() throws IOException {
 
+        if (url.contains("?scopes=")) {
+          accessToken = "fake access token with scope";
+        }
         if (requestStatusCode != null) {
           return new MockLowLevelHttpResponse()
               .setStatusCode(requestStatusCode)
