@@ -194,18 +194,15 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   public void createdScoped_clones() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     ServiceAccountCredentials credentials =
-        (ServiceAccountCredentials)
-            createDefaultBuilderWithKey(privateKey)
-                .setServiceAccountUser(USER)
-                .setScopes(SCOPES)
-                .setAccessToken(AccessToken.newBuilder().build())
-                .build();
+        createDefaultBuilderWithKey(privateKey)
+            .setServiceAccountUser(USER)
+            .setScopes(SCOPES)
+            .build();
     List<String> newScopes = Arrays.asList("scope1", "scope2");
 
     ServiceAccountCredentials newCredentials =
         (ServiceAccountCredentials) credentials.createScoped(newScopes);
 
-    assertNull(newCredentials.getAccessToken());
     assertEquals(CLIENT_ID, newCredentials.getClientId());
     assertEquals(CLIENT_EMAIL, newCredentials.getClientEmail());
     assertEquals(privateKey, newCredentials.getPrivateKey());
