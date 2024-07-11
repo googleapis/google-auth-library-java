@@ -5,15 +5,7 @@ import com.google.auth.http.HttpTransportFactory;
 
 public class MockTokenServerTransportFactory implements HttpTransportFactory {
 
-  public MockTokenServerTransport transport;
-
-  public MockTokenServerTransportFactory() {
-    this(new MockTokenServerTransport());
-  }
-
-  MockTokenServerTransportFactory(MockTokenServerTransport transport) {
-    this.transport = transport;
-  }
+  MockTokenServerTransport transport = new MockTokenServerTransport();
 
   @Override
   public HttpTransport create() {

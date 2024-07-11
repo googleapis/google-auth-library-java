@@ -47,11 +47,11 @@ import java.io.IOException;
 public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
 
   private static final String DEFAULT_IAM_ACCESS_TOKEN_ENDPOINT =
-      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken";
+      "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:generateAccessToken";
   private static final String IAM_ID_TOKEN_ENDPOINT =
-      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateIdToken";
+      "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:generateIdToken";
   private static final String IAM_SIGN_ENDPOINT =
-      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
+      "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:signBlob";
   private Integer tokenResponseErrorCode;
   private String tokenResponseErrorContent;
   private String targetPrincipal;
@@ -65,9 +65,13 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
 
   private String idToken;
 
+  private String universeDomain;
+
   private MockLowLevelHttpRequest request;
 
-  public MockIAMCredentialsServiceTransport() {}
+  MockIAMCredentialsServiceTransport(String universeDomain) {
+    this.universeDomain = universeDomain;
+  }
 
   public void setTokenResponseErrorCode(Integer tokenResponseErrorCode) {
     this.tokenResponseErrorCode = tokenResponseErrorCode;
@@ -112,13 +116,15 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
 
   @Override
   public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
-
     String iamAccesssTokenformattedUrl =
         iamAccessTokenEndpoint != null
             ? iamAccessTokenEndpoint
-            : String.format(DEFAULT_IAM_ACCESS_TOKEN_ENDPOINT, this.targetPrincipal);
-    String iamSignBlobformattedUrl = String.format(IAM_SIGN_ENDPOINT, this.targetPrincipal);
-    String iamIdTokenformattedUrl = String.format(IAM_ID_TOKEN_ENDPOINT, this.targetPrincipal);
+            : String.format(
+                DEFAULT_IAM_ACCESS_TOKEN_ENDPOINT, universeDomain, this.targetPrincipal);
+    String iamSignBlobformattedUrl =
+        String.format(IAM_SIGN_ENDPOINT, universeDomain, this.targetPrincipal);
+    String iamIdTokenformattedUrl =
+        String.format(IAM_ID_TOKEN_ENDPOINT, universeDomain, this.targetPrincipal);
     if (url.equals(iamAccesssTokenformattedUrl)) {
       this.request =
           new MockLowLevelHttpRequest(url) {
