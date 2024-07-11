@@ -150,9 +150,6 @@ public class MockMetadataServerTransport extends MockHttpTransport {
       @Override
       public LowLevelHttpResponse execute() throws IOException {
 
-        if (url.contains("?scopes=")) {
-          accessToken = "fake access token with scope";
-        }
         if (requestStatusCode != null) {
           return new MockLowLevelHttpResponse()
               .setStatusCode(requestStatusCode)
@@ -167,7 +164,11 @@ public class MockMetadataServerTransport extends MockHttpTransport {
         // Create the JSON response
         GenericJson refreshContents = new GenericJson();
         refreshContents.setFactory(OAuth2Utils.JSON_FACTORY);
-        refreshContents.put("access_token", accessToken);
+        if (url.contains("?scopes=")) {
+          refreshContents.put("access_token", "fake access token with scope");
+        } else {
+          refreshContents.put("access_token", accessToken);
+        }
         refreshContents.put("expires_in", 3600000);
         refreshContents.put("token_type", "Bearer");
         String refreshText = refreshContents.toPrettyString();
