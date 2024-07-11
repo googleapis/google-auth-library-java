@@ -30,7 +30,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>libraries-bom</artifactId>
-        <version>26.40.0</version>
+        <version>26.43.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -43,14 +43,14 @@
     <dependency>
       <groupId>com.google.auth</groupId>
       <artifactId>google-auth-library-oauth2-http</artifactId>
-      <version>1.23.0</version>
+      <version>1.24.0</version>
     </dependency>
 
 <!--    IAM dependency-->
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-iam-admin</artifactId>
-      <version>3.39.0</version>
+      <version>3.41.0</version>
     </dependency>
 
 <!--    GCloud dependency-->
@@ -74,7 +74,7 @@
       <artifactId>truth</artifactId>
       <groupId>com.google.truth</groupId>
       <scope>test</scope>
-      <version>1.4.2</version>
+      <version>1.4.3</version>
     </dependency>
 
   </dependencies>
