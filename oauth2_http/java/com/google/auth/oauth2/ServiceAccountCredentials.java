@@ -558,7 +558,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   /**
    * Returns a Google ID Token from either the Oauth or IAM Endpoint. For Credentials that are in
    * the Google Default Universe (googleapis.com), the ID Token will be retrieved from the Oauth
-   * Endpoint. Otherwise, it will be retrieved form the IAM Endpoint.
+   * Endpoint. Otherwise, it will be retrieved from the IAM Endpoint.
    *
    * @param targetAudience the aud: field the IdToken should include.
    * @param options list of Credential specific options for the token. Currently, unused for
