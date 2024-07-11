@@ -191,18 +191,16 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void createScoped_shouldInvalidateAccessToken() throws IOException {
-    List<String> scopes = Arrays.asList(null, "foo", "", "bar");
-    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+  public void buildScoped_shouldInvalidateAccessToken() throws IOException {
     ComputeEngineCredentials credentials =
         (ComputeEngineCredentials)
             ComputeEngineCredentials.newBuilder()
-                .setHttpTransportFactory(transportFactory)
-                .setQuotaProjectId("quota-project")
+                .setScopes(null)
                 .setAccessToken(AccessToken.newBuilder().build())
                 .build();
+    List<String> newScopes = Arrays.asList(null, "foo", "", "bar");
     assertNotNull(credentials.getAccessToken());
-    GoogleCredentials credentialsScoped = credentials.createScoped(scopes);
+    GoogleCredentials credentialsScoped = credentials.createScoped(newScopes);
     assertNull(credentialsScoped.getAccessToken());
   }
 
@@ -282,7 +280,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getRequestMetadata_invalidatedAccessTokenWhenScoped() throws IOException {
+  public void getRequestMetadata_newAccessTokenWhenScoped() throws IOException {
     String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     String accessTokenWithScopes = "fake access token with scope";
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
@@ -295,7 +293,8 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
     ComputeEngineCredentials scopedCredentialCopy =
         (ComputeEngineCredentials) credentials.createScoped(Arrays.asList("foo", "bar"));
-    Map<String, List<String>> metadataForCopiedCredentials = scopedCredentialCopy.getRequestMetadata(CALL_URI);
+    Map<String, List<String>> metadataForCopiedCredentials =
+        scopedCredentialCopy.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadataForCopiedCredentials, accessTokenWithScopes);
   }
 
