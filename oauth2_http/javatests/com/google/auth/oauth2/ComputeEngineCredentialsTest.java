@@ -284,6 +284,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     String accessTokenWithScopes = "fake access token with scope";
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setAccessToken(accessToken);
+    transportFactory.transport.setAccessToken("foo,bar", accessTokenWithScopes);
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
