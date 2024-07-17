@@ -163,14 +163,12 @@ public class ComputeEngineCredentials extends GoogleCredentials
   @Override
   public GoogleCredentials createScoped(
       Collection<String> newScopes, Collection<String> newDefaultScopes) {
-    ComputeEngineCredentials.Builder builder =
-        (Builder)
-            this.toBuilder()
-                .setHttpTransportFactory(transportFactory)
-                .setScopes(newScopes)
-                .setDefaultScopes(newDefaultScopes)
-                .setAccessToken(null);
-    return new ComputeEngineCredentials(builder);
+    return this.toBuilder()
+        .setHttpTransportFactory(transportFactory)
+        .setScopes(newScopes)
+        .setDefaultScopes(newDefaultScopes)
+        .setAccessToken(null)
+        .build();
   }
 
   /**

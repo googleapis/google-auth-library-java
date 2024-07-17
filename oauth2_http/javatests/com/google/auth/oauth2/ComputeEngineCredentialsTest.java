@@ -229,6 +229,19 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void buildScoped_quotaProjectId() throws IOException {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder()
+            .setScopes(null)
+            .setQuotaProjectId("some-project-id")
+            .build();
+    ComputeEngineCredentials scopedCredentials =
+        (ComputeEngineCredentials) credentials.createScoped(Arrays.asList("foo"));
+
+    assertEquals("some-project-id", scopedCredentials.getQuotaProjectId());
+  }
+
+  @Test
   public void buildDefaultScoped_explicitUniverse() throws IOException {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder()
