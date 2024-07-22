@@ -75,7 +75,7 @@
     <project.appengine.version>2.0.29</project.appengine.version>
     <project.findbugs.version>3.0.2</project.findbugs.version>
     <deploy.autorelease>false</deploy.autorelease>
-    <project.error-prone.version>2.29.0</project.error-prone.version>
+    <project.error-prone.version>2.29.2</project.error-prone.version>
   </properties>
 
   <dependencyManagement>
@@ -182,7 +182,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>3.7.0</version>
+          <version>3.8.0</version>
           <configuration>
             <source>8</source>
             <failOnError>false</failOnError>
@@ -332,7 +332,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.7.0</version>
+        <version>3.8.0</version>
         <reportSets>
           <reportSet>
             <id>html</id>
@@ -400,7 +400,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
-            <version>3.7.0</version>
+            <version>3.8.0</version>
             <executions>
               <execution>
                 <id>attach-javadocs</id>
