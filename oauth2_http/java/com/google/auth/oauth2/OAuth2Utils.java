@@ -43,6 +43,7 @@ import com.google.api.client.util.PemReader.Section;
 import com.google.api.client.util.SecurityUtils;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -250,6 +251,19 @@ class OAuth2Utils {
       unexpectedException = exception;
     }
     throw new IOException("Unexpected exception reading PKCS#8 data", unexpectedException);
+  }
+
+  /**
+   * A helper function to get a base64 encoded basic auth.
+   *
+   * @param clientId A ClientId object which contains a string value and a secret
+   * @return The basic auth header
+   */
+  public static String getBasicAuthString(ClientId clientId) {
+    String encodedCredentials =
+        BaseEncoding.base64()
+            .encode((clientId.getClientId() + ":" + clientId.getClientSecret()).getBytes());
+    return "Basic " + encodedCredentials;
   }
 
   private OAuth2Utils() {}

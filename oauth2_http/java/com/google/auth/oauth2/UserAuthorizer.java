@@ -43,7 +43,6 @@ import com.google.api.client.util.Joiner;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.BaseEncoding;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.net.URI;
@@ -96,7 +95,7 @@ public class UserAuthorizer {
    * @param tokenServerUri URI of the end point that provides tokens
    * @param userAuthUri URI of the Web UI for user consent
    * @param pkce PKCE implementation
-   * @param clientAuthenticationType ClientAuthentication type as defined in RFC 7591
+   * @param clientAuthentication ClientAuthentication type as defined in RFC 7591
    *     basic/post/none
    */
   private UserAuthorizer(
@@ -305,6 +304,11 @@ public class UserAuthorizer {
   /**
    * Returns a UserCredentials instance by exchanging an OAuth2 authorization code for tokens.
    *
+   * <p>The library is going to exchange an access token depends on the token_uri we provide. If
+   * will be either oauth2 or sts. The two endpoints accepting different way of basic auth. STS want
+   * client id and client secret being base64 encoded and put into header. OAuth2 endpoint want the
+   * client secret being sent as a field in post.
+   *
    * @param code Code returned from OAuth2 consent prompt.
    * @param baseUri The URI to resolve the OAuth2 callback URI relative to.
    * @param additionalParameters Additional parameters to be added to the post body of token
@@ -322,10 +326,7 @@ public class UserAuthorizer {
     tokenData.put("client_id", clientId.getClientId());
     tokenData.put("redirect_uri", resolvedCallbackUri);
     tokenData.put("grant_type", "authorization_code");
-    // If the token request is sent to STS. STS will fail by design if the `client_secret` in post
-    // body.
-    // Sending client_secret when the client authentication type is post is to maintain existing
-    // behavior for existing code.
+
     if (this.clientAuthenticationType == ClientAuthenticationType.CLIENT_SECRET_POST) {
       tokenData.put("client_secret", clientId.getClientSecret());
     }
@@ -347,7 +348,7 @@ public class UserAuthorizer {
     tokenRequest.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
 
     if (this.clientAuthenticationType == ClientAuthenticationType.CLIENT_SECRET_BASIC) {
-      tokenRequest.getHeaders().setAuthorization(getBasicAuthString(clientId));
+      tokenRequest.getHeaders().setAuthorization(OAuth2Utils.getBasicAuthString(clientId));
     }
 
     HttpResponse tokenResponse = tokenRequest.execute();
@@ -506,19 +507,6 @@ public class UserAuthorizer {
       UserCredentials userCredentials = (UserCredentials) credentials;
       storeCredentials(userId, userCredentials);
     }
-  }
-
-  /**
-   * A helper function to get a base64 encoded basic auth.
-   *
-   * @param clientId A ClientId object which contains a string value and a secret
-   * @return The basic auth header
-   */
-  public static String getBasicAuthString(ClientId clientId) {
-    String encodedCredentials =
-        BaseEncoding.base64()
-            .encode((clientId.getClientId() + ":" + clientId.getClientSecret()).getBytes());
-    return "Basic " + encodedCredentials;
   }
 
   public static Builder newBuilder() {

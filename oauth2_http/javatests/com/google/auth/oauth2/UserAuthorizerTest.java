@@ -171,7 +171,7 @@ public class UserAuthorizerTest {
     String expectBasicAuthHeader =
         "Basic " + BaseEncoding.base64().encode((CLIENT_ID_VALUE + ":" + CLIENT_SECRET).getBytes());
 
-    assertEquals(expectBasicAuthHeader, UserAuthorizer.getBasicAuthString(CLIENT_ID));
+    assertEquals(expectBasicAuthHeader, OAuth2Utils.getBasicAuthString(CLIENT_ID));
   }
 
   @Test
