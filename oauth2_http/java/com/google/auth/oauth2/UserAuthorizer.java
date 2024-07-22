@@ -95,8 +95,7 @@ public class UserAuthorizer {
    * @param tokenServerUri URI of the end point that provides tokens
    * @param userAuthUri URI of the Web UI for user consent
    * @param pkce PKCE implementation
-   * @param clientAuthentication ClientAuthentication type as defined in RFC 7591
-   *     basic/post/none
+   * @param clientAuthentication ClientAuthentication type as defined in RFC 7591 basic/post/none
    */
   private UserAuthorizer(
       ClientId clientId,
