@@ -625,6 +625,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
     requestParams.forEach(tokenRequest::set);
     UrlEncodedContent content = new UrlEncodedContent(tokenRequest);
 
+    // Create IAM Token URI in this method instead of in the constructor because
+    // `getUniverseDomain()` throws an IOException that would need to be caught
     URI iamIdTokenUri =
         URI.create(
             String.format(
