@@ -298,6 +298,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     Map<String, List<String>> metadataForCopiedCredentials =
         scopedCredentialCopy.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadataForCopiedCredentials, accessTokenWithScopes);
+    TestUtils.assertNotContainsBearerToken(metadataForCopiedCredentials, accessToken);
   }
 
   @Test
