@@ -64,6 +64,16 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
   public MockMetadataServerTransport() {}
 
+  public MockMetadataServerTransport(String accessToken) {
+    setAccessToken(accessToken);
+  }
+
+  public MockMetadataServerTransport(Map<String, String> accessTokenMap) {
+    for (String scope : accessTokenMap.keySet()) {
+      setAccessToken(scope, accessTokenMap.get(scope));
+    }
+  }
+
   public void setAccessToken(String accessToken) {
     setAccessToken("default", accessToken);
   }
@@ -179,7 +189,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
           // no scopes specified, return access token correspoinding to default scopes
           refreshContents.put("access_token", scopesToAccessToken.get("default"));
         } else {
-          refreshContents.put("access_token", scopesToAccessToken.get(urlParsed.get(1)));
+          refreshContents.put(
+              "access_token", scopesToAccessToken.get("[" + urlParsed.get(1) + "]"));
         }
         refreshContents.put("expires_in", 3600000);
         refreshContents.put("token_type", "Bearer");
