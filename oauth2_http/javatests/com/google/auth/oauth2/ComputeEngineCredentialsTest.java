@@ -976,8 +976,8 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
   static class MockMetadataServerTransportFactory implements HttpTransportFactory {
 
-    MockMetadataServerTransport transport = new MockMetadataServerTransport(
-        SCOPE_TO_ACCESS_TOKEN_MAP);
+    MockMetadataServerTransport transport =
+        new MockMetadataServerTransport(SCOPE_TO_ACCESS_TOKEN_MAP);
 
     @Override
     public HttpTransport create() {
