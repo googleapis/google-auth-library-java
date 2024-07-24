@@ -124,7 +124,7 @@ class IamUtils {
             .setMultiplier(OAuth2Utils.RETRY_MULTIPLIER)
             .build();
 
-    // Retry on 5xx errors
+    // Retry on 502 and 503 status codes
     request.setUnsuccessfulResponseHandler(
         new HttpBackOffUnsuccessfulResponseHandler(backoff)
             .setBackOffRequired(

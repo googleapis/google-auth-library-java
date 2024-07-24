@@ -365,7 +365,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   public void refreshAccessToken_unauthorized() throws IOException {
     String expectedMessage = "The caller does not have permission";
     mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mockTransportFactory.transport.setStatusCodeAndErrorMessage(
+    mockTransportFactory.transport.addStatusCodeAndMessage(
         HttpStatusCodes.STATUS_CODE_UNAUTHORIZED,
         generateErrorJson(
             HttpStatusCodes.STATUS_CODE_UNAUTHORIZED, expectedMessage, "global", "forbidden"),
@@ -394,7 +394,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     String invalidTargetEmail = "foo";
     String expectedMessage = "Request contains an invalid argument";
     mockTransportFactory.transport.setTargetPrincipal(invalidTargetEmail);
-    mockTransportFactory.transport.setStatusCodeAndErrorMessage(
+    mockTransportFactory.transport.addStatusCodeAndMessage(
         HttpStatusCodes.STATUS_CODE_BAD_REQUEST,
         generateErrorJson(
             HttpStatusCodes.STATUS_CODE_BAD_REQUEST, expectedMessage, "global", "badRequest"));
@@ -463,10 +463,10 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
   @Test()
   public void refreshAccessToken_success() throws IOException, IllegalStateException {
-
     mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
     mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
+    mockTransportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
             sourceCredentials,
@@ -486,6 +486,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
     mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
     mockTransportFactory.transport.setAccessTokenEndpoint(IMPERSONATION_URL);
+    mockTransportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
 
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
@@ -504,10 +505,10 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
   @Test()
   public void getRequestMetadata_withQuotaProjectId() throws IOException, IllegalStateException {
-
     mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
     mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
+    mockTransportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
             sourceCredentials,
@@ -527,10 +528,10 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
   @Test()
   public void getRequestMetadata_withoutQuotaProjectId() throws IOException, IllegalStateException {
-
     mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
     mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
+    mockTransportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
             sourceCredentials,
@@ -546,10 +547,10 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
   @Test()
   public void refreshAccessToken_delegates_success() throws IOException, IllegalStateException {
-
     mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
     mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
+    mockTransportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
     List<String> delegates = Arrays.asList("delegate-account@iam.gserviceaccount.com");
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
@@ -572,6 +573,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
     mockTransportFactory.transport.setExpireTime(getFormattedTime(c.getTime()));
+    mockTransportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
                 sourceCredentials,
@@ -598,6 +600,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
     mockTransportFactory.transport.setExpireTime(getFormattedTime(c.getTime()));
+    mockTransportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
                 sourceCredentials,
@@ -617,11 +620,11 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void refreshAccessToken_invalidDate() throws IllegalStateException {
-
     String expectedMessage = "Unparseable date";
     mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mockTransportFactory.transport.setAccessToken("foo");
     mockTransportFactory.transport.setExpireTime("1973-09-29T15:01:23");
+    mockTransportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
             sourceCredentials,
@@ -661,6 +664,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
     mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
+    mockTransportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
             sourceCredentials,
@@ -683,6 +687,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
     mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
+    mockTransportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
             sourceCredentials,
@@ -722,6 +727,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
     mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
+    mockTransportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
             sourceCredentials,
@@ -760,7 +766,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
     mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mockTransportFactory.transport.setSignedBlob(expectedSignature);
-    mockTransportFactory.transport.setStatusCodeAndErrorMessage(
+    mockTransportFactory.transport.addStatusCodeAndMessage(
         HttpStatusCodes.STATUS_CODE_FORBIDDEN, "Sign Error");
 
     try {
@@ -792,7 +798,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
     mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mockTransportFactory.transport.setSignedBlob(expectedSignature);
-    mockTransportFactory.transport.setStatusCodeAndErrorMessage(
+    mockTransportFactory.transport.addStatusCodeAndMessage(
         HttpStatusCodes.STATUS_CODE_SERVER_ERROR, "Sign Error");
 
     try {
@@ -811,6 +817,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
     mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
+    mockTransportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
 
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
@@ -842,6 +849,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     mockTransportFactory.transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mockTransportFactory.transport.setAccessToken(ACCESS_TOKEN);
     mockTransportFactory.transport.setExpireTime(getDefaultExpireTime());
+    mockTransportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
 
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
@@ -883,7 +891,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             mockTransportFactory);
 
     mockTransportFactory.transport.setIdToken(STANDARD_ID_TOKEN);
-    mockTransportFactory.transport.setStatusCodeAndErrorMessage(
+    mockTransportFactory.transport.addStatusCodeAndMessage(
         HttpStatusCodes.STATUS_CODE_SERVER_ERROR, "Internal Server Error");
 
     String targetAudience = "https://foo.bar";
@@ -916,7 +924,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             mockTransportFactory);
 
     mockTransportFactory.transport.setIdToken(STANDARD_ID_TOKEN);
-    mockTransportFactory.transport.setStatusCodeAndErrorMessage(
+    mockTransportFactory.transport.addStatusCodeAndMessage(
         HttpStatusCodes.STATUS_CODE_MOVED_PERMANENTLY, "Redirect");
 
     String targetAudience = "https://foo.bar";

@@ -4,6 +4,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.google.api.client.http.HttpStatusCodes;
 import com.google.auth.ServiceAccountSigner;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -29,6 +30,7 @@ public class IamUtilsTest {
     ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory transportFactory =
         new ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory();
     transportFactory.transport.setSignedBlob(expectedSignature);
+    transportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
     transportFactory.transport.setTargetPrincipal(CLIENT_EMAIL);
 
     byte[] signature =
@@ -52,8 +54,9 @@ public class IamUtilsTest {
 
     ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory transportFactory =
         new ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory();
-    transportFactory.transport.setStatusCodeAndErrorMessage(502, "Bad Gateway");
-    transportFactory.transport.setStatusCodeAndErrorMessage(502, "Bad Gateway");
+    transportFactory.transport.addStatusCodeAndMessage(502, "Bad Gateway");
+    transportFactory.transport.addStatusCodeAndMessage(502, "Bad Gateway");
+    transportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
     transportFactory.transport.setSignedBlob(expectedSignature);
     transportFactory.transport.setTargetPrincipal(CLIENT_EMAIL);
 
@@ -78,12 +81,13 @@ public class IamUtilsTest {
 
     ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory transportFactory =
         new ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory();
-    transportFactory.transport.setStatusCodeAndErrorMessage(502, "Bad Gateway");
-    transportFactory.transport.setStatusCodeAndErrorMessage(502, "Bad Gateway");
-    transportFactory.transport.setStatusCodeAndErrorMessage(502, "Bad Gateway");
-    transportFactory.transport.setStatusCodeAndErrorMessage(502, "Bad Gateway");
     transportFactory.transport.setSignedBlob(expectedSignature);
     transportFactory.transport.setTargetPrincipal(CLIENT_EMAIL);
+    transportFactory.transport.addStatusCodeAndMessage(502, "Bad Gateway");
+    transportFactory.transport.addStatusCodeAndMessage(502, "Bad Gateway");
+    transportFactory.transport.addStatusCodeAndMessage(502, "Bad Gateway");
+    transportFactory.transport.addStatusCodeAndMessage(502, "Bad Gateway");
+    transportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
 
     ServiceAccountSigner.SigningException exception =
         assertThrows(
@@ -113,7 +117,7 @@ public class IamUtilsTest {
 
     ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory transportFactory =
         new ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory();
-    transportFactory.transport.setStatusCodeAndErrorMessage(401, "Unauthorized");
+    transportFactory.transport.addStatusCodeAndMessage(401, "Unauthorized");
     transportFactory.transport.setSignedBlob(expectedSignature);
     transportFactory.transport.setTargetPrincipal(CLIENT_EMAIL);
 

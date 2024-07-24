@@ -42,7 +42,8 @@ import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.auth.TestUtils;
 import com.google.common.io.BaseEncoding;
 import java.io.IOException;
-import java.util.Stack;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 /** Transport that simulates the IAMCredentials server for access tokens. */
 public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
@@ -66,7 +67,7 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
   private static final String IAM_SIGN_ENDPOINT =
       "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
 
-  private final Stack<ServerResponse> serverResponses;
+  private final Deque<ServerResponse> serverResponses;
 
   private String targetPrincipal;
   private byte[] signedBlob;
@@ -80,13 +81,7 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
   private MockLowLevelHttpRequest request;
 
   public MockIAMCredentialsServiceTransport() {
-    this.serverResponses = new Stack<>();
-    this.serverResponses.add(new ServerResponse(HttpStatusCodes.STATUS_CODE_OK, "", true));
-  }
-
-  public void addErrorResponseAndMessage(
-      int responseCode, String errorMessage, boolean lastStatus) {
-    serverResponses.push(new ServerResponse(responseCode, errorMessage, lastStatus));
+    this.serverResponses = new ArrayDeque<>();
   }
 
   public void setTargetPrincipal(String targetPrincipal) {
@@ -105,13 +100,13 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
     this.signedBlob = signedBlob;
   }
 
-  public void setStatusCodeAndErrorMessage(int responseCode, String errorMessage) {
-    setStatusCodeAndErrorMessage(responseCode, errorMessage, false);
+  public void addStatusCodeAndMessage(int responseCode, String message) {
+    addStatusCodeAndMessage(responseCode, message, false);
   }
 
-  // repeat to ensure simulate ssetcenarios where retrying returns the same status over and over
-  public void setStatusCodeAndErrorMessage(int responseCode, String errorMessage, boolean repeat) {
-    addErrorResponseAndMessage(responseCode, errorMessage, repeat);
+  // repeat to ensure simulate scenarios where retrying returns the same status over and over
+  public void addStatusCodeAndMessage(int responseCode, String message, boolean repeat) {
+    serverResponses.offer(new ServerResponse(responseCode, message, repeat));
   }
 
   public void setIdToken(String idToken) {
@@ -134,9 +129,9 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
             : String.format(DEFAULT_IAM_ACCESS_TOKEN_ENDPOINT, this.targetPrincipal);
     String iamSignBlobformattedUrl = String.format(IAM_SIGN_ENDPOINT, this.targetPrincipal);
     String iamIdTokenformattedUrl = String.format(IAM_ID_TOKEN_ENDPOINT, this.targetPrincipal);
-    ServerResponse serverResponse = serverResponses.pop();
+    ServerResponse serverResponse = serverResponses.poll();
     if (serverResponse.repeatServerResponse) {
-      serverResponses.push(serverResponse);
+      serverResponses.offerFirst(serverResponse);
     }
     if (url.equals(iamAccessTokenformattedUrl)) {
       this.request =
