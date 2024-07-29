@@ -46,9 +46,12 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /** Transport that simulates the GCE metadata server for access tokens. */
 public class MockMetadataServerTransport extends MockHttpTransport {
+
+  private static final Pattern BOOL_PARAMETER_VALUE = Pattern.compile("on|1|(?i)y|yes|true");
 
   private String accessToken;
 
@@ -203,7 +206,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
         // return licenses only if format=full is set
         if (queryPairs.containsKey("licenses")) {
-          if (((String) queryPairs.get("licenses")).equals("TRUE")) {
+          if (BOOL_PARAMETER_VALUE.matcher((String) queryPairs.get("licenses")).matches()) {
             return new MockLowLevelHttpRequest(url) {
               @Override
               public LowLevelHttpResponse execute() throws IOException {
