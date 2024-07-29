@@ -105,12 +105,12 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
           + "jb21wdXRlQGRldmVsb3Blci5nc2VydmljZWFjY291bnQuY29tIiwNCiAgImVtYWlsX3ZlcmlmaWVkIjogdHJ1ZSw"
           + "NCiAgImV4cCI6IDE1NjQ1MTk0OTYsDQogICJnb29nbGUiOiB7DQogICAgImNvbXB1dGVfZW5naW5lIjogew0KICA"
           + "gICAgImluc3RhbmNlX2NyZWF0aW9uX3RpbWVzdGFtcCI6IDE1NjMyMzA5MDcsDQogICAgICAiaW5zdGFuY2VfaWQ"
-          + "iOiAiMzQ5Nzk3NDM5MzQ0MTE3OTI0MyIsDQogICAgICAiaW5zdGFuY2VfbmFtZSI6ICJpYW0iLA0KICAgICAgInB"
-          + "yb2plY3RfaWQiOiAiZm9vLWJhci04MjAiLA0KICAgICAgInByb2plY3RfbnVtYmVyIjogMTA3MTI4NDE4NDQzNiw"
-          + "NCiAgICAgICJ6b25lIjogInVzLWNlbnRyYWwxLWEiDQogICAgfSwNCiAgICAibGljZW5zZSI6IFsNCiAgICAgICA"
-          + "iTElDRU5TRV8xIiwNCiAgICAgICAiTElDRU5TRV8yIg0KICAgIF0NCiAgfSwNCiAgImlhdCI6IDE1NjQ1MTU4OTY"
-          + "sDQogICJpc3MiOiAiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwNCiAgInN1YiI6ICIxMTIxNzkwNjI3MjA"
-          + "zOTEzMDU4ODUiDQp9.redacted";
+          + "iOiAiMzQ5Nzk3NDM5MzQ0MTE3OTI0MyIsDQogICAgICAiaW5zdGFuY2VfbmFtZSI6ICJpYW0iLA0KICAgICAgImx"
+          + "pY2Vuc2VfaWQiOiBbDQogICAgICAgICIxMDAxMDAwIiwNCiAgICAgICAgIjEwMDEwMDEiLA0KICAgICAgICAiMTA"
+          + "wMTAwOCINCiAgICAgIF0sDQogICAgICAicHJvamVjdF9pZCI6ICJmb28tYmFyLTgyMCIsDQogICAgICAicHJvamV"
+          + "jdF9udW1iZXIiOiAxMDcxMjg0MTg0NDM2LA0KICAgICAgInpvbmUiOiAidXMtY2VudHJhbDEtYSINCiAgICB9DQo"
+          + "gIH0sDQogICJpYXQiOiAxNTY0NTE1ODk2LA0KICAiaXNzIjogImh0dHBzOi8vYWNjb3VudHMuZ29vZ2xlLmNvbSI"
+          + "sDQogICJzdWIiOiAiMTEyMTc5MDYyNzIwMzkxMzA1ODg1Ig0KfQ.redacted";
 
   @Test
   public void buildTokenUrlWithScopes_null_scopes() {
@@ -925,7 +925,9 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     Payload p = tokenCredential.getIdToken().getJsonWebSignature().getPayload();
     assertTrue("Full ID Token format not provided", p.containsKey("google"));
     ArrayMap<String, ArrayMap> googleClaim = (ArrayMap<String, ArrayMap>) p.get("google");
-    assertTrue(googleClaim.containsKey("license"));
+    assertTrue(googleClaim.containsKey("compute_engine"));
+    ArrayMap computeEngineClaim = (ArrayMap) googleClaim.get("compute_engine");
+    assertTrue(computeEngineClaim.containsKey("license_id"));
   }
 
   static class MockMetadataServerTransportFactory implements HttpTransportFactory {
