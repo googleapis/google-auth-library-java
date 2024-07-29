@@ -98,7 +98,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
           + "20iLCJzdWIiOiIxMTIxNzkwNjI3MjAzOTEzMDU4ODUifQ.redacted";
 
   // Id Token which includes GCE extended claims and any VM License data (if applicable)
-  public static final String FULL_ID_TOKEN_WITH_LICENSE =
+  public static final String FULL_ID_TOKEN_WITH_LICENSES =
       "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRmMzc1ODkwOG"
           + "I3OTIyOTNhZDk3N2EwYjk5MWQ5OGE3N2Y0ZWVlY2QiLCJ0eXAiOiJKV1QifQ.ew0KICAiYXVkIjogImh0dHBzOi8"
           + "vZm9vLmJhciIsDQogICJhenAiOiAiMTEyMTc5MDYyNzIwMzkxMzA1ODg1IiwNCiAgImVtYWlsIjogIjEyMzQ1Ni1"
@@ -907,7 +907,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void idTokenWithAudience_license() throws IOException {
+  public void idTokenWithAudience_licenses() throws IOException {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();

@@ -201,14 +201,14 @@ public class MockMetadataServerTransport extends MockHttpTransport {
     if (queryPairs.containsKey("format")) {
       if (((String) queryPairs.get("format")).equals("full")) {
 
-        // return license only if format=full is set
-        if (queryPairs.containsKey("license")) {
-          if (((String) queryPairs.get("license")).equals("TRUE")) {
+        // return licenses only if format=full is set
+        if (queryPairs.containsKey("licenses")) {
+          if (((String) queryPairs.get("licenses")).equals("TRUE")) {
             return new MockLowLevelHttpRequest(url) {
               @Override
               public LowLevelHttpResponse execute() throws IOException {
                 return new MockLowLevelHttpResponse()
-                    .setContent(ComputeEngineCredentialsTest.FULL_ID_TOKEN_WITH_LICENSE);
+                    .setContent(ComputeEngineCredentialsTest.FULL_ID_TOKEN_WITH_LICENSES);
               }
             };
           }
