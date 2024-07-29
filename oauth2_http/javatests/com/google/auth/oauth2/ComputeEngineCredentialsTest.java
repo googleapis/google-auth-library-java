@@ -901,7 +901,8 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     tokenCredential.refresh();
     Payload p = tokenCredential.getIdToken().getJsonWebSignature().getPayload();
     assertTrue("Full ID Token format not provided", p.containsKey("google"));
-    ArrayMap<String, ArrayMap> googleClaim = (ArrayMap<String, ArrayMap>) p.get("google");
+    ArrayMap<String, ArrayMap<String, ?>> googleClaim =
+        (ArrayMap<String, ArrayMap<String, ?>>) p.get("google");
     assertTrue(googleClaim.containsKey("compute_engine"));
   }
 
@@ -924,9 +925,11 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     tokenCredential.refresh();
     Payload p = tokenCredential.getIdToken().getJsonWebSignature().getPayload();
     assertTrue("Full ID Token format not provided", p.containsKey("google"));
-    ArrayMap<String, ArrayMap> googleClaim = (ArrayMap<String, ArrayMap>) p.get("google");
+    ArrayMap<String, ArrayMap<String, ?>> googleClaim =
+        (ArrayMap<String, ArrayMap<String, ?>>) p.get("google");
     assertTrue(googleClaim.containsKey("compute_engine"));
-    ArrayMap computeEngineClaim = (ArrayMap) googleClaim.get("compute_engine");
+    ArrayMap<String, ?> computeEngineClaim =
+        (ArrayMap<String, ?>) googleClaim.get("compute_engine");
     assertTrue(computeEngineClaim.containsKey("license_id"));
   }
 
