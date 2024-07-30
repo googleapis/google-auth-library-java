@@ -92,10 +92,20 @@ class OAuth2Utils {
 
   static final String TOKEN_RESPONSE_SCOPE = "scope";
 
+  static final int INITIAL_RETRY_INTERVAL_MILLIS = 1000;
+  static final double RETRY_RANDOMIZATION_FACTOR = 0.1;
+  static final double RETRY_MULTIPLIER = 2;
+  static final int DEFAULT_NUMBER_OF_RETRIES = 3;
+
   // Includes expected server errors from Google token endpoint
   // Other 5xx codes are either not used or retries are unlikely to succeed
   public static final Set<Integer> TOKEN_ENDPOINT_RETRYABLE_STATUS_CODES =
       new HashSet<>(Arrays.asList(500, 503, 408, 429));
+
+  // Following guidance for IAM retries:
+  // https://cloud.google.com/iam/docs/retry-strategy#errors-to-retry
+  static final Set<Integer> IAM_RETRYABLE_STATUS_CODES =
+      new HashSet<>(Arrays.asList(500, 502, 503, 504));
 
   static class DefaultHttpTransportFactory implements HttpTransportFactory {
 
