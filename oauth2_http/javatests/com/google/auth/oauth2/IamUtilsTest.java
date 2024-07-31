@@ -53,7 +53,8 @@ public class IamUtilsTest {
   public void sign_noRetry() throws IOException {
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
-    // Mock this call because signing requires an access token
+    // Mock this call because signing requires an access token. The call is initialized with
+    // HttpCredentialsAdapter which will make a call to get the access token
     ServiceAccountCredentials credentials = Mockito.mock(ServiceAccountCredentials.class);
     Mockito.when(credentials.getRequestMetadata(Mockito.any())).thenReturn(ImmutableMap.of());
 
@@ -76,7 +77,8 @@ public class IamUtilsTest {
   public void sign_4xxServerError_exception() throws IOException {
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
-    // Mock this call because signing requires an access token
+    // Mock this call because signing requires an access token. The call is initialized with
+    // HttpCredentialsAdapter which will make a call to get the access token
     ServiceAccountCredentials credentials = Mockito.mock(ServiceAccountCredentials.class);
     Mockito.when(credentials.getRequestMetadata(Mockito.any())).thenReturn(ImmutableMap.of());
 
