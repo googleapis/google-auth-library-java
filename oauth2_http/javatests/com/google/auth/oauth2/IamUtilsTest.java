@@ -62,6 +62,7 @@ public class IamUtilsTest {
         new ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory();
     transportFactory.transport.setSignedBlob(expectedSignature);
     transportFactory.transport.setTargetPrincipal(CLIENT_EMAIL);
+    transportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
 
     byte[] signature =
         IamUtils.sign(
@@ -71,6 +72,72 @@ public class IamUtilsTest {
             expectedSignature,
             ImmutableMap.of());
     assertArrayEquals(expectedSignature, signature);
+  }
+
+  // The SignBlob RPC will retry up to three times before it gives up. This test will fail twice
+  // before returning a success.
+  @Test
+  public void sign_retryTwoTimes_success() throws IOException {
+    byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
+
+    // Mock this call because signing requires an access token
+    ServiceAccountCredentials credentials = Mockito.mock(ServiceAccountCredentials.class);
+    Mockito.when(credentials.getRequestMetadata(Mockito.any())).thenReturn(ImmutableMap.of());
+
+    ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory transportFactory =
+        new ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory();
+    transportFactory.transport.addStatusCodeAndMessage(502, "Bad Gateway");
+    transportFactory.transport.addStatusCodeAndMessage(502, "Bad Gateway");
+    transportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
+    transportFactory.transport.setSignedBlob(expectedSignature);
+    transportFactory.transport.setTargetPrincipal(CLIENT_EMAIL);
+
+    byte[] signature =
+        IamUtils.sign(
+            CLIENT_EMAIL,
+            credentials,
+            transportFactory.transport,
+            expectedSignature,
+            ImmutableMap.of());
+    assertArrayEquals(expectedSignature, signature);
+  }
+
+  // The rpc will retry up to three times before it gives up. This test will fail four times before
+  // returning a success. After the third failure, the failure will be reported back to the user.
+  @Test
+  public void sign_retryFourTimes_exception() throws IOException {
+    byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
+
+    // Mock this call because signing requires an access token
+    ServiceAccountCredentials credentials = Mockito.mock(ServiceAccountCredentials.class);
+    Mockito.when(credentials.getRequestMetadata(Mockito.any())).thenReturn(ImmutableMap.of());
+
+    ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory transportFactory =
+        new ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory();
+    transportFactory.transport.setSignedBlob(expectedSignature);
+    transportFactory.transport.setTargetPrincipal(CLIENT_EMAIL);
+    transportFactory.transport.addStatusCodeAndMessage(502, "Bad Gateway");
+    transportFactory.transport.addStatusCodeAndMessage(502, "Bad Gateway");
+    transportFactory.transport.addStatusCodeAndMessage(502, "Bad Gateway");
+    transportFactory.transport.addStatusCodeAndMessage(502, "Bad Gateway");
+    transportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
+
+    ServiceAccountSigner.SigningException exception =
+        assertThrows(
+            ServiceAccountSigner.SigningException.class,
+            () ->
+                IamUtils.sign(
+                    CLIENT_EMAIL,
+                    credentials,
+                    transportFactory.transport,
+                    expectedSignature,
+                    ImmutableMap.of()));
+    assertTrue(exception.getMessage().contains("Failed to sign the provided bytes"));
+    assertTrue(
+        exception
+            .getCause()
+            .getMessage()
+            .contains("Unexpected Error code 502 trying to sign provided bytes"));
   }
 
   @Test
@@ -86,7 +153,7 @@ public class IamUtilsTest {
         new ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory();
     transportFactory.transport.setSignedBlob(expectedSignature);
     transportFactory.transport.setTargetPrincipal(CLIENT_EMAIL);
-    transportFactory.transport.setErrorResponseCodeAndMessage(
+    transportFactory.transport.addStatusCodeAndMessage(
         HttpStatusCodes.STATUS_CODE_UNAUTHORIZED, "Failed to sign the provided bytes");
 
     ServiceAccountSigner.SigningException exception =
