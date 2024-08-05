@@ -50,7 +50,10 @@ import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.common.io.BaseEncoding;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * This internal class provides shared utilities for interacting with the IAM API for common
@@ -63,6 +66,11 @@ class IamUtils {
       "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateIdToken";
   private static final String PARSE_ERROR_MESSAGE = "Error parsing error message response. ";
   private static final String PARSE_ERROR_SIGNATURE = "Error parsing signature response. ";
+
+  // Following guidance for IAM retries:
+  // https://cloud.google.com/iam/docs/retry-strategy#errors-to-retry
+  static final Set<Integer> IAM_RETRYABLE_STATUS_CODES =
+      new HashSet<>(Arrays.asList(500, 502, 503, 504));
 
   /**
    * Returns a signature for the provided bytes.
@@ -129,7 +137,7 @@ class IamUtils {
         new HttpBackOffUnsuccessfulResponseHandler(backoff)
             .setBackOffRequired(
                 response ->
-                    OAuth2Utils.IAM_RETRYABLE_STATUS_CODES.contains(response.getStatusCode())));
+                    IamUtils.IAM_RETRYABLE_STATUS_CODES.contains(response.getStatusCode())));
     request.setIOExceptionHandler(new HttpBackOffIOExceptionHandler(backoff));
 
     HttpResponse response = request.execute();
