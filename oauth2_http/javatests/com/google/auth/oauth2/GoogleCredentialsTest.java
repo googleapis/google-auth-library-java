@@ -33,6 +33,7 @@ package com.google.auth.oauth2;
 
 import static org.junit.Assert.*;
 
+import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.util.Clock;
 import com.google.auth.Credentials;
@@ -609,6 +610,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.setExpireTime(ImpersonatedCredentialsTest.getDefaultExpireTime());
     transportFactory.transport.setAccessTokenEndpoint(
         ImpersonatedCredentialsTest.IMPERSONATION_URL);
+    transportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
 
     InputStream impersonationCredentialsStream =
         ImpersonatedCredentialsTest.writeImpersonationCredentialsStream(
@@ -669,6 +671,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.setExpireTime(ImpersonatedCredentialsTest.getDefaultExpireTime());
     transportFactory.transport.setAccessTokenEndpoint(
         ImpersonatedCredentialsTest.IMPERSONATION_URL);
+    transportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
 
     InputStream impersonationCredentialsStream =
         ImpersonatedCredentialsTest.writeImpersonationCredentialsStream(
