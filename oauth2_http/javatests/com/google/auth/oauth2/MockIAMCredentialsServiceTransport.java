@@ -80,6 +80,10 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
 
   private MockLowLevelHttpRequest request;
 
+  // Store the number of requests that are sent to the Mock Server. This is used to track the
+  // number of retries attempts made to ensure that retry boundaries are respected.
+  private int numRequests;
+
   public MockIAMCredentialsServiceTransport() {
     this.serverResponses = new ArrayDeque<>();
   }
@@ -100,6 +104,8 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
     this.signedBlob = signedBlob;
   }
 
+  // Enqueue the status code + message. Each request to the mock server will pop off the
+  // status code + message in the order it was enqueued
   public void addStatusCodeAndMessage(int responseCode, String message) {
     addStatusCodeAndMessage(responseCode, message, false);
   }
@@ -123,9 +129,13 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
     return request;
   }
 
+  int getNumRequests() {
+    return numRequests;
+  }
+
   @Override
   public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
-    String iamAccessTokenformattedUrl =
+    String iamAccessTokenFormattedUrl =
         iamAccessTokenEndpoint != null
             ? iamAccessTokenEndpoint
             : String.format(DEFAULT_IAM_ACCESS_TOKEN_ENDPOINT, this.targetPrincipal);
@@ -136,7 +146,7 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
     if (serverResponse.repeatServerResponse) {
       serverResponses.offerFirst(serverResponse);
     }
-    if (url.equals(iamAccessTokenformattedUrl)) {
+    if (url.equals(iamAccessTokenFormattedUrl)) {
       this.request =
           new MockLowLevelHttpRequest(url) {
             @Override
@@ -204,6 +214,7 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
     } else {
       return super.buildRequest(method, url);
     }
+    numRequests++;
 
     return this.request;
   }

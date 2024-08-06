@@ -31,6 +31,7 @@
 package com.google.auth.oauth2;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
@@ -38,6 +39,7 @@ import com.google.api.client.http.HttpStatusCodes;
 import com.google.auth.ServiceAccountSigner;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -49,14 +51,20 @@ public class IamUtilsTest {
   private static final String CLIENT_EMAIL =
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr@developer.gserviceaccount.com";
 
-  @Test
-  public void sign_noRetry() throws IOException {
-    byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
+  private ServiceAccountCredentials credentials;
 
-    // Mock this call because signing requires an access token. The call is initialized with
-    // HttpCredentialsAdapter which will make a call to get the access token
-    ServiceAccountCredentials credentials = Mockito.mock(ServiceAccountCredentials.class);
+  @Before
+  public void setup() throws IOException {
+    // Mock this call for the Credentials because the IAM SignBlob RPC requires an access token. The
+    // call is initialized with HttpCredentialsAdapter which will make a call to get the access
+    // token
+    credentials = Mockito.mock(ServiceAccountCredentials.class);
     Mockito.when(credentials.getRequestMetadata(Mockito.any())).thenReturn(ImmutableMap.of());
+  }
+
+  @Test
+  public void sign_success_noRetry() {
+    byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
     ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory transportFactory =
         new ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory();
@@ -72,22 +80,22 @@ public class IamUtilsTest {
             expectedSignature,
             ImmutableMap.of());
     assertArrayEquals(expectedSignature, signature);
+
+    assertEquals(1, transportFactory.transport.getNumRequests());
   }
 
   // The SignBlob RPC will retry up to three times before it gives up. This test will fail twice
   // before returning a success.
   @Test
-  public void sign_retryTwoTimes_success() throws IOException {
+  public void sign_retryTwoTimes_success() {
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
-
-    // Mock this call because signing requires an access token
-    ServiceAccountCredentials credentials = Mockito.mock(ServiceAccountCredentials.class);
-    Mockito.when(credentials.getRequestMetadata(Mockito.any())).thenReturn(ImmutableMap.of());
 
     ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory transportFactory =
         new ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory();
-    transportFactory.transport.addStatusCodeAndMessage(502, "Bad Gateway");
-    transportFactory.transport.addStatusCodeAndMessage(502, "Bad Gateway");
+    transportFactory.transport.addStatusCodeAndMessage(
+        HttpStatusCodes.STATUS_CODE_BAD_GATEWAY, "Bad Gateway");
+    transportFactory.transport.addStatusCodeAndMessage(
+        HttpStatusCodes.STATUS_CODE_SERVICE_UNAVAILABLE, "Bad Gateway");
     transportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
     transportFactory.transport.setSignedBlob(expectedSignature);
     transportFactory.transport.setTargetPrincipal(CLIENT_EMAIL);
@@ -100,26 +108,30 @@ public class IamUtilsTest {
             expectedSignature,
             ImmutableMap.of());
     assertArrayEquals(expectedSignature, signature);
+
+    // Expect that three requests are made (2 failures which are retries + 1 final requests which
+    // resulted in a successful response)
+    assertEquals(3, transportFactory.transport.getNumRequests());
   }
 
   // The rpc will retry up to three times before it gives up. This test will fail four times before
   // returning a success. After the third failure, the failure will be reported back to the user.
   @Test
-  public void sign_retryFourTimes_exception() throws IOException {
+  public void sign_retryFourTimes_exception() {
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
-
-    // Mock this call because signing requires an access token
-    ServiceAccountCredentials credentials = Mockito.mock(ServiceAccountCredentials.class);
-    Mockito.when(credentials.getRequestMetadata(Mockito.any())).thenReturn(ImmutableMap.of());
 
     ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory transportFactory =
         new ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory();
     transportFactory.transport.setSignedBlob(expectedSignature);
     transportFactory.transport.setTargetPrincipal(CLIENT_EMAIL);
-    transportFactory.transport.addStatusCodeAndMessage(502, "Bad Gateway");
-    transportFactory.transport.addStatusCodeAndMessage(502, "Bad Gateway");
-    transportFactory.transport.addStatusCodeAndMessage(502, "Bad Gateway");
-    transportFactory.transport.addStatusCodeAndMessage(502, "Bad Gateway");
+    transportFactory.transport.addStatusCodeAndMessage(
+        HttpStatusCodes.STATUS_CODE_BAD_GATEWAY, "Bad Gateway");
+    transportFactory.transport.addStatusCodeAndMessage(
+        HttpStatusCodes.STATUS_CODE_SERVICE_UNAVAILABLE, "Unavailable");
+    transportFactory.transport.addStatusCodeAndMessage(
+        HttpStatusCodes.STATUS_CODE_SERVER_ERROR, "Server Error");
+    transportFactory.transport.addStatusCodeAndMessage(
+        HttpStatusCodes.STATUS_CODE_BAD_GATEWAY, "Bad Gateway");
     transportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
 
     ServiceAccountSigner.SigningException exception =
@@ -138,16 +150,15 @@ public class IamUtilsTest {
             .getCause()
             .getMessage()
             .contains("Unexpected Error code 502 trying to sign provided bytes"));
+
+    // Expect that three requests are made (3 failures which are retried + 1 final request which
+    // resulted in another failed response)
+    assertEquals(4, transportFactory.transport.getNumRequests());
   }
 
   @Test
-  public void sign_4xxServerError_exception() throws IOException {
+  public void sign_4xxError_noRetry_exception() {
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
-
-    // Mock this call because signing requires an access token. The call is initialized with
-    // HttpCredentialsAdapter which will make a call to get the access token
-    ServiceAccountCredentials credentials = Mockito.mock(ServiceAccountCredentials.class);
-    Mockito.when(credentials.getRequestMetadata(Mockito.any())).thenReturn(ImmutableMap.of());
 
     ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory transportFactory =
         new ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory();
@@ -172,5 +183,8 @@ public class IamUtilsTest {
             .getCause()
             .getMessage()
             .contains("Error code 401 trying to sign provided bytes:"));
+
+    // Only one request will have been made for a 4xx error (no retries)
+    assertEquals(1, transportFactory.transport.getNumRequests());
   }
 }
