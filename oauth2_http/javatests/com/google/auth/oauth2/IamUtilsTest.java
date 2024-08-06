@@ -84,8 +84,9 @@ public class IamUtilsTest {
     assertEquals(1, transportFactory.transport.getNumRequests());
   }
 
-  // The SignBlob RPC will retry up to three times before it gives up. This test will fail twice
-  // before returning a success.
+  // The SignBlob RPC will retry up to three times before it gives up. This test will return two
+  // 5xx status codes before returning a success. This test covers the cases where the number of
+  // retry attempts is below the configured retry attempt count bounds (3 attempts).
   @Test
   public void sign_retryTwoTimes_success() {
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
@@ -95,7 +96,7 @@ public class IamUtilsTest {
     transportFactory.transport.addStatusCodeAndMessage(
         HttpStatusCodes.STATUS_CODE_BAD_GATEWAY, "Bad Gateway");
     transportFactory.transport.addStatusCodeAndMessage(
-        HttpStatusCodes.STATUS_CODE_SERVICE_UNAVAILABLE, "Bad Gateway");
+        HttpStatusCodes.STATUS_CODE_SERVICE_UNAVAILABLE, "Unavailable");
     transportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
     transportFactory.transport.setSignedBlob(expectedSignature);
     transportFactory.transport.setTargetPrincipal(CLIENT_EMAIL);
@@ -112,6 +113,39 @@ public class IamUtilsTest {
     // Expect that three requests are made (2 failures which are retries + 1 final requests which
     // resulted in a successful response)
     assertEquals(3, transportFactory.transport.getNumRequests());
+  }
+
+  // The rpc will retry up to three times before it gives up. This test will enqueue three failed
+  // status codes + messages before returning a success. After the third retry attempt, the request
+  // will try one last time and the result will be reported back to the user.
+  @Test
+  public void sign_retryThreeTimes_success() {
+    byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
+
+    ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory transportFactory =
+        new ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory();
+    transportFactory.transport.setSignedBlob(expectedSignature);
+    transportFactory.transport.setTargetPrincipal(CLIENT_EMAIL);
+    transportFactory.transport.addStatusCodeAndMessage(
+        HttpStatusCodes.STATUS_CODE_BAD_GATEWAY, "Bad Gateway");
+    transportFactory.transport.addStatusCodeAndMessage(
+        HttpStatusCodes.STATUS_CODE_SERVICE_UNAVAILABLE, "Unavailable");
+    transportFactory.transport.addStatusCodeAndMessage(
+        HttpStatusCodes.STATUS_CODE_SERVER_ERROR, "Server Error");
+    transportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
+
+    byte[] signature =
+        IamUtils.sign(
+            CLIENT_EMAIL,
+            credentials,
+            transportFactory.transport,
+            expectedSignature,
+            ImmutableMap.of());
+    assertArrayEquals(expectedSignature, signature);
+
+    // Expect that three requests are made (3 failures which are retried + 1 final request which
+    // resulted the final success response)
+    assertEquals(4, transportFactory.transport.getNumRequests());
   }
 
   // The rpc will retry up to three times before it gives up. This test will enqueue four failed
