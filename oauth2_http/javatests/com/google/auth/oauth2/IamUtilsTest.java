@@ -114,10 +114,11 @@ public class IamUtilsTest {
     assertEquals(3, transportFactory.transport.getNumRequests());
   }
 
-  // The rpc will retry up to three times before it gives up. This test will fail four times before
-  // returning a success. After the third failure, the failure will be reported back to the user.
+  // The rpc will retry up to three times before it gives up. This test will enqueue four failed
+  // status codes + messages before returning a success. After the third retry attempt, the request
+  // will try one last time and the result will be reported back to the user.
   @Test
-  public void sign_retryFourTimes_exception() {
+  public void sign_retryThreeTimes_exception() {
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
     ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory transportFactory =
