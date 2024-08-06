@@ -102,11 +102,6 @@ class OAuth2Utils {
   public static final Set<Integer> TOKEN_ENDPOINT_RETRYABLE_STATUS_CODES =
       new HashSet<>(Arrays.asList(500, 503, 408, 429));
 
-  // Following guidance for IAM retries:
-  // https://cloud.google.com/iam/docs/retry-strategy#errors-to-retry
-  static final Set<Integer> IAM_RETRYABLE_STATUS_CODES =
-      new HashSet<>(Arrays.asList(500, 502, 503, 504));
-
   static class DefaultHttpTransportFactory implements HttpTransportFactory {
 
     @Override
