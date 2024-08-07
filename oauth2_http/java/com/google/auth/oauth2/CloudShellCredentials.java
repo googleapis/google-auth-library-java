@@ -32,7 +32,6 @@
 package com.google.auth.oauth2;
 
 import com.google.api.client.json.JsonParser;
-import com.google.common.base.Charsets;
 import com.google.common.base.MoreObjects;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.BufferedReader;
@@ -40,6 +39,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -59,7 +59,7 @@ public class CloudShellCredentials extends GoogleCredentials {
   protected static final String GET_AUTH_TOKEN_REQUEST = "2\n[]";
 
   protected static final byte[] GET_AUTH_TOKEN_REQUEST_BYTES =
-      (GET_AUTH_TOKEN_REQUEST + "\n").getBytes(Charsets.UTF_8);
+      (GET_AUTH_TOKEN_REQUEST + "\n").getBytes(StandardCharsets.UTF_8);
 
   private final int authPort;
 
