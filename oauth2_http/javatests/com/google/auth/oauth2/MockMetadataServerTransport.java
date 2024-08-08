@@ -38,6 +38,7 @@ import com.google.api.client.json.Json;
 import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
+import com.google.common.base.Splitter;
 import com.google.common.io.BaseEncoding;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -45,13 +46,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /** Transport that simulates the GCE metadata server for access tokens. */
 public class MockMetadataServerTransport extends MockHttpTransport {
 
-  private String accessToken;
-
+  // key are scopes as in request url string following "?scopes="
+  private Map<String, String> scopesToAccessToken;
   private Integer requestStatusCode;
 
   private String serviceAccountEmail;
@@ -62,8 +64,25 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
   public MockMetadataServerTransport() {}
 
+  public MockMetadataServerTransport(String accessToken) {
+    setAccessToken(accessToken);
+  }
+
+  public MockMetadataServerTransport(Map<String, String> accessTokenMap) {
+    for (String scope : accessTokenMap.keySet()) {
+      setAccessToken(scope, accessTokenMap.get(scope));
+    }
+  }
+
   public void setAccessToken(String accessToken) {
-    this.accessToken = accessToken;
+    setAccessToken("default", accessToken);
+  }
+
+  public void setAccessToken(String scopes, String accessToken) {
+    if (scopesToAccessToken == null) {
+      scopesToAccessToken = new HashMap<>();
+    }
+    scopesToAccessToken.put(scopes, accessToken);
   }
 
   public void setRequestStatusCode(Integer requestStatusCode) {
@@ -84,7 +103,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
   @Override
   public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
-    if (url.equals(ComputeEngineCredentials.getTokenServerEncodedUrl())) {
+    if (url.startsWith(ComputeEngineCredentials.getTokenServerEncodedUrl())) {
       return getMockRequestForTokenEndpoint(url);
     } else if (isGetServiceAccountsUrl(url)) {
       return getMockRequestForServiceAccount(url);
@@ -164,7 +183,15 @@ public class MockMetadataServerTransport extends MockHttpTransport {
         // Create the JSON response
         GenericJson refreshContents = new GenericJson();
         refreshContents.setFactory(OAuth2Utils.JSON_FACTORY);
-        refreshContents.put("access_token", accessToken);
+
+        List<String> urlParsed = Splitter.on("?scopes=").splitToList(url);
+        if (urlParsed.size() == 1) {
+          // no scopes specified, return access token correspoinding to default scopes
+          refreshContents.put("access_token", scopesToAccessToken.get("default"));
+        } else {
+          refreshContents.put(
+              "access_token", scopesToAccessToken.get("[" + urlParsed.get(1) + "]"));
+        }
         refreshContents.put("expires_in", 3600000);
         refreshContents.put("token_type", "Bearer");
         String refreshText = refreshContents.toPrettyString();

@@ -63,7 +63,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -111,6 +113,16 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
           + "iTElDRU5TRV8xIiwNCiAgICAgICAiTElDRU5TRV8yIg0KICAgIF0NCiAgfSwNCiAgImlhdCI6IDE1NjQ1MTU4OTY"
           + "sDQogICJpc3MiOiAiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwNCiAgInN1YiI6ICIxMTIxNzkwNjI3MjA"
           + "zOTEzMDU4ODUiDQp9.redacted";
+  private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
+  private static final List<String> SCOPES = Arrays.asList("foo", "bar");
+  private static final String ACCESS_TOKEN_WITH_SCOPES = "1/MkSJoj1xsli0AccessTokenScoped_NKPY2";
+  private static final Map<String, String> SCOPE_TO_ACCESS_TOKEN_MAP =
+      Stream.of(
+              new String[][] {
+                {"default", ACCESS_TOKEN},
+                {SCOPES.toString().replaceAll("\\s", ""), ACCESS_TOKEN_WITH_SCOPES},
+              })
+          .collect(Collectors.toMap(data -> data[0], data -> data[1]));
 
   @Test
   public void buildTokenUrlWithScopes_null_scopes() {
@@ -215,7 +227,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
         (ComputeEngineCredentials) credentials.createScoped(Arrays.asList("foo"));
 
     assertEquals("some-universe", scopedCredentials.getUniverseDomain());
-    assertEquals(true, scopedCredentials.isExplicitUniverseDomain());
+    assertTrue(scopedCredentials.isExplicitUniverseDomain());
   }
 
   @Test
@@ -226,6 +238,33 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
     assertEquals(1, scopes.size());
     assertEquals("foo", scopes.toArray()[0]);
+  }
+
+  @Test
+  public void buildScoped_quotaProjectId() throws IOException {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder()
+            .setScopes(null)
+            .setQuotaProjectId("some-project-id")
+            .build();
+    ComputeEngineCredentials scopedCredentials =
+        (ComputeEngineCredentials) credentials.createScoped(Arrays.asList("foo"));
+
+    assertEquals("some-project-id", scopedCredentials.getQuotaProjectId());
+  }
+
+  @Test
+  public void buildDefaultScoped_explicitUniverse() throws IOException {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder()
+            .setScopes(null)
+            .setUniverseDomain("some-universe")
+            .build();
+    ComputeEngineCredentials scopedCredentials =
+        (ComputeEngineCredentials) credentials.createScoped(null, Arrays.asList("foo"));
+
+    assertEquals("some-universe", scopedCredentials.getUniverseDomain());
+    assertTrue(scopedCredentials.isExplicitUniverseDomain());
   }
 
   @Test
@@ -240,21 +279,37 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void getRequestMetadata_hasAccessToken() throws IOException {
-    String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-    transportFactory.transport.setAccessToken(accessToken);
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
-    TestUtils.assertContainsBearerToken(metadata, accessToken);
+    TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+  }
+
+  @Test
+  public void getRequestMetadata_shouldInvalidateAccessTokenWhenScoped_newAccessTokenFromRefresh()
+      throws IOException {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+
+    TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+
+    assertNotNull(credentials.getAccessToken());
+    ComputeEngineCredentials scopedCredentialCopy =
+        (ComputeEngineCredentials) credentials.createScoped(SCOPES);
+    assertNull(scopedCredentialCopy.getAccessToken());
+    Map<String, List<String>> metadataForCopiedCredentials =
+        scopedCredentialCopy.getRequestMetadata(CALL_URI);
+    TestUtils.assertContainsBearerToken(metadataForCopiedCredentials, ACCESS_TOKEN_WITH_SCOPES);
+    TestUtils.assertNotContainsBearerToken(metadataForCopiedCredentials, ACCESS_TOKEN);
   }
 
   @Test
   public void getRequestMetadata_missingServiceAccount_throws() {
-    String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-    transportFactory.transport.setAccessToken(accessToken);
     transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_NOT_FOUND);
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
@@ -271,9 +326,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void getRequestMetadata_serverError_throws() {
-    String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-    transportFactory.transport.setAccessToken(accessToken);
     transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_SERVER_ERROR);
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
@@ -481,11 +534,9 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   @Test
   public void sign_sameAs() throws IOException {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-    final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     String defaultAccountEmail = "mail@mail.com";
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
-    transportFactory.transport.setAccessToken(accessToken);
     transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);
     transportFactory.transport.setSignature(expectedSignature);
     ComputeEngineCredentials credentials =
@@ -497,10 +548,8 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   @Test
   public void sign_getAccountFails() throws IOException {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-    final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
-    transportFactory.transport.setAccessToken(accessToken);
     transportFactory.transport.setSignature(expectedSignature);
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
@@ -517,7 +566,6 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   @Test
   public void sign_accessDenied_throws() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-    final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     String defaultAccountEmail = "mail@mail.com";
 
     transportFactory.transport =
@@ -538,7 +586,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
           }
         };
 
-    transportFactory.transport.setAccessToken(accessToken);
+    transportFactory.transport.setAccessToken(ACCESS_TOKEN);
     transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);
 
     ComputeEngineCredentials credentials =
@@ -558,7 +606,6 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   @Test
   public void sign_serverError_throws() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-    final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     String defaultAccountEmail = "mail@mail.com";
 
     transportFactory.transport =
@@ -579,7 +626,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
           }
         };
 
-    transportFactory.transport.setAccessToken(accessToken);
+    transportFactory.transport.setAccessToken(ACCESS_TOKEN);
     transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);
 
     ComputeEngineCredentials credentials =
@@ -808,7 +855,6 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   @Test
   public void sign_emptyContent_throws() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-    String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     String defaultAccountEmail = "mail@mail.com";
 
     transportFactory.transport =
@@ -828,7 +874,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
           }
         };
 
-    transportFactory.transport.setAccessToken(accessToken);
+    transportFactory.transport.setAccessToken(ACCESS_TOKEN);
     transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);
 
     ComputeEngineCredentials credentials =
@@ -930,7 +976,8 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
   static class MockMetadataServerTransportFactory implements HttpTransportFactory {
 
-    MockMetadataServerTransport transport = new MockMetadataServerTransport();
+    MockMetadataServerTransport transport =
+        new MockMetadataServerTransport(SCOPE_TO_ACCESS_TOKEN_MAP);
 
     @Override
     public HttpTransport create() {
