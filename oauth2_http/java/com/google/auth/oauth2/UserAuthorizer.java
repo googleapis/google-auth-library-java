@@ -56,6 +56,17 @@ import java.util.Map;
 /** Handles an interactive 3-Legged-OAuth2 (3LO) user consent authorization. */
 public class UserAuthorizer {
 
+  /**
+   * Represents the client authentication types as specified in RFC 7591.
+   *
+   * <p>For more details, see <a href="https://tools.ietf.org/html/rfc7591">RFC 7591</a>.
+   */
+  public enum ClientAuthenticationType {
+    CLIENT_SECRET_POST,
+    CLIENT_SECRET_BASIC,
+    NONE
+  }
+
   static final URI DEFAULT_CALLBACK_URI = URI.create("/oauth2callback");
 
   private final String TOKEN_STORE_ERROR = "Error parsing stored token data.";
@@ -70,6 +81,7 @@ public class UserAuthorizer {
   private final URI tokenServerUri;
   private final URI userAuthUri;
   private final PKCEProvider pkce;
+  private final ClientAuthenticationType clientAuthenticationType;
 
   /**
    * Constructor with all parameters.
@@ -83,6 +95,7 @@ public class UserAuthorizer {
    * @param tokenServerUri URI of the end point that provides tokens
    * @param userAuthUri URI of the Web UI for user consent
    * @param pkce PKCE implementation
+   * @param clientAuthentication ClientAuthentication type as defined in RFC 7591 basic/post/none
    */
   private UserAuthorizer(
       ClientId clientId,
@@ -92,7 +105,8 @@ public class UserAuthorizer {
       HttpTransportFactory transportFactory,
       URI tokenServerUri,
       URI userAuthUri,
-      PKCEProvider pkce) {
+      PKCEProvider pkce,
+      ClientAuthenticationType clientAuthentication) {
     this.clientId = Preconditions.checkNotNull(clientId);
     this.scopes = ImmutableList.copyOf(Preconditions.checkNotNull(scopes));
     this.callbackUri = (callbackUri == null) ? DEFAULT_CALLBACK_URI : callbackUri;
@@ -102,6 +116,10 @@ public class UserAuthorizer {
     this.userAuthUri = (userAuthUri == null) ? OAuth2Utils.USER_AUTH_URI : userAuthUri;
     this.tokenStore = (tokenStore == null) ? new MemoryTokensStorage() : tokenStore;
     this.pkce = pkce;
+    this.clientAuthenticationType =
+        (clientAuthentication == null)
+            ? ClientAuthenticationType.CLIENT_SECRET_POST
+            : clientAuthentication;
   }
 
   /**
@@ -159,6 +177,15 @@ public class UserAuthorizer {
    */
   public TokenStore getTokenStore() {
     return tokenStore;
+  }
+
+  /**
+   * Returns the client authentication type as defined in RFC 7591.
+   *
+   * @return The {@link ClientAuthenticationType}
+   */
+  public ClientAuthenticationType getClientAuthenticationType() {
+    return clientAuthenticationType;
   }
 
   /**
@@ -276,6 +303,11 @@ public class UserAuthorizer {
   /**
    * Returns a UserCredentials instance by exchanging an OAuth2 authorization code for tokens.
    *
+   * <p>The library is going to exchange an access token depends on the token_uri we provide. If
+   * will be either oauth2 or sts. The two endpoints accepting different way of basic auth. STS want
+   * client id and client secret being base64 encoded and put into header. OAuth2 endpoint want the
+   * client secret being sent as a field in post.
+   *
    * @param code Code returned from OAuth2 consent prompt.
    * @param baseUri The URI to resolve the OAuth2 callback URI relative to.
    * @param additionalParameters Additional parameters to be added to the post body of token
@@ -291,9 +323,12 @@ public class UserAuthorizer {
     GenericData tokenData = new GenericData();
     tokenData.put("code", code);
     tokenData.put("client_id", clientId.getClientId());
-    tokenData.put("client_secret", clientId.getClientSecret());
     tokenData.put("redirect_uri", resolvedCallbackUri);
     tokenData.put("grant_type", "authorization_code");
+
+    if (this.clientAuthenticationType == ClientAuthenticationType.CLIENT_SECRET_POST) {
+      tokenData.put("client_secret", clientId.getClientSecret());
+    }
 
     if (additionalParameters != null) {
       for (Map.Entry<String, String> entry : additionalParameters.entrySet()) {
@@ -310,6 +345,10 @@ public class UserAuthorizer {
     HttpRequest tokenRequest =
         requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), tokenContent);
     tokenRequest.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
+
+    if (this.clientAuthenticationType == ClientAuthenticationType.CLIENT_SECRET_BASIC) {
+      tokenRequest.getHeaders().setAuthorization(OAuth2Utils.getBasicAuthString(clientId));
+    }
 
     HttpResponse tokenResponse = tokenRequest.execute();
 
@@ -418,7 +457,6 @@ public class UserAuthorizer {
     }
     AccessToken accessToken = credentials.getAccessToken();
     String acessTokenValue = null;
-    String scopes = null;
     Date expiresBy = null;
     List<String> grantedScopes = new ArrayList<>();
 
@@ -488,6 +526,7 @@ public class UserAuthorizer {
     private Collection<String> scopes;
     private HttpTransportFactory transportFactory;
     private PKCEProvider pkce;
+    private ClientAuthenticationType clientAuthenticationType;
 
     protected Builder() {}
 
@@ -500,6 +539,7 @@ public class UserAuthorizer {
       this.callbackUri = authorizer.callbackUri;
       this.userAuthUri = authorizer.userAuthUri;
       this.pkce = new DefaultPKCEProvider();
+      this.clientAuthenticationType = authorizer.clientAuthenticationType;
     }
 
     @CanIgnoreReturnValue
@@ -559,6 +599,12 @@ public class UserAuthorizer {
       return this;
     }
 
+    @CanIgnoreReturnValue
+    public Builder setClientAuthenticationType(ClientAuthenticationType clientAuthenticationType) {
+      this.clientAuthenticationType = clientAuthenticationType;
+      return this;
+    }
+
     public ClientId getClientId() {
       return clientId;
     }
@@ -591,6 +637,10 @@ public class UserAuthorizer {
       return pkce;
     }
 
+    public ClientAuthenticationType getClientAuthenticationType() {
+      return clientAuthenticationType;
+    }
+
     public UserAuthorizer build() {
       return new UserAuthorizer(
           clientId,
@@ -600,7 +650,8 @@ public class UserAuthorizer {
           transportFactory,
           tokenServerUri,
           userAuthUri,
-          pkce);
+          pkce,
+          clientAuthenticationType);
     }
   }
 }

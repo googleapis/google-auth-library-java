@@ -38,6 +38,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
 import com.google.auth.TestUtils;
+import com.google.common.io.BaseEncoding;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
@@ -90,6 +91,9 @@ public class UserAuthorizerTest {
     assertSame(store, authorizer.getTokenStore());
     assertEquals(DUMMY_SCOPES, authorizer.getScopes());
     assertEquals(UserAuthorizer.DEFAULT_CALLBACK_URI, authorizer.getCallbackUri());
+    assertEquals(
+        UserAuthorizer.ClientAuthenticationType.CLIENT_SECRET_POST,
+        authorizer.getClientAuthenticationType());
   }
 
   @Test
@@ -102,12 +106,38 @@ public class UserAuthorizerTest {
             .setScopes(DUMMY_SCOPES)
             .setTokenStore(store)
             .setCallbackUri(CALLBACK_URI)
+            .setClientAuthenticationType(
+                UserAuthorizer.ClientAuthenticationType.CLIENT_SECRET_BASIC)
             .build();
 
     assertSame(CLIENT_ID, authorizer.getClientId());
     assertSame(store, authorizer.getTokenStore());
     assertEquals(DUMMY_SCOPES, authorizer.getScopes());
     assertEquals(CALLBACK_URI, authorizer.getCallbackUri());
+    assertEquals(
+        UserAuthorizer.ClientAuthenticationType.CLIENT_SECRET_BASIC,
+        authorizer.getClientAuthenticationType());
+  }
+
+  @Test
+  public void constructorWithClientAuthenticationTypeNone() {
+    TokenStore store = new MemoryTokensStorage();
+
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(DUMMY_SCOPES)
+            .setTokenStore(store)
+            .setCallbackUri(CALLBACK_URI)
+            .setClientAuthenticationType(UserAuthorizer.ClientAuthenticationType.NONE)
+            .build();
+
+    assertSame(CLIENT_ID, authorizer.getClientId());
+    assertSame(store, authorizer.getTokenStore());
+    assertEquals(DUMMY_SCOPES, authorizer.getScopes());
+    assertEquals(CALLBACK_URI, authorizer.getCallbackUri());
+    assertEquals(
+        UserAuthorizer.ClientAuthenticationType.NONE, authorizer.getClientAuthenticationType());
   }
 
   @Test(expected = NullPointerException.class)
@@ -134,6 +164,14 @@ public class UserAuthorizerTest {
     URI absoluteCallbackURI = authorizer.getCallbackUri(BASE_URI);
 
     assertEquals(expectedCallbackURI, absoluteCallbackURI);
+  }
+
+  @Test
+  public void getBasicAuthTest() {
+    String expectBasicAuthHeader =
+        "Basic " + BaseEncoding.base64().encode((CLIENT_ID_VALUE + ":" + CLIENT_SECRET).getBytes());
+
+    assertEquals(expectBasicAuthHeader, OAuth2Utils.getBasicAuthString(CLIENT_ID));
   }
 
   @Test
@@ -497,6 +535,77 @@ public class UserAuthorizerTest {
     assertEquals(REFRESH_TOKEN, credentials2.getRefreshToken());
     assertEquals(GRANTED_SCOPES, credentials2.getAccessToken().getScopes());
     assertEquals(accessTokenValue2, credentials2.getAccessToken().getTokenValue());
+  }
+
+  @Test
+  public void getAndStoreCredentialsFromCodeBasicAuth_getAndStoresCredentials() throws IOException {
+    final String accessTokenValue1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    final String accessTokenValue2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
+    transportFactory.transport.addAuthorizationCode(
+        CODE, REFRESH_TOKEN, accessTokenValue1, GRANTED_SCOPES_STRING, null);
+    transportFactory.transport.disableSecretCheck();
+    TokenStore tokenStore = new MemoryTokensStorage();
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(DUMMY_SCOPES)
+            .setTokenStore(tokenStore)
+            .setHttpTransportFactory(transportFactory)
+            .setClientAuthenticationType(
+                UserAuthorizer.ClientAuthenticationType.CLIENT_SECRET_BASIC)
+            .build();
+
+    UserCredentials credentials1 =
+        authorizer.getAndStoreCredentialsFromCode(USER_ID, CODE, BASE_URI);
+
+    assertEquals(REFRESH_TOKEN, credentials1.getRefreshToken());
+    assertEquals(GRANTED_SCOPES, credentials1.getAccessToken().getScopes());
+    assertEquals(accessTokenValue1, credentials1.getAccessToken().getTokenValue());
+
+    // Validate request auth header
+    // MockLowLevelHttpRequest request = transportFactory.transport.getRequest();
+    // Map<String, List<String>> requestHeaders = request.getHeaders();
+    // String basicAuth = requestHeaders.get("Authorization").get(0);
+    // String expectedAuthHeader = "Basic " + BaseEncoding.base64().encode((CLIENT_ID_VALUE + ":" +
+    // CLIENT_SECRET).getBytes());
+    // assertEquals(expectedAuthHeader, basicAuth);
+
+    // Refresh the token to get update from token server
+    transportFactory.transport.addRefreshToken(REFRESH_TOKEN, accessTokenValue2);
+    credentials1.refresh();
+    assertEquals(REFRESH_TOKEN, credentials1.getRefreshToken());
+    assertEquals(accessTokenValue2, credentials1.getAccessToken().getTokenValue());
+
+    // Load a second credentials instance
+    UserCredentials credentials2 = authorizer.getCredentials(USER_ID);
+
+    // Verify that token refresh stored the updated tokens
+    assertEquals(REFRESH_TOKEN, credentials2.getRefreshToken());
+    assertEquals(GRANTED_SCOPES, credentials2.getAccessToken().getScopes());
+    assertEquals(accessTokenValue2, credentials2.getAccessToken().getTokenValue());
+  }
+
+  @Test(expected = IOException.class)
+  public void getAndStoreCredentialsFromCodeNoneAuth_throws() throws IOException {
+    final String accessTokenValue1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
+    transportFactory.transport.addAuthorizationCode(
+        CODE, REFRESH_TOKEN, accessTokenValue1, GRANTED_SCOPES_STRING, null);
+
+    TokenStore tokenStore = new MemoryTokensStorage();
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(DUMMY_SCOPES)
+            .setTokenStore(tokenStore)
+            .setHttpTransportFactory(transportFactory)
+            .setClientAuthenticationType(UserAuthorizer.ClientAuthenticationType.NONE)
+            .build();
+
+    authorizer.getAndStoreCredentialsFromCode(USER_ID, CODE, BASE_URI);
   }
 
   @Test(expected = NullPointerException.class)
