@@ -89,10 +89,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final int TWELVE_HOURS_IN_SECONDS = 43200;
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
-  private static final int INITIAL_RETRY_INTERVAL_MILLIS = 1000;
-  private static final double RETRY_RANDOMIZATION_FACTOR = 0.1;
-  private static final double RETRY_MULTIPLIER = 2;
-  static final int DEFAULT_NUMBER_OF_RETRIES = 3;
 
   private final String clientId;
   private final String clientEmail;
@@ -505,7 +501,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
 
     if (this.defaultRetriesEnabled) {
-      request.setNumberOfRetries(DEFAULT_NUMBER_OF_RETRIES);
+      request.setNumberOfRetries(OAuth2Utils.DEFAULT_NUMBER_OF_RETRIES);
     } else {
       request.setNumberOfRetries(0);
     }
@@ -513,9 +509,9 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
     ExponentialBackOff backoff =
         new ExponentialBackOff.Builder()
-            .setInitialIntervalMillis(INITIAL_RETRY_INTERVAL_MILLIS)
-            .setRandomizationFactor(RETRY_RANDOMIZATION_FACTOR)
-            .setMultiplier(RETRY_MULTIPLIER)
+            .setInitialIntervalMillis(OAuth2Utils.INITIAL_RETRY_INTERVAL_MILLIS)
+            .setRandomizationFactor(OAuth2Utils.RETRY_RANDOMIZATION_FACTOR)
+            .setMultiplier(OAuth2Utils.RETRY_MULTIPLIER)
             .build();
 
     request.setUnsuccessfulResponseHandler(
@@ -641,7 +637,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   /**
    * Clones the service account with a new useJwtAccessWithScope value. This flag will be ignored if
-   * universeDomain field is different from {@link Credentials.GOOGLE_DEFAULT_UNIVERSE}.
+   * universeDomain field is different from {@link Credentials#GOOGLE_DEFAULT_UNIVERSE}.
    *
    * @param useJwtAccessWithScope whether self-signed JWT with scopes should be used
    * @return the cloned service account credentials with the given useJwtAccessWithScope
@@ -1119,7 +1115,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
     /**
      * Sets the useJwtAccessWithScope flag. This flag will be ignored if universeDomain field is
-     * different from {@link Credentials.GOOGLE_DEFAULT_UNIVERSE}.
+     * different from {@link Credentials#GOOGLE_DEFAULT_UNIVERSE}.
      */
     @CanIgnoreReturnValue
     public Builder setUseJwtAccessWithScope(boolean useJwtAccessWithScope) {

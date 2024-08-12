@@ -329,8 +329,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * Constructor that relies on a {@link GoogleCredential.Builder} to provide all the necessary
-   * field values for initialization.
+   * Constructor that relies on a {@link Builder} to provide all the necessary field values for
+   * initialization.
    *
    * @param builder an instance of a builder
    */

@@ -32,13 +32,17 @@
 package com.google.auth.oauth2;
 
 import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpBackOffIOExceptionHandler;
+import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler;
 import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
+import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.client.util.GenericData;
 import com.google.auth.Credentials;
 import com.google.auth.ServiceAccountSigner;
@@ -46,7 +50,10 @@ import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.common.io.BaseEncoding;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * This internal class provides shared utilities for interacting with the IAM API for common
@@ -59,6 +66,11 @@ class IamUtils {
       "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateIdToken";
   private static final String PARSE_ERROR_MESSAGE = "Error parsing error message response. ";
   private static final String PARSE_ERROR_SIGNATURE = "Error parsing signature response. ";
+
+  // Following guidance for IAM retries:
+  // https://cloud.google.com/iam/docs/retry-strategy#errors-to-retry
+  static final Set<Integer> IAM_RETRYABLE_STATUS_CODES =
+      new HashSet<>(Arrays.asList(500, 502, 503, 504));
 
   /**
    * Returns a signature for the provided bytes.
@@ -78,11 +90,12 @@ class IamUtils {
       byte[] toSign,
       Map<String, ?> additionalFields) {
     BaseEncoding base64 = BaseEncoding.base64();
+    HttpRequestFactory factory =
+        transport.createRequestFactory(new HttpCredentialsAdapter(credentials));
     String signature;
     try {
       signature =
-          getSignature(
-              serviceAccountEmail, credentials, transport, base64.encode(toSign), additionalFields);
+          getSignature(serviceAccountEmail, base64.encode(toSign), additionalFields, factory);
     } catch (IOException ex) {
       throw new ServiceAccountSigner.SigningException("Failed to sign the provided bytes", ex);
     }
@@ -91,10 +104,9 @@ class IamUtils {
 
   private static String getSignature(
       String serviceAccountEmail,
-      Credentials credentials,
-      HttpTransport transport,
       String bytes,
-      Map<String, ?> additionalFields)
+      Map<String, ?> additionalFields,
+      HttpRequestFactory factory)
       throws IOException {
     String signBlobUrl = String.format(SIGN_BLOB_URL_FORMAT, serviceAccountEmail);
     GenericUrl genericUrl = new GenericUrl(signBlobUrl);
@@ -106,13 +118,27 @@ class IamUtils {
     }
     JsonHttpContent signContent = new JsonHttpContent(OAuth2Utils.JSON_FACTORY, signRequest);
 
-    HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
-    HttpRequest request =
-        transport.createRequestFactory(adapter).buildPostRequest(genericUrl, signContent);
+    HttpRequest request = factory.buildPostRequest(genericUrl, signContent);
 
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     request.setParser(parser);
     request.setThrowExceptionOnExecuteError(false);
+    request.setNumberOfRetries(OAuth2Utils.DEFAULT_NUMBER_OF_RETRIES);
+
+    ExponentialBackOff backoff =
+        new ExponentialBackOff.Builder()
+            .setInitialIntervalMillis(OAuth2Utils.INITIAL_RETRY_INTERVAL_MILLIS)
+            .setRandomizationFactor(OAuth2Utils.RETRY_RANDOMIZATION_FACTOR)
+            .setMultiplier(OAuth2Utils.RETRY_MULTIPLIER)
+            .build();
+
+    // Retry on 500, 502, 503, and 503 status codes
+    request.setUnsuccessfulResponseHandler(
+        new HttpBackOffUnsuccessfulResponseHandler(backoff)
+            .setBackOffRequired(
+                response ->
+                    IamUtils.IAM_RETRYABLE_STATUS_CODES.contains(response.getStatusCode())));
+    request.setIOExceptionHandler(new HttpBackOffIOExceptionHandler(backoff));
 
     HttpResponse response = request.execute();
     int statusCode = response.getStatusCode();
@@ -125,6 +151,8 @@ class IamUtils {
           String.format(
               "Error code %s trying to sign provided bytes: %s", statusCode, errorMessage));
     }
+
+    // Request will have retried a 5xx error 3 times and is still receiving a 5xx error code
     if (statusCode != HttpStatusCodes.STATUS_CODE_OK) {
       throw new IOException(
           String.format(
@@ -152,8 +180,8 @@ class IamUtils {
    * @param additionalFields additional fields to send in the IAM call
    * @return IdToken issed to the serviceAccount
    * @throws IOException if the IdToken cannot be issued.
-   * @see
-   *     https://cloud.google.com/iam/credentials/reference/rest/v1/projects.serviceAccounts/generateIdToken
+   * @see <a
+   *     href="https://cloud.google.com/iam/credentials/reference/rest/v1/projects.serviceAccounts/generateIdToken">...</a>
    */
   static IdToken getIdToken(
       String serviceAccountEmail,

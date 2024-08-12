@@ -50,7 +50,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
- * Internal provider for retrieving AWS security credentials for {@Link AwsCredentials} to exchange
+ * Internal provider for retrieving AWS security credentials for {@link AwsCredentials} to exchange
  * for GCP access tokens. The credentials are retrieved either via environment variables or metadata
  * endpoints.
  */
