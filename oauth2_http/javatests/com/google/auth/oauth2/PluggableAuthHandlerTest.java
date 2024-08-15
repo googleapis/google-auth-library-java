@@ -741,8 +741,8 @@ public class PluggableAuthHandlerTest {
     assertTrue(response.isSuccessful());
     assertEquals(TOKEN_TYPE_OIDC, response.getTokenType());
     assertEquals(ID_TOKEN, response.getSubjectToken());
-    assertEquals(Instant.now().getEpochSecond() + EXPIRATION_DURATION,
-        (long) response.getExpirationTime());
+    assertEquals(
+        Instant.now().getEpochSecond() + EXPIRATION_DURATION, (long) response.getExpirationTime());
     // Current env map should include the mappings from options.
     assertEquals(4, currentEnv.size());
     assertEquals(expectedMap, currentEnv);
@@ -788,8 +788,8 @@ public class PluggableAuthHandlerTest {
     assertTrue(response.isSuccessful());
     assertEquals(TOKEN_TYPE_SAML, response.getTokenType());
     assertEquals(SAML_RESPONSE, response.getSubjectToken());
-    assertEquals(Instant.now().getEpochSecond() + EXPIRATION_DURATION,
-        (long) response.getExpirationTime());
+    assertEquals(
+        Instant.now().getEpochSecond() + EXPIRATION_DURATION, (long) response.getExpirationTime());
 
     // Current env map should include the mappings from options.
     assertEquals(4, currentEnv.size());
