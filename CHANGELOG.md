@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.1](https://github.com/googleapis/google-auth-library-java/compare/v1.24.0...v1.24.1) (2024-08-13)
+
+
+### Bug Fixes
+
+* Retry sign blob call  with exponential backoff ([#1452](https://github.com/googleapis/google-auth-library-java/issues/1452)) ([d42f30a](https://github.com/googleapis/google-auth-library-java/commit/d42f30acae7c7bd81afbecbfa83ebde5c6db931a))
+
 ## [1.24.0](https://github.com/googleapis/google-auth-library-java/compare/v1.23.0...v1.24.0) (2024-07-09)
 
 
