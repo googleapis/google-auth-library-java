@@ -45,6 +45,8 @@ public abstract class Credentials implements Serializable {
 
   public static final String GOOGLE_DEFAULT_UNIVERSE = "googleapis.com";
 
+  private String credentialType = "unknown";
+
   /**
    * A constant string name describing the authentication technology.
    *
@@ -68,6 +70,14 @@ public abstract class Credentials implements Serializable {
    */
   public String getUniverseDomain() throws IOException {
     return GOOGLE_DEFAULT_UNIVERSE;
+  }
+
+  public String getCredentialType() {
+    return this.credentialType;
+  }
+
+  public void setCredentialType(String credentialType) {
+    this.credentialType = credentialType;
   }
 
   /**

@@ -67,4 +67,36 @@ class MetricsUtils {
     }
     return version;
   }
+
+  public enum RequestType {
+    ACCESS_TOKEN_REQUEST("at"),
+    ID_TOKEN_REQUEST("it"),
+    METADATA_SERVER_PIN("mds"),
+    UNSPECIFIED("unspecified");
+
+    private String label;
+
+    private RequestType(String label) {
+      this.label = label;
+    }
+
+    public String getLabel() {
+      return label;
+    }
+  }
+
+  static String getGoogleCredentialsMetricsHeader(RequestType requestType, String credentialType) {
+    if (requestType.equals(RequestType.UNSPECIFIED)) {
+      return String.format(
+          "%s %s/%s",
+          MetricsUtils.getLanguageAndAuthLibraryVersions(), "cred-type", credentialType);
+    }
+    return String.format(
+        "%s %s/%s %s/%s",
+        MetricsUtils.getLanguageAndAuthLibraryVersions(),
+        "auth-request-type",
+        requestType.getLabel(),
+        "cred-type",
+        credentialType);
+  }
 }

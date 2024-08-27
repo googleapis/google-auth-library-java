@@ -35,6 +35,7 @@ import static com.google.auth.oauth2.OAuth2Utils.JSON_FACTORY;
 import static com.google.common.base.MoreObjects.firstNonNull;
 
 import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
@@ -46,6 +47,7 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.oauth2.MetricsUtils.RequestType;
 import com.google.common.base.MoreObjects;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.ByteArrayInputStream;
@@ -95,6 +97,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     Preconditions.checkState(
         builder.getAccessToken() != null || builder.refreshToken != null,
         "Either accessToken or refreshToken must not be null");
+    this.setCredentialType("u");
   }
 
   /**
@@ -264,6 +267,13 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
 
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
+
+    HttpHeaders additionalHeaders = new HttpHeaders();
+    additionalHeaders.set(
+        MetricsUtils.API_CLIENT_HEADER,
+        MetricsUtils.getGoogleCredentialsMetricsHeader(
+            RequestType.UNSPECIFIED, getCredentialType()));
+    request.setHeaders(additionalHeaders);
     request.setParser(new JsonObjectParser(JSON_FACTORY));
     HttpResponse response;
 
@@ -375,6 +385,11 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
   @Override
   public Builder toBuilder() {
     return new Builder(this);
+  }
+
+  @Override
+  public String getCredentialType() {
+    return "u";
   }
 
   public static class Builder extends GoogleCredentials.Builder {
