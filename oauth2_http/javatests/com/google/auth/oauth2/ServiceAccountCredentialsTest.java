@@ -42,6 +42,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.api.client.http.HttpResponseException;
+import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
@@ -905,6 +906,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
         new MockIAMCredentialsServiceTransportFactory(nonGDU);
     transportFactory.getTransport().setTargetPrincipal(CLIENT_EMAIL);
     transportFactory.getTransport().setIdToken(DEFAULT_ID_TOKEN);
+    transportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
     ServiceAccountCredentials credentials =
         createDefaultBuilder()
             .setScopes(SCOPES)
@@ -935,6 +937,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
         new MockIAMCredentialsServiceTransportFactory(nonGDU);
     transportFactory.getTransport().setTargetPrincipal(CLIENT_EMAIL);
     transportFactory.getTransport().setIdToken(DEFAULT_ID_TOKEN);
+    transportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
     ServiceAccountCredentials credentials =
         createDefaultBuilder()
             .setScopes(SCOPES)
