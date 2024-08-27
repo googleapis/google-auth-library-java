@@ -221,17 +221,19 @@ public class ComputeEngineCredentials extends GoogleCredentials
       return super.getUniverseDomain();
     }
 
-    synchronized (this) {
-      if (this.universeDomainFromMetadata != null) {
-        return this.universeDomainFromMetadata;
-      }
-    }
-
-    String universeDomainFromMetadata = getUniverseDomainFromMetadata();
-    synchronized (this) {
-      this.universeDomainFromMetadata = universeDomainFromMetadata;
-    }
-    return universeDomainFromMetadata;
+    // TODO (b/349488459): Temporary disable retrieving Universe Domain from MDS
+    return GOOGLE_DEFAULT_UNIVERSE;
+    //    synchronized (this) {
+    //      if (this.universeDomainFromMetadata != null) {
+    //        return this.universeDomainFromMetadata;
+    //      }
+    //    }
+    //
+    //    String universeDomainFromMetadata = getUniverseDomainFromMetadata();
+    //    synchronized (this) {
+    //      this.universeDomainFromMetadata = universeDomainFromMetadata;
+    //    }
+    //    return universeDomainFromMetadata;
   }
 
   private String getUniverseDomainFromMetadata() throws IOException {

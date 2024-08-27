@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.Credentials.GOOGLE_DEFAULT_UNIVERSE;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -49,7 +50,6 @@ import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.ArrayMap;
 import com.google.api.client.util.Clock;
-import com.google.auth.Credentials;
 import com.google.auth.ServiceAccountSigner.SigningException;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
@@ -292,17 +292,17 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     ComputeEngineCredentials explicitUniverseCredentials =
         ComputeEngineCredentials.newBuilder()
-            .setUniverseDomain(Credentials.GOOGLE_DEFAULT_UNIVERSE)
+            .setUniverseDomain(GOOGLE_DEFAULT_UNIVERSE)
             .setHttpTransportFactory(transportFactory)
             .build();
     ComputeEngineCredentials otherCredentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
-    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, otherCredentials.getUniverseDomain());
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, otherCredentials.getUniverseDomain());
     assertFalse(explicitUniverseCredentials.equals(otherCredentials));
     assertFalse(otherCredentials.equals(explicitUniverseCredentials));
     ComputeEngineCredentials otherExplicitUniverseCredentials =
         ComputeEngineCredentials.newBuilder()
-            .setUniverseDomain(Credentials.GOOGLE_DEFAULT_UNIVERSE)
+            .setUniverseDomain(GOOGLE_DEFAULT_UNIVERSE)
             .setHttpTransportFactory(transportFactory)
             .build();
     assertTrue(explicitUniverseCredentials.equals(otherExplicitUniverseCredentials));
@@ -690,7 +690,9 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
     String universeDomain = credentials.getUniverseDomain();
-    assertEquals("some-universe.xyz", universeDomain);
+    // TODO (b/349488459): Temporary disable retrieving Universe Domain from MDS
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, universeDomain);
+    //    assertEquals("some-universe.xyz", universeDomain);
     assertEquals(false, credentials.isExplicitUniverseDomain());
   }
 
@@ -717,7 +719,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
     String universeDomain = credentials.getUniverseDomain();
-    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, universeDomain);
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, universeDomain);
     assertEquals(false, credentials.isExplicitUniverseDomain());
   }
 
@@ -744,7 +746,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
     String universeDomain = credentials.getUniverseDomain();
-    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, universeDomain);
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, universeDomain);
     assertEquals(false, credentials.isExplicitUniverseDomain());
   }
 
@@ -773,11 +775,11 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder()
             .setHttpTransportFactory(transportFactory)
-            .setUniverseDomain(Credentials.GOOGLE_DEFAULT_UNIVERSE)
+            .setUniverseDomain(GOOGLE_DEFAULT_UNIVERSE)
             .build();
 
     String universeDomain = credentials.getUniverseDomain();
-    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, universeDomain);
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, universeDomain);
     assertEquals(true, credentials.isExplicitUniverseDomain());
     assertEquals(0, transportFactory.transport.getRequestCount());
   }
@@ -790,19 +792,21 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
-    for (int status = 400; status < 600; status++) {
-      // 404 should not throw and tested separately
-      if (status == 404) {
-        continue;
-      }
-      try {
-        transportFactory.transport.setRequestStatusCode(status);
-        credentials.getUniverseDomain();
-        fail("Should not be able to use credential without exception.");
-      } catch (GoogleAuthException ex) {
-        assertTrue(ex.isRetryable());
-      }
-    }
+    // TODO (b/349488459): Temporary disable retrieving Universe Domain from MDS
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
+    //    for (int status = 400; status < 600; status++) {
+    //      // 404 should not throw and tested separately
+    //      if (status == 404) {
+    //        continue;
+    //      }
+    //      try {
+    //        transportFactory.transport.setRequestStatusCode(status);
+    //        credentials.getUniverseDomain();
+    //        fail("Should not be able to use credential without exception.");
+    //      } catch (GoogleAuthException ex) {
+    //        assertTrue(ex.isRetryable());
+    //      }
+    //    }
   }
 
   @Test
