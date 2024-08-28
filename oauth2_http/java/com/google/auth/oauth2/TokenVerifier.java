@@ -279,9 +279,6 @@ public class TokenVerifier {
   /** Custom CacheLoader for mapping certificate urls to the contained public keys. */
   static class PublicKeyLoader extends CacheLoader<String, Map<String, PublicKey>> {
     private static final int DEFAULT_NUMBER_OF_RETRIES = 2;
-    private static final int INITIAL_RETRY_INTERVAL_MILLIS = 1000;
-    private static final double RETRY_RANDOMIZATION_FACTOR = 0.1;
-    private static final double RETRY_MULTIPLIER = 2;
     private final HttpTransportFactory httpTransportFactory;
 
     /**
@@ -330,9 +327,9 @@ public class TokenVerifier {
 
       ExponentialBackOff backoff =
           new ExponentialBackOff.Builder()
-              .setInitialIntervalMillis(INITIAL_RETRY_INTERVAL_MILLIS)
-              .setRandomizationFactor(RETRY_RANDOMIZATION_FACTOR)
-              .setMultiplier(RETRY_MULTIPLIER)
+              .setInitialIntervalMillis(OAuth2Utils.INITIAL_RETRY_INTERVAL_MILLIS)
+              .setRandomizationFactor(OAuth2Utils.RETRY_RANDOMIZATION_FACTOR)
+              .setMultiplier(OAuth2Utils.RETRY_MULTIPLIER)
               .build();
 
       request.setUnsuccessfulResponseHandler(
