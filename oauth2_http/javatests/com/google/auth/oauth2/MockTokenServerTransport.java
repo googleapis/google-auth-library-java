@@ -72,7 +72,6 @@ public class MockTokenServerTransport extends MockHttpTransport {
   private IOException error;
   private final Queue<Future<LowLevelHttpResponse>> responseSequence = new ArrayDeque<>();
   private int expiresInSeconds = 3600;
-  private boolean checkSecret = true;
   private MockLowLevelHttpRequest request;
   private ClientAuthenticationType clientAuthenticationType;
   private PKCEProvider pkceProvider;
@@ -226,7 +225,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
                 }
                 String foundSecret = query.get("client_secret");
                 String expectedSecret = clients.get(foundId);
-                if ((foundSecret == null || !foundSecret.equals(expectedSecret)) && checkSecret) {
+                if ((foundSecret == null || !foundSecret.equals(expectedSecret))) {
                   throw new IOException("Client secret not found.");
                 }
                 String grantType = query.get("grant_type");
@@ -412,10 +411,6 @@ public class MockTokenServerTransport extends MockHttpTransport {
       return request;
     }
     return super.buildRequest(method, url);
-  }
-
-  public void disableSecretCheck() {
-    checkSecret = false;
   }
 
   private void validateAdditionalParameters(Map<String, String> query) {

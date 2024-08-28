@@ -84,7 +84,7 @@ public class UserAuthorizer {
   private final PKCEProvider pkce;
   private final ClientAuthenticationType clientAuthenticationType;
 
-  /** /** Internal constructor. See {@link Builder}. */
+  /** Internal constructor. See {@link Builder}. */
   private UserAuthorizer(Builder builder) {
     this.clientId = Preconditions.checkNotNull(builder.clientId);
     this.scopes = ImmutableList.copyOf(Preconditions.checkNotNull(builder.scopes));
