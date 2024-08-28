@@ -40,6 +40,6 @@ public class ApiKeyCredentials extends Credentials {
 
     @Override
     public void refresh() throws IOException {
-
+        // no-op
     }
 }
