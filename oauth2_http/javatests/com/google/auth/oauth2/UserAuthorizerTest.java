@@ -33,15 +33,22 @@ package com.google.auth.oauth2;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.auth.TestUtils;
+import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.oauth2.UserAuthorizer.ClientAuthenticationType;
+import com.google.auth.oauth2.UserAuthorizer.TokenResponseWithConfig;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -90,6 +97,9 @@ public class UserAuthorizerTest {
     assertSame(store, authorizer.getTokenStore());
     assertEquals(DUMMY_SCOPES, authorizer.getScopes());
     assertEquals(UserAuthorizer.DEFAULT_CALLBACK_URI, authorizer.getCallbackUri());
+    assertEquals(
+        UserAuthorizer.ClientAuthenticationType.CLIENT_SECRET_POST,
+        authorizer.getClientAuthenticationType());
   }
 
   @Test
@@ -102,12 +112,38 @@ public class UserAuthorizerTest {
             .setScopes(DUMMY_SCOPES)
             .setTokenStore(store)
             .setCallbackUri(CALLBACK_URI)
+            .setClientAuthenticationType(
+                UserAuthorizer.ClientAuthenticationType.CLIENT_SECRET_BASIC)
             .build();
 
     assertSame(CLIENT_ID, authorizer.getClientId());
     assertSame(store, authorizer.getTokenStore());
     assertEquals(DUMMY_SCOPES, authorizer.getScopes());
     assertEquals(CALLBACK_URI, authorizer.getCallbackUri());
+    assertEquals(
+        UserAuthorizer.ClientAuthenticationType.CLIENT_SECRET_BASIC,
+        authorizer.getClientAuthenticationType());
+  }
+
+  @Test
+  public void constructorWithClientAuthenticationTypeNone() {
+    TokenStore store = new MemoryTokensStorage();
+
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(DUMMY_SCOPES)
+            .setTokenStore(store)
+            .setCallbackUri(CALLBACK_URI)
+            .setClientAuthenticationType(UserAuthorizer.ClientAuthenticationType.NONE)
+            .build();
+
+    assertSame(CLIENT_ID, authorizer.getClientId());
+    assertSame(store, authorizer.getTokenStore());
+    assertEquals(DUMMY_SCOPES, authorizer.getScopes());
+    assertEquals(CALLBACK_URI, authorizer.getCallbackUri());
+    assertEquals(
+        UserAuthorizer.ClientAuthenticationType.NONE, authorizer.getClientAuthenticationType());
   }
 
   @Test(expected = NullPointerException.class)
@@ -227,6 +263,157 @@ public class UserAuthorizerTest {
     UserCredentials credentials = authorizer.getCredentials(USER_ID);
 
     assertNull(credentials);
+  }
+
+  @Test
+  public void testGetTokenResponseFromAuthCodeExchange_convertsCodeToTokens() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
+    transportFactory.transport.addAuthorizationCode(
+        CODE,
+        REFRESH_TOKEN,
+        ACCESS_TOKEN_VALUE,
+        GRANTED_SCOPES_STRING,
+        /* additionalParameters= */ null);
+
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(DUMMY_SCOPES)
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    TokenResponseWithConfig response =
+        authorizer.getTokenResponseFromAuthCodeExchange(
+            CODE, BASE_URI, /* additionalParameters= */ null);
+
+    assertEquals(REFRESH_TOKEN, response.getRefreshToken());
+    assertNotNull(response.getAccessToken());
+    assertEquals(ACCESS_TOKEN_VALUE, response.getAccessToken().getTokenValue());
+    assertEquals(GRANTED_SCOPES, response.getAccessToken().getScopes());
+  }
+
+  @Test
+  public void testGetTokenResponseFromAuthCodeExchange_workforceIdentityFederationClientAuthBasic()
+      throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
+    transportFactory.transport.setClientAuthType(ClientAuthenticationType.CLIENT_SECRET_BASIC);
+    transportFactory.transport.setPkceProvider(new DefaultPKCEProvider());
+    transportFactory.transport.addAuthorizationCode(
+        CODE,
+        REFRESH_TOKEN,
+        ACCESS_TOKEN_VALUE,
+        GRANTED_SCOPES_STRING,
+        /* additionalParameters= */ null);
+
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(Collections.singletonList("https://www.googleapis.com/auth/cloud-platform"))
+            .setTokenServerUri(OAuth2Utils.WORKFORCE_IDENTITY_FEDERATION_TOKEN_SERVER_URI)
+            .setUserAuthUri(OAuth2Utils.WORKFORCE_IDENTITY_FEDERATION_AUTH_URI)
+            .setClientAuthenticationType(ClientAuthenticationType.CLIENT_SECRET_BASIC)
+            .setPKCEProvider(new DefaultPKCEProvider())
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    TokenResponseWithConfig response =
+        authorizer.getTokenResponseFromAuthCodeExchange(
+            CODE, BASE_URI, /* additionalParameters= */ null);
+
+    assertEquals(REFRESH_TOKEN, response.getRefreshToken());
+    assertNotNull(response.getAccessToken());
+    assertEquals(ACCESS_TOKEN_VALUE, response.getAccessToken().getTokenValue());
+
+    Map<String, List<String>> headers = transportFactory.transport.getRequest().getHeaders();
+    List<String> authHeader = headers.get("authorization");
+
+    assertEquals(
+        OAuth2Utils.generateBasicAuthHeader(CLIENT_ID_VALUE, CLIENT_SECRET),
+        authHeader.iterator().next());
+    assertEquals(1, authHeader.size());
+  }
+
+  @Test
+  public void testGetTokenResponseFromAuthCodeExchange_workforceIdentityFederationNoClientAuth()
+      throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
+    transportFactory.transport.setClientAuthType(ClientAuthenticationType.CLIENT_SECRET_POST);
+    transportFactory.transport.addAuthorizationCode(
+        CODE,
+        REFRESH_TOKEN,
+        ACCESS_TOKEN_VALUE,
+        GRANTED_SCOPES_STRING,
+        /* additionalParameters= */ null);
+
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(Collections.singletonList("https://www.googleapis.com/auth/cloud-platform"))
+            .setTokenServerUri(OAuth2Utils.WORKFORCE_IDENTITY_FEDERATION_TOKEN_SERVER_URI)
+            .setUserAuthUri(OAuth2Utils.WORKFORCE_IDENTITY_FEDERATION_AUTH_URI)
+            .setClientAuthenticationType(ClientAuthenticationType.NONE)
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    TokenResponseWithConfig response =
+        authorizer.getTokenResponseFromAuthCodeExchange(
+            CODE, BASE_URI, /* additionalParameters= */ null);
+
+    assertEquals(REFRESH_TOKEN, response.getRefreshToken());
+    assertNotNull(response.getAccessToken());
+    assertEquals(ACCESS_TOKEN_VALUE, response.getAccessToken().getTokenValue());
+
+    Map<String, List<String>> headers = transportFactory.transport.getRequest().getHeaders();
+    assertNull(headers.get("authorization"));
+  }
+
+  @Test
+  public void testGetTokenResponseFromAuthCodeExchange_missingAuthCode_throws() {
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder().setClientId(CLIENT_ID).setScopes(DUMMY_SCOPES).build();
+
+    assertThrows(
+        NullPointerException.class,
+        () -> {
+          authorizer.getTokenResponseFromAuthCodeExchange(
+              /* code= */ null, BASE_URI, /* additionalParameters= */ null);
+        });
+  }
+
+  @Test
+  public void testGetTokenResponseFromAuthCodeExchange_missingAccessToken_throws()
+      throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
+    // Missing access token.
+    transportFactory.transport.addAuthorizationCode(
+        CODE,
+        REFRESH_TOKEN,
+        /* accessToken= */ null,
+        GRANTED_SCOPES_STRING,
+        /* additionalParameters= */ null);
+
+    UserAuthorizer authorizer =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(DUMMY_SCOPES)
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    IOException e =
+        assertThrows(
+            IOException.class,
+            () -> {
+              authorizer.getTokenResponseFromAuthCodeExchange(
+                  CODE, BASE_URI, /* additionalParameters= */ null);
+            });
+
+    assertTrue(
+        e.getMessage()
+            .contains("Error reading result of Token API:Expected value access_token not found."));
   }
 
   @Test
@@ -381,7 +568,7 @@ public class UserAuthorizerTest {
   }
 
   @Test
-  public void getCredentialsFromCode_conevertsCodeToTokens() throws IOException {
+  public void getCredentialsFromCode_convertsCodeToTokens() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
     transportFactory.transport.addAuthorizationCode(
@@ -645,12 +832,63 @@ public class UserAuthorizerTest {
           }
         };
 
-    UserAuthorizer authorizer =
-        UserAuthorizer.newBuilder()
-            .setClientId(CLIENT_ID)
-            .setScopes(DUMMY_SCOPES)
-            .setTokenStore(new MemoryTokensStorage())
-            .setPKCEProvider(pkce)
+    UserAuthorizer.newBuilder()
+        .setClientId(CLIENT_ID)
+        .setScopes(DUMMY_SCOPES)
+        .setTokenStore(new MemoryTokensStorage())
+        .setPKCEProvider(pkce)
+        .build();
+  }
+
+  @Test
+  public void testTokenResponseWithConfig() {
+    String clientId = "testClientId";
+    String clientSecret = "testClientSecret";
+    String refreshToken = "testRefreshToken";
+    AccessToken accessToken = new AccessToken("token", new Date());
+    URI tokenServerUri = URI.create("https://example.com/token");
+    HttpTransportFactory httpTransportFactory = new MockTokenServerTransportFactory();
+
+    TokenResponseWithConfig tokenResponse =
+        TokenResponseWithConfig.newBuilder()
+            .setClientId(clientId)
+            .setClientSecret(clientSecret)
+            .setRefreshToken(refreshToken)
+            .setAccessToken(accessToken)
+            .setTokenServerUri(tokenServerUri)
+            .setHttpTransportFactory(httpTransportFactory)
             .build();
+
+    assertEquals(clientId, tokenResponse.getClientId());
+    assertEquals(clientSecret, tokenResponse.getClientSecret());
+    assertEquals(refreshToken, tokenResponse.getRefreshToken());
+    assertEquals(accessToken, tokenResponse.getAccessToken());
+    assertEquals(tokenServerUri, tokenResponse.getTokenServerUri());
+    assertEquals(httpTransportFactory, tokenResponse.getHttpTransportFactory());
+  }
+
+  @Test
+  public void testTokenResponseWithConfig_noRefreshToken() {
+    String clientId = "testClientId";
+    String clientSecret = "testClientSecret";
+    AccessToken accessToken = new AccessToken("token", new Date());
+    URI tokenServerUri = URI.create("https://example.com/token");
+    HttpTransportFactory httpTransportFactory = new MockTokenServerTransportFactory();
+
+    TokenResponseWithConfig tokenResponse =
+        TokenResponseWithConfig.newBuilder()
+            .setClientId(clientId)
+            .setClientSecret(clientSecret)
+            .setAccessToken(accessToken)
+            .setTokenServerUri(tokenServerUri)
+            .setHttpTransportFactory(httpTransportFactory)
+            .build();
+
+    assertEquals(clientId, tokenResponse.getClientId());
+    assertEquals(clientSecret, tokenResponse.getClientSecret());
+    assertEquals(accessToken, tokenResponse.getAccessToken());
+    assertEquals(tokenServerUri, tokenResponse.getTokenServerUri());
+    assertEquals(httpTransportFactory, tokenResponse.getHttpTransportFactory());
+    assertNull(tokenResponse.getRefreshToken());
   }
 }

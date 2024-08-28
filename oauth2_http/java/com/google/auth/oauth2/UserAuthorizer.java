@@ -52,9 +52,21 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /** Handles an interactive 3-Legged-OAuth2 (3LO) user consent authorization. */
 public class UserAuthorizer {
+
+  /**
+   * Represents the client authentication types as specified in RFC 7591.
+   *
+   * <p>For more details, see <a href="https://tools.ietf.org/html/rfc7591">RFC 7591</a>.
+   */
+  public enum ClientAuthenticationType {
+    CLIENT_SECRET_POST,
+    CLIENT_SECRET_BASIC,
+    NONE
+  }
 
   static final URI DEFAULT_CALLBACK_URI = URI.create("/oauth2callback");
 
@@ -70,38 +82,27 @@ public class UserAuthorizer {
   private final URI tokenServerUri;
   private final URI userAuthUri;
   private final PKCEProvider pkce;
+  private final ClientAuthenticationType clientAuthenticationType;
 
-  /**
-   * Constructor with all parameters.
-   *
-   * @param clientId Client ID to identify the OAuth2 consent prompt
-   * @param scopes OAuth2 scopes defining the user consent
-   * @param tokenStore Implementation of a component for long term storage of tokens
-   * @param callbackUri URI for implementation of the OAuth2 web callback
-   * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *     tokens.
-   * @param tokenServerUri URI of the end point that provides tokens
-   * @param userAuthUri URI of the Web UI for user consent
-   * @param pkce PKCE implementation
-   */
-  private UserAuthorizer(
-      ClientId clientId,
-      Collection<String> scopes,
-      TokenStore tokenStore,
-      URI callbackUri,
-      HttpTransportFactory transportFactory,
-      URI tokenServerUri,
-      URI userAuthUri,
-      PKCEProvider pkce) {
-    this.clientId = Preconditions.checkNotNull(clientId);
-    this.scopes = ImmutableList.copyOf(Preconditions.checkNotNull(scopes));
-    this.callbackUri = (callbackUri == null) ? DEFAULT_CALLBACK_URI : callbackUri;
+  /** /** Internal constructor. See {@link Builder}. */
+  private UserAuthorizer(Builder builder) {
+    this.clientId = Preconditions.checkNotNull(builder.clientId);
+    this.scopes = ImmutableList.copyOf(Preconditions.checkNotNull(builder.scopes));
+    this.callbackUri = (builder.callbackUri == null) ? DEFAULT_CALLBACK_URI : builder.callbackUri;
     this.transportFactory =
-        (transportFactory == null) ? OAuth2Utils.HTTP_TRANSPORT_FACTORY : transportFactory;
-    this.tokenServerUri = (tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : tokenServerUri;
-    this.userAuthUri = (userAuthUri == null) ? OAuth2Utils.USER_AUTH_URI : userAuthUri;
-    this.tokenStore = (tokenStore == null) ? new MemoryTokensStorage() : tokenStore;
-    this.pkce = pkce;
+        (builder.transportFactory == null)
+            ? OAuth2Utils.HTTP_TRANSPORT_FACTORY
+            : builder.transportFactory;
+    this.tokenServerUri =
+        (builder.tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : builder.tokenServerUri;
+    this.userAuthUri =
+        (builder.userAuthUri == null) ? OAuth2Utils.USER_AUTH_URI : builder.userAuthUri;
+    this.tokenStore = (builder.tokenStore == null) ? new MemoryTokensStorage() : builder.tokenStore;
+    this.pkce = builder.pkce;
+    this.clientAuthenticationType =
+        (builder.clientAuthenticationType == null)
+            ? ClientAuthenticationType.CLIENT_SECRET_POST
+            : builder.clientAuthenticationType;
   }
 
   /**
@@ -162,7 +163,16 @@ public class UserAuthorizer {
   }
 
   /**
-   * Return an URL that performs the authorization consent prompt web UI.
+   * Returns the client authentication type as defined in RFC 7591.
+   *
+   * @return The {@link ClientAuthenticationType}
+   */
+  public ClientAuthenticationType getClientAuthenticationType() {
+    return clientAuthenticationType;
+  }
+
+  /**
+   * Return a URL that performs the authorization consent prompt web UI.
    *
    * @param userId Application's identifier for the end user.
    * @param state State that is passed on to the OAuth2 callback URI after the consent.
@@ -174,7 +184,7 @@ public class UserAuthorizer {
   }
 
   /**
-   * Return an URL that performs the authorization consent prompt web UI.
+   * Return a URL that performs the authorization consent prompt web UI.
    *
    * @param userId Application's identifier for the end user.
    * @param state State that is passed on to the OAuth2 callback URI after the consent.
@@ -285,59 +295,34 @@ public class UserAuthorizer {
    */
   public UserCredentials getCredentialsFromCode(
       String code, URI baseUri, Map<String, String> additionalParameters) throws IOException {
-    Preconditions.checkNotNull(code);
-    URI resolvedCallbackUri = getCallbackUri(baseUri);
-
-    GenericData tokenData = new GenericData();
-    tokenData.put("code", code);
-    tokenData.put("client_id", clientId.getClientId());
-    tokenData.put("client_secret", clientId.getClientSecret());
-    tokenData.put("redirect_uri", resolvedCallbackUri);
-    tokenData.put("grant_type", "authorization_code");
-
-    if (additionalParameters != null) {
-      for (Map.Entry<String, String> entry : additionalParameters.entrySet()) {
-        tokenData.put(entry.getKey(), entry.getValue());
-      }
-    }
-
-    if (pkce != null) {
-      tokenData.put("code_verifier", pkce.getCodeVerifier());
-    }
-
-    UrlEncodedContent tokenContent = new UrlEncodedContent(tokenData);
-    HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
-    HttpRequest tokenRequest =
-        requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), tokenContent);
-    tokenRequest.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
-
-    HttpResponse tokenResponse = tokenRequest.execute();
-
-    GenericJson parsedTokens = tokenResponse.parseAs(GenericJson.class);
-    String accessTokenValue =
-        OAuth2Utils.validateString(parsedTokens, "access_token", FETCH_TOKEN_ERROR);
-    int expiresInSecs = OAuth2Utils.validateInt32(parsedTokens, "expires_in", FETCH_TOKEN_ERROR);
-    Date expirationTime = new Date(new Date().getTime() + expiresInSecs * 1000);
-    String scopes =
-        OAuth2Utils.validateOptionalString(
-            parsedTokens, OAuth2Utils.TOKEN_RESPONSE_SCOPE, FETCH_TOKEN_ERROR);
-    AccessToken accessToken =
-        AccessToken.newBuilder()
-            .setExpirationTime(expirationTime)
-            .setTokenValue(accessTokenValue)
-            .setScopes(scopes)
-            .build();
-    String refreshToken =
-        OAuth2Utils.validateOptionalString(parsedTokens, "refresh_token", FETCH_TOKEN_ERROR);
-
+    TokenResponseWithConfig tokenResponseWithConfig =
+        getCredentialsFromCodeInternal(code, baseUri, additionalParameters);
     return UserCredentials.newBuilder()
-        .setClientId(clientId.getClientId())
-        .setClientSecret(clientId.getClientSecret())
-        .setRefreshToken(refreshToken)
-        .setAccessToken(accessToken)
-        .setHttpTransportFactory(transportFactory)
-        .setTokenServerUri(tokenServerUri)
+        .setClientId(tokenResponseWithConfig.getClientId())
+        .setClientSecret(tokenResponseWithConfig.getClientSecret())
+        .setAccessToken(tokenResponseWithConfig.getAccessToken())
+        .setRefreshToken(tokenResponseWithConfig.getRefreshToken())
+        .setHttpTransportFactory(tokenResponseWithConfig.getHttpTransportFactory())
+        .setTokenServerUri(tokenResponseWithConfig.getTokenServerUri())
         .build();
+  }
+
+  /**
+   * Handles OAuth2 authorization code exchange and returns a {@link TokenResponseWithConfig} object
+   * containing the tokens and configuration details.
+   *
+   * @param code The authorization code received from the OAuth2 authorization server.
+   * @param callbackUri The URI to which the authorization server redirected the user after granting
+   *     authorization.
+   * @param additionalParameters Additional parameters to include in the token exchange request.
+   * @return A {@link TokenResponseWithConfig} object containing the access token, refresh token (if
+   *     granted), and configuration details used in the OAuth flow.
+   * @throws IOException If an error occurs during the token exchange process.
+   */
+  public TokenResponseWithConfig getTokenResponseFromAuthCodeExchange(
+      String code, URI callbackUri, @Nullable Map<String, String> additionalParameters)
+      throws IOException {
+    return getCredentialsFromCodeInternal(code, callbackUri, additionalParameters);
   }
 
   /**
@@ -418,7 +403,6 @@ public class UserAuthorizer {
     }
     AccessToken accessToken = credentials.getAccessToken();
     String acessTokenValue = null;
-    String scopes = null;
     Date expiresBy = null;
     List<String> grantedScopes = new ArrayList<>();
 
@@ -448,6 +432,74 @@ public class UserAuthorizer {
    */
   protected void monitorCredentials(String userId, UserCredentials credentials) {
     credentials.addChangeListener(new UserCredentialsListener(userId));
+  }
+
+  private TokenResponseWithConfig getCredentialsFromCodeInternal(
+      String code, URI baseUri, Map<String, String> additionalParameters) throws IOException {
+    Preconditions.checkNotNull(code);
+    URI resolvedCallbackUri = getCallbackUri(baseUri);
+
+    GenericData tokenData = new GenericData();
+    tokenData.put("code", code);
+    tokenData.put("client_id", clientId.getClientId());
+    tokenData.put("redirect_uri", resolvedCallbackUri);
+    tokenData.put("grant_type", "authorization_code");
+
+    if (additionalParameters != null) {
+      for (Map.Entry<String, String> entry : additionalParameters.entrySet()) {
+        tokenData.put(entry.getKey(), entry.getValue());
+      }
+    }
+
+    if (pkce != null) {
+      tokenData.put("code_verifier", pkce.getCodeVerifier());
+    }
+
+    if (this.clientAuthenticationType == ClientAuthenticationType.CLIENT_SECRET_POST) {
+      tokenData.put("client_secret", clientId.getClientSecret());
+    }
+
+    HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
+    UrlEncodedContent tokenContent = new UrlEncodedContent(tokenData);
+    HttpRequest tokenRequest =
+        requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), tokenContent);
+    tokenRequest.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
+
+    if (this.clientAuthenticationType == ClientAuthenticationType.CLIENT_SECRET_BASIC) {
+      tokenRequest
+          .getHeaders()
+          .setAuthorization(
+              OAuth2Utils.generateBasicAuthHeader(
+                  clientId.getClientId(), clientId.getClientSecret()));
+    }
+
+    HttpResponse tokenResponse = tokenRequest.execute();
+
+    GenericJson parsedTokens = tokenResponse.parseAs(GenericJson.class);
+    String accessTokenValue =
+        OAuth2Utils.validateString(parsedTokens, "access_token", FETCH_TOKEN_ERROR);
+    int expiresInSecs = OAuth2Utils.validateInt32(parsedTokens, "expires_in", FETCH_TOKEN_ERROR);
+    Date expirationTime = new Date(new Date().getTime() + expiresInSecs * 1000);
+    String scopes =
+        OAuth2Utils.validateOptionalString(
+            parsedTokens, OAuth2Utils.TOKEN_RESPONSE_SCOPE, FETCH_TOKEN_ERROR);
+    AccessToken accessToken =
+        AccessToken.newBuilder()
+            .setExpirationTime(expirationTime)
+            .setTokenValue(accessTokenValue)
+            .setScopes(scopes)
+            .build();
+    String refreshToken =
+        OAuth2Utils.validateOptionalString(parsedTokens, "refresh_token", FETCH_TOKEN_ERROR);
+
+    return TokenResponseWithConfig.newBuilder()
+        .setClientId(clientId.getClientId())
+        .setClientSecret(clientId.getClientSecret())
+        .setAccessToken(accessToken)
+        .setRefreshToken(refreshToken)
+        .setHttpTransportFactory(transportFactory)
+        .setTokenServerUri(tokenServerUri)
+        .build();
   }
 
   /**
@@ -488,6 +540,7 @@ public class UserAuthorizer {
     private Collection<String> scopes;
     private HttpTransportFactory transportFactory;
     private PKCEProvider pkce;
+    private ClientAuthenticationType clientAuthenticationType;
 
     protected Builder() {}
 
@@ -500,50 +553,102 @@ public class UserAuthorizer {
       this.callbackUri = authorizer.callbackUri;
       this.userAuthUri = authorizer.userAuthUri;
       this.pkce = new DefaultPKCEProvider();
+      this.clientAuthenticationType = authorizer.clientAuthenticationType;
     }
 
+    /**
+     * Sets the OAuth 2.0 client ID.
+     *
+     * @param clientId the client ID
+     * @return this {@code Builder} object
+     */
     @CanIgnoreReturnValue
     public Builder setClientId(ClientId clientId) {
       this.clientId = clientId;
       return this;
     }
 
+    /**
+     * Sets the {@link TokenStore} to use for long term token storage.
+     *
+     * @param tokenStore the token store
+     * @return this {@code Builder} object
+     */
     @CanIgnoreReturnValue
     public Builder setTokenStore(TokenStore tokenStore) {
       this.tokenStore = tokenStore;
       return this;
     }
 
+    /**
+     * Sets the OAuth 2.0 scopes to request.
+     *
+     * @param scopes the scopes to request
+     * @return this {@code Builder} object
+     */
     @CanIgnoreReturnValue
     public Builder setScopes(Collection<String> scopes) {
       this.scopes = scopes;
       return this;
     }
 
+    /**
+     * Sets the token exchange endpoint.
+     *
+     * @param tokenServerUri the token exchange endpoint to use
+     * @return this {@code Builder} object
+     */
     @CanIgnoreReturnValue
     public Builder setTokenServerUri(URI tokenServerUri) {
       this.tokenServerUri = tokenServerUri;
       return this;
     }
 
+    /**
+     * Sets the redirect URI registered with your OAuth provider. This is where the user's browser
+     * will be redirected after granting or denying authorization.
+     *
+     * @param callbackUri the redirect URI
+     * @return this {@code Builder} object
+     */
     @CanIgnoreReturnValue
     public Builder setCallbackUri(URI callbackUri) {
       this.callbackUri = callbackUri;
       return this;
     }
 
+    /**
+     * Sets the authorization URI where the user is directed to log in and grant authorization.
+     *
+     * @param userAuthUri the authorization URI
+     * @return this {@code Builder} object
+     */
     @CanIgnoreReturnValue
     public Builder setUserAuthUri(URI userAuthUri) {
       this.userAuthUri = userAuthUri;
       return this;
     }
 
+    /**
+     * Sets the HTTP transport factory.
+     *
+     * @param transportFactory the {@code HttpTransportFactory} to set
+     * @return this {@code Builder} object
+     */
     @CanIgnoreReturnValue
     public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
       this.transportFactory = transportFactory;
       return this;
     }
 
+    /**
+     * Sets the optional {@link PKCEProvider} to enable Proof Key for Code Exchange to be used. This
+     * enhances security by using a code challenge and verifier to prevent authorization code
+     * interception attacks.
+     *
+     * @param pkce the {@code PKCEProvider} to set
+     * @return this {@code Builder} object
+     */
     @CanIgnoreReturnValue
     public Builder setPKCEProvider(PKCEProvider pkce) {
       if (pkce != null) {
@@ -556,6 +661,20 @@ public class UserAuthorizer {
         }
       }
       this.pkce = pkce;
+      return this;
+    }
+
+    /**
+     * Sets the optional {@link ClientAuthenticationType}, one of the client authentication methods
+     * defined in RFC 7591. This specifies how your application authenticates itself to the
+     * authorization server.
+     *
+     * @param clientAuthentication the {@code ClientAuthenticationType} to set
+     * @return this {@code Builder} object
+     */
+    @CanIgnoreReturnValue
+    public Builder setClientAuthenticationType(ClientAuthenticationType clientAuthentication) {
+      this.clientAuthenticationType = clientAuthentication;
       return this;
     }
 
@@ -591,16 +710,168 @@ public class UserAuthorizer {
       return pkce;
     }
 
+    public ClientAuthenticationType getClientAuthenticationType() {
+      return clientAuthenticationType;
+    }
+
     public UserAuthorizer build() {
-      return new UserAuthorizer(
-          clientId,
-          scopes,
-          tokenStore,
-          callbackUri,
-          transportFactory,
-          tokenServerUri,
-          userAuthUri,
-          pkce);
+      return new UserAuthorizer(this);
+    }
+  }
+
+  /**
+   * Represents the response from an OAuth token exchange, including configuration details used to
+   * initiate the flow.
+   *
+   * <p>This response can be used to initialize the following credentials types:
+   *
+   * <pre>{@code
+   * // UserCredentials when Google is the identity provider:
+   * UserCredentials userCredentials = UserCredentials.newBuilder()
+   *     .setHttpTransportFactory(tokenResponseWithConfig.getHttpTransportFactory())
+   *     .setClientId(tokenResponseWithConfig.getClientId())
+   *     .setClientSecret(tokenResponseWithConfig.getClientSecret())
+   *     .setAccessToken(tokenResponseWithConfig.getAccessToken())
+   *     .setRefreshToken(tokenResponseWithConfig.getRefreshToken())
+   *     .setTokenServerUri(tokenResponseWithConfig.getTokenServerUri())
+   *     .build();
+   *
+   * // ExternalAccountAuthorizedUserCredentials when using Workforce Identity Federation:
+   * ExternalAccountAuthorizedUserCredentials externalAccountAuthorizedUserCredentials =
+   *     ExternalAccountAuthorizedUserCredentials.newBuilder()
+   *         .setHttpTransportFactory(tokenResponseWithConfig.getHttpTransportFactory())
+   *         .setClientId(tokenResponseWithConfig.getClientId())
+   *         .setClientSecret(tokenResponseWithConfig.getClientSecret())
+   *         .setAccessToken(tokenResponseWithConfig.getAccessToken())
+   *         .setRefreshToken(tokenResponseWithConfig.getRefreshToken())
+   *         .setTokenUrl(tokenResponseWithConfig.getTokenServerUri().toURL().toString())
+   *         .build();
+   * }</pre>
+   */
+  public static class TokenResponseWithConfig {
+
+    private final String clientId;
+    private final String clientSecret;
+    private final String refreshToken;
+    private final AccessToken accessToken;
+    private URI tokenServerUri;
+    private final HttpTransportFactory httpTransportFactory;
+
+    private TokenResponseWithConfig(Builder builder) {
+      this.clientId = builder.clientId;
+      this.clientSecret = builder.clientSecret;
+      this.accessToken = builder.accessToken;
+      this.httpTransportFactory = builder.httpTransportFactory;
+      this.tokenServerUri = builder.tokenServerUri;
+      this.refreshToken = builder.refreshToken;
+    }
+
+    /**
+     * Returns the OAuth 2.0 client ID used.
+     *
+     * @return The client ID.
+     */
+    public String getClientId() {
+      return clientId;
+    }
+
+    /**
+     * Returns the OAuth 2.0 client secret used.
+     *
+     * @return The client secret.
+     */
+    public String getClientSecret() {
+      return clientSecret;
+    }
+
+    /**
+     * Returns the access token obtained from the token exchange.
+     *
+     * @return The access token.
+     */
+    public AccessToken getAccessToken() {
+      return accessToken;
+    }
+
+    /**
+     * Returns the HTTP transport factory used.
+     *
+     * @return The HTTP transport factory.
+     */
+    public HttpTransportFactory getHttpTransportFactory() {
+      return httpTransportFactory;
+    }
+
+    /**
+     * Returns the URI of the token server used.
+     *
+     * @return The token server URI.
+     */
+    public URI getTokenServerUri() {
+      return tokenServerUri;
+    }
+
+    /**
+     * Returns the refresh token obtained from the token exchange, if available.
+     *
+     * @return The refresh token, or null if not granted.
+     */
+    @Nullable
+    public String getRefreshToken() {
+      return refreshToken;
+    }
+
+    static Builder newBuilder() {
+      return new Builder();
+    }
+
+    static class Builder {
+      private String clientId;
+      private String clientSecret;
+      private String refreshToken;
+      private AccessToken accessToken;
+      private URI tokenServerUri;
+      private HttpTransportFactory httpTransportFactory;
+
+      @CanIgnoreReturnValue
+      Builder setClientId(String clientId) {
+        this.clientId = clientId;
+        return this;
+      }
+
+      @CanIgnoreReturnValue
+      Builder setClientSecret(String clientSecret) {
+        this.clientSecret = clientSecret;
+        return this;
+      }
+
+      @CanIgnoreReturnValue
+      Builder setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+        return this;
+      }
+
+      @CanIgnoreReturnValue
+      Builder setAccessToken(AccessToken accessToken) {
+        this.accessToken = accessToken;
+        return this;
+      }
+
+      @CanIgnoreReturnValue
+      Builder setHttpTransportFactory(HttpTransportFactory httpTransportFactory) {
+        this.httpTransportFactory = httpTransportFactory;
+        return this;
+      }
+
+      @CanIgnoreReturnValue
+      Builder setTokenServerUri(URI tokenServerUri) {
+        this.tokenServerUri = tokenServerUri;
+        return this;
+      }
+
+      TokenResponseWithConfig build() {
+        return new TokenResponseWithConfig(this);
+      }
     }
   }
 }
