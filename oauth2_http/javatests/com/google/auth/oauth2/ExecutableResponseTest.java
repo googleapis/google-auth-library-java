@@ -63,8 +63,8 @@ public class ExecutableResponseTest {
     assertEquals(EXECUTABLE_SUPPORTED_MAX_VERSION, response.getVersion());
     assertEquals(TOKEN_TYPE_OIDC, response.getTokenType());
     assertEquals(ID_TOKEN, response.getSubjectToken());
-    assertTrue(
-        Instant.now().getEpochSecond() + EXPIRATION_DURATION == response.getExpirationTime());
+    assertEquals(
+        Instant.now().getEpochSecond() + EXPIRATION_DURATION, (long) response.getExpirationTime());
   }
 
   @Test
@@ -93,8 +93,8 @@ public class ExecutableResponseTest {
     assertEquals(EXECUTABLE_SUPPORTED_MAX_VERSION, response.getVersion());
     assertEquals(TOKEN_TYPE_SAML, response.getTokenType());
     assertEquals(SAML_RESPONSE, response.getSubjectToken());
-    assertTrue(
-        Instant.now().getEpochSecond() + EXPIRATION_DURATION == response.getExpirationTime());
+    assertEquals(
+        Instant.now().getEpochSecond() + EXPIRATION_DURATION, (long) response.getExpirationTime());
   }
 
   @Test
