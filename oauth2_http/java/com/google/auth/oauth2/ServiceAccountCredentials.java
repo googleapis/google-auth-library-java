@@ -612,14 +612,15 @@ public class ServiceAccountCredentials extends GoogleCredentials
   }
 
   /**
-   * Clones the service account with the specified scopes.
+   * Clones the service account with the specified scopes. The Access Token is invalidated even if
+   * the same scopes are provided.
    *
    * <p>Should be called before use for instances with empty scopes.
    */
   @Override
   public GoogleCredentials createScoped(
       Collection<String> newScopes, Collection<String> newDefaultScopes) {
-    return this.toBuilder().setScopes(newScopes, newDefaultScopes).build();
+    return this.toBuilder().setScopes(newScopes, newDefaultScopes).setAccessToken(null).build();
   }
 
   /**
