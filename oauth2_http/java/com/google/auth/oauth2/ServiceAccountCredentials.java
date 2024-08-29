@@ -36,6 +36,8 @@ import static com.google.common.base.MoreObjects.firstNonNull;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpBackOffIOExceptionHandler;
 import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler;
+import com.google.api.client.http.HttpContent;
+import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
@@ -52,9 +54,12 @@ import com.google.api.client.util.Preconditions;
 import com.google.auth.Credentials;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.ServiceAccountSigner;
+import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects.ToStringHelper;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
@@ -547,7 +552,9 @@ public class ServiceAccountCredentials extends GoogleCredentials
   }
 
   /**
-   * Returns a Google ID Token from the metadata server on ComputeEngine.
+   * Returns a Google ID Token from either the Oauth or IAM Endpoint. For Credentials that are in
+   * the Google Default Universe (googleapis.com), the ID Token will be retrieved from the Oauth
+   * Endpoint. Otherwise, it will be retrieved from the IAM Endpoint.
    *
    * @param targetAudience the aud: field the IdToken should include.
    * @param options list of Credential specific options for the token. Currently, unused for
@@ -558,21 +565,90 @@ public class ServiceAccountCredentials extends GoogleCredentials
   @Override
   public IdToken idTokenWithAudience(String targetAudience, List<Option> options)
       throws IOException {
+    return isDefaultUniverseDomain()
+        ? getIdTokenOauthEndpoint(targetAudience)
+        : getIdTokenIamEndpoint(targetAudience);
+  }
 
-    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
+  /**
+   * Uses the Oauth Endpoint to generate an ID token. Assertions and grant_type are sent in the
+   * request body.
+   */
+  private IdToken getIdTokenOauthEndpoint(String targetAudience) throws IOException {
     long currentTime = clock.currentTimeMillis();
     String assertion =
-        createAssertionForIdToken(
-            jsonFactory, currentTime, tokenServerUri.toString(), targetAudience);
+        createAssertionForIdToken(currentTime, tokenServerUri.toString(), targetAudience);
 
+    Map<String, Object> requestParams =
+        ImmutableMap.of("grant_type", GRANT_TYPE, "assertion", assertion);
     GenericData tokenRequest = new GenericData();
-    tokenRequest.set("grant_type", GRANT_TYPE);
-    tokenRequest.set("assertion", assertion);
+    requestParams.forEach(tokenRequest::set);
     UrlEncodedContent content = new UrlEncodedContent(tokenRequest);
 
+    HttpRequest request = buildIdTokenRequest(tokenServerUri, transportFactory, content);
+    HttpResponse httpResponse = executeRequest(request);
+
+    GenericData responseData = httpResponse.parseAs(GenericData.class);
+    String rawToken = OAuth2Utils.validateString(responseData, "id_token", PARSE_ERROR_PREFIX);
+    return IdToken.create(rawToken);
+  }
+
+  /**
+   * Use IAM generateIdToken endpoint to obtain an ID token.
+   *
+   * <p>This flow works as follows:
+   *
+   * <ol>
+   *   <li>Create a self-signed jwt with `https://www.googleapis.com/auth/iam` as the scope.
+   *   <li>Use the self-signed jwt as the access token, and make a POST request to IAM
+   *       generateIdToken endpoint.
+   *   <li>If the request is successfully, it will return {"token":"the ID token"}. Extract the ID
+   *       token.
+   * </ol>
+   */
+  private IdToken getIdTokenIamEndpoint(String targetAudience) throws IOException {
+    JwtCredentials selfSignedJwtCredentials =
+        createSelfSignedJwtCredentials(
+            null, ImmutableList.of("https://www.googleapis.com/auth/iam"));
+    Map<String, List<String>> responseMetadata = selfSignedJwtCredentials.getRequestMetadata(null);
+    // JwtCredentials will return a map with one entry ("Authorization" -> List with size 1)
+    String accessToken = responseMetadata.get(AuthHttpConstants.AUTHORIZATION).get(0);
+
+    // Do not check user options. These params are always set regardless of options configured
+    Map<String, Object> requestParams =
+        ImmutableMap.of("audience", targetAudience, "includeEmail", "true", "useEmailAzp", "true");
+    GenericData tokenRequest = new GenericData();
+    requestParams.forEach(tokenRequest::set);
+    UrlEncodedContent content = new UrlEncodedContent(tokenRequest);
+
+    // Create IAM Token URI in this method instead of in the constructor because
+    // `getUniverseDomain()` throws an IOException that would need to be caught
+    URI iamIdTokenUri =
+        URI.create(
+            String.format(
+                OAuth2Utils.IAM_ID_TOKEN_ENDPOINT_FORMAT, getUniverseDomain(), clientEmail));
+    HttpRequest request = buildIdTokenRequest(iamIdTokenUri, transportFactory, content);
+    // Use the Access Token from the SSJWT to request the ID Token from IAM Endpoint
+    request.setHeaders(new HttpHeaders().set(AuthHttpConstants.AUTHORIZATION, accessToken));
+    HttpResponse httpResponse = executeRequest(request);
+
+    GenericData responseData = httpResponse.parseAs(GenericData.class);
+    // IAM Endpoint returns `token` instead of `id_token`
+    String rawToken = OAuth2Utils.validateString(responseData, "token", PARSE_ERROR_PREFIX);
+    return IdToken.create(rawToken);
+  }
+
+  // Build a default POST HttpRequest to be used for both Oauth and IAM endpoints
+  private HttpRequest buildIdTokenRequest(
+      URI uri, HttpTransportFactory transportFactory, HttpContent content) throws IOException {
+    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
-    HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
+    HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(uri), content);
     request.setParser(new JsonObjectParser(jsonFactory));
+    return request;
+  }
+
+  private HttpResponse executeRequest(HttpRequest request) throws IOException {
     HttpResponse response;
     try {
       response = request.execute();
@@ -583,11 +659,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
               e.getMessage(), getIssuer()),
           e);
     }
-
-    GenericData responseData = response.parseAs(GenericData.class);
-    String rawToken = OAuth2Utils.validateString(responseData, "id_token", PARSE_ERROR_PREFIX);
-
-    return IdToken.create(rawToken);
+    return response;
   }
 
   /**
@@ -826,9 +898,9 @@ public class ServiceAccountCredentials extends GoogleCredentials
   }
 
   @VisibleForTesting
-  String createAssertionForIdToken(
-      JsonFactory jsonFactory, long currentTime, String audience, String targetAudience)
+  String createAssertionForIdToken(long currentTime, String audience, String targetAudience)
       throws IOException {
+    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     JsonWebSignature.Header header = new JsonWebSignature.Header();
     header.setAlgorithm("RS256");
     header.setType("JWT");
@@ -849,9 +921,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     try {
       payload.set("target_audience", targetAudience);
 
-      String assertion =
-          JsonWebSignature.signUsingRsaSha256(privateKey, jsonFactory, header, payload);
-      return assertion;
+      return JsonWebSignature.signUsingRsaSha256(privateKey, jsonFactory, header, payload);
     } catch (GeneralSecurityException e) {
       throw new IOException(
           "Error signing service account access token request with private key.", e);
@@ -877,18 +947,18 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   @VisibleForTesting
   JwtCredentials createSelfSignedJwtCredentials(final URI uri) {
+    return createSelfSignedJwtCredentials(uri, scopes.isEmpty() ? defaultScopes : scopes);
+  }
+
+  @VisibleForTesting
+  JwtCredentials createSelfSignedJwtCredentials(final URI uri, Collection<String> scopes) {
     // Create a JwtCredentials for self-signed JWT. See https://google.aip.dev/auth/4111.
     JwtClaims.Builder claimsBuilder =
         JwtClaims.newBuilder().setIssuer(clientEmail).setSubject(clientEmail);
 
     if (uri == null) {
       // If uri is null, use scopes.
-      String scopeClaim = "";
-      if (!scopes.isEmpty()) {
-        scopeClaim = Joiner.on(' ').join(scopes);
-      } else {
-        scopeClaim = Joiner.on(' ').join(defaultScopes);
-      }
+      String scopeClaim = Joiner.on(' ').join(scopes);
       claimsBuilder.setAdditionalClaims(Collections.singletonMap("scope", scopeClaim));
     } else {
       // otherwise, use audience with the uri.
