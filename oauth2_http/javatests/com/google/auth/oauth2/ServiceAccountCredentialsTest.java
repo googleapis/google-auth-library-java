@@ -1668,8 +1668,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(ACCESS_TOKEN, accessToken.getTokenValue());
 
     // Calling createScoped() again will invalidate the existing access token and calling
-    // `refresh()`
-    // is required to get a new Access Token.
+    // `refresh()` is required to get a new Access Token.
     credentials = credentials.createScoped("RANDOM_SCOPES");
     AccessToken newAccessToken = credentials.getAccessToken();
     assertNull(newAccessToken);
