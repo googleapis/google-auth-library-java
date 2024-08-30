@@ -613,7 +613,9 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   /**
    * Clones the service account with the specified scopes. The Access Token is invalidated even if
-   * the same scopes are provided.
+   * the same scopes are provided. Access Tokens contain information of the internal values (i.e.
+   * scope). If an internal value (scope) is modified, then the existing Access Token is no longer
+   * valid and should not be re-used.
    *
    * <p>Should be called before use for instances with empty scopes.
    */
