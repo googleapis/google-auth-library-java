@@ -427,8 +427,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * If the credentials support scopes, creates a copy of the identity with the specified scopes;
-   * otherwise, returns the same instance.
+   * If the credentials support scopes, creates a copy of the identity with the specified scopes,
+   * invalidates the existing scoped access token; otherwise, return the same instance.
    *
    * @param scopes Collection of scopes to request.
    * @return GoogleCredentials with requested scopes.
