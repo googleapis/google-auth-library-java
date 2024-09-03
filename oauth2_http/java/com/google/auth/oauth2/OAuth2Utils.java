@@ -78,14 +78,8 @@ class OAuth2Utils {
 
   static final URI TOKEN_SERVER_URI = URI.create("https://oauth2.googleapis.com/token");
 
-  static final URI WORKFORCE_IDENTITY_FEDERATION_TOKEN_SERVER_URI =
-      URI.create("https://sts.googleapis.com/v1/oauthtoken");
-
   static final URI TOKEN_REVOKE_URI = URI.create("https://oauth2.googleapis.com/revoke");
   static final URI USER_AUTH_URI = URI.create("https://accounts.google.com/o/oauth2/auth");
-
-  static final URI WORKFORCE_IDENTITY_FEDERATION_AUTH_URI =
-      URI.create("https://auth.cloud.google/authorize");
 
   static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 

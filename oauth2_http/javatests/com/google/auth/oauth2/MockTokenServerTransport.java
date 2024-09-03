@@ -31,6 +31,8 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.TestUtils.WORKFORCE_IDENTITY_FEDERATION_TOKEN_SERVER_URI;
+
 import com.google.api.client.http.LowLevelHttpRequest;
 import com.google.api.client.http.LowLevelHttpResponse;
 import com.google.api.client.json.GenericJson;
@@ -337,8 +339,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
           };
       return request;
     }
-    if (urlWithoutQuery.equals(
-        OAuth2Utils.WORKFORCE_IDENTITY_FEDERATION_TOKEN_SERVER_URI.toString())) {
+    if (urlWithoutQuery.equals(WORKFORCE_IDENTITY_FEDERATION_TOKEN_SERVER_URI.toString())) {
       request =
           new MockLowLevelHttpRequest(url) {
             @Override

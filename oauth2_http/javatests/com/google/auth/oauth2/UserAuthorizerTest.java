@@ -31,6 +31,8 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.TestUtils.WORKFORCE_IDENTITY_FEDERATION_AUTH_URI;
+import static com.google.auth.TestUtils.WORKFORCE_IDENTITY_FEDERATION_TOKEN_SERVER_URI;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -311,8 +313,8 @@ public class UserAuthorizerTest {
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
             .setScopes(Collections.singletonList("https://www.googleapis.com/auth/cloud-platform"))
-            .setTokenServerUri(OAuth2Utils.WORKFORCE_IDENTITY_FEDERATION_TOKEN_SERVER_URI)
-            .setUserAuthUri(OAuth2Utils.WORKFORCE_IDENTITY_FEDERATION_AUTH_URI)
+            .setTokenServerUri(WORKFORCE_IDENTITY_FEDERATION_TOKEN_SERVER_URI)
+            .setUserAuthUri(WORKFORCE_IDENTITY_FEDERATION_AUTH_URI)
             .setClientAuthenticationType(ClientAuthenticationType.CLIENT_SECRET_BASIC)
             .setPKCEProvider(new DefaultPKCEProvider())
             .setHttpTransportFactory(transportFactory)
@@ -352,8 +354,8 @@ public class UserAuthorizerTest {
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
             .setScopes(Collections.singletonList("https://www.googleapis.com/auth/cloud-platform"))
-            .setTokenServerUri(OAuth2Utils.WORKFORCE_IDENTITY_FEDERATION_TOKEN_SERVER_URI)
-            .setUserAuthUri(OAuth2Utils.WORKFORCE_IDENTITY_FEDERATION_AUTH_URI)
+            .setTokenServerUri(WORKFORCE_IDENTITY_FEDERATION_TOKEN_SERVER_URI)
+            .setUserAuthUri(WORKFORCE_IDENTITY_FEDERATION_AUTH_URI)
             .setClientAuthenticationType(ClientAuthenticationType.NONE)
             .setHttpTransportFactory(transportFactory)
             .build();
