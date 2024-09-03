@@ -25,6 +25,15 @@
   ],
   "packageRules": [
     {
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "matchPackagePatterns": [
+        "*"
+      ],
+      "enabled": false
+    },
+    {
       "packagePatterns": [
         "^com.google.guava:"
       ],

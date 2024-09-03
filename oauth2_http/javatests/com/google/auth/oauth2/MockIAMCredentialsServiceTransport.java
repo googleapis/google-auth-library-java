@@ -31,6 +31,8 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.oauth2.OAuth2Utils.IAM_ID_TOKEN_ENDPOINT_FORMAT;
+
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.http.LowLevelHttpRequest;
 import com.google.api.client.http.LowLevelHttpResponse;
@@ -42,22 +44,33 @@ import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.auth.TestUtils;
 import com.google.common.io.BaseEncoding;
 import java.io.IOException;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 /** Transport that simulates the IAMCredentials server for access tokens. */
 public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
 
+  private static class ServerResponse {
+    private final int statusCode;
+    private final String response;
+    private final boolean repeatServerResponse;
+
+    public ServerResponse(int statusCode, String response, boolean repeatServerResponse) {
+      this.statusCode = statusCode;
+      this.response = response;
+      this.repeatServerResponse = repeatServerResponse;
+    }
+  }
+
   private static final String DEFAULT_IAM_ACCESS_TOKEN_ENDPOINT =
-      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken";
-  private static final String IAM_ID_TOKEN_ENDPOINT =
-      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateIdToken";
+      "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:generateAccessToken";
   private static final String IAM_SIGN_ENDPOINT =
-      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
-  private Integer tokenResponseErrorCode;
-  private String tokenResponseErrorContent;
+      "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:signBlob";
+
+  private final Deque<ServerResponse> serverResponses;
+
   private String targetPrincipal;
   private byte[] signedBlob;
-  private int responseCode = HttpStatusCodes.STATUS_CODE_OK;
-  private String errorMessage;
   private String iamAccessTokenEndpoint;
 
   private String accessToken;
@@ -65,16 +78,21 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
 
   private String idToken;
 
+  private String universeDomain;
+
   private MockLowLevelHttpRequest request;
 
-  public MockIAMCredentialsServiceTransport() {}
-
-  public void setTokenResponseErrorCode(Integer tokenResponseErrorCode) {
-    this.tokenResponseErrorCode = tokenResponseErrorCode;
+  MockIAMCredentialsServiceTransport(String universeDomain) {
+    this.universeDomain = universeDomain;
+    this.serverResponses = new ArrayDeque<>();
   }
 
-  public void setTokenResponseErrorContent(String tokenResponseErrorContent) {
-    this.tokenResponseErrorContent = tokenResponseErrorContent;
+  // Store the number of requests that are sent to the Mock Server. This is used to track the
+  // number of retries attempts made to ensure that retry boundaries are respected.
+  private int numRequests;
+
+  public MockIAMCredentialsServiceTransport() {
+    this.serverResponses = new ArrayDeque<>();
   }
 
   public void setTargetPrincipal(String targetPrincipal) {
@@ -93,9 +111,17 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
     this.signedBlob = signedBlob;
   }
 
-  public void setErrorResponseCodeAndMessage(int responseCode, String errorMessage) {
-    this.responseCode = responseCode;
-    this.errorMessage = errorMessage;
+  // Enqueue the status code + message. Each request to the mock server will pop off the
+  // status code + message in the order it was enqueued
+  public void addStatusCodeAndMessage(int responseCode, String message) {
+    addStatusCodeAndMessage(responseCode, message, false);
+  }
+
+  // repeat to ensure simulate scenarios where retrying returns the same status over and over.
+  // Setting repeat will result in this status code being returned until the connection is
+  // terminated.
+  public void addStatusCodeAndMessage(int responseCode, String message, boolean repeat) {
+    serverResponses.offer(new ServerResponse(responseCode, message, repeat));
   }
 
   public void setIdToken(String idToken) {
@@ -110,26 +136,36 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
     return request;
   }
 
+  int getNumRequests() {
+    return numRequests;
+  }
+
   @Override
   public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
-
-    String iamAccesssTokenformattedUrl =
+    String iamAccessTokenFormattedUrl =
         iamAccessTokenEndpoint != null
             ? iamAccessTokenEndpoint
-            : String.format(DEFAULT_IAM_ACCESS_TOKEN_ENDPOINT, this.targetPrincipal);
-    String iamSignBlobformattedUrl = String.format(IAM_SIGN_ENDPOINT, this.targetPrincipal);
-    String iamIdTokenformattedUrl = String.format(IAM_ID_TOKEN_ENDPOINT, this.targetPrincipal);
-    if (url.equals(iamAccesssTokenformattedUrl)) {
+            : String.format(
+                DEFAULT_IAM_ACCESS_TOKEN_ENDPOINT, universeDomain, this.targetPrincipal);
+    String iamSignBlobformattedUrl =
+        String.format(IAM_SIGN_ENDPOINT, universeDomain, this.targetPrincipal);
+    String iamIdTokenformattedUrl =
+        String.format(IAM_ID_TOKEN_ENDPOINT_FORMAT, universeDomain, this.targetPrincipal);
+    ServerResponse serverResponse = serverResponses.poll();
+    // Status code was configured to be repeated until connection is terminated
+    if (serverResponse.repeatServerResponse) {
+      serverResponses.offerFirst(serverResponse);
+    }
+    if (url.equals(iamAccessTokenFormattedUrl)) {
       this.request =
           new MockLowLevelHttpRequest(url) {
             @Override
             public LowLevelHttpResponse execute() throws IOException {
-
-              if (tokenResponseErrorCode != null) {
+              if (serverResponse.statusCode != HttpStatusCodes.STATUS_CODE_OK) {
                 return new MockLowLevelHttpResponse()
-                    .setStatusCode(tokenResponseErrorCode)
+                    .setStatusCode(serverResponse.statusCode)
                     .setContentType(Json.MEDIA_TYPE)
-                    .setContent(tokenResponseErrorContent);
+                    .setContent(serverResponse.response);
               }
 
               // Create the JSON response
@@ -143,45 +179,20 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
                   .setContent(refreshText);
             }
           };
-    } else if (url.equals(iamSignBlobformattedUrl)
-        && responseCode != HttpStatusCodes.STATUS_CODE_OK) {
-      this.request =
-          new MockLowLevelHttpRequest(url) {
-            @Override
-            public LowLevelHttpResponse execute() throws IOException {
-
-              if (tokenResponseErrorCode != null) {
-                return new MockLowLevelHttpResponse()
-                    .setStatusCode(tokenResponseErrorCode)
-                    .setContentType(Json.MEDIA_TYPE)
-                    .setContent(tokenResponseErrorContent);
-              }
-
-              BaseEncoding base64 = BaseEncoding.base64();
-              GenericJson refreshContents = new GenericJson();
-              refreshContents.setFactory(OAuth2Utils.JSON_FACTORY);
-              refreshContents.put("signedBlob", base64.encode(signedBlob));
-              return new MockLowLevelHttpResponse()
-                  .setStatusCode(responseCode)
-                  .setContent(TestUtils.errorJson(errorMessage));
-            }
-          };
     } else if (url.equals(iamSignBlobformattedUrl)) {
       this.request =
           new MockLowLevelHttpRequest(url) {
             @Override
             public LowLevelHttpResponse execute() throws IOException {
-
-              if (tokenResponseErrorCode != null) {
-                return new MockLowLevelHttpResponse()
-                    .setStatusCode(tokenResponseErrorCode)
-                    .setContentType(Json.MEDIA_TYPE)
-                    .setContent(tokenResponseErrorContent);
-              }
-
               BaseEncoding base64 = BaseEncoding.base64();
               GenericJson refreshContents = new GenericJson();
               refreshContents.setFactory(OAuth2Utils.JSON_FACTORY);
+
+              if (serverResponse.statusCode != HttpStatusCodes.STATUS_CODE_OK) {
+                return new MockLowLevelHttpResponse()
+                    .setStatusCode(serverResponse.statusCode)
+                    .setContent(TestUtils.errorJson(serverResponse.response));
+              }
               refreshContents.put("signedBlob", base64.encode(signedBlob));
               String refreshText = refreshContents.toPrettyString();
               return new MockLowLevelHttpResponse()
@@ -194,12 +205,11 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
           new MockLowLevelHttpRequest(url) {
             @Override
             public LowLevelHttpResponse execute() throws IOException {
-
-              if (responseCode != HttpStatusCodes.STATUS_CODE_OK) {
+              if (serverResponse.statusCode != HttpStatusCodes.STATUS_CODE_OK) {
                 return new MockLowLevelHttpResponse()
-                    .setStatusCode(responseCode)
+                    .setStatusCode(serverResponse.statusCode)
                     .setContentType(Json.MEDIA_TYPE)
-                    .setContent(errorMessage);
+                    .setContent(serverResponse.response);
               }
 
               GenericJson refreshContents = new GenericJson();
@@ -214,6 +224,7 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
     } else {
       return super.buildRequest(method, url);
     }
+    numRequests++;
 
     return this.request;
   }
