@@ -1705,6 +1705,31 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertTrue("Should have run onSuccess() callback", success.get());
   }
 
+  @Test
+  public void createScopes_existingAccessTokenInvalidated() throws IOException {
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
+    GoogleCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientEmail(CLIENT_EMAIL)
+            .setPrivateKey(privateKey)
+            .setPrivateKeyId(PRIVATE_KEY_ID)
+            .setProjectId(PROJECT_ID)
+            .setQuotaProjectId("my-quota-project-id")
+            .setHttpTransportFactory(transportFactory)
+            .setScopes(SCOPES)
+            .build();
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), ACCESS_TOKEN);
+
+    // Calling createScoped() again will invalidate the existing access token and calling
+    // `refresh()` is required to get a new Access Token.
+    credentials = credentials.createScoped("RANDOM_SCOPES");
+    AccessToken newAccessToken = credentials.getAccessToken();
+    assertNull(newAccessToken);
+  }
+
   private void verifyJwtAccess(Map<String, List<String>> metadata, String expectedScopeClaim)
       throws IOException {
     assertNotNull(metadata);
