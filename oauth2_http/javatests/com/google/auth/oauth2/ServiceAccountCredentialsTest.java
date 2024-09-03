@@ -1719,15 +1719,9 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             .setProjectId(PROJECT_ID)
             .setQuotaProjectId("my-quota-project-id")
             .setHttpTransportFactory(transportFactory)
-            .setUseJwtAccessWithScope(true)
             .setScopes(SCOPES)
             .build();
-    // Explicitly call `refresh()` to simulate an API request. Creating a GoogleCredentials object
-    // does not immediately get the Access Token
-    credentials.refresh();
-    AccessToken accessToken = credentials.getAccessToken();
-    assertNotNull(accessToken);
-    assertEquals(ACCESS_TOKEN, accessToken.getTokenValue());
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), ACCESS_TOKEN);
 
     // Calling createScoped() again will invalidate the existing access token and calling
     // `refresh()` is required to get a new Access Token.
