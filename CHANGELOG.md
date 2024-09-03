@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.25.0](https://github.com/googleapis/google-auth-library-java/compare/v1.24.1...v1.25.0) (2024-09-03)
+
+
+### Features
+
+* Support retrieving ID Token from IAM endpoint for ServiceAccountCredentials ([#1433](https://github.com/googleapis/google-auth-library-java/issues/1433)) ([4fcf83e](https://github.com/googleapis/google-auth-library-java/commit/4fcf83e0f96de0e6323b85b9a47119a257b37e90))
+
+
+### Bug Fixes
+
+* ComputeEngineCredentials.createScoped should invalidate existing AccessToken ([#1428](https://github.com/googleapis/google-auth-library-java/issues/1428)) ([079a065](https://github.com/googleapis/google-auth-library-java/commit/079a06563114e359b74694b78aec687601a2f628))
+* Invalidate the SA's AccessToken when createScoped() is called ([#1489](https://github.com/googleapis/google-auth-library-java/issues/1489)) ([f26fee7](https://github.com/googleapis/google-auth-library-java/commit/f26fee78d69fce1aaa00dbd5548f3e0266ee6441))
+
 ## [1.24.1](https://github.com/googleapis/google-auth-library-java/compare/v1.24.0...v1.24.1) (2024-08-13)
 
 
