@@ -277,7 +277,7 @@ class OAuth2Utils {
    * @throws IllegalArgumentException if either username or password is null or empty.
    */
   static String generateBasicAuthHeader(String username, String password) {
-    if (Strings.isNullOrEmpty(username)) {
+    if (Strings.isNullOrEmpty(username) || Strings.isNullOrEmpty(password)) {
       throw new IllegalArgumentException("Username and password cannot be null or empty.");
     }
     String credentials = username + ":" + password;
