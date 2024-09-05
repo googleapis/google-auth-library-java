@@ -47,6 +47,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URLDecoder;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -58,6 +59,11 @@ import javax.annotation.Nullable;
 
 /** Utilities for test code under com.google.auth. */
 public class TestUtils {
+
+  public static final URI WORKFORCE_IDENTITY_FEDERATION_AUTH_URI =
+      URI.create("https://auth.cloud.google/authorize");
+  public static final URI WORKFORCE_IDENTITY_FEDERATION_TOKEN_SERVER_URI =
+      URI.create("https://sts.googleapis.com/v1/oauthtoken");
 
   private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
