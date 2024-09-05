@@ -31,6 +31,8 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.oauth2.OAuth2Utils.IAM_ID_TOKEN_ENDPOINT_FORMAT;
+
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.http.LowLevelHttpRequest;
 import com.google.api.client.http.LowLevelHttpResponse;
@@ -61,11 +63,9 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
   }
 
   private static final String DEFAULT_IAM_ACCESS_TOKEN_ENDPOINT =
-      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken";
-  private static final String IAM_ID_TOKEN_ENDPOINT =
-      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateIdToken";
+      "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:generateAccessToken";
   private static final String IAM_SIGN_ENDPOINT =
-      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
+      "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:signBlob";
 
   private final Deque<ServerResponse> serverResponses;
 
@@ -78,7 +78,14 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
 
   private String idToken;
 
+  private String universeDomain;
+
   private MockLowLevelHttpRequest request;
+
+  MockIAMCredentialsServiceTransport(String universeDomain) {
+    this.universeDomain = universeDomain;
+    this.serverResponses = new ArrayDeque<>();
+  }
 
   // Store the number of requests that are sent to the Mock Server. This is used to track the
   // number of retries attempts made to ensure that retry boundaries are respected.
@@ -138,9 +145,12 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
     String iamAccessTokenFormattedUrl =
         iamAccessTokenEndpoint != null
             ? iamAccessTokenEndpoint
-            : String.format(DEFAULT_IAM_ACCESS_TOKEN_ENDPOINT, this.targetPrincipal);
-    String iamSignBlobformattedUrl = String.format(IAM_SIGN_ENDPOINT, this.targetPrincipal);
-    String iamIdTokenformattedUrl = String.format(IAM_ID_TOKEN_ENDPOINT, this.targetPrincipal);
+            : String.format(
+                DEFAULT_IAM_ACCESS_TOKEN_ENDPOINT, universeDomain, this.targetPrincipal);
+    String iamSignBlobformattedUrl =
+        String.format(IAM_SIGN_ENDPOINT, universeDomain, this.targetPrincipal);
+    String iamIdTokenformattedUrl =
+        String.format(IAM_ID_TOKEN_ENDPOINT_FORMAT, universeDomain, this.targetPrincipal);
     ServerResponse serverResponse = serverResponses.poll();
     // Status code was configured to be repeated until connection is terminated
     if (serverResponse.repeatServerResponse) {

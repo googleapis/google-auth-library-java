@@ -66,22 +66,22 @@ public class IamUtilsTest {
   public void sign_success_noRetry() {
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
-    ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory transportFactory =
-        new ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory();
-    transportFactory.transport.setSignedBlob(expectedSignature);
-    transportFactory.transport.setTargetPrincipal(CLIENT_EMAIL);
-    transportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
+    MockIAMCredentialsServiceTransportFactory transportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    transportFactory.getTransport().setSignedBlob(expectedSignature);
+    transportFactory.getTransport().setTargetPrincipal(CLIENT_EMAIL);
+    transportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
 
     byte[] signature =
         IamUtils.sign(
             CLIENT_EMAIL,
             credentials,
-            transportFactory.transport,
+            transportFactory.getTransport(),
             expectedSignature,
             ImmutableMap.of());
     assertArrayEquals(expectedSignature, signature);
 
-    assertEquals(1, transportFactory.transport.getNumRequests());
+    assertEquals(1, transportFactory.getTransport().getNumRequests());
   }
 
   // The SignBlob RPC will retry up to three times before it gives up. This test will return two
@@ -91,28 +91,30 @@ public class IamUtilsTest {
   public void sign_retryTwoTimes_success() {
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
-    ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory transportFactory =
-        new ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory();
-    transportFactory.transport.addStatusCodeAndMessage(
-        HttpStatusCodes.STATUS_CODE_BAD_GATEWAY, "Bad Gateway");
-    transportFactory.transport.addStatusCodeAndMessage(
-        HttpStatusCodes.STATUS_CODE_SERVICE_UNAVAILABLE, "Unavailable");
-    transportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
-    transportFactory.transport.setSignedBlob(expectedSignature);
-    transportFactory.transport.setTargetPrincipal(CLIENT_EMAIL);
+    MockIAMCredentialsServiceTransportFactory transportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    transportFactory
+        .getTransport()
+        .addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_BAD_GATEWAY, "Bad Gateway");
+    transportFactory
+        .getTransport()
+        .addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_SERVICE_UNAVAILABLE, "Unavailable");
+    transportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
+    transportFactory.getTransport().setSignedBlob(expectedSignature);
+    transportFactory.getTransport().setTargetPrincipal(CLIENT_EMAIL);
 
     byte[] signature =
         IamUtils.sign(
             CLIENT_EMAIL,
             credentials,
-            transportFactory.transport,
+            transportFactory.getTransport(),
             expectedSignature,
             ImmutableMap.of());
     assertArrayEquals(expectedSignature, signature);
 
     // Expect that three requests are made (2 failures which are retries + 1 final requests which
     // resulted in a successful response)
-    assertEquals(3, transportFactory.transport.getNumRequests());
+    assertEquals(3, transportFactory.getTransport().getNumRequests());
   }
 
   // The rpc will retry up to three times before it gives up. This test will enqueue three failed
@@ -122,30 +124,33 @@ public class IamUtilsTest {
   public void sign_retryThreeTimes_success() {
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
-    ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory transportFactory =
-        new ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory();
-    transportFactory.transport.setSignedBlob(expectedSignature);
-    transportFactory.transport.setTargetPrincipal(CLIENT_EMAIL);
-    transportFactory.transport.addStatusCodeAndMessage(
-        HttpStatusCodes.STATUS_CODE_BAD_GATEWAY, "Bad Gateway");
-    transportFactory.transport.addStatusCodeAndMessage(
-        HttpStatusCodes.STATUS_CODE_SERVICE_UNAVAILABLE, "Unavailable");
-    transportFactory.transport.addStatusCodeAndMessage(
-        HttpStatusCodes.STATUS_CODE_SERVER_ERROR, "Server Error");
-    transportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
+    MockIAMCredentialsServiceTransportFactory transportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    transportFactory.getTransport().setSignedBlob(expectedSignature);
+    transportFactory.getTransport().setTargetPrincipal(CLIENT_EMAIL);
+    transportFactory
+        .getTransport()
+        .addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_BAD_GATEWAY, "Bad Gateway");
+    transportFactory
+        .getTransport()
+        .addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_SERVICE_UNAVAILABLE, "Unavailable");
+    transportFactory
+        .getTransport()
+        .addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_SERVER_ERROR, "Server Error");
+    transportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
 
     byte[] signature =
         IamUtils.sign(
             CLIENT_EMAIL,
             credentials,
-            transportFactory.transport,
+            transportFactory.getTransport(),
             expectedSignature,
             ImmutableMap.of());
     assertArrayEquals(expectedSignature, signature);
 
     // Expect that three requests are made (3 failures which are retried + 1 final request which
     // resulted the final success response)
-    assertEquals(4, transportFactory.transport.getNumRequests());
+    assertEquals(4, transportFactory.getTransport().getNumRequests());
   }
 
   // The rpc will retry up to three times before it gives up. This test will enqueue four failed
@@ -155,19 +160,23 @@ public class IamUtilsTest {
   public void sign_retryThreeTimes_exception() {
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
-    ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory transportFactory =
-        new ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory();
-    transportFactory.transport.setSignedBlob(expectedSignature);
-    transportFactory.transport.setTargetPrincipal(CLIENT_EMAIL);
-    transportFactory.transport.addStatusCodeAndMessage(
-        HttpStatusCodes.STATUS_CODE_BAD_GATEWAY, "Bad Gateway");
-    transportFactory.transport.addStatusCodeAndMessage(
-        HttpStatusCodes.STATUS_CODE_SERVICE_UNAVAILABLE, "Unavailable");
-    transportFactory.transport.addStatusCodeAndMessage(
-        HttpStatusCodes.STATUS_CODE_SERVER_ERROR, "Server Error");
-    transportFactory.transport.addStatusCodeAndMessage(
-        HttpStatusCodes.STATUS_CODE_BAD_GATEWAY, "Bad Gateway");
-    transportFactory.transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
+    MockIAMCredentialsServiceTransportFactory transportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    transportFactory.getTransport().setSignedBlob(expectedSignature);
+    transportFactory.getTransport().setTargetPrincipal(CLIENT_EMAIL);
+    transportFactory
+        .getTransport()
+        .addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_BAD_GATEWAY, "Bad Gateway");
+    transportFactory
+        .getTransport()
+        .addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_SERVICE_UNAVAILABLE, "Unavailable");
+    transportFactory
+        .getTransport()
+        .addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_SERVER_ERROR, "Server Error");
+    transportFactory
+        .getTransport()
+        .addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_BAD_GATEWAY, "Bad Gateway");
+    transportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
 
     ServiceAccountSigner.SigningException exception =
         assertThrows(
@@ -176,7 +185,7 @@ public class IamUtilsTest {
                 IamUtils.sign(
                     CLIENT_EMAIL,
                     credentials,
-                    transportFactory.transport,
+                    transportFactory.getTransport(),
                     expectedSignature,
                     ImmutableMap.of()));
     assertTrue(exception.getMessage().contains("Failed to sign the provided bytes"));
@@ -188,19 +197,21 @@ public class IamUtilsTest {
 
     // Expect that three requests are made (3 failures which are retried + 1 final request which
     // resulted in another failed response)
-    assertEquals(4, transportFactory.transport.getNumRequests());
+    assertEquals(4, transportFactory.getTransport().getNumRequests());
   }
 
   @Test
   public void sign_4xxError_noRetry_exception() {
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
-    ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory transportFactory =
-        new ImpersonatedCredentialsTest.MockIAMCredentialsServiceTransportFactory();
-    transportFactory.transport.setSignedBlob(expectedSignature);
-    transportFactory.transport.setTargetPrincipal(CLIENT_EMAIL);
-    transportFactory.transport.addStatusCodeAndMessage(
-        HttpStatusCodes.STATUS_CODE_UNAUTHORIZED, "Failed to sign the provided bytes");
+    MockIAMCredentialsServiceTransportFactory transportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    transportFactory.getTransport().setSignedBlob(expectedSignature);
+    transportFactory.getTransport().setTargetPrincipal(CLIENT_EMAIL);
+    transportFactory
+        .getTransport()
+        .addStatusCodeAndMessage(
+            HttpStatusCodes.STATUS_CODE_UNAUTHORIZED, "Failed to sign the provided bytes");
 
     ServiceAccountSigner.SigningException exception =
         assertThrows(
@@ -209,7 +220,7 @@ public class IamUtilsTest {
                 IamUtils.sign(
                     CLIENT_EMAIL,
                     credentials,
-                    transportFactory.transport,
+                    transportFactory.getTransport(),
                     expectedSignature,
                     ImmutableMap.of()));
     assertTrue(exception.getMessage().contains("Failed to sign the provided bytes"));
@@ -220,6 +231,6 @@ public class IamUtilsTest {
             .contains("Error code 401 trying to sign provided bytes:"));
 
     // Only one request will have been made for a 4xx error (no retries)
-    assertEquals(1, transportFactory.transport.getNumRequests());
+    assertEquals(1, transportFactory.getTransport().getNumRequests());
   }
 }
