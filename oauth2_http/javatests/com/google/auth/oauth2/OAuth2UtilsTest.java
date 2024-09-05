@@ -74,4 +74,28 @@ public class OAuth2UtilsTest {
           generateBasicAuthHeader(username, password);
         });
   }
+
+  @Test
+  public void testNullUsername_throws() {
+    String username = null;
+    String password = "testPassword";
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> {
+          generateBasicAuthHeader(username, password);
+        });
+  }
+
+  @Test
+  public void testNullPassword_throws() {
+    String username = "testUser";
+    String password = null;
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> {
+          generateBasicAuthHeader(username, password);
+        });
+  }
 }

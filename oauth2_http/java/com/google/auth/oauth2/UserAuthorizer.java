@@ -320,8 +320,7 @@ public class UserAuthorizer {
    * @throws IOException If an error occurs during the token exchange process.
    */
   public TokenResponseWithConfig getTokenResponseFromAuthCodeExchange(
-      String code, URI callbackUri, @Nullable Map<String, String> additionalParameters)
-      throws IOException {
+      String code, URI callbackUri, Map<String, String> additionalParameters) throws IOException {
     return getCredentialsFromCodeInternal(code, callbackUri, additionalParameters);
   }
 

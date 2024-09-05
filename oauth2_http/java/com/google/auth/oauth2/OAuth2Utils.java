@@ -67,6 +67,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import jdk.internal.joptsimple.internal.Strings;
 
 /** Internal utilities for the com.google.auth.oauth2 namespace. */
 class OAuth2Utils {
@@ -276,7 +277,7 @@ class OAuth2Utils {
    * @throws IllegalArgumentException if either username or password is null or empty.
    */
   static String generateBasicAuthHeader(String username, String password) {
-    if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
+    if (Strings.isNullOrEmpty(username)) {
       throw new IllegalArgumentException("Username and password cannot be null or empty.");
     }
     String credentials = username + ":" + password;
