@@ -56,6 +56,7 @@ import com.google.auth.RequestMetadataCallback;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.oauth2.MetricsUtils.RequestType;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
@@ -505,6 +506,9 @@ public class ServiceAccountCredentials extends GoogleCredentials
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
 
+    HttpHeaders additionalHeaders =
+        getHttpHeaders(RequestType.ACCESS_TOKEN_REQUEST, getCredentialType());
+    request.setHeaders(additionalHeaders);
     if (this.defaultRetriesEnabled) {
       request.setNumberOfRetries(OAuth2Utils.DEFAULT_NUMBER_OF_RETRIES);
     } else {
@@ -551,6 +555,14 @@ public class ServiceAccountCredentials extends GoogleCredentials
     return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
   }
 
+  private HttpHeaders getHttpHeaders(RequestType requestType, String credentialType) {
+    HttpHeaders additionalHeaders = new HttpHeaders();
+    additionalHeaders.set(
+        MetricsUtils.API_CLIENT_HEADER,
+        MetricsUtils.getGoogleCredentialsMetricsHeader(requestType, credentialType));
+    return additionalHeaders;
+  }
+
   /**
    * Returns a Google ID Token from either the Oauth or IAM Endpoint. For Credentials that are in
    * the Google Default Universe (googleapis.com), the ID Token will be retrieved from the Oauth
@@ -586,6 +598,11 @@ public class ServiceAccountCredentials extends GoogleCredentials
     UrlEncodedContent content = new UrlEncodedContent(tokenRequest);
 
     HttpRequest request = buildIdTokenRequest(tokenServerUri, transportFactory, content);
+    // add metric header
+    HttpHeaders additionalHeaders =
+        getHttpHeaders(RequestType.ID_TOKEN_REQUEST, getCredentialType());
+    request.setHeaders(additionalHeaders);
+
     HttpResponse httpResponse = executeRequest(request);
 
     GenericData responseData = httpResponse.parseAs(GenericData.class);
@@ -1013,9 +1030,12 @@ public class ServiceAccountCredentials extends GoogleCredentials
     // configured then use scopes to get access token.
     if ((!createScopedRequired() && !useJwtAccessWithScope)
         || isConfiguredForDomainWideDelegation()) {
+      // assertion token flow
+      this.setCredentialType("sa");
       return super.getRequestMetadata(uri);
     }
-
+    // self-signed JWT flow
+    this.setCredentialType("jwt");
     return getRequestMetadataWithSelfSignedJwt(uri);
   }
 
