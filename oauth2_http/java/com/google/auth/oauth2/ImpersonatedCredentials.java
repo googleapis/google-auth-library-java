@@ -36,6 +36,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
+import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
@@ -46,6 +47,7 @@ import com.google.api.client.util.GenericData;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.oauth2.MetricsUtils.RequestType;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
@@ -452,6 +454,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
   private ImpersonatedCredentials(Builder builder) {
     super(builder);
+    this.setCredentialType("imp");
     this.sourceCredentials = builder.getSourceCredentials();
     this.targetPrincipal = builder.getTargetPrincipal();
     this.delegates = builder.getDelegates();
@@ -508,6 +511,9 @@ public class ImpersonatedCredentials extends GoogleCredentials
     HttpRequest request = requestFactory.buildPostRequest(url, requestContent);
     adapter.initialize(request);
     request.setParser(parser);
+    HttpHeaders additionalHeaders =
+        MetricsUtils.createMetricsHeader(RequestType.ACCESS_TOKEN_REQUEST, getCredentialType());
+    request.setHeaders(additionalHeaders);
 
     HttpResponse response = null;
     try {
@@ -557,7 +563,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
         transportFactory.create(),
         targetAudience,
         includeEmail,
-        ImmutableMap.of("delegates", this.delegates));
+        ImmutableMap.of("delegates", this.delegates),
+        getCredentialType());
   }
 
   @Override

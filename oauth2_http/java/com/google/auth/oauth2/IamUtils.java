@@ -34,6 +34,7 @@ package com.google.auth.oauth2;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpBackOffIOExceptionHandler;
 import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler;
+import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
@@ -47,6 +48,7 @@ import com.google.api.client.util.GenericData;
 import com.google.auth.Credentials;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpCredentialsAdapter;
+import com.google.auth.oauth2.MetricsUtils.RequestType;
 import com.google.common.io.BaseEncoding;
 import java.io.IOException;
 import java.io.InputStream;
@@ -178,6 +180,7 @@ class IamUtils {
    * @param transport transport used for building the HTTP request
    * @param targetAudience the audience the issued ID token should include
    * @param additionalFields additional fields to send in the IAM call
+   * @param credentialType credential type for credential making this call
    * @return IdToken issed to the serviceAccount
    * @throws IOException if the IdToken cannot be issued.
    * @see <a
@@ -189,7 +192,8 @@ class IamUtils {
       HttpTransport transport,
       String targetAudience,
       boolean includeEmail,
-      Map<String, ?> additionalFields)
+      Map<String, ?> additionalFields,
+      String credentialType)
       throws IOException {
 
     String idTokenUrl = String.format(ID_TOKEN_URL_FORMAT, serviceAccountEmail);
@@ -210,6 +214,10 @@ class IamUtils {
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     request.setParser(parser);
     request.setThrowExceptionOnExecuteError(false);
+
+    HttpHeaders additionalHeaders =
+        MetricsUtils.createMetricsHeader(RequestType.ID_TOKEN_REQUEST, credentialType);
+    request.setHeaders(additionalHeaders);
 
     HttpResponse response = request.execute();
     int statusCode = response.getStatusCode();

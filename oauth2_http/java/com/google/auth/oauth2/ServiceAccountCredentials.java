@@ -507,7 +507,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
 
     HttpHeaders additionalHeaders =
-        getHttpHeaders(RequestType.ACCESS_TOKEN_REQUEST, getCredentialType());
+        MetricsUtils.createMetricsHeader(RequestType.ACCESS_TOKEN_REQUEST, getCredentialType());
     request.setHeaders(additionalHeaders);
     if (this.defaultRetriesEnabled) {
       request.setNumberOfRetries(OAuth2Utils.DEFAULT_NUMBER_OF_RETRIES);
@@ -555,14 +555,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
     return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
   }
 
-  private HttpHeaders getHttpHeaders(RequestType requestType, String credentialType) {
-    HttpHeaders additionalHeaders = new HttpHeaders();
-    additionalHeaders.set(
-        MetricsUtils.API_CLIENT_HEADER,
-        MetricsUtils.getGoogleCredentialsMetricsHeader(requestType, credentialType));
-    return additionalHeaders;
-  }
-
   /**
    * Returns a Google ID Token from either the Oauth or IAM Endpoint. For Credentials that are in
    * the Google Default Universe (googleapis.com), the ID Token will be retrieved from the Oauth
@@ -600,7 +592,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     HttpRequest request = buildIdTokenRequest(tokenServerUri, transportFactory, content);
     // add metric header
     HttpHeaders additionalHeaders =
-        getHttpHeaders(RequestType.ID_TOKEN_REQUEST, getCredentialType());
+        MetricsUtils.createMetricsHeader(RequestType.ID_TOKEN_REQUEST, getCredentialType());
     request.setHeaders(additionalHeaders);
 
     HttpResponse httpResponse = executeRequest(request);
