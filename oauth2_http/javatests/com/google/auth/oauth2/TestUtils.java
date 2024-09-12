@@ -42,13 +42,22 @@ public class TestUtils {
       Map<String, List<String>> headers, String requestType, String credentialType) {
     assertTrue(headers.containsKey(MetricsUtils.API_CLIENT_HEADER));
     String actualMetricsValue = headers.get(MetricsUtils.API_CLIENT_HEADER).get(0);
-    String expectedMetricsValue =
-        requestType.equals("unspecified")
-            ? String.format(
-                "%s cred-type/%s", MetricsUtils.getLanguageAndAuthLibraryVersions(), credentialType)
-            : String.format(
-                "%s auth-request-type/%s cred-type/%s",
-                MetricsUtils.getLanguageAndAuthLibraryVersions(), requestType, credentialType);
+    String expectedMetricsValue;
+    if (requestType.equals("unspecified")) {
+      expectedMetricsValue =
+          String.format(
+              "%s cred-type/%s", MetricsUtils.getLanguageAndAuthLibraryVersions(), credentialType);
+    } else if (credentialType.isEmpty()) {
+      expectedMetricsValue =
+          String.format(
+              "%s auth-request-type/%s",
+              MetricsUtils.getLanguageAndAuthLibraryVersions(), requestType);
+    } else {
+      expectedMetricsValue =
+          String.format(
+              "%s auth-request-type/%s cred-type/%s",
+              MetricsUtils.getLanguageAndAuthLibraryVersions(), requestType, credentialType);
+    }
     assertEquals(expectedMetricsValue, actualMetricsValue);
   }
 }

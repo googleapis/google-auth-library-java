@@ -468,6 +468,11 @@ public class DefaultCredentialsProviderTest {
 
     assertTrue(defaultCredentials instanceof ComputeEngineCredentials);
     assertEquals(QUOTA_PROJECT_FROM_ENVIRONMENT, defaultCredentials.getQuotaProjectId());
+
+    // verify metrics header
+    Map<String, List<String>> headers = transportFactory.transport.getRequest().getHeaders();
+
+    com.google.auth.oauth2.TestUtils.validateMetricsHeader(headers, "mds", "");
   }
 
   @Test

@@ -100,6 +100,13 @@ class MetricsUtils {
           "%s %s/%s",
           MetricsUtils.getLanguageAndAuthLibraryVersions(), "cred-type", credentialType);
     }
+    if (credentialType.isEmpty()) {
+      return String.format(
+          "%s %s/%s",
+          MetricsUtils.getLanguageAndAuthLibraryVersions(),
+          "auth-request-type",
+          requestType.getLabel());
+    }
     return String.format(
         "%s %s/%s %s/%s",
         MetricsUtils.getLanguageAndAuthLibraryVersions(),
