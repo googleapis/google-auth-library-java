@@ -34,7 +34,6 @@ package com.google.auth.oauth2;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpBackOffIOExceptionHandler;
 import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler;
-import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
@@ -215,9 +214,12 @@ class IamUtils {
     request.setParser(parser);
     request.setThrowExceptionOnExecuteError(false);
 
-    HttpHeaders additionalHeaders =
-        MetricsUtils.createMetricsHeader(RequestType.ID_TOKEN_REQUEST, credentialType);
-    request.setHeaders(additionalHeaders);
+    request
+        .getHeaders()
+        .set(
+            MetricsUtils.API_CLIENT_HEADER,
+            MetricsUtils.getGoogleCredentialsMetricsHeader(
+                RequestType.ID_TOKEN_REQUEST, credentialType));
 
     HttpResponse response = request.execute();
     int statusCode = response.getStatusCode();

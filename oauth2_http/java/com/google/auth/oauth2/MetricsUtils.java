@@ -31,7 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import com.google.api.client.http.HttpHeaders;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -84,14 +83,6 @@ class MetricsUtils {
     public String getLabel() {
       return label;
     }
-  }
-
-  static HttpHeaders createMetricsHeader(RequestType requestType, String credentialType) {
-    HttpHeaders additionalHeaders = new HttpHeaders();
-    additionalHeaders.set(
-        MetricsUtils.API_CLIENT_HEADER,
-        MetricsUtils.getGoogleCredentialsMetricsHeader(requestType, credentialType));
-    return additionalHeaders;
   }
 
   static String getGoogleCredentialsMetricsHeader(RequestType requestType, String credentialType) {

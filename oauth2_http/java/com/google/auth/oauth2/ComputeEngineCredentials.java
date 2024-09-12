@@ -235,7 +235,6 @@ public class ComputeEngineCredentials extends GoogleCredentials
   }
 
   private String getUniverseDomainFromMetadata() throws IOException {
-    // TODO: what request type is this
     HttpResponse response = getMetadataResponse(getUniverseDomainUrl(), RequestType.UNSPECIFIED);
     int statusCode = response.getStatusCode();
     if (statusCode == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
@@ -453,9 +452,12 @@ public class ComputeEngineCredentials extends GoogleCredentials
             transportFactory.create().createRequestFactory().buildGetRequest(tokenUrl);
         request.setConnectTimeout(COMPUTE_PING_CONNECTION_TIMEOUT_MS);
         request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
-        HttpHeaders additionalHeaders =
-            MetricsUtils.createMetricsHeader(RequestType.METADATA_SERVER_PIN, "");
-        request.setHeaders(additionalHeaders);
+        request
+            .getHeaders()
+            .set(
+                MetricsUtils.API_CLIENT_HEADER,
+                MetricsUtils.getGoogleCredentialsMetricsHeader(
+                    RequestType.METADATA_SERVER_PIN, ""));
         HttpResponse response = request.execute();
         try {
           // Internet providers can return a generic response to all requests, so it is necessary
@@ -603,7 +605,6 @@ public class ComputeEngineCredentials extends GoogleCredentials
   }
 
   private String getDefaultServiceAccount() throws IOException {
-    // TODO: what request type is this
     HttpResponse response = getMetadataResponse(getServiceAccountsUrl(), RequestType.UNSPECIFIED);
     int statusCode = response.getStatusCode();
     if (statusCode == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {

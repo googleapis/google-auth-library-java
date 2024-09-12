@@ -36,7 +36,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
-import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
@@ -511,9 +510,12 @@ public class ImpersonatedCredentials extends GoogleCredentials
     HttpRequest request = requestFactory.buildPostRequest(url, requestContent);
     adapter.initialize(request);
     request.setParser(parser);
-    HttpHeaders additionalHeaders =
-        MetricsUtils.createMetricsHeader(RequestType.ACCESS_TOKEN_REQUEST, getCredentialType());
-    request.setHeaders(additionalHeaders);
+    request
+        .getHeaders()
+        .set(
+            MetricsUtils.API_CLIENT_HEADER,
+            MetricsUtils.getGoogleCredentialsMetricsHeader(
+                RequestType.ACCESS_TOKEN_REQUEST, getCredentialType()));
 
     HttpResponse response = null;
     try {

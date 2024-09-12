@@ -506,9 +506,12 @@ public class ServiceAccountCredentials extends GoogleCredentials
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
 
-    HttpHeaders additionalHeaders =
-        MetricsUtils.createMetricsHeader(RequestType.ACCESS_TOKEN_REQUEST, getCredentialType());
-    request.setHeaders(additionalHeaders);
+    request
+        .getHeaders()
+        .set(
+            MetricsUtils.API_CLIENT_HEADER,
+            MetricsUtils.getGoogleCredentialsMetricsHeader(
+                RequestType.ACCESS_TOKEN_REQUEST, getCredentialType()));
     if (this.defaultRetriesEnabled) {
       request.setNumberOfRetries(OAuth2Utils.DEFAULT_NUMBER_OF_RETRIES);
     } else {
@@ -591,9 +594,12 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
     HttpRequest request = buildIdTokenRequest(tokenServerUri, transportFactory, content);
     // add metric header
-    HttpHeaders additionalHeaders =
-        MetricsUtils.createMetricsHeader(RequestType.ID_TOKEN_REQUEST, getCredentialType());
-    request.setHeaders(additionalHeaders);
+    request
+        .getHeaders()
+        .set(
+            MetricsUtils.API_CLIENT_HEADER,
+            MetricsUtils.getGoogleCredentialsMetricsHeader(
+                RequestType.ID_TOKEN_REQUEST, getCredentialType()));
 
     HttpResponse httpResponse = executeRequest(request);
 
