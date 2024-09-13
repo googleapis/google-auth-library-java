@@ -472,10 +472,11 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     assertEquals(
         DEFAULT_IMPERSONATION_URL, mockTransportFactory.getTransport().getRequest().getUrl());
 
-    // verify header
-    Map<String, List<String>> accessTokenRequestHeader =
+    // verify metrics header added and authorization header intact
+    Map<String, List<String>> requestHeader =
         mockTransportFactory.getTransport().getRequest().getHeaders();
-    com.google.auth.oauth2.TestUtils.validateMetricsHeader(accessTokenRequestHeader, "at", "imp");
+    com.google.auth.oauth2.TestUtils.validateMetricsHeader(requestHeader, "at", "imp");
+    assertTrue(requestHeader.containsKey("authorization"));
   }
 
   @Test
@@ -874,10 +875,11 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     Payload p = tokenCredential.getIdToken().getJsonWebSignature().getPayload();
     assertTrue(p.containsKey("email"));
 
-    // verify header
-    Map<String, List<String>> accessTokenRequestHeader =
+    // verify metrics header
+    Map<String, List<String>> requestHeader =
         mockTransportFactory.getTransport().getRequest().getHeaders();
-    com.google.auth.oauth2.TestUtils.validateMetricsHeader(accessTokenRequestHeader, "it", "imp");
+    com.google.auth.oauth2.TestUtils.validateMetricsHeader(requestHeader, "it", "imp");
+    assertTrue(requestHeader.containsKey("authorization"));
   }
 
   @Test

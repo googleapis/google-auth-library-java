@@ -619,7 +619,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
     // verify header
     Map<String, List<String>> accessTokenRequestHeader =
-        transportFactory.transport.getRequests().get(0).getHeaders();
+        transportFactory.transport.getRequest().getHeaders();
     com.google.auth.oauth2.TestUtils.validateMetricsHeader(accessTokenRequestHeader, "at", "sa");
   }
 
@@ -863,6 +863,11 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
 
+    // verify access token request metrics headers
+    Map<String, List<String>> accessTokenRequestHeader =
+        transportFactory.transport.getRequest().getHeaders();
+    com.google.auth.oauth2.TestUtils.validateMetricsHeader(accessTokenRequestHeader, "at", "sa");
+
     String targetAudience = "https://foo.bar";
     IdTokenCredentials tokenCredential =
         IdTokenCredentials.newBuilder()
@@ -878,12 +883,9 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
         targetAudience,
         tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
 
-    // verify headers
-    Map<String, List<String>> accessTokenRequestHeader =
-        transportFactory.transport.getRequests().get(0).getHeaders();
-    com.google.auth.oauth2.TestUtils.validateMetricsHeader(accessTokenRequestHeader, "at", "sa");
+    // verify id token request metrics headers
     Map<String, List<String>> idTokenRequestHeader =
-        transportFactory.transport.getRequests().get(1).getHeaders();
+        transportFactory.transport.getRequest().getHeaders();
     com.google.auth.oauth2.TestUtils.validateMetricsHeader(idTokenRequestHeader, "it", "sa");
   }
 

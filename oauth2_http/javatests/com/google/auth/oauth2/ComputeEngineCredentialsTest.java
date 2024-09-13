@@ -285,8 +285,11 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
-    Map<String, List<String>> headers = transportFactory.transport.getRequest().getHeaders();
-    com.google.auth.oauth2.TestUtils.validateMetricsHeader(headers, "at", "mds");
+    // verify metrics header added and other header intact
+    Map<String, List<String>> requestHeaders = transportFactory.transport.getRequest().getHeaders();
+    com.google.auth.oauth2.TestUtils.validateMetricsHeader(requestHeaders, "at", "mds");
+    assertTrue(requestHeaders.containsKey("metadata-flavor"));
+    assertTrue(requestHeaders.get("metadata-flavor").contains("Google"));
   }
 
   @Test
@@ -956,8 +959,9 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     ArrayMap<String, ArrayMap> googleClaim = (ArrayMap<String, ArrayMap>) p.get("google");
     assertTrue(googleClaim.containsKey("compute_engine"));
 
-    Map<String, List<String>> headers = transportFactory.transport.getRequest().getHeaders();
-    com.google.auth.oauth2.TestUtils.validateMetricsHeader(headers, "it", "mds");
+    // verify metrics header
+    Map<String, List<String>> requestHeaders = transportFactory.transport.getRequest().getHeaders();
+    com.google.auth.oauth2.TestUtils.validateMetricsHeader(requestHeaders, "it", "mds");
   }
 
   @Test
