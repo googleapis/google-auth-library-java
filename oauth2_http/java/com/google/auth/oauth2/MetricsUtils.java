@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import com.google.auth.CredentialType;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -85,13 +86,14 @@ class MetricsUtils {
     }
   }
 
-  static String getGoogleCredentialsMetricsHeader(RequestType requestType, String credentialType) {
-    if (requestType.equals(RequestType.UNSPECIFIED)) {
+  static String getGoogleCredentialsMetricsHeader(
+      RequestType requestType, CredentialType credentialType) {
+    if (requestType == RequestType.UNSPECIFIED) {
       return String.format(
           "%s %s/%s",
-          MetricsUtils.getLanguageAndAuthLibraryVersions(), "cred-type", credentialType);
+          MetricsUtils.getLanguageAndAuthLibraryVersions(), "cred-type", credentialType.getLabel());
     }
-    if (credentialType.isEmpty()) {
+    if (credentialType == CredentialType.UNKNOWN) {
       return String.format(
           "%s %s/%s",
           MetricsUtils.getLanguageAndAuthLibraryVersions(),
@@ -104,6 +106,6 @@ class MetricsUtils {
         "auth-request-type",
         requestType.getLabel(),
         "cred-type",
-        credentialType);
+        credentialType.getLabel());
   }
 }

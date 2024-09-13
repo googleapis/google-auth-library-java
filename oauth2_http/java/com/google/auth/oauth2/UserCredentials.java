@@ -46,6 +46,7 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Preconditions;
+import com.google.auth.CredentialType;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.MetricsUtils.RequestType;
 import com.google.common.base.MoreObjects;
@@ -97,7 +98,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     Preconditions.checkState(
         builder.getAccessToken() != null || builder.refreshToken != null,
         "Either accessToken or refreshToken must not be null");
-    this.setCredentialType("u");
+    this.setCredentialType(CredentialType.USER_CREDENTIALS);
   }
 
   /**
@@ -385,11 +386,6 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
   @Override
   public Builder toBuilder() {
     return new Builder(this);
-  }
-
-  @Override
-  public String getCredentialType() {
-    return "u";
   }
 
   public static class Builder extends GoogleCredentials.Builder {

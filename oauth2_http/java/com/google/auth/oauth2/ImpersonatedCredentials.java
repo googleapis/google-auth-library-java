@@ -43,6 +43,7 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
+import com.google.auth.CredentialType;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.http.HttpTransportFactory;
@@ -453,7 +454,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
   private ImpersonatedCredentials(Builder builder) {
     super(builder);
-    this.setCredentialType("imp");
+    this.setCredentialType(CredentialType.IMPERSONATED_CREDENTIALS);
     this.sourceCredentials = builder.getSourceCredentials();
     this.targetPrincipal = builder.getTargetPrincipal();
     this.delegates = builder.getDelegates();

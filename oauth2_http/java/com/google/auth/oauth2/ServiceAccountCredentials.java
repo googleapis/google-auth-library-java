@@ -51,6 +51,7 @@ import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Joiner;
 import com.google.api.client.util.Preconditions;
+import com.google.auth.CredentialType;
 import com.google.auth.Credentials;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.ServiceAccountSigner;
@@ -1029,11 +1030,11 @@ public class ServiceAccountCredentials extends GoogleCredentials
     if ((!createScopedRequired() && !useJwtAccessWithScope)
         || isConfiguredForDomainWideDelegation()) {
       // assertion token flow
-      this.setCredentialType("sa");
+      this.setCredentialType(CredentialType.SERVICE_ACCOUNT_CREDENTIALS_AT);
       return super.getRequestMetadata(uri);
     }
     // self-signed JWT flow
-    this.setCredentialType("jwt");
+    this.setCredentialType(CredentialType.SERVICE_ACCOUNT_CREDENTIALS_JWT);
     return getRequestMetadataWithSelfSignedJwt(uri);
   }
 
