@@ -75,7 +75,7 @@
     <project.appengine.version>2.0.29</project.appengine.version>
     <project.findbugs.version>3.0.2</project.findbugs.version>
     <deploy.autorelease>false</deploy.autorelease>
-    <project.error-prone.version>2.31.0</project.error-prone.version>
+    <project.error-prone.version>2.32.0</project.error-prone.version>
   </properties>
 
   <dependencyManagement>
@@ -413,7 +413,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
-            <version>3.2.5</version>
+            <version>3.2.6</version>
             <executions>
               <execution>
                 <id>sign-artifacts</id>
