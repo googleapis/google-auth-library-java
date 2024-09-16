@@ -31,6 +31,8 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.TestUtils.WORKFORCE_IDENTITY_FEDERATION_TOKEN_SERVER_URI;
+
 import com.google.api.client.http.LowLevelHttpRequest;
 import com.google.api.client.http.LowLevelHttpResponse;
 import com.google.api.client.json.GenericJson;
@@ -42,6 +44,7 @@ import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.auth.TestUtils;
+import com.google.auth.oauth2.UserAuthorizer.ClientAuthenticationType;
 import com.google.common.util.concurrent.Futures;
 import java.io.IOException;
 import java.net.URI;
@@ -71,6 +74,9 @@ public class MockTokenServerTransport extends MockHttpTransport {
   private IOException error;
   private final Queue<Future<LowLevelHttpResponse>> responseSequence = new ArrayDeque<>();
   private int expiresInSeconds = 3600;
+  private MockLowLevelHttpRequest request;
+  private ClientAuthenticationType clientAuthenticationType;
+  private PKCEProvider pkceProvider;
 
   public MockTokenServerTransport() {}
 
@@ -80,6 +86,14 @@ public class MockTokenServerTransport extends MockHttpTransport {
 
   public void setTokenServerUri(URI tokenServerUri) {
     this.tokenServerUri = tokenServerUri;
+  }
+
+  public void setClientAuthType(ClientAuthenticationType type) {
+    this.clientAuthenticationType = type;
+  }
+
+  public void setPkceProvider(PKCEProvider pkceProvider) {
+    this.pkceProvider = pkceProvider;
   }
 
   public void addAuthorizationCode(
@@ -93,7 +107,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
     this.grantedScopes.put(refreshToken, grantedScopes);
 
     if (additionalParameters != null) {
-      this.additionalParameters.put(refreshToken, additionalParameters);
+      this.additionalParameters.put(code, additionalParameters);
     }
   }
 
@@ -147,6 +161,10 @@ public class MockTokenServerTransport extends MockHttpTransport {
     this.expiresInSeconds = expiresInSeconds;
   }
 
+  public MockLowLevelHttpRequest getRequest() {
+    return request;
+  }
+
   @Override
   public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
     buildRequestCount++;
@@ -158,183 +176,265 @@ public class MockTokenServerTransport extends MockHttpTransport {
     final String query = (questionMarkPos > 0) ? url.substring(questionMarkPos + 1) : "";
 
     if (!responseSequence.isEmpty()) {
-      return new MockLowLevelHttpRequest(url) {
-        @Override
-        public LowLevelHttpResponse execute() throws IOException {
-          try {
-            return responseSequence.poll().get();
-          } catch (ExecutionException e) {
-            Throwable cause = e.getCause();
-            throw (IOException) cause;
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Unexpectedly interrupted");
-          }
-        }
-      };
+      request =
+          new MockLowLevelHttpRequest(url) {
+            @Override
+            public LowLevelHttpResponse execute() throws IOException {
+              try {
+                return responseSequence.poll().get();
+              } catch (ExecutionException e) {
+                Throwable cause = e.getCause();
+                throw (IOException) cause;
+              } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Unexpectedly interrupted");
+              }
+            }
+          };
+      return request;
     }
 
     if (urlWithoutQuery.equals(tokenServerUri.toString())) {
-      return new MockLowLevelHttpRequest(url) {
-        @Override
-        public LowLevelHttpResponse execute() throws IOException {
+      request =
+          new MockLowLevelHttpRequest(url) {
+            @Override
+            public LowLevelHttpResponse execute() throws IOException {
 
-          if (!responseSequence.isEmpty()) {
-            try {
-              return responseSequence.poll().get();
-            } catch (ExecutionException e) {
-              Throwable cause = e.getCause();
-              throw (IOException) cause;
-            } catch (InterruptedException e) {
-              Thread.currentThread().interrupt();
-              throw new RuntimeException("Unexpectedly interrupted");
-            }
-          }
-
-          String content = this.getContentAsString();
-          Map<String, String> query = TestUtils.parseQuery(content);
-          String accessToken = null;
-          String refreshToken = null;
-          String grantedScopesString = null;
-          boolean generateAccessToken = true;
-
-          String foundId = query.get("client_id");
-          boolean isUserEmailScope = false;
-          if (foundId != null) {
-            if (!clients.containsKey(foundId)) {
-              throw new IOException("Client ID not found.");
-            }
-            String foundSecret = query.get("client_secret");
-            String expectedSecret = clients.get(foundId);
-            if (foundSecret == null || !foundSecret.equals(expectedSecret)) {
-              throw new IOException("Client secret not found.");
-            }
-            String grantType = query.get("grant_type");
-            if (grantType != null && grantType.equals("authorization_code")) {
-              String foundCode = query.get("code");
-              if (!codes.containsKey(foundCode)) {
-                throw new IOException("Authorization code not found");
-              }
-              refreshToken = codes.get(foundCode);
-            } else {
-              refreshToken = query.get("refresh_token");
-            }
-            if (!refreshTokens.containsKey(refreshToken)) {
-              throw new IOException("Refresh Token not found.");
-            }
-            if (refreshToken.equals(REFRESH_TOKEN_WITH_USER_SCOPE)) {
-              isUserEmailScope = true;
-            }
-            accessToken = refreshTokens.get(refreshToken);
-
-            if (grantedScopes.containsKey(refreshToken)) {
-              grantedScopesString = grantedScopes.get(refreshToken);
-            }
-
-            if (additionalParameters.containsKey(refreshToken)) {
-              Map<String, String> additionalParametersMap = additionalParameters.get(refreshToken);
-              for (Map.Entry<String, String> entry : additionalParametersMap.entrySet()) {
-                String key = entry.getKey();
-                String expectedValue = entry.getValue();
-                if (!query.containsKey(key)) {
-                  throw new IllegalArgumentException("Missing additional parameter: " + key);
-                } else {
-                  String actualValue = query.get(key);
-                  if (!expectedValue.equals(actualValue)) {
-                    throw new IllegalArgumentException(
-                        "For additional parameter "
-                            + key
-                            + ", Actual value: "
-                            + actualValue
-                            + ", Expected value: "
-                            + expectedValue);
-                  }
+              if (!responseSequence.isEmpty()) {
+                try {
+                  return responseSequence.poll().get();
+                } catch (ExecutionException e) {
+                  Throwable cause = e.getCause();
+                  throw (IOException) cause;
+                } catch (InterruptedException e) {
+                  Thread.currentThread().interrupt();
+                  throw new RuntimeException("Unexpectedly interrupted");
                 }
               }
+
+              String content = this.getContentAsString();
+              Map<String, String> query = TestUtils.parseQuery(content);
+              String accessToken = null;
+              String refreshToken = null;
+              String grantedScopesString = null;
+              boolean generateAccessToken = true;
+
+              String foundId = query.get("client_id");
+              boolean isUserEmailScope = false;
+              if (foundId != null) {
+                if (!clients.containsKey(foundId)) {
+                  throw new IOException("Client ID not found.");
+                }
+                String foundSecret = query.get("client_secret");
+                String expectedSecret = clients.get(foundId);
+                if ((foundSecret == null || !foundSecret.equals(expectedSecret))) {
+                  throw new IOException("Client secret not found.");
+                }
+                String grantType = query.get("grant_type");
+                if (grantType != null && grantType.equals("authorization_code")) {
+                  String foundCode = query.get("code");
+                  if (!codes.containsKey(foundCode)) {
+                    throw new IOException("Authorization code not found");
+                  }
+                  refreshToken = codes.get(foundCode);
+                } else {
+                  refreshToken = query.get("refresh_token");
+                }
+                if (!refreshTokens.containsKey(refreshToken)) {
+                  throw new IOException("Refresh Token not found.");
+                }
+                if (refreshToken.equals(REFRESH_TOKEN_WITH_USER_SCOPE)) {
+                  isUserEmailScope = true;
+                }
+                accessToken = refreshTokens.get(refreshToken);
+
+                if (grantedScopes.containsKey(refreshToken)) {
+                  grantedScopesString = grantedScopes.get(refreshToken);
+                }
+                validateAdditionalParameters(query);
+              } else if (query.containsKey("grant_type")) {
+                String grantType = query.get("grant_type");
+                String assertion = query.get("assertion");
+                JsonWebSignature signature = JsonWebSignature.parse(JSON_FACTORY, assertion);
+                if (OAuth2Utils.GRANT_TYPE_JWT_BEARER.equals(grantType)) {
+                  String foundEmail = signature.getPayload().getIssuer();
+                  if (!serviceAccounts.containsKey(foundEmail)) {}
+                  accessToken = serviceAccounts.get(foundEmail);
+                  String foundTargetAudience =
+                      (String) signature.getPayload().get("target_audience");
+                  String foundScopes = (String) signature.getPayload().get("scope");
+                  if ((foundScopes == null || foundScopes.length() == 0)
+                      && (foundTargetAudience == null || foundTargetAudience.length() == 0)) {
+                    throw new IOException("Either target_audience or scopes must be specified.");
+                  }
+
+                  if (foundScopes != null && foundTargetAudience != null) {
+                    throw new IOException(
+                        "Only one of target_audience or scopes must be specified.");
+                  }
+                  if (foundTargetAudience != null) {
+                    generateAccessToken = false;
+                  }
+
+                  // For GDCH scenario
+                } else if (OAuth2Utils.TOKEN_TYPE_TOKEN_EXCHANGE.equals(grantType)) {
+                  String foundServiceIdentityName = signature.getPayload().getIssuer();
+                  if (!gdchServiceAccounts.containsKey(foundServiceIdentityName)) {
+                    throw new IOException(
+                        "GDCH Service Account Service Identity Name not found as issuer.");
+                  }
+                  accessToken = gdchServiceAccounts.get(foundServiceIdentityName);
+                  String foundApiAudience = (String) signature.getPayload().get("api_audience");
+                  if ((foundApiAudience == null || foundApiAudience.length() == 0)) {
+                    throw new IOException("Api_audience must be specified.");
+                  }
+                } else {
+                  throw new IOException("Service Account Email not found as issuer.");
+                }
+              } else {
+                throw new IOException("Unknown token type.");
+              }
+
+              // Create the JSON response
+              // https://developers.google.com/identity/protocols/OpenIDConnect#server-flow
+              GenericJson responseContents = new GenericJson();
+              responseContents.setFactory(JSON_FACTORY);
+              responseContents.put("token_type", "Bearer");
+              responseContents.put("expires_in", expiresInSeconds);
+              if (generateAccessToken) {
+                responseContents.put("access_token", accessToken);
+                if (refreshToken != null) {
+                  responseContents.put("refresh_token", refreshToken);
+                }
+                if (grantedScopesString != null) {
+                  responseContents.put("scope", grantedScopesString);
+                }
+              }
+              if (isUserEmailScope || !generateAccessToken) {
+                responseContents.put("id_token", ServiceAccountCredentialsTest.DEFAULT_ID_TOKEN);
+              }
+              String refreshText = responseContents.toPrettyString();
+
+              return new MockLowLevelHttpResponse()
+                  .setContentType(Json.MEDIA_TYPE)
+                  .setContent(refreshText);
             }
-
-          } else if (query.containsKey("grant_type")) {
-            String grantType = query.get("grant_type");
-            String assertion = query.get("assertion");
-            JsonWebSignature signature = JsonWebSignature.parse(JSON_FACTORY, assertion);
-            if (OAuth2Utils.GRANT_TYPE_JWT_BEARER.equals(grantType)) {
-              String foundEmail = signature.getPayload().getIssuer();
-              if (!serviceAccounts.containsKey(foundEmail)) {}
-              accessToken = serviceAccounts.get(foundEmail);
-              String foundTargetAudience = (String) signature.getPayload().get("target_audience");
-              String foundScopes = (String) signature.getPayload().get("scope");
-              if ((foundScopes == null || foundScopes.length() == 0)
-                  && (foundTargetAudience == null || foundTargetAudience.length() == 0)) {
-                throw new IOException("Either target_audience or scopes must be specified.");
-              }
-
-              if (foundScopes != null && foundTargetAudience != null) {
-                throw new IOException("Only one of target_audience or scopes must be specified.");
-              }
-              if (foundTargetAudience != null) {
-                generateAccessToken = false;
-              }
-
-              // For GDCH scenario
-            } else if (OAuth2Utils.TOKEN_TYPE_TOKEN_EXCHANGE.equals(grantType)) {
-              String foundServiceIdentityName = signature.getPayload().getIssuer();
-              if (!gdchServiceAccounts.containsKey(foundServiceIdentityName)) {
-                throw new IOException(
-                    "GDCH Service Account Service Identity Name not found as issuer.");
-              }
-              accessToken = gdchServiceAccounts.get(foundServiceIdentityName);
-              String foundApiAudience = (String) signature.getPayload().get("api_audience");
-              if ((foundApiAudience == null || foundApiAudience.length() == 0)) {
-                throw new IOException("Api_audience must be specified.");
-              }
-            } else {
-              throw new IOException("Service Account Email not found as issuer.");
-            }
-          } else {
-            throw new IOException("Unknown token type.");
-          }
-
-          // Create the JSON response
-          // https://developers.google.com/identity/protocols/OpenIDConnect#server-flow
-          GenericJson responseContents = new GenericJson();
-          responseContents.setFactory(JSON_FACTORY);
-          responseContents.put("token_type", "Bearer");
-          responseContents.put("expires_in", expiresInSeconds);
-          if (generateAccessToken) {
-            responseContents.put("access_token", accessToken);
-            if (refreshToken != null) {
-              responseContents.put("refresh_token", refreshToken);
-            }
-            if (grantedScopesString != null) {
-              responseContents.put("scope", grantedScopesString);
-            }
-          }
-          if (isUserEmailScope || !generateAccessToken) {
-            responseContents.put("id_token", ServiceAccountCredentialsTest.DEFAULT_ID_TOKEN);
-          }
-          String refreshText = responseContents.toPrettyString();
-
-          return new MockLowLevelHttpResponse()
-              .setContentType(Json.MEDIA_TYPE)
-              .setContent(refreshText);
-        }
-      };
+          };
+      return request;
     } else if (urlWithoutQuery.equals(OAuth2Utils.TOKEN_REVOKE_URI.toString())) {
-      return new MockLowLevelHttpRequest(url) {
-        @Override
-        public LowLevelHttpResponse execute() throws IOException {
-          Map<String, String> parameters = TestUtils.parseQuery(this.getContentAsString());
-          String token = parameters.get("token");
-          if (token == null) {
-            throw new IOException("Token to revoke not found.");
-          }
-          // Token could be access token or refresh token so remove keys and values
-          refreshTokens.values().removeAll(Collections.singleton(token));
-          refreshTokens.remove(token);
-          return new MockLowLevelHttpResponse().setContentType(Json.MEDIA_TYPE);
-        }
-      };
+      request =
+          new MockLowLevelHttpRequest(url) {
+            @Override
+            public LowLevelHttpResponse execute() throws IOException {
+              Map<String, String> parameters = TestUtils.parseQuery(this.getContentAsString());
+              String token = parameters.get("token");
+              if (token == null) {
+                throw new IOException("Token to revoke not found.");
+              }
+              // Token could be access token or refresh token so remove keys and values
+              refreshTokens.values().removeAll(Collections.singleton(token));
+              refreshTokens.remove(token);
+              return new MockLowLevelHttpResponse().setContentType(Json.MEDIA_TYPE);
+            }
+          };
+      return request;
+    }
+    if (urlWithoutQuery.equals(WORKFORCE_IDENTITY_FEDERATION_TOKEN_SERVER_URI.toString())) {
+      request =
+          new MockLowLevelHttpRequest(url) {
+            @Override
+            public LowLevelHttpResponse execute() throws IOException {
+
+              if (!responseSequence.isEmpty()) {
+                try {
+                  return responseSequence.poll().get();
+                } catch (ExecutionException e) {
+                  Throwable cause = e.getCause();
+                  throw (IOException) cause;
+                } catch (InterruptedException e) {
+                  Thread.currentThread().interrupt();
+                  throw new RuntimeException("Unexpectedly interrupted");
+                }
+              }
+
+              String content = this.getContentAsString();
+              Map<String, String> query = TestUtils.parseQuery(content);
+
+              // Validate required fields.
+              if (!query.containsKey("code")
+                  || !query.containsKey("client_id")
+                  || !query.containsKey("redirect_uri")
+                  || !query.containsKey("grant_type")) {
+                throw new IOException("Invalid request, missing one or more fields.");
+              }
+
+              String clientId = query.get("client_id");
+              if (!clients.containsKey(clientId)) {
+                throw new IOException("Client ID not registered.");
+              }
+
+              if (!clients.containsKey(query.get("client_id"))) {
+                throw new IOException("Client ID not registered.");
+              }
+
+              String grantType = query.get("grant_type");
+              if (!grantType.equals("authorization_code")) {
+                throw new IOException("Invalid grant_type. Must be authorization_code.");
+              }
+
+              if (pkceProvider != null && !query.containsKey("code_verifier")) {
+                throw new IOException("Code verifier must be provided.");
+              }
+
+              validateAdditionalParameters(query);
+
+              // Generate response.
+              String refreshToken = codes.get(query.get("code"));
+              String accessToken = getAccessToken(refreshToken);
+              GenericJson responseContents = new GenericJson();
+              responseContents.setFactory(JSON_FACTORY);
+              responseContents.put("token_type", "Bearer");
+              responseContents.put("expires_in", expiresInSeconds);
+              responseContents.put("access_token", accessToken);
+              responseContents.put("refresh_token", refreshToken);
+
+              if (query.containsKey("scopes")) {
+                responseContents.put("scope", query.get("scopes"));
+              }
+
+              String refreshText = responseContents.toPrettyString();
+
+              return new MockLowLevelHttpResponse()
+                  .setContentType(Json.MEDIA_TYPE)
+                  .setContent(refreshText);
+            }
+          };
+      return request;
     }
     return super.buildRequest(method, url);
+  }
+
+  private void validateAdditionalParameters(Map<String, String> query) {
+    if (additionalParameters.containsKey(query.get("code"))) {
+      Map<String, String> additionalParametersMap = additionalParameters.get(query.get("code"));
+      for (Map.Entry<String, String> entry : additionalParametersMap.entrySet()) {
+        String key = entry.getKey();
+        String expectedValue = entry.getValue();
+        if (!query.containsKey(key)) {
+          throw new IllegalArgumentException("Missing additional parameter: " + key);
+        } else {
+          String actualValue = query.get(key);
+          if (!expectedValue.equals(actualValue)) {
+            throw new IllegalArgumentException(
+                "For additional parameter "
+                    + key
+                    + ", Actual value: "
+                    + actualValue
+                    + ", Expected value: "
+                    + expectedValue);
+          }
+        }
+      }
+    }
   }
 }
