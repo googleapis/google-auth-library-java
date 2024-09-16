@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ApiKeyCredentials extends Credentials {
-  private static final String API_KEY_HEADER_KEY = "x-goog-api-key";
+  static final String API_KEY_HEADER_KEY = "x-goog-api-key";
   private final String apiKey;
 
   ApiKeyCredentials(String apiKey) {
