@@ -30,49 +30,47 @@
  */
 package com.google.auth;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.*;
 import java.util.*;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Test case for {@link ApiKeyCredentials}. */
 @RunWith(JUnit4.class)
 public class ApiKeyCredentialsTest {
 
-    private static final String TEST_API_KEY = "testApiKey";
+  private static final String TEST_API_KEY = "testApiKey";
 
-    @Test
-    public void testGetAuthenticationType() {
-        ApiKeyCredentials credentials = ApiKeyCredentials.create(TEST_API_KEY);
-        assertEquals("", credentials.getAuthenticationType());
-    }
+  @Test
+  public void testGetAuthenticationType() {
+    ApiKeyCredentials credentials = ApiKeyCredentials.create(TEST_API_KEY);
+    assertEquals("", credentials.getAuthenticationType());
+  }
 
-    @Test
-    public void testGetRequestMetadata() throws IOException, URISyntaxException {
-        ApiKeyCredentials credentials = ApiKeyCredentials.create(TEST_API_KEY);
-        Map<String, List<String>> metadata = credentials.getRequestMetadata(new URI("http://test.com"));
-        assertEquals(1, metadata.size());
-        assertTrue(metadata.containsKey(ApiKeyCredentials.API_KEY_HEADER_KEY));
-        assertEquals(1, metadata.get(ApiKeyCredentials.API_KEY_HEADER_KEY).size());
-        assertEquals(TEST_API_KEY, metadata.get(ApiKeyCredentials.API_KEY_HEADER_KEY).get(0));
-    }
+  @Test
+  public void testGetRequestMetadata() throws IOException, URISyntaxException {
+    ApiKeyCredentials credentials = ApiKeyCredentials.create(TEST_API_KEY);
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(new URI("http://test.com"));
+    assertEquals(1, metadata.size());
+    assertTrue(metadata.containsKey(ApiKeyCredentials.API_KEY_HEADER_KEY));
+    assertEquals(1, metadata.get(ApiKeyCredentials.API_KEY_HEADER_KEY).size());
+    assertEquals(TEST_API_KEY, metadata.get(ApiKeyCredentials.API_KEY_HEADER_KEY).get(0));
+  }
 
-    @Test
-    public void testHasRequestMetadata() {
-        ApiKeyCredentials credentials = ApiKeyCredentials.create(TEST_API_KEY);
-        assertTrue(credentials.hasRequestMetadata());
-    }
+  @Test
+  public void testHasRequestMetadata() {
+    ApiKeyCredentials credentials = ApiKeyCredentials.create(TEST_API_KEY);
+    assertTrue(credentials.hasRequestMetadata());
+  }
 
-    @Test
-    public void testHasRequestMetadataOnly() {
-        ApiKeyCredentials credentials = ApiKeyCredentials.create(TEST_API_KEY);
-        assertTrue(credentials.hasRequestMetadataOnly());
-    }
+  @Test
+  public void testHasRequestMetadataOnly() {
+    ApiKeyCredentials credentials = ApiKeyCredentials.create(TEST_API_KEY);
+    assertTrue(credentials.hasRequestMetadataOnly());
+  }
 }
