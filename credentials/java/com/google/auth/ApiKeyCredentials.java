@@ -1,5 +1,5 @@
 /*
- * Copyright 2015, Google Inc. All rights reserved.
+ * Copyright 2024, Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -30,11 +30,10 @@
  */
 package com.google.auth;
 
+import com.google.api.client.util.*;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Credentials class for calling Google APIs using an API key.
@@ -54,6 +53,9 @@ public class ApiKeyCredentials extends Credentials {
   }
 
   public static ApiKeyCredentials create(String apiKey) {
+    Preconditions.checkNotNull(apiKey, "API key cannot be null");
+    Preconditions.checkArgument(!apiKey.isEmpty(), "API key cannot be empty");
+
     return new ApiKeyCredentials(apiKey);
   }
 

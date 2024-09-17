@@ -1,5 +1,5 @@
 /*
- * Copyright 2015, Google Inc. All rights reserved.
+ * Copyright 2024, Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -30,8 +30,7 @@
  */
 package com.google.auth;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.net.*;
@@ -72,5 +71,25 @@ public class ApiKeyCredentialsTest {
   public void testHasRequestMetadataOnly() {
     ApiKeyCredentials credentials = ApiKeyCredentials.create(TEST_API_KEY);
     assertTrue(credentials.hasRequestMetadataOnly());
+  }
+
+  @Test
+  public void testNullApiKey_ThrowsException() {
+    try {
+      ApiKeyCredentials.create(null);
+      fail("No exception raised");
+    } catch (NullPointerException e) {
+      assert (e.getMessage().contains("API key cannot be null"));
+    }
+  }
+
+  @Test
+  public void testBlankApiKey_ThrowsException() {
+    try {
+      ApiKeyCredentials.create("");
+      fail("No exception raised");
+    } catch (IllegalArgumentException e) {
+      assert (e.getMessage().contains("API key cannot be empty"));
+    }
   }
 }
