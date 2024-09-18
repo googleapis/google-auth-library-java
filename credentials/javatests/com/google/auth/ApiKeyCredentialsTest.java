@@ -78,8 +78,8 @@ public class ApiKeyCredentialsTest {
     try {
       ApiKeyCredentials.create(null);
       fail("No exception raised");
-    } catch (NullPointerException e) {
-      assert (e.getMessage().contains("API key cannot be null"));
+    } catch (IllegalArgumentException e) {
+      assert (e.getMessage().contains("API key cannot be null or blank"));
     }
   }
 
@@ -89,7 +89,7 @@ public class ApiKeyCredentialsTest {
       ApiKeyCredentials.create("");
       fail("No exception raised");
     } catch (IllegalArgumentException e) {
-      assert (e.getMessage().contains("API key cannot be empty"));
+      assert (e.getMessage().contains("API key cannot be null or blank"));
     }
   }
 }

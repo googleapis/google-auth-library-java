@@ -30,10 +30,11 @@
  */
 package com.google.auth;
 
-import com.google.api.client.util.*;
 import java.io.IOException;
 import java.net.URI;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Credentials class for calling Google APIs using an API key.
@@ -53,9 +54,9 @@ public class ApiKeyCredentials extends Credentials {
   }
 
   public static ApiKeyCredentials create(String apiKey) {
-    Preconditions.checkNotNull(apiKey, "API key cannot be null");
-    Preconditions.checkArgument(!apiKey.isEmpty(), "API key cannot be empty");
-
+    if (apiKey == null || apiKey.isEmpty()) {
+      throw new IllegalArgumentException("API key cannot be null or blank");
+    }
     return new ApiKeyCredentials(apiKey);
   }
 
