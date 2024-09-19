@@ -41,6 +41,10 @@ import java.util.Map;
  *
  * <p>Uses an API key directly in the request metadata to provide authorization.
  *
+ * <p>Note: ApiKeyCredentials extends from base {@link Credentials} class rather than
+ * GoogleCredentials/OAuth2Credentials, as it does not provide an access token and is not considered
+ * an OAuth2 credential.
+ *
  * <pre><code>
  * Credentials credentials = ApiKeyCredentials.create("your api key");
  * </code></pre>

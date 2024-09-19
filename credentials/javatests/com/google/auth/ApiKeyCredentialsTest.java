@@ -30,7 +30,9 @@
  */
 package com.google.auth;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URI;
@@ -77,21 +79,11 @@ public class ApiKeyCredentialsTest {
 
   @Test
   public void testNullApiKey_ThrowsException() {
-    try {
-      ApiKeyCredentials.create(null);
-      fail("No exception raised");
-    } catch (IllegalArgumentException e) {
-      assert (e.getMessage().contains("API key cannot be null or blank"));
-    }
+    assertThrows(IllegalArgumentException.class, () -> ApiKeyCredentials.create(null));
   }
 
   @Test
   public void testBlankApiKey_ThrowsException() {
-    try {
-      ApiKeyCredentials.create("");
-      fail("No exception raised");
-    } catch (IllegalArgumentException e) {
-      assert (e.getMessage().contains("API key cannot be null or blank"));
-    }
+    assertThrows(IllegalArgumentException.class, () -> ApiKeyCredentials.create(""));
   }
 }
