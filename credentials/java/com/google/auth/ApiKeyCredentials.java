@@ -62,7 +62,7 @@ public class ApiKeyCredentials extends Credentials {
 
   @Override
   public String getAuthenticationType() {
-    return "";
+    return "API-Key";
   }
 
   @Override

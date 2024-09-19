@@ -50,7 +50,7 @@ public class ApiKeyCredentialsTest {
   @Test
   public void testGetAuthenticationType() {
     ApiKeyCredentials credentials = ApiKeyCredentials.create(TEST_API_KEY);
-    assertEquals("", credentials.getAuthenticationType());
+    assertEquals("API-Key", credentials.getAuthenticationType());
   }
 
   @Test
