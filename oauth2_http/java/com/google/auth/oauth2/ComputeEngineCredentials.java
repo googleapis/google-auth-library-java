@@ -48,6 +48,7 @@ import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects.ToStringHelper;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.BufferedReader;
@@ -155,21 +156,19 @@ public class ComputeEngineCredentials extends GoogleCredentials
   /** Clones the compute engine account with the specified scopes. */
   @Override
   public GoogleCredentials createScoped(Collection<String> newScopes) {
-    ComputeEngineCredentials.Builder builder =
-        this.toBuilder().setHttpTransportFactory(transportFactory).setScopes(newScopes);
-    return new ComputeEngineCredentials(builder);
+    return createScoped(newScopes, ImmutableList.of());
   }
 
   /** Clones the compute engine account with the specified scopes and default scopes. */
   @Override
   public GoogleCredentials createScoped(
       Collection<String> newScopes, Collection<String> newDefaultScopes) {
-    ComputeEngineCredentials.Builder builder =
-        ComputeEngineCredentials.newBuilder()
-            .setHttpTransportFactory(transportFactory)
-            .setScopes(newScopes)
-            .setDefaultScopes(newDefaultScopes);
-    return new ComputeEngineCredentials(builder);
+    return this.toBuilder()
+        .setHttpTransportFactory(transportFactory)
+        .setScopes(newScopes)
+        .setDefaultScopes(newDefaultScopes)
+        .setAccessToken(null)
+        .build();
   }
 
   /**
