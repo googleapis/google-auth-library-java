@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.0](https://github.com/googleapis/google-auth-library-java/compare/v1.26.0...v1.27.0) (2024-09-20)
+
+
+### Features
+
+* Add api key credential as client library authorization type ([#1483](https://github.com/googleapis/google-auth-library-java/issues/1483)) ([6401e51](https://github.com/googleapis/google-auth-library-java/commit/6401e51c04fa6bd819e8dff98a62b7f079608a43))
+
 ## [1.26.0](https://github.com/googleapis/google-auth-library-java/compare/v1.25.0...v1.26.0) (2024-09-18)
 
 
