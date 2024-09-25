@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.27.0](https://github.com/googleapis/google-auth-library-java/compare/v1.26.0...v1.27.0) (2024-09-20)
+
+
+### Features
+
+* Add api key credential as client library authorization type ([#1483](https://github.com/googleapis/google-auth-library-java/issues/1483)) ([6401e51](https://github.com/googleapis/google-auth-library-java/commit/6401e51c04fa6bd819e8dff98a62b7f079608a43))
+
+## [1.26.0](https://github.com/googleapis/google-auth-library-java/compare/v1.25.0...v1.26.0) (2024-09-18)
+
+
+### Features
+
+* Updates UserAuthorizer to support retrieving token response directly with different client auth types ([#1486](https://github.com/googleapis/google-auth-library-java/issues/1486)) ([1651006](https://github.com/googleapis/google-auth-library-java/commit/16510064e861868f649b6bc8fdc54b8a39890812))
+
 ## [1.25.0](https://github.com/googleapis/google-auth-library-java/compare/v1.24.1...v1.25.0) (2024-09-03)
 
 
