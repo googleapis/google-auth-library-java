@@ -27,7 +27,7 @@ public final class S2A {
   private static final int MAX_MDS_PING_TRIES = 3;
   private static final String PARSE_ERROR_S2A = "Error parsing Mtls Auto Config response.";
 
-  private MtlsConfig config;
+  private S2AConfig config;
 
   private transient HttpTransportFactory transportFactory;
 
@@ -40,27 +40,27 @@ public final class S2A {
   /** @return the mTLS S2A Address from the mTLS config. */
   public synchronized String getMtlsS2AAddress() {
     if (config == null) {
-      config = getMdsMtlsConfig();
+      config = getS2AConfig();
     }
-    return config.getMtlsS2AAddress();
+    return config.getMtlsAddress();
   }
 
   /** @return the plaintext S2A Address from the mTLS config. */
   public synchronized String getPlaintextS2AAddress() {
     if (config == null) {
-      config = getMdsMtlsConfig();
+      config = getS2AConfig();
     }
-    return config.getPlaintextS2AAddress();
+    return config.getPlaintextAddress();
   }
 
   /**
-   * Queries the MDS mTLS Autoconfiguration endpoint and returns the {@link MtlsConfig}.
+   * Queries the MDS mTLS Autoconfiguration endpoint and returns the {@link S2AConfig}.
    *
-   * <p>Returns {@link MtlsConfig} with empty addresses on error.
+   * <p>Returns {@link S2AConfig} with empty addresses on error.
    *
-   * @return the {@link MtlsConfig}.
+   * @return the {@link S2AConfig}.
    */
-  private MtlsConfig getMdsMtlsConfig() {
+  private S2AConfig getS2AConfig() {
     String plaintextS2AAddress = "";
     String mtlsS2AAddress = "";
 
@@ -97,12 +97,12 @@ public final class S2A {
       } catch (IOException e) {
         continue;
       }
-      return MtlsConfig.createBuilder()
-          .setPlaintextS2AAddress(plaintextS2AAddress)
-          .setMtlsS2AAddress(mtlsS2AAddress)
+      return S2AConfig.createBuilder()
+          .setPlaintextAddress(plaintextS2AAddress)
+          .setMtlsAddress(mtlsS2AAddress)
           .build();
     }
-    return MtlsConfig.createBuilder().build();
+    return S2AConfig.createBuilder().build();
   }
 
   /** @return MDS mTLS autoconfig endpoint. */
