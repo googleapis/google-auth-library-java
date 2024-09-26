@@ -1,5 +1,60 @@
 # Changelog
 
+## [1.27.0](https://github.com/googleapis/google-auth-library-java/compare/v1.26.0...v1.27.0) (2024-09-20)
+
+
+### Features
+
+* Add api key credential as client library authorization type ([#1483](https://github.com/googleapis/google-auth-library-java/issues/1483)) ([6401e51](https://github.com/googleapis/google-auth-library-java/commit/6401e51c04fa6bd819e8dff98a62b7f079608a43))
+
+## [1.26.0](https://github.com/googleapis/google-auth-library-java/compare/v1.25.0...v1.26.0) (2024-09-18)
+
+
+### Features
+
+* Updates UserAuthorizer to support retrieving token response directly with different client auth types ([#1486](https://github.com/googleapis/google-auth-library-java/issues/1486)) ([1651006](https://github.com/googleapis/google-auth-library-java/commit/16510064e861868f649b6bc8fdc54b8a39890812))
+
+## [1.25.0](https://github.com/googleapis/google-auth-library-java/compare/v1.24.1...v1.25.0) (2024-09-03)
+
+
+### Features
+
+* Support retrieving ID Token from IAM endpoint for ServiceAccountCredentials ([#1433](https://github.com/googleapis/google-auth-library-java/issues/1433)) ([4fcf83e](https://github.com/googleapis/google-auth-library-java/commit/4fcf83e0f96de0e6323b85b9a47119a257b37e90))
+
+
+### Bug Fixes
+
+* ComputeEngineCredentials.createScoped should invalidate existing AccessToken ([#1428](https://github.com/googleapis/google-auth-library-java/issues/1428)) ([079a065](https://github.com/googleapis/google-auth-library-java/commit/079a06563114e359b74694b78aec687601a2f628))
+* Invalidate the SA's AccessToken when createScoped() is called ([#1489](https://github.com/googleapis/google-auth-library-java/issues/1489)) ([f26fee7](https://github.com/googleapis/google-auth-library-java/commit/f26fee78d69fce1aaa00dbd5548f3e0266ee6441))
+
+## [1.24.1](https://github.com/googleapis/google-auth-library-java/compare/v1.24.0...v1.24.1) (2024-08-13)
+
+
+### Bug Fixes
+
+* Retry sign blob call  with exponential backoff ([#1452](https://github.com/googleapis/google-auth-library-java/issues/1452)) ([d42f30a](https://github.com/googleapis/google-auth-library-java/commit/d42f30acae7c7bd81afbecbfa83ebde5c6db931a))
+
+## [1.24.0](https://github.com/googleapis/google-auth-library-java/compare/v1.23.0...v1.24.0) (2024-07-09)
+
+
+### Features
+
+* [java] allow passing libraries_bom_version from env ([#1967](https://github.com/googleapis/google-auth-library-java/issues/1967)) ([#1407](https://github.com/googleapis/google-auth-library-java/issues/1407)) ([d92b421](https://github.com/googleapis/google-auth-library-java/commit/d92b421c8fa9c22dda47b49f5ebec7f6ac2658a9))
+* Next release from main branch is 1.21.0 ([#1372](https://github.com/googleapis/google-auth-library-java/issues/1372)) ([23c3cbe](https://github.com/googleapis/google-auth-library-java/commit/23c3cbe70fdce49a3075e15ba965739704a87ace))
+
+
+### Bug Fixes
+
+* Makes default token url universe aware ([#1383](https://github.com/googleapis/google-auth-library-java/issues/1383)) ([e3caf05](https://github.com/googleapis/google-auth-library-java/commit/e3caf05831011dc05d3a8b01ebf79305eda70183))
+* Remove Base64 padding in DefaultPKCEProvider ([#1375](https://github.com/googleapis/google-auth-library-java/issues/1375)) ([1405378](https://github.com/googleapis/google-auth-library-java/commit/1405378b05469841a3683bc914f47b92437abcfc))
+
+
+### Documentation
+
+* Add supplier sections to table of contents ([#1371](https://github.com/googleapis/google-auth-library-java/issues/1371)) ([9e11763](https://github.com/googleapis/google-auth-library-java/commit/9e11763e79127b3691533488482575adef6f73d2))
+* Adds docs for supplier based external account credentials ([#1362](https://github.com/googleapis/google-auth-library-java/issues/1362)) ([bd898c6](https://github.com/googleapis/google-auth-library-java/commit/bd898c64875a87414f84ca0787ba6c140e05921b))
+* Fix readme documentation for workload custom suppliers. ([#1382](https://github.com/googleapis/google-auth-library-java/issues/1382)) ([75bd749](https://github.com/googleapis/google-auth-library-java/commit/75bd749985e2d507dc48863408067950fcda3ef1))
+
 ## [1.23.0](https://github.com/googleapis/google-auth-library-java/compare/v1.22.0...v1.23.0) (2024-02-05)
 
 

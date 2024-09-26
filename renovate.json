@@ -8,7 +8,8 @@
     ":automergeDisabled",
     ":ignoreModulesAndTests",
     ":maintainLockFilesDisabled",
-    ":autodetectPinVersions"
+    ":autodetectPinVersions",
+    ":dependencyDashboard"
   ],
   "ignorePaths": [".kokoro/requirements.txt"],
   "customManagers": [
@@ -23,6 +24,15 @@
     }
   ],
   "packageRules": [
+    {
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "matchPackagePatterns": [
+        "*"
+      ],
+      "enabled": false
+    },
     {
       "packagePatterns": [
         "^com.google.guava:"

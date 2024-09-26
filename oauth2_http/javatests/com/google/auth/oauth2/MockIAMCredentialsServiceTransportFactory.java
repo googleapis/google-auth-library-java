@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Google LLC
+ * Copyright 2024, Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -12,7 +12,7 @@
  * in the documentation and/or other materials provided with the
  * distribution.
  *
- *    * Neither the name of Google LLC nor the names of its
+ *    * Neither the name of Google Inc. nor the names of its
  * contributors may be used to endorse or promote products derived from
  * this software without specific prior written permission.
  *
@@ -28,33 +28,29 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package com.google.auth.oauth2;
 
-import java.io.IOException;
-import java.io.Serializable;
+import com.google.api.client.http.HttpTransport;
+import com.google.auth.Credentials;
+import com.google.auth.http.HttpTransportFactory;
 
-/**
- * Supplier for retrieving AWS Security credentials for {@link AwsCredentials} to exchange for GCP
- * access tokens.
- */
-public interface AwsSecurityCredentialsSupplier extends Serializable {
+public class MockIAMCredentialsServiceTransportFactory implements HttpTransportFactory {
+  private MockIAMCredentialsServiceTransport transport;
 
-  /**
-   * Gets the AWS region to use.
-   *
-   * @param context relevant context from the calling credential.
-   * @return the AWS region that should be used for the credential.
-   * @throws IOException
-   */
-  String getRegion(ExternalAccountSupplierContext context) throws IOException;
+  MockIAMCredentialsServiceTransportFactory() {
+    this(Credentials.GOOGLE_DEFAULT_UNIVERSE);
+  }
 
-  /**
-   * Gets AWS security credentials.
-   *
-   * @param context relevant context from the calling credential.
-   * @return valid AWS security credentials that can be exchanged for a GCP access token.
-   * @throws IOException
-   */
-  AwsSecurityCredentials getCredentials(ExternalAccountSupplierContext context) throws IOException;
+  MockIAMCredentialsServiceTransportFactory(String universeDomain) {
+    this.transport = new MockIAMCredentialsServiceTransport(universeDomain);
+  }
+
+  public MockIAMCredentialsServiceTransport getTransport() {
+    return transport;
+  }
+
+  @Override
+  public HttpTransport create() {
+    return transport;
+  }
 }
