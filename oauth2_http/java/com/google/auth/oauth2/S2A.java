@@ -61,17 +61,17 @@ public final class S2A {
 
     String url = getMdsMtlsEndpoint();
     GenericUrl genericUrl = new GenericUrl(url);
-    
+    JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY); 
+    if (transportFactory == null) {
+      transportFactory =
+          Iterables.getFirst(
+              ServiceLoader.load(HttpTransportFactory.class), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+    }  
+
     for (int i = 0; i < MAX_MDS_PING_TRIES; i++) {
       try {
-        if (transportFactory == null) {
-          transportFactory =
-              Iterables.getFirst(
-                  ServiceLoader.load(HttpTransportFactory.class), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
-        }
         HttpRequest request =
             transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
-        JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
         request.setParser(parser);
         request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
         request.setThrowExceptionOnExecuteError(false);
