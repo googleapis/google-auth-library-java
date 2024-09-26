@@ -25,7 +25,7 @@ public final class S2A {
   public static final String METADATA_FLAVOR = "Metadata-Flavor";
   public static final String GOOGLE = "Google";
   private static final int MAX_MDS_PING_TRIES = 3;
-  private static final String PARSE_ERROR_S2A = "Error parsing Mtls Auto Config response.";
+  private static final String PARSE_ERROR_S2A = "Error parsing S2A Config from MDS JSON response.";
 
   private S2AConfig config;
 
