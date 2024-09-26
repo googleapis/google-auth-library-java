@@ -35,21 +35,16 @@ public final class S2A {
 
   public void setHttpTransportFactory(HttpTransportFactory tf) {
     this.transportFactory = tf;
+    this.config = getS2AConfigFromMDS();
   }
 
   /** @return the mTLS S2A Address from the mTLS config. */
-  public synchronized String getMtlsS2AAddress() {
-    if (config == null) {
-      config = getS2AConfigFromMDS();
-    }
+  public String getMtlsS2AAddress() {
     return config.getMtlsAddress();
   }
 
   /** @return the plaintext S2A Address from the mTLS config. */
-  public synchronized String getPlaintextS2AAddress() {
-    if (config == null) {
-      config = getS2AConfigFromMDS();
-    }
+  public String getPlaintextS2AAddress() {
     return config.getPlaintextAddress();
   }
 
