@@ -19,7 +19,7 @@ import javax.annotation.concurrent.ThreadSafe;
  */
 @ThreadSafe
 public final class S2A {
-  public static final String MTLS_CONFIG_ENDPOINT =
+  public static final String S2A_CONFIG_ENDPOINT_POSTFIX =
       "/computeMetadata/v1/instance/platform-security/auto-mtls-configuration";
 
   public static final String METADATA_FLAVOR = "Metadata-Flavor";
@@ -40,7 +40,7 @@ public final class S2A {
   /** @return the mTLS S2A Address from the mTLS config. */
   public synchronized String getMtlsS2AAddress() {
     if (config == null) {
-      config = getS2AConfig();
+      config = getS2AConfigFromMDS();
     }
     return config.getMtlsAddress();
   }
@@ -48,7 +48,7 @@ public final class S2A {
   /** @return the plaintext S2A Address from the mTLS config. */
   public synchronized String getPlaintextS2AAddress() {
     if (config == null) {
-      config = getS2AConfig();
+      config = getS2AConfigFromMDS();
     }
     return config.getPlaintextAddress();
   }
@@ -60,7 +60,7 @@ public final class S2A {
    *
    * @return the {@link S2AConfig}.
    */
-  private S2AConfig getS2AConfig() {
+  private S2AConfig getS2AConfigFromMDS() {
     String plaintextS2AAddress = "";
     String mtlsS2AAddress = "";
 
@@ -107,6 +107,6 @@ public final class S2A {
 
   /** @return MDS mTLS autoconfig endpoint. */
   private String getMdsMtlsEndpoint() {
-    return ComputeEngineCredentials.getMetadataServerUrl() + MTLS_CONFIG_ENDPOINT;
+    return ComputeEngineCredentials.getMetadataServerUrl() + S2A_CONFIG_ENDPOINT_POSTFIX;
   }
 }

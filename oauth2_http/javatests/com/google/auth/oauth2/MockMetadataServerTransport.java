@@ -328,6 +328,6 @@ public class MockMetadataServerTransport extends MockHttpTransport {
   protected boolean isMtlsConfigRequestUrl(String url) {
     return plaintextS2AAddress != null
         && mtlsS2AAddress != null
-        && url.equals(String.format(ComputeEngineCredentials.getMetadataServerUrl() + S2A.MTLS_CONFIG_ENDPOINT));
+        && url.equals(String.format(ComputeEngineCredentials.getMetadataServerUrl() + S2A.S2A_CONFIG_ENDPOINT_POSTFIX));
   }
 }
