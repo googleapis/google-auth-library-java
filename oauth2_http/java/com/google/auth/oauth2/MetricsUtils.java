@@ -73,7 +73,8 @@ class MetricsUtils {
     ACCESS_TOKEN_REQUEST("at"),
     ID_TOKEN_REQUEST("it"),
     METADATA_SERVER_PIN("mds"),
-    UNSPECIFIED("unspecified");
+    UNSPECIFIED("unspecified"),
+    UNTRACKED("untracked");
 
     private String label;
 
