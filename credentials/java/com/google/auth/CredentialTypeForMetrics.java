@@ -31,13 +31,26 @@
 
 package com.google.auth;
 
+/**
+ * Defines the different types of credentials that can be used for metrics.
+ *
+ * <p>Each credential type is associated with a label that is used for reporting purposes. Add new
+ * enum constant only when corresponding configs established.
+ *
+ * <p>Credentials with type {@code CredentialTypeForMetrics.DO_NOT_SEND} is default value for
+ * credential implementations that do not set type specifically. It is not expected to send metrics.
+ *
+ * <p>
+ *
+ * @see #getLabel()
+ */
 public enum CredentialTypeForMetrics {
   USER_CREDENTIALS("u"),
   SERVICE_ACCOUNT_CREDENTIALS_AT("sa"),
   SERVICE_ACCOUNT_CREDENTIALS_JWT("jwt"),
   VM_CREDENTIALS("mds"),
   IMPERSONATED_CREDENTIALS("imp"),
-  UNKNOWN("unknown");
+  DO_NOT_SEND("do not send type to metrics");
 
   private String label;
 

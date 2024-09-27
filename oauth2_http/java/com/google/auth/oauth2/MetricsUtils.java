@@ -87,14 +87,35 @@ class MetricsUtils {
     }
   }
 
+  /**
+   * Formulates metrics header string.
+   *
+   * <p>For UserCredentials access token or id token requests, no request type is specified, metric
+   * header string takes format: “gl-java/JAVA_VERSION auth/LIB_VERSION cred-type/u”
+   *
+   * <p>For MDS pin, credentials type should not include in header, metric header string takes
+   * format: “gl-java/JAVA_VERSION auth/LIB_VERSION auth-request-type/mds”
+   *
+   * <p>For ServiceAccountCredentials, ComputeEngineCredentials and ImpersonatedCredentials access
+   * token or id token requests, metric header string takes format “gl-java/JAVA_VERSION
+   * auth/LIB_VERSION auth-request-type/[it/at] cred-type/[mds/sa/imp]”
+   *
+   * @param requestType
+   * @param credentialTypeForMetrics
+   * @return
+   */
   static String getGoogleCredentialsMetricsHeader(
       RequestType requestType, CredentialTypeForMetrics credentialTypeForMetrics) {
+    // format for UserCredentials requests
     if (requestType == RequestType.UNSPECIFIED) {
       return String.format(
           "%s %s/%s",
-          MetricsUtils.getLanguageAndAuthLibraryVersions(), "cred-type", credentialTypeForMetrics.getLabel());
+          MetricsUtils.getLanguageAndAuthLibraryVersions(),
+          "cred-type",
+          credentialTypeForMetrics.getLabel());
     }
-    if (credentialTypeForMetrics == CredentialTypeForMetrics.UNKNOWN) {
+    // format for MDS pin
+    if (credentialTypeForMetrics == CredentialTypeForMetrics.DO_NOT_SEND) {
       return String.format(
           "%s %s/%s",
           MetricsUtils.getLanguageAndAuthLibraryVersions(),

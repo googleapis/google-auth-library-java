@@ -454,7 +454,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
   private ImpersonatedCredentials(Builder builder) {
     super(builder);
-    this.setCredentialType(CredentialTypeForMetrics.IMPERSONATED_CREDENTIALS);
+    this.setMetricsCredentialType(CredentialTypeForMetrics.IMPERSONATED_CREDENTIALS);
     this.sourceCredentials = builder.getSourceCredentials();
     this.targetPrincipal = builder.getTargetPrincipal();
     this.delegates = builder.getDelegates();
@@ -516,7 +516,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
         .set(
             MetricsUtils.API_CLIENT_HEADER,
             MetricsUtils.getGoogleCredentialsMetricsHeader(
-                RequestType.ACCESS_TOKEN_REQUEST, getCredentialType()));
+                RequestType.ACCESS_TOKEN_REQUEST, getMetricsCredentialType()));
 
     HttpResponse response = null;
     try {
@@ -567,7 +567,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
         targetAudience,
         includeEmail,
         ImmutableMap.of("delegates", this.delegates),
-        getCredentialType());
+        getMetricsCredentialType());
   }
 
   @Override

@@ -98,7 +98,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     Preconditions.checkState(
         builder.getAccessToken() != null || builder.refreshToken != null,
         "Either accessToken or refreshToken must not be null");
-    this.setCredentialType(CredentialTypeForMetrics.USER_CREDENTIALS);
+    this.setMetricsCredentialType(CredentialTypeForMetrics.USER_CREDENTIALS);
   }
 
   /**
@@ -273,7 +273,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     additionalHeaders.set(
         MetricsUtils.API_CLIENT_HEADER,
         MetricsUtils.getGoogleCredentialsMetricsHeader(
-            RequestType.UNSPECIFIED, getCredentialType()));
+            RequestType.UNSPECIFIED, getMetricsCredentialType()));
     request.setHeaders(additionalHeaders);
     request.setParser(new JsonObjectParser(JSON_FACTORY));
     HttpResponse response;

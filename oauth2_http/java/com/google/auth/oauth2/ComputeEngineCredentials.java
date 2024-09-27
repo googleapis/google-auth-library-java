@@ -135,7 +135,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
    */
   private ComputeEngineCredentials(ComputeEngineCredentials.Builder builder) {
     super(builder);
-    this.setCredentialType(CredentialTypeForMetrics.VM_CREDENTIALS);
+    this.setMetricsCredentialType(CredentialTypeForMetrics.VM_CREDENTIALS);
     this.transportFactory =
         firstNonNull(
             builder.getHttpTransportFactory(),
@@ -351,7 +351,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
           .getHeaders()
           .set(
               MetricsUtils.API_CLIENT_HEADER,
-              MetricsUtils.getGoogleCredentialsMetricsHeader(requestType, getCredentialType()));
+              MetricsUtils.getGoogleCredentialsMetricsHeader(
+                  requestType, getMetricsCredentialType()));
     }
 
     request.setThrowExceptionOnExecuteError(false);
@@ -458,7 +459,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
             .set(
                 MetricsUtils.API_CLIENT_HEADER,
                 MetricsUtils.getGoogleCredentialsMetricsHeader(
-                    RequestType.METADATA_SERVER_PIN, CredentialTypeForMetrics.UNKNOWN));
+                    RequestType.METADATA_SERVER_PIN, CredentialTypeForMetrics.DO_NOT_SEND));
         HttpResponse response = request.execute();
         try {
           // Internet providers can return a generic response to all requests, so it is necessary

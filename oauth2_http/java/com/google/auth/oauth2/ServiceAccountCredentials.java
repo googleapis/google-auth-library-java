@@ -512,7 +512,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         .set(
             MetricsUtils.API_CLIENT_HEADER,
             MetricsUtils.getGoogleCredentialsMetricsHeader(
-                RequestType.ACCESS_TOKEN_REQUEST, getCredentialType()));
+                RequestType.ACCESS_TOKEN_REQUEST, getMetricsCredentialType()));
     if (this.defaultRetriesEnabled) {
       request.setNumberOfRetries(OAuth2Utils.DEFAULT_NUMBER_OF_RETRIES);
     } else {
@@ -600,7 +600,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         .set(
             MetricsUtils.API_CLIENT_HEADER,
             MetricsUtils.getGoogleCredentialsMetricsHeader(
-                RequestType.ID_TOKEN_REQUEST, getCredentialType()));
+                RequestType.ID_TOKEN_REQUEST, getMetricsCredentialType()));
 
     HttpResponse httpResponse = executeRequest(request);
 
@@ -1030,11 +1030,11 @@ public class ServiceAccountCredentials extends GoogleCredentials
     if ((!createScopedRequired() && !useJwtAccessWithScope)
         || isConfiguredForDomainWideDelegation()) {
       // assertion token flow
-      this.setCredentialType(CredentialTypeForMetrics.SERVICE_ACCOUNT_CREDENTIALS_AT);
+      this.setMetricsCredentialType(CredentialTypeForMetrics.SERVICE_ACCOUNT_CREDENTIALS_AT);
       return super.getRequestMetadata(uri);
     }
     // self-signed JWT flow
-    this.setCredentialType(CredentialTypeForMetrics.SERVICE_ACCOUNT_CREDENTIALS_JWT);
+    this.setMetricsCredentialType(CredentialTypeForMetrics.SERVICE_ACCOUNT_CREDENTIALS_JWT);
     return getRequestMetadataWithSelfSignedJwt(uri);
   }
 

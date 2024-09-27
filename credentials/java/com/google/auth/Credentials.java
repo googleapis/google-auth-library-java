@@ -45,7 +45,7 @@ public abstract class Credentials implements Serializable {
 
   public static final String GOOGLE_DEFAULT_UNIVERSE = "googleapis.com";
 
-  private CredentialTypeForMetrics credentialTypeForMetrics = CredentialTypeForMetrics.UNKNOWN;
+  private CredentialTypeForMetrics credentialTypeForMetrics = CredentialTypeForMetrics.DO_NOT_SEND;
 
   /**
    * A constant string name describing the authentication technology.
@@ -72,11 +72,24 @@ public abstract class Credentials implements Serializable {
     return GOOGLE_DEFAULT_UNIVERSE;
   }
 
-  public CredentialTypeForMetrics getCredentialType() {
+  /**
+   * Gets the credential type used for internal metrics header.
+   *
+   * @return a enum value for credential type
+   */
+  public CredentialTypeForMetrics getMetricsCredentialType() {
     return this.credentialTypeForMetrics;
   }
 
-  public void setCredentialType(CredentialTypeForMetrics credentialTypeForMetrics) {
+  /**
+   * Sets the credential type for metrics.
+   *
+   * <p>The default is {@code CredentialTypeForMetrics.DO_NOT_SEND}. For a credential that is
+   * established to track for metrics, this default should be overridden.
+   *
+   * @param credentialTypeForMetrics The credential type to be used for metrics.
+   */
+  public void setMetricsCredentialType(CredentialTypeForMetrics credentialTypeForMetrics) {
     this.credentialTypeForMetrics = credentialTypeForMetrics;
   }
 

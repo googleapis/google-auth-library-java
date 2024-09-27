@@ -1609,7 +1609,9 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
     // Verify credentialType is correctly set. This is used for token usage metrics.
     // Self signed jwt flow doesn’t call any token endpoint, thus no token request metrics.
-    assertEquals(CredentialTypeForMetrics.SERVICE_ACCOUNT_CREDENTIALS_JWT, credentials.getCredentialType());
+    assertEquals(
+        CredentialTypeForMetrics.SERVICE_ACCOUNT_CREDENTIALS_JWT,
+        credentials.getMetricsCredentialType());
   }
 
   @Test
