@@ -31,7 +31,7 @@
 
 package com.google.auth;
 
-public enum CredentialType {
+public enum CredentialTypeForMetrics {
   USER_CREDENTIALS("u"),
   SERVICE_ACCOUNT_CREDENTIALS_AT("sa"),
   SERVICE_ACCOUNT_CREDENTIALS_JWT("jwt"),
@@ -41,7 +41,7 @@ public enum CredentialType {
 
   private String label;
 
-  private CredentialType(String label) {
+  private CredentialTypeForMetrics(String label) {
     this.label = label;
   }
 

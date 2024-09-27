@@ -52,7 +52,7 @@ import com.google.api.client.testing.http.FixedClock;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.api.client.util.Joiner;
-import com.google.auth.CredentialType;
+import com.google.auth.CredentialTypeForMetrics;
 import com.google.auth.Credentials;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.TestUtils;
@@ -1609,7 +1609,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
     // Verify credentialType is correctly set. This is used for token usage metrics.
     // Self signed jwt flow doesn’t call any token endpoint, thus no token request metrics.
-    assertEquals(CredentialType.SERVICE_ACCOUNT_CREDENTIALS_JWT, credentials.getCredentialType());
+    assertEquals(CredentialTypeForMetrics.SERVICE_ACCOUNT_CREDENTIALS_JWT, credentials.getCredentialType());
   }
 
   @Test

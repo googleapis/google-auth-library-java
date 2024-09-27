@@ -44,7 +44,7 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.client.util.GenericData;
-import com.google.auth.CredentialType;
+import com.google.auth.CredentialTypeForMetrics;
 import com.google.auth.Credentials;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpCredentialsAdapter;
@@ -180,7 +180,7 @@ class IamUtils {
    * @param transport transport used for building the HTTP request
    * @param targetAudience the audience the issued ID token should include
    * @param additionalFields additional fields to send in the IAM call
-   * @param credentialType credential type for credential making this call
+   * @param credentialTypeForMetrics credential type for credential making this call
    * @return IdToken issed to the serviceAccount
    * @throws IOException if the IdToken cannot be issued.
    * @see <a
@@ -193,7 +193,7 @@ class IamUtils {
       String targetAudience,
       boolean includeEmail,
       Map<String, ?> additionalFields,
-      CredentialType credentialType)
+      CredentialTypeForMetrics credentialTypeForMetrics)
       throws IOException {
 
     String idTokenUrl = String.format(ID_TOKEN_URL_FORMAT, serviceAccountEmail);
@@ -220,7 +220,7 @@ class IamUtils {
         .set(
             MetricsUtils.API_CLIENT_HEADER,
             MetricsUtils.getGoogleCredentialsMetricsHeader(
-                RequestType.ID_TOKEN_REQUEST, credentialType));
+                RequestType.ID_TOKEN_REQUEST, credentialTypeForMetrics));
 
     HttpResponse response = request.execute();
     int statusCode = response.getStatusCode();

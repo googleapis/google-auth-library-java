@@ -41,7 +41,7 @@ import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
-import com.google.auth.CredentialType;
+import com.google.auth.CredentialTypeForMetrics;
 import com.google.auth.Credentials;
 import com.google.auth.Retryable;
 import com.google.auth.ServiceAccountSigner;
@@ -135,7 +135,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
    */
   private ComputeEngineCredentials(ComputeEngineCredentials.Builder builder) {
     super(builder);
-    this.setCredentialType(CredentialType.VM_CREDENTIALS);
+    this.setCredentialType(CredentialTypeForMetrics.VM_CREDENTIALS);
     this.transportFactory =
         firstNonNull(
             builder.getHttpTransportFactory(),
@@ -458,7 +458,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
             .set(
                 MetricsUtils.API_CLIENT_HEADER,
                 MetricsUtils.getGoogleCredentialsMetricsHeader(
-                    RequestType.METADATA_SERVER_PIN, CredentialType.UNKNOWN));
+                    RequestType.METADATA_SERVER_PIN, CredentialTypeForMetrics.UNKNOWN));
         HttpResponse response = request.execute();
         try {
           // Internet providers can return a generic response to all requests, so it is necessary
