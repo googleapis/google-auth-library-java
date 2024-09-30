@@ -108,6 +108,11 @@ class MetricsUtils {
    */
   static String getGoogleCredentialsMetricsHeader(
       RequestType requestType, CredentialTypeForMetrics credentialTypeForMetrics) {
+    // This case is not used
+    if (requestType == RequestType.UNSPECIFIED
+        && credentialTypeForMetrics == CredentialTypeForMetrics.DO_NOT_SEND) {
+      return MetricsUtils.getLanguageAndAuthLibraryVersions();
+    }
     // format for UserCredentials requests
     if (requestType == RequestType.UNSPECIFIED) {
       return String.format(
