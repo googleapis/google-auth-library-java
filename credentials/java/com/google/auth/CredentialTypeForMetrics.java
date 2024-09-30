@@ -50,7 +50,7 @@ public enum CredentialTypeForMetrics {
   SERVICE_ACCOUNT_CREDENTIALS_JWT("jwt"),
   VM_CREDENTIALS("mds"),
   IMPERSONATED_CREDENTIALS("imp"),
-  DO_NOT_SEND("do not send type to metrics");
+  DO_NOT_SEND("dns");
 
   private String label;
 

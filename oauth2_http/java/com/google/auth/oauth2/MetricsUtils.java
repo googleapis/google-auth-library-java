@@ -76,8 +76,8 @@ class MetricsUtils {
     ACCESS_TOKEN_REQUEST("at"),
     ID_TOKEN_REQUEST("it"),
     METADATA_SERVER_PIN("mds"),
-    UNSPECIFIED("unspecified"),
-    UNTRACKED("untracked");
+    UNSPECIFIED("unspecified"), // should not send request type info
+    UNTRACKED("untracked"); // should not add metric header
 
     private String label;
 
