@@ -90,51 +90,26 @@ class MetricsUtils {
   }
 
   /**
-   * Formulates metrics header string.
+   * Formulates metrics header string. Header string takes format: “gl-java/JAVA_VERSION
+   * auth/LIB_VERSION auth-request-type/REQUEST_TYPE cred-type/CREDENTIAL_TYPE”. "auth-request-type"
+   * and "cred-type" can be omitted.
    *
-   * <p>For UserCredentials access token or id token requests, no request type is specified, metric
-   * header string takes format: “gl-java/JAVA_VERSION auth/LIB_VERSION cred-type/u”
-   *
-   * <p>For MDS pin, credentials type should not include in header, metric header string takes
-   * format: “gl-java/JAVA_VERSION auth/LIB_VERSION auth-request-type/mds”
-   *
-   * <p>For ServiceAccountCredentials, ComputeEngineCredentials and ImpersonatedCredentials access
-   * token or id token requests, metric header string takes format “gl-java/JAVA_VERSION
-   * auth/LIB_VERSION auth-request-type/[it/at] cred-type/[mds/sa/imp]”
-   *
-   * @param requestType
-   * @param credentialTypeForMetrics
+   * @param requestType Auth request type to be specified in metrics, omit when {@code
+   *     RequestType.UNSPECIFIED}
+   * @param credentialTypeForMetrics Credential type to be included in metrics string, omit when
+   *     {@code CredentialTypeForMetrics.DO_NOT_SEND}
    * @return metrics header string to send
    */
   static String getGoogleCredentialsMetricsHeader(
       RequestType requestType, CredentialTypeForMetrics credentialTypeForMetrics) {
-    // This case is not used
-    if (requestType == RequestType.UNSPECIFIED
-        && credentialTypeForMetrics == CredentialTypeForMetrics.DO_NOT_SEND) {
-      return MetricsUtils.getLanguageAndAuthLibraryVersions();
+    StringBuilder stringBuilder =
+        new StringBuilder(MetricsUtils.getLanguageAndAuthLibraryVersions());
+    if (requestType != RequestType.UNSPECIFIED) {
+      stringBuilder.append(String.format(" %s/%s", AUTH_REQUEST_TYPE, requestType.getLabel()));
     }
-    // format for UserCredentials requests
-    if (requestType == RequestType.UNSPECIFIED) {
-      return String.format(
-          "%s %s/%s",
-          MetricsUtils.getLanguageAndAuthLibraryVersions(),
-          CRED_TYPE,
-          credentialTypeForMetrics.getLabel());
+    if (credentialTypeForMetrics != CredentialTypeForMetrics.DO_NOT_SEND) {
+      stringBuilder.append(String.format(" %s/%s", CRED_TYPE, credentialTypeForMetrics.getLabel()));
     }
-    // format for MDS pin
-    if (credentialTypeForMetrics == CredentialTypeForMetrics.DO_NOT_SEND) {
-      return String.format(
-          "%s %s/%s",
-          MetricsUtils.getLanguageAndAuthLibraryVersions(),
-          AUTH_REQUEST_TYPE,
-          requestType.getLabel());
-    }
-    return String.format(
-        "%s %s/%s %s/%s",
-        MetricsUtils.getLanguageAndAuthLibraryVersions(),
-        AUTH_REQUEST_TYPE,
-        requestType.getLabel(),
-        CRED_TYPE,
-        credentialTypeForMetrics.getLabel());
+    return stringBuilder.toString();
   }
 }
