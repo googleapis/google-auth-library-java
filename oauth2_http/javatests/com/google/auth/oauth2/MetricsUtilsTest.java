@@ -32,25 +32,73 @@
 package com.google.auth.oauth2;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import com.google.api.client.http.HttpHeaders;
+import com.google.api.client.http.HttpRequest;
+import com.google.auth.CredentialTypeForMetrics;
+import com.google.auth.oauth2.MetricsUtils.RequestType;
 import java.util.regex.Pattern;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
 
 @RunWith(JUnit4.class)
 public class MetricsUtilsTest {
+  static final String VERSION_PATTERN =
+      "gl-java/[\\d\\._-]+ auth/\\d+\\.\\d+\\.\\d+(-sp\\.\\d+)?(-SNAPSHOT)?";
+  static final String AUTH_REQUEST_TYPE_PATTERN =
+      String.format(" %s/[\\w]+", MetricsUtils.AUTH_REQUEST_TYPE);
+  static final String CRED_TYPE_PATTERN = String.format(" %s/[\\w]+", MetricsUtils.CRED_TYPE);
+  static final String METRICS_PATTERN_FULL =
+      VERSION_PATTERN + AUTH_REQUEST_TYPE_PATTERN + CRED_TYPE_PATTERN;
+  static final String METRICS_PATTERN_NO_REQUEST_TYPE = VERSION_PATTERN + CRED_TYPE_PATTERN;
+  static final String METRICS_PATTERN_NO_CRED_TYPE = VERSION_PATTERN + AUTH_REQUEST_TYPE_PATTERN;
 
-  public static void assertVersions(String version) {
-    assertNotNull("version constant should not be null", version);
-    Pattern semverPattern =
-        Pattern.compile("gl-java/[\\d\\._-]+ auth/\\d+\\.\\d+\\.\\d+(-sp\\.\\d+)?(-SNAPSHOT)?");
-    assertTrue(semverPattern.matcher(version).matches());
+  private static void assertPatterns(String contentToTest, String patternString) {
+    assertNotNull("metric header string should not be null", contentToTest);
+    Pattern pattern = Pattern.compile(patternString);
+    assertTrue(pattern.matcher(contentToTest).matches());
   }
 
   @Test
-  public void getVersionWorks() {
+  public void getLanguageAndAuthLibraryVersionsTest() {
     String version = MetricsUtils.getLanguageAndAuthLibraryVersions();
-    assertVersions(version);
+    assertPatterns(version, VERSION_PATTERN);
+  }
+
+  @Test
+  public void getGoogleCredentialsMetricsHeaderTest() {
+    String metricsStringNoRequestType =
+        MetricsUtils.getGoogleCredentialsMetricsHeader(
+            RequestType.UNSPECIFIED, CredentialTypeForMetrics.USER_CREDENTIALS);
+    assertPatterns(metricsStringNoRequestType, METRICS_PATTERN_NO_REQUEST_TYPE);
+
+    String metricsStringNoCredType =
+        MetricsUtils.getGoogleCredentialsMetricsHeader(
+            RequestType.METADATA_SERVER_PIN, CredentialTypeForMetrics.DO_NOT_SEND);
+    assertPatterns(metricsStringNoCredType, METRICS_PATTERN_NO_CRED_TYPE);
+
+    String metricsString =
+        MetricsUtils.getGoogleCredentialsMetricsHeader(
+            RequestType.ID_TOKEN_REQUEST, CredentialTypeForMetrics.SERVICE_ACCOUNT_CREDENTIALS_AT);
+    assertPatterns(metricsString, METRICS_PATTERN_FULL);
+
+    String metricsStringNoTypes =
+        MetricsUtils.getGoogleCredentialsMetricsHeader(
+            RequestType.UNSPECIFIED, CredentialTypeForMetrics.DO_NOT_SEND);
+    assertPatterns(metricsStringNoTypes, VERSION_PATTERN);
+  }
+
+  @Test
+  public void setMetricsHeaderTest() {
+    HttpRequest request = Mockito.mock(HttpRequest.class);
+    HttpHeaders httpHeaders = Mockito.mock(HttpHeaders.class);
+    when(request.getHeaders()).thenReturn(httpHeaders);
+    String metricsHeader = "fake-metrics-string/content";
+    MetricsUtils.setMetricsHeader(request, metricsHeader);
+    verify(httpHeaders).set(MetricsUtils.API_CLIENT_HEADER, metricsHeader);
   }
 }

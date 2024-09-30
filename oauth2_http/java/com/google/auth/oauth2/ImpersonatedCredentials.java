@@ -511,12 +511,10 @@ public class ImpersonatedCredentials extends GoogleCredentials
     HttpRequest request = requestFactory.buildPostRequest(url, requestContent);
     adapter.initialize(request);
     request.setParser(parser);
-    request
-        .getHeaders()
-        .set(
-            MetricsUtils.API_CLIENT_HEADER,
-            MetricsUtils.getGoogleCredentialsMetricsHeader(
-                RequestType.ACCESS_TOKEN_REQUEST, getMetricsCredentialType()));
+    MetricsUtils.setMetricsHeader(
+        request,
+        MetricsUtils.getGoogleCredentialsMetricsHeader(
+            RequestType.ACCESS_TOKEN_REQUEST, getMetricsCredentialType()));
 
     HttpResponse response = null;
     try {

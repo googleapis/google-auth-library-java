@@ -347,12 +347,9 @@ public class ComputeEngineCredentials extends GoogleCredentials
     request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
     // do not send metric header for getUniverseDomain and getAccount
     if (requestType != RequestType.UNTRACKED) {
-      request
-          .getHeaders()
-          .set(
-              MetricsUtils.API_CLIENT_HEADER,
-              MetricsUtils.getGoogleCredentialsMetricsHeader(
-                  requestType, getMetricsCredentialType()));
+      MetricsUtils.setMetricsHeader(
+          request,
+          MetricsUtils.getGoogleCredentialsMetricsHeader(requestType, getMetricsCredentialType()));
     }
 
     request.setThrowExceptionOnExecuteError(false);
@@ -454,12 +451,10 @@ public class ComputeEngineCredentials extends GoogleCredentials
             transportFactory.create().createRequestFactory().buildGetRequest(tokenUrl);
         request.setConnectTimeout(COMPUTE_PING_CONNECTION_TIMEOUT_MS);
         request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
-        request
-            .getHeaders()
-            .set(
-                MetricsUtils.API_CLIENT_HEADER,
-                MetricsUtils.getGoogleCredentialsMetricsHeader(
-                    RequestType.METADATA_SERVER_PIN, CredentialTypeForMetrics.DO_NOT_SEND));
+        MetricsUtils.setMetricsHeader(
+            request,
+            MetricsUtils.getGoogleCredentialsMetricsHeader(
+                RequestType.METADATA_SERVER_PIN, CredentialTypeForMetrics.DO_NOT_SEND));
         HttpResponse response = request.execute();
         try {
           // Internet providers can return a generic response to all requests, so it is necessary

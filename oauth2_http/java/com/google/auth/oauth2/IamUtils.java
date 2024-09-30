@@ -215,12 +215,10 @@ class IamUtils {
     request.setParser(parser);
     request.setThrowExceptionOnExecuteError(false);
 
-    request
-        .getHeaders()
-        .set(
-            MetricsUtils.API_CLIENT_HEADER,
-            MetricsUtils.getGoogleCredentialsMetricsHeader(
-                RequestType.ID_TOKEN_REQUEST, credentialTypeForMetrics));
+    MetricsUtils.setMetricsHeader(
+        request,
+        MetricsUtils.getGoogleCredentialsMetricsHeader(
+            RequestType.ID_TOKEN_REQUEST, credentialTypeForMetrics));
 
     HttpResponse response = request.execute();
     int statusCode = response.getStatusCode();

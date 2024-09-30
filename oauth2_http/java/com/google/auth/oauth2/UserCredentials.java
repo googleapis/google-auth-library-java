@@ -35,7 +35,6 @@ import static com.google.auth.oauth2.OAuth2Utils.JSON_FACTORY;
 import static com.google.common.base.MoreObjects.firstNonNull;
 
 import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
@@ -269,12 +268,10 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
 
-    HttpHeaders additionalHeaders = new HttpHeaders();
-    additionalHeaders.set(
-        MetricsUtils.API_CLIENT_HEADER,
+    MetricsUtils.setMetricsHeader(
+        request,
         MetricsUtils.getGoogleCredentialsMetricsHeader(
             RequestType.UNSPECIFIED, getMetricsCredentialType()));
-    request.setHeaders(additionalHeaders);
     request.setParser(new JsonObjectParser(JSON_FACTORY));
     HttpResponse response;
 

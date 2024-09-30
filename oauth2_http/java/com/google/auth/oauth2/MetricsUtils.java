@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import com.google.api.client.http.HttpRequest;
 import com.google.auth.CredentialTypeForMetrics;
 import java.io.IOException;
 import java.io.InputStream;
@@ -111,5 +112,9 @@ class MetricsUtils {
       stringBuilder.append(String.format(" %s/%s", CRED_TYPE, credentialTypeForMetrics.getLabel()));
     }
     return stringBuilder.toString();
+  }
+
+  static void setMetricsHeader(HttpRequest request, String metricsHeader) {
+    request.getHeaders().set(MetricsUtils.API_CLIENT_HEADER, metricsHeader);
   }
 }
