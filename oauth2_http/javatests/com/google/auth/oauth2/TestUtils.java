@@ -46,17 +46,26 @@ public class TestUtils {
     if (requestType.equals("unspecified")) {
       expectedMetricsValue =
           String.format(
-              "%s cred-type/%s", MetricsUtils.getLanguageAndAuthLibraryVersions(), credentialType);
+              "%s %s/%s",
+              MetricsUtils.getLanguageAndAuthLibraryVersions(),
+              MetricsUtils.CRED_TYPE,
+              credentialType);
     } else if (credentialType.isEmpty()) {
       expectedMetricsValue =
           String.format(
-              "%s auth-request-type/%s",
-              MetricsUtils.getLanguageAndAuthLibraryVersions(), requestType);
+              "%s %s/%s",
+              MetricsUtils.getLanguageAndAuthLibraryVersions(),
+              MetricsUtils.AUTH_REQUEST_TYPE,
+              requestType);
     } else {
       expectedMetricsValue =
           String.format(
-              "%s auth-request-type/%s cred-type/%s",
-              MetricsUtils.getLanguageAndAuthLibraryVersions(), requestType, credentialType);
+              "%s %s/%s %s/%s",
+              MetricsUtils.getLanguageAndAuthLibraryVersions(),
+              MetricsUtils.AUTH_REQUEST_TYPE,
+              requestType,
+              MetricsUtils.CRED_TYPE,
+              credentialType);
     }
     assertEquals(expectedMetricsValue, actualMetricsValue);
   }

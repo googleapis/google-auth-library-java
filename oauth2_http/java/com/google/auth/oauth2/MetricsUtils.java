@@ -38,6 +38,8 @@ import java.util.Properties;
 
 class MetricsUtils {
   static final String API_CLIENT_HEADER = "x-goog-api-client";
+  static final String CRED_TYPE = "cred-type";
+  static final String AUTH_REQUEST_TYPE = "auth-request-type";
   private static final String authLibraryVersion = getAuthLibraryVersion();
   private static final String javaLanguageVersion = System.getProperty("java.version");
 
@@ -102,7 +104,7 @@ class MetricsUtils {
    *
    * @param requestType
    * @param credentialTypeForMetrics
-   * @return
+   * @return metrics header string to send
    */
   static String getGoogleCredentialsMetricsHeader(
       RequestType requestType, CredentialTypeForMetrics credentialTypeForMetrics) {
@@ -111,7 +113,7 @@ class MetricsUtils {
       return String.format(
           "%s %s/%s",
           MetricsUtils.getLanguageAndAuthLibraryVersions(),
-          "cred-type",
+          CRED_TYPE,
           credentialTypeForMetrics.getLabel());
     }
     // format for MDS pin
@@ -119,15 +121,15 @@ class MetricsUtils {
       return String.format(
           "%s %s/%s",
           MetricsUtils.getLanguageAndAuthLibraryVersions(),
-          "auth-request-type",
+          AUTH_REQUEST_TYPE,
           requestType.getLabel());
     }
     return String.format(
         "%s %s/%s %s/%s",
         MetricsUtils.getLanguageAndAuthLibraryVersions(),
-        "auth-request-type",
+        AUTH_REQUEST_TYPE,
         requestType.getLabel(),
-        "cred-type",
+        CRED_TYPE,
         credentialTypeForMetrics.getLabel());
   }
 }
