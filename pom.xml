@@ -76,7 +76,6 @@
     <project.findbugs.version>3.0.2</project.findbugs.version>
     <deploy.autorelease>false</deploy.autorelease>
     <project.error-prone.version>2.32.0</project.error-prone.version>
-    <project.mockito.version>4.11.0</project.mockito.version>
   </properties>
 
   <dependencyManagement>
@@ -148,18 +147,6 @@
           <artifactId>error_prone_annotations</artifactId>
           <version>${project.error-prone.version}</version>
           <scope>compile</scope>
-      </dependency>
-      <dependency>
-          <groupId>org.mockito</groupId>
-          <artifactId>mockito-core</artifactId>
-          <version>${project.mockito.version}</version>
-          <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.mockito</groupId>
-        <artifactId>mockito-inline</artifactId>
-        <version>${project.mockito.version}</version>
-        <scope>test</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>

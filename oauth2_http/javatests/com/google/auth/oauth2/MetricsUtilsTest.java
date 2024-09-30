@@ -32,18 +32,13 @@
 package com.google.auth.oauth2;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
-import com.google.api.client.http.HttpHeaders;
-import com.google.api.client.http.HttpRequest;
 import com.google.auth.CredentialTypeForMetrics;
 import com.google.auth.oauth2.MetricsUtils.RequestType;
 import java.util.regex.Pattern;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.mockito.Mockito;
 
 @RunWith(JUnit4.class)
 public class MetricsUtilsTest {
@@ -90,15 +85,5 @@ public class MetricsUtilsTest {
         MetricsUtils.getGoogleCredentialsMetricsHeader(
             RequestType.UNSPECIFIED, CredentialTypeForMetrics.DO_NOT_SEND);
     assertPatterns(metricsStringNoTypes, VERSION_PATTERN);
-  }
-
-  @Test
-  public void setMetricsHeaderTest() {
-    HttpRequest request = Mockito.mock(HttpRequest.class);
-    HttpHeaders httpHeaders = Mockito.mock(HttpHeaders.class);
-    when(request.getHeaders()).thenReturn(httpHeaders);
-    String metricsHeader = "fake-metrics-string/content";
-    MetricsUtils.setMetricsHeader(request, metricsHeader);
-    verify(httpHeaders).set(MetricsUtils.API_CLIENT_HEADER, metricsHeader);
   }
 }
