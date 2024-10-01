@@ -50,7 +50,7 @@ public class TestUtils {
               MetricsUtils.getLanguageAndAuthLibraryVersions(),
               MetricsUtils.CRED_TYPE,
               credentialType);
-    } else if (credentialType.isEmpty()) {
+    } else if (credentialType.equals("untracked")) {
       expectedMetricsValue =
           String.format(
               "%s %s/%s",

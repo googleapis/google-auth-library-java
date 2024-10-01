@@ -471,7 +471,7 @@ public class DefaultCredentialsProviderTest {
 
     // verify metrics header
     Map<String, List<String>> headers = transportFactory.transport.getRequest().getHeaders();
-    com.google.auth.oauth2.TestUtils.validateMetricsHeader(headers, "mds", "");
+    com.google.auth.oauth2.TestUtils.validateMetricsHeader(headers, "mds", "untracked");
     assertEquals("Google", headers.get("metadata-flavor").get(0));
   }
 
