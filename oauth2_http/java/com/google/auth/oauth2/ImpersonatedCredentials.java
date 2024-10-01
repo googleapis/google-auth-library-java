@@ -408,7 +408,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
         .setSourceCredentials(sourceCredentials)
         .setTargetPrincipal(targetPrincipal)
         .setDelegates(delegates)
-        .setScopes(new ArrayList<String>())
+        .setScopes(new ArrayList<>())
         .setLifetime(DEFAULT_LIFETIME_IN_SECONDS)
         .setHttpTransportFactory(transportFactory)
         .setQuotaProjectId(quotaProjectId)
