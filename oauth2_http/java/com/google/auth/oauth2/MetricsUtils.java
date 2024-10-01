@@ -76,8 +76,7 @@ class MetricsUtils {
     ACCESS_TOKEN_REQUEST("at"),
     ID_TOKEN_REQUEST("it"),
     METADATA_SERVER_PING("mds"),
-    UNSPECIFIED("unspecified"), // should not send request type info
-    UNTRACKED("untracked"); // should not add metric header
+    UNTRACKED("untracked");
 
     private String label;
 
@@ -96,7 +95,7 @@ class MetricsUtils {
    * and "cred-type" can be omitted.
    *
    * @param requestType Auth request type to be specified in metrics, omit when {@code
-   *     RequestType.UNSPECIFIED}
+   *     RequestType.UNTRACKED}
    * @param credentialTypeForMetrics Credential type to be included in metrics string, omit when
    *     {@code CredentialTypeForMetrics.DO_NOT_SEND}
    * @return metrics header string to send
@@ -105,7 +104,7 @@ class MetricsUtils {
       RequestType requestType, CredentialTypeForMetrics credentialTypeForMetrics) {
     StringBuilder stringBuilder =
         new StringBuilder(MetricsUtils.getLanguageAndAuthLibraryVersions());
-    if (requestType != RequestType.UNSPECIFIED) {
+    if (requestType != RequestType.UNTRACKED) {
       stringBuilder.append(String.format(" %s/%s", AUTH_REQUEST_TYPE, requestType.getLabel()));
     }
     if (credentialTypeForMetrics != CredentialTypeForMetrics.DO_NOT_SEND) {

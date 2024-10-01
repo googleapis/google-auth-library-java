@@ -1021,7 +1021,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   @Override
   public CredentialTypeForMetrics getMetricsCredentialType() {
-    return shouldUseAssertionFlow() ? CredentialTypeForMetrics.SERVICE_ACCOUNT_CREDENTIALS_AT
+    return shouldUseAssertionFlow()
+        ? CredentialTypeForMetrics.SERVICE_ACCOUNT_CREDENTIALS_AT
         : CredentialTypeForMetrics.SERVICE_ACCOUNT_CREDENTIALS_JWT;
   }
 
@@ -1033,7 +1034,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
   }
 
   private Map<String, List<String>> getRequestMetadataForGdu(URI uri) throws IOException {
-    return shouldUseAssertionFlow() ? super.getRequestMetadata(uri)
+    return shouldUseAssertionFlow()
+        ? super.getRequestMetadata(uri)
         : getRequestMetadataWithSelfSignedJwt(uri);
   }
 

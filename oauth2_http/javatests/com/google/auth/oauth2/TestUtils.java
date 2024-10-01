@@ -43,7 +43,7 @@ public class TestUtils {
     assertTrue(headers.containsKey(MetricsUtils.API_CLIENT_HEADER));
     String actualMetricsValue = headers.get(MetricsUtils.API_CLIENT_HEADER).get(0);
     String expectedMetricsValue;
-    if (requestType.equals("unspecified")) {
+    if (requestType.equals("untracked")) {
       expectedMetricsValue =
           String.format(
               "%s %s/%s",

@@ -68,7 +68,7 @@ public class MetricsUtilsTest {
   public void getGoogleCredentialsMetricsHeaderTest() {
     String metricsStringNoRequestType =
         MetricsUtils.getGoogleCredentialsMetricsHeader(
-            RequestType.UNSPECIFIED, CredentialTypeForMetrics.USER_CREDENTIALS);
+            RequestType.UNTRACKED, CredentialTypeForMetrics.USER_CREDENTIALS);
     assertPatterns(metricsStringNoRequestType, METRICS_PATTERN_NO_REQUEST_TYPE);
 
     String metricsStringNoCredType =
@@ -83,7 +83,7 @@ public class MetricsUtilsTest {
 
     String metricsStringNoTypes =
         MetricsUtils.getGoogleCredentialsMetricsHeader(
-            RequestType.UNSPECIFIED, CredentialTypeForMetrics.DO_NOT_SEND);
+            RequestType.UNTRACKED, CredentialTypeForMetrics.DO_NOT_SEND);
     assertPatterns(metricsStringNoTypes, VERSION_PATTERN);
   }
 }

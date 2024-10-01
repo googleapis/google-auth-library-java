@@ -275,7 +275,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     MetricsUtils.setMetricsHeader(
         request,
         MetricsUtils.getGoogleCredentialsMetricsHeader(
-            RequestType.UNSPECIFIED, getMetricsCredentialType()));
+            RequestType.UNTRACKED, getMetricsCredentialType()));
     request.setParser(new JsonObjectParser(JSON_FACTORY));
     HttpResponse response;
 

@@ -72,16 +72,15 @@ public abstract class Credentials implements Serializable {
 
   /**
    * Gets the credential type used for internal metrics header.
-    *
-    * <p>The default is {@code CredentialTypeForMetrics.DO_NOT_SEND}. For a credential that is
-    * established to track for metrics, this default should be overridden.
+   *
+   * <p>The default is {@code CredentialTypeForMetrics.DO_NOT_SEND}. For a credential that is
+   * established to track for metrics, this default should be overridden.
    *
    * @return a enum value for credential type
    */
   public CredentialTypeForMetrics getMetricsCredentialType() {
     return CredentialTypeForMetrics.DO_NOT_SEND;
   }
-
 
   /**
    * Get the current request metadata, refreshing tokens if required.
