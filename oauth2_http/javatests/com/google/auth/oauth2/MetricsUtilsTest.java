@@ -73,7 +73,7 @@ public class MetricsUtilsTest {
 
     String metricsStringNoCredType =
         MetricsUtils.getGoogleCredentialsMetricsHeader(
-            RequestType.METADATA_SERVER_PIN, CredentialTypeForMetrics.DO_NOT_SEND);
+            RequestType.METADATA_SERVER_PING, CredentialTypeForMetrics.DO_NOT_SEND);
     assertPatterns(metricsStringNoCredType, METRICS_PATTERN_NO_CRED_TYPE);
 
     String metricsString =

@@ -454,7 +454,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
         MetricsUtils.setMetricsHeader(
             request,
             MetricsUtils.getGoogleCredentialsMetricsHeader(
-                RequestType.METADATA_SERVER_PIN, CredentialTypeForMetrics.DO_NOT_SEND));
+                RequestType.METADATA_SERVER_PING, CredentialTypeForMetrics.DO_NOT_SEND));
         HttpResponse response = request.execute();
         try {
           // Internet providers can return a generic response to all requests, so it is necessary

@@ -75,7 +75,7 @@ class MetricsUtils {
   public enum RequestType {
     ACCESS_TOKEN_REQUEST("at"),
     ID_TOKEN_REQUEST("it"),
-    METADATA_SERVER_PIN("mds"),
+    METADATA_SERVER_PING("mds"),
     UNSPECIFIED("unspecified"), // should not send request type info
     UNTRACKED("untracked"); // should not add metric header
 
