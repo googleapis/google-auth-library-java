@@ -97,7 +97,11 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     Preconditions.checkState(
         builder.getAccessToken() != null || builder.refreshToken != null,
         "Either accessToken or refreshToken must not be null");
-    this.setMetricsCredentialType(CredentialTypeForMetrics.USER_CREDENTIALS);
+  }
+
+  @Override
+  public CredentialTypeForMetrics getMetricsCredentialType() {
+    return CredentialTypeForMetrics.USER_CREDENTIALS;
   }
 
   /**

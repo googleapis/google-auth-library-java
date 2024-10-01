@@ -135,7 +135,6 @@ public class ComputeEngineCredentials extends GoogleCredentials
    */
   private ComputeEngineCredentials(ComputeEngineCredentials.Builder builder) {
     super(builder);
-    this.setMetricsCredentialType(CredentialTypeForMetrics.VM_CREDENTIALS);
     this.transportFactory =
         firstNonNull(
             builder.getHttpTransportFactory(),
@@ -153,6 +152,11 @@ public class ComputeEngineCredentials extends GoogleCredentials
       scopeList.removeAll(Arrays.asList("", null));
       this.scopes = ImmutableSet.<String>copyOf(scopeList);
     }
+  }
+
+  @Override
+  public CredentialTypeForMetrics getMetricsCredentialType() {
+    return CredentialTypeForMetrics.VM_CREDENTIALS;
   }
 
   /** Clones the compute engine account with the specified scopes. */

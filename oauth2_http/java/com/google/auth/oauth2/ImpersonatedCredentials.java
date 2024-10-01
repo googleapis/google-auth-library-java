@@ -433,6 +433,11 @@ public class ImpersonatedCredentials extends GoogleCredentials
         .build();
   }
 
+  @Override
+  public CredentialTypeForMetrics getMetricsCredentialType() {
+    return CredentialTypeForMetrics.IMPERSONATED_CREDENTIALS;
+  }
+
   /**
    * Clones the impersonated credentials with a new calendar.
    *
@@ -454,7 +459,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
   private ImpersonatedCredentials(Builder builder) {
     super(builder);
-    this.setMetricsCredentialType(CredentialTypeForMetrics.IMPERSONATED_CREDENTIALS);
     this.sourceCredentials = builder.getSourceCredentials();
     this.targetPrincipal = builder.getTargetPrincipal();
     this.delegates = builder.getDelegates();

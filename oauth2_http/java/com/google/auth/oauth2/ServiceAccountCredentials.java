@@ -472,8 +472,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
             GoogleCredentials.fromStream(credentialsStream, transportFactory);
     if (credential == null) {
       throw new IOException(
-          String.format(
-              "Error reading credentials from stream, ServiceAccountCredentials type is not recognized."));
+          "Error reading credentials from stream, ServiceAccountCredentials type is not recognized.");
     }
     return credential;
   }
@@ -1020,18 +1019,22 @@ public class ServiceAccountCredentials extends GoogleCredentials
     }
   }
 
-  private Map<String, List<String>> getRequestMetadataForGdu(URI uri) throws IOException {
+  @Override
+  public CredentialTypeForMetrics getMetricsCredentialType() {
+    return shouldUseAssertionFlow() ? CredentialTypeForMetrics.SERVICE_ACCOUNT_CREDENTIALS_AT
+        : CredentialTypeForMetrics.SERVICE_ACCOUNT_CREDENTIALS_JWT;
+  }
+
+  private boolean shouldUseAssertionFlow() {
     // If scopes are provided, but we cannot use self-signed JWT or domain-wide delegation is
     // configured then use scopes to get access token.
-    if ((!createScopedRequired() && !useJwtAccessWithScope)
-        || isConfiguredForDomainWideDelegation()) {
-      // assertion token flow
-      this.setMetricsCredentialType(CredentialTypeForMetrics.SERVICE_ACCOUNT_CREDENTIALS_AT);
-      return super.getRequestMetadata(uri);
-    }
-    // self-signed JWT flow
-    this.setMetricsCredentialType(CredentialTypeForMetrics.SERVICE_ACCOUNT_CREDENTIALS_JWT);
-    return getRequestMetadataWithSelfSignedJwt(uri);
+    return ((!createScopedRequired() && !useJwtAccessWithScope)
+        || isConfiguredForDomainWideDelegation());
+  }
+
+  private Map<String, List<String>> getRequestMetadataForGdu(URI uri) throws IOException {
+    return shouldUseAssertionFlow() ? super.getRequestMetadata(uri)
+        : getRequestMetadataWithSelfSignedJwt(uri);
   }
 
   private Map<String, List<String>> getRequestMetadataForNonGdu(URI uri) throws IOException {
