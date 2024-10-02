@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.28.0](https://github.com/googleapis/google-auth-library-java/compare/v1.27.0...v1.28.0) (2024-10-02)
+
+
+### Features
+
+* Add metric headers ([#1503](https://github.com/googleapis/google-auth-library-java/issues/1503)) ([7f0c1d3](https://github.com/googleapis/google-auth-library-java/commit/7f0c1d31176f9e634fac3b2c6b06f880a51b5fa6))
+
 ## [1.27.0](https://github.com/googleapis/google-auth-library-java/compare/v1.26.0...v1.27.0) (2024-09-20)
 
 
