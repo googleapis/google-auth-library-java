@@ -66,21 +66,25 @@ public final class S2A {
       transportFactory =
           Iterables.getFirst(
               ServiceLoader.load(HttpTransportFactory.class), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
-    }  
+    }
+
+    HttpRequest request;
+    try {
+      request =
+              transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
+      request.setParser(parser);
+      request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
+      request.setThrowExceptionOnExecuteError(false);
+    } catch (IOException e) {
+      return S2AConfig.createBuilder().build();
+    }
 
     for (int i = 0; i < MAX_MDS_PING_TRIES; i++) {
       try {
-        HttpRequest request =
-            transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
-        request.setParser(parser);
-        request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
-        request.setThrowExceptionOnExecuteError(false);
         HttpResponse response = request.execute();
-
         if (!response.isSuccessStatusCode()) {
           continue;
         }
-
         InputStream content = response.getContent();
         if (content == null) {
           continue;
