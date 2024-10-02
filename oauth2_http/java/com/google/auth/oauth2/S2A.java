@@ -56,9 +56,6 @@ public final class S2A {
    * @return the {@link S2AConfig}.
    */
   private S2AConfig getS2AConfigFromMDS() {
-    String plaintextS2AAddress = "";
-    String mtlsS2AAddress = "";
-
     String url = getMdsMtlsEndpoint();
     GenericUrl genericUrl = new GenericUrl(url);
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY); 
@@ -80,6 +77,8 @@ public final class S2A {
     }
 
     for (int i = 0; i < MAX_MDS_PING_TRIES; i++) {
+      String plaintextS2AAddress = "";
+      String mtlsS2AAddress = "";
       try {
         HttpResponse response = request.execute();
         if (!response.isSuccessStatusCode()) {
