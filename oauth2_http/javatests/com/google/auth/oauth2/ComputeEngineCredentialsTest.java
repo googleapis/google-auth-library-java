@@ -285,6 +285,11 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+    // verify metrics header added and other header intact
+    Map<String, List<String>> requestHeaders = transportFactory.transport.getRequest().getHeaders();
+    com.google.auth.oauth2.TestUtils.validateMetricsHeader(requestHeaders, "at", "mds");
+    assertTrue(requestHeaders.containsKey("metadata-flavor"));
+    assertTrue(requestHeaders.get("metadata-flavor").contains("Google"));
   }
 
   @Test
@@ -458,6 +463,10 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
     assertEquals(defaultAccountEmail, credentials.getAccount());
+
+    // metric headers are not supported for getAccount()
+    Map<String, List<String>> headers = transportFactory.transport.getRequest().getHeaders();
+    assertFalse(headers.containsKey(MetricsUtils.API_CLIENT_HEADER));
   }
 
   @Test
@@ -949,6 +958,10 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     assertTrue("Full ID Token format not provided", p.containsKey("google"));
     ArrayMap<String, ArrayMap> googleClaim = (ArrayMap<String, ArrayMap>) p.get("google");
     assertTrue(googleClaim.containsKey("compute_engine"));
+
+    // verify metrics header
+    Map<String, List<String>> requestHeaders = transportFactory.transport.getRequest().getHeaders();
+    com.google.auth.oauth2.TestUtils.validateMetricsHeader(requestHeaders, "it", "mds");
   }
 
   @Test

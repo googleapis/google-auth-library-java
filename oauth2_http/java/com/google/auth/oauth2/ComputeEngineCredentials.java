@@ -41,10 +41,12 @@ import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
+import com.google.auth.CredentialTypeForMetrics;
 import com.google.auth.Credentials;
 import com.google.auth.Retryable;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.oauth2.MetricsUtils.RequestType;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects.ToStringHelper;
@@ -133,7 +135,6 @@ public class ComputeEngineCredentials extends GoogleCredentials
    */
   private ComputeEngineCredentials(ComputeEngineCredentials.Builder builder) {
     super(builder);
-
     this.transportFactory =
         firstNonNull(
             builder.getHttpTransportFactory(),
@@ -151,6 +152,11 @@ public class ComputeEngineCredentials extends GoogleCredentials
       scopeList.removeAll(Arrays.asList("", null));
       this.scopes = ImmutableSet.<String>copyOf(scopeList);
     }
+  }
+
+  @Override
+  public CredentialTypeForMetrics getMetricsCredentialType() {
+    return CredentialTypeForMetrics.VM_CREDENTIALS;
   }
 
   /** Clones the compute engine account with the specified scopes. */
@@ -234,7 +240,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
   }
 
   private String getUniverseDomainFromMetadata() throws IOException {
-    HttpResponse response = getMetadataResponse(getUniverseDomainUrl());
+    HttpResponse response =
+        getMetadataResponse(getUniverseDomainUrl(), RequestType.UNTRACKED, false);
     int statusCode = response.getStatusCode();
     if (statusCode == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
       return Credentials.GOOGLE_DEFAULT_UNIVERSE;
@@ -260,7 +267,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
   /** Refresh the access token by getting it from the GCE metadata server */
   @Override
   public AccessToken refreshAccessToken() throws IOException {
-    HttpResponse response = getMetadataResponse(createTokenUrlWithScopes());
+    HttpResponse response =
+        getMetadataResponse(createTokenUrlWithScopes(), RequestType.ACCESS_TOKEN_REQUEST, true);
     int statusCode = response.getStatusCode();
     if (statusCode == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
       throw new IOException(
@@ -325,7 +333,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
       }
     }
     documentUrl.set("audience", targetAudience);
-    HttpResponse response = getMetadataResponse(documentUrl.toString());
+    HttpResponse response =
+        getMetadataResponse(documentUrl.toString(), RequestType.ID_TOKEN_REQUEST, true);
     InputStream content = response.getContent();
     if (content == null) {
       throw new IOException("Empty content from metadata token server request.");
@@ -334,13 +343,21 @@ public class ComputeEngineCredentials extends GoogleCredentials
     return IdToken.create(rawToken);
   }
 
-  private HttpResponse getMetadataResponse(String url) throws IOException {
+  private HttpResponse getMetadataResponse(
+      String url, RequestType requestType, boolean shouldSendMetricsHeader) throws IOException {
     GenericUrl genericUrl = new GenericUrl(url);
     HttpRequest request =
         transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     request.setParser(parser);
     request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
+    // do not send metric header for getUniverseDomain and getAccount
+    if (shouldSendMetricsHeader) {
+      MetricsUtils.setMetricsHeader(
+          request,
+          MetricsUtils.getGoogleCredentialsMetricsHeader(requestType, getMetricsCredentialType()));
+    }
+
     request.setThrowExceptionOnExecuteError(false);
     HttpResponse response;
     try {
@@ -440,7 +457,10 @@ public class ComputeEngineCredentials extends GoogleCredentials
             transportFactory.create().createRequestFactory().buildGetRequest(tokenUrl);
         request.setConnectTimeout(COMPUTE_PING_CONNECTION_TIMEOUT_MS);
         request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
-
+        MetricsUtils.setMetricsHeader(
+            request,
+            MetricsUtils.getGoogleCredentialsMetricsHeader(
+                RequestType.METADATA_SERVER_PING, CredentialTypeForMetrics.DO_NOT_SEND));
         HttpResponse response = request.execute();
         try {
           // Internet providers can return a generic response to all requests, so it is necessary
@@ -588,7 +608,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
   }
 
   private String getDefaultServiceAccount() throws IOException {
-    HttpResponse response = getMetadataResponse(getServiceAccountsUrl());
+    HttpResponse response =
+        getMetadataResponse(getServiceAccountsUrl(), RequestType.UNTRACKED, false);
     int statusCode = response.getStatusCode();
     if (statusCode == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
       throw new IOException(
