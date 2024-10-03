@@ -52,7 +52,7 @@ public enum CredentialTypeForMetrics {
   IMPERSONATED_CREDENTIALS("imp"),
   DO_NOT_SEND("dns");
 
-  private String label;
+  private final String label;
 
   private CredentialTypeForMetrics(String label) {
     this.label = label;
