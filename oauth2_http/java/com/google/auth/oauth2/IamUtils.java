@@ -64,8 +64,6 @@ import java.util.Set;
 class IamUtils {
   private static final String SIGN_BLOB_URL_FORMAT =
       "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
-  private static final String ID_TOKEN_URL_FORMAT =
-      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateIdToken";
   private static final String PARSE_ERROR_MESSAGE = "Error parsing error message response. ";
   private static final String PARSE_ERROR_SIGNATURE = "Error parsing signature response. ";
 
@@ -196,7 +194,11 @@ class IamUtils {
       CredentialTypeForMetrics credentialTypeForMetrics)
       throws IOException {
 
-    String idTokenUrl = String.format(ID_TOKEN_URL_FORMAT, serviceAccountEmail);
+    String idTokenUrl =
+        String.format(
+            OAuth2Utils.IAM_ID_TOKEN_ENDPOINT_FORMAT,
+            credentials.getUniverseDomain(),
+            serviceAccountEmail);
     GenericUrl genericUrl = new GenericUrl(idTokenUrl);
 
     GenericData idTokenRequest = new GenericData();

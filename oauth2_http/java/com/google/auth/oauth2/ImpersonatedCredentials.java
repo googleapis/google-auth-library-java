@@ -103,9 +103,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
   private static final String CLOUD_PLATFORM_SCOPE =
       "https://www.googleapis.com/auth/cloud-platform";
-  private static final String IAM_ACCESS_TOKEN_ENDPOINT =
-      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken";
-
   private GoogleCredentials sourceCredentials;
   private String targetPrincipal;
   private List<String> delegates;
@@ -504,7 +501,10 @@ public class ImpersonatedCredentials extends GoogleCredentials
     String endpointUrl =
         this.iamEndpointOverride != null
             ? this.iamEndpointOverride
-            : String.format(IAM_ACCESS_TOKEN_ENDPOINT, this.targetPrincipal);
+            : String.format(
+                OAuth2Utils.IAM_ACCESS_TOKEN_ENDPOINT_FORMAT,
+                this.sourceCredentials.getUniverseDomain(),
+                this.targetPrincipal);
     GenericUrl url = new GenericUrl(endpointUrl);
 
     Map<String, Object> body =
