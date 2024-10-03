@@ -83,6 +83,8 @@ class OAuth2Utils {
 
   static final String IAM_ACCESS_TOKEN_ENDPOINT_FORMAT =
       "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:generateAccessToken";
+  static final String SIGN_BLOB_ENDPOINT_FORMAT =
+      "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:signBlob";
 
   static final URI TOKEN_SERVER_URI = URI.create("https://oauth2.googleapis.com/token");
 

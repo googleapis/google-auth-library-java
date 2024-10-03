@@ -48,6 +48,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.json.webtoken.JsonWebToken.Payload;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.util.Clock;
+import com.google.auth.Credentials;
 import com.google.auth.ServiceAccountSigner.SigningException;
 import com.google.auth.TestUtils;
 import com.google.common.collect.ImmutableList;
@@ -948,6 +949,24 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     } catch (IOException e) {
       assertTrue(e.getMessage().contains("Unexpected Error code 301 trying to getIDToken"));
     }
+  }
+
+  @Test
+  public void getUniverseDomain_defaultUniverse() throws IOException {
+
+    mockTransportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.getTransport().setAccessToken(ACCESS_TOKEN);
+    mockTransportFactory.getTransport().setExpireTime(getDefaultExpireTime());
+
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            sourceCredentials,
+            IMPERSONATED_CLIENT_EMAIL,
+            null,
+            IMMUTABLE_SCOPES_LIST,
+            VALID_LIFETIME,
+            mockTransportFactory);
+    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, targetCredentials.getUniverseDomain());
   }
 
   @Test

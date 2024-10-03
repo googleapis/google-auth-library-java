@@ -60,6 +60,7 @@ public class IamUtilsTest {
     // token
     credentials = Mockito.mock(ServiceAccountCredentials.class);
     Mockito.when(credentials.getRequestMetadata(Mockito.any())).thenReturn(ImmutableMap.of());
+    Mockito.when(credentials.getUniverseDomain()).thenReturn("googleapis.com");
   }
 
   @Test

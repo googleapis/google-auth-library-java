@@ -469,7 +469,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
     this.calendar = builder.getCalendar();
     if (this.delegates == null) {
-      this.delegates = new ArrayList<String>();
+      this.delegates = new ArrayList<>();
     }
     if (this.scopes == null) {
       throw new IllegalStateException("Scopes cannot be null");
@@ -477,6 +477,11 @@ public class ImpersonatedCredentials extends GoogleCredentials
     if (this.lifetime > TWELVE_HOURS_IN_SECONDS) {
       throw new IllegalStateException("lifetime must be less than or equal to 43200");
     }
+  }
+
+  @Override
+  public String getUniverseDomain() throws IOException {
+    return this.sourceCredentials.getUniverseDomain();
   }
 
   @Override
