@@ -970,6 +970,42 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void universeDomain_getFromSourceCredentials() throws IOException {
+    GoogleCredentials sourceCredentialsNonGDU =
+        sourceCredentials.toBuilder().setUniverseDomain("source.domain.xyz").build();
+    ImpersonatedCredentials impersonatedCredentials =
+        ImpersonatedCredentials.newBuilder()
+            .setSourceCredentials(sourceCredentialsNonGDU)
+            .setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL)
+            .setDelegates(null)
+            .setScopes(IMMUTABLE_SCOPES_LIST)
+            .setLifetime(VALID_LIFETIME)
+            .setHttpTransportFactory(mockTransportFactory)
+            .build();
+
+    assertEquals("source.domain.xyz", impersonatedCredentials.getUniverseDomain());
+  }
+
+  @Test
+  public void universeDomain_whenExplicit() throws IOException {
+
+    GoogleCredentials sourceCredentialsNonGDU =
+        sourceCredentials.toBuilder().setUniverseDomain("source.domain.com").build();
+    ImpersonatedCredentials impersonatedCredentials =
+        ImpersonatedCredentials.newBuilder()
+            .setSourceCredentials(sourceCredentialsNonGDU)
+            .setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL)
+            .setDelegates(null)
+            .setScopes(IMMUTABLE_SCOPES_LIST)
+            .setLifetime(VALID_LIFETIME)
+            .setHttpTransportFactory(mockTransportFactory)
+            .setUniverseDomain("explicit.domain.com")
+            .build();
+
+    assertEquals("explicit.domain.com", impersonatedCredentials.getUniverseDomain());
+  }
+
+  @Test
   public void hashCode_equals() throws IOException {
     mockTransportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mockTransportFactory.getTransport().setAccessToken(ACCESS_TOKEN);

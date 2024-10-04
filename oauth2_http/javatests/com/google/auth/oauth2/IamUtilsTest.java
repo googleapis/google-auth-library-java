@@ -36,6 +36,7 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.google.api.client.http.HttpStatusCodes;
+import com.google.auth.Credentials;
 import com.google.auth.ServiceAccountSigner;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -77,6 +78,7 @@ public class IamUtilsTest {
         IamUtils.sign(
             CLIENT_EMAIL,
             credentials,
+            Credentials.GOOGLE_DEFAULT_UNIVERSE,
             transportFactory.getTransport(),
             expectedSignature,
             ImmutableMap.of());
@@ -108,6 +110,7 @@ public class IamUtilsTest {
         IamUtils.sign(
             CLIENT_EMAIL,
             credentials,
+            Credentials.GOOGLE_DEFAULT_UNIVERSE,
             transportFactory.getTransport(),
             expectedSignature,
             ImmutableMap.of());
@@ -144,6 +147,7 @@ public class IamUtilsTest {
         IamUtils.sign(
             CLIENT_EMAIL,
             credentials,
+            Credentials.GOOGLE_DEFAULT_UNIVERSE,
             transportFactory.getTransport(),
             expectedSignature,
             ImmutableMap.of());
@@ -186,6 +190,7 @@ public class IamUtilsTest {
                 IamUtils.sign(
                     CLIENT_EMAIL,
                     credentials,
+                    Credentials.GOOGLE_DEFAULT_UNIVERSE,
                     transportFactory.getTransport(),
                     expectedSignature,
                     ImmutableMap.of()));
@@ -221,6 +226,7 @@ public class IamUtilsTest {
                 IamUtils.sign(
                     CLIENT_EMAIL,
                     credentials,
+                    Credentials.GOOGLE_DEFAULT_UNIVERSE,
                     transportFactory.getTransport(),
                     expectedSignature,
                     ImmutableMap.of()));

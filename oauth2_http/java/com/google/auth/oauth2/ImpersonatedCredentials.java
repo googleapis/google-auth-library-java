@@ -345,12 +345,19 @@ public class ImpersonatedCredentials extends GoogleCredentials
    */
   @Override
   public byte[] sign(byte[] toSign) {
-    return IamUtils.sign(
-        getAccount(),
-        sourceCredentials,
-        transportFactory.create(),
-        toSign,
-        ImmutableMap.of("delegates", this.delegates));
+    try {
+      return IamUtils.sign(
+          getAccount(),
+          sourceCredentials,
+          getUniverseDomain(),
+          transportFactory.create(),
+          toSign,
+          ImmutableMap.of("delegates", this.delegates));
+    } catch (IOException e) {
+      // Throwing an IOException would be a breaking change, so wrap it here.
+      // This should not happen for this credential type.
+      throw new IllegalStateException(e);
+    }
   }
 
   /**
@@ -481,7 +488,16 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
   @Override
   public String getUniverseDomain() throws IOException {
-    return this.sourceCredentials.getUniverseDomain();
+    try {
+      if (isExplicitUniverseDomain()) {
+        return super.getUniverseDomain();
+      }
+      return this.sourceCredentials.getUniverseDomain();
+    } catch (IOException e) {
+      // Throwing an IOException would be a breaking change, so wrap it here.
+      // This should not happen for this credential type.
+      throw new IllegalStateException(e);
+    }
   }
 
   @Override
@@ -503,13 +519,18 @@ public class ImpersonatedCredentials extends GoogleCredentials
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(sourceCredentials);
     HttpRequestFactory requestFactory = httpTransport.createRequestFactory();
 
-    String endpointUrl =
-        this.iamEndpointOverride != null
-            ? this.iamEndpointOverride
-            : String.format(
-                OAuth2Utils.IAM_ACCESS_TOKEN_ENDPOINT_FORMAT,
-                this.sourceCredentials.getUniverseDomain(),
-                this.targetPrincipal);
+    String endpointUrl = null;
+    try {
+      endpointUrl =
+          this.iamEndpointOverride != null
+              ? this.iamEndpointOverride
+              : String.format(
+                  OAuth2Utils.IAM_ACCESS_TOKEN_ENDPOINT_FORMAT,
+                  getUniverseDomain(),
+                  this.targetPrincipal);
+    } catch (IOException e) {
+      throw new IOException("Error getting Universe Domain", e);
+    }
     GenericUrl url = new GenericUrl(endpointUrl);
 
     Map<String, Object> body =
@@ -574,7 +595,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
         targetAudience,
         includeEmail,
         ImmutableMap.of("delegates", this.delegates),
-        getMetricsCredentialType());
+        getMetricsCredentialType(),
+        getUniverseDomain());
   }
 
   @Override
@@ -621,7 +643,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
   @Override
   public Builder toBuilder() {
-    return new Builder(this.sourceCredentials, this.targetPrincipal);
+    return new Builder(this);
   }
 
   public static Builder newBuilder() {
@@ -644,6 +666,17 @@ public class ImpersonatedCredentials extends GoogleCredentials
     protected Builder(GoogleCredentials sourceCredentials, String targetPrincipal) {
       this.sourceCredentials = sourceCredentials;
       this.targetPrincipal = targetPrincipal;
+    }
+
+    protected Builder(ImpersonatedCredentials credentials) {
+      super(credentials);
+      this.sourceCredentials = credentials.sourceCredentials;
+      this.targetPrincipal = credentials.targetPrincipal;
+      this.delegates = credentials.delegates;
+      this.scopes = credentials.scopes;
+      this.lifetime = credentials.lifetime;
+      this.transportFactory = credentials.transportFactory;
+      this.iamEndpointOverride = credentials.iamEndpointOverride;
     }
 
     @CanIgnoreReturnValue
@@ -727,6 +760,12 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
     public Calendar getCalendar() {
       return this.calendar;
+    }
+
+    @Override
+    public Builder setUniverseDomain(String universeDomain) {
+      super.setUniverseDomain(universeDomain);
+      return this;
     }
 
     @Override

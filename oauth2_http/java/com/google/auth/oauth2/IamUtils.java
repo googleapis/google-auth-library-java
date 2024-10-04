@@ -84,6 +84,7 @@ class IamUtils {
   static byte[] sign(
       String serviceAccountEmail,
       Credentials credentials,
+      String universeDomain,
       HttpTransport transport,
       byte[] toSign,
       Map<String, ?> additionalFields) {
@@ -95,7 +96,7 @@ class IamUtils {
       signature =
           getSignature(
               serviceAccountEmail,
-              credentials.getUniverseDomain(),
+              universeDomain,
               base64.encode(toSign),
               additionalFields,
               factory);
@@ -196,14 +197,13 @@ class IamUtils {
       String targetAudience,
       boolean includeEmail,
       Map<String, ?> additionalFields,
-      CredentialTypeForMetrics credentialTypeForMetrics)
+      CredentialTypeForMetrics credentialTypeForMetrics,
+      String universeDomain)
       throws IOException {
 
     String idTokenUrl =
         String.format(
-            OAuth2Utils.IAM_ID_TOKEN_ENDPOINT_FORMAT,
-            credentials.getUniverseDomain(),
-            serviceAccountEmail);
+            OAuth2Utils.IAM_ID_TOKEN_ENDPOINT_FORMAT, universeDomain, serviceAccountEmail);
     GenericUrl genericUrl = new GenericUrl(idTokenUrl);
 
     GenericData idTokenRequest = new GenericData();
