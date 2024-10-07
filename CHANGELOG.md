@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.28.1](https://github.com/googleapis/google-auth-library-java/compare/v1.28.0...v1.28.1) (2024-10-07)
+
+
+### Bug Fixes
+
+* Make some enum fields final ([#1526](https://github.com/googleapis/google-auth-library-java/issues/1526)) ([8920155](https://github.com/googleapis/google-auth-library-java/commit/89201558db913d9a71b3acccbab8eb0045ada6de))
+
 ## [1.28.0](https://github.com/googleapis/google-auth-library-java/compare/v1.27.0...v1.28.0) (2024-10-02)
 
 
