@@ -507,7 +507,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
   public static String getUniverseDomainUrl() {
     return getMetadataServerUrl(DefaultCredentialsProvider.DEFAULT)
-        + "/computeMetadata/v1/universe/universe_domain";
+        + "/computeMetadata/v1/universe/universe-domain";
   }
 
   public static String getServiceAccountsUrl() {
