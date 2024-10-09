@@ -348,12 +348,19 @@ public class ImpersonatedCredentials extends GoogleCredentials
    */
   @Override
   public byte[] sign(byte[] toSign) {
-    return IamUtils.sign(
-        getAccount(),
-        sourceCredentials,
-        transportFactory.create(),
-        toSign,
-        ImmutableMap.of("delegates", this.delegates));
+    try {
+      return IamUtils.sign(
+          getAccount(),
+          sourceCredentials,
+          getUniverseDomain(),
+          transportFactory.create(),
+          toSign,
+          ImmutableMap.of("delegates", this.delegates));
+    } catch (IOException e) {
+      // Throwing an IOException would be a breaking change, so wrap it here.
+      // This should not happen for this credential type.
+      throw new IllegalStateException(e);
+    }
   }
 
   /**
@@ -483,6 +490,20 @@ public class ImpersonatedCredentials extends GoogleCredentials
   }
 
   @Override
+  public String getUniverseDomain() throws IOException {
+    try {
+      if (isExplicitUniverseDomain()) {
+        return super.getUniverseDomain();
+      }
+      return this.sourceCredentials.getUniverseDomain();
+    } catch (IOException e) {
+      // Throwing an IOException would be a breaking change, so wrap it here.
+      // This should not happen for this credential type.
+      throw new IllegalStateException(e);
+    }
+  }
+
+  @Override
   public AccessToken refreshAccessToken() throws IOException {
     if (this.sourceCredentials.getAccessToken() == null) {
       this.sourceCredentials =
@@ -569,7 +590,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
         targetAudience,
         includeEmail,
         ImmutableMap.of("delegates", this.delegates),
-        getMetricsCredentialType());
+        getMetricsCredentialType(),
+        getUniverseDomain());
   }
 
   @Override
@@ -722,6 +744,12 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
     public Calendar getCalendar() {
       return this.calendar;
+    }
+
+    @Override
+    public Builder setUniverseDomain(String universeDomain) {
+      super.setUniverseDomain(universeDomain);
+      return this;
     }
 
     @Override
