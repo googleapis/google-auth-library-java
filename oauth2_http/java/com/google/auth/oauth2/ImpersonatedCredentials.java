@@ -494,7 +494,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
    *     implementation otherwise
    */
   @Override
-  public String getUniverseDomain() throws IOException{
+  public String getUniverseDomain() throws IOException {
     if (isExplicitUniverseDomain()) {
       return super.getUniverseDomain();
     }
@@ -506,7 +506,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     try {
       return getUniverseDomain().equals(Credentials.GOOGLE_DEFAULT_UNIVERSE);
     } catch (IOException e) {
-      // Throwing an IOException would be a breaking change, so wrap it here.
+      // super method does not throw IOException, so wrap it here.
       // This should not happen for this credential type.
       throw new IllegalStateException(e);
     }
