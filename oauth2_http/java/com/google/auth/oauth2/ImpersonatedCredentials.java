@@ -44,6 +44,7 @@ import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.auth.CredentialTypeForMetrics;
+import com.google.auth.Credentials;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.http.HttpTransportFactory;
@@ -103,9 +104,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
   private static final String CLOUD_PLATFORM_SCOPE =
       "https://www.googleapis.com/auth/cloud-platform";
-  private static final String IAM_ACCESS_TOKEN_ENDPOINT =
-      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken";
-
   private GoogleCredentials sourceCredentials;
   private String targetPrincipal;
   private List<String> delegates;
@@ -472,13 +470,38 @@ public class ImpersonatedCredentials extends GoogleCredentials
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
     this.calendar = builder.getCalendar();
     if (this.delegates == null) {
-      this.delegates = new ArrayList<String>();
+      this.delegates = new ArrayList<>();
     }
     if (this.scopes == null) {
       throw new IllegalStateException("Scopes cannot be null");
     }
     if (this.lifetime > TWELVE_HOURS_IN_SECONDS) {
       throw new IllegalStateException("lifetime must be less than or equal to 43200");
+    }
+  }
+
+  /**
+   * Gets the universe domain for the credential.
+   *
+   * @return An explicit universe domain if it was explicitly provided, invokes the super
+   *     implementation otherwise
+   */
+  @Override
+  public String getUniverseDomain() throws IOException {
+    if (isExplicitUniverseDomain()) {
+      return super.getUniverseDomain();
+    }
+    return this.sourceCredentials.getUniverseDomain();
+  }
+
+  @Override
+  boolean isDefaultUniverseDomain() {
+    try {
+      return getUniverseDomain().equals(Credentials.GOOGLE_DEFAULT_UNIVERSE);
+    } catch (IOException e) {
+      // super method does not throw IOException, so wrap it here.
+      // This should not happen for this credential type.
+      throw new IllegalStateException(e);
     }
   }
 
@@ -489,10 +512,13 @@ public class ImpersonatedCredentials extends GoogleCredentials
           this.sourceCredentials.createScoped(Arrays.asList(CLOUD_PLATFORM_SCOPE));
     }
 
-    try {
-      this.sourceCredentials.refreshIfExpired();
-    } catch (IOException e) {
-      throw new IOException("Unable to refresh sourceCredentials", e);
+    // for nonGDU uses self-signed JWT and will get refreshed at initialize request step
+    if (isDefaultUniverseDomain()) {
+      try {
+        this.sourceCredentials.refreshIfExpired();
+      } catch (IOException e) {
+        throw new IOException("Unable to refresh sourceCredentials", e);
+      }
     }
 
     HttpTransport httpTransport = this.transportFactory.create();
@@ -501,10 +527,18 @@ public class ImpersonatedCredentials extends GoogleCredentials
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(sourceCredentials);
     HttpRequestFactory requestFactory = httpTransport.createRequestFactory();
 
-    String endpointUrl =
-        this.iamEndpointOverride != null
-            ? this.iamEndpointOverride
-            : String.format(IAM_ACCESS_TOKEN_ENDPOINT, this.targetPrincipal);
+    String endpointUrl = null;
+    try {
+      endpointUrl =
+          this.iamEndpointOverride != null
+              ? this.iamEndpointOverride
+              : String.format(
+                  OAuth2Utils.IAM_ACCESS_TOKEN_ENDPOINT_FORMAT,
+                  getUniverseDomain(),
+                  this.targetPrincipal);
+    } catch (IOException e) {
+      throw new IOException("Error getting Universe Domain", e);
+    }
     GenericUrl url = new GenericUrl(endpointUrl);
 
     Map<String, Object> body =
@@ -603,6 +637,9 @@ public class ImpersonatedCredentials extends GoogleCredentials
     if (!(obj instanceof ImpersonatedCredentials)) {
       return false;
     }
+    if (!super.equals(obj)) {
+      return false;
+    }
     ImpersonatedCredentials other = (ImpersonatedCredentials) obj;
     return Objects.equals(this.sourceCredentials, other.sourceCredentials)
         && Objects.equals(this.targetPrincipal, other.targetPrincipal)
@@ -616,7 +653,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
   @Override
   public Builder toBuilder() {
-    return new Builder(this.sourceCredentials, this.targetPrincipal);
+    return new Builder(this);
   }
 
   public static Builder newBuilder() {
@@ -639,6 +676,17 @@ public class ImpersonatedCredentials extends GoogleCredentials
     protected Builder(GoogleCredentials sourceCredentials, String targetPrincipal) {
       this.sourceCredentials = sourceCredentials;
       this.targetPrincipal = targetPrincipal;
+    }
+
+    protected Builder(ImpersonatedCredentials credentials) {
+      super(credentials);
+      this.sourceCredentials = credentials.sourceCredentials;
+      this.targetPrincipal = credentials.targetPrincipal;
+      this.delegates = credentials.delegates;
+      this.scopes = credentials.scopes;
+      this.lifetime = credentials.lifetime;
+      this.transportFactory = credentials.transportFactory;
+      this.iamEndpointOverride = credentials.iamEndpointOverride;
     }
 
     @CanIgnoreReturnValue
@@ -722,6 +770,12 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
     public Calendar getCalendar() {
       return this.calendar;
+    }
+
+    @Override
+    public Builder setUniverseDomain(String universeDomain) {
+      super.setUniverseDomain(universeDomain);
+      return this;
     }
 
     @Override
