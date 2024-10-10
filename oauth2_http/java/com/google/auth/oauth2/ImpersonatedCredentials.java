@@ -523,7 +523,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
     if (isDefaultUniverseDomain()) {
       try {
         this.sourceCredentials.refreshIfExpired();
-
       } catch (IOException e) {
         throw new IOException("Unable to refresh sourceCredentials", e);
       }

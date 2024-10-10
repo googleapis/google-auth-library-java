@@ -502,9 +502,13 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     transportFactory.getTransport().setExpireTime(getDefaultExpireTime());
     transportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
 
-    GoogleCredentials sourceCredentialsNonGDU =
-        sourceCredentials.toBuilder().setUniverseDomain(TEST_UNIVERSE_DOMAIN).build();
-    ImpersonatedCredentials targetCredentials =
+    ServiceAccountCredentials sourceCredentialsNonGDU =
+        ((ServiceAccountCredentials) sourceCredentials)
+            .toBuilder()
+            .setUniverseDomain(TEST_UNIVERSE_DOMAIN)
+            .setHttpTransportFactory(transportFactory)
+            .build();
+    ImpersonatedCredentials impersonatedCredentials =
         ImpersonatedCredentials.create(
             sourceCredentialsNonGDU,
             IMPERSONATED_CLIENT_EMAIL,
@@ -513,7 +517,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             VALID_LIFETIME,
             transportFactory);
 
-    assertEquals(ACCESS_TOKEN, targetCredentials.refreshAccessToken().getTokenValue());
+    assertEquals(ACCESS_TOKEN, impersonatedCredentials.refreshAccessToken().getTokenValue());
     assertEquals(NONGDU_IMPERSONATION_URL, transportFactory.getTransport().getRequest().getUrl());
   }
 
