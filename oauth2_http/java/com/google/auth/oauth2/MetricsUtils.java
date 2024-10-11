@@ -78,7 +78,7 @@ class MetricsUtils {
     METADATA_SERVER_PING("mds"),
     UNTRACKED("untracked");
 
-    private String label;
+    private final String label;
 
     private RequestType(String label) {
       this.label = label;
