@@ -484,8 +484,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
   /**
    * Gets the universe domain for the credential.
    *
-   * @return An explicit universe domain if it was explicitly provided, invokes the super
-   *     implementation otherwise
+   * @return An explicit universe domain if it was explicitly provided, use the universe domain from
+   *     source credentials otherwise
    */
   @Override
   public String getUniverseDomain() throws IOException {
@@ -495,6 +495,12 @@ public class ImpersonatedCredentials extends GoogleCredentials
     return this.sourceCredentials.getUniverseDomain();
   }
 
+  /**
+   * Checks if universe domain equals to {@link Credentials#GOOGLE_DEFAULT_UNIVERSE}.
+   *
+   * @return true if universeDomain equals to {@link Credentials#GOOGLE_DEFAULT_UNIVERSE}, false
+   *     otherwise
+   */
   @Override
   boolean isDefaultUniverseDomain() {
     try {
@@ -513,7 +519,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
           this.sourceCredentials.createScoped(Arrays.asList(CLOUD_PLATFORM_SCOPE));
     }
 
-    // for nonGDU uses self-signed JWT and will get refreshed at initialize request step
+    // skip for nonGDU because it uses self-signed JWT
+    // and will get refreshed at initialize request step
     if (isDefaultUniverseDomain()) {
       try {
         this.sourceCredentials.refreshIfExpired();
@@ -674,6 +681,13 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
     protected Builder() {}
 
+    /**
+     * @param sourceCredentials The source credentials to use for impersonation.
+     * @param targetPrincipal The service account to impersonate.
+     * @deprecated Use {@link #Builder(ImpersonatedCredentials)} instead. This constructor will be
+     *     removed in a future release.
+     */
+    @Deprecated
     protected Builder(GoogleCredentials sourceCredentials, String targetPrincipal) {
       this.sourceCredentials = sourceCredentials;
       this.targetPrincipal = targetPrincipal;

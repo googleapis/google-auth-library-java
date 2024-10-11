@@ -1019,7 +1019,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getUniverseDomain_defaultUniverse() throws IOException {
+  public void universeDomain_defaultUniverse() throws IOException {
     ImpersonatedCredentials impersonatedCredentials =
         ImpersonatedCredentials.create(
             sourceCredentials,
@@ -1029,6 +1029,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             VALID_LIFETIME,
             mockTransportFactory);
     assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, impersonatedCredentials.getUniverseDomain());
+    assertTrue(impersonatedCredentials.isDefaultUniverseDomain());
   }
 
   @Test
@@ -1046,6 +1047,8 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             .build();
 
     assertEquals("source.domain.xyz", impersonatedCredentials.getUniverseDomain());
+    assertFalse(impersonatedCredentials.isDefaultUniverseDomain());
+    assertFalse(impersonatedCredentials.isExplicitUniverseDomain());
   }
 
   @Test
@@ -1064,6 +1067,8 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             .build();
 
     assertEquals("explicit.domain.com", impersonatedCredentials.getUniverseDomain());
+    assertFalse(impersonatedCredentials.isDefaultUniverseDomain());
+    assertTrue(impersonatedCredentials.isExplicitUniverseDomain());
   }
 
   @Test
