@@ -421,15 +421,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
   @Override
   public GoogleCredentials createScoped(Collection<String> scopes) {
-    return toBuilder()
-        .setScopes(new ArrayList<>(scopes))
-        .setLifetime(this.lifetime)
-        .setDelegates(this.delegates)
-        .setHttpTransportFactory(this.transportFactory)
-        .setQuotaProjectId(this.quotaProjectId)
-        .setIamEndpointOverride(this.iamEndpointOverride)
-        .setAccessToken(null)
-        .build();
+    return toBuilder().setScopes(new ArrayList<>(scopes)).setAccessToken(null).build();
   }
 
   @Override
@@ -536,17 +528,15 @@ public class ImpersonatedCredentials extends GoogleCredentials
     HttpRequestFactory requestFactory = httpTransport.createRequestFactory();
 
     String endpointUrl = null;
-    try {
-      endpointUrl =
-          this.iamEndpointOverride != null
-              ? this.iamEndpointOverride
-              : String.format(
-                  OAuth2Utils.IAM_ACCESS_TOKEN_ENDPOINT_FORMAT,
-                  getUniverseDomain(),
-                  this.targetPrincipal);
-    } catch (IOException e) {
-      throw new IOException("Error getting Universe Domain", e);
-    }
+
+    endpointUrl =
+        this.iamEndpointOverride != null
+            ? this.iamEndpointOverride
+            : String.format(
+                OAuth2Utils.IAM_ACCESS_TOKEN_ENDPOINT_FORMAT,
+                getUniverseDomain(),
+                this.targetPrincipal);
+
     GenericUrl url = new GenericUrl(endpointUrl);
 
     Map<String, Object> body =
