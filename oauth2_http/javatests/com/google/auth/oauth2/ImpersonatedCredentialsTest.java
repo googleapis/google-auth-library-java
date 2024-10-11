@@ -322,6 +322,31 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void createScoped_existingAccessTokenInvalidated() throws IOException {
+    mockTransportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.getTransport().setAccessToken(ACCESS_TOKEN);
+    mockTransportFactory.getTransport().setExpireTime(getDefaultExpireTime());
+    mockTransportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
+
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            sourceCredentials,
+            IMPERSONATED_CLIENT_EMAIL,
+            DELEGATES,
+            IMMUTABLE_SCOPES_LIST,
+            VALID_LIFETIME,
+            mockTransportFactory,
+            QUOTA_PROJECT_ID);
+
+    targetCredentials.refresh();
+    assertEquals(ACCESS_TOKEN, targetCredentials.getAccessToken().getTokenValue());
+    ImpersonatedCredentials scoped_credentials =
+        (ImpersonatedCredentials) targetCredentials.createScoped(IMMUTABLE_SCOPES_LIST);
+
+    assertNull(scoped_credentials.getAccessToken());
+  }
+
+  @Test
   public void createScopedWithImmutableScopes() {
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
