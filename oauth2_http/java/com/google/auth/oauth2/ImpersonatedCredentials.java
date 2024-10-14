@@ -487,23 +487,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
     return this.sourceCredentials.getUniverseDomain();
   }
 
-  /**
-   * Checks if universe domain equals to {@link Credentials#GOOGLE_DEFAULT_UNIVERSE}.
-   *
-   * @return true if universeDomain equals to {@link Credentials#GOOGLE_DEFAULT_UNIVERSE}, false
-   *     otherwise
-   */
-  @Override
-  boolean isDefaultUniverseDomain() {
-    try {
-      return getUniverseDomain().equals(Credentials.GOOGLE_DEFAULT_UNIVERSE);
-    } catch (IOException e) {
-      // super method does not throw IOException, so wrap it here.
-      // This should not happen for this credential type.
-      throw new IllegalStateException(e);
-    }
-  }
-
   @Override
   public AccessToken refreshAccessToken() throws IOException {
     if (this.sourceCredentials.getAccessToken() == null) {
