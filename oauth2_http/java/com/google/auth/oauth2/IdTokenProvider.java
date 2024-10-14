@@ -59,7 +59,7 @@ public interface IdTokenProvider {
     LICENSES_TRUE("licensesTrue"),
     INCLUDE_EMAIL("includeEmail");
 
-    private String option;
+    private final String option;
 
     private Option(String option) {
       this.option = option;
