@@ -42,6 +42,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.api.client.http.HttpResponseException;
+import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
@@ -51,6 +52,7 @@ import com.google.api.client.testing.http.FixedClock;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.api.client.util.Joiner;
+import com.google.auth.CredentialTypeForMetrics;
 import com.google.auth.Credentials;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.TestUtils;
@@ -123,7 +125,6 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
   private static final int INVALID_LIFETIME = 43210;
   private static final String JWT_ACCESS_PREFIX = "Bearer ";
-  private static final String GOOGLE_DEFAULT_UNIVERSE = "googleapis.com";
 
   private ServiceAccountCredentials.Builder createDefaultBuilderWithToken(String accessToken)
       throws IOException {
@@ -210,7 +211,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertArrayEquals(newScopes.toArray(), newCredentials.getScopes().toArray());
     assertEquals(USER, newCredentials.getServiceAccountUser());
     assertEquals(PROJECT_ID, newCredentials.getProjectId());
-    assertEquals(GOOGLE_DEFAULT_UNIVERSE, newCredentials.getUniverseDomain());
+    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, newCredentials.getUniverseDomain());
 
     assertArrayEquals(
         SCOPES.toArray(), ((ServiceAccountCredentials) credentials).getScopes().toArray());
@@ -310,8 +311,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
     String assertion =
-        credentials.createAssertionForIdToken(
-            jsonFactory, currentTimeMillis, null, "https://foo.com/bar");
+        credentials.createAssertionForIdToken(currentTimeMillis, null, "https://foo.com/bar");
 
     JsonWebSignature signature = JsonWebSignature.parse(jsonFactory, assertion);
     JsonWebToken.Payload payload = signature.getPayload();
@@ -329,8 +329,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
     String assertion =
-        credentials.createAssertionForIdToken(
-            jsonFactory, currentTimeMillis, null, "https://foo.com/bar");
+        credentials.createAssertionForIdToken(currentTimeMillis, null, "https://foo.com/bar");
 
     JsonWebSignature signature = JsonWebSignature.parse(jsonFactory, assertion);
     JsonWebToken.Payload payload = signature.getPayload();
@@ -353,8 +352,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
     String assertion =
-        credentials.createAssertionForIdToken(
-            jsonFactory, currentTimeMillis, null, "https://foo.com/bar");
+        credentials.createAssertionForIdToken(currentTimeMillis, null, "https://foo.com/bar");
 
     JsonWebSignature signature = JsonWebSignature.parse(jsonFactory, assertion);
     JsonWebToken.Payload payload = signature.getPayload();
@@ -383,7 +381,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
     GoogleCredentials scopedCredentials = credentials.createScoped(SCOPES);
     assertEquals(false, credentials.isExplicitUniverseDomain());
-    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
+    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
     Map<String, List<String>> metadata = scopedCredentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
@@ -518,7 +516,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.fromJson(json, new MockTokenServerTransportFactory());
     assertEquals(PROJECT_ID, credentials.getProjectId());
-    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
+    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
   @Test
@@ -618,12 +616,17 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+
+    // verify header
+    Map<String, List<String>> accessTokenRequestHeader =
+        transportFactory.transport.getRequest().getHeaders();
+    com.google.auth.oauth2.TestUtils.validateMetricsHeader(accessTokenRequestHeader, "at", "sa");
   }
 
   @Test
   public void getUniverseDomain_defaultUniverse() throws IOException {
     ServiceAccountCredentials credentials = createDefaultBuilder().build();
-    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
+    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
   @Test
@@ -850,7 +853,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void idTokenWithAudience_correct() throws IOException {
+  public void idTokenWithAudience_oauthFlow_targetAudienceMatchesAudClaim() throws IOException {
     String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
@@ -859,6 +862,11 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
     transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
+
+    // verify access token request metrics headers
+    Map<String, List<String>> accessTokenRequestHeader =
+        transportFactory.transport.getRequest().getHeaders();
+    com.google.auth.oauth2.TestUtils.validateMetricsHeader(accessTokenRequestHeader, "at", "sa");
 
     String targetAudience = "https://foo.bar";
     IdTokenCredentials tokenCredential =
@@ -869,13 +877,21 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     tokenCredential.refresh();
     assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getAccessToken().getTokenValue());
     assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getIdToken().getTokenValue());
+
+    // ID Token's aud claim is `https://foo.bar`
     assertEquals(
         targetAudience,
-        (String) tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
+        tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
+
+    // verify id token request metrics headers
+    Map<String, List<String>> idTokenRequestHeader =
+        transportFactory.transport.getRequest().getHeaders();
+    com.google.auth.oauth2.TestUtils.validateMetricsHeader(idTokenRequestHeader, "it", "sa");
   }
 
   @Test
-  public void idTokenWithAudience_incorrect() throws IOException {
+  public void idTokenWithAudience_oauthFlow_targetAudienceDoesNotMatchAudClaim()
+      throws IOException {
     String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
@@ -885,16 +901,78 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
 
-    String targetAudience = "https://bar";
+    String targetAudience = "differentAudience";
     IdTokenCredentials tokenCredential =
         IdTokenCredentials.newBuilder()
             .setIdTokenProvider(credentials)
             .setTargetAudience(targetAudience)
             .build();
     tokenCredential.refresh();
+
+    // ID Token's aud claim is `https://foo.bar`
     assertNotEquals(
         targetAudience,
-        (String) tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
+        tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
+  }
+
+  @Test
+  public void idTokenWithAudience_iamFlow_targetAudienceMatchesAudClaim() throws IOException {
+    String nonGDU = "test.com";
+    MockIAMCredentialsServiceTransportFactory transportFactory =
+        new MockIAMCredentialsServiceTransportFactory(nonGDU);
+    transportFactory.getTransport().setTargetPrincipal(CLIENT_EMAIL);
+    transportFactory.getTransport().setIdToken(DEFAULT_ID_TOKEN);
+    transportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
+    ServiceAccountCredentials credentials =
+        createDefaultBuilder()
+            .setScopes(SCOPES)
+            .setHttpTransportFactory(transportFactory)
+            .setUniverseDomain(nonGDU)
+            .build();
+
+    String targetAudience = "https://foo.bar";
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(credentials)
+            .setTargetAudience(targetAudience)
+            .build();
+    tokenCredential.refresh();
+    assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getAccessToken().getTokenValue());
+    assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getIdToken().getTokenValue());
+
+    // ID Token's aud claim is `https://foo.bar`
+    assertEquals(
+        targetAudience,
+        tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
+  }
+
+  @Test
+  public void idTokenWithAudience_iamFlow_targetAudienceDoesNotMatchAudClaim() throws IOException {
+    String nonGDU = "test.com";
+    MockIAMCredentialsServiceTransportFactory transportFactory =
+        new MockIAMCredentialsServiceTransportFactory(nonGDU);
+    transportFactory.getTransport().setTargetPrincipal(CLIENT_EMAIL);
+    transportFactory.getTransport().setIdToken(DEFAULT_ID_TOKEN);
+    transportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
+    ServiceAccountCredentials credentials =
+        createDefaultBuilder()
+            .setScopes(SCOPES)
+            .setHttpTransportFactory(transportFactory)
+            .setUniverseDomain(nonGDU)
+            .build();
+
+    String targetAudience = "differentAudience";
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(credentials)
+            .setTargetAudience(targetAudience)
+            .build();
+    tokenCredential.refresh();
+
+    // ID Token's aud claim is `https://foo.bar`
+    assertNotEquals(
+        targetAudience,
+        tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
   }
 
   @Test
@@ -1528,6 +1606,12 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     assertNotNull(((ServiceAccountCredentials) credentials).getSelfSignedJwtCredentialsWithScope());
     verifyJwtAccess(metadata, "dummy.scope");
+
+    // Verify credentialType is correctly set. This is used for token usage metrics.
+    // Self signed jwt flow doesn’t call any token endpoint, thus no token request metrics.
+    assertEquals(
+        CredentialTypeForMetrics.SERVICE_ACCOUNT_CREDENTIALS_JWT,
+        credentials.getMetricsCredentialType());
   }
 
   @Test
@@ -1641,6 +1725,31 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
         });
 
     assertTrue("Should have run onSuccess() callback", success.get());
+  }
+
+  @Test
+  public void createScopes_existingAccessTokenInvalidated() throws IOException {
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
+    GoogleCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setClientEmail(CLIENT_EMAIL)
+            .setPrivateKey(privateKey)
+            .setPrivateKeyId(PRIVATE_KEY_ID)
+            .setProjectId(PROJECT_ID)
+            .setQuotaProjectId("my-quota-project-id")
+            .setHttpTransportFactory(transportFactory)
+            .setScopes(SCOPES)
+            .build();
+    TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), ACCESS_TOKEN);
+
+    // Calling createScoped() again will invalidate the existing access token and calling
+    // `refresh()` is required to get a new Access Token.
+    credentials = credentials.createScoped("RANDOM_SCOPES");
+    AccessToken newAccessToken = credentials.getAccessToken();
+    assertNull(newAccessToken);
   }
 
   private void verifyJwtAccess(Map<String, List<String>> metadata, String expectedScopeClaim)

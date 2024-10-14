@@ -38,6 +38,7 @@ import com.google.api.client.json.Json;
 import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
+import com.google.common.base.Splitter;
 import com.google.common.io.BaseEncoding;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -45,6 +46,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -53,7 +55,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
   private static final Pattern BOOL_PARAMETER_VALUE = Pattern.compile("on|1|(?i)y|yes|true");
 
-  private String accessToken;
+  // key are scopes as in request url string following "?scopes="
+  private Map<String, String> scopesToAccessToken;
 
   private Integer requestStatusCode;
 
@@ -63,10 +66,29 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
   private byte[] signature;
 
+  private MockLowLevelHttpRequest request;
+
   public MockMetadataServerTransport() {}
 
+  public MockMetadataServerTransport(String accessToken) {
+    setAccessToken(accessToken);
+  }
+
+  public MockMetadataServerTransport(Map<String, String> accessTokenMap) {
+    for (String scope : accessTokenMap.keySet()) {
+      setAccessToken(scope, accessTokenMap.get(scope));
+    }
+  }
+
   public void setAccessToken(String accessToken) {
-    this.accessToken = accessToken;
+    setAccessToken("default", accessToken);
+  }
+
+  public void setAccessToken(String scopes, String accessToken) {
+    if (scopesToAccessToken == null) {
+      scopesToAccessToken = new HashMap<>();
+    }
+    scopesToAccessToken.put(scopes, accessToken);
   }
 
   public void setRequestStatusCode(Integer requestStatusCode) {
@@ -85,31 +107,41 @@ public class MockMetadataServerTransport extends MockHttpTransport {
     this.idToken = idToken;
   }
 
+  public MockLowLevelHttpRequest getRequest() {
+    return request;
+  }
+
   @Override
   public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
-    if (url.equals(ComputeEngineCredentials.getTokenServerEncodedUrl())) {
-      return getMockRequestForTokenEndpoint(url);
+    if (url.startsWith(ComputeEngineCredentials.getTokenServerEncodedUrl())) {
+      this.request = getMockRequestForTokenEndpoint(url);
+      return this.request;
     } else if (isGetServiceAccountsUrl(url)) {
-      return getMockRequestForServiceAccount(url);
+      this.request = getMockRequestForServiceAccount(url);
+      return this.request;
     } else if (isSignRequestUrl(url)) {
-      return getMockRequestForSign(url);
+      this.request = getMockRequestForSign(url);
+      return this.request;
     } else if (isIdentityDocumentUrl(url)) {
-      return getMockRequestForIdentityDocument(url);
+      this.request = getMockRequestForIdentityDocument(url);
+      return this.request;
     }
-    return new MockLowLevelHttpRequest(url) {
-      @Override
-      public LowLevelHttpResponse execute() {
-        if (requestStatusCode != null) {
-          return new MockLowLevelHttpResponse()
-              .setStatusCode(requestStatusCode)
-              .setContent("Metadata Error");
-        }
+    this.request =
+        new MockLowLevelHttpRequest(url) {
+          @Override
+          public LowLevelHttpResponse execute() {
+            if (requestStatusCode != null) {
+              return new MockLowLevelHttpResponse()
+                  .setStatusCode(requestStatusCode)
+                  .setContent("Metadata Error");
+            }
 
-        MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-        response.addHeader("Metadata-Flavor", "Google");
-        return response;
-      }
-    };
+            MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+            response.addHeader("Metadata-Flavor", "Google");
+            return response;
+          }
+        };
+    return this.request;
   }
 
   private MockLowLevelHttpRequest getMockRequestForSign(String url) {
@@ -167,7 +199,15 @@ public class MockMetadataServerTransport extends MockHttpTransport {
         // Create the JSON response
         GenericJson refreshContents = new GenericJson();
         refreshContents.setFactory(OAuth2Utils.JSON_FACTORY);
-        refreshContents.put("access_token", accessToken);
+
+        List<String> urlParsed = Splitter.on("?scopes=").splitToList(url);
+        if (urlParsed.size() == 1) {
+          // no scopes specified, return access token correspoinding to default scopes
+          refreshContents.put("access_token", scopesToAccessToken.get("default"));
+        } else {
+          refreshContents.put(
+              "access_token", scopesToAccessToken.get("[" + urlParsed.get(1) + "]"));
+        }
         refreshContents.put("expires_in", 3600000);
         refreshContents.put("token_type", "Bearer");
         String refreshText = refreshContents.toPrettyString();

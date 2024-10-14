@@ -46,7 +46,6 @@ import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
-import com.google.auth.oauth2.ComputeEngineCredentialsTest.MockMetadataServerTransportFactory;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -306,7 +305,6 @@ public class DefaultCredentialsProviderTest {
   @Test
   public void getDefaultCredentials_compute_providesToken() throws IOException {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-    transportFactory.transport.setAccessToken(ACCESS_TOKEN);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
 
     GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory);
@@ -331,7 +329,6 @@ public class DefaultCredentialsProviderTest {
   @Test
   public void getDefaultCredentials_cloudshell_withComputCredentialsPresent() throws IOException {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-    transportFactory.transport.setAccessToken(ACCESS_TOKEN);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setEnv(DefaultCredentialsProvider.CLOUD_SHELL_ENV_VAR, "4");
 
@@ -463,7 +460,6 @@ public class DefaultCredentialsProviderTest {
   @Test
   public void getDefaultCredentials_compute_quotaProject() throws IOException {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-    transportFactory.transport.setAccessToken(ACCESS_TOKEN);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setEnv(
         DefaultCredentialsProvider.QUOTA_PROJECT_ENV_VAR, QUOTA_PROJECT_FROM_ENVIRONMENT);
@@ -472,6 +468,11 @@ public class DefaultCredentialsProviderTest {
 
     assertTrue(defaultCredentials instanceof ComputeEngineCredentials);
     assertEquals(QUOTA_PROJECT_FROM_ENVIRONMENT, defaultCredentials.getQuotaProjectId());
+
+    // verify metrics header
+    Map<String, List<String>> headers = transportFactory.transport.getRequest().getHeaders();
+    com.google.auth.oauth2.TestUtils.validateMetricsHeader(headers, "mds", "untracked");
+    assertEquals("Google", headers.get("metadata-flavor").get(0));
   }
 
   @Test
@@ -881,6 +882,16 @@ public class DefaultCredentialsProviderTest {
   static class MockRequestCountingTransportFactory implements HttpTransportFactory {
 
     MockRequestCountingTransport transport = new MockRequestCountingTransport();
+
+    @Override
+    public HttpTransport create() {
+      return transport;
+    }
+  }
+
+  static class MockMetadataServerTransportFactory implements HttpTransportFactory {
+
+    MockMetadataServerTransport transport = new MockMetadataServerTransport(ACCESS_TOKEN);
 
     @Override
     public HttpTransport create() {

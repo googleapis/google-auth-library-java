@@ -45,7 +45,9 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Preconditions;
+import com.google.auth.CredentialTypeForMetrics;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.oauth2.MetricsUtils.RequestType;
 import com.google.common.base.MoreObjects;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.ByteArrayInputStream;
@@ -95,6 +97,11 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     Preconditions.checkState(
         builder.getAccessToken() != null || builder.refreshToken != null,
         "Either accessToken or refreshToken must not be null");
+  }
+
+  @Override
+  public CredentialTypeForMetrics getMetricsCredentialType() {
+    return CredentialTypeForMetrics.USER_CREDENTIALS;
   }
 
   /**
@@ -264,6 +271,11 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
 
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
+
+    MetricsUtils.setMetricsHeader(
+        request,
+        MetricsUtils.getGoogleCredentialsMetricsHeader(
+            RequestType.UNTRACKED, getMetricsCredentialType()));
     request.setParser(new JsonObjectParser(JSON_FACTORY));
     HttpResponse response;
 

@@ -43,6 +43,8 @@ import com.google.api.client.util.PemReader.Section;
 import com.google.api.client.util.SecurityUtils;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.common.base.Strings;
+import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -75,7 +77,12 @@ class OAuth2Utils {
   static final String TOKEN_TYPE_TOKEN_EXCHANGE = "urn:ietf:params:oauth:token-type:token-exchange";
   static final String GRANT_TYPE_JWT_BEARER = "urn:ietf:params:oauth:grant-type:jwt-bearer";
 
+  // generateIdToken endpoint is to be formatted with universe domain and client email
+  static final String IAM_ID_TOKEN_ENDPOINT_FORMAT =
+      "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:generateIdToken";
+
   static final URI TOKEN_SERVER_URI = URI.create("https://oauth2.googleapis.com/token");
+
   static final URI TOKEN_REVOKE_URI = URI.create("https://oauth2.googleapis.com/revoke");
   static final URI USER_AUTH_URI = URI.create("https://accounts.google.com/o/oauth2/auth");
 
@@ -91,6 +98,11 @@ class OAuth2Utils {
   static final String BEARER_PREFIX = AuthHttpConstants.BEARER + " ";
 
   static final String TOKEN_RESPONSE_SCOPE = "scope";
+
+  static final int INITIAL_RETRY_INTERVAL_MILLIS = 1000;
+  static final double RETRY_RANDOMIZATION_FACTOR = 0.1;
+  static final double RETRY_MULTIPLIER = 2;
+  static final int DEFAULT_NUMBER_OF_RETRIES = 3;
 
   // Includes expected server errors from Google token endpoint
   // Other 5xx codes are either not used or retries are unlikely to succeed
@@ -250,6 +262,27 @@ class OAuth2Utils {
       unexpectedException = exception;
     }
     throw new IOException("Unexpected exception reading PKCS#8 data", unexpectedException);
+  }
+
+  /**
+   * Generates a Basic Authentication header string for the provided username and password.
+   *
+   * <p>This method constructs a Basic Authentication string using the provided username and
+   * password. The credentials are encoded in Base64 format and prefixed with the "Basic " scheme
+   * identifier.
+   *
+   * @param username The username for authentication.
+   * @param password The password for authentication.
+   * @return The Basic Authentication header value.
+   * @throws IllegalArgumentException if either username or password is null or empty.
+   */
+  static String generateBasicAuthHeader(String username, String password) {
+    if (Strings.isNullOrEmpty(username) || Strings.isNullOrEmpty(password)) {
+      throw new IllegalArgumentException("Username and password cannot be null or empty.");
+    }
+    String credentials = username + ":" + password;
+    String encodedCredentials = BaseEncoding.base64().encode(credentials.getBytes());
+    return "Basic " + encodedCredentials;
   }
 
   private OAuth2Utils() {}

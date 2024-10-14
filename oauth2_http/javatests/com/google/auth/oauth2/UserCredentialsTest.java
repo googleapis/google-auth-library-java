@@ -724,6 +724,12 @@ public class UserCredentialsTest extends BaseSerializationTest {
 
     assertEquals(ACCESS_TOKEN, credentials.getAccessToken().getTokenValue());
 
+    // verify access token request metrics headers
+    Map<String, List<String>> accessTokenRequestHeader =
+        transportFactory.transport.getRequest().getHeaders();
+    com.google.auth.oauth2.TestUtils.validateMetricsHeader(
+        accessTokenRequestHeader, "untracked", "u");
+
     IdTokenCredentials tokenCredential =
         IdTokenCredentials.newBuilder().setIdTokenProvider(credentials).build();
 
@@ -735,6 +741,11 @@ public class UserCredentialsTest extends BaseSerializationTest {
 
     assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getAccessToken().getTokenValue());
     assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getIdToken().getTokenValue());
+
+    // verify id token request metrics headers, same as access token request
+    Map<String, List<String>> idTokenRequestHeader =
+        transportFactory.transport.getRequest().getHeaders();
+    com.google.auth.oauth2.TestUtils.validateMetricsHeader(idTokenRequestHeader, "untracked", "u");
   }
 
   @Test
