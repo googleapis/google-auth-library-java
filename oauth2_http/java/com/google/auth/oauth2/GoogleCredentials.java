@@ -483,7 +483,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     return this;
   }
 
-  public static class Builder extends OAuth2Credentials.Builder {
+  public static class Builder<BuilderType extends Builder<BuilderType>> extends OAuth2Credentials.Builder {
     @Nullable protected String quotaProjectId;
     @Nullable protected String universeDomain;
 
@@ -509,14 +509,14 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     }
 
     @CanIgnoreReturnValue
-    public Builder setQuotaProjectId(String quotaProjectId) {
+    public BuilderType setQuotaProjectId(String quotaProjectId) {
       this.quotaProjectId = quotaProjectId;
-      return this;
+      return (BuilderType) this;
     }
 
-    public Builder setUniverseDomain(String universeDomain) {
+    public BuilderType setUniverseDomain(String universeDomain) {
       this.universeDomain = universeDomain;
-      return this;
+      return (BuilderType) this;
     }
 
     public String getQuotaProjectId() {
@@ -529,9 +529,9 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
 
     @Override
     @CanIgnoreReturnValue
-    public Builder setAccessToken(AccessToken token) {
+    public BuilderType setAccessToken(AccessToken token) {
       super.setAccessToken(token);
-      return this;
+      return (BuilderType) this;
     }
   }
 }
