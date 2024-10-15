@@ -1002,7 +1002,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         super.getRequestMetadata(uri, executor, callback);
       }
     } catch (IOException e) {
-      // Wrap it here to avoid breaking change.
+      // Wrap here because throwing exception would be breaking change.
       // This should not happen for this credential type.
       throw new IllegalStateException(e);
     }
