@@ -640,7 +640,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     return new Builder();
   }
 
-  public static class Builder extends GoogleCredentials.Builder<Builder> {
+  public static class Builder extends GoogleCredentials.Builder {
 
     private GoogleCredentials sourceCredentials;
     private String targetPrincipal;
@@ -736,6 +736,13 @@ public class ImpersonatedCredentials extends GoogleCredentials
       return transportFactory;
     }
 
+    @Override
+    @CanIgnoreReturnValue
+    public Builder setQuotaProjectId(String quotaProjectId) {
+      super.setQuotaProjectId(quotaProjectId);
+      return this;
+    }
+
     @CanIgnoreReturnValue
     public Builder setIamEndpointOverride(String iamEndpointOverride) {
       this.iamEndpointOverride = iamEndpointOverride;
@@ -750,6 +757,12 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
     public Calendar getCalendar() {
       return this.calendar;
+    }
+
+    @Override
+    public Builder setUniverseDomain(String universeDomain) {
+      super.setUniverseDomain(universeDomain);
+      return this;
     }
 
     @Override
