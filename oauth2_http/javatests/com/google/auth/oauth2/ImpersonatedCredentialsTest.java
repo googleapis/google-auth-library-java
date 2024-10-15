@@ -164,6 +164,18 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     return sourceCredentials;
   }
 
+  @Test
+  public void impersonatedCredentials() {
+    ImpersonatedCredentials impersonatedCredentials1 = ImpersonatedCredentials.newBuilder()
+            .setUniverseDomain("asdas")
+            .setTargetPrincipal(null)
+            .build();
+    ImpersonatedCredentials impersonatedCredentials2 = ImpersonatedCredentials
+            .newBuilder()
+            .setUniverseDomain("asdasd")
+            .build();
+  }
+
   @Test()
   public void fromJson_userAsSource_WithQuotaProjectId() throws IOException {
     GenericJson json =

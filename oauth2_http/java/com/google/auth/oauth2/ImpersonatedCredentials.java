@@ -623,7 +623,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     return new Builder();
   }
 
-  public static class Builder extends GoogleCredentials.Builder {
+  public static class Builder extends GoogleCredentials.Builder<Builder> {
 
     private GoogleCredentials sourceCredentials;
     private String targetPrincipal;
