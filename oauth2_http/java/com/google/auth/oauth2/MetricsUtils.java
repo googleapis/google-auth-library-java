@@ -32,7 +32,6 @@
 package com.google.auth.oauth2;
 
 import com.google.api.client.http.HttpRequest;
-import com.google.auth.CredentialTypeForMetrics;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -72,7 +71,7 @@ class MetricsUtils {
     return version;
   }
 
-  public enum RequestType {
+  enum RequestType {
     ACCESS_TOKEN_REQUEST("at"),
     ID_TOKEN_REQUEST("it"),
     METADATA_SERVER_PING("mds"),
