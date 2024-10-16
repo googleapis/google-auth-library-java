@@ -33,7 +33,6 @@ package com.google.auth.oauth2;
 
 import static org.junit.Assert.*;
 
-import com.google.auth.oauth2.MetricsUtils.CredentialTypeForMetrics;
 import com.google.auth.oauth2.MetricsUtils.RequestType;
 import java.util.regex.Pattern;
 import org.junit.Test;

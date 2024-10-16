@@ -71,7 +71,7 @@ class MetricsUtils {
     return version;
   }
 
-  public enum RequestType {
+  enum RequestType {
     ACCESS_TOKEN_REQUEST("at"),
     ID_TOKEN_REQUEST("it"),
     METADATA_SERVER_PING("mds"),
@@ -114,37 +114,5 @@ class MetricsUtils {
 
   static void setMetricsHeader(HttpRequest request, String metricsHeader) {
     request.getHeaders().set(MetricsUtils.API_CLIENT_HEADER, metricsHeader);
-  }
-
-  /**
-   * Defines the different types of credentials that can be used for metrics.
-   *
-   * <p>Each credential type is associated with a label that is used for reporting purposes. Add new
-   * enum constant only when corresponding configs established.
-   *
-   * <p>Credentials with type {@code CredentialTypeForMetrics.DO_NOT_SEND} is default value for
-   * credential implementations that do not set type specifically. It is not expected to send metrics.
-   *
-   * <p>
-   *
-   * @see #getLabel()
-   */
-  public enum CredentialTypeForMetrics {
-    USER_CREDENTIALS("u"),
-    SERVICE_ACCOUNT_CREDENTIALS_AT("sa"),
-    SERVICE_ACCOUNT_CREDENTIALS_JWT("jwt"),
-    VM_CREDENTIALS("mds"),
-    IMPERSONATED_CREDENTIALS("imp"),
-    DO_NOT_SEND("dns");
-
-    private final String label;
-
-    private CredentialTypeForMetrics(String label) {
-      this.label = label;
-    }
-
-    public String getLabel() {
-      return label;
-    }
   }
 }

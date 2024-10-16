@@ -70,8 +70,6 @@ public abstract class Credentials implements Serializable {
     return GOOGLE_DEFAULT_UNIVERSE;
   }
 
-
-
   /**
    * Get the current request metadata, refreshing tokens if required.
    *

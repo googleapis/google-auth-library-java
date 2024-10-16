@@ -44,7 +44,6 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.client.util.GenericData;
-import com.google.auth.oauth2.MetricsUtils.CredentialTypeForMetrics;
 import com.google.auth.Credentials;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpCredentialsAdapter;
