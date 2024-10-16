@@ -35,6 +35,7 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.Preconditions;
+import com.google.auth.oauth2.MetricsUtils.CredentialTypeForMetrics;
 import com.google.auth.Credentials;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
@@ -294,6 +295,18 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       return addQuotaProjectIdToRequestMetadata(quotaProjectId, headers);
     }
     return headers;
+  }
+
+  /**
+   * Gets the credential type used for internal metrics header.
+   *
+   * <p>The default is {@code CredentialTypeForMetrics.DO_NOT_SEND}. For a credential that is
+   * established to track for metrics, this default should be overridden.
+   *
+   * @return a enum value for credential type
+   */
+  public CredentialTypeForMetrics getMetricsCredentialType() {
+    return CredentialTypeForMetrics.DO_NOT_SEND;
   }
 
   /** Default constructor. */

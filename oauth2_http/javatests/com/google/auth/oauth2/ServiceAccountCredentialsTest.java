@@ -52,7 +52,7 @@ import com.google.api.client.testing.http.FixedClock;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.api.client.util.Joiner;
-import com.google.auth.CredentialTypeForMetrics;
+import com.google.auth.oauth2.MetricsUtils.CredentialTypeForMetrics;
 import com.google.auth.Credentials;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.TestUtils;

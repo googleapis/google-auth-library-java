@@ -45,7 +45,7 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Preconditions;
-import com.google.auth.CredentialTypeForMetrics;
+import com.google.auth.oauth2.MetricsUtils.CredentialTypeForMetrics;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.MetricsUtils.RequestType;
 import com.google.common.base.MoreObjects;

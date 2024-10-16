@@ -41,7 +41,7 @@ import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
-import com.google.auth.CredentialTypeForMetrics;
+import com.google.auth.oauth2.MetricsUtils.CredentialTypeForMetrics;
 import com.google.auth.Credentials;
 import com.google.auth.Retryable;
 import com.google.auth.ServiceAccountSigner;
