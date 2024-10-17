@@ -37,6 +37,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -1052,21 +1053,43 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void universeDomain_whenExplicit() throws IOException {
+  public void universeDomain_whenExplicit_notAllowedIfNotMatchToSourceUD() throws IOException {
+    GoogleCredentials sourceCredentialsNonGDU =
+        sourceCredentials.toBuilder().setUniverseDomain("source.domain.xyz").build();
+    IllegalStateException illegalStateException =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                ImpersonatedCredentials.newBuilder()
+                    .setSourceCredentials(sourceCredentialsNonGDU)
+                    .setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL)
+                    .setDelegates(null)
+                    .setScopes(IMMUTABLE_SCOPES_LIST)
+                    .setLifetime(VALID_LIFETIME)
+                    .setHttpTransportFactory(mockTransportFactory)
+                    .setUniverseDomain("explicit.domain.com")
+                    .build());
+    assertEquals(
+        "Universe is derived from the source credentials", illegalStateException.getMessage());
+  }
+
+  @Test
+  public void universeDomain_whenExplicit_AllowedIfMatchesSourceUD() throws IOException {
     GoogleCredentials sourceCredentialsNonGDU =
         sourceCredentials.toBuilder().setUniverseDomain("source.domain.xyz").build();
     ImpersonatedCredentials impersonatedCredentials =
-        ImpersonatedCredentials.newBuilder()
-            .setSourceCredentials(sourceCredentialsNonGDU)
-            .setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL)
-            .setDelegates(null)
-            .setScopes(IMMUTABLE_SCOPES_LIST)
-            .setLifetime(VALID_LIFETIME)
-            .setHttpTransportFactory(mockTransportFactory)
-            .setUniverseDomain("explicit.domain.com")
-            .build();
+        (ImpersonatedCredentials)
+            ImpersonatedCredentials.newBuilder()
+                .setSourceCredentials(sourceCredentialsNonGDU)
+                .setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL)
+                .setDelegates(null)
+                .setScopes(IMMUTABLE_SCOPES_LIST)
+                .setLifetime(VALID_LIFETIME)
+                .setHttpTransportFactory(mockTransportFactory)
+                .setUniverseDomain("source.domain.xyz")
+                .build();
 
-    assertEquals("explicit.domain.com", impersonatedCredentials.getUniverseDomain());
+    assertEquals("source.domain.xyz", impersonatedCredentials.getUniverseDomain());
     assertFalse(impersonatedCredentials.isDefaultUniverseDomain());
     assertTrue(impersonatedCredentials.isExplicitUniverseDomain());
   }

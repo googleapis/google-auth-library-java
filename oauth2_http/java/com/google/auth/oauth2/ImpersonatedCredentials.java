@@ -447,7 +447,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
         .build();
   }
 
-  private ImpersonatedCredentials(Builder builder) {
+  private ImpersonatedCredentials(Builder builder) throws IOException {
     super(builder);
     this.sourceCredentials = builder.getSourceCredentials();
     this.targetPrincipal = builder.getTargetPrincipal();
@@ -470,19 +470,23 @@ public class ImpersonatedCredentials extends GoogleCredentials
     if (this.lifetime > TWELVE_HOURS_IN_SECONDS) {
       throw new IllegalStateException("lifetime must be less than or equal to 43200");
     }
+
+    // Do not expect explicit universe domain, throw exception if the explicit universe domain
+    // does not match the source credential.
+    // Do nothing if it matches the source credential
+    if (isExplicitUniverseDomain()
+        && !this.sourceCredentials.getUniverseDomain().equals(builder.getUniverseDomain())) {
+      throw new IllegalStateException("Universe is derived from the source credentials");
+    }
   }
 
   /**
    * Gets the universe domain for the credential.
    *
-   * @return An explicit universe domain if it was explicitly provided, use the universe domain from
-   *     source credentials otherwise
+   * @return the universe domain from source credentials
    */
   @Override
   public String getUniverseDomain() throws IOException {
-    if (isExplicitUniverseDomain()) {
-      return super.getUniverseDomain();
-    }
     return this.sourceCredentials.getUniverseDomain();
   }
 
@@ -760,14 +764,14 @@ public class ImpersonatedCredentials extends GoogleCredentials
     }
 
     @Override
-    public Builder setUniverseDomain(String universeDomain) {
-      super.setUniverseDomain(universeDomain);
-      return this;
-    }
-
-    @Override
     public ImpersonatedCredentials build() {
-      return new ImpersonatedCredentials(this);
+      try {
+        return new ImpersonatedCredentials(this);
+      } catch (IOException e) {
+        // throwing exception would be breaking change. catching instead.
+        // this should never happen.
+        throw new IllegalStateException(e);
+      }
     }
   }
 
