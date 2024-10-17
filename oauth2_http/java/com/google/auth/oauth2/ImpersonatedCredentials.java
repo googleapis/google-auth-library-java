@@ -499,8 +499,9 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
     // skip for SA with SSJ flow because it uses self-signed JWT
     // and will get refreshed at initialize request step
-    if (isDefaultUniverseDomain()
-        && (this.sourceCredentials instanceof ServiceAccountCredentials
+    // run for other source credential types or SA with GDU assert flow
+    if (!(this.sourceCredentials instanceof ServiceAccountCredentials)
+        || (isDefaultUniverseDomain()
             && ((ServiceAccountCredentials) this.sourceCredentials).shouldUseAssertionFlow())) {
       try {
         this.sourceCredentials.refreshIfExpired();
