@@ -502,7 +502,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
     // run for other source credential types or SA with GDU assert flow
     if (!(this.sourceCredentials instanceof ServiceAccountCredentials)
         || (isDefaultUniverseDomain()
-            && ((ServiceAccountCredentials) this.sourceCredentials).shouldUseAssertionFlowForGdu())) {
+            && ((ServiceAccountCredentials) this.sourceCredentials)
+                .shouldUseAssertionFlowForGdu())) {
       try {
         this.sourceCredentials.refreshIfExpired();
       } catch (IOException e) {
