@@ -497,9 +497,11 @@ public class ImpersonatedCredentials extends GoogleCredentials
           this.sourceCredentials.createScoped(Arrays.asList(CLOUD_PLATFORM_SCOPE));
     }
 
-    // skip for nonGDU because it uses self-signed JWT
+    // skip for SA with SSJ flow because it uses self-signed JWT
     // and will get refreshed at initialize request step
-    if (isDefaultUniverseDomain()) {
+    if (isDefaultUniverseDomain()
+        && (this.sourceCredentials instanceof ServiceAccountCredentials
+            && ((ServiceAccountCredentials) this.sourceCredentials).shouldUseAssertionFlow())) {
       try {
         this.sourceCredentials.refreshIfExpired();
       } catch (IOException e) {

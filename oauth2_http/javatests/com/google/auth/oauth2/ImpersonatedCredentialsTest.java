@@ -520,6 +520,32 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   @Test()
+  public void refreshAccessToken_success_SSJflow() throws IOException, IllegalStateException {
+    mockTransportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.getTransport().setAccessToken(ACCESS_TOKEN);
+    mockTransportFactory.getTransport().setExpireTime(getDefaultExpireTime());
+    mockTransportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
+    ServiceAccountCredentials sourceCredentialsSSJ =
+        ((ServiceAccountCredentials) sourceCredentials)
+            .toBuilder()
+            .setHttpTransportFactory(mockTransportFactory)
+            .setUseJwtAccessWithScope(true)
+            .build();
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            sourceCredentialsSSJ,
+            IMPERSONATED_CLIENT_EMAIL,
+            null,
+            IMMUTABLE_SCOPES_LIST,
+            VALID_LIFETIME,
+            mockTransportFactory);
+
+    assertEquals(ACCESS_TOKEN, targetCredentials.refreshAccessToken().getTokenValue());
+    assertEquals(
+        DEFAULT_IMPERSONATION_URL, mockTransportFactory.getTransport().getRequest().getUrl());
+  }
+
+  @Test()
   public void refreshAccessToken_success_nonGDU() throws IOException, IllegalStateException {
     MockIAMCredentialsServiceTransportFactory transportFactory =
         new MockIAMCredentialsServiceTransportFactory(TEST_UNIVERSE_DOMAIN);

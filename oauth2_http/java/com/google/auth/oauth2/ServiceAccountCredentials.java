@@ -1032,7 +1032,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         : CredentialTypeForMetrics.SERVICE_ACCOUNT_CREDENTIALS_JWT;
   }
 
-  private boolean shouldUseAssertionFlow() {
+  boolean shouldUseAssertionFlow() {
     // If scopes are provided, but we cannot use self-signed JWT or domain-wide delegation is
     // configured then use scopes to get access token.
     return ((!createScopedRequired() && !useJwtAccessWithScope)
