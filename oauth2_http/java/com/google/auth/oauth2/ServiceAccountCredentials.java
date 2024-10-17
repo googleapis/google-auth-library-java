@@ -992,13 +992,19 @@ public class ServiceAccountCredentials extends GoogleCredentials
     // For default universe Self-signed JWT could be explicitly disabled with
     // {@code ServiceAccountCredentials.useJwtAccessWithScope} flag.
     // If universe is non-default, it only supports self-signed JWT, and it is always allowed.
-    if (this.useJwtAccessWithScope || !isDefaultUniverseDomain()) {
-      // This will call getRequestMetadata(URI uri), which handles self-signed JWT logic.
-      // Self-signed JWT doesn't use network, so here we do a blocking call to improve
-      // efficiency. executor will be ignored since it is intended for async operation.
-      blockingGetToCallback(uri, callback);
-    } else {
-      super.getRequestMetadata(uri, executor, callback);
+    try {
+      if (this.useJwtAccessWithScope || !isDefaultUniverseDomain()) {
+        // This will call getRequestMetadata(URI uri), which handles self-signed JWT logic.
+        // Self-signed JWT doesn't use network, so here we do a blocking call to improve
+        // efficiency. executor will be ignored since it is intended for async operation.
+        blockingGetToCallback(uri, callback);
+      } else {
+        super.getRequestMetadata(uri, executor, callback);
+      }
+    } catch (IOException e) {
+      // Wrap here because throwing exception would be breaking change.
+      // This should not happen for this credential type.
+      throw new IllegalStateException(e);
     }
   }
 
@@ -1021,12 +1027,12 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   @Override
   public CredentialTypeForMetrics getMetricsCredentialType() {
-    return shouldUseAssertionFlow()
+    return shouldUseAssertionFlowForGdu()
         ? CredentialTypeForMetrics.SERVICE_ACCOUNT_CREDENTIALS_AT
         : CredentialTypeForMetrics.SERVICE_ACCOUNT_CREDENTIALS_JWT;
   }
 
-  private boolean shouldUseAssertionFlow() {
+  boolean shouldUseAssertionFlowForGdu() {
     // If scopes are provided, but we cannot use self-signed JWT or domain-wide delegation is
     // configured then use scopes to get access token.
     return ((!createScopedRequired() && !useJwtAccessWithScope)
@@ -1034,7 +1040,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   }
 
   private Map<String, List<String>> getRequestMetadataForGdu(URI uri) throws IOException {
-    return shouldUseAssertionFlow()
+    return shouldUseAssertionFlowForGdu()
         ? super.getRequestMetadata(uri)
         : getRequestMetadataWithSelfSignedJwt(uri);
   }
