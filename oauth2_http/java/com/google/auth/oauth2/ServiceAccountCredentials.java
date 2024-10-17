@@ -1027,12 +1027,12 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   @Override
   public CredentialTypeForMetrics getMetricsCredentialType() {
-    return shouldUseAssertionFlow()
+    return shouldUseAssertionFlowForGdu()
         ? CredentialTypeForMetrics.SERVICE_ACCOUNT_CREDENTIALS_AT
         : CredentialTypeForMetrics.SERVICE_ACCOUNT_CREDENTIALS_JWT;
   }
 
-  boolean shouldUseAssertionFlow() {
+  boolean shouldUseAssertionFlowForGdu() {
     // If scopes are provided, but we cannot use self-signed JWT or domain-wide delegation is
     // configured then use scopes to get access token.
     return ((!createScopedRequired() && !useJwtAccessWithScope)
@@ -1040,7 +1040,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   }
 
   private Map<String, List<String>> getRequestMetadataForGdu(URI uri) throws IOException {
-    return shouldUseAssertionFlow()
+    return shouldUseAssertionFlowForGdu()
         ? super.getRequestMetadata(uri)
         : getRequestMetadataWithSelfSignedJwt(uri);
   }

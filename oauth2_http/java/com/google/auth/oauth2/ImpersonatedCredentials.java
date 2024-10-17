@@ -502,7 +502,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     // run for other source credential types or SA with GDU assert flow
     if (!(this.sourceCredentials instanceof ServiceAccountCredentials)
         || (isDefaultUniverseDomain()
-            && ((ServiceAccountCredentials) this.sourceCredentials).shouldUseAssertionFlow())) {
+            && ((ServiceAccountCredentials) this.sourceCredentials).shouldUseAssertionFlowForGdu())) {
       try {
         this.sourceCredentials.refreshIfExpired();
       } catch (IOException e) {
@@ -516,9 +516,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(sourceCredentials);
     HttpRequestFactory requestFactory = httpTransport.createRequestFactory();
 
-    String endpointUrl = null;
-
-    endpointUrl =
+    String endpointUrl =
         this.iamEndpointOverride != null
             ? this.iamEndpointOverride
             : String.format(
