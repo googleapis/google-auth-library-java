@@ -103,9 +103,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
   private static final String CLOUD_PLATFORM_SCOPE =
       "https://www.googleapis.com/auth/cloud-platform";
-  private static final String IAM_ACCESS_TOKEN_ENDPOINT =
-      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken";
-
   private GoogleCredentials sourceCredentials;
   private String targetPrincipal;
   private List<String> delegates;
@@ -423,14 +420,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
   @Override
   public GoogleCredentials createScoped(Collection<String> scopes) {
-    return toBuilder()
-        .setScopes(new ArrayList<>(scopes))
-        .setLifetime(this.lifetime)
-        .setDelegates(this.delegates)
-        .setHttpTransportFactory(this.transportFactory)
-        .setQuotaProjectId(this.quotaProjectId)
-        .setIamEndpointOverride(this.iamEndpointOverride)
-        .build();
+    return toBuilder().setScopes(new ArrayList<>(scopes)).setAccessToken(null).build();
   }
 
   @Override
@@ -457,7 +447,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
         .build();
   }
 
-  private ImpersonatedCredentials(Builder builder) {
+  private ImpersonatedCredentials(Builder builder) throws IOException {
     super(builder);
     this.sourceCredentials = builder.getSourceCredentials();
     this.targetPrincipal = builder.getTargetPrincipal();
@@ -472,7 +462,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
     this.calendar = builder.getCalendar();
     if (this.delegates == null) {
-      this.delegates = new ArrayList<String>();
+      this.delegates = new ArrayList<>();
     }
     if (this.scopes == null) {
       throw new IllegalStateException("Scopes cannot be null");
@@ -480,6 +470,28 @@ public class ImpersonatedCredentials extends GoogleCredentials
     if (this.lifetime > TWELVE_HOURS_IN_SECONDS) {
       throw new IllegalStateException("lifetime must be less than or equal to 43200");
     }
+
+    // Do not expect explicit universe domain, throw exception if the explicit universe domain
+    // does not match the source credential.
+    // Do nothing if it matches the source credential
+    if (isExplicitUniverseDomain()
+        && !this.sourceCredentials.getUniverseDomain().equals(builder.getUniverseDomain())) {
+      throw new IllegalStateException(
+          String.format(
+              "Universe domain %s in source credentials "
+                  + "does not match %s universe domain set for impersonated credentials.",
+              this.sourceCredentials.getUniverseDomain(), builder.getUniverseDomain()));
+    }
+  }
+
+  /**
+   * Gets the universe domain for the credential.
+   *
+   * @return the universe domain from source credentials
+   */
+  @Override
+  public String getUniverseDomain() throws IOException {
+    return this.sourceCredentials.getUniverseDomain();
   }
 
   @Override
@@ -489,10 +501,18 @@ public class ImpersonatedCredentials extends GoogleCredentials
           this.sourceCredentials.createScoped(Arrays.asList(CLOUD_PLATFORM_SCOPE));
     }
 
-    try {
-      this.sourceCredentials.refreshIfExpired();
-    } catch (IOException e) {
-      throw new IOException("Unable to refresh sourceCredentials", e);
+    // skip for SA with SSJ flow because it uses self-signed JWT
+    // and will get refreshed at initialize request step
+    // run for other source credential types or SA with GDU assert flow
+    if (!(this.sourceCredentials instanceof ServiceAccountCredentials)
+        || (isDefaultUniverseDomain()
+            && ((ServiceAccountCredentials) this.sourceCredentials)
+                .shouldUseAssertionFlowForGdu())) {
+      try {
+        this.sourceCredentials.refreshIfExpired();
+      } catch (IOException e) {
+        throw new IOException("Unable to refresh sourceCredentials", e);
+      }
     }
 
     HttpTransport httpTransport = this.transportFactory.create();
@@ -504,7 +524,11 @@ public class ImpersonatedCredentials extends GoogleCredentials
     String endpointUrl =
         this.iamEndpointOverride != null
             ? this.iamEndpointOverride
-            : String.format(IAM_ACCESS_TOKEN_ENDPOINT, this.targetPrincipal);
+            : String.format(
+                OAuth2Utils.IAM_ACCESS_TOKEN_ENDPOINT_FORMAT,
+                getUniverseDomain(),
+                this.targetPrincipal);
+
     GenericUrl url = new GenericUrl(endpointUrl);
 
     Map<String, Object> body =
@@ -603,6 +627,9 @@ public class ImpersonatedCredentials extends GoogleCredentials
     if (!(obj instanceof ImpersonatedCredentials)) {
       return false;
     }
+    if (!super.equals(obj)) {
+      return false;
+    }
     ImpersonatedCredentials other = (ImpersonatedCredentials) obj;
     return Objects.equals(this.sourceCredentials, other.sourceCredentials)
         && Objects.equals(this.targetPrincipal, other.targetPrincipal)
@@ -616,7 +643,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
   @Override
   public Builder toBuilder() {
-    return new Builder(this.sourceCredentials, this.targetPrincipal);
+    return new Builder(this);
   }
 
   public static Builder newBuilder() {
@@ -636,9 +663,27 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
     protected Builder() {}
 
+    /**
+     * @param sourceCredentials The source credentials to use for impersonation.
+     * @param targetPrincipal The service account to impersonate.
+     * @deprecated Use {@link #Builder(ImpersonatedCredentials)} instead. This constructor will be
+     *     removed in a future release.
+     */
+    @Deprecated
     protected Builder(GoogleCredentials sourceCredentials, String targetPrincipal) {
       this.sourceCredentials = sourceCredentials;
       this.targetPrincipal = targetPrincipal;
+    }
+
+    protected Builder(ImpersonatedCredentials credentials) {
+      super(credentials);
+      this.sourceCredentials = credentials.sourceCredentials;
+      this.targetPrincipal = credentials.targetPrincipal;
+      this.delegates = credentials.delegates;
+      this.scopes = credentials.scopes;
+      this.lifetime = credentials.lifetime;
+      this.transportFactory = credentials.transportFactory;
+      this.iamEndpointOverride = credentials.iamEndpointOverride;
     }
 
     @CanIgnoreReturnValue
@@ -726,7 +771,13 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
     @Override
     public ImpersonatedCredentials build() {
-      return new ImpersonatedCredentials(this);
+      try {
+        return new ImpersonatedCredentials(this);
+      } catch (IOException e) {
+        // throwing exception would be breaking change. catching instead.
+        // this should never happen.
+        throw new IllegalStateException(e);
+      }
     }
   }
 
