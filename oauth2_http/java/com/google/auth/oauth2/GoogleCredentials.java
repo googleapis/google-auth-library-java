@@ -263,11 +263,11 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   /**
    * Checks if universe domain equals to {@link Credentials#GOOGLE_DEFAULT_UNIVERSE}.
    *
-   * @return true if universeDomain equals to {@link Credentials#GOOGLE_DEFAULT_UNIVERSE}, false
+   * @return true if universe domain equals to {@link Credentials#GOOGLE_DEFAULT_UNIVERSE}, false
    *     otherwise
    */
-  boolean isDefaultUniverseDomain() {
-    return this.universeDomain.equals(Credentials.GOOGLE_DEFAULT_UNIVERSE);
+  boolean isDefaultUniverseDomain() throws IOException {
+    return getUniverseDomain().equals(Credentials.GOOGLE_DEFAULT_UNIVERSE);
   }
 
   /**
