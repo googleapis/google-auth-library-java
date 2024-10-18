@@ -476,7 +476,11 @@ public class ImpersonatedCredentials extends GoogleCredentials
     // Do nothing if it matches the source credential
     if (isExplicitUniverseDomain()
         && !this.sourceCredentials.getUniverseDomain().equals(builder.getUniverseDomain())) {
-      throw new IllegalStateException("Universe is derived from the source credentials");
+      throw new IllegalStateException(
+          String.format(
+              "Universe domain %s in source credentials "
+                  + "does not match %s universe domain set for impersonated credentials.",
+              this.sourceCredentials.getUniverseDomain(), builder.getUniverseDomain()));
     }
   }
 

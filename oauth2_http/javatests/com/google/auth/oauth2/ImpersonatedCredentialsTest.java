@@ -1096,7 +1096,9 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
                     .setUniverseDomain("explicit.domain.com")
                     .build());
     assertEquals(
-        "Universe is derived from the source credentials", illegalStateException.getMessage());
+        "Universe domain source.domain.xyz in source credentials"
+            + " does not match explicit.domain.com universe domain set for impersonated credentials.",
+        illegalStateException.getMessage());
   }
 
   @Test
