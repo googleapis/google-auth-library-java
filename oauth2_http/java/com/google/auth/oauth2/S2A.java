@@ -56,6 +56,7 @@ public final class S2A {
   public static final String METADATA_FLAVOR = "Metadata-Flavor";
   public static final String GOOGLE = "Google";
   private static final String PARSE_ERROR_S2A = "Error parsing S2A Config from MDS JSON response.";
+  private static final String MDS_MTLS_ENDPOINT = ComputeEngineCredentials.getMetadataServerUrl() + S2A_CONFIG_ENDPOINT_POSTFIX;
 
   private S2AConfig config;
 
@@ -84,8 +85,7 @@ public final class S2A {
    * @return the {@link S2AConfig}.
    */
   private S2AConfig getS2AConfigFromMDS() {
-    String url = getMdsMtlsEndpoint();
-    GenericUrl genericUrl = new GenericUrl(url);
+    GenericUrl genericUrl = new GenericUrl(MDS_MTLS_ENDPOINT);
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY); 
     if (transportFactory == null) {
       transportFactory =
@@ -129,10 +129,5 @@ public final class S2A {
           .build();
     }
     return S2AConfig.createBuilder().build();
-  }
-
-  /** @return MDS mTLS autoconfig endpoint. */
-  private String getMdsMtlsEndpoint() {
-    return ComputeEngineCredentials.getMetadataServerUrl() + S2A_CONFIG_ENDPOINT_POSTFIX;
   }
 }
