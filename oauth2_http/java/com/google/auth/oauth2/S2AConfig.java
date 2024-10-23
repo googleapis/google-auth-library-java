@@ -33,7 +33,7 @@ package com.google.auth.oauth2;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 
 /** Holds an mTLS configuration (consists of address of S2A) retrieved from the Metadata Server. */
-public final class S2AConfig {
+final class S2AConfig {
   // plaintextAddress is the plaintext address to reach the S2A.
   private final String plaintextAddress;
 
