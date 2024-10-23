@@ -54,7 +54,6 @@ public final class S2A {
 
   public static final String METADATA_FLAVOR = "Metadata-Flavor";
   public static final String GOOGLE = "Google";
-  private static final int MAX_MDS_PING_TRIES = 3;
   private static final String PARSE_ERROR_S2A = "Error parsing S2A Config from MDS JSON response.";
 
   private S2AConfig config;
@@ -104,7 +103,7 @@ public final class S2A {
       return S2AConfig.createBuilder().build();
     }
 
-    for (int i = 0; i < MAX_MDS_PING_TRIES; i++) {
+    for (int i = 0; i < OAuth2Utils.DEFAULT_NUMBER_OF_RETRIES; i++) {
       String plaintextS2AAddress = "";
       String mtlsS2AAddress = "";
       try {
