@@ -61,8 +61,6 @@ public final class S2A {
 
   private transient HttpTransportFactory transportFactory;
 
-  public S2A() {}
-
   public void setHttpTransportFactory(HttpTransportFactory tf) {
     this.transportFactory = tf;
     this.config = getS2AConfigFromMDS();
