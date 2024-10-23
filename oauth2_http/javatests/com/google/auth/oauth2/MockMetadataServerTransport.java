@@ -67,6 +67,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
   private String mtlsS2AAddress;
 
   private boolean emptyContent;
+  private MockLowLevelHttpRequest request;
 
   public MockMetadataServerTransport() {}
 
@@ -119,33 +120,43 @@ public class MockMetadataServerTransport extends MockHttpTransport {
     this.emptyContent = emptyContent;
   }
 
+  public MockLowLevelHttpRequest getRequest() {
+    return request;
+  }
+
   @Override
   public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
     if (url.startsWith(ComputeEngineCredentials.getTokenServerEncodedUrl())) {
-      return getMockRequestForTokenEndpoint(url);
+      this.request = getMockRequestForTokenEndpoint(url);
+      return this.request;
     } else if (isGetServiceAccountsUrl(url)) {
-      return getMockRequestForServiceAccount(url);
+      this.request = getMockRequestForServiceAccount(url);
+      return this.request;
     } else if (isSignRequestUrl(url)) {
-      return getMockRequestForSign(url);
+      this.request = getMockRequestForSign(url);
+      return this.request;
     } else if (isIdentityDocumentUrl(url)) {
-      return getMockRequestForIdentityDocument(url);
+      this.request = getMockRequestForIdentityDocument(url);
+      return this.request;
     } else if (isMtlsConfigRequestUrl(url)) {
       return getMockRequestForMtlsConfig(url);
     }
-    return new MockLowLevelHttpRequest(url) {
-      @Override
-      public LowLevelHttpResponse execute() {
-        if (requestStatusCode != null) {
-          return new MockLowLevelHttpResponse()
-              .setStatusCode(requestStatusCode)
-              .setContent("Metadata Error");
-        }
+    this.request =
+        new MockLowLevelHttpRequest(url) {
+          @Override
+          public LowLevelHttpResponse execute() {
+            if (requestStatusCode != null) {
+              return new MockLowLevelHttpResponse()
+                  .setStatusCode(requestStatusCode)
+                  .setContent("Metadata Error");
+            }
 
-        MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-        response.addHeader("Metadata-Flavor", "Google");
-        return response;
-      }
-    };
+            MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+            response.addHeader("Metadata-Flavor", "Google");
+            return response;
+          }
+        };
+    return this.request;
   }
 
   private MockLowLevelHttpRequest getMockRequestForSign(String url) {

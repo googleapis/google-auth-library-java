@@ -51,11 +51,13 @@ import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Joiner;
 import com.google.api.client.util.Preconditions;
+import com.google.auth.CredentialTypeForMetrics;
 import com.google.auth.Credentials;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.oauth2.MetricsUtils.RequestType;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
@@ -470,8 +472,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
             GoogleCredentials.fromStream(credentialsStream, transportFactory);
     if (credential == null) {
       throw new IOException(
-          String.format(
-              "Error reading credentials from stream, ServiceAccountCredentials type is not recognized."));
+          "Error reading credentials from stream, ServiceAccountCredentials type is not recognized.");
     }
     return credential;
   }
@@ -505,6 +506,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
 
+    MetricsUtils.setMetricsHeader(
+        request,
+        MetricsUtils.getGoogleCredentialsMetricsHeader(
+            RequestType.ACCESS_TOKEN_REQUEST, getMetricsCredentialType()));
     if (this.defaultRetriesEnabled) {
       request.setNumberOfRetries(OAuth2Utils.DEFAULT_NUMBER_OF_RETRIES);
     } else {
@@ -586,6 +591,12 @@ public class ServiceAccountCredentials extends GoogleCredentials
     UrlEncodedContent content = new UrlEncodedContent(tokenRequest);
 
     HttpRequest request = buildIdTokenRequest(tokenServerUri, transportFactory, content);
+    // add metric header
+    MetricsUtils.setMetricsHeader(
+        request,
+        MetricsUtils.getGoogleCredentialsMetricsHeader(
+            RequestType.ID_TOKEN_REQUEST, getMetricsCredentialType()));
+
     HttpResponse httpResponse = executeRequest(request);
 
     GenericData responseData = httpResponse.parseAs(GenericData.class);
@@ -981,13 +992,19 @@ public class ServiceAccountCredentials extends GoogleCredentials
     // For default universe Self-signed JWT could be explicitly disabled with
     // {@code ServiceAccountCredentials.useJwtAccessWithScope} flag.
     // If universe is non-default, it only supports self-signed JWT, and it is always allowed.
-    if (this.useJwtAccessWithScope || !isDefaultUniverseDomain()) {
-      // This will call getRequestMetadata(URI uri), which handles self-signed JWT logic.
-      // Self-signed JWT doesn't use network, so here we do a blocking call to improve
-      // efficiency. executor will be ignored since it is intended for async operation.
-      blockingGetToCallback(uri, callback);
-    } else {
-      super.getRequestMetadata(uri, executor, callback);
+    try {
+      if (this.useJwtAccessWithScope || !isDefaultUniverseDomain()) {
+        // This will call getRequestMetadata(URI uri), which handles self-signed JWT logic.
+        // Self-signed JWT doesn't use network, so here we do a blocking call to improve
+        // efficiency. executor will be ignored since it is intended for async operation.
+        blockingGetToCallback(uri, callback);
+      } else {
+        super.getRequestMetadata(uri, executor, callback);
+      }
+    } catch (IOException e) {
+      // Wrap here because throwing exception would be breaking change.
+      // This should not happen for this credential type.
+      throw new IllegalStateException(e);
     }
   }
 
@@ -1008,15 +1025,24 @@ public class ServiceAccountCredentials extends GoogleCredentials
     }
   }
 
-  private Map<String, List<String>> getRequestMetadataForGdu(URI uri) throws IOException {
+  @Override
+  public CredentialTypeForMetrics getMetricsCredentialType() {
+    return shouldUseAssertionFlowForGdu()
+        ? CredentialTypeForMetrics.SERVICE_ACCOUNT_CREDENTIALS_AT
+        : CredentialTypeForMetrics.SERVICE_ACCOUNT_CREDENTIALS_JWT;
+  }
+
+  boolean shouldUseAssertionFlowForGdu() {
     // If scopes are provided, but we cannot use self-signed JWT or domain-wide delegation is
     // configured then use scopes to get access token.
-    if ((!createScopedRequired() && !useJwtAccessWithScope)
-        || isConfiguredForDomainWideDelegation()) {
-      return super.getRequestMetadata(uri);
-    }
+    return ((!createScopedRequired() && !useJwtAccessWithScope)
+        || isConfiguredForDomainWideDelegation());
+  }
 
-    return getRequestMetadataWithSelfSignedJwt(uri);
+  private Map<String, List<String>> getRequestMetadataForGdu(URI uri) throws IOException {
+    return shouldUseAssertionFlowForGdu()
+        ? super.getRequestMetadata(uri)
+        : getRequestMetadataWithSelfSignedJwt(uri);
   }
 
   private Map<String, List<String>> getRequestMetadataForNonGdu(URI uri) throws IOException {

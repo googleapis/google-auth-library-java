@@ -31,12 +31,16 @@
 
 package com.google.auth.oauth2;
 
+import com.google.api.client.http.HttpRequest;
+import com.google.auth.CredentialTypeForMetrics;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
 class MetricsUtils {
   static final String API_CLIENT_HEADER = "x-goog-api-client";
+  static final String CRED_TYPE = "cred-type";
+  static final String AUTH_REQUEST_TYPE = "auth-request-type";
   private static final String authLibraryVersion = getAuthLibraryVersion();
   private static final String javaLanguageVersion = System.getProperty("java.version");
 
@@ -66,5 +70,50 @@ class MetricsUtils {
       // Ignore.
     }
     return version;
+  }
+
+  public enum RequestType {
+    ACCESS_TOKEN_REQUEST("at"),
+    ID_TOKEN_REQUEST("it"),
+    METADATA_SERVER_PING("mds"),
+    UNTRACKED("untracked");
+
+    private final String label;
+
+    private RequestType(String label) {
+      this.label = label;
+    }
+
+    public String getLabel() {
+      return label;
+    }
+  }
+
+  /**
+   * Formulates metrics header string. Header string takes format: “gl-java/JAVA_VERSION
+   * auth/LIB_VERSION auth-request-type/REQUEST_TYPE cred-type/CREDENTIAL_TYPE”. "auth-request-type"
+   * and "cred-type" can be omitted.
+   *
+   * @param requestType Auth request type to be specified in metrics, omit when {@code
+   *     RequestType.UNTRACKED}
+   * @param credentialTypeForMetrics Credential type to be included in metrics string, omit when
+   *     {@code CredentialTypeForMetrics.DO_NOT_SEND}
+   * @return metrics header string to send
+   */
+  static String getGoogleCredentialsMetricsHeader(
+      RequestType requestType, CredentialTypeForMetrics credentialTypeForMetrics) {
+    StringBuilder stringBuilder =
+        new StringBuilder(MetricsUtils.getLanguageAndAuthLibraryVersions());
+    if (requestType != RequestType.UNTRACKED) {
+      stringBuilder.append(String.format(" %s/%s", AUTH_REQUEST_TYPE, requestType.getLabel()));
+    }
+    if (credentialTypeForMetrics != CredentialTypeForMetrics.DO_NOT_SEND) {
+      stringBuilder.append(String.format(" %s/%s", CRED_TYPE, credentialTypeForMetrics.getLabel()));
+    }
+    return stringBuilder.toString();
+  }
+
+  static void setMetricsHeader(HttpRequest request, String metricsHeader) {
+    request.getHeaders().set(MetricsUtils.API_CLIENT_HEADER, metricsHeader);
   }
 }

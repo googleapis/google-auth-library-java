@@ -52,6 +52,7 @@ import com.google.api.client.testing.http.FixedClock;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.api.client.util.Joiner;
+import com.google.auth.CredentialTypeForMetrics;
 import com.google.auth.Credentials;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.TestUtils;
@@ -615,6 +616,11 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+
+    // verify header
+    Map<String, List<String>> accessTokenRequestHeader =
+        transportFactory.transport.getRequest().getHeaders();
+    com.google.auth.oauth2.TestUtils.validateMetricsHeader(accessTokenRequestHeader, "at", "sa");
   }
 
   @Test
@@ -857,6 +863,11 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     transport.addServiceAccount(CLIENT_EMAIL, accessToken1);
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken1);
 
+    // verify access token request metrics headers
+    Map<String, List<String>> accessTokenRequestHeader =
+        transportFactory.transport.getRequest().getHeaders();
+    com.google.auth.oauth2.TestUtils.validateMetricsHeader(accessTokenRequestHeader, "at", "sa");
+
     String targetAudience = "https://foo.bar";
     IdTokenCredentials tokenCredential =
         IdTokenCredentials.newBuilder()
@@ -871,6 +882,11 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(
         targetAudience,
         tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
+
+    // verify id token request metrics headers
+    Map<String, List<String>> idTokenRequestHeader =
+        transportFactory.transport.getRequest().getHeaders();
+    com.google.auth.oauth2.TestUtils.validateMetricsHeader(idTokenRequestHeader, "it", "sa");
   }
 
   @Test
@@ -1590,6 +1606,12 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     assertNotNull(((ServiceAccountCredentials) credentials).getSelfSignedJwtCredentialsWithScope());
     verifyJwtAccess(metadata, "dummy.scope");
+
+    // Verify credentialType is correctly set. This is used for token usage metrics.
+    // Self signed jwt flow doesn’t call any token endpoint, thus no token request metrics.
+    assertEquals(
+        CredentialTypeForMetrics.SERVICE_ACCOUNT_CREDENTIALS_JWT,
+        credentials.getMetricsCredentialType());
   }
 
   @Test
