@@ -39,6 +39,7 @@ import com.google.auth.http.HttpTransportFactory;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 import java.util.ServiceLoader;
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -60,8 +61,8 @@ public final class S2A {
 
   private transient HttpTransportFactory transportFactory;
 
-  public void setHttpTransportFactory(HttpTransportFactory tf) {
-    this.transportFactory = tf;
+  public S2A(Optional<HttpTransportFactory> transportFactory) {
+    this.transportFactory = transportFactory.get();
     this.config = getS2AConfigFromMDS();
   }
 
