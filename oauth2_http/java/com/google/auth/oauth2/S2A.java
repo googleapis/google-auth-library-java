@@ -143,6 +143,11 @@ public final class S2A {
       try {
         HttpResponse response = request.execute();
         if (!response.isSuccessStatusCode()) {
+          int statusCode = response.getStatusCode();
+          if (statusCode >= 400 && statusCode < 500) {
+            // Do not retry if endpoint does not exist.
+            return S2AConfig.createBuilder().build();
+          }
           continue;
         }
         InputStream content = response.getContent();
