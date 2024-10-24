@@ -37,6 +37,7 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.collect.Iterables;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
@@ -62,8 +63,8 @@ public final class S2A {
 
   private transient HttpTransportFactory transportFactory;
 
-  public S2A(Optional<HttpTransportFactory> transportFactory) {
-    this.transportFactory = transportFactory.get();
+  S2A(S2A.Builder builder) {
+    this.transportFactory = builder.getHttpTransportFactory();
     this.config = getS2AConfigFromMDS();
   }
 
@@ -75,6 +76,30 @@ public final class S2A {
   /** @return the plaintext S2A Address from the mTLS config. */
   public String getPlaintextS2AAddress() {
     return config.getPlaintextAddress();
+  }
+
+  public static Builder newBuilder() {
+    return new Builder();
+  }
+
+  public static class Builder {
+    private HttpTransportFactory transportFactory;
+
+    protected Builder() {}
+
+    @CanIgnoreReturnValue
+    public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
+      this.transportFactory = transportFactory;
+      return this;
+    }
+
+    public HttpTransportFactory getHttpTransportFactory() {
+      return this.transportFactory;
+    }
+
+    public S2A build() {
+      return new S2A(this);
+    }
   }
 
   /**
