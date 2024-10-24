@@ -51,6 +51,8 @@ import javax.annotation.concurrent.ThreadSafe;
  */
 @ThreadSafe
 public final class S2A {
+  static final String S2A_PLAINTEXT_ADDRESS_JSON_KEY = "plaintext_address";
+  static final String S2A_MTLS_ADDRESS_JSON_KEY = "mtls_address";
   static final String S2A_CONFIG_ENDPOINT_POSTFIX =
       "/computeMetadata/v1/instance/platform-security/auto-mtls-configuration";
 
@@ -156,13 +158,17 @@ public final class S2A {
           continue;
         }
         GenericData responseData = response.parseAs(GenericData.class);
-        plaintextS2AAddress =
-            OAuth2Utils.validateString(responseData, "plaintext_address", PARSE_ERROR_S2A);
-        mtlsS2AAddress = OAuth2Utils.validateString(responseData, "mtls_address", PARSE_ERROR_S2A);
+        try {
+          plaintextS2AAddress =
+              OAuth2Utils.validateString(responseData, S2A_PLAINTEXT_ADDRESS_JSON_KEY, PARSE_ERROR_S2A);
+        } catch (IOException ignore) {}
+        try { 
+          mtlsS2AAddress = OAuth2Utils.validateString(responseData, S2A_MTLS_ADDRESS_JSON_KEY, PARSE_ERROR_S2A);
+        } catch (IOException ignore) {}
       } catch (IOException e) {
         /*
-        Indicates an error when executing the {@link HttpRequest} or parsing the response from MDS.
-        In either case retry the request. If max retries have been exhausted, empty addresses
+        Indicates an error when executing the {@link HttpRequest}.
+        The request is retried, if max retries have been exhausted, empty addresses
         will be populated in S2AConfig. The user/caller of this library passes the address to the
         S2A client, which will fail to create S2AChannelCredentials (due to empty address) after 
         which the user/caller should fallback to creating a channel without S2A.

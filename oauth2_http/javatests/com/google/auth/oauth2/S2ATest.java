@@ -44,13 +44,16 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class S2ATest {
 
+  private static final String INVALID_JSON_KEY = "invalid_key";
   private static final String S2A_PLAINTEXT_ADDRESS = "plaintext";
   private static final String S2A_MTLS_ADDRESS = "mtls";
 
   @Test
   public void getS2AAddress_validAddress() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    transportFactory.transport.setPlaintextS2AAddressJsonKey(S2A.S2A_PLAINTEXT_ADDRESS_JSON_KEY);
     transportFactory.transport.setPlaintextS2AAddress(S2A_PLAINTEXT_ADDRESS);
+    transportFactory.transport.setMtlsS2AAddressJsonKey(S2A.S2A_MTLS_ADDRESS_JSON_KEY);
     transportFactory.transport.setMtlsS2AAddress(S2A_MTLS_ADDRESS);
     transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_OK);
 
@@ -64,7 +67,9 @@ public class S2ATest {
   @Test
   public void getS2AAddress_queryEndpointResponseErrorCode_emptyAddress() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    transportFactory.transport.setPlaintextS2AAddressJsonKey(S2A.S2A_PLAINTEXT_ADDRESS_JSON_KEY);
     transportFactory.transport.setPlaintextS2AAddress(S2A_PLAINTEXT_ADDRESS);
+    transportFactory.transport.setMtlsS2AAddressJsonKey(S2A.S2A_MTLS_ADDRESS_JSON_KEY);
     transportFactory.transport.setMtlsS2AAddress(S2A_MTLS_ADDRESS);
     transportFactory.transport.setRequestStatusCode(
         HttpStatusCodes.STATUS_CODE_SERVICE_UNAVAILABLE);
@@ -79,7 +84,9 @@ public class S2ATest {
   @Test
   public void getS2AAddress_queryEndpointResponseEmpty_emptyAddress() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    transportFactory.transport.setPlaintextS2AAddressJsonKey(S2A.S2A_PLAINTEXT_ADDRESS_JSON_KEY);
     transportFactory.transport.setPlaintextS2AAddress(S2A_PLAINTEXT_ADDRESS);
+    transportFactory.transport.setMtlsS2AAddressJsonKey(S2A.S2A_MTLS_ADDRESS_JSON_KEY);
     transportFactory.transport.setMtlsS2AAddress(S2A_MTLS_ADDRESS);
     transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_OK);
     transportFactory.transport.setEmptyContent(true);
@@ -88,6 +95,38 @@ public class S2ATest {
     String plaintextS2AAddress = s2aUtils.getPlaintextS2AAddress();
     String mtlsS2AAddress = s2aUtils.getMtlsS2AAddress();
     assertTrue(plaintextS2AAddress.isEmpty());
+    assertTrue(mtlsS2AAddress.isEmpty());
+  }
+
+  @Test
+  public void getS2AAddress_queryEndpointResponseInvalidPlaintextJsonKey_plaintextEmptyAddress() {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    transportFactory.transport.setPlaintextS2AAddressJsonKey(INVALID_JSON_KEY);
+    transportFactory.transport.setPlaintextS2AAddress(S2A_PLAINTEXT_ADDRESS);
+    transportFactory.transport.setMtlsS2AAddressJsonKey(S2A.S2A_MTLS_ADDRESS_JSON_KEY);
+    transportFactory.transport.setMtlsS2AAddress(S2A_MTLS_ADDRESS);
+    transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_OK);
+
+    S2A s2aUtils = S2A.newBuilder().setHttpTransportFactory(transportFactory).build();
+    String plaintextS2AAddress = s2aUtils.getPlaintextS2AAddress();
+    String mtlsS2AAddress = s2aUtils.getMtlsS2AAddress();
+    assertTrue(plaintextS2AAddress.isEmpty());
+    assertEquals(S2A_MTLS_ADDRESS, mtlsS2AAddress);
+  }
+
+  @Test
+  public void getS2AAddress_queryEndpointResponseInvalidMtlsJsonKey_mtlsEmptyAddress() {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    transportFactory.transport.setPlaintextS2AAddressJsonKey(S2A.S2A_PLAINTEXT_ADDRESS_JSON_KEY);
+    transportFactory.transport.setPlaintextS2AAddress(S2A_PLAINTEXT_ADDRESS);
+    transportFactory.transport.setMtlsS2AAddressJsonKey(INVALID_JSON_KEY);
+    transportFactory.transport.setMtlsS2AAddress(S2A_MTLS_ADDRESS);
+    transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_OK);
+
+    S2A s2aUtils = S2A.newBuilder().setHttpTransportFactory(transportFactory).build();
+    String plaintextS2AAddress = s2aUtils.getPlaintextS2AAddress();
+    String mtlsS2AAddress = s2aUtils.getMtlsS2AAddress();
+    assertEquals(S2A_PLAINTEXT_ADDRESS, plaintextS2AAddress);
     assertTrue(mtlsS2AAddress.isEmpty());
   }
 }

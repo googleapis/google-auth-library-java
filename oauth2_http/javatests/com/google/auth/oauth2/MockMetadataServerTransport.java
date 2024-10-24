@@ -62,7 +62,11 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
   private byte[] signature;
 
+  private String plaintextS2AAddressJsonKey;
+
   private String plaintextS2AAddress;
+
+  private String mtlsS2AAddressJsonKey;
 
   private String mtlsS2AAddress;
 
@@ -108,8 +112,16 @@ public class MockMetadataServerTransport extends MockHttpTransport {
     this.idToken = idToken;
   }
 
+  public void setPlaintextS2AAddressJsonKey(String key) {
+    this.plaintextS2AAddressJsonKey = key;
+  }
+
   public void setPlaintextS2AAddress(String address) {
     this.plaintextS2AAddress = address;
+  }
+
+  public void setMtlsS2AAddressJsonKey(String key) {
+    this.mtlsS2AAddressJsonKey = key;
   }
 
   public void setMtlsS2AAddress(String address) {
@@ -304,8 +316,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
         // Create the JSON response
         GenericJson content = new GenericJson();
         content.setFactory(OAuth2Utils.JSON_FACTORY);
-        content.put("plaintext_address", plaintextS2AAddress);
-        content.put("mtls_address", mtlsS2AAddress);
+        content.put(plaintextS2AAddressJsonKey, plaintextS2AAddress);
+        content.put(mtlsS2AAddressJsonKey, mtlsS2AAddress);
         String contentText = content.toPrettyString();
 
         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
@@ -337,8 +349,10 @@ public class MockMetadataServerTransport extends MockHttpTransport {
   }
 
   protected boolean isMtlsConfigRequestUrl(String url) {
-    return plaintextS2AAddress != null
+    return plaintextS2AAddressJsonKey != null
+        && plaintextS2AAddress != null
         && mtlsS2AAddress != null
+        && mtlsS2AAddressJsonKey != null
         && url.equals(String.format(ComputeEngineCredentials.getMetadataServerUrl() + S2A.S2A_CONFIG_ENDPOINT_POSTFIX));
   }
 }
