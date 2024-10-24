@@ -50,11 +50,11 @@ import javax.annotation.concurrent.ThreadSafe;
  */
 @ThreadSafe
 public final class S2A {
-  public static final String S2A_CONFIG_ENDPOINT_POSTFIX =
+  static final String S2A_CONFIG_ENDPOINT_POSTFIX =
       "/computeMetadata/v1/instance/platform-security/auto-mtls-configuration";
 
-  public static final String METADATA_FLAVOR = "Metadata-Flavor";
-  public static final String GOOGLE = "Google";
+  static final String METADATA_FLAVOR = "Metadata-Flavor";
+  static final String GOOGLE = "Google";
   private static final String PARSE_ERROR_S2A = "Error parsing S2A Config from MDS JSON response.";
   private static final String MDS_MTLS_ENDPOINT = ComputeEngineCredentials.getMetadataServerUrl() + S2A_CONFIG_ENDPOINT_POSTFIX;
 
