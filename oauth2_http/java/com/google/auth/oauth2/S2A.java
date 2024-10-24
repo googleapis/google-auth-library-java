@@ -106,14 +106,15 @@ public final class S2A {
    * Queries the MDS mTLS Autoconfiguration endpoint and returns the {@link S2AConfig}.
    *
    * <p>Returns {@link S2AConfig}. If S2A is not running, or if any error occurs when
-   * making the request to MDS, {@link S2AConfig} will be populated with empty addresses.
+   * making the request to MDS / processing the response, {@link S2AConfig} will be 
+   * populated with empty addresses.
    * 
    * Users are expected to try to fetch the mTLS-S2A address first (via 
    * {@link getMtlsS2AAddress}). If it is empty or they have some problem loading the
    * mTLS-MDS credentials, they should then fallback to fetching the plaintext-S2A address
    * (via {@link getPlaintextS2AAddress}). If the plaintext-S2A address is empty it means
-   * that an error occurred when talking to the MDS or that S2A is not running in the 
-   * environment; in either case this indicates S2A shouldn't be used.
+   * that an error occurred when talking to the MDS / processing the response or that S2A 
+   * is not running in the environment; in either case this indicates S2A shouldn't be used.
    *
    * @return the {@link S2AConfig}.
    */
@@ -159,6 +160,13 @@ public final class S2A {
             OAuth2Utils.validateString(responseData, "plaintext_address", PARSE_ERROR_S2A);
         mtlsS2AAddress = OAuth2Utils.validateString(responseData, "mtls_address", PARSE_ERROR_S2A);
       } catch (IOException e) {
+        /*
+        Indicates an error when executing the {@link HttpRequest} or parsing the response from MDS.
+        In either case retry the request. If max retries have been exhausted, empty addresses
+        will be populated in S2AConfig. The user/caller of this library passes the address to the
+        S2A client, which will fail to create S2AChannelCredentials (due to empty address) after 
+        which the user/caller should fallback to creating a channel without S2A.
+        */
         continue;
       }
       return S2AConfig.createBuilder()
