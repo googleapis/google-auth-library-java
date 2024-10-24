@@ -105,7 +105,15 @@ public final class S2A {
   /**
    * Queries the MDS mTLS Autoconfiguration endpoint and returns the {@link S2AConfig}.
    *
-   * <p>Returns {@link S2AConfig} with empty addresses on error.
+   * <p>Returns {@link S2AConfig}. If S2A is not running, or if any error occurs when
+   * making the request to MDS, {@link S2AConfig} will be populated with empty addresses.
+   * 
+   * Users are expected to try to fetch the mTLS-S2A address first (via 
+   * {@link getMtlsS2AAddress}). If it is empty or they have some problem loading the
+   * mTLS-MDS credentials, they should then fallback to fetching the plaintext-S2A address
+   * (via {@link getPlaintextS2AAddress}). If the plaintext-S2A address is empty it means
+   * that an error occurred when talking to the MDS or that S2A is not running in the 
+   * environment; in either case this indicates S2A shouldn't be used.
    *
    * @return the {@link S2AConfig}.
    */
