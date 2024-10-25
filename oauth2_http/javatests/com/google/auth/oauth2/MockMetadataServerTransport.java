@@ -62,6 +62,15 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
   private byte[] signature;
 
+  private String plaintextS2AAddressJsonKey;
+
+  private String plaintextS2AAddress;
+
+  private String mtlsS2AAddressJsonKey;
+
+  private String mtlsS2AAddress;
+
+  private boolean emptyContent;
   private MockLowLevelHttpRequest request;
 
   public MockMetadataServerTransport() {}
@@ -103,6 +112,26 @@ public class MockMetadataServerTransport extends MockHttpTransport {
     this.idToken = idToken;
   }
 
+  public void setPlaintextS2AAddressJsonKey(String key) {
+    this.plaintextS2AAddressJsonKey = key;
+  }
+
+  public void setPlaintextS2AAddress(String address) {
+    this.plaintextS2AAddress = address;
+  }
+
+  public void setMtlsS2AAddressJsonKey(String key) {
+    this.mtlsS2AAddressJsonKey = key;
+  }
+
+  public void setMtlsS2AAddress(String address) {
+    this.mtlsS2AAddress = address;
+  }
+
+  public void setEmptyContent(boolean emptyContent) {
+    this.emptyContent = emptyContent;
+  }
+
   public MockLowLevelHttpRequest getRequest() {
     return request;
   }
@@ -121,6 +150,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
     } else if (isIdentityDocumentUrl(url)) {
       this.request = getMockRequestForIdentityDocument(url);
       return this.request;
+    } else if (isMtlsConfigRequestUrl(url)) {
+      return getMockRequestForMtlsConfig(url);
     }
     this.request =
         new MockLowLevelHttpRequest(url) {
@@ -272,6 +303,39 @@ public class MockMetadataServerTransport extends MockHttpTransport {
     };
   }
 
+  private MockLowLevelHttpRequest getMockRequestForMtlsConfig(String url) {
+    return new MockLowLevelHttpRequest(url) {
+      @Override
+      public LowLevelHttpResponse execute() throws IOException {
+
+        String metadataRequestHeader = getFirstHeaderValue(S2A.METADATA_FLAVOR);
+        if (!S2A.GOOGLE.equals(metadataRequestHeader)) {
+          throw new IOException("Metadata request header not found");
+        }
+
+        // Create the JSON response
+        GenericJson content = new GenericJson();
+        content.setFactory(OAuth2Utils.JSON_FACTORY);
+        if (requestStatusCode < 400) {
+          content.put(plaintextS2AAddressJsonKey, plaintextS2AAddress);
+          content.put(mtlsS2AAddressJsonKey, mtlsS2AAddress);
+        }
+        String contentText = content.toPrettyString();
+
+        MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+
+        if (requestStatusCode != null) {
+          response.setStatusCode(requestStatusCode);
+        }
+        if (emptyContent == true) {
+          return response.setZeroContent();
+        }
+        response.setContentType(Json.MEDIA_TYPE).setContent(contentText);
+        return response;
+      }
+    };
+  }
+
   protected boolean isGetServiceAccountsUrl(String url) {
     return url.equals(ComputeEngineCredentials.getServiceAccountsUrl());
   }
@@ -284,5 +348,13 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
   protected boolean isIdentityDocumentUrl(String url) {
     return url.startsWith(String.format(ComputeEngineCredentials.getIdentityDocumentUrl()));
+  }
+
+  protected boolean isMtlsConfigRequestUrl(String url) {
+    return plaintextS2AAddressJsonKey != null
+        && plaintextS2AAddress != null
+        && mtlsS2AAddress != null
+        && mtlsS2AAddressJsonKey != null
+        && url.equals(String.format(ComputeEngineCredentials.getMetadataServerUrl() + S2A.S2A_CONFIG_ENDPOINT_POSTFIX));
   }
 }
