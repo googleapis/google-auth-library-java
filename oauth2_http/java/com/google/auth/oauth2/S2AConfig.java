@@ -66,12 +66,20 @@ final class S2AConfig {
 
     @CanIgnoreReturnValue
     public Builder setPlaintextAddress(String plaintextAddress) {
+      /* 
+       * No validation / format check is necessary here. It is up to the client which consumes this address
+       * to return error if there is a problem connecting to S2A at that address.
+      */
       this.plaintextAddress = plaintextAddress;
       return this;
     }
 
     @CanIgnoreReturnValue
     public Builder setMtlsAddress(String mtlsAddress) {
+      /* 
+       * No validation / format check is necessary here. It is up to the client which consumes this address
+       * to return error if there is a problem connecting to S2A at that address.
+      */
       this.mtlsAddress = mtlsAddress;
       return this;
     }
