@@ -62,13 +62,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
   private byte[] signature;
 
-  private String plaintextS2AAddressJsonKey;
-
-  private String plaintextS2AAddress;
-
-  private String mtlsS2AAddressJsonKey;
-
-  private String mtlsS2AAddress;
+  private Map<String, String> s2aContentMap = new HashMap<>();
 
   private boolean emptyContent;
   private MockLowLevelHttpRequest request;
@@ -112,20 +106,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
     this.idToken = idToken;
   }
 
-  public void setPlaintextS2AAddressJsonKey(String key) {
-    this.plaintextS2AAddressJsonKey = key;
-  }
-
-  public void setPlaintextS2AAddress(String address) {
-    this.plaintextS2AAddress = address;
-  }
-
-  public void setMtlsS2AAddressJsonKey(String key) {
-    this.mtlsS2AAddressJsonKey = key;
-  }
-
-  public void setMtlsS2AAddress(String address) {
-    this.mtlsS2AAddress = address;
+  public void setS2AContentMap(String key, String value) {
+    s2aContentMap.put(key, value);
   }
 
   public void setEmptyContent(boolean emptyContent) {
@@ -317,8 +299,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
         GenericJson content = new GenericJson();
         content.setFactory(OAuth2Utils.JSON_FACTORY);
         if (requestStatusCode == 200) {
-          content.put(plaintextS2AAddressJsonKey, plaintextS2AAddress);
-          content.put(mtlsS2AAddressJsonKey, mtlsS2AAddress);
+          content.put(s2aContentMap.get("plaintextS2AAddressJsonKey"), s2aContentMap.get("plaintextS2AAddress"));
+          content.put(s2aContentMap.get("mtlsS2AAddressJsonKey"), s2aContentMap.get("mtlsS2AAddress"));
         }
         String contentText = content.toPrettyString();
 
@@ -351,10 +333,10 @@ public class MockMetadataServerTransport extends MockHttpTransport {
   }
 
   protected boolean isMtlsConfigRequestUrl(String url) {
-    return plaintextS2AAddressJsonKey != null
-        && plaintextS2AAddress != null
-        && mtlsS2AAddress != null
-        && mtlsS2AAddressJsonKey != null
+    return s2aContentMap.containsKey("plaintextS2AAddressJsonKey")
+        && s2aContentMap.containsKey("plaintextS2AAddress")
+        && s2aContentMap.containsKey("mtlsS2AAddressJsonKey")
+        && s2aContentMap.containsKey("mtlsS2AAddress")
         && url.equals(
             String.format(
                 ComputeEngineCredentials.getMetadataServerUrl() + S2A.S2A_CONFIG_ENDPOINT_POSTFIX));
