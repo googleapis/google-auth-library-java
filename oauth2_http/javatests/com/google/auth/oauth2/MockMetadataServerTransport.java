@@ -39,6 +39,7 @@ import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.BaseEncoding;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -106,8 +107,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
     this.idToken = idToken;
   }
 
-  public void setS2AContentMap(String key, String value) {
-    s2aContentMap.put(key, value);
+  public void setS2AContentMap(ImmutableMap<String, String> map) {
+    this.s2aContentMap = map;
   }
 
   public void setEmptyContent(boolean emptyContent) {
@@ -299,11 +300,9 @@ public class MockMetadataServerTransport extends MockHttpTransport {
         GenericJson content = new GenericJson();
         content.setFactory(OAuth2Utils.JSON_FACTORY);
         if (requestStatusCode == 200) {
-          content.put(
-              s2aContentMap.get("plaintextS2AAddressJsonKey"),
-              s2aContentMap.get("plaintextS2AAddress"));
-          content.put(
-              s2aContentMap.get("mtlsS2AAddressJsonKey"), s2aContentMap.get("mtlsS2AAddress"));
+          for (Map.Entry<String, String> entrySet : s2aContentMap.entrySet()) {
+            content.put(entrySet.getKey(), entrySet.getValue());
+          }
         }
         String contentText = content.toPrettyString();
 
@@ -336,12 +335,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
   }
 
   protected boolean isMtlsConfigRequestUrl(String url) {
-    return s2aContentMap.containsKey("plaintextS2AAddressJsonKey")
-        && s2aContentMap.containsKey("plaintextS2AAddress")
-        && s2aContentMap.containsKey("mtlsS2AAddressJsonKey")
-        && s2aContentMap.containsKey("mtlsS2AAddress")
-        && url.equals(
-            String.format(
-                ComputeEngineCredentials.getMetadataServerUrl() + S2A.S2A_CONFIG_ENDPOINT_POSTFIX));
+    return url.equals(
+        String.format(
+            ComputeEngineCredentials.getMetadataServerUrl() + S2A.S2A_CONFIG_ENDPOINT_POSTFIX));
   }
 }
