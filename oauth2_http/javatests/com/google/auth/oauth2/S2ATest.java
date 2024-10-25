@@ -35,7 +35,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.auth.oauth2.ComputeEngineCredentialsTest.MockMetadataServerTransportFactory;
-import java.util.Optional;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;

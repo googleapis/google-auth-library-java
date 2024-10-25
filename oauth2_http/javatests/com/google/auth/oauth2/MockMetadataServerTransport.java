@@ -355,6 +355,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
         && plaintextS2AAddress != null
         && mtlsS2AAddress != null
         && mtlsS2AAddressJsonKey != null
-        && url.equals(String.format(ComputeEngineCredentials.getMetadataServerUrl() + S2A.S2A_CONFIG_ENDPOINT_POSTFIX));
+        && url.equals(
+            String.format(
+                ComputeEngineCredentials.getMetadataServerUrl() + S2A.S2A_CONFIG_ENDPOINT_POSTFIX));
   }
 }

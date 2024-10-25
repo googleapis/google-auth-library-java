@@ -45,7 +45,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.Set;
 import javax.annotation.concurrent.ThreadSafe;
@@ -64,9 +63,11 @@ public final class S2A {
 
   static final String METADATA_FLAVOR = "Metadata-Flavor";
   static final String GOOGLE = "Google";
-  private static final Set<Integer> RETRYABLE_STATUS_CODES = new HashSet<>(Arrays.asList(500, 502, 503));
+  private static final Set<Integer> RETRYABLE_STATUS_CODES =
+      new HashSet<>(Arrays.asList(500, 502, 503));
   private static final String PARSE_ERROR_S2A = "Error parsing S2A Config from MDS JSON response.";
-  private static final String MDS_MTLS_ENDPOINT = ComputeEngineCredentials.getMetadataServerUrl() + S2A_CONFIG_ENDPOINT_POSTFIX;
+  private static final String MDS_MTLS_ENDPOINT =
+      ComputeEngineCredentials.getMetadataServerUrl() + S2A_CONFIG_ENDPOINT_POSTFIX;
 
   private S2AConfig config;
 
@@ -114,22 +115,22 @@ public final class S2A {
   /**
    * Queries the MDS mTLS Autoconfiguration endpoint and returns the {@link S2AConfig}.
    *
-   * <p>Returns {@link S2AConfig}. If S2A is not running, or if any error occurs when
-   * making the request to MDS / processing the response, {@link S2AConfig} will be 
-   * populated with empty addresses.
-   * 
-   * Users are expected to try to fetch the mTLS-S2A address first (via 
-   * {@link getMtlsS2AAddress}). If it is empty or they have some problem loading the
-   * mTLS-MDS credentials, they should then fallback to fetching the plaintext-S2A address
-   * (via {@link getPlaintextS2AAddress}). If the plaintext-S2A address is empty it means
-   * that an error occurred when talking to the MDS / processing the response or that S2A 
-   * is not running in the environment; in either case this indicates S2A shouldn't be used.
+   * <p>Returns {@link S2AConfig}. If S2A is not running, or if any error occurs when making the
+   * request to MDS / processing the response, {@link S2AConfig} will be populated with empty
+   * addresses.
+   *
+   * <p>Users are expected to try to fetch the mTLS-S2A address first (via {@link
+   * getMtlsS2AAddress}). If it is empty or they have some problem loading the mTLS-MDS credentials,
+   * they should then fallback to fetching the plaintext-S2A address (via {@link
+   * getPlaintextS2AAddress}). If the plaintext-S2A address is empty it means that an error occurred
+   * when talking to the MDS / processing the response or that S2A is not running in the
+   * environment; in either case this indicates S2A shouldn't be used.
    *
    * @return the {@link S2AConfig}.
    */
   private S2AConfig getS2AConfigFromMDS() {
     GenericUrl genericUrl = new GenericUrl(MDS_MTLS_ENDPOINT);
-    JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY); 
+    JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     if (transportFactory == null) {
       transportFactory =
           Iterables.getFirst(
@@ -138,26 +139,24 @@ public final class S2A {
 
     HttpRequest request;
     try {
-      request =
-              transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
+      request = transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
       request.setParser(parser);
       request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
       request.setThrowExceptionOnExecuteError(false);
       request.setNumberOfRetries(OAuth2Utils.DEFAULT_NUMBER_OF_RETRIES);
 
       ExponentialBackOff backoff =
-        new ExponentialBackOff.Builder()
-            .setInitialIntervalMillis(OAuth2Utils.INITIAL_RETRY_INTERVAL_MILLIS)
-            .setRandomizationFactor(OAuth2Utils.RETRY_RANDOMIZATION_FACTOR)
-            .setMultiplier(OAuth2Utils.RETRY_MULTIPLIER)
-            .build();
+          new ExponentialBackOff.Builder()
+              .setInitialIntervalMillis(OAuth2Utils.INITIAL_RETRY_INTERVAL_MILLIS)
+              .setRandomizationFactor(OAuth2Utils.RETRY_RANDOMIZATION_FACTOR)
+              .setMultiplier(OAuth2Utils.RETRY_MULTIPLIER)
+              .build();
 
       // Retry on 5xx status codes.
       request.setUnsuccessfulResponseHandler(
-        new HttpBackOffUnsuccessfulResponseHandler(backoff)
-            .setBackOffRequired(
-                response ->
-                    RETRYABLE_STATUS_CODES.contains(response.getStatusCode())));
+          new HttpBackOffUnsuccessfulResponseHandler(backoff)
+              .setBackOffRequired(
+                  response -> RETRYABLE_STATUS_CODES.contains(response.getStatusCode())));
       request.setIOExceptionHandler(new HttpBackOffIOExceptionHandler(backoff));
     } catch (IOException e) {
       return S2AConfig.createBuilder().build();
@@ -174,11 +173,15 @@ public final class S2A {
       GenericData responseData = response.parseAs(GenericData.class);
       try {
         plaintextS2AAddress =
-            OAuth2Utils.validateString(responseData, S2A_PLAINTEXT_ADDRESS_JSON_KEY, PARSE_ERROR_S2A);
-      } catch (IOException ignore) {}
-      try { 
-        mtlsS2AAddress = OAuth2Utils.validateString(responseData, S2A_MTLS_ADDRESS_JSON_KEY, PARSE_ERROR_S2A);
-      } catch (IOException ignore) {}
+            OAuth2Utils.validateString(
+                responseData, S2A_PLAINTEXT_ADDRESS_JSON_KEY, PARSE_ERROR_S2A);
+      } catch (IOException ignore) {
+      }
+      try {
+        mtlsS2AAddress =
+            OAuth2Utils.validateString(responseData, S2A_MTLS_ADDRESS_JSON_KEY, PARSE_ERROR_S2A);
+      } catch (IOException ignore) {
+      }
     } catch (IOException ignore) {
       /*
        * Return empty addresses in {@link S2AConfig} once all retries have been exhausted.
@@ -189,6 +192,5 @@ public final class S2A {
         .setPlaintextAddress(plaintextS2AAddress)
         .setMtlsAddress(mtlsS2AAddress)
         .build();
-    
   }
 }
