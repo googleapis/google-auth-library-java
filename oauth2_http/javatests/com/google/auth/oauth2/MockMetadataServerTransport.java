@@ -299,8 +299,11 @@ public class MockMetadataServerTransport extends MockHttpTransport {
         GenericJson content = new GenericJson();
         content.setFactory(OAuth2Utils.JSON_FACTORY);
         if (requestStatusCode == 200) {
-          content.put(s2aContentMap.get("plaintextS2AAddressJsonKey"), s2aContentMap.get("plaintextS2AAddress"));
-          content.put(s2aContentMap.get("mtlsS2AAddressJsonKey"), s2aContentMap.get("mtlsS2AAddress"));
+          content.put(
+              s2aContentMap.get("plaintextS2AAddressJsonKey"),
+              s2aContentMap.get("plaintextS2AAddress"));
+          content.put(
+              s2aContentMap.get("mtlsS2AAddressJsonKey"), s2aContentMap.get("mtlsS2AAddress"));
         }
         String contentText = content.toPrettyString();
 

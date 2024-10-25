@@ -50,9 +50,11 @@ public class S2ATest {
   @Test
   public void getS2AAddress_validAddress() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-    transportFactory.transport.setS2AContentMap("plaintextS2AAddressJsonKey", S2A.S2A_PLAINTEXT_ADDRESS_JSON_KEY);
+    transportFactory.transport.setS2AContentMap(
+        "plaintextS2AAddressJsonKey", S2A.S2A_PLAINTEXT_ADDRESS_JSON_KEY);
     transportFactory.transport.setS2AContentMap("plaintextS2AAddress", S2A_PLAINTEXT_ADDRESS);
-    transportFactory.transport.setS2AContentMap("mtlsS2AAddressJsonKey", S2A.S2A_MTLS_ADDRESS_JSON_KEY);
+    transportFactory.transport.setS2AContentMap(
+        "mtlsS2AAddressJsonKey", S2A.S2A_MTLS_ADDRESS_JSON_KEY);
     transportFactory.transport.setS2AContentMap("mtlsS2AAddress", S2A_MTLS_ADDRESS);
     transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_OK);
 
@@ -66,9 +68,11 @@ public class S2ATest {
   @Test
   public void getS2AAddress_queryEndpointResponseErrorCode_emptyAddress() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-    transportFactory.transport.setS2AContentMap("plaintextS2AAddressJsonKey", S2A.S2A_PLAINTEXT_ADDRESS_JSON_KEY);
+    transportFactory.transport.setS2AContentMap(
+        "plaintextS2AAddressJsonKey", S2A.S2A_PLAINTEXT_ADDRESS_JSON_KEY);
     transportFactory.transport.setS2AContentMap("plaintextS2AAddress", S2A_PLAINTEXT_ADDRESS);
-    transportFactory.transport.setS2AContentMap("mtlsS2AAddressJsonKey", S2A.S2A_MTLS_ADDRESS_JSON_KEY);
+    transportFactory.transport.setS2AContentMap(
+        "mtlsS2AAddressJsonKey", S2A.S2A_MTLS_ADDRESS_JSON_KEY);
     transportFactory.transport.setS2AContentMap("mtlsS2AAddress", S2A_MTLS_ADDRESS);
     transportFactory.transport.setRequestStatusCode(
         HttpStatusCodes.STATUS_CODE_SERVICE_UNAVAILABLE);
@@ -83,9 +87,11 @@ public class S2ATest {
   @Test
   public void getS2AAddress_queryEndpointResponseEmpty_emptyAddress() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-    transportFactory.transport.setS2AContentMap("plaintextS2AAddressJsonKey", S2A.S2A_PLAINTEXT_ADDRESS_JSON_KEY);
+    transportFactory.transport.setS2AContentMap(
+        "plaintextS2AAddressJsonKey", S2A.S2A_PLAINTEXT_ADDRESS_JSON_KEY);
     transportFactory.transport.setS2AContentMap("plaintextS2AAddress", S2A_PLAINTEXT_ADDRESS);
-    transportFactory.transport.setS2AContentMap("mtlsS2AAddressJsonKey", S2A.S2A_MTLS_ADDRESS_JSON_KEY);
+    transportFactory.transport.setS2AContentMap(
+        "mtlsS2AAddressJsonKey", S2A.S2A_MTLS_ADDRESS_JSON_KEY);
     transportFactory.transport.setS2AContentMap("mtlsS2AAddress", S2A_MTLS_ADDRESS);
     transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_OK);
     transportFactory.transport.setEmptyContent(true);
@@ -102,7 +108,8 @@ public class S2ATest {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setS2AContentMap("plaintextS2AAddressJsonKey", INVALID_JSON_KEY);
     transportFactory.transport.setS2AContentMap("plaintextS2AAddress", S2A_PLAINTEXT_ADDRESS);
-    transportFactory.transport.setS2AContentMap("mtlsS2AAddressJsonKey", S2A.S2A_MTLS_ADDRESS_JSON_KEY);
+    transportFactory.transport.setS2AContentMap(
+        "mtlsS2AAddressJsonKey", S2A.S2A_MTLS_ADDRESS_JSON_KEY);
     transportFactory.transport.setS2AContentMap("mtlsS2AAddress", S2A_MTLS_ADDRESS);
     transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_OK);
 
@@ -116,7 +123,8 @@ public class S2ATest {
   @Test
   public void getS2AAddress_queryEndpointResponseInvalidMtlsJsonKey_mtlsEmptyAddress() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-    transportFactory.transport.setS2AContentMap("plaintextS2AAddressJsonKey", S2A.S2A_PLAINTEXT_ADDRESS_JSON_KEY);
+    transportFactory.transport.setS2AContentMap(
+        "plaintextS2AAddressJsonKey", S2A.S2A_PLAINTEXT_ADDRESS_JSON_KEY);
     transportFactory.transport.setS2AContentMap("plaintextS2AAddress", S2A_PLAINTEXT_ADDRESS);
     transportFactory.transport.setS2AContentMap("mtlsS2AAddressJsonKey", INVALID_JSON_KEY);
     transportFactory.transport.setS2AContentMap("mtlsS2AAddress", S2A_MTLS_ADDRESS);

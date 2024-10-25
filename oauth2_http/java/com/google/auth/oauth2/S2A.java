@@ -140,7 +140,8 @@ public final class S2A {
     String plaintextS2AAddress = "";
     String mtlsS2AAddress = "";
     try {
-      HttpRequest request = transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
+      HttpRequest request =
+          transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
       request.setParser(parser);
       request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
       request.setThrowExceptionOnExecuteError(false);
