@@ -137,9 +137,10 @@ public final class S2A {
               ServiceLoader.load(HttpTransportFactory.class), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
     }
 
-    HttpRequest request;
+    String plaintextS2AAddress = "";
+    String mtlsS2AAddress = "";
     try {
-      request = transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
+      HttpRequest request = transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
       request.setParser(parser);
       request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
       request.setThrowExceptionOnExecuteError(false);
@@ -158,13 +159,7 @@ public final class S2A {
               .setBackOffRequired(
                   response -> RETRYABLE_STATUS_CODES.contains(response.getStatusCode())));
       request.setIOExceptionHandler(new HttpBackOffIOExceptionHandler(backoff));
-    } catch (IOException e) {
-      return S2AConfig.createBuilder().build();
-    }
 
-    String plaintextS2AAddress = "";
-    String mtlsS2AAddress = "";
-    try {
       HttpResponse response = request.execute();
       InputStream content = response.getContent();
       if (content == null) {
@@ -186,6 +181,7 @@ public final class S2A {
       /*
        * Return empty addresses in {@link S2AConfig} once all retries have been exhausted.
        */
+      return S2AConfig.createBuilder().build();
     }
 
     return S2AConfig.createBuilder()
