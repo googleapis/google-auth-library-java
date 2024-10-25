@@ -316,8 +316,10 @@ public class MockMetadataServerTransport extends MockHttpTransport {
         // Create the JSON response
         GenericJson content = new GenericJson();
         content.setFactory(OAuth2Utils.JSON_FACTORY);
-        content.put(plaintextS2AAddressJsonKey, plaintextS2AAddress);
-        content.put(mtlsS2AAddressJsonKey, mtlsS2AAddress);
+        if (requestStatusCode < 400) {
+          content.put(plaintextS2AAddressJsonKey, plaintextS2AAddress);
+          content.put(mtlsS2AAddressJsonKey, mtlsS2AAddress);
+        }
         String contentText = content.toPrettyString();
 
         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
