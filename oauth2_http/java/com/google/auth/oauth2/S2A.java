@@ -130,60 +130,74 @@ public final class S2A {
    * @return the {@link S2AConfig}.
    */
   private S2AConfig getS2AConfigFromMDS() {
-    GenericUrl genericUrl = new GenericUrl(MDS_MTLS_ENDPOINT);
-    JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     if (transportFactory == null) {
       transportFactory =
           Iterables.getFirst(
               ServiceLoader.load(HttpTransportFactory.class), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
     }
 
-    String plaintextS2AAddress = "";
-    String mtlsS2AAddress = "";
+    HttpRequest request = null;
+    GenericUrl genericUrl = new GenericUrl(MDS_MTLS_ENDPOINT);
     try {
-      HttpRequest request =
-          transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
-      request.setParser(parser);
-      request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
-      request.setThrowExceptionOnExecuteError(false);
-      request.setNumberOfRetries(OAuth2Utils.DEFAULT_NUMBER_OF_RETRIES);
+      request = transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
+    } catch (IOException ignore) {
+      /*
+       * Return empty addresses in {@link S2AConfig} if error building the GET request.
+       */
+      return S2AConfig.createBuilder().build();
+    }
 
-      ExponentialBackOff backoff =
-          new ExponentialBackOff.Builder()
-              .setInitialIntervalMillis(OAuth2Utils.INITIAL_RETRY_INTERVAL_MILLIS)
-              .setRandomizationFactor(OAuth2Utils.RETRY_RANDOMIZATION_FACTOR)
-              .setMultiplier(OAuth2Utils.RETRY_MULTIPLIER)
-              .build();
+    request.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
+    request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
+    request.setThrowExceptionOnExecuteError(false);
+    request.setNumberOfRetries(OAuth2Utils.DEFAULT_NUMBER_OF_RETRIES);
 
-      // Retry on 5xx status codes.
-      request.setUnsuccessfulResponseHandler(
-          new HttpBackOffUnsuccessfulResponseHandler(backoff)
-              .setBackOffRequired(
-                  response -> RETRYABLE_STATUS_CODES.contains(response.getStatusCode())));
-      request.setIOExceptionHandler(new HttpBackOffIOExceptionHandler(backoff));
+    ExponentialBackOff backoff =
+        new ExponentialBackOff.Builder()
+            .setInitialIntervalMillis(OAuth2Utils.INITIAL_RETRY_INTERVAL_MILLIS)
+            .setRandomizationFactor(OAuth2Utils.RETRY_RANDOMIZATION_FACTOR)
+            .setMultiplier(OAuth2Utils.RETRY_MULTIPLIER)
+            .build();
 
+    // Retry on 5xx status codes.
+    request.setUnsuccessfulResponseHandler(
+        new HttpBackOffUnsuccessfulResponseHandler(backoff)
+            .setBackOffRequired(
+                response -> RETRYABLE_STATUS_CODES.contains(response.getStatusCode())));
+    request.setIOExceptionHandler(new HttpBackOffIOExceptionHandler(backoff));
+
+    GenericData responseData = null;
+    try {
       HttpResponse response = request.execute();
       InputStream content = response.getContent();
       if (content == null) {
         return S2AConfig.createBuilder().build();
       }
-      GenericData responseData = response.parseAs(GenericData.class);
-      try {
-        plaintextS2AAddress =
-            OAuth2Utils.validateString(
-                responseData, S2A_PLAINTEXT_ADDRESS_JSON_KEY, PARSE_ERROR_S2A);
-      } catch (IOException ignore) {
-      }
-      try {
-        mtlsS2AAddress =
-            OAuth2Utils.validateString(responseData, S2A_MTLS_ADDRESS_JSON_KEY, PARSE_ERROR_S2A);
-      } catch (IOException ignore) {
-      }
+      responseData = response.parseAs(GenericData.class);
     } catch (IOException ignore) {
       /*
        * Return empty addresses in {@link S2AConfig} once all retries have been exhausted.
        */
       return S2AConfig.createBuilder().build();
+    }
+
+    String plaintextS2AAddress = "";
+    String mtlsS2AAddress = "";
+    try {
+      plaintextS2AAddress =
+          OAuth2Utils.validateString(responseData, S2A_PLAINTEXT_ADDRESS_JSON_KEY, PARSE_ERROR_S2A);
+    } catch (IOException ignore) {
+      /*
+       * Do not throw error because of parsing error, just leave the address as empty in {@link S2AConfig}.
+       */
+    }
+    try {
+      mtlsS2AAddress =
+          OAuth2Utils.validateString(responseData, S2A_MTLS_ADDRESS_JSON_KEY, PARSE_ERROR_S2A);
+    } catch (IOException ignore) {
+      /*
+       * Do not throw error because of parsing error, just leave the address as empty in {@link S2AConfig}.
+       */
     }
 
     return S2AConfig.createBuilder()
