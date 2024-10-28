@@ -191,6 +191,66 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void buildTokenUrlSoftMtlsBound_mtls_transport() {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setTransport("mtls").build();
+    String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
+
+    assertEquals(TOKEN_URL + "?transport=mtls", softBoundTokenUrl);
+  }
+
+  @Test
+  public void buildTokenUrlSoftMtlsBound_iam_enforcement() {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setBindingEnforcement("iam-policy").build();
+    String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
+
+    assertEquals(TOKEN_URL + "?binding-enforcement=iam-policy", softBoundTokenUrl);
+  }
+
+  @Test
+  public void buildTokenUrlSoftMtlsBound_mtls_transport_iam_enforcement() {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder()
+            .setTransport("mtls")
+            .setBindingEnforcement("iam-policy")
+            .build();
+    String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
+
+    assertEquals(TOKEN_URL + "?transport=mtls&binding-enforcement=iam-policy", softBoundTokenUrl);
+  }
+
+  @Test
+  public void buildTokenUrlHardMtlsBound_always_enforced() {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setBindingEnforcement("on").build();
+    String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
+
+    assertEquals(TOKEN_URL + "?binding-enforcement=on", softBoundTokenUrl);
+  }
+
+  @Test
+  public void buildTokenUrlHardMtlsBound_mtls_transport_always_enforced() {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder()
+            .setTransport("mtls")
+            .setBindingEnforcement("on")
+            .build();
+    String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
+
+    assertEquals(TOKEN_URL + "?transport=mtls&binding-enforcement=on", softBoundTokenUrl);
+  }
+
+  @Test
+  public void buildTokenUrlHardDirectPathBound_alts_transport() {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setTransport("alts").build();
+    String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
+
+    assertEquals(TOKEN_URL + "?transport=alts", softBoundTokenUrl);
+  }
+
+  @Test
   public void buildScoped_scopesPresent() throws IOException {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setScopes(null).build();
