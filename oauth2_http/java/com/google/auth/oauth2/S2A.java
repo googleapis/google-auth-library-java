@@ -52,7 +52,8 @@ import javax.annotation.concurrent.ThreadSafe;
 /**
  * Utilities to fetch the S2A (Secure Session Agent) address from the mTLS configuration.
  *
- * <p>mTLS configuration is queried from the MDS MTLS Autoconfiguration endpoint.
+ * <p>mTLS configuration is queried from the MDS MTLS Autoconfiguration endpoint. See
+ * https://google.aip.dev/auth/4115 for details.
  */
 @ThreadSafe
 public final class S2A {
