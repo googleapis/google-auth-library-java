@@ -54,8 +54,8 @@ import javax.annotation.concurrent.ThreadSafe;
  *
  * <p>mTLS configuration is queried from the MDS MTLS Autoconfiguration endpoint. See
  * https://google.aip.dev/auth/4115 for details.
- * 
- * This is an experimental utility.
+ *
+ * <p>This is an experimental utility.
  */
 @ThreadSafe
 public final class S2A {
