@@ -44,10 +44,12 @@ final class S2AConfig {
     return new Builder();
   }
 
+  /** @return the plaintext S2A Address. */
   public String getPlaintextAddress() {
     return plaintextAddress;
   }
 
+  /** @return the mTLS S2A Address. */
   public String getMtlsAddress() {
     return mtlsAddress;
   }
