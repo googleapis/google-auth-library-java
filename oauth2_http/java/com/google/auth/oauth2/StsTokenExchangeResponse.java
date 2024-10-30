@@ -43,7 +43,7 @@ import javax.annotation.Nullable;
  * Defines an OAuth 2.0 token exchange successful response. Based on
  * https://tools.ietf.org/html/rfc8693#section-2.2.1.
  */
-final class StsTokenExchangeResponse {
+public final class StsTokenExchangeResponse {
   private final AccessToken accessToken;
   private final String issuedTokenType;
   private final String tokenType;
@@ -51,6 +51,7 @@ final class StsTokenExchangeResponse {
   @Nullable private final Long expiresInSeconds;
   @Nullable private final String refreshToken;
   @Nullable private final List<String> scopes;
+  @Nullable private final String accessBoundarySessionKey;
 
   private StsTokenExchangeResponse(
       String accessToken,
@@ -58,7 +59,8 @@ final class StsTokenExchangeResponse {
       String tokenType,
       @Nullable Long expiresInSeconds,
       @Nullable String refreshToken,
-      @Nullable List<String> scopes) {
+      @Nullable List<String> scopes,
+      @Nullable String accessBoundarySessionKey) {
     checkNotNull(accessToken);
 
     this.expiresInSeconds = expiresInSeconds;
@@ -71,6 +73,7 @@ final class StsTokenExchangeResponse {
     this.tokenType = checkNotNull(tokenType);
     this.refreshToken = refreshToken;
     this.scopes = scopes;
+    this.accessBoundarySessionKey = accessBoundarySessionKey;
   }
 
   public static Builder newBuilder(String accessToken, String issuedTokenType, String tokenType) {
@@ -107,6 +110,11 @@ final class StsTokenExchangeResponse {
     return new ArrayList<>(scopes);
   }
 
+  @Nullable
+  public String getAccessBoundarySessionKey() {
+    return accessBoundarySessionKey;
+  }
+
   public static class Builder {
     private final String accessToken;
     private final String issuedTokenType;
@@ -115,6 +123,7 @@ final class StsTokenExchangeResponse {
     @Nullable private Long expiresInSeconds;
     @Nullable private String refreshToken;
     @Nullable private List<String> scopes;
+    @Nullable private String accessBoundarySessionKey;
 
     private Builder(String accessToken, String issuedTokenType, String tokenType) {
       this.accessToken = accessToken;
@@ -142,9 +151,22 @@ final class StsTokenExchangeResponse {
       return this;
     }
 
+    @CanIgnoreReturnValue
+    public StsTokenExchangeResponse.Builder setAccessBoundarySessionKey(
+        String accessBoundarySessionKey) {
+      this.accessBoundarySessionKey = accessBoundarySessionKey;
+      return this;
+    }
+
     public StsTokenExchangeResponse build() {
       return new StsTokenExchangeResponse(
-          accessToken, issuedTokenType, tokenType, expiresInSeconds, refreshToken, scopes);
+          accessToken,
+          issuedTokenType,
+          tokenType,
+          expiresInSeconds,
+          refreshToken,
+          scopes,
+          accessBoundarySessionKey);
     }
   }
 }

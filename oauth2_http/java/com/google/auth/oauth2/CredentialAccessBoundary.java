@@ -67,7 +67,7 @@ public final class CredentialAccessBoundary {
   /**
    * Internal method that returns the JSON string representation of the credential access boundary.
    */
-  String toJson() {
+  public String toJson() {
     List<GenericJson> rules = new ArrayList<>();
     for (AccessBoundaryRule rule : accessBoundaryRules) {
       GenericJson ruleJson = new GenericJson();

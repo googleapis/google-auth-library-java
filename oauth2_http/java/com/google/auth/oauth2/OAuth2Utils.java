@@ -70,11 +70,15 @@ import java.util.Map;
 import java.util.Set;
 
 /** Internal utilities for the com.google.auth.oauth2 namespace. */
-class OAuth2Utils {
+public class OAuth2Utils {
+
   static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
 
-  static final String TOKEN_TYPE_ACCESS_TOKEN = "urn:ietf:params:oauth:token-type:access_token";
+  public static final String TOKEN_TYPE_ACCESS_TOKEN =
+      "urn:ietf:params:oauth:token-type:access_token";
   static final String TOKEN_TYPE_TOKEN_EXCHANGE = "urn:ietf:params:oauth:token-type:token-exchange";
+  public static final String TOKEN_TYPE_ACCESS_BOUNDARY_INTERMEDIARY_TOKEN =
+      "urn:ietf:params:oauth:token-type:access_boundary_intermediary_token";
   static final String GRANT_TYPE_JWT_BEARER = "urn:ietf:params:oauth:grant-type:jwt-bearer";
 
   // generateIdToken endpoint is to be formatted with universe domain and client email
@@ -93,7 +97,8 @@ class OAuth2Utils {
 
   static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 
-  static final HttpTransportFactory HTTP_TRANSPORT_FACTORY = new DefaultHttpTransportFactory();
+  public static final HttpTransportFactory HTTP_TRANSPORT_FACTORY =
+      new DefaultHttpTransportFactory();
 
   static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 

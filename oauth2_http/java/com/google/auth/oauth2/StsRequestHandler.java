@@ -51,7 +51,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 /** Implements the OAuth 2.0 token exchange based on https://tools.ietf.org/html/rfc8693. */
-final class StsRequestHandler {
+public final class StsRequestHandler {
   private static final String TOKEN_EXCHANGE_GRANT_TYPE =
       "urn:ietf:params:oauth:grant-type:token-exchange";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token response.";
@@ -174,6 +174,11 @@ final class StsRequestHandler {
     if (responseData.containsKey("scope")) {
       String scope = OAuth2Utils.validateString(responseData, "scope", PARSE_ERROR_PREFIX);
       builder.setScopes(Arrays.asList(scope.trim().split("\\s+")));
+    }
+    if (responseData.containsKey("access_boundary_session_key")) {
+      builder.setAccessBoundarySessionKey(
+          OAuth2Utils.validateString(
+              responseData, "access_boundary_session_key", PARSE_ERROR_PREFIX));
     }
     return builder.build();
   }

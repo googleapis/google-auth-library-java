@@ -484,7 +484,7 @@ public class OAuth2Credentials extends Credentials {
     }
   }
 
-  protected static <T> T getFromServiceLoader(Class<? extends T> clazz, T defaultInstance) {
+  public static <T> T getFromServiceLoader(Class<? extends T> clazz, T defaultInstance) {
     return Iterables.getFirst(ServiceLoader.load(clazz), defaultInstance);
   }
 
