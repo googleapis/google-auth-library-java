@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.auth</groupId>
   <artifactId>google-auth-library-parent</artifactId>
-  <version>1.28.1-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
+  <version>1.29.1-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
   <packaging>pom</packaging>
   <name>Google Auth Library for Java</name>
   <description>Client libraries providing authentication and
@@ -72,10 +72,10 @@
     <project.google.http.version>1.45.0</project.google.http.version>
     <project.junit.version>4.13.2</project.junit.version>
     <project.guava.version>33.3.1-android</project.guava.version>
-    <project.appengine.version>2.0.30</project.appengine.version>
+    <project.appengine.version>2.0.31</project.appengine.version>
     <project.findbugs.version>3.0.2</project.findbugs.version>
     <deploy.autorelease>false</deploy.autorelease>
-    <project.error-prone.version>2.33.0</project.error-prone.version>
+    <project.error-prone.version>2.35.1</project.error-prone.version>
   </properties>
 
   <dependencyManagement>
@@ -211,7 +211,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.5.0</version>
+          <version>3.5.1</version>
           <configuration>
             <reportNameSuffix>sponge_log</reportNameSuffix>
           </configuration>
@@ -219,7 +219,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
-          <version>3.8.0</version>
+          <version>3.8.1</version>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
@@ -249,7 +249,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.5.0</version>
+        <version>3.6.0</version>
         <executions>
           <execution>
             <id>checkstyle</id>
@@ -280,7 +280,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-site-plugin</artifactId>
-        <version>3.20.0</version>
+        <version>3.21.0</version>
         <configuration>
           <skipDeploy>true</skipDeploy>
         </configuration>

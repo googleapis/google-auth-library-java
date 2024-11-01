@@ -612,12 +612,12 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
         .setExpireTime(ImpersonatedCredentialsTest.getDefaultExpireTime());
     transportFactory
         .getTransport()
-        .setAccessTokenEndpoint(ImpersonatedCredentialsTest.IMPERSONATION_URL);
+        .setAccessTokenEndpoint(ImpersonatedCredentialsTest.IMPERSONATION_OVERRIDE_URL);
     transportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
 
     InputStream impersonationCredentialsStream =
         ImpersonatedCredentialsTest.writeImpersonationCredentialsStream(
-            ImpersonatedCredentialsTest.IMPERSONATION_URL,
+            ImpersonatedCredentialsTest.IMPERSONATION_OVERRIDE_URL,
             ImpersonatedCredentialsTest.DELEGATES,
             ImpersonatedCredentialsTest.QUOTA_PROJECT_ID);
 
@@ -647,7 +647,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     InputStream impersonationCredentialsStream =
         ImpersonatedCredentialsTest.writeImpersonationCredentialsStream(
-            ImpersonatedCredentialsTest.IMPERSONATION_URL,
+            ImpersonatedCredentialsTest.IMPERSONATION_OVERRIDE_URL,
             ImpersonatedCredentialsTest.DELEGATES,
             ImpersonatedCredentialsTest.QUOTA_PROJECT_ID);
 
@@ -677,12 +677,12 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
         .setExpireTime(ImpersonatedCredentialsTest.getDefaultExpireTime());
     transportFactory
         .getTransport()
-        .setAccessTokenEndpoint(ImpersonatedCredentialsTest.IMPERSONATION_URL);
+        .setAccessTokenEndpoint(ImpersonatedCredentialsTest.IMPERSONATION_OVERRIDE_URL);
     transportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
 
     InputStream impersonationCredentialsStream =
         ImpersonatedCredentialsTest.writeImpersonationCredentialsStream(
-            ImpersonatedCredentialsTest.IMPERSONATION_URL,
+            ImpersonatedCredentialsTest.IMPERSONATION_OVERRIDE_URL,
             ImpersonatedCredentialsTest.DELEGATES,
             null);
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.29.0](https://github.com/googleapis/google-auth-library-java/compare/v1.28.0...v1.29.0) (2024-10-22)
+
+
+### Features
+
+* Service sccount to service account impersonation to support universe domain ([#1528](https://github.com/googleapis/google-auth-library-java/issues/1528)) ([c498ccf](https://github.com/googleapis/google-auth-library-java/commit/c498ccf67755c6ec619cb37962c2c86ae3ec9d4c))
+
+
+### Bug Fixes
+
+* Make some enum fields final ([#1526](https://github.com/googleapis/google-auth-library-java/issues/1526)) ([8920155](https://github.com/googleapis/google-auth-library-java/commit/89201558db913d9a71b3acccbab8eb0045ada6de))
+
 ## [1.28.0](https://github.com/googleapis/google-auth-library-java/compare/v1.27.0...v1.28.0) (2024-10-02)
 
 
