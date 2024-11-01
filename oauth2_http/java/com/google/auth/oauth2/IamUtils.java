@@ -114,7 +114,7 @@ class IamUtils {
       HttpRequestFactory factory)
       throws IOException {
     String signBlobUrl =
-        String.format(OAuth2Utils.SIGN_BLOB_ENDPOINT_FORMAT, universeDomain, serviceAccountEmail);
+        String.format(OAuth2Utils.IAM_SIGN_BLOB_ENDPOINT_FORMAT, universeDomain, serviceAccountEmail);
     GenericUrl genericUrl = new GenericUrl(signBlobUrl);
 
     GenericData signRequest = new GenericData();
