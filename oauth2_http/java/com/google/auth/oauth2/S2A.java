@@ -58,7 +58,7 @@ import javax.annotation.concurrent.ThreadSafe;
  * <p>This is an experimental utility.
  */
 @ThreadSafe
-public final class S2A {
+public class S2A {
   static final String S2A_PLAINTEXT_ADDRESS_JSON_KEY = "plaintext_address";
   static final String S2A_MTLS_ADDRESS_JSON_KEY = "mtls_address";
   static final String S2A_CONFIG_ENDPOINT_POSTFIX =
