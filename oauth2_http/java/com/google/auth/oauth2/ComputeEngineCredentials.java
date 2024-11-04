@@ -609,10 +609,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
       throw ex;
     } catch (RuntimeException ex) {
       throw new SigningException("Signing failed", ex);
-    } catch (IOException e) {
-      // Throwing an IOException would be a breaking change, so wrap it here.
-      // This should not happen for this credential type.
-      throw new IllegalStateException("Failed to get universe domain", e);
+    } catch (IOException ex) {
+      throw new SigningException("Failed to sign: Error obtaining universe domain", ex);
     }
   }
 
