@@ -353,10 +353,10 @@ public class ImpersonatedCredentials extends GoogleCredentials
           transportFactory.create(),
           toSign,
           ImmutableMap.of("delegates", this.delegates));
-    } catch (IOException e) {
+    } catch (IOException ex) {
       // Throwing an IOException would be a breaking change, so wrap it here.
       // This should not happen for this credential type.
-      throw new IllegalStateException(e);
+      throw new IllegalStateException("Failed to sign: Error obtaining universe domain", ex);
     }
   }
 
