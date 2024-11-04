@@ -40,6 +40,8 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.GenericJson;
@@ -938,6 +940,32 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     transportFactory.getTransport().setSignedBlob(expectedSignature);
 
     assertArrayEquals(expectedSignature, targetCredentials.sign(expectedSignature));
+  }
+
+  @Test
+  public void sign_universeDomainException() throws IOException {
+    // Currently, no credentials allowed as source credentials throws exception for
+    // getUniverseDomain(), mock this behavior for test only. ServiceAccountCredentials
+    // should not throw for getUniverseDomain() calls.
+    ServiceAccountCredentials sourceCredentialsMock = mock(ServiceAccountCredentials.class);
+    when(sourceCredentialsMock.getUniverseDomain()).thenThrow(IOException.class);
+
+    MockIAMCredentialsServiceTransportFactory transportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            sourceCredentialsMock,
+            IMPERSONATED_CLIENT_EMAIL,
+            null,
+            IMMUTABLE_SCOPES_LIST,
+            VALID_LIFETIME,
+            transportFactory);
+
+    byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
+
+    IllegalStateException exception =
+        assertThrows(IllegalStateException.class, () -> targetCredentials.sign(expectedSignature));
+    assertEquals("Failed to sign: Error obtaining universe domain", exception.getMessage());
   }
 
   @Test
