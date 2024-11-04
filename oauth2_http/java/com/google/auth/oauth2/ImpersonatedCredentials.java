@@ -44,7 +44,6 @@ import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.auth.CredentialTypeForMetrics;
-import com.google.auth.Credentials;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.http.HttpTransportFactory;
@@ -503,17 +502,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
   }
 
   @Override
-  boolean isDefaultUniverseDomain() {
-    try {
-      return getUniverseDomain().equals(Credentials.GOOGLE_DEFAULT_UNIVERSE);
-    } catch (IOException e) {
-      // super method does not throw IOException, so wrap it here.
-      // This should not happen for this credential type.
-      throw new IllegalStateException(e);
-    }
-  }
-
-  @Override
   public AccessToken refreshAccessToken() throws IOException {
     if (this.sourceCredentials.getAccessToken() == null) {
       this.sourceCredentials =
@@ -787,12 +775,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
     public Calendar getCalendar() {
       return this.calendar;
-    }
-
-    @Override
-    public Builder setUniverseDomain(String universeDomain) {
-      super.setUniverseDomain(universeDomain);
-      return this;
     }
 
     @Override
