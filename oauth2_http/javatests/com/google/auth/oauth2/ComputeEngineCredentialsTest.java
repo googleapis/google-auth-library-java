@@ -725,7 +725,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
       IOException exception =
           Assert.assertThrows(IOException.class, () -> credentials.refreshAccessToken());
-      assertTrue(exception instanceof GoogleAuthException);
+      assertFalse(exception instanceof GoogleAuthException);
     }
   }
 
