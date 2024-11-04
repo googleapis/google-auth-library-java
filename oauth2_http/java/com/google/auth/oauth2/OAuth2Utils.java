@@ -77,15 +77,6 @@ class OAuth2Utils {
   static final String TOKEN_TYPE_TOKEN_EXCHANGE = "urn:ietf:params:oauth:token-type:token-exchange";
   static final String GRANT_TYPE_JWT_BEARER = "urn:ietf:params:oauth:grant-type:jwt-bearer";
 
-  // iam credentials endpoints are to be formatted with universe domain and client email
-  static final String IAM_ID_TOKEN_ENDPOINT_FORMAT =
-      "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:generateIdToken";
-
-  static final String IAM_ACCESS_TOKEN_ENDPOINT_FORMAT =
-      "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:generateAccessToken";
-  static final String IAM_SIGN_BLOB_ENDPOINT_FORMAT =
-      "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:signBlob";
-
   static final URI TOKEN_SERVER_URI = URI.create("https://oauth2.googleapis.com/token");
 
   static final URI TOKEN_REVOKE_URI = URI.create("https://oauth2.googleapis.com/revoke");

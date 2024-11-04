@@ -532,7 +532,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
         this.iamEndpointOverride != null
             ? this.iamEndpointOverride
             : String.format(
-                OAuth2Utils.IAM_ACCESS_TOKEN_ENDPOINT_FORMAT,
+                IamUtils.IAM_ACCESS_TOKEN_ENDPOINT_FORMAT,
                 getUniverseDomain(),
                 this.targetPrincipal);
 

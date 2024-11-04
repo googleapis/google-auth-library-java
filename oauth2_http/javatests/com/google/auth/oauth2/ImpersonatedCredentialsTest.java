@@ -133,12 +133,12 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
           + ":generateAccessToken";
   public static final String DEFAULT_IMPERSONATION_URL =
       String.format(
-          OAuth2Utils.IAM_ACCESS_TOKEN_ENDPOINT_FORMAT,
+          IamUtils.IAM_ACCESS_TOKEN_ENDPOINT_FORMAT,
           DEFAULT_UNIVERSE_DOMAIN,
           IMPERSONATED_CLIENT_EMAIL);
   private static final String NONGDU_IMPERSONATION_URL =
       String.format(
-          OAuth2Utils.IAM_ACCESS_TOKEN_ENDPOINT_FORMAT,
+          IamUtils.IAM_ACCESS_TOKEN_ENDPOINT_FORMAT,
           TEST_UNIVERSE_DOMAIN,
           IMPERSONATED_CLIENT_EMAIL);
   public static final String IMPERSONATION_OVERRIDE_URL =

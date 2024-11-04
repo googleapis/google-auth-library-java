@@ -62,6 +62,14 @@ import java.util.Set;
  * features like signing.
  */
 class IamUtils {
+
+  // iam credentials endpoints are to be formatted with universe domain and client email
+  static final String IAM_ID_TOKEN_ENDPOINT_FORMAT =
+      "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:generateIdToken";
+  static final String IAM_ACCESS_TOKEN_ENDPOINT_FORMAT =
+      "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:generateAccessToken";
+  static final String IAM_SIGN_BLOB_ENDPOINT_FORMAT =
+      "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:signBlob";
   private static final String PARSE_ERROR_MESSAGE = "Error parsing error message response. ";
   private static final String PARSE_ERROR_SIGNATURE = "Error parsing signature response. ";
 
@@ -114,8 +122,7 @@ class IamUtils {
       HttpRequestFactory factory)
       throws IOException {
     String signBlobUrl =
-        String.format(
-            OAuth2Utils.IAM_SIGN_BLOB_ENDPOINT_FORMAT, universeDomain, serviceAccountEmail);
+        String.format(IAM_SIGN_BLOB_ENDPOINT_FORMAT, universeDomain, serviceAccountEmail);
     GenericUrl genericUrl = new GenericUrl(signBlobUrl);
 
     GenericData signRequest = new GenericData();
@@ -203,8 +210,7 @@ class IamUtils {
       throws IOException {
 
     String idTokenUrl =
-        String.format(
-            OAuth2Utils.IAM_ID_TOKEN_ENDPOINT_FORMAT, universeDomain, serviceAccountEmail);
+        String.format(IAM_ID_TOKEN_ENDPOINT_FORMAT, universeDomain, serviceAccountEmail);
     GenericUrl genericUrl = new GenericUrl(idTokenUrl);
 
     GenericData idTokenRequest = new GenericData();
