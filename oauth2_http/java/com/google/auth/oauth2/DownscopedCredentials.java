@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.oauth2.OAuth2Utils.TOKEN_EXCHANGE_URL_FORMAT;
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -88,7 +89,6 @@ import java.io.IOException;
  */
 public final class DownscopedCredentials extends OAuth2Credentials {
 
-  private final String TOKEN_EXCHANGE_URL_FORMAT = "https://sts.{universe_domain}/v1/token";
   private final GoogleCredentials sourceCredential;
   private final CredentialAccessBoundary credentialAccessBoundary;
   private final String universeDomain;
@@ -125,8 +125,7 @@ public final class DownscopedCredentials extends OAuth2Credentials {
       throw new IllegalStateException(
           "Error occurred when attempting to retrieve source credential universe domain.", e);
     }
-    this.tokenExchangeEndpoint =
-        TOKEN_EXCHANGE_URL_FORMAT.replace("{universe_domain}", universeDomain);
+    this.tokenExchangeEndpoint = String.format(TOKEN_EXCHANGE_URL_FORMAT, universeDomain);
   }
 
   @Override
