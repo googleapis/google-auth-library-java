@@ -60,8 +60,9 @@ public class S2ATest {
     transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_OK);
 
     S2A s2aUtils = S2A.newBuilder().setHttpTransportFactory(transportFactory).build();
-    String plaintextS2AAddress = s2aUtils.getPlaintextS2AAddress();
-    String mtlsS2AAddress = s2aUtils.getMtlsS2AAddress();
+    S2AConfig config = s2aUtils.getConfigFromMDS();
+    String plaintextS2AAddress = config.getPlaintextAddress();
+    String mtlsS2AAddress = config.getMtlsAddress();
     assertEquals(S2A_PLAINTEXT_ADDRESS, plaintextS2AAddress);
     assertEquals(S2A_MTLS_ADDRESS, mtlsS2AAddress);
   }
@@ -79,8 +80,9 @@ public class S2ATest {
         HttpStatusCodes.STATUS_CODE_SERVICE_UNAVAILABLE);
 
     S2A s2aUtils = S2A.newBuilder().setHttpTransportFactory(transportFactory).build();
-    String plaintextS2AAddress = s2aUtils.getPlaintextS2AAddress();
-    String mtlsS2AAddress = s2aUtils.getMtlsS2AAddress();
+    S2AConfig config = s2aUtils.getConfigFromMDS();
+    String plaintextS2AAddress = config.getPlaintextAddress();
+    String mtlsS2AAddress = config.getMtlsAddress();
     assertTrue(plaintextS2AAddress.isEmpty());
     assertTrue(mtlsS2AAddress.isEmpty());
   }
@@ -98,8 +100,9 @@ public class S2ATest {
     transportFactory.transport.setEmptyContent(true);
 
     S2A s2aUtils = S2A.newBuilder().setHttpTransportFactory(transportFactory).build();
-    String plaintextS2AAddress = s2aUtils.getPlaintextS2AAddress();
-    String mtlsS2AAddress = s2aUtils.getMtlsS2AAddress();
+    S2AConfig config = s2aUtils.getConfigFromMDS();
+    String plaintextS2AAddress = config.getPlaintextAddress();
+    String mtlsS2AAddress = config.getMtlsAddress();
     assertTrue(plaintextS2AAddress.isEmpty());
     assertTrue(mtlsS2AAddress.isEmpty());
   }
@@ -116,8 +119,9 @@ public class S2ATest {
     transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_OK);
 
     S2A s2aUtils = S2A.newBuilder().setHttpTransportFactory(transportFactory).build();
-    String plaintextS2AAddress = s2aUtils.getPlaintextS2AAddress();
-    String mtlsS2AAddress = s2aUtils.getMtlsS2AAddress();
+    S2AConfig config = s2aUtils.getConfigFromMDS();
+    String plaintextS2AAddress = config.getPlaintextAddress();
+    String mtlsS2AAddress = config.getMtlsAddress();
     assertTrue(plaintextS2AAddress.isEmpty());
     assertEquals(S2A_MTLS_ADDRESS, mtlsS2AAddress);
   }
@@ -134,8 +138,9 @@ public class S2ATest {
     transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_OK);
 
     S2A s2aUtils = S2A.newBuilder().setHttpTransportFactory(transportFactory).build();
-    String plaintextS2AAddress = s2aUtils.getPlaintextS2AAddress();
-    String mtlsS2AAddress = s2aUtils.getMtlsS2AAddress();
+    S2AConfig config = s2aUtils.getConfigFromMDS();
+    String plaintextS2AAddress = config.getPlaintextAddress();
+    String mtlsS2AAddress = config.getMtlsAddress();
     assertEquals(S2A_PLAINTEXT_ADDRESS, plaintextS2AAddress);
     assertTrue(mtlsS2AAddress.isEmpty());
   }
