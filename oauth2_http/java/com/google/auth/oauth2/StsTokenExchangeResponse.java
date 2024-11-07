@@ -110,6 +110,11 @@ public final class StsTokenExchangeResponse {
     return new ArrayList<>(scopes);
   }
 
+  /**
+   * Returns the access boundary session key if present.
+   *
+   * @return the access boundary session key or {@code null} if not present
+   */
   @Nullable
   public String getAccessBoundarySessionKey() {
     return accessBoundarySessionKey;
@@ -151,6 +156,12 @@ public final class StsTokenExchangeResponse {
       return this;
     }
 
+    /**
+     * Sets the access boundary session key.
+     *
+     * @param accessBoundarySessionKey the access boundary session key to set
+     * @return this {@code Builder} object
+     */
     @CanIgnoreReturnValue
     public StsTokenExchangeResponse.Builder setAccessBoundarySessionKey(
         String accessBoundarySessionKey) {
