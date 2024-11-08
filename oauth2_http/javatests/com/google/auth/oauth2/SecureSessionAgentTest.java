@@ -40,9 +40,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Test cases for {@link S2A}. */
+/** Test cases for {@link SecureSessionAgent}. */
 @RunWith(JUnit4.class)
-public class S2ATest {
+public class SecureSessionAgentTest {
 
   private static final String INVALID_JSON_KEY = "invalid_key";
   private static final String S2A_PLAINTEXT_ADDRESS = "plaintext";
@@ -53,14 +53,15 @@ public class S2ATest {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setS2AContentMap(
         ImmutableMap.of(
-            S2A.S2A_PLAINTEXT_ADDRESS_JSON_KEY,
+            SecureSessionAgent.S2A_PLAINTEXT_ADDRESS_JSON_KEY,
             S2A_PLAINTEXT_ADDRESS,
-            S2A.S2A_MTLS_ADDRESS_JSON_KEY,
+            SecureSessionAgent.S2A_MTLS_ADDRESS_JSON_KEY,
             S2A_MTLS_ADDRESS));
     transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_OK);
 
-    S2A s2aUtils = S2A.newBuilder().setHttpTransportFactory(transportFactory).build();
-    S2AConfig config = s2aUtils.getConfigFromMDS();
+    SecureSessionAgent s2aUtils =
+        SecureSessionAgent.newBuilder().setHttpTransportFactory(transportFactory).build();
+    SecureSessionAgentConfig config = s2aUtils.getConfigFromMDS();
     String plaintextS2AAddress = config.getPlaintextAddress();
     String mtlsS2AAddress = config.getMtlsAddress();
     assertEquals(S2A_PLAINTEXT_ADDRESS, plaintextS2AAddress);
@@ -72,15 +73,16 @@ public class S2ATest {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setS2AContentMap(
         ImmutableMap.of(
-            S2A.S2A_PLAINTEXT_ADDRESS_JSON_KEY,
+            SecureSessionAgent.S2A_PLAINTEXT_ADDRESS_JSON_KEY,
             S2A_PLAINTEXT_ADDRESS,
-            S2A.S2A_MTLS_ADDRESS_JSON_KEY,
+            SecureSessionAgent.S2A_MTLS_ADDRESS_JSON_KEY,
             S2A_MTLS_ADDRESS));
     transportFactory.transport.setRequestStatusCode(
         HttpStatusCodes.STATUS_CODE_SERVICE_UNAVAILABLE);
 
-    S2A s2aUtils = S2A.newBuilder().setHttpTransportFactory(transportFactory).build();
-    S2AConfig config = s2aUtils.getConfigFromMDS();
+    SecureSessionAgent s2aUtils =
+        SecureSessionAgent.newBuilder().setHttpTransportFactory(transportFactory).build();
+    SecureSessionAgentConfig config = s2aUtils.getConfigFromMDS();
     String plaintextS2AAddress = config.getPlaintextAddress();
     String mtlsS2AAddress = config.getMtlsAddress();
     assertTrue(plaintextS2AAddress.isEmpty());
@@ -92,15 +94,16 @@ public class S2ATest {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setS2AContentMap(
         ImmutableMap.of(
-            S2A.S2A_PLAINTEXT_ADDRESS_JSON_KEY,
+            SecureSessionAgent.S2A_PLAINTEXT_ADDRESS_JSON_KEY,
             S2A_PLAINTEXT_ADDRESS,
-            S2A.S2A_MTLS_ADDRESS_JSON_KEY,
+            SecureSessionAgent.S2A_MTLS_ADDRESS_JSON_KEY,
             S2A_MTLS_ADDRESS));
     transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_OK);
     transportFactory.transport.setEmptyContent(true);
 
-    S2A s2aUtils = S2A.newBuilder().setHttpTransportFactory(transportFactory).build();
-    S2AConfig config = s2aUtils.getConfigFromMDS();
+    SecureSessionAgent s2aUtils =
+        SecureSessionAgent.newBuilder().setHttpTransportFactory(transportFactory).build();
+    SecureSessionAgentConfig config = s2aUtils.getConfigFromMDS();
     String plaintextS2AAddress = config.getPlaintextAddress();
     String mtlsS2AAddress = config.getMtlsAddress();
     assertTrue(plaintextS2AAddress.isEmpty());
@@ -114,12 +117,13 @@ public class S2ATest {
         ImmutableMap.of(
             INVALID_JSON_KEY,
             S2A_PLAINTEXT_ADDRESS,
-            S2A.S2A_MTLS_ADDRESS_JSON_KEY,
+            SecureSessionAgent.S2A_MTLS_ADDRESS_JSON_KEY,
             S2A_MTLS_ADDRESS));
     transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_OK);
 
-    S2A s2aUtils = S2A.newBuilder().setHttpTransportFactory(transportFactory).build();
-    S2AConfig config = s2aUtils.getConfigFromMDS();
+    SecureSessionAgent s2aUtils =
+        SecureSessionAgent.newBuilder().setHttpTransportFactory(transportFactory).build();
+    SecureSessionAgentConfig config = s2aUtils.getConfigFromMDS();
     String plaintextS2AAddress = config.getPlaintextAddress();
     String mtlsS2AAddress = config.getMtlsAddress();
     assertTrue(plaintextS2AAddress.isEmpty());
@@ -131,14 +135,15 @@ public class S2ATest {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setS2AContentMap(
         ImmutableMap.of(
-            S2A.S2A_PLAINTEXT_ADDRESS_JSON_KEY,
+            SecureSessionAgent.S2A_PLAINTEXT_ADDRESS_JSON_KEY,
             S2A_PLAINTEXT_ADDRESS,
             INVALID_JSON_KEY,
             S2A_MTLS_ADDRESS));
     transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_OK);
 
-    S2A s2aUtils = S2A.newBuilder().setHttpTransportFactory(transportFactory).build();
-    S2AConfig config = s2aUtils.getConfigFromMDS();
+    SecureSessionAgent s2aUtils =
+        SecureSessionAgent.newBuilder().setHttpTransportFactory(transportFactory).build();
+    SecureSessionAgentConfig config = s2aUtils.getConfigFromMDS();
     String plaintextS2AAddress = config.getPlaintextAddress();
     String mtlsS2AAddress = config.getMtlsAddress();
     assertEquals(S2A_PLAINTEXT_ADDRESS, plaintextS2AAddress);
