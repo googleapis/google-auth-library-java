@@ -65,12 +65,14 @@ public final class MockStsTransport extends MockHttpTransport {
   private static final String ACCESS_TOKEN = "accessToken";
   private static final String TOKEN_TYPE = "Bearer";
   private static final Long EXPIRES_IN = 3600L;
+  private static final String ACCESS_BOUNDARY_SESSION_KEY = "accessBoundarySessionKey";
 
   private final Queue<IOException> responseErrorSequence = new ArrayDeque<>();
   private final Queue<List<String>> scopeSequence = new ArrayDeque<>();
   private final Queue<String> refreshTokenSequence = new ArrayDeque<>();
 
   private boolean returnExpiresIn = true;
+  private boolean returnAccessBoundarySessionKey = false;
   private MockLowLevelHttpRequest request;
 
   public void addResponseErrorSequence(IOException... errors) {
@@ -133,6 +135,11 @@ public final class MockStsTransport extends MockHttpTransport {
                 response.put("refresh_token", refreshTokenSequence.poll());
               }
             }
+
+            if (returnAccessBoundarySessionKey) {
+              response.put("access_boundary_session_key", ACCESS_BOUNDARY_SESSION_KEY);
+            }
+
             return new MockLowLevelHttpResponse()
                 .setContentType(Json.MEDIA_TYPE)
                 .setContent(response.toPrettyString());
@@ -169,7 +176,15 @@ public final class MockStsTransport extends MockHttpTransport {
     return EXPIRES_IN;
   }
 
+  public String getAccessBoundarySessionKey() {
+    return ACCESS_BOUNDARY_SESSION_KEY;
+  }
+
   public void setReturnExpiresIn(boolean returnExpiresIn) {
     this.returnExpiresIn = returnExpiresIn;
+  }
+
+  public void setReturnAccessBoundarySessionKey(boolean returnAccessBoundarySessionKey) {
+    this.returnAccessBoundarySessionKey = returnAccessBoundarySessionKey;
   }
 }
