@@ -72,18 +72,20 @@ public class SecureSessionAgent {
   private static final String MDS_MTLS_ENDPOINT =
       ComputeEngineCredentials.getMetadataServerUrl() + S2A_CONFIG_ENDPOINT_POSTFIX;
 
-  private SecureSessionAgentConfig config;
-
   private transient HttpTransportFactory transportFactory;
 
   SecureSessionAgent(SecureSessionAgent.Builder builder) {
     this.transportFactory = builder.getHttpTransportFactory();
-    this.config = getSecureSessionAgentConfigFromMDS();
   }
 
-  /** @return the cached SecureSessionAgentConfig. */
-  public SecureSessionAgentConfig getConfigFromMDS() {
-    return config;
+  /**
+   * This method makes a network call to MDS to get the {@link SecureSessionAgentConfig} which
+   * contains the plaintext and mtls address to reach the S2A (Secure Session Agent).
+   *
+   * @return the cached SecureSessionAgentConfig.
+   */
+  public SecureSessionAgentConfig getConfig() {
+    return getSecureSessionAgentConfigFromMDS();
   }
 
   public static Builder newBuilder() {

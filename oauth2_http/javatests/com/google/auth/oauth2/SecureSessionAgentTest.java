@@ -61,7 +61,7 @@ public class SecureSessionAgentTest {
 
     SecureSessionAgent s2aUtils =
         SecureSessionAgent.newBuilder().setHttpTransportFactory(transportFactory).build();
-    SecureSessionAgentConfig config = s2aUtils.getConfigFromMDS();
+    SecureSessionAgentConfig config = s2aUtils.getConfig();
     String plaintextS2AAddress = config.getPlaintextAddress();
     String mtlsS2AAddress = config.getMtlsAddress();
     assertEquals(S2A_PLAINTEXT_ADDRESS, plaintextS2AAddress);
@@ -82,7 +82,7 @@ public class SecureSessionAgentTest {
 
     SecureSessionAgent s2aUtils =
         SecureSessionAgent.newBuilder().setHttpTransportFactory(transportFactory).build();
-    SecureSessionAgentConfig config = s2aUtils.getConfigFromMDS();
+    SecureSessionAgentConfig config = s2aUtils.getConfig();
     String plaintextS2AAddress = config.getPlaintextAddress();
     String mtlsS2AAddress = config.getMtlsAddress();
     assertTrue(plaintextS2AAddress.isEmpty());
@@ -103,7 +103,7 @@ public class SecureSessionAgentTest {
 
     SecureSessionAgent s2aUtils =
         SecureSessionAgent.newBuilder().setHttpTransportFactory(transportFactory).build();
-    SecureSessionAgentConfig config = s2aUtils.getConfigFromMDS();
+    SecureSessionAgentConfig config = s2aUtils.getConfig();
     String plaintextS2AAddress = config.getPlaintextAddress();
     String mtlsS2AAddress = config.getMtlsAddress();
     assertTrue(plaintextS2AAddress.isEmpty());
@@ -123,7 +123,7 @@ public class SecureSessionAgentTest {
 
     SecureSessionAgent s2aUtils =
         SecureSessionAgent.newBuilder().setHttpTransportFactory(transportFactory).build();
-    SecureSessionAgentConfig config = s2aUtils.getConfigFromMDS();
+    SecureSessionAgentConfig config = s2aUtils.getConfig();
     String plaintextS2AAddress = config.getPlaintextAddress();
     String mtlsS2AAddress = config.getMtlsAddress();
     assertTrue(plaintextS2AAddress.isEmpty());
@@ -143,7 +143,7 @@ public class SecureSessionAgentTest {
 
     SecureSessionAgent s2aUtils =
         SecureSessionAgent.newBuilder().setHttpTransportFactory(transportFactory).build();
-    SecureSessionAgentConfig config = s2aUtils.getConfigFromMDS();
+    SecureSessionAgentConfig config = s2aUtils.getConfig();
     String plaintextS2AAddress = config.getPlaintextAddress();
     String mtlsS2AAddress = config.getMtlsAddress();
     assertEquals(S2A_PLAINTEXT_ADDRESS, plaintextS2AAddress);

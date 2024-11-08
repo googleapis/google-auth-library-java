@@ -337,6 +337,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
   protected boolean isMtlsConfigRequestUrl(String url) {
     return url.equals(
         String.format(
-            ComputeEngineCredentials.getMetadataServerUrl() + SecureSessionAgent.S2A_CONFIG_ENDPOINT_POSTFIX));
+            ComputeEngineCredentials.getMetadataServerUrl()
+                + SecureSessionAgent.S2A_CONFIG_ENDPOINT_POSTFIX));
   }
 }
