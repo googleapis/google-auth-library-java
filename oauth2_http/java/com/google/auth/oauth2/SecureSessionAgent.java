@@ -88,7 +88,7 @@ public class SecureSessionAgent {
     return getSecureSessionAgentConfigFromMDS();
   }
 
-   /** @return default instance of SecureSessionAgent */
+  /** @return default instance of SecureSessionAgent */
   public static SecureSessionAgent create() {
     return newBuilder().build();
   }
