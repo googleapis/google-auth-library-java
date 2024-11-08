@@ -82,7 +82,7 @@ public class SecureSessionAgent {
    * This method makes a network call to MDS to get the {@link SecureSessionAgentConfig} which
    * contains the plaintext and mtls address to reach the S2A (Secure Session Agent).
    *
-   * @return the cached SecureSessionAgentConfig.
+   * @return a SecureSessionAgentConfig.
    */
   public SecureSessionAgentConfig getConfig() {
     return getSecureSessionAgentConfigFromMDS();
