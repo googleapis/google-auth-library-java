@@ -291,8 +291,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
       @Override
       public LowLevelHttpResponse execute() throws IOException {
 
-        String metadataRequestHeader = getFirstHeaderValue(S2A.METADATA_FLAVOR);
-        if (!S2A.GOOGLE.equals(metadataRequestHeader)) {
+        String metadataRequestHeader = getFirstHeaderValue(SecureSessionAgent.METADATA_FLAVOR);
+        if (!SecureSessionAgent.GOOGLE.equals(metadataRequestHeader)) {
           throw new IOException("Metadata request header not found");
         }
 
@@ -337,6 +337,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
   protected boolean isMtlsConfigRequestUrl(String url) {
     return url.equals(
         String.format(
-            ComputeEngineCredentials.getMetadataServerUrl() + S2A.S2A_CONFIG_ENDPOINT_POSTFIX));
+            ComputeEngineCredentials.getMetadataServerUrl()
+                + SecureSessionAgent.S2A_CONFIG_ENDPOINT_POSTFIX));
   }
 }
