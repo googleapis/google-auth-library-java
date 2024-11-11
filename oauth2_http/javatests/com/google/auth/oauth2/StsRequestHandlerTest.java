@@ -281,8 +281,7 @@ public final class StsRequestHandlerTest {
     transport.setReturnAccessBoundarySessionKey(/* returnAccessBoundarySessionKey= */ true);
 
     StsTokenExchangeRequest stsTokenExchangeRequest =
-        StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType")
-            .build();
+        StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
 
     StsRequestHandler requestHandler =
         StsRequestHandler.newBuilder(

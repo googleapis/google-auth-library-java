@@ -47,12 +47,13 @@ import com.google.common.base.Strings;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 
+
 public final class ClientSideCredentialAccessBoundaryFactory {
   private final GoogleCredentials sourceCredential;
   private final transient HttpTransportFactory transportFactory;
   private final String tokenExchangeEndpoint;
-  private String acceessBoundarySessionKey;
-  private AccessToken intermediaryAccessToken;
+  private String accessBoundarySessionKey;
+  private AccessToken intermediateAccessToken;
 
   private ClientSideCredentialAccessBoundaryFactory(Builder builder) {
     this.transportFactory = builder.transportFactory;
@@ -76,6 +77,7 @@ public final class ClientSideCredentialAccessBoundaryFactory {
         StsTokenExchangeRequest.newBuilder(
                 sourceAccessToken.getTokenValue(), OAuth2Utils.TOKEN_TYPE_ACCESS_TOKEN)
             .setRequestTokenType(OAuth2Utils.TOKEN_TYPE_ACCESS_BOUNDARY_INTERMEDIARY_TOKEN)
+
             .build();
 
     StsRequestHandler handler =
@@ -84,8 +86,8 @@ public final class ClientSideCredentialAccessBoundaryFactory {
             .build();
 
     StsTokenExchangeResponse response = handler.exchangeToken();
-    this.acceessBoundarySessionKey = response.getAccessBoundarySessionKey();
-    this.intermediaryAccessToken = response.getAccessToken();
+    this.accessBoundarySessionKey = response.getAccessBoundarySessionKey();
+    this.intermediateAccessToken = response.getAccessToken();
 
     // The STS endpoint will only return the expiration time for the intermediary token
     // if the original access token represents a service account.
@@ -93,7 +95,7 @@ public final class ClientSideCredentialAccessBoundaryFactory {
     // When no expires_in is returned, we can copy the source credential's expiration time.
     if (response.getAccessToken().getExpirationTime() == null) {
       if (sourceAccessToken.getExpirationTime() != null) {
-        this.intermediaryAccessToken =
+        this.intermediateAccessToken =
             new AccessToken(
                 response.getAccessToken().getTokenValue(), sourceAccessToken.getExpirationTime());
       }
