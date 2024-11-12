@@ -38,11 +38,11 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 /**
- * Represents an OAuth 2.0 token exchange request, as defined in
- * <a href="https://tools.ietf.org/html/rfc8693#section-2.1">RFC 8693, Section 2.1</a>.
+ * Represents an OAuth 2.0 token exchange request, as defined in <a
+ * href="https://tools.ietf.org/html/rfc8693#section-2.1">RFC 8693, Section 2.1</a>.
  *
- * <p>This class encapsulates the parameters necessary for making a token exchange request to
- * Google Security Token Service (STS). It includes the subject token, subject token type, optional
+ * <p>This class encapsulates the parameters necessary for making a token exchange request to Google
+ * Security Token Service (STS). It includes the subject token, subject token type, optional
  * parameters like acting party, scopes, resource, audience, requested token type, and internal
  * options.
  *
@@ -84,10 +84,10 @@ public final class StsTokenExchangeRequest {
   /**
    * Returns a new {@link StsTokenExchangeRequest.Builder} instance.
    *
-   * @param subjectToken The token being exchanged. This represents the credentials being used
-   *        to authorize the token exchange request.
-   * @param subjectTokenType The type of the {@code subjectToken}.  For example,
-   *        {@link OAuth2Utils#TOKEN_TYPE_ACCESS_TOKEN}.
+   * @param subjectToken The token being exchanged. This represents the credentials being used to
+   *     authorize the token exchange request.
+   * @param subjectTokenType The type of the {@code subjectToken}. For example, {@link
+   *     OAuth2Utils#TOKEN_TYPE_ACCESS_TOKEN}.
    * @return A new builder for creating {@code StsTokenExchangeRequest} instances.
    */
   public static Builder newBuilder(String subjectToken, String subjectTokenType) {

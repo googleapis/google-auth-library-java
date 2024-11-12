@@ -51,12 +51,12 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 /**
- * Implements the OAuth 2.0 token exchange based on
- * <a href="https://tools.ietf.org/html/rfc8693">RFC 8693</a>.
+ * Implements the OAuth 2.0 token exchange based on <a
+ * href="https://tools.ietf.org/html/rfc8693">RFC 8693</a>.
  *
- * <p>This class handles the process of exchanging one type of token for another using the
- * Security Token Service (STS). It constructs and sends the token exchange request to the STS
- * endpoint and parses the response to create an {@link StsTokenExchangeResponse} object.
+ * <p>This class handles the process of exchanging one type of token for another using the Security
+ * Token Service (STS). It constructs and sends the token exchange request to the STS endpoint and
+ * parses the response to create an {@link StsTokenExchangeResponse} object.
  *
  * <p>Use the {@link #newBuilder(String, StsTokenExchangeRequest, HttpRequestFactory)} method to
  * create a new builder for constructing an instance of this class.

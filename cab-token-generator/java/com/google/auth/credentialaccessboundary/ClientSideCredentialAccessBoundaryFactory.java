@@ -47,7 +47,6 @@ import com.google.common.base.Strings;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 
-
 public final class ClientSideCredentialAccessBoundaryFactory {
   private final GoogleCredentials sourceCredential;
   private final transient HttpTransportFactory transportFactory;
@@ -77,7 +76,6 @@ public final class ClientSideCredentialAccessBoundaryFactory {
         StsTokenExchangeRequest.newBuilder(
                 sourceAccessToken.getTokenValue(), OAuth2Utils.TOKEN_TYPE_ACCESS_TOKEN)
             .setRequestTokenType(OAuth2Utils.TOKEN_TYPE_ACCESS_BOUNDARY_INTERMEDIARY_TOKEN)
-
             .build();
 
     StsRequestHandler handler =

@@ -86,8 +86,8 @@ public final class StsTokenExchangeResponse {
    * Returns a new {@link StsTokenExchangeResponse.Builder} instance.
    *
    * @param accessToken The exchanged access token.
-   * @param issuedTokenType The issued token type.  For example,
-   *     {@link OAuth2Utils#TOKEN_TYPE_ACCESS_TOKEN}.
+   * @param issuedTokenType The issued token type. For example, {@link
+   *     OAuth2Utils#TOKEN_TYPE_ACCESS_TOKEN}.
    * @param tokenType The token type (e.g., "Bearer").
    * @return A new builder for creating {@link StsTokenExchangeResponse} instances.
    */
