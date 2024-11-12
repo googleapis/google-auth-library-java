@@ -60,7 +60,7 @@ public final class ClientSideCredentialAccessBoundaryFactory {
     this.tokenExchangeEndpoint = builder.tokenExchangeEndpoint;
   }
 
-  private void fetchCredentials() throws IOException {
+  private void refreshIntermediateCredentials() throws IOException {
     try {
       this.sourceCredential.refreshIfExpired();
     } catch (IOException e) {
