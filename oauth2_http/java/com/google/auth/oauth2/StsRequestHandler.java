@@ -50,7 +50,17 @@ import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nullable;
 
-/** Implements the OAuth 2.0 token exchange based on https://tools.ietf.org/html/rfc8693. */
+/**
+ * Implements the OAuth 2.0 token exchange based on
+ * <a href="https://tools.ietf.org/html/rfc8693">RFC 8693</a>.
+ *
+ * <p>This class handles the process of exchanging one type of token for another using the
+ * Security Token Service (STS). It constructs and sends the token exchange request to the STS
+ * endpoint and parses the response to create an {@link StsTokenExchangeResponse} object.
+ *
+ * <p>Use the {@link #newBuilder(String, StsTokenExchangeRequest, HttpRequestFactory)} method to
+ * create a new builder for constructing an instance of this class.
+ */
 public final class StsRequestHandler {
   private static final String TOKEN_EXCHANGE_GRANT_TYPE =
       "urn:ietf:params:oauth:grant-type:token-exchange";
@@ -85,6 +95,14 @@ public final class StsRequestHandler {
     this.internalOptions = internalOptions;
   }
 
+  /**
+   * Returns a new builder for creating an instance of {@link StsRequestHandler}.
+   *
+   * @param tokenExchangeEndpoint The STS token exchange endpoint.
+   * @param stsTokenExchangeRequest The STS token exchange request.
+   * @param httpRequestFactory The HTTP request factory to use for sending the request.
+   * @return A new builder instance.
+   */
   public static Builder newBuilder(
       String tokenExchangeEndpoint,
       StsTokenExchangeRequest stsTokenExchangeRequest,

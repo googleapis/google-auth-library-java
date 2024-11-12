@@ -40,8 +40,14 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 /**
- * Defines an OAuth 2.0 token exchange successful response. Based on
- * https://tools.ietf.org/html/rfc8693#section-2.2.1.
+ * Represents an OAuth 2.0 token exchange request to the Google Security Token Service (STS), as
+ * defined in <a href="https://tools.ietf.org/html/rfc8693#section-2.1">RFC 8693, Section 2.1</a>.
+ *
+ * <p>This class encapsulates the parameters for the request, including the subject token and its
+ * type, along with optional parameters like acting party, scopes, resource, audience, requested
+ * token type, and internal options.
+ *
+ * <p>Instances are immutable. Use {@link #newBuilder(String, String, String)} to create a builder.
  */
 public final class StsTokenExchangeResponse {
   private final AccessToken accessToken;
@@ -76,6 +82,15 @@ public final class StsTokenExchangeResponse {
     this.accessBoundarySessionKey = accessBoundarySessionKey;
   }
 
+  /**
+   * Returns a new {@link StsTokenExchangeResponse.Builder} instance.
+   *
+   * @param accessToken The exchanged access token.
+   * @param issuedTokenType The issued token type.  For example,
+   *     {@link OAuth2Utils#TOKEN_TYPE_ACCESS_TOKEN}.
+   * @param tokenType The token type (e.g., "Bearer").
+   * @return A new builder for creating {@link StsTokenExchangeResponse} instances.
+   */
   public static Builder newBuilder(String accessToken, String issuedTokenType, String tokenType) {
     return new Builder(accessToken, issuedTokenType, tokenType);
   }
