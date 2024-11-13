@@ -38,6 +38,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.auth.Credentials;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.AccessToken;
+import com.google.auth.oauth2.CredentialAccessBoundary;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.OAuth2Utils;
 import com.google.auth.oauth2.StsRequestHandler;
@@ -60,7 +61,7 @@ public final class ClientSideCredentialAccessBoundaryFactory {
     this.tokenExchangeEndpoint = builder.tokenExchangeEndpoint;
   }
 
-  private void refreshIntermediateCredentials() throws IOException {
+  private void refreshCredentials() throws IOException {
     try {
       this.sourceCredential.refreshIfExpired();
     } catch (IOException e) {
@@ -100,6 +101,16 @@ public final class ClientSideCredentialAccessBoundaryFactory {
     }
   }
 
+  private void refreshCredentialsIfRequired() {
+    // TODO(negarb): Implement refreshCredentialsIfRequired
+    throw new UnsupportedOperationException("refreshCredentialsIfRequired is not yet implemented.");
+  }
+
+  public AccessToken generateToken(CredentialAccessBoundary accessBoundary) {
+    // TODO(negarb/jiahuah): Implement generateToken
+    throw new UnsupportedOperationException("generateToken is not yet implemented.");
+  }
+
   public static Builder newBuilder() {
     return new Builder();
   }
@@ -113,11 +124,12 @@ public final class ClientSideCredentialAccessBoundaryFactory {
     private Builder() {}
 
     /**
-     * Sets the required source credential used to acquire the intermediary credential.
+     * Sets the required source credential.
      *
      * @param sourceCredential the {@code GoogleCredentials} to set
      * @return this {@code Builder} object
      */
+    @CanIgnoreReturnValue
     public Builder setSourceCredential(GoogleCredentials sourceCredential) {
       this.sourceCredential = sourceCredential;
       return this;

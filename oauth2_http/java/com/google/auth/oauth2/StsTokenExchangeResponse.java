@@ -40,14 +40,16 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 /**
- * Represents an OAuth 2.0 token exchange request to the Google Security Token Service (STS), as
- * defined in <a href="https://tools.ietf.org/html/rfc8693#section-2.1">RFC 8693, Section 2.1</a>.
+ * Represents a successful OAuth 2.0 token exchange response from the Google Security Token Service
+ * (STS), as defined in <a href="https://tools.ietf.org/html/rfc8693#section-2.2.1">RFC 8693,
+ * Section 2.2.1</a>.
  *
- * <p>This class encapsulates the parameters for the request, including the subject token and its
- * type, along with optional parameters like acting party, scopes, resource, audience, requested
- * token type, and internal options.
+ * <p>This class provides access to the exchanged access token, issued token type, token type,
+ * expiration time, refresh token (optional), scopes (optional), and the access boundary session key
+ * (optional).
  *
- * <p>Instances are immutable. Use {@link #newBuilder(String, String, String)} to create a builder.
+ * <p>Instances are immutable. Use {@link #newBuilder(String, String, String)} to create an
+ * instance.
  */
 public final class StsTokenExchangeResponse {
   private final AccessToken accessToken;
