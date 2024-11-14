@@ -61,6 +61,22 @@ public final class ClientSideCredentialAccessBoundaryFactory {
     this.tokenExchangeEndpoint = builder.tokenExchangeEndpoint;
   }
 
+  /**
+   * Refreshes the source credential and exchanges it for an intermediary access token using the STS
+   * endpoint.
+   *
+   * <p>If the source credential is expired, it will be refreshed. A token exchange request is then
+   * made to the STS endpoint. The resulting intermediary access token and access boundary session
+   * key are stored. The intermediary access token's expiration time is determined as follows:
+   *
+   * <ol>
+   *   <li>If the STS response includes `expires_in`, that value is used.
+   *   <li>Otherwise, if the source credential has an expiration time, that value is used.
+   *   <li>Otherwise, the intermediary token will have no expiration time.
+   * </ol>
+   *
+   * @throws IOException If an error occurs during credential refresh or token exchange.
+   */
   private void refreshCredentials() throws IOException {
     try {
       this.sourceCredential.refreshIfExpired();
@@ -70,7 +86,7 @@ public final class ClientSideCredentialAccessBoundaryFactory {
 
     AccessToken sourceAccessToken = sourceCredential.getAccessToken();
     if (sourceAccessToken == null || Strings.isNullOrEmpty(sourceAccessToken.getTokenValue())) {
-      throw new IOException("The source credential does not have an access token.");
+      throw new IllegalStateException("The source credential does not have an access token.");
     }
 
     StsTokenExchangeRequest request =
