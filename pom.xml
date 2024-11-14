@@ -58,6 +58,7 @@
     <module>oauth2_http</module>
     <module>appengine</module>
     <module>bom</module>
+    <module>cab-token-generator</module>
   </modules>
 
   <scm>
