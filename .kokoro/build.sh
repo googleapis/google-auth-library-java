@@ -38,7 +38,6 @@ retry_with_backoff 3 10 \
     -T 1C
 
 # if GOOGLE_APPLICATION_CREDENTIALS is specified as a relative path, prepend Kokoro root directory onto it
-bash .kokoro/populate-secrets.sh
 if [[ ! -z "${GOOGLE_APPLICATION_CREDENTIALS}" && "${GOOGLE_APPLICATION_CREDENTIALS}" != /* ]]; then
     export GOOGLE_APPLICATION_CREDENTIALS=$(realpath ${KOKORO_GFILE_DIR}/${GOOGLE_APPLICATION_CREDENTIALS})
 fi
@@ -74,6 +73,10 @@ integration)
 graalvmA)
     # Run Unit and Integration Tests with Native Image
     echo "HELLOOOO"
+    bash .kokoro/populate-secrets.sh
+    if [[ ! -z "${GOOGLE_APPLICATION_CREDENTIALS}" && "${GOOGLE_APPLICATION_CREDENTIALS}" != /* ]]; then
+      export GOOGLE_APPLICATION_CREDENTIALS=$(realpath ${KOKORO_GFILE_DIR}/${GOOGLE_APPLICATION_CREDENTIALS})
+    fi
     mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Pnative-test test -pl 'oauth2_http'
     RETURN_CODE=$?
     ;;
