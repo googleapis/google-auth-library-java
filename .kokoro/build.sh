@@ -72,11 +72,13 @@ integration)
     ;;
 graalvmA)
     # Run Unit and Integration Tests with Native Image
+    $(dirname $0)/populate-secrets.sh
     mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Pnative-test test -pl 'oauth2_http'
     RETURN_CODE=$?
     ;;
 graalvmB)
     # Run Unit and Integration Tests with Native Image
+    $(dirname $0)/populate-secrets.sh
     mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Pnative-test test -pl 'oauth2_http'
     RETURN_CODE=$?
     ;;
