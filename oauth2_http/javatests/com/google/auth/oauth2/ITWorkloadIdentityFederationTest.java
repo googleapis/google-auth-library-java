@@ -436,6 +436,8 @@ public final class ITWorkloadIdentityFederationTest {
 
   private GenericJson getServiceAccountKeyFileAsJson() throws IOException {
     String credentialsPath = System.getenv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR);
+    System.out.println("DEBUG");
+    System.out.println(credentialsPath);
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     JsonObjectParser parser = new JsonObjectParser(jsonFactory);
     return parser.parseAndClose(
