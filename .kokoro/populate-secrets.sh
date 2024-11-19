@@ -30,7 +30,7 @@ do
   msg "Retrieving secret ${key}"
   gcloud secrets versions access latest \
   --project cloud-devrel-kokoro-resources \
-  --secret "${key}" > "${SECRET_LOCATION}/${key}"
+  --secret ${key} > "${SECRET_LOCATION}/${key}"
 #  docker run --entrypoint=gcloud \
 #    --volume=${KOKORO_GFILE_DIR}:${KOKORO_GFILE_DIR} \
 #    gcr.io/google.com/cloudsdktool/cloud-sdk \
