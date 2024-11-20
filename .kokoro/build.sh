@@ -75,6 +75,7 @@ graalvmA)
     echo "HELLOOOO"
     bash .kokoro/populate-secrets.sh
     if [[ ! -z "${GOOGLE_APPLICATION_CREDENTIALS}" && "${GOOGLE_APPLICATION_CREDENTIALS}" != /* ]]; then
+      echo "HELLO1"
       export GOOGLE_APPLICATION_CREDENTIALS=$(realpath ${KOKORO_GFILE_DIR}/${GOOGLE_APPLICATION_CREDENTIALS})
     fi
     mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Pnative-test test -pl 'oauth2_http'
