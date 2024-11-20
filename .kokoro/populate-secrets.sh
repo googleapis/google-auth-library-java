@@ -38,6 +38,9 @@ do
 #    --project cloud-devrel-kokoro-resources \
 #    --secret ${key} > \
 #    "${SECRET_LOCATION}/${key}"
+  if [[ -f "${SECRET_LOCATION}/${key}" ]]; then
+    msg "Secret file exists: ${SECRET_LOCATION}/${key}"
+  fi
   if [[ $? == 0 ]]; then
     msg "Secret written to ${SECRET_LOCATION}/${key}"
   else
