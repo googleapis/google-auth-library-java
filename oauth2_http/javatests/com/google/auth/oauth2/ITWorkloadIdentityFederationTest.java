@@ -437,6 +437,7 @@ public final class ITWorkloadIdentityFederationTest {
   private GenericJson getServiceAccountKeyFileAsJson() throws IOException {
     String credentialsPath = System.getenv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR);
     System.out.println(System.getenv("GOOGLE_APPLICATION_CREDENTIALS"));
+    System.out.println(System.getenv("KOKORO_GFILE_DIR"));
     System.out.println("DEBUG");
     System.out.println(credentialsPath);
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
