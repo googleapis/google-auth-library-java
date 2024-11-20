@@ -75,7 +75,7 @@
     <project.appengine.version>2.0.31</project.appengine.version>
     <project.findbugs.version>3.0.2</project.findbugs.version>
     <deploy.autorelease>false</deploy.autorelease>
-    <project.error-prone.version>2.35.1</project.error-prone.version>
+    <project.error-prone.version>2.36.0</project.error-prone.version>
   </properties>
 
   <dependencyManagement>
