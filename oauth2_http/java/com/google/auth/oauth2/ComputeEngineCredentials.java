@@ -599,11 +599,18 @@ public class ComputeEngineCredentials extends GoogleCredentials
     try {
       String account = getAccount();
       return IamUtils.sign(
-          account, this, transportFactory.create(), toSign, Collections.<String, Object>emptyMap());
+          account,
+          this,
+          this.getUniverseDomain(),
+          transportFactory.create(),
+          toSign,
+          Collections.<String, Object>emptyMap());
     } catch (SigningException ex) {
       throw ex;
     } catch (RuntimeException ex) {
       throw new SigningException("Signing failed", ex);
+    } catch (IOException ex) {
+      throw new SigningException("Failed to sign: Error obtaining universe domain", ex);
     }
   }
 
