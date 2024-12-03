@@ -257,7 +257,7 @@ public class OAuth2Utils {
   }
 
   /** Helper to convert from a PKCS#8 String to an RSA private key */
-  static PrivateKey privateKeyFromPkcs8(String privateKeyPkcs8) throws IOException {
+  public static PrivateKey privateKeyFromPkcs8(String privateKeyPkcs8) throws IOException {
     Reader reader = new StringReader(privateKeyPkcs8);
     Section section = PemReader.readFirstSectionAndClose(reader, "PRIVATE KEY");
     if (section == null) {

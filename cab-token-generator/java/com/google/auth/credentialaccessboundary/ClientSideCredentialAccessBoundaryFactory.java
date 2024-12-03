@@ -45,6 +45,7 @@ import com.google.auth.oauth2.OAuth2Utils;
 import com.google.auth.oauth2.StsRequestHandler;
 import com.google.auth.oauth2.StsTokenExchangeRequest;
 import com.google.auth.oauth2.StsTokenExchangeResponse;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -98,7 +99,8 @@ public final class ClientSideCredentialAccessBoundaryFactory {
    *
    * @throws IOException If an error occurs during credential refresh or token exchange.
    */
-  private void refreshCredentials() throws IOException {
+  @VisibleForTesting
+  void refreshCredentials() throws IOException {
     try {
       // Force a refresh on the source credentials. The intermediate token's lifetime is tied to the
       // source credential's expiration. The factory's refreshMargin might be different from the
@@ -357,5 +359,25 @@ public final class ClientSideCredentialAccessBoundaryFactory {
       this.tokenExchangeEndpoint = String.format(TOKEN_EXCHANGE_URL_FORMAT, universeDomain);
       return new ClientSideCredentialAccessBoundaryFactory(this);
     }
+  }
+
+  @VisibleForTesting
+  String getAccessBoundarySessionKey() {
+    return accessBoundarySessionKey;
+  }
+
+  @VisibleForTesting
+  AccessToken getIntermediateAccessToken() {
+    return intermediateAccessToken;
+  }
+
+  @VisibleForTesting
+  String getTokenExchangeEndpoint() {
+    return tokenExchangeEndpoint;
+  }
+
+  @VisibleForTesting
+  HttpTransportFactory getTransportFactory() {
+    return transportFactory;
   }
 }

@@ -15,6 +15,7 @@
 
   <build>
     <sourceDirectory>java</sourceDirectory>
+    <testSourceDirectory>javatests</testSourceDirectory>
   </build>
   <dependencies>
     <dependency>
@@ -36,6 +37,18 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.auth</groupId>
+      <artifactId>google-auth-library-oauth2-http</artifactId>
+      <scope>test</scope>
+      <type>test-jar</type>
+      <classifier>testlib</classifier>
     </dependency>
   </dependencies>
 
