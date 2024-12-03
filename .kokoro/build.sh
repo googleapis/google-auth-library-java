@@ -72,11 +72,15 @@ integration)
     ;;
 graalvmA)
     # Run Unit and Integration Tests with Native Image
+    bash .kokoro/populate-secrets.sh
+    export GOOGLE_APPLICATION_CREDENTIALS="${KOKORO_GFILE_DIR}/secret_manager/java-it-service-account"
     mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Pnative-test test -pl 'oauth2_http'
     RETURN_CODE=$?
     ;;
 graalvmB)
     # Run Unit and Integration Tests with Native Image
+    bash .kokoro/populate-secrets.sh
+    export GOOGLE_APPLICATION_CREDENTIALS="${KOKORO_GFILE_DIR}/secret_manager/java-it-service-account"
     mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Pnative-test test -pl 'oauth2_http'
     RETURN_CODE=$?
     ;;

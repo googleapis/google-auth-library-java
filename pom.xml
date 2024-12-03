@@ -16,7 +16,7 @@
   <parent>
     <groupId>com.google.cloud</groupId>
     <artifactId>google-cloud-shared-config</artifactId>
-    <version>1.11.3</version>
+    <version>1.12.0</version>
   </parent>
 
   <distributionManagement>
@@ -75,7 +75,7 @@
     <project.appengine.version>2.0.31</project.appengine.version>
     <project.findbugs.version>3.0.2</project.findbugs.version>
     <deploy.autorelease>false</deploy.autorelease>
-    <project.error-prone.version>2.35.1</project.error-prone.version>
+    <project.error-prone.version>2.36.0</project.error-prone.version>
   </properties>
 
   <dependencyManagement>
