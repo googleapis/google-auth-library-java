@@ -50,6 +50,7 @@ import com.google.auth.oauth2.MetricsUtils.RequestType;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects.ToStringHelper;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -208,10 +209,10 @@ public class ComputeEngineCredentials extends GoogleCredentials
     if (!scopes.isEmpty()) {
       tokenUrl.set("scopes", Joiner.on(',').join(scopes));
     }
-    if (!transport.isEmpty()) {
+    if (!Strings.isNullOrEmpty(transport)) {
       tokenUrl.set("transport", transport);
     }
-    if (!bindingEnforcement.isEmpty()) {
+    if (!Strings.isNullOrEmpty(bindingEnforcement)) {
       tokenUrl.set("binding-enforcement", bindingEnforcement);
     }
     return tokenUrl.toString();
