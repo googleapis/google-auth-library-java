@@ -658,8 +658,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
     private Collection<String> scopes;
     private Collection<String> defaultScopes;
 
-    private String transport = "";
-    private String bindingEnforcement = "";
+    private String transport;
+    private String bindingEnforcement;
 
     protected Builder() {
       setRefreshMargin(COMPUTE_REFRESH_MARGIN);
