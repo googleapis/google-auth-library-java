@@ -34,7 +34,6 @@
             <artifactId>maven-surefire-plugin</artifactId>
             <version>${surefire.version}</version>
             <configuration>
-              <argLine>--add-opens java.base/java.util=ALL-UNNAMED</argLine>
               <!-- Excludes integration tests when unit tests are run. -->
               <excludes>
                 <exclude>**/IT*.java</exclude>

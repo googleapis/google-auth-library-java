@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -12,6 +13,7 @@ import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
 import com.google.auth.TestAppender;
+import com.google.auth.oauth2.LoggingUtils.LoggerFactoryProvider;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.After;
@@ -70,26 +72,28 @@ public class LoggingUtilsTest {
   }
 
   @Test
-  public void testGetLogger_loggingEnabled_noSlf4jBinding() {
-    LoggingUtils.LoggerFactoryProvider mockProvider =
-        mock(LoggingUtils.LoggerFactoryProvider.class);
-    ILoggerFactory mockLoggerFactory =
-        mock(org.slf4j.helpers.NOPLoggerFactory.class); // Mock NOPLoggerFactory
-
-    when(mockProvider.getLoggerFactory())
-        .thenReturn(mockLoggerFactory); // Return the mock NOPLoggerFactory
-
-    testEnvironmentProvider.setEnv("GOOGLE_SDK_JAVA_LOGGING", "true");
-    Logger logger = LoggingUtils.getLogger(LoggingUtilsTest.class, mockProvider);
-    assertTrue(logger instanceof NOPLogger);
-  }
-
-  @Test
   public void testGetLogger_loggingDisabled() {
     testEnvironmentProvider.setEnv("GOOGLE_SDK_JAVA_LOGGING", "false");
 
     Logger logger = LoggingUtils.getLogger(LoggingUtilsTest.class);
     assertEquals(NOPLogger.class, logger.getClass());
+  }
+
+  @Test
+  public void testGetLogger_loggingEnabled_noBinding() {
+    testEnvironmentProvider.setEnv("GOOGLE_SDK_JAVA_LOGGING", "true");
+    // Create a mock LoggerFactoryProvider
+    LoggerFactoryProvider mockLoggerFactoryProvider = mock(LoggerFactoryProvider.class);
+    ILoggerFactory mockLoggerFactory = mock(ILoggerFactory.class);
+    when(mockLoggerFactoryProvider.getLoggerFactory()).thenReturn(mockLoggerFactory);
+    when(mockLoggerFactory.getLogger(anyString()))
+        .thenReturn(org.slf4j.helpers.NOPLogger.NOP_LOGGER);
+
+    // Use the mock LoggerFactoryProvider in getLogger()
+    Logger logger = LoggingUtils.getLogger(LoggingUtilsTest.class, mockLoggerFactoryProvider);
+
+    // Assert that the returned logger is a NOPLogger
+    assertTrue(logger instanceof org.slf4j.helpers.NOPLogger);
   }
 
   @Test

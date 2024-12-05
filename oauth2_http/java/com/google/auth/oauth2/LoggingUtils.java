@@ -17,6 +17,7 @@ import org.slf4j.MDC;
 class LoggingUtils {
 
   private static EnvironmentProvider environmentProvider = SystemEnvironmentProvider.getInstance();
+  private static final Logger NO_OP_LOGGER = org.slf4j.helpers.NOPLogger.NOP_LOGGER;
 
   // expose this setter for testing purposes
   static void setEnvironmentProvider(EnvironmentProvider provider) {
@@ -44,16 +45,9 @@ class LoggingUtils {
   static Logger getLogger(Class<?> clazz, LoggerFactoryProvider factoryProvider) {
     if (!isLoggingEnabled()) {
       //  use SLF4j's NOP logger regardless of bindings
-      return org.slf4j.helpers.NOPLogger.NOP_LOGGER;
+      return NO_OP_LOGGER;
     }
-
-    ILoggerFactory loggerFactory = factoryProvider.getLoggerFactory();
-    if (loggerFactory != null && !(loggerFactory instanceof org.slf4j.helpers.NOPLoggerFactory)) {
-      // Use SLF4j binding when present
-      return LoggerFactory.getLogger(clazz);
-    }
-    // No SLF4j binding found, return nop logger
-    return org.slf4j.helpers.NOPLogger.NOP_LOGGER;
+    return factoryProvider.getLoggerFactory().getLogger(clazz.getName());
   }
 
   static boolean isLoggingEnabled() {
