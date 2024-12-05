@@ -246,6 +246,7 @@
     </dependency>
 
 
+    <!--  TODO: clean up versions  -->
     <!--  Logging dependencies  -->
     <dependency>
       <groupId>org.slf4j</groupId>
