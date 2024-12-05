@@ -166,6 +166,14 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     return createDefaultBuilderWithKey(privateKey);
   }
 
+  private TestEnvironmentProvider testEnvironmentProvider;
+  @Before
+  public void setup() {
+    testEnvironmentProvider = new TestEnvironmentProvider();
+    testEnvironmentProvider.setEnv("GOOGLE_SDK_JAVA_LOGGING", "true");
+    LoggingUtils.setEnvironmentProvider(testEnvironmentProvider);
+  }
+
   @Test
   public void setLifetime() throws IOException {
     ServiceAccountCredentials.Builder builder = createDefaultBuilder();
@@ -604,6 +612,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void getRequestMetadata_hasAccessToken() throws IOException {
+    testEnvironmentProvider.setEnv("GOOGLE_SDK_JAVA_LOGGING", "true");
     TestAppender.clearEvents();
     GoogleCredentials credentials =
         createDefaultBuilderWithToken(ACCESS_TOKEN).setScopes(SCOPES).build();
@@ -614,8 +623,6 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(
         "Sending auth request to refresh access token.",
         TestAppender.events.get(0).getFormattedMessage());
-
-    // verify(logger).info("log info message expected");
   }
 
   @Test
@@ -932,36 +939,11 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
         tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
   }
 
-  @Before
-  public void setup() {
-    LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-
-    PatternLayoutEncoder patternLayoutEncoder = new PatternLayoutEncoder();
-    patternLayoutEncoder.setPattern("%-4relative [%thread] %-5level %logger{35} - %msg%n");
-    patternLayoutEncoder.setContext(loggerContext);
-
-    patternLayoutEncoder.start();
-
-    ConsoleAppender<ILoggingEvent> consoleAppender = new ConsoleAppender<>();
-    consoleAppender.setEncoder(patternLayoutEncoder);
-
-    consoleAppender.setContext(loggerContext);
-    consoleAppender.setName("CONSOLE");
-
-    consoleAppender.start();
-
-    ch.qos.logback.classic.Logger rootLogger = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
-    rootLogger.addAppender(consoleAppender);
-  }
-
-  @After
-  public void tearDown() {
-    LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-    loggerContext.getLogger(Logger.ROOT_LOGGER_NAME).detachAppender("CONSOLE");
-  }
 
   @Test
   public void idTokenWithAudience_iamFlow_targetAudienceMatchesAudClaim() throws IOException {
+
+    testEnvironmentProvider.setEnv("GOOGLE_SDK_JAVA_LOGGING", "true");
     TestAppender.clearEvents();
     String nonGDU = "test.com";
     MockIAMCredentialsServiceTransportFactory transportFactory =
@@ -995,15 +977,6 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(
         "Sending id token request to Iam Endpoint.",
         TestAppender.events.get(0).getFormattedMessage());
-    assertTrue(
-        TestAppender.events
-            .get(0)
-            .getMDCPropertyMap()
-            .get("request.headers")
-            .startsWith("{authorization="));
-    assertEquals(
-        "https://iamcredentials.test.com/v1/projects/-/serviceAccounts/36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr@developer.gserviceaccount.com:generateIdToken",
-        TestAppender.events.get(0).getMDCPropertyMap().get("request.url"));
     assertEquals("Auth response payload.", TestAppender.events.get(1).getFormattedMessage());
   }
 

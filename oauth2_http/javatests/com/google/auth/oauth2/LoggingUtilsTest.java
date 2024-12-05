@@ -81,7 +81,7 @@ public class LoggingUtilsTest {
 
     testEnvironmentProvider.setEnv("GOOGLE_SDK_JAVA_LOGGING", "true");
     Logger logger = LoggingUtils.getLogger(LoggingUtilsTest.class, mockProvider);
-    assertTrue(logger instanceof LoggingUtils.JulWrapperLogger);
+    assertTrue(logger instanceof NOPLogger);
   }
 
   @Test

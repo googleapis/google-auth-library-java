@@ -1,27 +1,27 @@
 <configuration>
-<!--  <appender name="TEST_APPENDER" class="com.google.auth.TestAppender" />-->
-<!--  <root level="DEBUG">-->
-<!--    <appender-ref ref="TEST_APPENDER" />-->
-<!--  </root>-->
-  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-    <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-      <provider class="net.logstash.logback.composite.loggingevent.ArgumentsJsonProvider" />
-      <fieldNames>
-        <level>severity</level>
-      </fieldNames>
-    </encoder>
-<!--    <filter class="ch.qos.logback.core.filter.EvaluatorFilter">-->
-<!--      <evaluator class="ch.qos.logback.classic.boolex.JaninoEventEvaluator">-->
-<!--        <expression>logger.equals("com.google.auth.oauth2.LoggingInterceptor")</expression>-->
-
-<!--      </evaluator>-->
-<!--      <onMatch>ACCEPT</onMatch>-->
-<!--      <onMismatch>DENY</onMismatch>-->
-<!--    </filter>-->
-  </appender>
-
+  <appender name="TEST_APPENDER" class="com.google.auth.TestAppender" />
   <root level="DEBUG">
-    <appender-ref ref="STDOUT" />
+    <appender-ref ref="TEST_APPENDER" />
   </root>
-  <logger name="org.slf4j.helpers.NOPLogger" level="OFF" />
+<!--  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">-->
+<!--    <encoder class="net.logstash.logback.encoder.LogstashEncoder">-->
+<!--      <provider class="net.logstash.logback.composite.loggingevent.ArgumentsJsonProvider" />-->
+<!--      <fieldNames>-->
+<!--        <level>severity</level>-->
+<!--      </fieldNames>-->
+<!--    </encoder>-->
+<!--&lt;!&ndash;    <filter class="ch.qos.logback.core.filter.EvaluatorFilter">&ndash;&gt;-->
+<!--&lt;!&ndash;      <evaluator class="ch.qos.logback.classic.boolex.JaninoEventEvaluator">&ndash;&gt;-->
+<!--&lt;!&ndash;        <expression>logger.equals("com.google.auth.oauth2.LoggingInterceptor")</expression>&ndash;&gt;-->
+
+<!--&lt;!&ndash;      </evaluator>&ndash;&gt;-->
+<!--&lt;!&ndash;      <onMatch>ACCEPT</onMatch>&ndash;&gt;-->
+<!--&lt;!&ndash;      <onMismatch>DENY</onMismatch>&ndash;&gt;-->
+<!--&lt;!&ndash;    </filter>&ndash;&gt;-->
+<!--  </appender>-->
+
+<!--  <root level="DEBUG">-->
+<!--    <appender-ref ref="STDOUT" />-->
+<!--  </root>-->
+<!--  <logger name="org.slf4j.helpers.NOPLogger" level="OFF" />-->
 </configuration>
