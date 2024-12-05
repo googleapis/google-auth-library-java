@@ -92,6 +92,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
   static final Duration COMPUTE_REFRESH_MARGIN = Duration.ofMinutes(3).plusSeconds(45);
 
   private static final Logger LOGGER = Logger.getLogger(ComputeEngineCredentials.class.getName());
+  private static final org.slf4j.Logger SLF4JLOGGER =
+      LoggingUtils.getLogger(ComputeEngineCredentials.class);
 
   static final String DEFAULT_METADATA_SERVER_URL = "http://metadata.google.internal";
 
@@ -296,11 +298,14 @@ public class ComputeEngineCredentials extends GoogleCredentials
       throw new IOException("Empty content from metadata token server request.");
     }
     GenericData responseData = response.parseAs(GenericData.class);
+    LoggingUtils.logGenericData(
+        responseData, SLF4JLOGGER, "Auth response from refresh access token payload.");
     String accessToken =
         OAuth2Utils.validateString(responseData, "access_token", PARSE_ERROR_PREFIX);
     int expiresInSeconds =
         OAuth2Utils.validateInt32(responseData, "expires_in", PARSE_ERROR_PREFIX);
     long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000;
+
     return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
   }
 
@@ -361,7 +366,9 @@ public class ComputeEngineCredentials extends GoogleCredentials
     request.setThrowExceptionOnExecuteError(false);
     HttpResponse response;
     try {
+      LoggingUtils.logRequest(request, SLF4JLOGGER, "auth get metadata sending request.");
       response = request.execute();
+      LoggingUtils.logResponse(response, SLF4JLOGGER, "auth get metadata received response.");
     } catch (UnknownHostException exception) {
       throw new IOException(
           "ComputeEngineCredentials cannot find the metadata server. This is"
@@ -461,7 +468,10 @@ public class ComputeEngineCredentials extends GoogleCredentials
             request,
             MetricsUtils.getGoogleCredentialsMetricsHeader(
                 RequestType.METADATA_SERVER_PING, CredentialTypeForMetrics.DO_NOT_SEND));
+
+        LoggingUtils.logRequest(request, SLF4JLOGGER, "auth pin MDS.");
         HttpResponse response = request.execute();
+        LoggingUtils.logResponse(response, SLF4JLOGGER, "auth received response from MDS.");
         try {
           // Internet providers can return a generic response to all requests, so it is necessary
           // to check that metadata header is present also.
@@ -633,6 +643,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
       throw new IOException("Empty content from metadata token server request.");
     }
     GenericData responseData = response.parseAs(GenericData.class);
+    LoggingUtils.logGenericData(
+        responseData, SLF4JLOGGER, "Auth get default service account payload.");
     Map<String, Object> defaultAccount =
         OAuth2Utils.validateMap(responseData, "default", PARSE_ERROR_ACCOUNT);
     return OAuth2Utils.validateString(defaultAccount, "email", PARSE_ERROR_ACCOUNT);

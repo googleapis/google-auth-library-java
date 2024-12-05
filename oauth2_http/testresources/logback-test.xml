@@ -1,0 +1,27 @@
+<configuration>
+<!--  <appender name="TEST_APPENDER" class="com.google.auth.TestAppender" />-->
+<!--  <root level="DEBUG">-->
+<!--    <appender-ref ref="TEST_APPENDER" />-->
+<!--  </root>-->
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+      <provider class="net.logstash.logback.composite.loggingevent.ArgumentsJsonProvider" />
+      <fieldNames>
+        <level>severity</level>
+      </fieldNames>
+    </encoder>
+<!--    <filter class="ch.qos.logback.core.filter.EvaluatorFilter">-->
+<!--      <evaluator class="ch.qos.logback.classic.boolex.JaninoEventEvaluator">-->
+<!--        <expression>logger.equals("com.google.auth.oauth2.LoggingInterceptor")</expression>-->
+
+<!--      </evaluator>-->
+<!--      <onMatch>ACCEPT</onMatch>-->
+<!--      <onMismatch>DENY</onMismatch>-->
+<!--    </filter>-->
+  </appender>
+
+  <root level="DEBUG">
+    <appender-ref ref="STDOUT" />
+  </root>
+  <logger name="org.slf4j.helpers.NOPLogger" level="OFF" />
+</configuration>

@@ -41,6 +41,10 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.ConsoleAppender;
 import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.GenericJson;
@@ -55,6 +59,7 @@ import com.google.api.client.util.Joiner;
 import com.google.auth.CredentialTypeForMetrics;
 import com.google.auth.Credentials;
 import com.google.auth.RequestMetadataCallback;
+import com.google.auth.TestAppender;
 import com.google.auth.TestUtils;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.http.HttpTransportFactory;
@@ -78,9 +83,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Test case for {@link ServiceAccountCredentials}. */
 @RunWith(JUnit4.class)
@@ -595,10 +604,18 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void getRequestMetadata_hasAccessToken() throws IOException {
+    TestAppender.clearEvents();
     GoogleCredentials credentials =
         createDefaultBuilderWithToken(ACCESS_TOKEN).setScopes(SCOPES).build();
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+
+    assertEquals(3, TestAppender.events.size());
+    assertEquals(
+        "Sending auth request to refresh access token.",
+        TestAppender.events.get(0).getFormattedMessage());
+
+    // verify(logger).info("log info message expected");
   }
 
   @Test
@@ -915,8 +932,37 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
         tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
   }
 
+  @Before
+  public void setup() {
+    LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+
+    PatternLayoutEncoder patternLayoutEncoder = new PatternLayoutEncoder();
+    patternLayoutEncoder.setPattern("%-4relative [%thread] %-5level %logger{35} - %msg%n");
+    patternLayoutEncoder.setContext(loggerContext);
+
+    patternLayoutEncoder.start();
+
+    ConsoleAppender<ILoggingEvent> consoleAppender = new ConsoleAppender<>();
+    consoleAppender.setEncoder(patternLayoutEncoder);
+
+    consoleAppender.setContext(loggerContext);
+    consoleAppender.setName("CONSOLE");
+
+    consoleAppender.start();
+
+    ch.qos.logback.classic.Logger rootLogger = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
+    rootLogger.addAppender(consoleAppender);
+  }
+
+  @After
+  public void tearDown() {
+    LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+    loggerContext.getLogger(Logger.ROOT_LOGGER_NAME).detachAppender("CONSOLE");
+  }
+
   @Test
   public void idTokenWithAudience_iamFlow_targetAudienceMatchesAudClaim() throws IOException {
+    TestAppender.clearEvents();
     String nonGDU = "test.com";
     MockIAMCredentialsServiceTransportFactory transportFactory =
         new MockIAMCredentialsServiceTransportFactory(nonGDU);
@@ -944,6 +990,21 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(
         targetAudience,
         tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
+
+    assertEquals(2, TestAppender.events.size());
+    assertEquals(
+        "Sending id token request to Iam Endpoint.",
+        TestAppender.events.get(0).getFormattedMessage());
+    assertTrue(
+        TestAppender.events
+            .get(0)
+            .getMDCPropertyMap()
+            .get("request.headers")
+            .startsWith("{authorization="));
+    assertEquals(
+        "https://iamcredentials.test.com/v1/projects/-/serviceAccounts/36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr@developer.gserviceaccount.com:generateIdToken",
+        TestAppender.events.get(0).getMDCPropertyMap().get("request.url"));
+    assertEquals("Auth response payload.", TestAppender.events.get(1).getFormattedMessage());
   }
 
   @Test

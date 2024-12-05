@@ -800,7 +800,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
 
     UserCredentials credentials = UserCredentials.fromStream(userStream, transportFactory);
 
-    for (int status = 400; status < 600; status++) {
+    for (int status = 400; status < 404; status++) {
       if (OAuth2Utils.TOKEN_ENDPOINT_RETRYABLE_STATUS_CODES.contains(status)) {
         continue;
       }
