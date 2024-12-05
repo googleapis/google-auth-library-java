@@ -41,10 +41,6 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.ConsoleAppender;
 import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.GenericJson;
@@ -83,13 +79,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** Test case for {@link ServiceAccountCredentials}. */
 @RunWith(JUnit4.class)
@@ -167,6 +160,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   private TestEnvironmentProvider testEnvironmentProvider;
+
   @Before
   public void setup() {
     testEnvironmentProvider = new TestEnvironmentProvider();
@@ -938,7 +932,6 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
         targetAudience,
         tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
   }
-
 
   @Test
   public void idTokenWithAudience_iamFlow_targetAudienceMatchesAudClaim() throws IOException {

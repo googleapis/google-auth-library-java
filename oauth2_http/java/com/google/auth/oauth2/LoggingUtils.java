@@ -14,10 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-public class LoggingUtils {
+class LoggingUtils {
 
-  private static final java.util.logging.Logger LOGGER =
-      java.util.logging.Logger.getLogger(LoggingUtils.class.getName());
   private static EnvironmentProvider environmentProvider = SystemEnvironmentProvider.getInstance();
 
   // expose this setter for testing purposes
@@ -38,11 +36,12 @@ public class LoggingUtils {
     }
   }
 
-  public static Logger getLogger(Class<?> clazz) {
+  static Logger getLogger(Class<?> clazz) {
     return getLogger(clazz, new DefaultLoggerFactoryProvider());
   }
 
-  public static Logger getLogger(Class<?> clazz, LoggerFactoryProvider factoryProvider) {
+  // constructor with LoggerFactoryProvider to make testing easier
+  static Logger getLogger(Class<?> clazz, LoggerFactoryProvider factoryProvider) {
     if (!isLoggingEnabled()) {
       //  use SLF4j's NOP logger regardless of bindings
       return org.slf4j.helpers.NOPLogger.NOP_LOGGER;
@@ -57,12 +56,12 @@ public class LoggingUtils {
     return org.slf4j.helpers.NOPLogger.NOP_LOGGER;
   }
 
-  public static boolean isLoggingEnabled() {
+  static boolean isLoggingEnabled() {
     String enableLogging = environmentProvider.getEnv("GOOGLE_SDK_JAVA_LOGGING");
     return "true".equalsIgnoreCase(enableLogging);
   }
 
-  public static void logWithMDC(
+  static void logWithMDC(
       Logger logger, org.slf4j.event.Level level, Map<String, String> contextMap, String message) {
     contextMap.forEach(MDC::put);
     switch (level) {
