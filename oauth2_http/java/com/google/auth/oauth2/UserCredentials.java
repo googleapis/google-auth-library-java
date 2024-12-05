@@ -50,7 +50,6 @@ import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.MetricsUtils.RequestType;
 import com.google.common.base.MoreObjects;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import com.google.gson.Gson;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -71,7 +70,6 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final long serialVersionUID = -4800758775038679176L;
   private static final Logger LOGGER = LoggingUtils.getLogger(UserCredentials.class);
-  private static final Gson gson = new Gson();
 
   private final String clientId;
   private final String clientSecret;

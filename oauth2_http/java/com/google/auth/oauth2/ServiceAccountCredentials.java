@@ -64,7 +64,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import com.google.gson.Gson;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -99,7 +98,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
   private static final int TWELVE_HOURS_IN_SECONDS = 43200;
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
   private static final Logger LOGGER = LoggingUtils.getLogger(ServiceAccountCredentials.class);
-  private static final Gson gson = new Gson();
 
   private final String clientId;
   private final String clientEmail;
