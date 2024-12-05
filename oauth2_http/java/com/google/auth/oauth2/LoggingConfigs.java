@@ -8,10 +8,12 @@ class LoggingConfigs {
 
   private static EnvironmentProvider environmentProvider = SystemEnvironmentProvider.getInstance();
   private static final Logger NO_OP_LOGGER = org.slf4j.helpers.NOPLogger.NOP_LOGGER;
-  private static final boolean LOGGING_ENABLED = isLoggingEnabled();
-  // expose this setter for testing purposes
+  private static boolean loggingEnabled = isLoggingEnabled();
+  // expose this setter only for testing purposes
   static void setEnvironmentProvider(EnvironmentProvider provider) {
     environmentProvider = provider;
+    // Recalculate LOGGING_ENABLED after setting the new provider
+    loggingEnabled = isLoggingEnabled();
   }
 
   private LoggingConfigs() {}
@@ -22,7 +24,7 @@ class LoggingConfigs {
 
   // constructor with LoggerFactoryProvider to make testing easier
   static Logger getLogger(Class<?> clazz, LoggerFactoryProvider factoryProvider) {
-    if (LOGGING_ENABLED) {
+    if (loggingEnabled) {
       return factoryProvider.getLoggerFactory().getLogger(clazz.getName());
     } else {
       //  use SLF4j's NOP logger regardless of bindings
