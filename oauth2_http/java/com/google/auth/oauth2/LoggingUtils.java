@@ -89,56 +89,70 @@ class LoggingUtils {
 
   static void logRequest(HttpRequest request, Logger logger, String message) {
     if (logger.isInfoEnabled()) {
-      Map<String, String> loggingDataMap = new HashMap<>();
-      loggingDataMap.put("request.method", request.getRequestMethod());
-      loggingDataMap.put("request.url", request.getUrl().toString());
+      try {
+        Map<String, String> loggingDataMap = new HashMap<>();
+        loggingDataMap.put("request.method", request.getRequestMethod());
+        loggingDataMap.put("request.url", request.getUrl().toString());
 
-      Map<String, Object> headers = new HashMap<>();
-      request
-          .getHeaders()
-          .forEach(
-              (key, val) -> {
-                if ("authorization".equals(key)) {
-                  String hashedVal = calculateSHA256Hash(String.valueOf(val));
-                  headers.put(key, hashedVal);
-                } else {
-                  headers.put(key, val);
-                }
-              });
-      loggingDataMap.put("request.headers", headers.toString());
+        Map<String, Object> headers = new HashMap<>();
+        request
+            .getHeaders()
+            .forEach(
+                (key, val) -> {
+                  if ("authorization".equals(key)) {
+                    String hashedVal = calculateSHA256Hash(String.valueOf(val));
+                    headers.put(key, hashedVal);
+                  } else {
+                    headers.put(key, val);
+                  }
+                });
+        loggingDataMap.put("request.headers", headers.toString());
 
-      if (request.getContent() != null && logger.isDebugEnabled()) {
-        // are payload always GenericData? If so, can parse and store in json
-        GenericData data = (GenericData) ((UrlEncodedContent) request.getContent()).getData();
+        if (request.getContent() != null && logger.isDebugEnabled()) {
+          // are payload always GenericData? If so, can parse and store in json
+          GenericData data = (GenericData) ((UrlEncodedContent) request.getContent()).getData();
 
-        Map<String, String> contextMap = parseGenericData(data);
-        loggingDataMap.put("request.payload", contextMap.toString());
+          Map<String, String> contextMap = parseGenericData(data);
+          loggingDataMap.put("request.payload", contextMap.toString());
 
-        LoggingUtils.logWithMDC(logger, org.slf4j.event.Level.DEBUG, loggingDataMap, message);
-      } else {
+          LoggingUtils.logWithMDC(logger, org.slf4j.event.Level.DEBUG, loggingDataMap, message);
+        } else {
 
-        LoggingUtils.logWithMDC(logger, org.slf4j.event.Level.INFO, loggingDataMap, message);
+          LoggingUtils.logWithMDC(logger, org.slf4j.event.Level.INFO, loggingDataMap, message);
+        }
+      } catch (Exception e) {
+        logger.error("Error logging request: ", e);
       }
     }
   }
 
   static void logResponse(HttpResponse response, Logger logger, String message) {
     if (logger.isInfoEnabled()) {
-      Map<String, String> responseLogDataMap = new HashMap<>();
-      responseLogDataMap.put("response.status", String.valueOf(response.getStatusCode()));
-      responseLogDataMap.put("response.status.message", response.getStatusMessage());
+      try {
+        Map<String, String> responseLogDataMap = new HashMap<>();
+        responseLogDataMap.put("response.status", String.valueOf(response.getStatusCode()));
+        responseLogDataMap.put("response.status.message", response.getStatusMessage());
 
-      Map<String, Object> headers = new HashMap<>();
-      response.getHeaders().forEach((key, val) -> headers.put(key, val));
-      responseLogDataMap.put("response.headers", headers.toString());
-      LoggingUtils.logWithMDC(logger, org.slf4j.event.Level.INFO, responseLogDataMap, message);
+        Map<String, Object> headers = new HashMap<>();
+        response.getHeaders().forEach((key, val) -> headers.put(key, val));
+        responseLogDataMap.put("response.headers", headers.toString());
+        LoggingUtils.logWithMDC(logger, org.slf4j.event.Level.INFO, responseLogDataMap, message);
+      } catch (Exception e) {
+
+        logger.error("Error logging response: ", e);
+      }
     }
   }
 
   static void logGenericData(GenericData genericData, Logger logger, String message) {
     if (logger.isDebugEnabled()) {
-      Map<String, String> contextMap = parseGenericData(genericData);
-      LoggingUtils.logWithMDC(logger, org.slf4j.event.Level.DEBUG, contextMap, message);
+      try {
+
+        Map<String, String> contextMap = parseGenericData(genericData);
+        LoggingUtils.logWithMDC(logger, org.slf4j.event.Level.DEBUG, contextMap, message);
+      } catch (Exception e) {
+        logger.error("Error logging GenericData: ", e);
+      }
     }
   }
 
