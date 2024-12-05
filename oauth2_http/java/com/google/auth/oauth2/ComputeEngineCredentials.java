@@ -93,7 +93,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
   private static final Logger LOGGER = Logger.getLogger(ComputeEngineCredentials.class.getName());
   private static final org.slf4j.Logger SLF4JLOGGER =
-      LoggingUtils.getLogger(ComputeEngineCredentials.class);
+      LoggingConfigs.getLogger(ComputeEngineCredentials.class);
 
   static final String DEFAULT_METADATA_SERVER_URL = "http://metadata.google.internal";
 

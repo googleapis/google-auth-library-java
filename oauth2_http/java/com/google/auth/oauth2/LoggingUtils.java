@@ -9,51 +9,12 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
-import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 class LoggingUtils {
 
-  private static EnvironmentProvider environmentProvider = SystemEnvironmentProvider.getInstance();
-  private static final Logger NO_OP_LOGGER = org.slf4j.helpers.NOPLogger.NOP_LOGGER;
-
-  // expose this setter for testing purposes
-  static void setEnvironmentProvider(EnvironmentProvider provider) {
-    environmentProvider = provider;
-  }
-
   private LoggingUtils() {}
-
-  interface LoggerFactoryProvider {
-    ILoggerFactory getLoggerFactory();
-  }
-
-  static class DefaultLoggerFactoryProvider implements LoggerFactoryProvider {
-    @Override
-    public ILoggerFactory getLoggerFactory() {
-      return LoggerFactory.getILoggerFactory();
-    }
-  }
-
-  static Logger getLogger(Class<?> clazz) {
-    return getLogger(clazz, new DefaultLoggerFactoryProvider());
-  }
-
-  // constructor with LoggerFactoryProvider to make testing easier
-  static Logger getLogger(Class<?> clazz, LoggerFactoryProvider factoryProvider) {
-    if (!isLoggingEnabled()) {
-      //  use SLF4j's NOP logger regardless of bindings
-      return NO_OP_LOGGER;
-    }
-    return factoryProvider.getLoggerFactory().getLogger(clazz.getName());
-  }
-
-  static boolean isLoggingEnabled() {
-    String enableLogging = environmentProvider.getEnv("GOOGLE_SDK_JAVA_LOGGING");
-    return "true".equalsIgnoreCase(enableLogging);
-  }
 
   static void logWithMDC(
       Logger logger, org.slf4j.event.Level level, Map<String, String> contextMap, String message) {
@@ -109,10 +70,10 @@ class LoggingUtils {
           Map<String, String> contextMap = parseGenericData(data);
           loggingDataMap.put("request.payload", contextMap.toString());
 
-          LoggingUtils.logWithMDC(logger, org.slf4j.event.Level.DEBUG, loggingDataMap, message);
+          logWithMDC(logger, org.slf4j.event.Level.DEBUG, loggingDataMap, message);
         } else {
 
-          LoggingUtils.logWithMDC(logger, org.slf4j.event.Level.INFO, loggingDataMap, message);
+          logWithMDC(logger, org.slf4j.event.Level.INFO, loggingDataMap, message);
         }
       } catch (Exception e) {
         logger.error("Error logging request: ", e);
@@ -130,7 +91,7 @@ class LoggingUtils {
         Map<String, Object> headers = new HashMap<>();
         response.getHeaders().forEach((key, val) -> headers.put(key, val));
         responseLogDataMap.put("response.headers", headers.toString());
-        LoggingUtils.logWithMDC(logger, org.slf4j.event.Level.INFO, responseLogDataMap, message);
+        logWithMDC(logger, org.slf4j.event.Level.INFO, responseLogDataMap, message);
       } catch (Exception e) {
 
         logger.error("Error logging response: ", e);
@@ -143,7 +104,7 @@ class LoggingUtils {
       try {
 
         Map<String, String> contextMap = parseGenericData(genericData);
-        LoggingUtils.logWithMDC(logger, org.slf4j.event.Level.DEBUG, contextMap, message);
+        logWithMDC(logger, org.slf4j.event.Level.DEBUG, contextMap, message);
       } catch (Exception e) {
         logger.error("Error logging GenericData: ", e);
       }

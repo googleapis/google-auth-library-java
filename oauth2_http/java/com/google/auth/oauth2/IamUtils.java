@@ -69,7 +69,7 @@ class IamUtils {
       "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateIdToken";
   private static final String PARSE_ERROR_MESSAGE = "Error parsing error message response. ";
   private static final String PARSE_ERROR_SIGNATURE = "Error parsing signature response. ";
-  private static final Logger LOGGER = LoggingUtils.getLogger(IamUtils.class);
+  private static final Logger LOGGER = LoggingConfigs.getLogger(IamUtils.class);
 
   // Following guidance for IAM retries:
   // https://cloud.google.com/iam/docs/retry-strategy#errors-to-retry

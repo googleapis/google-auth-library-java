@@ -111,7 +111,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
   private int lifetime;
   private String iamEndpointOverride;
   private final String transportFactoryClassName;
-  private static final Logger LOGGER = LoggingUtils.getLogger(ImpersonatedCredentials.class);
+  private static final Logger LOGGER = LoggingConfigs.getLogger(ImpersonatedCredentials.class);
 
   private transient HttpTransportFactory transportFactory;
 

@@ -13,7 +13,7 @@ import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
 import com.google.auth.TestAppender;
-import com.google.auth.oauth2.LoggingUtils.LoggerFactoryProvider;
+import com.google.auth.oauth2.LoggingConfigs.LoggerFactoryProvider;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.After;
@@ -24,16 +24,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.NOPLogger;
 
-public class LoggingUtilsTest {
+public class LoggingConfigsTest {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(LoggingUtilsTest.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(LoggingConfigsTest.class);
 
   private TestEnvironmentProvider testEnvironmentProvider;
 
   @Before
   public void setup() {
     testEnvironmentProvider = new TestEnvironmentProvider();
-    LoggingUtils.setEnvironmentProvider(testEnvironmentProvider);
+    LoggingConfigs.setEnvironmentProvider(testEnvironmentProvider);
 
     // need to setup a ConsoleAppender and attach to root logger because TestAppender
     // does not correctly capture MDC info
@@ -66,7 +66,7 @@ public class LoggingUtilsTest {
   @Test
   public void testGetLogger_loggingEnabled_slf4jBindingPresent() {
     testEnvironmentProvider.setEnv("GOOGLE_SDK_JAVA_LOGGING", "true");
-    Logger logger = LoggingUtils.getLogger(LoggingUtilsTest.class);
+    Logger logger = LoggingConfigs.getLogger(LoggingConfigsTest.class);
     assertTrue(logger instanceof org.slf4j.Logger);
     assertNotEquals(logger.getClass(), NOPLogger.class);
   }
@@ -75,7 +75,7 @@ public class LoggingUtilsTest {
   public void testGetLogger_loggingDisabled() {
     testEnvironmentProvider.setEnv("GOOGLE_SDK_JAVA_LOGGING", "false");
 
-    Logger logger = LoggingUtils.getLogger(LoggingUtilsTest.class);
+    Logger logger = LoggingConfigs.getLogger(LoggingConfigsTest.class);
     assertEquals(NOPLogger.class, logger.getClass());
   }
 
@@ -90,7 +90,7 @@ public class LoggingUtilsTest {
         .thenReturn(org.slf4j.helpers.NOPLogger.NOP_LOGGER);
 
     // Use the mock LoggerFactoryProvider in getLogger()
-    Logger logger = LoggingUtils.getLogger(LoggingUtilsTest.class, mockLoggerFactoryProvider);
+    Logger logger = LoggingConfigs.getLogger(LoggingConfigsTest.class, mockLoggerFactoryProvider);
 
     // Assert that the returned logger is a NOPLogger
     assertTrue(logger instanceof org.slf4j.helpers.NOPLogger);
@@ -99,16 +99,16 @@ public class LoggingUtilsTest {
   @Test
   public void testIsLoggingEnabled_true() {
     testEnvironmentProvider.setEnv("GOOGLE_SDK_JAVA_LOGGING", "true");
-    assertTrue(LoggingUtils.isLoggingEnabled());
+    assertTrue(LoggingConfigs.isLoggingEnabled());
     testEnvironmentProvider.setEnv("GOOGLE_SDK_JAVA_LOGGING", "TRUE");
-    assertTrue(LoggingUtils.isLoggingEnabled());
+    assertTrue(LoggingConfigs.isLoggingEnabled());
     testEnvironmentProvider.setEnv("GOOGLE_SDK_JAVA_LOGGING", "True");
-    assertTrue(LoggingUtils.isLoggingEnabled());
+    assertTrue(LoggingConfigs.isLoggingEnabled());
   }
 
   @Test
   public void testIsLoggingEnabled_defaultToFalse() {
-    assertFalse(LoggingUtils.isLoggingEnabled());
+    assertFalse(LoggingConfigs.isLoggingEnabled());
   }
 
   @Test

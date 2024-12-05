@@ -165,7 +165,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   public void setup() {
     testEnvironmentProvider = new TestEnvironmentProvider();
     testEnvironmentProvider.setEnv("GOOGLE_SDK_JAVA_LOGGING", "true");
-    LoggingUtils.setEnvironmentProvider(testEnvironmentProvider);
+    LoggingConfigs.setEnvironmentProvider(testEnvironmentProvider);
   }
 
   @Test

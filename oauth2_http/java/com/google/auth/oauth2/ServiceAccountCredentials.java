@@ -97,7 +97,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final int TWELVE_HOURS_IN_SECONDS = 43200;
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
-  private static final Logger LOGGER = LoggingUtils.getLogger(ServiceAccountCredentials.class);
+  private static final Logger LOGGER = LoggingConfigs.getLogger(ServiceAccountCredentials.class);
 
   private final String clientId;
   private final String clientEmail;

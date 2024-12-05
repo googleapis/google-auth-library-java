@@ -69,7 +69,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
   private static final String GRANT_TYPE = "refresh_token";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final long serialVersionUID = -4800758775038679176L;
-  private static final Logger LOGGER = LoggingUtils.getLogger(UserCredentials.class);
+  private static final Logger LOGGER = LoggingConfigs.getLogger(UserCredentials.class);
 
   private final String clientId;
   private final String clientSecret;
