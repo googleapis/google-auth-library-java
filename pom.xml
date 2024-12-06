@@ -77,6 +77,8 @@
     <project.findbugs.version>3.0.2</project.findbugs.version>
     <deploy.autorelease>false</deploy.autorelease>
     <project.error-prone.version>2.35.1</project.error-prone.version>
+    <project.protobuf.version>3.25.5</project.protobuf.version>
+    <project.cel.version>0.8.0</project.cel.version>
   </properties>
 
   <dependencyManagement>
@@ -148,6 +150,26 @@
           <artifactId>error_prone_annotations</artifactId>
           <version>${project.error-prone.version}</version>
           <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-java</artifactId>
+        <version>${project.protobuf.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>dev.cel</groupId>
+        <artifactId>cel</artifactId>
+        <version>${project.cel.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>annotations</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
     </dependencies>
   </dependencyManagement>
