@@ -1,3 +1,34 @@
+/*
+ * Copyright 2024 Google LLC
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ *    * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ *    * Redistributions in binary form must reproduce the above
+ * copyright notice, this list of conditions and the following disclaimer
+ * in the documentation and/or other materials provided with the
+ * distribution.
+ *
+ *    * Neither the name of Google LLC nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 package com.google.auth.oauth2;
 
 import com.google.api.client.http.HttpRequest;
@@ -43,8 +74,8 @@ class LoggingUtils {
   }
 
   static void logRequest(HttpRequest request, Logger logger, String message) {
-    if (logger.isInfoEnabled()) {
-      try {
+    try {
+      if (logger.isInfoEnabled()) {
         Map<String, String> loggingDataMap = new HashMap<>();
         loggingDataMap.put("request.method", request.getRequestMethod());
         loggingDataMap.put("request.url", request.getUrl().toString());
@@ -75,39 +106,37 @@ class LoggingUtils {
 
           logWithMDC(logger, org.slf4j.event.Level.INFO, loggingDataMap, message);
         }
-      } catch (Exception e) {
-        logger.error("Error logging request: ", e);
       }
+    } catch (Exception e) {
+      logger.error("Error logging request: ", e);
     }
   }
 
   static void logResponse(HttpResponse response, Logger logger, String message) {
-    if (logger.isInfoEnabled()) {
-      try {
+    try {
+      if (logger.isInfoEnabled()) {
         Map<String, String> responseLogDataMap = new HashMap<>();
         responseLogDataMap.put("response.status", String.valueOf(response.getStatusCode()));
         responseLogDataMap.put("response.status.message", response.getStatusMessage());
 
-        Map<String, Object> headers = new HashMap<>();
-        response.getHeaders().forEach((key, val) -> headers.put(key, val));
+        Map<String, Object> headers = new HashMap<>(response.getHeaders());
         responseLogDataMap.put("response.headers", headers.toString());
         logWithMDC(logger, org.slf4j.event.Level.INFO, responseLogDataMap, message);
-      } catch (Exception e) {
-
-        logger.error("Error logging response: ", e);
       }
+    } catch (Exception e) {
+
+      logger.error("Error logging response: ", e);
     }
   }
 
   static void logGenericData(GenericData genericData, Logger logger, String message) {
-    if (logger.isDebugEnabled()) {
-      try {
-
+    try {
+      if (logger.isDebugEnabled()) {
         Map<String, String> contextMap = parseGenericData(genericData);
         logWithMDC(logger, org.slf4j.event.Level.DEBUG, contextMap, message);
-      } catch (Exception e) {
-        logger.error("Error logging GenericData: ", e);
       }
+    } catch (Exception e) {
+      logger.error("Error logging GenericData: ", e);
     }
   }
 
