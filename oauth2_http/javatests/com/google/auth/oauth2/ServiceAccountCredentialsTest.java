@@ -55,7 +55,6 @@ import com.google.api.client.util.Joiner;
 import com.google.auth.CredentialTypeForMetrics;
 import com.google.auth.Credentials;
 import com.google.auth.RequestMetadataCallback;
-import com.google.auth.TestAppender;
 import com.google.auth.TestUtils;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.http.HttpTransportFactory;
@@ -79,7 +78,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -88,7 +86,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
-  private static final String CLIENT_EMAIL =
+  static final String CLIENT_EMAIL =
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr@developer.gserviceaccount.com";
   private static final String CLIENT_ID =
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr.apps.googleusercontent.com";
@@ -106,14 +104,14 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
           + "gidhycxS86dxpEljnOMCw8CKoUBd5I880IUahEiUltk7OLJYS/Ts1wbn3kPOVX3wyJs8WBDtBkFrDHW2ezth2QJ"
           + "ADj3e1YhMVdjJW5jqwlD/VNddGjgzyunmiZg0uOXsHXbytYmsA545S8KRQFaJKFXYYFo2kOjqOiC1T2cAzMDjCQ"
           + "==\n-----END PRIVATE KEY-----\n";
-  private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
-  private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
+  static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
+  static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
   private static final Collection<String> DEFAULT_SCOPES =
       Collections.singletonList("dummy.default.scope");
   private static final String USER = "user@example.com";
   private static final String PROJECT_ID = "project-id";
   private static final Collection<String> EMPTY_SCOPES = Collections.emptyList();
-  private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
+  static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
   private static final String JWT_AUDIENCE = "http://googleapis.com/";
   private static final HttpTransportFactory DUMMY_TRANSPORT_FACTORY =
       new MockTokenServerTransportFactory();
@@ -128,19 +126,20 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   private static final int INVALID_LIFETIME = 43210;
   private static final String JWT_ACCESS_PREFIX = "Bearer ";
 
-  private ServiceAccountCredentials.Builder createDefaultBuilderWithToken(String accessToken)
+  static ServiceAccountCredentials.Builder createDefaultBuilderWithToken(String accessToken)
       throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, accessToken);
     return createDefaultBuilder().setHttpTransportFactory(transportFactory);
   }
 
-  private ServiceAccountCredentials.Builder createDefaultBuilderWithScopes(
+  private static ServiceAccountCredentials.Builder createDefaultBuilderWithScopes(
       Collection<String> scopes) throws IOException {
     return createDefaultBuilder().setScopes(scopes);
   }
 
-  private ServiceAccountCredentials.Builder createDefaultBuilderWithKey(PrivateKey privateKey) {
+  private static ServiceAccountCredentials.Builder createDefaultBuilderWithKey(
+      PrivateKey privateKey) {
     ServiceAccountCredentials.Builder builder =
         ServiceAccountCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -154,18 +153,9 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     return builder;
   }
 
-  private ServiceAccountCredentials.Builder createDefaultBuilder() throws IOException {
+  static ServiceAccountCredentials.Builder createDefaultBuilder() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     return createDefaultBuilderWithKey(privateKey);
-  }
-
-  private TestEnvironmentProvider testEnvironmentProvider;
-
-  @Before
-  public void setup() {
-    testEnvironmentProvider = new TestEnvironmentProvider();
-    testEnvironmentProvider.setEnv("GOOGLE_SDK_JAVA_LOGGING", "true");
-    LoggingConfigs.setEnvironmentProvider(testEnvironmentProvider);
   }
 
   @Test
@@ -606,17 +596,10 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void getRequestMetadata_hasAccessToken() throws IOException {
-    testEnvironmentProvider.setEnv("GOOGLE_SDK_JAVA_LOGGING", "true");
-    TestAppender.clearEvents();
     GoogleCredentials credentials =
         createDefaultBuilderWithToken(ACCESS_TOKEN).setScopes(SCOPES).build();
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
-
-    assertEquals(3, TestAppender.events.size());
-    assertEquals(
-        "Sending auth request to refresh access token.",
-        TestAppender.events.get(0).getFormattedMessage());
   }
 
   @Test
@@ -935,9 +918,6 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void idTokenWithAudience_iamFlow_targetAudienceMatchesAudClaim() throws IOException {
-
-    testEnvironmentProvider.setEnv("GOOGLE_SDK_JAVA_LOGGING", "true");
-    TestAppender.clearEvents();
     String nonGDU = "test.com";
     MockIAMCredentialsServiceTransportFactory transportFactory =
         new MockIAMCredentialsServiceTransportFactory(nonGDU);
@@ -965,12 +945,6 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(
         targetAudience,
         tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
-
-    assertEquals(2, TestAppender.events.size());
-    assertEquals(
-        "Sending id token request to Iam Endpoint.",
-        TestAppender.events.get(0).getFormattedMessage());
-    assertEquals("Auth response payload.", TestAppender.events.get(1).getFormattedMessage());
   }
 
   @Test

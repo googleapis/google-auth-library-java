@@ -49,7 +49,9 @@ class LoggingUtils {
 
   static void logWithMDC(
       Logger logger, org.slf4j.event.Level level, Map<String, String> contextMap, String message) {
-    contextMap.forEach(MDC::put);
+    if (!contextMap.isEmpty()) {
+      contextMap.forEach(MDC::put);
+    }
     switch (level) {
       case TRACE:
         logger.trace(message);
@@ -70,7 +72,9 @@ class LoggingUtils {
         logger.info(message);
         // Default to INFO level
     }
-    MDC.clear();
+    if (!contextMap.isEmpty()) {
+      MDC.clear();
+    }
   }
 
   static void logRequest(HttpRequest request, Logger logger, String message) {

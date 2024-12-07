@@ -38,7 +38,7 @@ import java.util.List;
 
 /** Logback appender used to set up tests. */
 public class TestAppender extends AppenderBase<ILoggingEvent> {
-  public static List<ILoggingEvent> events = new ArrayList<>();
+  public List<ILoggingEvent> events = new ArrayList<>();
 
   @Override
   protected void append(ILoggingEvent eventObject) {
@@ -47,7 +47,7 @@ public class TestAppender extends AppenderBase<ILoggingEvent> {
     events.add(eventObject);
   }
 
-  public static void clearEvents() {
+  public void clearEvents() {
     events.clear();
   }
 }

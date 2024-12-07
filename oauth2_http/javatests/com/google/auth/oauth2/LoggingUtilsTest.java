@@ -42,31 +42,83 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 
 public class LoggingUtilsTest {
   private static final Logger LOGGER = LoggerFactory.getLogger(LoggingUtilsTest.class);
 
+  private TestAppender setupTestLogger() {
+    TestAppender testAppender = new TestAppender();
+    testAppender.start();
+    ((ch.qos.logback.classic.Logger) LOGGER).addAppender(testAppender);
+    return testAppender;
+  }
+
   @Test
   public void testLogWithMDC_slf4jLogger() {
-    TestAppender.clearEvents();
+
+    TestAppender testAppender = setupTestLogger();
+
     Map<String, String> contextMap = new HashMap<>();
     contextMap.put("key1", "value1");
     contextMap.put("key2", "value2");
-    LoggingUtils.logWithMDC(LOGGER, org.slf4j.event.Level.DEBUG, contextMap, "test message");
+    LoggingUtils.logWithMDC(LOGGER, Level.DEBUG, contextMap, "test message");
 
-    assertEquals(1, TestAppender.events.size());
-    assertEquals("test message", TestAppender.events.get(0).getFormattedMessage());
+    assertEquals(1, testAppender.events.size());
+    assertEquals("test message", testAppender.events.get(0).getFormattedMessage());
 
     // Verify MDC content
-    ILoggingEvent event = TestAppender.events.get(0);
+    ILoggingEvent event = testAppender.events.get(0);
     assertEquals(2, event.getMDCPropertyMap().size());
+    assertEquals(ch.qos.logback.classic.Level.DEBUG, event.getLevel());
     assertEquals("value1", event.getMDCPropertyMap().get("key1"));
     assertEquals("value2", event.getMDCPropertyMap().get("key2"));
+
+    testAppender.stop();
+  }
+
+  @Test
+  public void testLogWithMDC_INFO() {
+    TestAppender testAppender = setupTestLogger();
+    LoggingUtils.logWithMDC(LOGGER, Level.INFO, new HashMap<>(), "test message");
+
+    assertEquals(1, testAppender.events.size());
+    assertEquals(ch.qos.logback.classic.Level.INFO, testAppender.events.get(0).getLevel());
+    testAppender.stop();
+  }
+
+  @Test
+  public void testLogWithMDC_TRACE() {
+    TestAppender testAppender = setupTestLogger();
+    LoggingUtils.logWithMDC(LOGGER, Level.TRACE, new HashMap<>(), "test message");
+
+    assertEquals(0, testAppender.events.size());
+    testAppender.stop();
+  }
+
+  @Test
+  public void testLogWithMDC_WARN() {
+    TestAppender testAppender = setupTestLogger();
+    LoggingUtils.logWithMDC(LOGGER, Level.WARN, new HashMap<>(), "test message");
+
+    assertEquals(1, testAppender.events.size());
+    assertEquals(ch.qos.logback.classic.Level.WARN, testAppender.events.get(0).getLevel());
+    testAppender.stop();
+  }
+
+  @Test
+  public void testLogWithMDC_ERROR() {
+    TestAppender testAppender = setupTestLogger();
+    LoggingUtils.logWithMDC(LOGGER, Level.ERROR, new HashMap<>(), "test message");
+
+    assertEquals(1, testAppender.events.size());
+    assertEquals(ch.qos.logback.classic.Level.ERROR, testAppender.events.get(0).getLevel());
+    testAppender.stop();
   }
 
   @Test
   public void testLogGenericData() {
-    TestAppender.clearEvents();
+    TestAppender testAppender = setupTestLogger();
     GenericData genericData = Mockito.mock(GenericData.class);
 
     GenericData data = new GenericData();
@@ -75,11 +127,13 @@ public class LoggingUtilsTest {
 
     LoggingUtils.logGenericData(data, LOGGER, "test generic data");
 
-    assertEquals(1, TestAppender.events.size());
-    Map<String, String> mdcPropertyMap = TestAppender.events.get(0).getMDCPropertyMap();
+    assertEquals(1, testAppender.events.size());
+    Map<String, String> mdcPropertyMap = testAppender.events.get(0).getMDCPropertyMap();
     assertEquals(2, mdcPropertyMap.size());
     assertEquals("value1", mdcPropertyMap.get("key1"));
     assertNotNull(mdcPropertyMap.get("token"));
     assertNotEquals("value2", mdcPropertyMap.get("token"));
+
+    testAppender.stop();
   }
 }
