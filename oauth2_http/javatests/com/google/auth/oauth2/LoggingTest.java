@@ -90,7 +90,7 @@ public class LoggingTest {
 
     assertEquals(3, testAppender.events.size());
     assertEquals(
-        "Sending auth request to refresh access token.",
+        "Sending auth request to refresh access token",
         testAppender.events.get(0).getFormattedMessage());
     testAppender.stop();
   }
@@ -128,7 +128,7 @@ public class LoggingTest {
 
     assertEquals(2, testAppender.events.size());
     assertEquals(
-        "Sending id token request to Iam Endpoint.",
+        "Sending Auth request to get id token via Iam Endpoint",
         testAppender.events.get(0).getFormattedMessage());
     assertEquals("Auth response payload.", testAppender.events.get(1).getFormattedMessage());
 

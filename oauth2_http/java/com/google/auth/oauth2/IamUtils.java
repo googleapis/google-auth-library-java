@@ -144,9 +144,11 @@ class IamUtils {
                     IamUtils.IAM_RETRYABLE_STATUS_CODES.contains(response.getStatusCode())));
     request.setIOExceptionHandler(new HttpBackOffIOExceptionHandler(backoff));
 
-    LoggingUtils.logRequest(request, LOGGER, "auth sending request to get signature.");
+    LoggingUtils.logRequest(
+        request, LOGGER, "Sending auth request to get signature to sign the blob");
     HttpResponse response = request.execute();
-    LoggingUtils.logResponse(response, LOGGER, "auth received response for signature.");
+    LoggingUtils.logResponse(
+        response, LOGGER, "Received auth response for signature to sign the blob");
     int statusCode = response.getStatusCode();
     if (statusCode >= 400 && statusCode < HttpStatusCodes.STATUS_CODE_SERVER_ERROR) {
       GenericData responseError = response.parseAs(GenericData.class);
@@ -173,7 +175,7 @@ class IamUtils {
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
-    LoggingUtils.logGenericData(responseData, LOGGER, "Auth response payload.");
+    LoggingUtils.logGenericData(responseData, LOGGER, "Auth response payload for sign blob");
     return OAuth2Utils.validateString(responseData, "signedBlob", PARSE_ERROR_SIGNATURE);
   }
 
@@ -225,10 +227,10 @@ class IamUtils {
         MetricsUtils.getGoogleCredentialsMetricsHeader(
             RequestType.ID_TOKEN_REQUEST, credentialTypeForMetrics));
 
-    LoggingUtils.logRequest(request, LOGGER, "auth sending request to get id token.");
+    LoggingUtils.logRequest(request, LOGGER, "Sending auth request to get id token");
     HttpResponse response = request.execute();
 
-    LoggingUtils.logResponse(response, LOGGER, "auth received response for id token.");
+    LoggingUtils.logResponse(response, LOGGER, "Received auth response for id token");
     int statusCode = response.getStatusCode();
     if (statusCode >= 400 && statusCode < HttpStatusCodes.STATUS_CODE_SERVER_ERROR) {
       GenericData responseError = response.parseAs(GenericData.class);
@@ -253,7 +255,8 @@ class IamUtils {
     }
 
     GenericJson responseData = response.parseAs(GenericJson.class);
-    LoggingUtils.logGenericData(responseData, LOGGER, "response data payload.");
+    LoggingUtils.logGenericData(
+        responseData, LOGGER, "Auth response data payload for id token request");
     String rawToken = OAuth2Utils.validateString(responseData, "token", PARSE_ERROR_MESSAGE);
     return IdToken.create(rawToken);
   }

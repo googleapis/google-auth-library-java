@@ -299,7 +299,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
     }
     GenericData responseData = response.parseAs(GenericData.class);
     LoggingUtils.logGenericData(
-        responseData, SLF4JLOGGER, "Auth response from refresh access token payload.");
+        responseData, SLF4JLOGGER, "Auth response from refresh access token payload");
     String accessToken =
         OAuth2Utils.validateString(responseData, "access_token", PARSE_ERROR_PREFIX);
     int expiresInSeconds =
@@ -366,9 +366,23 @@ public class ComputeEngineCredentials extends GoogleCredentials
     request.setThrowExceptionOnExecuteError(false);
     HttpResponse response;
     try {
-      LoggingUtils.logRequest(request, SLF4JLOGGER, "auth get metadata sending request.");
+      String requestMessage;
+      String responseMessage;
+      if (requestType.equals(RequestType.ID_TOKEN_REQUEST)) {
+        requestMessage = "Auth get metadata sending request for id token";
+        responseMessage = "Auth get metadata received response for id token";
+      } else if (requestType.equals(RequestType.ACCESS_TOKEN_REQUEST)) {
+        requestMessage = "Auth get metadata sending request for access token";
+        responseMessage = "Auth get metadata received response for access token";
+      } else {
+        // TODO: this includes get universe domain and get default sa.
+        // refactor for more clear logging message.
+        requestMessage = "Auth get metadata sending request";
+        responseMessage = "Auth get metadata received response";
+      }
+      LoggingUtils.logRequest(request, SLF4JLOGGER, requestMessage);
       response = request.execute();
-      LoggingUtils.logResponse(response, SLF4JLOGGER, "auth get metadata received response.");
+      LoggingUtils.logResponse(response, SLF4JLOGGER, responseMessage);
     } catch (UnknownHostException exception) {
       throw new IOException(
           "ComputeEngineCredentials cannot find the metadata server. This is"
@@ -469,9 +483,10 @@ public class ComputeEngineCredentials extends GoogleCredentials
             MetricsUtils.getGoogleCredentialsMetricsHeader(
                 RequestType.METADATA_SERVER_PING, CredentialTypeForMetrics.DO_NOT_SEND));
 
-        LoggingUtils.logRequest(request, SLF4JLOGGER, "auth pin MDS.");
+        LoggingUtils.logRequest(request, SLF4JLOGGER, "Pin auth Metadata Server");
         HttpResponse response = request.execute();
-        LoggingUtils.logResponse(response, SLF4JLOGGER, "auth received response from MDS.");
+        LoggingUtils.logResponse(
+            response, SLF4JLOGGER, "Received auth response from Metadata Server");
         try {
           // Internet providers can return a generic response to all requests, so it is necessary
           // to check that metadata header is present also.
@@ -644,7 +659,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
     }
     GenericData responseData = response.parseAs(GenericData.class);
     LoggingUtils.logGenericData(
-        responseData, SLF4JLOGGER, "Auth get default service account payload.");
+        responseData, SLF4JLOGGER, "Auth get default service account payload");
     Map<String, Object> defaultAccount =
         OAuth2Utils.validateMap(responseData, "default", PARSE_ERROR_ACCOUNT);
     return OAuth2Utils.validateString(defaultAccount, "email", PARSE_ERROR_ACCOUNT);

@@ -193,13 +193,6 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     String scopes =
         OAuth2Utils.validateOptionalString(
             responseData, OAuth2Utils.TOKEN_RESPONSE_SCOPE, PARSE_ERROR_PREFIX);
-    // if (LOGGER.isDebugEnabled()) {
-    //   Map<String, String> responseContentMap = new HashMap<>();
-    //   responseContentMap.put("access_token", accessToken);
-    //   responseContentMap.put("expires_in", String.valueOf(expiresInSeconds));
-    //   responseContentMap.put(OAuth2Utils.TOKEN_RESPONSE_SCOPE, scopes);
-    //   LoggingUtils.logWithMDC(LOGGER, Level.DEBUG, responseContentMap, "response payload.");
-    // }
     return AccessToken.newBuilder()
         .setExpirationTime(new Date(expiresAtMilliseconds))
         .setTokenValue(accessToken)
@@ -224,11 +217,6 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     if (responseData.containsKey(idTokenKey)) {
       String idTokenString =
           OAuth2Utils.validateString(responseData, idTokenKey, PARSE_ERROR_PREFIX);
-      // if (LOGGER.isDebugEnabled()) {
-      //   Map<String, String> responseContentMap = new HashMap<>();
-      //   responseContentMap.put("id_token", idTokenString);
-      //   LoggingUtils.logWithMDC(LOGGER, Level.DEBUG, responseContentMap, "response payload.");
-      // }
       return IdToken.create(idTokenString);
     }
 
@@ -294,9 +282,9 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     HttpResponse response;
 
     try {
-      LoggingUtils.logRequest(request, LOGGER, "Sending auth request to refresh access token.");
+      LoggingUtils.logRequest(request, LOGGER, "Sending auth request to refresh access token");
       response = request.execute();
-      LoggingUtils.logResponse(response, LOGGER, "Received auth respond for refresh access token.");
+      LoggingUtils.logResponse(response, LOGGER, "Received auth respond for refresh access token");
     } catch (HttpResponseException re) {
       throw GoogleAuthException.createWithTokenEndpointResponseException(re);
     } catch (IOException e) {
@@ -305,7 +293,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
 
     GenericData data = response.parseAs(GenericData.class);
 
-    LoggingUtils.logGenericData(data, LOGGER, "Auth response payload.");
+    LoggingUtils.logGenericData(data, LOGGER, "Auth response payload for refresh access token");
     return data;
   }
 
