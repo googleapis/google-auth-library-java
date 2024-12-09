@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
 import javax.annotation.concurrent.ThreadSafe;
@@ -59,6 +60,7 @@ import javax.annotation.concurrent.ThreadSafe;
  */
 @ThreadSafe
 public class SecureSessionAgent {
+  static final String S2A_JSON_KEY = "s2a";
   static final String S2A_PLAINTEXT_ADDRESS_JSON_KEY = "plaintext_address";
   static final String S2A_MTLS_ADDRESS_JSON_KEY = "mtls_address";
   static final String S2A_CONFIG_ENDPOINT_POSTFIX =
@@ -190,15 +192,14 @@ public class SecureSessionAgent {
     String mtlsS2AAddress = "";
     try {
       plaintextS2AAddress =
-          OAuth2Utils.validateString(responseData, S2A_PLAINTEXT_ADDRESS_JSON_KEY, PARSE_ERROR_S2A);
+          validateString(responseData, S2A_PLAINTEXT_ADDRESS_JSON_KEY, PARSE_ERROR_S2A);
     } catch (IOException ignore) {
       /*
        * Do not throw error because of parsing error, just leave the address as empty in {@link SecureSessionAgentConfig}.
        */
     }
     try {
-      mtlsS2AAddress =
-          OAuth2Utils.validateString(responseData, S2A_MTLS_ADDRESS_JSON_KEY, PARSE_ERROR_S2A);
+      mtlsS2AAddress = validateString(responseData, S2A_MTLS_ADDRESS_JSON_KEY, PARSE_ERROR_S2A);
     } catch (IOException ignore) {
       /*
        * Do not throw error because of parsing error, just leave the address as empty in {@link SecureSessionAgentConfig}.
@@ -209,5 +210,24 @@ public class SecureSessionAgent {
         .setPlaintextAddress(plaintextS2AAddress)
         .setMtlsAddress(mtlsS2AAddress)
         .build();
+  }
+
+  private static String validateString(Map<String, Object> map, String key, String errorPrefix)
+      throws IOException {
+    Object value = map.get(S2A_JSON_KEY);
+    if (value == null) {
+      throw new IOException(
+          String.format(OAuth2Utils.VALUE_NOT_FOUND_MESSAGE, errorPrefix, S2A_JSON_KEY));
+    }
+    if (!(value instanceof Map)) {
+      throw new IOException(
+          String.format(OAuth2Utils.VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "Map", S2A_JSON_KEY));
+    }
+    Object address = ((Map<String, Object>) value).get(key);
+    if (!(address instanceof String)) {
+      throw new IOException(
+          String.format(OAuth2Utils.VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "string", key));
+    }
+    return (String) address;
   }
 }
