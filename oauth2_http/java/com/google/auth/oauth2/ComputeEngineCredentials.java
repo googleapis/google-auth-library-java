@@ -50,6 +50,7 @@ import com.google.auth.oauth2.MetricsUtils.RequestType;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects.ToStringHelper;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -122,6 +123,9 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
   private final Collection<String> scopes;
 
+  private final String transport;
+  private final String bindingEnforcement;
+
   private transient HttpTransportFactory transportFactory;
   private transient String serviceAccountEmail;
 
@@ -152,6 +156,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
       scopeList.removeAll(Arrays.asList("", null));
       this.scopes = ImmutableSet.<String>copyOf(scopeList);
     }
+    this.transport = builder.getTransport();
+    this.bindingEnforcement = builder.getBindingEnforcement();
   }
 
   @Override
@@ -191,7 +197,10 @@ public class ComputeEngineCredentials extends GoogleCredentials
   }
 
   /**
-   * If scopes is specified, add "?scopes=comma-separated-list-of-scopes" to the token url.
+   * If scopes is specified, add "?scopes=comma-separated-list-of-scopes" to the token url. If
+   * transport is specified, add "?transport=xyz" to the token url; xyz is one of "alts" or "mtls".
+   * If bindingEnforcement is specified, add "?binding-enforcement=xyz" to the token url; xyz is one
+   * of "iam-policy" or "on".
    *
    * @return token url with the given scopes
    */
@@ -199,6 +208,12 @@ public class ComputeEngineCredentials extends GoogleCredentials
     GenericUrl tokenUrl = new GenericUrl(getTokenServerEncodedUrl());
     if (!scopes.isEmpty()) {
       tokenUrl.set("scopes", Joiner.on(',').join(scopes));
+    }
+    if (!Strings.isNullOrEmpty(transport)) {
+      tokenUrl.set("transport", transport);
+    }
+    if (!Strings.isNullOrEmpty(bindingEnforcement)) {
+      tokenUrl.set("binding-enforcement", bindingEnforcement);
     }
     return tokenUrl.toString();
   }
@@ -643,6 +658,9 @@ public class ComputeEngineCredentials extends GoogleCredentials
     private Collection<String> scopes;
     private Collection<String> defaultScopes;
 
+    private String transport;
+    private String bindingEnforcement;
+
     protected Builder() {
       setRefreshMargin(COMPUTE_REFRESH_MARGIN);
       setExpirationMargin(COMPUTE_EXPIRATION_MARGIN);
@@ -684,6 +702,18 @@ public class ComputeEngineCredentials extends GoogleCredentials
       return this;
     }
 
+    @CanIgnoreReturnValue
+    public Builder setTransport(String transport) {
+      this.transport = transport;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setBindingEnforcement(String bindingEnforcement) {
+      this.bindingEnforcement = bindingEnforcement;
+      return this;
+    }
+
     public HttpTransportFactory getHttpTransportFactory() {
       return transportFactory;
     }
@@ -694,6 +724,14 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
     public Collection<String> getDefaultScopes() {
       return defaultScopes;
+    }
+
+    public String getTransport() {
+      return transport;
+    }
+
+    public String getBindingEnforcement() {
+      return bindingEnforcement;
     }
 
     @Override
