@@ -300,7 +300,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
         GenericJson content = new GenericJson();
         content.setFactory(OAuth2Utils.JSON_FACTORY);
         if (requestStatusCode == 200) {
-          content.put("s2a", s2aContentMap);
+          content.put(SecureSessionAgent.S2A_JSON_KEY, s2aContentMap);
         }
         String contentText = content.toPrettyString();
 
