@@ -144,12 +144,4 @@ public class LoggingUtilsTest {
 
     testAppender.stop();
   }
-
-  private TestAppender setupTestLogger(Class<?> clazz) {
-    TestAppender testAppender = new TestAppender();
-    testAppender.start();
-    Logger logger = LoggerFactory.getLogger(clazz);
-    ((ch.qos.logback.classic.Logger) logger).addAppender(testAppender);
-    return testAppender;
-  }
 }

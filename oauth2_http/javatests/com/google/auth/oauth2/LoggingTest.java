@@ -66,6 +66,11 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * This class contains tests for logging events in each credentials workflow Tests are copied from
+ * credentials test classes with addition of test logging appender setup and test logic for logging.
+ * This duplicates tests setups, but centralizes logging test setup in this class.
+ */
 public class LoggingTest {
 
   private static final Gson gson = new Gson();
