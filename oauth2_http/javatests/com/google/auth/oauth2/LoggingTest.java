@@ -52,8 +52,10 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.webtoken.JsonWebToken.Payload;
+import com.google.api.client.util.ArrayMap;
 import com.google.auth.TestAppender;
 import com.google.auth.TestUtils;
+import com.google.auth.oauth2.ComputeEngineCredentialsTest.MockMetadataServerTransportFactory;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import java.io.IOException;
@@ -291,6 +293,67 @@ public class LoggingTest {
         jsonMessage.get("message").getAsString());
     assertEquals(4, testAppender.events.get(0).getMDCPropertyMap().size());
     assertEquals(1, testAppender.events.get(2).getMDCPropertyMap().size());
+    testAppender.stop();
+  }
+
+  @Test
+  public void getRequestMetadata_hasAccessToken() throws IOException {
+    TestAppender testAppender = setupTestLogger(ComputeEngineCredentials.class);
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+
+    TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+
+    assertEquals(3, testAppender.events.size());
+    JsonObject jsonMessage =
+        gson.fromJson(testAppender.events.get(0).getFormattedMessage(), JsonObject.class);
+
+    assertEquals(
+        "com.google.auth.oauth2.ComputeEngineCredentials",
+        testAppender.events.get(0).getLoggerName());
+    assertEquals(
+        "Auth get metadata sending request for access token",
+        jsonMessage.get("message").getAsString());
+    assertEquals(3, testAppender.events.get(0).getMDCPropertyMap().size());
+    assertEquals(3, testAppender.events.get(1).getMDCPropertyMap().size());
+    assertEquals(3, testAppender.events.get(2).getMDCPropertyMap().size());
+    testAppender.stop();
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void idTokenWithAudience_full() throws IOException {
+    TestAppender testAppender = setupTestLogger(ComputeEngineCredentials.class);
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+    String targetAudience = "https://foo.bar";
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(credentials)
+            .setTargetAudience(targetAudience)
+            .setOptions(Arrays.asList(IdTokenProvider.Option.FORMAT_FULL))
+            .build();
+    tokenCredential.refresh();
+    Payload p = tokenCredential.getIdToken().getJsonWebSignature().getPayload();
+    assertTrue("Full ID Token format not provided", p.containsKey("google"));
+    ArrayMap<String, ArrayMap> googleClaim = (ArrayMap<String, ArrayMap>) p.get("google");
+    assertTrue(googleClaim.containsKey("compute_engine"));
+
+    assertEquals(2, testAppender.events.size());
+    JsonObject jsonMessage =
+        gson.fromJson(testAppender.events.get(0).getFormattedMessage(), JsonObject.class);
+
+    assertEquals(
+        "com.google.auth.oauth2.ComputeEngineCredentials",
+        testAppender.events.get(0).getLoggerName());
+    assertEquals(
+        "Auth get metadata sending request for id token", jsonMessage.get("message").getAsString());
+    assertEquals(3, testAppender.events.get(0).getMDCPropertyMap().size());
+    assertEquals(3, testAppender.events.get(1).getMDCPropertyMap().size());
     testAppender.stop();
   }
 }
