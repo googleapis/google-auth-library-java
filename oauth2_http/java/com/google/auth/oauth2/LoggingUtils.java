@@ -119,7 +119,7 @@ class LoggingUtils {
         if (request.getContent() != null && logger.isDebugEnabled()) {
           // are payload always GenericData? If so, can parse and store in json
           if (request.getContent() instanceof UrlEncodedContent) {
-
+            // this is parsed to GenericData because that is how it is constructed.
             GenericData data = (GenericData) ((UrlEncodedContent) request.getContent()).getData();
             Map<String, String> contextMap = parseGenericData(data);
             loggingDataMap.put("request.payload", contextMap.toString());

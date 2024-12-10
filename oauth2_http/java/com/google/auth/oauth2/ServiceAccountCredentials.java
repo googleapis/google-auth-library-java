@@ -493,7 +493,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   private GenericData parseResponseAs(HttpResponse response) throws IOException {
     GenericData genericData = response.parseAs(GenericData.class);
-    LoggingUtils.logGenericData(genericData, LOGGER, "Auth response payload");
+    LoggingUtils.logGenericData(genericData, LOGGER, "Response payload");
     return genericData;
   }
   /**
@@ -524,7 +524,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     }
     request.setParser(new JsonObjectParser(jsonFactory));
 
-    LoggingUtils.logRequest(request, LOGGER, "Sending auth request to refresh access token");
+    LoggingUtils.logRequest(request, LOGGER, "Sending request to refresh access token");
     ExponentialBackOff backoff =
         new ExponentialBackOff.Builder()
             .setInitialIntervalMillis(OAuth2Utils.INITIAL_RETRY_INTERVAL_MILLIS)
@@ -547,7 +547,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
     try {
       response = request.execute();
-      LoggingUtils.logResponse(response, LOGGER, "Auth response received for refresh access token");
+      LoggingUtils.logResponse(response, LOGGER, "Response received for refresh access token");
     } catch (HttpResponseException re) {
       String message = String.format(errorTemplate, re.getMessage(), getIssuer());
       throw GoogleAuthException.createWithTokenEndpointResponseException(re, message);
@@ -606,8 +606,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         MetricsUtils.getGoogleCredentialsMetricsHeader(
             RequestType.ID_TOKEN_REQUEST, getMetricsCredentialType()));
 
-    LoggingUtils.logRequest(
-        request, LOGGER, "Seding auth request to get Id token via Oauth endpoint");
+    LoggingUtils.logRequest(request, LOGGER, "Sending request to get Id token via Oauth endpoint");
     HttpResponse httpResponse = executeRequest(request);
 
     GenericData responseData = parseResponseAs(httpResponse);
@@ -653,8 +652,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     // Use the Access Token from the SSJWT to request the ID Token from IAM Endpoint
     request.setHeaders(new HttpHeaders().set(AuthHttpConstants.AUTHORIZATION, accessToken));
 
-    LoggingUtils.logRequest(
-        request, LOGGER, "Sending Auth request to get id token via Iam Endpoint");
+    LoggingUtils.logRequest(request, LOGGER, "Sending request to get id token via Iam Endpoint");
     HttpResponse httpResponse = executeRequest(request);
 
     GenericData responseData = parseResponseAs(httpResponse);

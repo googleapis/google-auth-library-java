@@ -548,15 +548,15 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
     HttpResponse response = null;
     try {
-      LoggingUtils.logRequest(request, LOGGER, "Sending auth request to refresh access token");
+      LoggingUtils.logRequest(request, LOGGER, "Sending request to refresh access token");
       response = request.execute();
-      LoggingUtils.logResponse(response, LOGGER, "Received auth response for access token");
+      LoggingUtils.logResponse(response, LOGGER, "Received response for access token");
     } catch (IOException e) {
       throw new IOException("Error requesting access token", e);
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
-    LoggingUtils.logGenericData(responseData, LOGGER, "Auth response payload for access token");
+    LoggingUtils.logGenericData(responseData, LOGGER, "Response payload for access token");
     response.disconnect();
 
     String accessToken =

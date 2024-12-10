@@ -109,7 +109,7 @@ public class LoggingTest {
     assertEquals(
         "com.google.auth.oauth2.UserCredentials", testAppender.events.get(0).getLoggerName());
     assertEquals(
-        "Sending auth request to refresh access token", jsonMessage.get("message").getAsString());
+        "Sending request to refresh access token", jsonMessage.get("message").getAsString());
     testAppender.stop();
   }
 
@@ -128,7 +128,7 @@ public class LoggingTest {
         gson.fromJson(testAppender.events.get(0).getFormattedMessage(), JsonObject.class);
 
     assertEquals(
-        "Sending auth request to refresh access token", jsonMessage.get("message").getAsString());
+        "Sending request to refresh access token", jsonMessage.get("message").getAsString());
     testAppender.stop();
   }
 
@@ -171,9 +171,9 @@ public class LoggingTest {
     JsonObject jsonMessage2 =
         gson.fromJson(testAppender.events.get(1).getFormattedMessage(), JsonObject.class);
     assertEquals(
-        "Sending Auth request to get id token via Iam Endpoint",
+        "Sending request to get id token via Iam Endpoint",
         jsonMessage1.get("message").getAsString());
-    assertEquals("Auth response payload", jsonMessage2.get("message").getAsString());
+    assertEquals("Response payload", jsonMessage2.get("message").getAsString());
 
     testAppender.stop();
   }
@@ -215,7 +215,7 @@ public class LoggingTest {
         "com.google.auth.oauth2.ImpersonatedCredentials",
         testAppender.events.get(0).getLoggerName());
     assertEquals(
-        "Sending auth request to refresh access token", jsonMessage.get("message").getAsString());
+        "Sending request to refresh access token", jsonMessage.get("message").getAsString());
     assertEquals(4, testAppender.events.get(0).getMDCPropertyMap().size());
     testAppender.stop();
   }
@@ -258,7 +258,7 @@ public class LoggingTest {
         gson.fromJson(testAppender.events.get(0).getFormattedMessage(), JsonObject.class);
 
     assertEquals("com.google.auth.oauth2.IamUtils", testAppender.events.get(0).getLoggerName());
-    assertEquals("Sending auth request to get id token", jsonMessage.get("message").getAsString());
+    assertEquals("Sending request to get id token", jsonMessage.get("message").getAsString());
     assertEquals(4, testAppender.events.get(0).getMDCPropertyMap().size());
     testAppender.stop();
   }
@@ -294,7 +294,7 @@ public class LoggingTest {
 
     assertEquals("com.google.auth.oauth2.IamUtils", testAppender.events.get(0).getLoggerName());
     assertEquals(
-        "Sending auth request to get signature to sign the blob",
+        "Sending request to get signature to sign the blob",
         jsonMessage.get("message").getAsString());
     assertEquals(4, testAppender.events.get(0).getMDCPropertyMap().size());
     assertEquals(1, testAppender.events.get(2).getMDCPropertyMap().size());
@@ -318,9 +318,7 @@ public class LoggingTest {
     assertEquals(
         "com.google.auth.oauth2.ComputeEngineCredentials",
         testAppender.events.get(0).getLoggerName());
-    assertEquals(
-        "Auth get metadata sending request for access token",
-        jsonMessage.get("message").getAsString());
+    assertEquals("Sending request for access token", jsonMessage.get("message").getAsString());
     assertEquals(3, testAppender.events.get(0).getMDCPropertyMap().size());
     assertEquals(3, testAppender.events.get(1).getMDCPropertyMap().size());
     assertEquals(3, testAppender.events.get(2).getMDCPropertyMap().size());
@@ -355,8 +353,7 @@ public class LoggingTest {
     assertEquals(
         "com.google.auth.oauth2.ComputeEngineCredentials",
         testAppender.events.get(0).getLoggerName());
-    assertEquals(
-        "Auth get metadata sending request for id token", jsonMessage.get("message").getAsString());
+    assertEquals("Sending request for id token", jsonMessage.get("message").getAsString());
     assertEquals(3, testAppender.events.get(0).getMDCPropertyMap().size());
     assertEquals(3, testAppender.events.get(1).getMDCPropertyMap().size());
     testAppender.stop();
