@@ -36,6 +36,8 @@ import static org.junit.Assert.*;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.google.api.client.util.GenericData;
 import com.google.auth.TestAppender;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Test;
@@ -46,6 +48,7 @@ import org.slf4j.event.Level;
 
 public class LoggingUtilsTest {
   private static final Logger LOGGER = LoggerFactory.getLogger(LoggingUtilsTest.class);
+  private static final Gson gson = new Gson();
 
   private TestAppender setupTestLogger() {
     TestAppender testAppender = new TestAppender();
@@ -65,7 +68,12 @@ public class LoggingUtilsTest {
     LoggingUtils.logWithMDC(LOGGER, Level.DEBUG, contextMap, "test message");
 
     assertEquals(1, testAppender.events.size());
-    assertEquals("test message", testAppender.events.get(0).getFormattedMessage());
+
+    JsonObject jsonMessage =
+        gson.fromJson(testAppender.events.get(0).getFormattedMessage(), JsonObject.class);
+    assertEquals("test message", jsonMessage.get("message").getAsString());
+    assertEquals("value1", jsonMessage.get("key1").getAsString());
+    assertEquals("value2", jsonMessage.get("key2").getAsString());
 
     // Verify MDC content
     ILoggingEvent event = testAppender.events.get(0);

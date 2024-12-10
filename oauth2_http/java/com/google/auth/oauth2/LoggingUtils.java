@@ -34,16 +34,32 @@ package com.google.auth.oauth2;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.UrlEncodedContent;
+import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.util.GenericData;
+import com.google.gson.Gson;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 
 class LoggingUtils {
+
+  private static final Gson gson = new Gson();
+  private static final Set<String> sensitiveKeys =
+      new HashSet<>(
+          Arrays.asList(
+              "token",
+              "assertion",
+              "access_token",
+              "client_secret",
+              "refresh_token",
+              "signedBlob"));
 
   private LoggingUtils() {}
 
@@ -51,6 +67,8 @@ class LoggingUtils {
       Logger logger, org.slf4j.event.Level level, Map<String, String> contextMap, String message) {
     if (!contextMap.isEmpty()) {
       contextMap.forEach(MDC::put);
+      contextMap.put("message", message);
+      message = gson.toJson(contextMap);
     }
     switch (level) {
       case TRACE:
@@ -100,10 +118,15 @@ class LoggingUtils {
 
         if (request.getContent() != null && logger.isDebugEnabled()) {
           // are payload always GenericData? If so, can parse and store in json
-          GenericData data = (GenericData) ((UrlEncodedContent) request.getContent()).getData();
+          if (request.getContent() instanceof UrlEncodedContent) {
 
-          Map<String, String> contextMap = parseGenericData(data);
-          loggingDataMap.put("request.payload", contextMap.toString());
+            GenericData data = (GenericData) ((UrlEncodedContent) request.getContent()).getData();
+            Map<String, String> contextMap = parseGenericData(data);
+            loggingDataMap.put("request.payload", contextMap.toString());
+          } else if (request.getContent() instanceof JsonHttpContent) {
+            String data = ((JsonHttpContent) request.getContent()).getData().toString();
+            loggingDataMap.put("request.payload", data);
+          }
 
           logWithMDC(logger, org.slf4j.event.Level.DEBUG, loggingDataMap, message);
         } else {
@@ -148,11 +171,7 @@ class LoggingUtils {
     Map<String, String> contextMap = new HashMap<>();
     genericData.forEach(
         (key, val) -> {
-          if ("token".equals(key)
-              || "assertion".equals(key)
-              || "access_token".equals(key)
-              || "client_secret".equals(key)
-              || "refresh_token".equals(key)) {
+          if (sensitiveKeys.contains(key)) {
             String secretString = String.valueOf(val);
             String hashedVal = calculateSHA256Hash(secretString);
             contextMap.put(key, hashedVal);
