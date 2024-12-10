@@ -112,6 +112,7 @@ jobs:
     - run: .kokoro/build.sh
       env:
         JOB_TYPE: lint
+        GOOGLE_SDK_JAVA_LOGGING: true
   clirr:
     runs-on: ubuntu-latest
     steps:
