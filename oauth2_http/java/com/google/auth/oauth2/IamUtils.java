@@ -56,6 +56,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import org.slf4j.Logger;
 
 /**
  * This internal class provides shared utilities for interacting with the IAM API for common
@@ -68,6 +69,7 @@ class IamUtils {
       "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateIdToken";
   private static final String PARSE_ERROR_MESSAGE = "Error parsing error message response. ";
   private static final String PARSE_ERROR_SIGNATURE = "Error parsing signature response. ";
+  private static final Logger LOGGER = LoggingConfigs.getLogger(IamUtils.class);
 
   // Following guidance for IAM retries:
   // https://cloud.google.com/iam/docs/retry-strategy#errors-to-retry
@@ -142,7 +144,11 @@ class IamUtils {
                     IamUtils.IAM_RETRYABLE_STATUS_CODES.contains(response.getStatusCode())));
     request.setIOExceptionHandler(new HttpBackOffIOExceptionHandler(backoff));
 
+    LoggingUtils.logRequest(
+        request, LOGGER, "Sending auth request to get signature to sign the blob");
     HttpResponse response = request.execute();
+    LoggingUtils.logResponse(
+        response, LOGGER, "Received auth response for signature to sign the blob");
     int statusCode = response.getStatusCode();
     if (statusCode >= 400 && statusCode < HttpStatusCodes.STATUS_CODE_SERVER_ERROR) {
       GenericData responseError = response.parseAs(GenericData.class);
@@ -169,6 +175,7 @@ class IamUtils {
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
+    LoggingUtils.logGenericData(responseData, LOGGER, "Auth response payload for sign blob");
     return OAuth2Utils.validateString(responseData, "signedBlob", PARSE_ERROR_SIGNATURE);
   }
 
@@ -220,7 +227,10 @@ class IamUtils {
         MetricsUtils.getGoogleCredentialsMetricsHeader(
             RequestType.ID_TOKEN_REQUEST, credentialTypeForMetrics));
 
+    LoggingUtils.logRequest(request, LOGGER, "Sending auth request to get id token");
     HttpResponse response = request.execute();
+
+    LoggingUtils.logResponse(response, LOGGER, "Received auth response for id token");
     int statusCode = response.getStatusCode();
     if (statusCode >= 400 && statusCode < HttpStatusCodes.STATUS_CODE_SERVER_ERROR) {
       GenericData responseError = response.parseAs(GenericData.class);
@@ -245,6 +255,8 @@ class IamUtils {
     }
 
     GenericJson responseData = response.parseAs(GenericJson.class);
+    LoggingUtils.logGenericData(
+        responseData, LOGGER, "Auth response data payload for id token request");
     String rawToken = OAuth2Utils.validateString(responseData, "token", PARSE_ERROR_MESSAGE);
     return IdToken.create(rawToken);
   }
