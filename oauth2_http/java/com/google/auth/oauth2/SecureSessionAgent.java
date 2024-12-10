@@ -190,16 +190,28 @@ public class SecureSessionAgent {
 
     String plaintextS2AAddress = "";
     String mtlsS2AAddress = "";
+    Object s2aAddressConfig = responseData.get(S2A_JSON_KEY);
+    if (s2aAddressConfig == null) {
+      /*
+       * Return empty addresses in {@link SecureSessionAgentConfig} if endpoint doesn't return anything.
+       */
+      return SecureSessionAgentConfig.createBuilder().build();
+    }
     try {
       plaintextS2AAddress =
-          validateString(responseData, S2A_PLAINTEXT_ADDRESS_JSON_KEY, PARSE_ERROR_S2A);
+          OAuth2Utils.validateString(
+              (Map<String, Object>) s2aAddressConfig,
+              S2A_PLAINTEXT_ADDRESS_JSON_KEY,
+              PARSE_ERROR_S2A);
     } catch (IOException ignore) {
       /*
        * Do not throw error because of parsing error, just leave the address as empty in {@link SecureSessionAgentConfig}.
        */
     }
     try {
-      mtlsS2AAddress = validateString(responseData, S2A_MTLS_ADDRESS_JSON_KEY, PARSE_ERROR_S2A);
+      mtlsS2AAddress =
+          OAuth2Utils.validateString(
+              (Map<String, Object>) s2aAddressConfig, S2A_MTLS_ADDRESS_JSON_KEY, PARSE_ERROR_S2A);
     } catch (IOException ignore) {
       /*
        * Do not throw error because of parsing error, just leave the address as empty in {@link SecureSessionAgentConfig}.
@@ -210,24 +222,5 @@ public class SecureSessionAgent {
         .setPlaintextAddress(plaintextS2AAddress)
         .setMtlsAddress(mtlsS2AAddress)
         .build();
-  }
-
-  private static String validateString(Map<String, Object> map, String key, String errorPrefix)
-      throws IOException {
-    Object value = map.get(S2A_JSON_KEY);
-    if (value == null) {
-      throw new IOException(
-          String.format(OAuth2Utils.VALUE_NOT_FOUND_MESSAGE, errorPrefix, S2A_JSON_KEY));
-    }
-    if (!(value instanceof Map)) {
-      throw new IOException(
-          String.format(OAuth2Utils.VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "Map", S2A_JSON_KEY));
-    }
-    Object address = ((Map<String, Object>) value).get(key);
-    if (!(address instanceof String)) {
-      throw new IOException(
-          String.format(OAuth2Utils.VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "string", key));
-    }
-    return (String) address;
   }
 }

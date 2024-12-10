@@ -97,8 +97,8 @@ class OAuth2Utils {
 
   static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
-  static final String VALUE_NOT_FOUND_MESSAGE = "%sExpected value %s not found.";
-  static final String VALUE_WRONG_TYPE_MESSAGE = "%sExpected %s value %s of wrong type.";
+  private static String VALUE_NOT_FOUND_MESSAGE = "%sExpected value %s not found.";
+  private static String VALUE_WRONG_TYPE_MESSAGE = "%sExpected %s value %s of wrong type.";
 
   static final String BEARER_PREFIX = AuthHttpConstants.BEARER + " ";
 
