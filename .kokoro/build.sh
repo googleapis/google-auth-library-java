@@ -60,6 +60,7 @@ javadoc)
     RETURN_CODE=$?
     ;;
 integration)
+    export GOOGLE_SDK_JAVA_LOGGING=true
     mvn -B ${INTEGRATION_TEST_ARGS} \
       -ntp \
       -Penable-integration-tests \
