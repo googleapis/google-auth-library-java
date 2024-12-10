@@ -39,36 +39,17 @@ import static com.google.auth.oauth2.ServiceAccountCredentialsTest.SCOPES;
 import static com.google.auth.oauth2.ServiceAccountCredentialsTest.createDefaultBuilder;
 import static org.junit.Assert.assertEquals;
 
-import ch.qos.logback.classic.LoggerContext;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.auth.TestAppender;
 import com.google.auth.TestUtils;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class LoggingTest {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(LoggingTest.class);
-  private TestEnvironmentProvider testEnvironmentProvider;
-
-  @Before
-  public void setup() {
-    testEnvironmentProvider = new TestEnvironmentProvider();
-    testEnvironmentProvider.setEnv("GOOGLE_SDK_JAVA_LOGGING", "true");
-    LoggingConfigs.setEnvironmentProvider(testEnvironmentProvider);
-  }
-
-  @After
-  public void tearDown() {
-    LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-    loggerContext.getLogger(Logger.ROOT_LOGGER_NAME).detachAppender("CONSOLE");
-  }
 
   private TestAppender setupTestLogger(Class<?> clazz) {
     TestAppender testAppender = new TestAppender();
@@ -130,7 +111,7 @@ public class LoggingTest {
     assertEquals(
         "Sending Auth request to get id token via Iam Endpoint",
         testAppender.events.get(0).getFormattedMessage());
-    assertEquals("Auth response payload.", testAppender.events.get(1).getFormattedMessage());
+    assertEquals("Auth response payload", testAppender.events.get(1).getFormattedMessage());
 
     testAppender.stop();
   }

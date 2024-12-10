@@ -36,6 +36,7 @@ jobs:
     - run: .kokoro/build.sh
       env:
         JOB_TYPE: test
+        GOOGLE_SDK_JAVA_LOGGING: true
   units-java8:
     # Building using Java 17 and run the tests with Java 8 runtime
     name: "units (8)"
@@ -58,6 +59,7 @@ jobs:
       - run: .kokoro/build.sh
         env:
           JOB_TYPE: test
+          GOOGLE_SDK_JAVA_LOGGING: true
   windows:
     runs-on: windows-latest
     steps:
@@ -72,6 +74,7 @@ jobs:
     - run: .kokoro/build.bat
       env:
         JOB_TYPE: test
+        GOOGLE_SDK_JAVA_LOGGING: true
   dependencies:
     runs-on: ubuntu-latest
     strategy:
