@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.30.1](https://github.com/googleapis/google-auth-library-java/compare/v1.30.0...v1.30.1) (2024-12-11)
+
+
+### Bug Fixes
+
+* JSON parsing of S2A addresses. ([#1589](https://github.com/googleapis/google-auth-library-java/issues/1589)) ([9d5ebfe](https://github.com/googleapis/google-auth-library-java/commit/9d5ebfe8870a11d27af3a7c7f3fd9930ab207162))
+
 ## [1.30.0](https://github.com/googleapis/google-auth-library-java/compare/v1.29.0...v1.30.0) (2024-11-08)
 
 
