@@ -152,8 +152,12 @@ public final class ClientSideCredentialAccessBoundaryFactory {
         break;
       case ASYNC:
         if (refreshTask.isNew) {
-          // Start a new background thread for the refresh task.
-          // This allows the current thread to continue without blocking.
+          // Starts a new background thread for the refresh task if it's a new task.
+          // We create a new thread because the Auth Library doesn't currently include a background
+          // executor. Introducing an executor would add complexity in managing its lifecycle and
+          // could potentially lead to memory leaks.
+          // We limit the number of concurrent refresh threads to 1, so the overhead of creating new
+          // threads for asynchronous calls should be acceptable.
           new Thread(refreshTask.task).start();
         } // (No else needed - if not new, another thread is handling the refresh)
         break;
@@ -307,13 +311,22 @@ public final class ClientSideCredentialAccessBoundaryFactory {
    *
    * <p>These credentials include an intermediate access token and an access boundary session key.
    */
-  private static class IntermediateCredentials {
+  @VisibleForTesting
+  static class IntermediateCredentials {
     private final AccessToken intermediateAccessToken;
     private final String accessBoundarySessionKey;
 
     IntermediateCredentials(AccessToken accessToken, String accessBoundarySessionKey) {
       this.intermediateAccessToken = accessToken;
       this.accessBoundarySessionKey = accessBoundarySessionKey;
+    }
+
+    String getAccessBoundarySessionKey() {
+      return accessBoundarySessionKey;
+    }
+
+    AccessToken getIntermediateAccessToken() {
+      return intermediateAccessToken;
     }
   }
 
