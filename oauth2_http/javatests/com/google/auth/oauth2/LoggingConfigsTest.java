@@ -69,7 +69,7 @@ public class LoggingConfigsTest {
 
   @Test
   public void testGetLogger_loggingEnabled_slf4jBindingPresent() {
-    testEnvironmentProvider.setEnv("GOOGLE_SDK_JAVA_LOGGING", "true");
+    testEnvironmentProvider.setEnv(LoggingConfigs.GOOGLE_SDK_JAVA_LOGGING_ENV, "true");
     LoggingConfigs.setEnvironmentProvider(testEnvironmentProvider);
     Logger logger = LoggingConfigs.getLogger(LoggingConfigsTest.class);
     assertNotNull(logger);
@@ -78,7 +78,7 @@ public class LoggingConfigsTest {
 
   @Test
   public void testGetLogger_loggingDisabled() {
-    testEnvironmentProvider.setEnv("GOOGLE_SDK_JAVA_LOGGING", "false");
+    testEnvironmentProvider.setEnv(LoggingConfigs.GOOGLE_SDK_JAVA_LOGGING_ENV, "false");
     LoggingConfigs.setEnvironmentProvider(testEnvironmentProvider);
 
     Logger logger = LoggingConfigs.getLogger(LoggingConfigsTest.class);
@@ -87,7 +87,7 @@ public class LoggingConfigsTest {
 
   @Test
   public void testGetLogger_loggingEnabled_noBinding() {
-    testEnvironmentProvider.setEnv("GOOGLE_SDK_JAVA_LOGGING", "true");
+    testEnvironmentProvider.setEnv(LoggingConfigs.GOOGLE_SDK_JAVA_LOGGING_ENV, "true");
     LoggingConfigs.setEnvironmentProvider(testEnvironmentProvider);
     // Create a mock LoggerFactoryProvider
     LoggerFactoryProvider mockLoggerFactoryProvider = mock(LoggerFactoryProvider.class);
@@ -105,13 +105,13 @@ public class LoggingConfigsTest {
 
   @Test
   public void testIsLoggingEnabled_true() {
-    testEnvironmentProvider.setEnv("GOOGLE_SDK_JAVA_LOGGING", "true");
+    testEnvironmentProvider.setEnv(LoggingConfigs.GOOGLE_SDK_JAVA_LOGGING_ENV, "true");
     LoggingConfigs.setEnvironmentProvider(testEnvironmentProvider);
     assertTrue(LoggingConfigs.isLoggingEnabled());
-    testEnvironmentProvider.setEnv("GOOGLE_SDK_JAVA_LOGGING", "TRUE");
+    testEnvironmentProvider.setEnv(LoggingConfigs.GOOGLE_SDK_JAVA_LOGGING_ENV, "TRUE");
     LoggingConfigs.setEnvironmentProvider(testEnvironmentProvider);
     assertTrue(LoggingConfigs.isLoggingEnabled());
-    testEnvironmentProvider.setEnv("GOOGLE_SDK_JAVA_LOGGING", "True");
+    testEnvironmentProvider.setEnv(LoggingConfigs.GOOGLE_SDK_JAVA_LOGGING_ENV, "True");
     LoggingConfigs.setEnvironmentProvider(testEnvironmentProvider);
     assertTrue(LoggingConfigs.isLoggingEnabled());
   }

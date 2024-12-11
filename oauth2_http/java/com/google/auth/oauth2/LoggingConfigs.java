@@ -37,9 +37,12 @@ import org.slf4j.LoggerFactory;
 
 class LoggingConfigs {
 
-  private static EnvironmentProvider environmentProvider = SystemEnvironmentProvider.getInstance();
   private static final Logger NO_OP_LOGGER = org.slf4j.helpers.NOPLogger.NOP_LOGGER;
-  private static boolean loggingEnabled = isLoggingEnabled();
+  static final String GOOGLE_SDK_JAVA_LOGGING_ENV = "GOOGLE_SDK_JAVA_LOGGING";
+  private static EnvironmentProvider environmentProvider =
+      SystemEnvironmentProvider.getInstance(); // this may be reset for testing purpose
+  private static boolean loggingEnabled =
+      isLoggingEnabled(); // this may be recalculated for testing purposes
   // expose this setter only for testing purposes
   static void setEnvironmentProvider(EnvironmentProvider provider) {
     environmentProvider = provider;
@@ -63,7 +66,7 @@ class LoggingConfigs {
   }
 
   static boolean isLoggingEnabled() {
-    String enableLogging = environmentProvider.getEnv("GOOGLE_SDK_JAVA_LOGGING");
+    String enableLogging = environmentProvider.getEnv(GOOGLE_SDK_JAVA_LOGGING_ENV);
     return "true".equalsIgnoreCase(enableLogging);
   }
 
