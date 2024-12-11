@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.30.1](https://github.com/googleapis/google-auth-library-java/compare/v1.30.0...v1.30.1) (2024-12-11)
+
+
+### Bug Fixes
+
+* JSON parsing of S2A addresses. ([#1589](https://github.com/googleapis/google-auth-library-java/issues/1589)) ([9d5ebfe](https://github.com/googleapis/google-auth-library-java/commit/9d5ebfe8870a11d27af3a7c7f3fd9930ab207162))
+
+## [1.30.0](https://github.com/googleapis/google-auth-library-java/compare/v1.29.0...v1.30.0) (2024-11-08)
+
+
+### Features
+
+* Support querying S2A Addresses from MDS ([#1400](https://github.com/googleapis/google-auth-library-java/issues/1400)) ([df06bd1](https://github.com/googleapis/google-auth-library-java/commit/df06bd1f94d03c4f8807c2adf42d25d29b731531))
+
+
+### Bug Fixes
+
+* Make it explicit that there is a network call to MDS to get SecureSessionAgentConfig ([#1573](https://github.com/googleapis/google-auth-library-java/issues/1573)) ([18020fe](https://github.com/googleapis/google-auth-library-java/commit/18020fedb855742ee27b6558f5de58d3818c6b48))
+
 ## [1.29.0](https://github.com/googleapis/google-auth-library-java/compare/v1.28.0...v1.29.0) (2024-10-22)
 
 
