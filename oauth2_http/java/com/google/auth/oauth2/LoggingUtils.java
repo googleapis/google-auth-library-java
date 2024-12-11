@@ -42,24 +42,28 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 
 class LoggingUtils {
 
   private static final Gson gson = new Gson();
-  private static final Set<String> sensitiveKeys =
-      new HashSet<>(
-          Arrays.asList(
-              "token",
-              "assertion",
-              "access_token",
-              "client_secret",
-              "refresh_token",
-              "signedBlob"));
+  private static final Set<String> SENSITIVE_KEYS = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+
+  static {
+    SENSITIVE_KEYS.addAll(
+        Arrays.asList(
+            "token",
+            "assertion",
+            "access_token",
+            "client_secret",
+            "refresh_token",
+            "signedBlob",
+            "authorization"));
+  }
 
   private LoggingUtils() {}
 
@@ -107,7 +111,7 @@ class LoggingUtils {
             .getHeaders()
             .forEach(
                 (key, val) -> {
-                  if ("authorization".equals(key)) {
+                  if (SENSITIVE_KEYS.contains(key)) {
                     String hashedVal = calculateSHA256Hash(String.valueOf(val));
                     headers.put(key, hashedVal);
                   } else {
@@ -171,7 +175,7 @@ class LoggingUtils {
     Map<String, String> contextMap = new HashMap<>();
     genericData.forEach(
         (key, val) -> {
-          if (sensitiveKeys.contains(key)) {
+          if (SENSITIVE_KEYS.contains(key)) {
             String secretString = String.valueOf(val);
             String hashedVal = calculateSHA256Hash(secretString);
             contextMap.put(key, hashedVal);
