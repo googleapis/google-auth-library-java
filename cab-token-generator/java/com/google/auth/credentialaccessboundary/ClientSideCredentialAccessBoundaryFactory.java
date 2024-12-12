@@ -36,17 +36,37 @@ import static com.google.auth.oauth2.OAuth2Utils.TOKEN_EXCHANGE_URL_FORMAT;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.auth.Credentials;
+import com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto.ClientSideAccessBoundary;
+import com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto.ClientSideAccessBoundaryRule;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.CredentialAccessBoundary;
+import com.google.auth.oauth2.CredentialAccessBoundary.AccessBoundaryRule;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.OAuth2Utils;
 import com.google.auth.oauth2.StsRequestHandler;
 import com.google.auth.oauth2.StsTokenExchangeRequest;
 import com.google.auth.oauth2.StsTokenExchangeResponse;
 import com.google.common.base.Strings;
+import com.google.crypto.tink.Aead;
+import com.google.crypto.tink.InsecureSecretKeyAccess;
+import com.google.crypto.tink.KeysetHandle;
+import com.google.crypto.tink.RegistryConfiguration;
+import com.google.crypto.tink.TinkProtoKeysetFormat;
+import com.google.crypto.tink.aead.AeadConfig;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import dev.cel.common.CelAbstractSyntaxTree;
+import dev.cel.common.CelOptions;
+import dev.cel.common.CelProtoAbstractSyntaxTree;
+import dev.cel.common.CelValidationException;
+import dev.cel.compiler.CelCompiler;
+import dev.cel.compiler.CelCompilerFactory;
+import dev.cel.expr.Expr;
 import java.io.IOException;
+import java.util.Base64;
+import java.util.Date;
+import java.util.List;
+import java.security.GeneralSecurityException;
 
 public final class ClientSideCredentialAccessBoundaryFactory {
   private final GoogleCredentials sourceCredential;
@@ -54,11 +74,24 @@ public final class ClientSideCredentialAccessBoundaryFactory {
   private final String tokenExchangeEndpoint;
   private String accessBoundarySessionKey;
   private AccessToken intermediateAccessToken;
+  private CelCompiler celCompiler;
 
   private ClientSideCredentialAccessBoundaryFactory(Builder builder) {
     this.transportFactory = builder.transportFactory;
     this.sourceCredential = builder.sourceCredential;
     this.tokenExchangeEndpoint = builder.tokenExchangeEndpoint;
+
+    try {
+      AeadConfig.register();
+    } catch (GeneralSecurityException e) {
+      throw new IllegalStateException("Error occurred when registering Tink");
+    }
+
+    CelOptions options = CelOptions.current().build();
+    this.celCompiler = CelCompilerFactory
+      .standardCelCompilerBuilder()
+      .setOptions(options)
+      .build();
   }
 
   /**
@@ -117,14 +150,91 @@ public final class ClientSideCredentialAccessBoundaryFactory {
     }
   }
 
-  private void refreshCredentialsIfRequired() {
+  private void refreshCredentialsIfRequired() throws IOException {
     // TODO(negarb): Implement refreshCredentialsIfRequired
-    throw new UnsupportedOperationException("refreshCredentialsIfRequired is not yet implemented.");
+    refreshCredentials();
   }
 
-  public AccessToken generateToken(CredentialAccessBoundary accessBoundary) {
-    // TODO(negarb/jiahuah): Implement generateToken
-    throw new UnsupportedOperationException("generateToken is not yet implemented.");
+  public AccessToken generateToken(CredentialAccessBoundary accessBoundary) throws IOException {
+    this.refreshCredentialsIfRequired();
+
+    String intermediaryToken, sessionKey;
+    Date intermediaryTokenExpirationTime;
+
+    synchronized (this) {
+      intermediaryToken = this.intermediateAccessToken.getTokenValue();
+      intermediaryTokenExpirationTime =
+          this.intermediateAccessToken.getExpirationTime();
+      sessionKey = this.accessBoundarySessionKey;
+    }
+
+    byte[] rawRestrictions =
+        this.serializeCredentialAccessBoundary(accessBoundary);
+
+    byte[] encryptedRestrictions =
+        this.encryptRestrictions(rawRestrictions, sessionKey);
+
+    String tokenValue =
+        intermediaryToken + "." +
+        Base64.getUrlEncoder().encodeToString(encryptedRestrictions);
+
+    return new AccessToken(tokenValue, intermediaryTokenExpirationTime);
+  }
+
+  private byte[] serializeCredentialAccessBoundary(
+      CredentialAccessBoundary credentialAccessBoundary) throws IOException {
+    List<AccessBoundaryRule> rules =
+        credentialAccessBoundary.getAccessBoundaryRules();
+    ClientSideAccessBoundary.Builder accessBoundaryBuilder =
+        ClientSideAccessBoundary.newBuilder();
+
+    for (AccessBoundaryRule rule : rules) {
+      ClientSideAccessBoundaryRule.Builder ruleBuilder =
+          accessBoundaryBuilder.addAccessBoundaryRulesBuilder()
+              .addAllAvailablePermissions(rule.getAvailablePermissions())
+              .setAvailableResource(rule.getAvailableResource());
+
+      if (rule.getAvailabilityCondition() != null) {
+        String availabilityCondition =
+            rule.getAvailabilityCondition().getExpression();
+
+        Expr availabilityConditionExpr = this.compileCel(availabilityCondition);
+        ruleBuilder.setCompiledAvailabilityCondition(availabilityConditionExpr);
+      }
+    }
+
+    return accessBoundaryBuilder.build().toByteArray();
+  }
+
+  private Expr compileCel(String expr) throws IOException {
+    try {
+      CelAbstractSyntaxTree ast = celCompiler.parse(expr).getAst();
+
+      CelProtoAbstractSyntaxTree astProto =
+          CelProtoAbstractSyntaxTree.fromCelAst(ast);
+
+      return astProto.getExpr();
+
+    } catch (CelValidationException exception) {
+      throw new IOException("Failed to parse CEL expression: " +
+                            exception.getMessage());
+    }
+  }
+
+  private byte[] encryptRestrictions(byte[] restriction, String sessionKey) throws InternalError {
+    try {
+      byte[] rawKey = Base64.getDecoder().decode(sessionKey);
+
+      KeysetHandle keysetHandle = TinkProtoKeysetFormat.parseKeyset(
+          rawKey, InsecureSecretKeyAccess.get());
+
+      Aead aead =
+          keysetHandle.getPrimitive(RegistryConfiguration.get(), Aead.class);
+
+      return aead.encrypt(restriction, /*associatedData=*/new byte[0]);
+    } catch (GeneralSecurityException exception) {
+      throw new InternalError("Failed to parse keyset: " + exception.getMessage());
+    }
   }
 
   public static Builder newBuilder() {
