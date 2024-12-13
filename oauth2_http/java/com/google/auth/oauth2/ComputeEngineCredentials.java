@@ -50,7 +50,6 @@ import com.google.auth.oauth2.MetricsUtils.RequestType;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects.ToStringHelper;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -110,6 +109,16 @@ public class ComputeEngineCredentials extends GoogleCredentials
   static final int MAX_COMPUTE_PING_TRIES = 3;
   static final int COMPUTE_PING_CONNECTION_TIMEOUT_MS = 500;
 
+  public enum Transport {
+    ALTS,
+    MTLS
+  }
+
+  public enum BindingEnforcement {
+    ON,
+    IAMPOLICY
+  }
+
   private static final String METADATA_FLAVOR = "Metadata-Flavor";
   private static final String GOOGLE = "Google";
   private static final String WINDOWS = "windows";
@@ -123,8 +132,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
   private final Collection<String> scopes;
 
-  private final String transport;
-  private final String bindingEnforcement;
+  private final Transport transport;
+  private final BindingEnforcement bindingEnforcement;
 
   private transient HttpTransportFactory transportFactory;
   private transient String serviceAccountEmail;
@@ -209,11 +218,15 @@ public class ComputeEngineCredentials extends GoogleCredentials
     if (!scopes.isEmpty()) {
       tokenUrl.set("scopes", Joiner.on(',').join(scopes));
     }
-    if (!Strings.isNullOrEmpty(transport)) {
-      tokenUrl.set("transport", transport);
+    if (transport == Transport.MTLS) {
+      tokenUrl.set("transport", "mtls");
+    } else if (transport == Transport.ALTS) {
+      tokenUrl.set("transport", "alts");
     }
-    if (!Strings.isNullOrEmpty(bindingEnforcement)) {
-      tokenUrl.set("binding-enforcement", bindingEnforcement);
+    if (bindingEnforcement == BindingEnforcement.ON) {
+      tokenUrl.set("binding-enforcement", "on");
+    } else if (bindingEnforcement == BindingEnforcement.IAMPOLICY) {
+      tokenUrl.set("binding-enforcement", "iam-policy");
     }
     return tokenUrl.toString();
   }
@@ -658,8 +671,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
     private Collection<String> scopes;
     private Collection<String> defaultScopes;
 
-    private String transport;
-    private String bindingEnforcement;
+    private Transport transport;
+    private BindingEnforcement bindingEnforcement;
 
     protected Builder() {
       setRefreshMargin(COMPUTE_REFRESH_MARGIN);
@@ -703,13 +716,13 @@ public class ComputeEngineCredentials extends GoogleCredentials
     }
 
     @CanIgnoreReturnValue
-    public Builder setTransport(String transport) {
+    public Builder setTransport(Transport transport) {
       this.transport = transport;
       return this;
     }
 
     @CanIgnoreReturnValue
-    public Builder setBindingEnforcement(String bindingEnforcement) {
+    public Builder setBindingEnforcement(BindingEnforcement bindingEnforcement) {
       this.bindingEnforcement = bindingEnforcement;
       return this;
     }
@@ -726,11 +739,11 @@ public class ComputeEngineCredentials extends GoogleCredentials
       return defaultScopes;
     }
 
-    public String getTransport() {
+    public Transport getTransport() {
       return transport;
     }
 
-    public String getBindingEnforcement() {
+    public BindingEnforcement getBindingEnforcement() {
       return bindingEnforcement;
     }
 
