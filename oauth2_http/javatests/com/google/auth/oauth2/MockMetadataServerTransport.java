@@ -300,9 +300,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
         GenericJson content = new GenericJson();
         content.setFactory(OAuth2Utils.JSON_FACTORY);
         if (requestStatusCode == 200) {
-          for (Map.Entry<String, String> entrySet : s2aContentMap.entrySet()) {
-            content.put(entrySet.getKey(), entrySet.getValue());
-          }
+          content.put(SecureSessionAgent.S2A_JSON_KEY, s2aContentMap);
         }
         String contentText = content.toPrettyString();
 
@@ -336,8 +334,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
   protected boolean isMtlsConfigRequestUrl(String url) {
     return url.equals(
-        String.format(
-            ComputeEngineCredentials.getMetadataServerUrl()
-                + SecureSessionAgent.S2A_CONFIG_ENDPOINT_POSTFIX));
+        ComputeEngineCredentials.getMetadataServerUrl()
+            + SecureSessionAgent.S2A_CONFIG_ENDPOINT_POSTFIX);
   }
 }

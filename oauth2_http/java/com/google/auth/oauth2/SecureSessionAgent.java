@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
 import javax.annotation.concurrent.ThreadSafe;
@@ -59,6 +60,7 @@ import javax.annotation.concurrent.ThreadSafe;
  */
 @ThreadSafe
 public class SecureSessionAgent {
+  static final String S2A_JSON_KEY = "s2a";
   static final String S2A_PLAINTEXT_ADDRESS_JSON_KEY = "plaintext_address";
   static final String S2A_MTLS_ADDRESS_JSON_KEY = "mtls_address";
   static final String S2A_CONFIG_ENDPOINT_POSTFIX =
@@ -188,9 +190,17 @@ public class SecureSessionAgent {
 
     String plaintextS2AAddress = "";
     String mtlsS2AAddress = "";
+    Map<String, Object> s2aAddressConfig = (Map<String, Object>) responseData.get(S2A_JSON_KEY);
+    if (s2aAddressConfig == null) {
+      /*
+       * Return empty addresses in {@link SecureSessionAgentConfig} if endpoint doesn't return anything.
+       */
+      return SecureSessionAgentConfig.createBuilder().build();
+    }
     try {
       plaintextS2AAddress =
-          OAuth2Utils.validateString(responseData, S2A_PLAINTEXT_ADDRESS_JSON_KEY, PARSE_ERROR_S2A);
+          OAuth2Utils.validateString(
+              s2aAddressConfig, S2A_PLAINTEXT_ADDRESS_JSON_KEY, PARSE_ERROR_S2A);
     } catch (IOException ignore) {
       /*
        * Do not throw error because of parsing error, just leave the address as empty in {@link SecureSessionAgentConfig}.
@@ -198,7 +208,7 @@ public class SecureSessionAgent {
     }
     try {
       mtlsS2AAddress =
-          OAuth2Utils.validateString(responseData, S2A_MTLS_ADDRESS_JSON_KEY, PARSE_ERROR_S2A);
+          OAuth2Utils.validateString(s2aAddressConfig, S2A_MTLS_ADDRESS_JSON_KEY, PARSE_ERROR_S2A);
     } catch (IOException ignore) {
       /*
        * Do not throw error because of parsing error, just leave the address as empty in {@link SecureSessionAgentConfig}.
