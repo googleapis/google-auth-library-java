@@ -109,6 +109,40 @@ public class ComputeEngineCredentials extends GoogleCredentials
   static final int MAX_COMPUTE_PING_TRIES = 3;
   static final int COMPUTE_PING_CONNECTION_TIMEOUT_MS = 500;
 
+  public enum AuthTransport {
+    // Authenticating to Google APIs via DirectPath
+    ALTS("alts"),
+    // Authenticating to Google APIs via GFE
+    MTLS("mtls");
+
+    private final String label;
+
+    private AuthTransport(String label) {
+      this.label = label;
+    }
+
+    public String getLabel() {
+      return label;
+    }
+  }
+
+  public enum BindingEnforcement {
+    // Binding enforcement will always happen, irrespective of the IAM policy.
+    ON("on"),
+    // Binding enforcement will depend on IAM policy.
+    IAMPOLICY("iam-policy");
+
+    private final String label;
+
+    private BindingEnforcement(String label) {
+      this.label = label;
+    }
+
+    public String getLabel() {
+      return label;
+    }
+  }
+
   private static final String METADATA_FLAVOR = "Metadata-Flavor";
   private static final String GOOGLE = "Google";
   private static final String WINDOWS = "windows";
@@ -121,6 +155,9 @@ public class ComputeEngineCredentials extends GoogleCredentials
   private final String transportFactoryClassName;
 
   private final Collection<String> scopes;
+
+  private final AuthTransport transport;
+  private final BindingEnforcement bindingEnforcement;
 
   private transient HttpTransportFactory transportFactory;
   private transient String serviceAccountEmail;
@@ -152,6 +189,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
       scopeList.removeAll(Arrays.asList("", null));
       this.scopes = ImmutableSet.<String>copyOf(scopeList);
     }
+    this.transport = builder.getTransport();
+    this.bindingEnforcement = builder.getBindingEnforcement();
   }
 
   @Override
@@ -191,7 +230,10 @@ public class ComputeEngineCredentials extends GoogleCredentials
   }
 
   /**
-   * If scopes is specified, add "?scopes=comma-separated-list-of-scopes" to the token url.
+   * If scopes is specified, add "?scopes=comma-separated-list-of-scopes" to the token url. If
+   * transport is specified, add "?transport=xyz" to the token url; xyz is one of "alts" or "mtls".
+   * If bindingEnforcement is specified, add "?binding-enforcement=xyz" to the token url; xyz is one
+   * of "iam-policy" or "on".
    *
    * @return token url with the given scopes
    */
@@ -199,6 +241,12 @@ public class ComputeEngineCredentials extends GoogleCredentials
     GenericUrl tokenUrl = new GenericUrl(getTokenServerEncodedUrl());
     if (!scopes.isEmpty()) {
       tokenUrl.set("scopes", Joiner.on(',').join(scopes));
+    }
+    if (transport != null) {
+      tokenUrl.set("transport", transport.getLabel());
+    }
+    if (bindingEnforcement != null) {
+      tokenUrl.set("binding-enforcement", bindingEnforcement.getLabel());
     }
     return tokenUrl.toString();
   }
@@ -643,6 +691,9 @@ public class ComputeEngineCredentials extends GoogleCredentials
     private Collection<String> scopes;
     private Collection<String> defaultScopes;
 
+    private AuthTransport transport;
+    private BindingEnforcement bindingEnforcement;
+
     protected Builder() {
       setRefreshMargin(COMPUTE_REFRESH_MARGIN);
       setExpirationMargin(COMPUTE_EXPIRATION_MARGIN);
@@ -684,6 +735,18 @@ public class ComputeEngineCredentials extends GoogleCredentials
       return this;
     }
 
+    @CanIgnoreReturnValue
+    public Builder setTransport(AuthTransport transport) {
+      this.transport = transport;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setBindingEnforcement(BindingEnforcement bindingEnforcement) {
+      this.bindingEnforcement = bindingEnforcement;
+      return this;
+    }
+
     public HttpTransportFactory getHttpTransportFactory() {
       return transportFactory;
     }
@@ -694,6 +757,14 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
     public Collection<String> getDefaultScopes() {
       return defaultScopes;
+    }
+
+    public AuthTransport getTransport() {
+      return transport;
+    }
+
+    public BindingEnforcement getBindingEnforcement() {
+      return bindingEnforcement;
     }
 
     @Override
