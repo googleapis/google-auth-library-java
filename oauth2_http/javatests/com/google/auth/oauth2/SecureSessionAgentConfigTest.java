@@ -37,16 +37,16 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Test cases for {@link S2AConfig}. */
+/** Test cases for {@linkSecureSessionAgentConfig}. */
 @RunWith(JUnit4.class)
-public class S2AConfigTest {
+public class SecureSessionAgentConfigTest {
   private static final String S2A_PLAINTEXT_ADDRESS = "plaintext";
   private static final String S2A_MTLS_ADDRESS = "mtls";
 
   @Test
   public void createS2AConfig_success() {
-    S2AConfig config =
-        S2AConfig.createBuilder()
+    SecureSessionAgentConfig config =
+        SecureSessionAgentConfig.createBuilder()
             .setPlaintextAddress(S2A_PLAINTEXT_ADDRESS)
             .setMtlsAddress(S2A_MTLS_ADDRESS)
             .build();
@@ -56,7 +56,7 @@ public class S2AConfigTest {
 
   @Test
   public void createEmptyS2AConfig_success() {
-    S2AConfig config = S2AConfig.createBuilder().build();
+    SecureSessionAgentConfig config = SecureSessionAgentConfig.createBuilder().build();
     assertTrue(config.getPlaintextAddress().isEmpty());
     assertTrue(config.getMtlsAddress().isEmpty());
   }
