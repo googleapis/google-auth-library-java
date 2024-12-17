@@ -783,8 +783,9 @@ public class ImpersonatedCredentials extends GoogleCredentials
         return new ImpersonatedCredentials(this);
       } catch (IOException e) {
         // throwing exception would be breaking change. catching instead.
-        // this should never happen.
-        throw new IllegalStateException(e);
+        // this should never happen because ImpersonatedCredential can only be SA or User
+        // Credentials.
+        throw new SigningException("Signing failed", e);
       }
     }
   }
