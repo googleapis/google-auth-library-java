@@ -345,12 +345,19 @@ public class ImpersonatedCredentials extends GoogleCredentials
    */
   @Override
   public byte[] sign(byte[] toSign) {
-    return IamUtils.sign(
-        getAccount(),
-        sourceCredentials,
-        transportFactory.create(),
-        toSign,
-        ImmutableMap.of("delegates", this.delegates));
+    try {
+      return IamUtils.sign(
+          getAccount(),
+          sourceCredentials,
+          getUniverseDomain(),
+          transportFactory.create(),
+          toSign,
+          ImmutableMap.of("delegates", this.delegates));
+    } catch (IOException ex) {
+      // Throwing an IOException would be a breaking change, so wrap it here.
+      // This should not happen for this credential type.
+      throw new IllegalStateException("Failed to sign: Error obtaining universe domain", ex);
+    }
   }
 
   /**
@@ -525,7 +532,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
         this.iamEndpointOverride != null
             ? this.iamEndpointOverride
             : String.format(
-                OAuth2Utils.IAM_ACCESS_TOKEN_ENDPOINT_FORMAT,
+                IamUtils.IAM_ACCESS_TOKEN_ENDPOINT_FORMAT,
                 getUniverseDomain(),
                 this.targetPrincipal);
 
@@ -593,7 +600,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
         targetAudience,
         includeEmail,
         ImmutableMap.of("delegates", this.delegates),
-        getMetricsCredentialType());
+        getMetricsCredentialType(),
+        getUniverseDomain());
   }
 
   @Override
@@ -775,8 +783,9 @@ public class ImpersonatedCredentials extends GoogleCredentials
         return new ImpersonatedCredentials(this);
       } catch (IOException e) {
         // throwing exception would be breaking change. catching instead.
-        // this should never happen.
-        throw new IllegalStateException(e);
+        // this should never happen because ImpersonatedCredential can only be SA or User
+        // Credentials.
+        throw new SigningException("Signing failed", e);
       }
     }
   }
