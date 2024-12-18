@@ -35,11 +35,15 @@ import static com.google.auth.oauth2.OAuth2Utils.TOKEN_EXCHANGE_URL_FORMAT;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.google.api.client.http.HttpTransport;
+import com.google.api.client.util.Clock;
 import com.google.auth.Credentials;
 import com.google.auth.TestUtils;
 import com.google.auth.credentialaccessboundary.ClientSideCredentialAccessBoundaryFactory.IntermediateCredentials;
+import com.google.auth.credentialaccessboundary.ClientSideCredentialAccessBoundaryFactory.RefreshType;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -51,12 +55,16 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Tests for {@link com.google.auth.oauth2.DownscopedCredentials}. */
+/**
+ * Tests for {@link
+ * com.google.auth.credentialaccessboundary.ClientSideCredentialAccessBoundaryFactory}.
+ */
 @RunWith(JUnit4.class)
 public class ClientSideCredentialAccessBoundaryFactoryTest {
   private static final String SA_PRIVATE_KEY_PKCS8 =
@@ -96,7 +104,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
   }
 
   @Test
-  public void refreshCredentials() throws Exception {
+  public void fetchIntermediateCredentials() throws Exception {
     GoogleCredentials sourceCredentials =
         getServiceAccountSourceCredentials(mockTokenServerTransportFactory);
 
@@ -106,7 +114,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
             .setHttpTransportFactory(mockStsTransportFactory)
             .build();
 
-    IntermediateCredentials intermediateCredentials = factory.refreshCredentials();
+    IntermediateCredentials intermediateCredentials = factory.fetchIntermediateCredentials();
 
     // Verify requested token type.
     Map<String, String> query =
@@ -125,7 +133,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
   }
 
   @Test
-  public void refreshCredentials_withCustomUniverseDomain() throws IOException {
+  public void fetchIntermediateCredentials_withCustomUniverseDomain() throws IOException {
     String universeDomain = "foobar";
     GoogleCredentials sourceCredentials =
         getServiceAccountSourceCredentials(mockTokenServerTransportFactory).toBuilder()
@@ -139,7 +147,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
             .setHttpTransportFactory(mockStsTransportFactory)
             .build();
 
-    factory.refreshCredentials();
+    factory.fetchIntermediateCredentials();
 
     // Verify domain.
     String url = mockStsTransportFactory.transport.getRequest().getUrl();
@@ -147,7 +155,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
   }
 
   @Test
-  public void refreshCredentials_sourceCredentialCannotRefresh_throwsIOException()
+  public void fetchIntermediateCredentials_sourceCredentialCannotRefresh_throwsIOException()
       throws Exception {
     // Simulate error when refreshing the source credential.
     mockTokenServerTransportFactory.transport.setError(new IOException());
@@ -162,7 +170,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
             .build();
 
     try {
-      factory.refreshCredentials(); // Expecting an IOException
+      factory.fetchIntermediateCredentials(); // Expecting an IOException
       fail("Should fail as the source credential should not be able to be refreshed.");
     } catch (IOException e) {
       assertEquals("Unable to refresh the provided source credential.", e.getMessage());
@@ -170,7 +178,8 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
   }
 
   @Test
-  public void refreshCredentials_noExpiresInReturned_copiesSourceExpiration() throws Exception {
+  public void fetchIntermediateCredentials_noExpiresInReturned_copiesSourceExpiration()
+      throws Exception {
     // Simulate STS not returning expires_in
     mockStsTransportFactory.transport.setReturnExpiresIn(false);
 
@@ -183,7 +192,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
             .setHttpTransportFactory(mockStsTransportFactory)
             .build();
 
-    IntermediateCredentials intermediateCredentials = factory.refreshCredentials();
+    IntermediateCredentials intermediateCredentials = factory.fetchIntermediateCredentials();
     AccessToken intermediateAccessToken = intermediateCredentials.getIntermediateAccessToken();
 
     assertEquals(
@@ -194,6 +203,147 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
     assertEquals(
         Objects.requireNonNull(sourceCredentials.getAccessToken()).getExpirationTime(),
         intermediateAccessToken.getExpirationTime());
+  }
+
+  @Test
+  public void refreshCredentialsIfRequired_firstCallWillFetchIntermediateCredentials()
+      throws IOException {
+    GoogleCredentials sourceCredentials =
+        getServiceAccountSourceCredentials(mockTokenServerTransportFactory);
+
+    ClientSideCredentialAccessBoundaryFactory factory =
+        ClientSideCredentialAccessBoundaryFactory.newBuilder()
+            .setSourceCredential(sourceCredentials)
+            .setHttpTransportFactory(mockStsTransportFactory)
+            .build();
+
+    // Verify that the first call to refreshCredentialsIfRequired() triggers a fetch of intermediate
+    // credentials, resulting in one request to the STS endpoint. This happens because the
+    // intermediate credentials are initially null.
+    assertEquals(0, mockStsTransportFactory.transport.getRequestCount());
+    factory.refreshCredentialsIfRequired();
+    assertEquals(1, mockStsTransportFactory.transport.getRequestCount());
+  }
+
+  @Test
+  public void refreshCredentialsIfRequired_noRefreshNeeded() throws IOException {
+    final ClientSideCredentialAccessBoundaryFactory factory =
+        getClientSideCredentialAccessBoundaryFactory(RefreshType.NONE);
+
+    // Call refreshCredentialsIfRequired() once to initialize the intermediate credentials. This
+    // should make one request to the STS endpoint.
+    factory.refreshCredentialsIfRequired();
+
+    // Verify that a subsequent call to refreshCredentialsIfRequired() does NOT trigger another
+    // refresh, as the token is still valid. The request count should remain the same.
+    assertEquals(1, mockStsTransportFactory.transport.getRequestCount());
+    factory.refreshCredentialsIfRequired();
+    assertEquals(1, mockStsTransportFactory.transport.getRequestCount());
+  }
+
+  @Test
+  public void refreshCredentialsIfRequired_blockingSingleThread() throws IOException {
+    final ClientSideCredentialAccessBoundaryFactory factory =
+        getClientSideCredentialAccessBoundaryFactory(RefreshType.BLOCKING);
+
+    // Call refreshCredentialsIfRequired() once to initialize the intermediate credentials. This
+    // should make one request to the STS endpoint.
+    factory.refreshCredentialsIfRequired();
+    assertEquals(1, mockStsTransportFactory.transport.getRequestCount());
+
+    // Simulate multiple calls to refreshCredentialsIfRequired. In blocking mode, each call should
+    // trigger a new request to the STS endpoint.
+    int numRefresh = 3;
+    for (int i = 0; i < numRefresh; i++) {
+      factory.refreshCredentialsIfRequired();
+    }
+
+    // Verify that the total number of requests to the STS endpoint is the initial request plus the
+    // number of subsequent refresh calls.
+    assertEquals(1 + numRefresh, mockStsTransportFactory.transport.getRequestCount());
+  }
+
+  @Test
+  public void refreshCredentialsIfRequired_asyncSingleThread() throws IOException {
+    final ClientSideCredentialAccessBoundaryFactory factory =
+        getClientSideCredentialAccessBoundaryFactory(RefreshType.ASYNC);
+
+    // Call refreshCredentialsIfRequired() once to initialize the intermediate credentials. This
+    // should make one request to the STS endpoint.
+    factory.refreshCredentialsIfRequired();
+    assertEquals(1, mockStsTransportFactory.transport.getRequestCount());
+
+    // Subsequent calls to refreshCredentialsIfRequired() in an async mode should NOT
+    // immediately call the STS endpoint. They should schedule an asynchronous refresh.
+    int numRefresh = 3;
+    for (int i = 0; i < numRefresh; i++) {
+      factory.refreshCredentialsIfRequired();
+    }
+
+    // Verify that only the initial call resulted in an immediate STS request. The async refresh
+    // is still pending.
+    assertEquals(1, mockStsTransportFactory.transport.getRequestCount());
+
+    // Introduce a small delay to allow the asynchronous refresh task to complete.  This is
+    // necessary because the async task runs on a separate thread.
+    try {
+      Thread.sleep(100);
+    } catch (InterruptedException e) {
+      throw new IOException(e);
+    }
+
+    // After the delay, the request count should be 2, indicating that the async refresh has made
+    // a single request to the STS endpoint.
+    assertEquals(2, mockStsTransportFactory.transport.getRequestCount());
+  }
+
+  @Test
+  public void refreshCredentialsIfRequired_blockingMultiThread()
+      throws IOException, InterruptedException {
+    final ClientSideCredentialAccessBoundaryFactory factory =
+        getClientSideCredentialAccessBoundaryFactory(RefreshType.BLOCKING);
+
+    // Call refreshCredentialsIfRequired() once to initialize the intermediate credentials. This
+    // should make one request to the STS endpoint.
+    factory.refreshCredentialsIfRequired();
+    assertEquals(1, mockStsTransportFactory.transport.getRequestCount());
+
+    // Simulate multiple threads concurrently calling refreshCredentialsIfRequired(). In blocking
+    // mode, only one of these calls should trigger a new request to the STS endpoint. The others
+    // should block until the first refresh completes and then use the newly acquired credentials.
+    triggerConcurrentRefresh(factory, 3);
+
+    // After all threads complete, the request count should be 2 (the initial fetch plus one
+    // blocking refresh).
+    assertEquals(2, mockStsTransportFactory.transport.getRequestCount());
+  }
+
+  @Test
+  public void refreshCredentialsIfRequired_asyncMultiThread()
+      throws IOException, InterruptedException {
+    final ClientSideCredentialAccessBoundaryFactory factory =
+        getClientSideCredentialAccessBoundaryFactory(RefreshType.ASYNC);
+
+    // Call refreshCredentialsIfRequired() once to initialize the intermediate credentials. This
+    // should make one request to the STS endpoint.
+    factory.refreshCredentialsIfRequired();
+    assertEquals(1, mockStsTransportFactory.transport.getRequestCount());
+
+    // Simulate multiple threads concurrently calling refreshCredentialsIfRequired(). In async
+    // mode, the first call should trigger a background refresh. Subsequent calls should NOT
+    // trigger additional refreshes while the background refresh is still pending.
+    triggerConcurrentRefresh(factory, 5);
+
+    // Introduce a small delay to allow the asynchronous refresh task to complete.
+    try {
+      Thread.sleep(100);
+    } catch (InterruptedException e) {
+      throw new IOException(e);
+    }
+
+    // After the delay, the request count should be 2, indicating that the initial fetch and a
+    // single async refresh occurred (not one per thread).
+    assertEquals(2, mockStsTransportFactory.transport.getRequestCount());
   }
 
   // Tests related to the builder methods
@@ -221,7 +371,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
                     .setSourceCredential(sourceCredentials)
                     .setMinimumTokenLifetime(Duration.ofMinutes(-1)));
 
-    assertEquals("Minimum token lifetime must be positive.", exception.getMessage());
+    assertEquals("Minimum token lifetime must be greater than zero.", exception.getMessage());
   }
 
   @Test
@@ -236,7 +386,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
                     .setSourceCredential(sourceCredentials)
                     .setMinimumTokenLifetime(Duration.ZERO));
 
-    assertEquals("Minimum token lifetime must be positive.", exception.getMessage());
+    assertEquals("Minimum token lifetime must be greater than zero.", exception.getMessage());
   }
 
   @Test
@@ -251,7 +401,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
                     .setSourceCredential(sourceCredentials)
                     .setRefreshMargin(Duration.ofMinutes(-1)));
 
-    assertEquals("Refresh margin must be positive.", exception.getMessage());
+    assertEquals("Refresh margin must be greater than zero.", exception.getMessage());
   }
 
   @Test
@@ -266,7 +416,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
                     .setSourceCredential(sourceCredentials)
                     .setRefreshMargin(Duration.ZERO));
 
-    assertEquals("Refresh margin must be positive.", exception.getMessage());
+    assertEquals("Refresh margin must be greater than zero.", exception.getMessage());
   }
 
   @Test
@@ -317,5 +467,85 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
             .build();
 
     return sourceCredentials.createScoped("https://www.googleapis.com/auth/cloud-platform");
+  }
+
+  private ClientSideCredentialAccessBoundaryFactory getClientSideCredentialAccessBoundaryFactory(
+      RefreshType refreshType) throws IOException {
+    GoogleCredentials sourceCredentials =
+        getServiceAccountSourceCredentials(mockTokenServerTransportFactory);
+
+    return ClientSideCredentialAccessBoundaryFactory.newBuilder()
+        .setSourceCredential(sourceCredentials)
+        .setHttpTransportFactory(mockStsTransportFactory)
+        .setClock(createMockClock(refreshType, sourceCredentials))
+        .build();
+  }
+
+  private Clock createMockClock(RefreshType refreshType, GoogleCredentials sourceCredentials) {
+    Clock mockClock = mock(Clock.class);
+    long currentTimeInMillis = Clock.SYSTEM.currentTimeMillis();
+    long mockedTimeInMillis;
+    final long refreshMarginInMillis =
+        ClientSideCredentialAccessBoundaryFactory.DEFAULT_REFRESH_MARGIN.toMillis();
+    final long minimumTokenLifetimeMillis =
+        ClientSideCredentialAccessBoundaryFactory.DEFAULT_MINIMUM_TOKEN_LIFETIME.toMillis();
+
+    // If the source credential doesn't have an access token, set the expiration time to 1 hour from
+    // the current time.
+    long expirationTimeInMillis =
+        sourceCredentials.getAccessToken() != null
+            ? sourceCredentials.getAccessToken().getExpirationTime().getTime()
+            : currentTimeInMillis + 3600000;
+
+    switch (refreshType) {
+      case NONE:
+        // Set mocked time so that the token is fresh and no refresh is needed (before the refresh
+        // margin).
+        mockedTimeInMillis = expirationTimeInMillis - refreshMarginInMillis - 60000;
+        break;
+      case ASYNC:
+        // Set mocked time so that the token is nearing expiry and an async refresh is triggered
+        // (within the refresh margin).
+        mockedTimeInMillis = expirationTimeInMillis - refreshMarginInMillis + 60000;
+        break;
+      case BLOCKING:
+        // Set mocked time so that the token requires immediate refresh (just after the minimum
+        // token lifetime).
+        mockedTimeInMillis = expirationTimeInMillis - minimumTokenLifetimeMillis + 60000;
+        break;
+      default:
+        throw new IllegalArgumentException("Unexpected RefreshType: " + refreshType);
+    }
+
+    when(mockClock.currentTimeMillis()).thenReturn(mockedTimeInMillis);
+    return mockClock;
+  }
+
+  private static void triggerConcurrentRefresh(
+      ClientSideCredentialAccessBoundaryFactory factory, int numThreads)
+      throws InterruptedException {
+    Thread[] threads = new Thread[numThreads];
+    CountDownLatch latch = new CountDownLatch(numThreads);
+
+    // Create and start the threads
+    for (int i = 0; i < numThreads; i++) {
+      threads[i] =
+          new Thread(
+              () -> {
+                try {
+                  latch.countDown(); // Signal thread is ready
+                  latch.await(); // Wait for all threads to be ready
+                  factory.refreshCredentialsIfRequired();
+                } catch (InterruptedException e) {
+                  Thread.currentThread().interrupt();
+                } catch (IOException e) {
+                  throw new RuntimeException(e);
+                }
+              });
+      threads[i].start();
+    }
+    for (Thread thread : threads) {
+      thread.join(); // Wait for each thread to complete
+    }
   }
 }

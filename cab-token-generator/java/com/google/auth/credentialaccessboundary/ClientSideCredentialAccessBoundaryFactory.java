@@ -60,17 +60,18 @@ import java.util.Date;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 
-public final class ClientSideCredentialAccessBoundaryFactory {
+public class ClientSideCredentialAccessBoundaryFactory {
+  static final Duration DEFAULT_REFRESH_MARGIN = Duration.ofMinutes(30);
+  static final Duration DEFAULT_MINIMUM_TOKEN_LIFETIME = Duration.ofMinutes(3);
   private final GoogleCredentials sourceCredential;
   private final transient HttpTransportFactory transportFactory;
   private final String tokenExchangeEndpoint;
   private final Duration minimumTokenLifetime;
   private final Duration refreshMargin;
-  private static final Duration DEFAULT_REFRESH_MARGIN = Duration.ofMinutes(30);
-  private static final Duration DEFAULT_MINIMUM_TOKEN_LIFETIME = Duration.ofMinutes(3);
   private transient RefreshTask refreshTask;
   private final Object refreshLock = new byte[0];
   private volatile IntermediateCredentials intermediateCredentials = null;
+  private final Clock clock;
 
   enum RefreshType {
     NONE,
@@ -88,10 +89,7 @@ public final class ClientSideCredentialAccessBoundaryFactory {
         builder.minimumTokenLifetime != null
             ? builder.minimumTokenLifetime
             : DEFAULT_MINIMUM_TOKEN_LIFETIME;
-  }
-
-  public static Builder newBuilder() {
-    return new Builder();
+    this.clock = builder.clock;
   }
 
   public AccessToken generateToken(CredentialAccessBoundary accessBoundary) {
@@ -110,7 +108,8 @@ public final class ClientSideCredentialAccessBoundaryFactory {
    * @throws IOException If an error occurs during the refresh process, such as network issues,
    *     invalid credentials, or problems with the token exchange endpoint.
    */
-  private void refreshCredentialsIfRequired() throws IOException {
+  @VisibleForTesting
+  void refreshCredentialsIfRequired() throws IOException {
     RefreshType refreshType = determineRefreshType();
 
     if (refreshType == RefreshType.NONE) {
@@ -171,14 +170,14 @@ public final class ClientSideCredentialAccessBoundaryFactory {
       return RefreshType.BLOCKING;
     }
 
-    AccessToken localAccessToken = intermediateCredentials.intermediateAccessToken;
-    Date expirationTime = localAccessToken.getExpirationTime();
+    AccessToken intermediateAccessToken = intermediateCredentials.intermediateAccessToken;
+    Date expirationTime = intermediateAccessToken.getExpirationTime();
     if (expirationTime == null) {
       return RefreshType.NONE; // Token does not expire, no refresh needed.
     }
 
-    Duration remaining =
-        Duration.ofMillis(expirationTime.getTime() - Clock.SYSTEM.currentTimeMillis());
+    Duration remaining = Duration.ofMillis(expirationTime.getTime() - clock.currentTimeMillis());
+
     if (remaining.compareTo(minimumTokenLifetime) <= 0) {
       // Intermediate token has expired or remaining lifetime is less than the minimum required
       // for CAB token generation. A blocking refresh is necessary.
@@ -208,26 +207,31 @@ public final class ClientSideCredentialAccessBoundaryFactory {
         return new RefreshTask(refreshTask.task, false);
       }
 
-      // No refresh task is currently running. Create and return a new refresh task.
       final ListenableFutureTask<IntermediateCredentials> task =
-          ListenableFutureTask.create(this::refreshCredentials);
-      return new RefreshTask(task, true);
+          ListenableFutureTask.create(this::fetchIntermediateCredentials);
+
+      // Store the new refresh task in the refreshTask field before returning. This ensures that
+      // subsequent calls to this method will return the existing task while it's still in progress.
+      refreshTask = new RefreshTask(task, true);
+      return refreshTask;
     }
   }
 
   /**
-   * Refreshes the source credential and exchanges it for an intermediate access token using the STS
-   * endpoint.
+   * Fetches the credentials by refreshing the source credential and exchanging it for an
+   * intermediate access token using the STS endpoint.
    *
-   * <p>If the source credential is expired, it will be refreshed. A token exchange request is then
-   * made to the STS endpoint.
+   * <p>The source credential is refreshed, and a token exchange request is made to the STS endpoint
+   * to obtain an intermediate access token and an associated access boundary session key. This
+   * ensures the intermediate access token meets this factory's refresh margin and minimum lifetime
+   * requirements.
    *
-   * @return The refreshed {@link IntermediateCredentials} containing the intermediate access token
+   * @return The fetched {@link IntermediateCredentials} containing the intermediate access token
    *     and access boundary session key.
    * @throws IOException If an error occurs during credential refresh or token exchange.
    */
   @VisibleForTesting
-  IntermediateCredentials refreshCredentials() throws IOException {
+  IntermediateCredentials fetchIntermediateCredentials() throws IOException {
     try {
       // Force a refresh on the source credentials. The intermediate token's lifetime is tied to the
       // source credential's expiration. The factory's refreshMargin might be different from the
@@ -306,6 +310,28 @@ public final class ClientSideCredentialAccessBoundaryFactory {
     }
   }
 
+  @VisibleForTesting
+  String getAccessBoundarySessionKey() {
+    return intermediateCredentials != null
+        ? intermediateCredentials.accessBoundarySessionKey
+        : null;
+  }
+
+  @VisibleForTesting
+  AccessToken getIntermediateAccessToken() {
+    return intermediateCredentials != null ? intermediateCredentials.intermediateAccessToken : null;
+  }
+
+  @VisibleForTesting
+  String getTokenExchangeEndpoint() {
+    return tokenExchangeEndpoint;
+  }
+
+  @VisibleForTesting
+  HttpTransportFactory getTransportFactory() {
+    return transportFactory;
+  }
+
   /**
    * Holds intermediate credentials obtained from the STS token exchange endpoint.
    *
@@ -372,6 +398,10 @@ public final class ClientSideCredentialAccessBoundaryFactory {
     }
   }
 
+  public static Builder newBuilder() {
+    return new Builder();
+  }
+
   public static class Builder {
     private GoogleCredentials sourceCredential;
     private HttpTransportFactory transportFactory;
@@ -379,6 +409,7 @@ public final class ClientSideCredentialAccessBoundaryFactory {
     private String tokenExchangeEndpoint;
     private Duration minimumTokenLifetime;
     private Duration refreshMargin;
+    private Clock clock = Clock.SYSTEM; // Default to system clock;
 
     private Builder() {}
 
@@ -403,14 +434,15 @@ public final class ClientSideCredentialAccessBoundaryFactory {
      * ensures that generated CAB tokens have a sufficient lifetime for use.
      *
      * @param minimumTokenLifetime The minimum acceptable lifetime for a generated CAB token. Must
-     *     be positive.
+     *     be greater than zero.
      * @return This {@code Builder} object.
      * @throws IllegalArgumentException if minimumTokenLifetime is negative or zero.
      */
     @CanIgnoreReturnValue
     public Builder setMinimumTokenLifetime(Duration minimumTokenLifetime) {
+      checkNotNull(minimumTokenLifetime, "Minimum token lifetime must not be null.");
       if (minimumTokenLifetime.isNegative() || minimumTokenLifetime.isZero()) {
-        throw new IllegalArgumentException("Minimum token lifetime must be positive.");
+        throw new IllegalArgumentException("Minimum token lifetime must be greater than zero.");
       }
       this.minimumTokenLifetime = minimumTokenLifetime;
       return this;
@@ -423,14 +455,15 @@ public final class ClientSideCredentialAccessBoundaryFactory {
      * time an asynchronous refresh should be initiated. If not provided, it will default to 30
      * minutes.
      *
-     * @param refreshMargin The refresh margin. Must be positive.
+     * @param refreshMargin The refresh margin. Must be greater than zero.
      * @return This {@code Builder} object.
      * @throws IllegalArgumentException if refreshMargin is negative or zero.
      */
     @CanIgnoreReturnValue
     public Builder setRefreshMargin(Duration refreshMargin) {
+      checkNotNull(refreshMargin, "Refresh margin must not be null.");
       if (refreshMargin.isNegative() || refreshMargin.isZero()) {
-        throw new IllegalArgumentException("Refresh margin must be positive.");
+        throw new IllegalArgumentException("Refresh margin must be greater than zero.");
       }
       this.refreshMargin = refreshMargin;
       return this;
@@ -457,6 +490,17 @@ public final class ClientSideCredentialAccessBoundaryFactory {
     @CanIgnoreReturnValue
     public Builder setUniverseDomain(String universeDomain) {
       this.universeDomain = universeDomain;
+      return this;
+    }
+
+    /**
+     * Set the clock for checking token expiry. Used for testing.
+     *
+     * @param clock the clock to use. Defaults to the system clock
+     * @return the builder
+     */
+    public Builder setClock(Clock clock) {
+      this.clock = clock;
       return this;
     }
 

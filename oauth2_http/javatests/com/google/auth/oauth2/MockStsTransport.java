@@ -74,6 +74,7 @@ public final class MockStsTransport extends MockHttpTransport {
   private boolean returnExpiresIn = true;
   private boolean returnAccessBoundarySessionKey = false;
   private MockLowLevelHttpRequest request;
+  private int requestCount = 0;
 
   public void addResponseErrorSequence(IOException... errors) {
     Collections.addAll(responseErrorSequence, errors);
