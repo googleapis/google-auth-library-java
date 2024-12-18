@@ -90,6 +90,7 @@ public final class MockStsTransport extends MockHttpTransport {
 
   @Override
   public LowLevelHttpRequest buildRequest(final String method, final String url) {
+    requestCount++;
     this.request =
         new MockLowLevelHttpRequest(url) {
           @Override
@@ -187,5 +188,9 @@ public final class MockStsTransport extends MockHttpTransport {
 
   public void setReturnAccessBoundarySessionKey(boolean returnAccessBoundarySessionKey) {
     this.returnAccessBoundarySessionKey = returnAccessBoundarySessionKey;
+  }
+
+  public int getRequestCount() {
+    return requestCount;
   }
 }
