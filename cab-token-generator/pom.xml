@@ -55,6 +55,12 @@
       <artifactId>mockito-core</artifactId>
       <version>4.11.0</version>
       <scope>test</scope>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>dev.cel</groupId>
+      <artifactId>cel</artifactId>
     </dependency>
   </dependencies>
 
