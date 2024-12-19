@@ -535,27 +535,4 @@ public class ClientSideCredentialAccessBoundaryFactory {
       return new ClientSideCredentialAccessBoundaryFactory(this);
     }
   }
-
-  @VisibleForTesting
-  String getAccessBoundarySessionKey() {
-
-    return intermediateCredentials != null
-        ? intermediateCredentials.accessBoundarySessionKey
-        : null;
-  }
-
-  @VisibleForTesting
-  AccessToken getIntermediateAccessToken() {
-    return intermediateCredentials != null ? intermediateCredentials.intermediateAccessToken : null;
-  }
-
-  @VisibleForTesting
-  String getTokenExchangeEndpoint() {
-    return tokenExchangeEndpoint;
-  }
-
-  @VisibleForTesting
-  HttpTransportFactory getTransportFactory() {
-    return transportFactory;
-  }
 }
