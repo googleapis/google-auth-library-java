@@ -83,7 +83,7 @@
     <deploy.autorelease>false</deploy.autorelease>
     <project.error-prone.version>2.35.1</project.error-prone.version>
     <project.protobuf.version>3.25.5</project.protobuf.version>
-    <project.cel.version>0.8.0</project.cel.version>
+    <project.cel.version>0.9.0-proto3-SNAPSHOT</project.cel.version>
   </properties>
 
   <repositories>
@@ -177,7 +177,7 @@
       <dependency>
         <groupId>dev.cel</groupId>
         <artifactId>cel</artifactId>
-        <version>${project.cel.version}</version>
+        <version>0.9.0-proto3-SNAPSHOT</version>
         <exclusions>
           <exclusion>
             <groupId>com.google.guava</groupId>
