@@ -177,7 +177,7 @@
       <dependency>
         <groupId>dev.cel</groupId>
         <artifactId>cel</artifactId>
-        <version>0.9.0-proto3-SNAPSHOT</version>
+        <version>${project.cel.version}</version>
         <exclusions>
           <exclusion>
             <groupId>com.google.guava</groupId>
