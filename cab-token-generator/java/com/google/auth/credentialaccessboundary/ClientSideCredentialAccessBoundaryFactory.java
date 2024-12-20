@@ -35,6 +35,7 @@ import static com.google.auth.oauth2.OAuth2Credentials.getFromServiceLoader;
 import static com.google.auth.oauth2.OAuth2Utils.TOKEN_EXCHANGE_URL_FORMAT;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.api.client.util.Clock;
 import com.google.auth.Credentials;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.AccessToken;
@@ -44,42 +45,196 @@ import com.google.auth.oauth2.OAuth2Utils;
 import com.google.auth.oauth2.StsRequestHandler;
 import com.google.auth.oauth2.StsTokenExchangeRequest;
 import com.google.auth.oauth2.StsTokenExchangeResponse;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
+import com.google.common.util.concurrent.AbstractFuture;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListenableFutureTask;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
+import java.time.Duration;
+import java.util.Date;
+import java.util.concurrent.ExecutionException;
+import javax.annotation.Nullable;
 
-public final class ClientSideCredentialAccessBoundaryFactory {
+public class ClientSideCredentialAccessBoundaryFactory {
+  static final Duration DEFAULT_REFRESH_MARGIN = Duration.ofMinutes(30);
+  static final Duration DEFAULT_MINIMUM_TOKEN_LIFETIME = Duration.ofMinutes(3);
   private final GoogleCredentials sourceCredential;
   private final transient HttpTransportFactory transportFactory;
   private final String tokenExchangeEndpoint;
-  private String accessBoundarySessionKey;
-  private AccessToken intermediateAccessToken;
+  private final Duration minimumTokenLifetime;
+  private final Duration refreshMargin;
+  private transient RefreshTask refreshTask;
+  private final Object refreshLock = new byte[0];
+  private volatile IntermediateCredentials intermediateCredentials = null;
+  private final Clock clock;
+
+  enum RefreshType {
+    NONE,
+    ASYNC,
+    BLOCKING
+  }
 
   private ClientSideCredentialAccessBoundaryFactory(Builder builder) {
     this.transportFactory = builder.transportFactory;
     this.sourceCredential = builder.sourceCredential;
     this.tokenExchangeEndpoint = builder.tokenExchangeEndpoint;
+    this.refreshMargin =
+        builder.refreshMargin != null ? builder.refreshMargin : DEFAULT_REFRESH_MARGIN;
+    this.minimumTokenLifetime =
+        builder.minimumTokenLifetime != null
+            ? builder.minimumTokenLifetime
+            : DEFAULT_MINIMUM_TOKEN_LIFETIME;
+    this.clock = builder.clock;
+  }
+
+  public AccessToken generateToken(CredentialAccessBoundary accessBoundary) {
+    // TODO(negarb/jiahuah): Implement generateToken
+    // Note: This method will call refreshCredentialsIfRequired().
+    throw new UnsupportedOperationException("generateToken is not yet implemented.");
   }
 
   /**
-   * Refreshes the source credential and exchanges it for an intermediary access token using the STS
-   * endpoint.
+   * Refreshes the intermediate access token and access boundary session key if required.
    *
-   * <p>If the source credential is expired, it will be refreshed. A token exchange request is then
-   * made to the STS endpoint. The resulting intermediary access token and access boundary session
-   * key are stored. The intermediary access token's expiration time is determined as follows:
+   * <p>This method checks the expiration time of the current intermediate access token and
+   * initiates a refresh if necessary. The refresh process also refreshes the underlying source
+   * credentials.
    *
-   * <ol>
-   *   <li>If the STS response includes `expires_in`, that value is used.
-   *   <li>Otherwise, if the source credential has an expiration time, that value is used.
-   *   <li>Otherwise, the intermediary token will have no expiration time.
-   * </ol>
+   * @throws IOException If an error occurs during the refresh process, such as network issues,
+   *     invalid credentials, or problems with the token exchange endpoint.
+   */
+  @VisibleForTesting
+  void refreshCredentialsIfRequired() throws IOException {
+    RefreshType refreshType = determineRefreshType();
+
+    if (refreshType == RefreshType.NONE) {
+      return; // No refresh needed, token is still valid.
+    }
+
+    // If a refresh is required, create or retrieve the refresh task.
+    RefreshTask refreshTask = getOrCreateRefreshTask();
+
+    // Handle the refresh based on the determined refresh type.
+    switch (refreshType) {
+      case BLOCKING:
+        if (refreshTask.isNew) {
+          // Start a new refresh task only if the task is new
+          MoreExecutors.directExecutor().execute(refreshTask.task);
+        }
+        try {
+          refreshTask.task.get(); // Wait for the refresh task to complete.
+        } catch (InterruptedException e) {
+          // Restore the interrupted status and throw an exception.
+          Thread.currentThread().interrupt();
+          throw new IOException(
+              "Interrupted while asynchronously refreshing the intermediate credentials", e);
+        } catch (ExecutionException e) {
+          // Unwrap the underlying cause of the execution exception.
+          Throwable cause = e.getCause();
+          if (cause instanceof IOException) {
+            throw (IOException) cause;
+          } else if (cause instanceof RuntimeException) {
+            throw (RuntimeException) cause;
+          } else {
+            // Wrap other exceptions in an IOException.
+            throw new IOException("Unexpected error refreshing intermediate credentials", cause);
+          }
+        }
+        break;
+      case ASYNC:
+        if (refreshTask.isNew) {
+          // Starts a new background thread for the refresh task if it's a new task.
+          // We create a new thread because the Auth Library doesn't currently include a background
+          // executor. Introducing an executor would add complexity in managing its lifecycle and
+          // could potentially lead to memory leaks.
+          // We limit the number of concurrent refresh threads to 1, so the overhead of creating new
+          // threads for asynchronous calls should be acceptable.
+          new Thread(refreshTask.task).start();
+        } // (No else needed - if not new, another thread is handling the refresh)
+        break;
+    }
+  }
+
+  private RefreshType determineRefreshType() {
+    if (intermediateCredentials == null
+        || intermediateCredentials.intermediateAccessToken == null) {
+      // A blocking refresh is needed if the intermediate access token doesn't exist.
+      return RefreshType.BLOCKING;
+    }
+
+    AccessToken intermediateAccessToken = intermediateCredentials.intermediateAccessToken;
+    Date expirationTime = intermediateAccessToken.getExpirationTime();
+    if (expirationTime == null) {
+      return RefreshType.NONE; // Token does not expire, no refresh needed.
+    }
+
+    Duration remaining = Duration.ofMillis(expirationTime.getTime() - clock.currentTimeMillis());
+
+    if (remaining.compareTo(minimumTokenLifetime) <= 0) {
+      // Intermediate token has expired or remaining lifetime is less than the minimum required
+      // for CAB token generation. A blocking refresh is necessary.
+      return RefreshType.BLOCKING;
+    } else if (remaining.compareTo(refreshMargin) <= 0) {
+      // The token is nearing expiration, an async refresh is needed.
+      return RefreshType.ASYNC;
+    }
+    // Token is still fresh, no refresh needed.
+    return RefreshType.NONE;
+  }
+
+  /**
+   * Atomically creates a single flight refresh task.
    *
+   * <p>Only a single refresh task can be scheduled at a time. If there is an existing task, it will
+   * be returned for subsequent invocations. However, if a new task is created, it is the
+   * responsibility of the caller to execute it. The task will clear the single flight slot upon
+   * completion.
+   */
+  private RefreshTask getOrCreateRefreshTask() {
+    synchronized (refreshLock) {
+      if (refreshTask != null) {
+        // An existing refresh task is already in progress. Return a NEW RefreshTask instance with
+        // the existing task, but set isNew to false. This indicates to the caller that a new
+        // refresh task was NOT created.
+        return new RefreshTask(refreshTask.task, false);
+      }
+
+      final ListenableFutureTask<IntermediateCredentials> task =
+          ListenableFutureTask.create(this::fetchIntermediateCredentials);
+
+      // Store the new refresh task in the refreshTask field before returning. This ensures that
+      // subsequent calls to this method will return the existing task while it's still in progress.
+      refreshTask = new RefreshTask(task, true);
+      return refreshTask;
+    }
+  }
+
+  /**
+   * Fetches the credentials by refreshing the source credential and exchanging it for an
+   * intermediate access token using the STS endpoint.
+   *
+   * <p>The source credential is refreshed, and a token exchange request is made to the STS endpoint
+   * to obtain an intermediate access token and an associated access boundary session key. This
+   * ensures the intermediate access token meets this factory's refresh margin and minimum lifetime
+   * requirements.
+   *
+   * @return The fetched {@link IntermediateCredentials} containing the intermediate access token
+   *     and access boundary session key.
    * @throws IOException If an error occurs during credential refresh or token exchange.
    */
-  private void refreshCredentials() throws IOException {
+  @VisibleForTesting
+  IntermediateCredentials fetchIntermediateCredentials() throws IOException {
     try {
-      this.sourceCredential.refreshIfExpired();
+      // Force a refresh on the source credentials. The intermediate token's lifetime is tied to the
+      // source credential's expiration. The factory's refreshMargin might be different from the
+      // refreshMargin on source credentials. This ensures the intermediate access token
+      // meets this factory's refresh margin and minimum lifetime requirements.
+      sourceCredential.refresh();
     } catch (IOException e) {
       throw new IOException("Unable to refresh the provided source credential.", e);
     }
@@ -101,30 +256,151 @@ public final class ClientSideCredentialAccessBoundaryFactory {
             .build();
 
     StsTokenExchangeResponse response = handler.exchangeToken();
-    this.accessBoundarySessionKey = response.getAccessBoundarySessionKey();
-    this.intermediateAccessToken = response.getAccessToken();
+    return new IntermediateCredentials(
+        getTokenFromResponse(response, sourceAccessToken), response.getAccessBoundarySessionKey());
+  }
 
-    // The STS endpoint will only return the expiration time for the intermediary token
+  /**
+   * Extracts the access token from the STS exchange response and sets the appropriate expiration
+   * time.
+   *
+   * @param response The STS token exchange response.
+   * @param sourceAccessToken The original access token used for the exchange.
+   * @return The intermediate access token.
+   */
+  private static AccessToken getTokenFromResponse(
+      StsTokenExchangeResponse response, AccessToken sourceAccessToken) {
+    AccessToken intermediateToken = response.getAccessToken();
+
+    // The STS endpoint will only return the expiration time for the intermediate token
     // if the original access token represents a service account.
-    // The intermediary token's expiration time will always match the source credential expiration.
+    // The intermediate token's expiration time will always match the source credential
+    // expiration.
     // When no expires_in is returned, we can copy the source credential's expiration time.
-    if (response.getAccessToken().getExpirationTime() == null) {
-      if (sourceAccessToken.getExpirationTime() != null) {
-        this.intermediateAccessToken =
-            new AccessToken(
-                response.getAccessToken().getTokenValue(), sourceAccessToken.getExpirationTime());
+    if (intermediateToken.getExpirationTime() == null
+        && sourceAccessToken.getExpirationTime() != null) {
+      return new AccessToken(
+          intermediateToken.getTokenValue(), sourceAccessToken.getExpirationTime());
+    }
+    return intermediateToken; // Return original if no modification needed
+  }
+
+  /**
+   * Completes the refresh task by storing the results and clearing the single flight slot.
+   *
+   * <p>This method is called when a refresh task finishes. It stores the refreshed credentials if
+   * successful. The single-flight "slot" is cleared, allowing subsequent refresh attempts. Any
+   * exceptions during the refresh are caught and suppressed to prevent indefinite blocking of
+   * subsequent refresh attempts.
+   */
+  private void finishRefreshTask(ListenableFuture<IntermediateCredentials> finishedTask)
+      throws ExecutionException {
+    synchronized (refreshLock) {
+      try {
+        this.intermediateCredentials = Futures.getDone(finishedTask);
+      } finally {
+        if (this.refreshTask != null && this.refreshTask.task == finishedTask) {
+          this.refreshTask = null;
+        }
       }
     }
   }
 
-  private void refreshCredentialsIfRequired() {
-    // TODO(negarb): Implement refreshCredentialsIfRequired
-    throw new UnsupportedOperationException("refreshCredentialsIfRequired is not yet implemented.");
+  @VisibleForTesting
+  String getAccessBoundarySessionKey() {
+    return intermediateCredentials != null
+        ? intermediateCredentials.accessBoundarySessionKey
+        : null;
   }
 
-  public AccessToken generateToken(CredentialAccessBoundary accessBoundary) {
-    // TODO(negarb/jiahuah): Implement generateToken
-    throw new UnsupportedOperationException("generateToken is not yet implemented.");
+  @VisibleForTesting
+  AccessToken getIntermediateAccessToken() {
+    return intermediateCredentials != null ? intermediateCredentials.intermediateAccessToken : null;
+  }
+
+  @VisibleForTesting
+  String getTokenExchangeEndpoint() {
+    return tokenExchangeEndpoint;
+  }
+
+  @VisibleForTesting
+  HttpTransportFactory getTransportFactory() {
+    return transportFactory;
+  }
+
+  /**
+   * Holds intermediate credentials obtained from the STS token exchange endpoint.
+   *
+   * <p>These credentials include an intermediate access token and an access boundary session key.
+   */
+  @VisibleForTesting
+  static class IntermediateCredentials {
+    private final AccessToken intermediateAccessToken;
+    private final String accessBoundarySessionKey;
+
+    IntermediateCredentials(AccessToken accessToken, String accessBoundarySessionKey) {
+      this.intermediateAccessToken = accessToken;
+      this.accessBoundarySessionKey = accessBoundarySessionKey;
+    }
+
+    String getAccessBoundarySessionKey() {
+      return accessBoundarySessionKey;
+    }
+
+    AccessToken getIntermediateAccessToken() {
+      return intermediateAccessToken;
+    }
+  }
+
+  /**
+   * Represents a task for refreshing intermediate credentials, ensuring that only one refresh
+   * operation is in progress at a time.
+   *
+   * <p>The {@code isNew} flag indicates whether this is a newly initiated refresh operation or an
+   * existing one already in progress. This distinction is used to prevent redundant refreshes.
+   */
+  class RefreshTask extends AbstractFuture<IntermediateCredentials> implements Runnable {
+    private final ListenableFutureTask<IntermediateCredentials> task;
+    final boolean isNew;
+
+    RefreshTask(ListenableFutureTask<IntermediateCredentials> task, boolean isNew) {
+      this.task = task;
+      this.isNew = isNew;
+
+      // Add listener to update factory's credentials when the task completes.
+      task.addListener(
+          () -> {
+            try {
+              finishRefreshTask(task);
+            } catch (ExecutionException e) {
+              Throwable cause = e.getCause();
+              RefreshTask.this.setException(cause);
+            }
+          },
+          MoreExecutors.directExecutor());
+
+      // Add callback to set the result or exception based on the outcome.
+      Futures.addCallback(
+          task,
+          new FutureCallback<IntermediateCredentials>() {
+            @Override
+            public void onSuccess(IntermediateCredentials result) {
+              RefreshTask.this.set(result);
+            }
+
+            @Override
+            public void onFailure(@Nullable Throwable t) {
+              RefreshTask.this.setException(
+                  t != null ? t : new IOException("Refresh failed with null Throwable."));
+            }
+          },
+          MoreExecutors.directExecutor());
+    }
+
+    @Override
+    public void run() {
+      task.run();
+    }
   }
 
   public static Builder newBuilder() {
@@ -136,6 +412,9 @@ public final class ClientSideCredentialAccessBoundaryFactory {
     private HttpTransportFactory transportFactory;
     private String universeDomain;
     private String tokenExchangeEndpoint;
+    private Duration minimumTokenLifetime;
+    private Duration refreshMargin;
+    private Clock clock = Clock.SYSTEM; // Default to system clock;
 
     private Builder() {}
 
@@ -148,6 +427,50 @@ public final class ClientSideCredentialAccessBoundaryFactory {
     @CanIgnoreReturnValue
     public Builder setSourceCredential(GoogleCredentials sourceCredential) {
       this.sourceCredential = sourceCredential;
+      return this;
+    }
+
+    /**
+     * Sets the minimum acceptable lifetime for a generated CAB token.
+     *
+     * <p>This value determines the minimum remaining lifetime required on the intermediate token
+     * before a CAB token can be generated. If the intermediate token's remaining lifetime is less
+     * than this value, CAB token generation will be blocked and a refresh will be initiated. This
+     * ensures that generated CAB tokens have a sufficient lifetime for use.
+     *
+     * @param minimumTokenLifetime The minimum acceptable lifetime for a generated CAB token. Must
+     *     be greater than zero.
+     * @return This {@code Builder} object.
+     * @throws IllegalArgumentException if minimumTokenLifetime is negative or zero.
+     */
+    @CanIgnoreReturnValue
+    public Builder setMinimumTokenLifetime(Duration minimumTokenLifetime) {
+      checkNotNull(minimumTokenLifetime, "Minimum token lifetime must not be null.");
+      if (minimumTokenLifetime.isNegative() || minimumTokenLifetime.isZero()) {
+        throw new IllegalArgumentException("Minimum token lifetime must be greater than zero.");
+      }
+      this.minimumTokenLifetime = minimumTokenLifetime;
+      return this;
+    }
+
+    /**
+     * Sets the refresh margin for the intermediate access token.
+     *
+     * <p>This duration specifies how far in advance of the intermediate access token's expiration
+     * time an asynchronous refresh should be initiated. If not provided, it will default to 30
+     * minutes.
+     *
+     * @param refreshMargin The refresh margin. Must be greater than zero.
+     * @return This {@code Builder} object.
+     * @throws IllegalArgumentException if refreshMargin is negative or zero.
+     */
+    @CanIgnoreReturnValue
+    public Builder setRefreshMargin(Duration refreshMargin) {
+      checkNotNull(refreshMargin, "Refresh margin must not be null.");
+      if (refreshMargin.isNegative() || refreshMargin.isZero()) {
+        throw new IllegalArgumentException("Refresh margin must be greater than zero.");
+      }
+      this.refreshMargin = refreshMargin;
       return this;
     }
 
@@ -172,6 +495,17 @@ public final class ClientSideCredentialAccessBoundaryFactory {
     @CanIgnoreReturnValue
     public Builder setUniverseDomain(String universeDomain) {
       this.universeDomain = universeDomain;
+      return this;
+    }
+
+    /**
+     * Set the clock for checking token expiry. Used for testing.
+     *
+     * @param clock the clock to use. Defaults to the system clock
+     * @return the builder
+     */
+    public Builder setClock(Clock clock) {
+      this.clock = clock;
       return this;
     }
 
