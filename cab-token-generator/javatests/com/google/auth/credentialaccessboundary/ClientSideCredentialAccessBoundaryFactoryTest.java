@@ -347,6 +347,29 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
     assertEquals(2, mockStsTransportFactory.transport.getRequestCount());
   }
 
+  @Test
+  public void refreshCredentialsIfRequired_sourceCredentialCannotRefresh_throwsIOException()
+      throws Exception {
+    // Simulate error when refreshing the source credential.
+    mockTokenServerTransportFactory.transport.setError(new IOException());
+
+    GoogleCredentials sourceCredentials =
+        getServiceAccountSourceCredentials(mockTokenServerTransportFactory);
+
+    ClientSideCredentialAccessBoundaryFactory factory =
+        ClientSideCredentialAccessBoundaryFactory.newBuilder()
+            .setSourceCredential(sourceCredentials)
+            .setHttpTransportFactory(mockStsTransportFactory)
+            .build();
+
+    try {
+      factory.refreshCredentialsIfRequired(); // Expecting an IOException
+      fail("Should fail as the source credential should not be able to be refreshed.");
+    } catch (IOException e) {
+      assertEquals("Unable to refresh the provided source credential.", e.getMessage());
+    }
+  }
+
   // Tests related to the builder methods
   @Test
   public void builder_noSourceCredential_throws() {

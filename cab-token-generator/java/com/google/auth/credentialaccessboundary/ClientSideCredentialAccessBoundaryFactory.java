@@ -123,29 +123,26 @@ public class ClientSideCredentialAccessBoundaryFactory {
     switch (refreshType) {
       case BLOCKING:
         if (refreshTask.isNew) {
-          // Execute the new refresh task synchronously on a direct executor.
-          // This blocks until the refresh is complete.
+          // Start a new refresh task only if the task is new
           MoreExecutors.directExecutor().execute(refreshTask.task);
-        } else {
-          // A refresh is already in progress, wait for it to complete.
-          try {
-            refreshTask.task.get();
-          } catch (InterruptedException e) {
-            // Restore the interrupted status and throw an exception.
-            Thread.currentThread().interrupt();
-            throw new IOException(
-                "Interrupted while asynchronously refreshing the intermediate credentials", e);
-          } catch (ExecutionException e) {
-            // Unwrap the underlying cause of the execution exception.
-            Throwable cause = e.getCause();
-            if (cause instanceof IOException) {
-              throw (IOException) cause;
-            } else if (cause instanceof RuntimeException) {
-              throw (RuntimeException) cause;
-            } else {
-              // Wrap other exceptions in an IOException.
-              throw new IOException("Unexpected error refreshing intermediate credentials", cause);
-            }
+        }
+        try {
+          refreshTask.task.get(); // Wait for the refresh task to complete.
+        } catch (InterruptedException e) {
+          // Restore the interrupted status and throw an exception.
+          Thread.currentThread().interrupt();
+          throw new IOException(
+              "Interrupted while asynchronously refreshing the intermediate credentials", e);
+        } catch (ExecutionException e) {
+          // Unwrap the underlying cause of the execution exception.
+          Throwable cause = e.getCause();
+          if (cause instanceof IOException) {
+            throw (IOException) cause;
+          } else if (cause instanceof RuntimeException) {
+            throw (RuntimeException) cause;
+          } else {
+            // Wrap other exceptions in an IOException.
+            throw new IOException("Unexpected error refreshing intermediate credentials", cause);
           }
         }
         break;
@@ -296,12 +293,11 @@ public class ClientSideCredentialAccessBoundaryFactory {
    * exceptions during the refresh are caught and suppressed to prevent indefinite blocking of
    * subsequent refresh attempts.
    */
-  private void finishRefreshTask(ListenableFuture<IntermediateCredentials> finishedTask) {
+  private void finishRefreshTask(ListenableFuture<IntermediateCredentials> finishedTask)
+      throws ExecutionException {
     synchronized (refreshLock) {
       try {
         this.intermediateCredentials = Futures.getDone(finishedTask);
-      } catch (Exception e) {
-        // noop
       } finally {
         if (this.refreshTask != null && this.refreshTask.task == finishedTask) {
           this.refreshTask = null;
@@ -372,7 +368,16 @@ public class ClientSideCredentialAccessBoundaryFactory {
       this.isNew = isNew;
 
       // Add listener to update factory's credentials when the task completes.
-      task.addListener(() -> finishRefreshTask(task), MoreExecutors.directExecutor());
+      task.addListener(
+          () -> {
+            try {
+              finishRefreshTask(task);
+            } catch (ExecutionException e) {
+              Throwable cause = e.getCause();
+              RefreshTask.this.setException(cause);
+            }
+          },
+          MoreExecutors.directExecutor());
 
       // Add callback to set the result or exception based on the outcome.
       Futures.addCallback(
