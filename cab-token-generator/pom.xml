@@ -64,6 +64,10 @@
       <groupId>dev.cel</groupId>
       <artifactId>cel</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>jsr305</artifactId>
+    </dependency>
   </dependencies>
 
 </project>
