@@ -215,6 +215,18 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void buildTokenUrl_nullTransport_nullBindingEnforcement() {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder()
+            .setAuthTransport(null)
+            .setBindingEnforcement(null)
+            .build();
+    String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
+
+    assertEquals(TOKEN_URL, softBoundTokenUrl);
+  }
+
+  @Test
   public void buildTokenUrlSoftMtlsBound_mtls_transport() {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder()
