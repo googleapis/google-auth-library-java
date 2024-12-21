@@ -189,7 +189,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
       scopeList.removeAll(Arrays.asList("", null));
       this.scopes = ImmutableSet.<String>copyOf(scopeList);
     }
-    this.transport = builder.getTransport();
+    this.transport = builder.getAuthTransport();
     this.bindingEnforcement = builder.getBindingEnforcement();
   }
 
@@ -735,12 +735,22 @@ public class ComputeEngineCredentials extends GoogleCredentials
       return this;
     }
 
+    /**
+     * Set the {@code AuthTransport} type.
+     * 
+     * @param transport the transport type over which to authenticate to Google APIs
+     */
     @CanIgnoreReturnValue
-    public Builder setTransport(AuthTransport transport) {
+    public Builder setAuthTransport(AuthTransport transport) {
       this.transport = transport;
       return this;
     }
 
+    /**
+     * Set the {@code BindingEnforcement} type.
+     * 
+     * @param bindingEnforcement the token binding enforcement policy.
+     */
     @CanIgnoreReturnValue
     public Builder setBindingEnforcement(BindingEnforcement bindingEnforcement) {
       this.bindingEnforcement = bindingEnforcement;
@@ -759,10 +769,20 @@ public class ComputeEngineCredentials extends GoogleCredentials
       return defaultScopes;
     }
 
-    public AuthTransport getTransport() {
+    /**
+     * Get the {@code AuthTransport} type.
+     * 
+     * @return the transport type over which to authenticate to Google APIs
+     */
+    public AuthTransport getAuthTransport() {
       return transport;
     }
 
+    /**
+     * Get the {@code BindingEnforcement} type.
+     * 
+     * @return the token binding enforcement policy.
+     */
     public BindingEnforcement getBindingEnforcement() {
       return bindingEnforcement;
     }

@@ -194,7 +194,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   public void buildTokenUrl_nullTransport() {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder()
-            .setTransport(null)
+            .setAuthTransport(null)
             .setBindingEnforcement(ComputeEngineCredentials.BindingEnforcement.ON)
             .build();
     String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
@@ -206,7 +206,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   public void buildTokenUrl_nullBindingEnforcement() {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder()
-            .setTransport(ComputeEngineCredentials.AuthTransport.MTLS)
+            .setAuthTransport(ComputeEngineCredentials.AuthTransport.MTLS)
             .setBindingEnforcement(null)
             .build();
     String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
@@ -218,7 +218,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   public void buildTokenUrlSoftMtlsBound_mtls_transport() {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder()
-            .setTransport(ComputeEngineCredentials.AuthTransport.MTLS)
+            .setAuthTransport(ComputeEngineCredentials.AuthTransport.MTLS)
             .build();
     String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
 
@@ -240,7 +240,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   public void buildTokenUrlSoftMtlsBound_mtls_transport_iam_enforcement() {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder()
-            .setTransport(ComputeEngineCredentials.AuthTransport.MTLS)
+            .setAuthTransport(ComputeEngineCredentials.AuthTransport.MTLS)
             .setBindingEnforcement(ComputeEngineCredentials.BindingEnforcement.IAM_POLICY)
             .build();
     String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
@@ -263,7 +263,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   public void buildTokenUrlHardMtlsBound_mtls_transport_always_enforced() {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder()
-            .setTransport(ComputeEngineCredentials.AuthTransport.MTLS)
+            .setAuthTransport(ComputeEngineCredentials.AuthTransport.MTLS)
             .setBindingEnforcement(ComputeEngineCredentials.BindingEnforcement.ON)
             .build();
     String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
@@ -275,7 +275,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   public void buildTokenUrlHardDirectPathBound_alts_transport() {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder()
-            .setTransport(ComputeEngineCredentials.AuthTransport.ALTS)
+            .setAuthTransport(ComputeEngineCredentials.AuthTransport.ALTS)
             .build();
     String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
 
