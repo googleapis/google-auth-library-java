@@ -130,7 +130,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
     // Binding enforcement will always happen, irrespective of the IAM policy.
     ON("on"),
     // Binding enforcement will depend on IAM policy.
-    IAMPOLICY("iam-policy");
+    IAM_POLICY("iam-policy");
 
     private final String label;
 
