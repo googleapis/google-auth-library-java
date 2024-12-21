@@ -194,7 +194,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   public void buildTokenUrl_nullTransport() {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder()
-            .setAuthTransport(null)
+            .setGoogleAuthTransport(null)
             .setBindingEnforcement(ComputeEngineCredentials.BindingEnforcement.ON)
             .build();
     String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
@@ -206,7 +206,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   public void buildTokenUrl_nullBindingEnforcement() {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder()
-            .setAuthTransport(ComputeEngineCredentials.AuthTransport.MTLS)
+            .setGoogleAuthTransport(ComputeEngineCredentials.GoogleAuthTransport.MTLS)
             .setBindingEnforcement(null)
             .build();
     String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
@@ -218,7 +218,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   public void buildTokenUrl_nullTransport_nullBindingEnforcement() {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder()
-            .setAuthTransport(null)
+            .setGoogleAuthTransport(null)
             .setBindingEnforcement(null)
             .build();
     String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
@@ -230,7 +230,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   public void buildTokenUrlSoftMtlsBound_mtls_transport() {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder()
-            .setAuthTransport(ComputeEngineCredentials.AuthTransport.MTLS)
+            .setGoogleAuthTransport(ComputeEngineCredentials.GoogleAuthTransport.MTLS)
             .build();
     String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
 
@@ -252,7 +252,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   public void buildTokenUrlSoftMtlsBound_mtls_transport_iam_enforcement() {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder()
-            .setAuthTransport(ComputeEngineCredentials.AuthTransport.MTLS)
+            .setGoogleAuthTransport(ComputeEngineCredentials.GoogleAuthTransport.MTLS)
             .setBindingEnforcement(ComputeEngineCredentials.BindingEnforcement.IAM_POLICY)
             .build();
     String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
@@ -275,7 +275,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   public void buildTokenUrlHardMtlsBound_mtls_transport_always_enforced() {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder()
-            .setAuthTransport(ComputeEngineCredentials.AuthTransport.MTLS)
+            .setGoogleAuthTransport(ComputeEngineCredentials.GoogleAuthTransport.MTLS)
             .setBindingEnforcement(ComputeEngineCredentials.BindingEnforcement.ON)
             .build();
     String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
@@ -287,7 +287,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   public void buildTokenUrlHardDirectPathBound_alts_transport() {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder()
-            .setAuthTransport(ComputeEngineCredentials.AuthTransport.ALTS)
+            .setGoogleAuthTransport(ComputeEngineCredentials.GoogleAuthTransport.ALTS)
             .build();
     String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
 

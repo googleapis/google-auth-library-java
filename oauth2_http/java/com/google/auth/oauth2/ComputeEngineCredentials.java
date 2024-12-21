@@ -109,7 +109,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
   static final int MAX_COMPUTE_PING_TRIES = 3;
   static final int COMPUTE_PING_CONNECTION_TIMEOUT_MS = 500;
 
-  public enum AuthTransport {
+  public enum GoogleAuthTransport {
     // Authenticating to Google APIs via DirectPath
     ALTS("alts"),
     // Authenticating to Google APIs via GFE
@@ -117,7 +117,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
     private final String label;
 
-    private AuthTransport(String label) {
+    private GoogleAuthTransport(String label) {
       this.label = label;
     }
 
@@ -156,7 +156,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
   private final Collection<String> scopes;
 
-  private final AuthTransport transport;
+  private final GoogleAuthTransport transport;
   private final BindingEnforcement bindingEnforcement;
 
   private transient HttpTransportFactory transportFactory;
@@ -189,7 +189,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
       scopeList.removeAll(Arrays.asList("", null));
       this.scopes = ImmutableSet.<String>copyOf(scopeList);
     }
-    this.transport = builder.getAuthTransport();
+    this.transport = builder.getGoogleAuthTransport();
     this.bindingEnforcement = builder.getBindingEnforcement();
   }
 
@@ -691,7 +691,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
     private Collection<String> scopes;
     private Collection<String> defaultScopes;
 
-    private AuthTransport transport;
+    private GoogleAuthTransport transport;
     private BindingEnforcement bindingEnforcement;
 
     protected Builder() {
@@ -736,19 +736,19 @@ public class ComputeEngineCredentials extends GoogleCredentials
     }
 
     /**
-     * Set the {@code AuthTransport} type.
-     * 
+     * Set the {@code GoogleAuthTransport} type.
+     *
      * @param transport the transport type over which to authenticate to Google APIs
      */
     @CanIgnoreReturnValue
-    public Builder setAuthTransport(AuthTransport transport) {
+    public Builder setGoogleAuthTransport(GoogleAuthTransport transport) {
       this.transport = transport;
       return this;
     }
 
     /**
      * Set the {@code BindingEnforcement} type.
-     * 
+     *
      * @param bindingEnforcement the token binding enforcement policy.
      */
     @CanIgnoreReturnValue
@@ -770,17 +770,17 @@ public class ComputeEngineCredentials extends GoogleCredentials
     }
 
     /**
-     * Get the {@code AuthTransport} type.
-     * 
+     * Get the {@code GoogleAuthTransport} type.
+     *
      * @return the transport type over which to authenticate to Google APIs
      */
-    public AuthTransport getAuthTransport() {
+    public GoogleAuthTransport getGoogleAuthTransport() {
       return transport;
     }
 
     /**
      * Get the {@code BindingEnforcement} type.
-     * 
+     *
      * @return the token binding enforcement policy.
      */
     public BindingEnforcement getBindingEnforcement() {
