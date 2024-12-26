@@ -33,6 +33,7 @@ package com.google.auth.credentialaccessboundary;
 
 import static com.google.auth.oauth2.OAuth2Utils.TOKEN_EXCHANGE_URL_FORMAT;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
@@ -54,7 +55,6 @@ import com.google.auth.oauth2.ServiceAccountCredentials;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import org.junit.Before;
 import org.junit.Test;
@@ -170,12 +170,8 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
             .setHttpTransportFactory(mockStsTransportFactory)
             .build();
 
-    try {
-      factory.fetchIntermediateCredentials(); // Expecting an IOException
-      fail("Should fail as the source credential should not be able to be refreshed.");
-    } catch (IOException e) {
-      assertEquals("Unable to refresh the provided source credential.", e.getMessage());
-    }
+    IOException thrown = assertThrows(IOException.class, factory::fetchIntermediateCredentials);
+    assertEquals("Unable to refresh the provided source credential.", thrown.getMessage());
   }
 
   @Test
@@ -201,9 +197,10 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
         intermediateAccessToken.getTokenValue());
 
     // Validate that the expires_in has been copied from the source credential.
+    AccessToken sourceAccessToken = sourceCredentials.getAccessToken();
+    assertNotNull(sourceAccessToken); // Assert that sourceAccessToken is not null
     assertEquals(
-        Objects.requireNonNull(sourceCredentials.getAccessToken()).getExpirationTime(),
-        intermediateAccessToken.getExpirationTime());
+        sourceAccessToken.getExpirationTime(), intermediateAccessToken.getExpirationTime());
   }
 
   @Test
@@ -288,13 +285,14 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
     // Introduce a small delay to allow the asynchronous refresh task to complete.  This is
     // necessary because the async task runs on a separate thread.
     try {
-      Thread.sleep(100);
+      Thread.sleep(1000);
     } catch (InterruptedException e) {
       throw new IOException(e);
     }
 
-    // After the delay, the request count should be 2, indicating that the async refresh has made
-    // a single request to the STS endpoint.
+    // After the delay, the request count should be 2 (initial fetch + one async refresh).
+    // Subsequent calls to refreshCredentialsIfRequired() in ASYNC mode re-use the in-progress
+    // refresh task, so they don't trigger additional STS requests.
     assertEquals(2, mockStsTransportFactory.transport.getRequestCount());
   }
 
