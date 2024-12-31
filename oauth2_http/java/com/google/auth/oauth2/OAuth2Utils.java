@@ -256,7 +256,14 @@ public class OAuth2Utils {
     return (Map) value;
   }
 
-  /** Helper to convert from a PKCS#8 String to an RSA private key */
+  /**
+   * Converts a PKCS#8 string to an RSA private key.
+   *
+   * @param privateKeyPkcs8 the PKCS#8 string.
+   * @return the RSA private key.
+   * @throws IOException if the PKCS#8 data is invalid or if an unexpected exception occurs during
+   *     key creation.
+   */
   public static PrivateKey privateKeyFromPkcs8(String privateKeyPkcs8) throws IOException {
     Reader reader = new StringReader(privateKeyPkcs8);
     Section section = PemReader.readFirstSectionAndClose(reader, "PRIVATE KEY");

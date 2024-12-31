@@ -35,7 +35,6 @@ import static com.google.auth.oauth2.OAuth2Utils.TOKEN_EXCHANGE_URL_FORMAT;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -136,8 +135,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
   public void fetchIntermediateCredentials_withCustomUniverseDomain() throws IOException {
     String universeDomain = "foobar";
     GoogleCredentials sourceCredentials =
-        getServiceAccountSourceCredentials(mockTokenServerTransportFactory)
-            .toBuilder()
+        getServiceAccountSourceCredentials(mockTokenServerTransportFactory).toBuilder()
             .setUniverseDomain(universeDomain)
             .build();
 
@@ -360,25 +358,21 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
             .setHttpTransportFactory(mockStsTransportFactory)
             .build();
 
-    try {
-      factory.refreshCredentialsIfRequired(); // Expecting an IOException
-      fail("Should fail as the source credential should not be able to be refreshed.");
-    } catch (IOException e) {
-      assertEquals("Unable to refresh the provided source credential.", e.getMessage());
-    }
+    IOException exception = assertThrows(IOException.class, factory::refreshCredentialsIfRequired);
+    assertEquals("Unable to refresh the provided source credential.", exception.getMessage());
   }
 
   // Tests related to the builder methods
   @Test
   public void builder_noSourceCredential_throws() {
-    try {
-      ClientSideCredentialAccessBoundaryFactory.newBuilder()
-          .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-          .build();
-      fail("Should fail as the source credential is null.");
-    } catch (NullPointerException e) {
-      assertEquals("Source credential must not be null.", e.getMessage());
-    }
+    NullPointerException exception =
+        assertThrows(
+            NullPointerException.class,
+            () ->
+                ClientSideCredentialAccessBoundaryFactory.newBuilder()
+                    .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+                    .build());
+    assertEquals("Source credential must not be null.", exception.getMessage());
   }
 
   @Test
@@ -461,18 +455,17 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
     GoogleCredentials sourceCredentials =
         getServiceAccountSourceCredentials(mockTokenServerTransportFactory);
 
-    try {
-      ClientSideCredentialAccessBoundaryFactory.newBuilder()
-          .setSourceCredential(sourceCredentials)
-          .setUniverseDomain("differentUniverseDomain")
-          .build();
-
-      fail("Should fail with universe domain mismatch.");
-    } catch (IllegalArgumentException e) {
-      assertEquals(
-          "The client side access boundary credential's universe domain must be the same as the source credential.",
-          e.getMessage());
-    }
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                ClientSideCredentialAccessBoundaryFactory.newBuilder()
+                    .setSourceCredential(sourceCredentials)
+                    .setUniverseDomain("differentUniverseDomain")
+                    .build());
+    assertEquals(
+        "The client side access boundary credential's universe domain must be the same as the source credential.",
+        exception.getMessage());
   }
 
   private static GoogleCredentials getServiceAccountSourceCredentials(
@@ -548,6 +541,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
       throws InterruptedException {
     Thread[] threads = new Thread[numThreads];
     CountDownLatch latch = new CountDownLatch(numThreads);
+    long timeoutMillis = 5000; // 5 seconds
 
     // Create and start the threads
     for (int i = 0; i < numThreads; i++) {
@@ -567,7 +561,14 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
       threads[i].start();
     }
     for (Thread thread : threads) {
-      thread.join(); // Wait for each thread to complete
+      thread.join(timeoutMillis); // Wait for each thread to complete
+      if (thread.isAlive()) {
+        thread.interrupt(); // Interrupt the thread if it's still running after the timeout
+        throw new AssertionError(
+            "Thread running refreshCredentialsIfRequired timed out after "
+                + timeoutMillis
+                + " milliseconds.");
+      }
     }
   }
 }
