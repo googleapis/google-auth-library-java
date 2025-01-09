@@ -43,14 +43,14 @@
     <dependency>
       <groupId>com.google.auth</groupId>
       <artifactId>google-auth-library-oauth2-http</artifactId>
-      <version>1.30.0</version>
+      <version>1.30.1</version>
     </dependency>
 
 <!--    IAM dependency-->
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-iam-admin</artifactId>
-      <version>3.49.0</version>
+      <version>3.50.0</version>
     </dependency>
 
 <!--    GCloud dependency-->
