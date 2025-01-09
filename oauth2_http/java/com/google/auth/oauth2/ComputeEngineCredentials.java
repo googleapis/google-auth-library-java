@@ -109,9 +109,6 @@ public class ComputeEngineCredentials extends GoogleCredentials
   static final int MAX_COMPUTE_PING_TRIES = 3;
   static final int COMPUTE_PING_CONNECTION_TIMEOUT_MS = 500;
 
-  // Experimental Feature:
-  //
-
   /**
    * Experimental Feature.
    *
@@ -147,6 +144,15 @@ public class ComputeEngineCredentials extends GoogleCredentials
    * Experimental Feature.
    *
    * <p>{@link BindingEnforcement} specifies how binding info in tokens will be enforced.
+   *
+   * <p>Behavior of setting {@link GoogleAuthTransport} / {@link BindingEnforcement}:
+   *
+   * <p>MTLS-bound token where binding enforcement depends on IAM policy: MTLS / {}, {} /
+   * IAM_POLICY, MTLS / IAM_POLICY
+   *
+   * <p>MTLS-bound token where bindings are always enforced: {} / ON, MTLS / ON
+   *
+   * <p>DirectPath bound token: ALTS / {}
    */
   public enum BindingEnforcement {
     // Binding enforcement will always happen, irrespective of the IAM policy.
