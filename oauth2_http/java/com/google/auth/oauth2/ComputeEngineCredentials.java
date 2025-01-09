@@ -110,16 +110,21 @@ public class ComputeEngineCredentials extends GoogleCredentials
   static final int COMPUTE_PING_CONNECTION_TIMEOUT_MS = 500;
 
   // Experimental Feature:
-  // Behavior of setting {@link GoogleAuthTransport} / {@link BindingEnforcement}:
-  // - MTLS-bound token where binding enforcement depends on IAM policy: MTLS / {}, {} / IAM_POLICY,
-  // MTLS / IAM_POLICY
-  // - MTLS-bound token where bindings are always enforced: {} / ON, MTLS / ON
-  // - DirectPath bound token: ALTS / {}
+  //
 
   /**
    * Experimental Feature.
    *
    * <p>{@link GoogleAuthTransport} specifies how to authenticate to Google APIs.
+   *
+   * <p>Behavior of setting {@link GoogleAuthTransport} / {@link BindingEnforcement}:
+   *
+   * <p>MTLS-bound token where binding enforcement depends on IAM policy: MTLS / {}, {} /
+   * IAM_POLICY, MTLS / IAM_POLICY
+   *
+   * <p>MTLS-bound token where bindings are always enforced: {} / ON, MTLS / ON
+   *
+   * <p>DirectPath bound token: ALTS / {}
    */
   public enum GoogleAuthTransport {
     // Authenticating to Google APIs via DirectPath
