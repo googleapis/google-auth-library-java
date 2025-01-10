@@ -84,6 +84,9 @@ libraryDependencies += "com.google.auth" % "google-auth-library-oauth2-http" % "
 
 ## google-auth-library-oauth2-http
 
+
+Please refer to [authenticate for using client libraries](https://cloud.google.com/docs/authentication/client-libraries) guide for best practices.
+
 ### Application Default Credentials
 
 This library provides an implementation of
