@@ -356,7 +356,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     } catch (IOException ex) {
       // Throwing an IOException would be a breaking change, so wrap it here.
       // This should not happen for this credential type.
-      throw new IllegalStateException("Failed to sign: Error obtaining universe domain", ex);
+      throw new SigningException("Failed to sign: Error obtaining universe domain", ex);
     }
   }
 
