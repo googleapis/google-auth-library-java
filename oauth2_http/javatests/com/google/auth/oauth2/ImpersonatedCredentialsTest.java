@@ -963,8 +963,8 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
-    IllegalStateException exception =
-        assertThrows(IllegalStateException.class, () -> targetCredentials.sign(expectedSignature));
+    SigningException exception =
+        assertThrows(SigningException.class, () -> targetCredentials.sign(expectedSignature));
     assertEquals("Failed to sign: Error obtaining universe domain", exception.getMessage());
   }
 
