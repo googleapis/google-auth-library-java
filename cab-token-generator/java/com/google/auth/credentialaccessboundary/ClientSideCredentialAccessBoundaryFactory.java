@@ -109,7 +109,7 @@ public class ClientSideCredentialAccessBoundaryFactory {
     try {
       AeadConfig.register();
     } catch (GeneralSecurityException e) {
-      throw new IllegalStateException("Error occurred when registering Tink");
+      throw new IllegalStateException("Error occurred when registering Tink", e);
     }
 
     CelOptions options = CelOptions.current().build();
