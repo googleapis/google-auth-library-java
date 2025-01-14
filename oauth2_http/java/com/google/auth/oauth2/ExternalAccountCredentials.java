@@ -39,10 +39,13 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
+import com.google.common.reflect.Reflection;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -402,6 +405,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     String tokenUrl = (String) json.get("token_url");
 
     Map<String, Object> credentialSourceMap = (Map<String, Object>) json.get("credential_source");
+    String awsSecurityCredentialsSupplierClass =
+        (String) json.get("security_credentials_supplier_class");
 
     // Optional params.
     String serviceAccountImpersonationUrl = (String) json.get("service_account_impersonation_url");
@@ -419,20 +424,26 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     }
 
     if (isAwsCredential(credentialSourceMap)) {
-      return AwsCredentials.newBuilder()
-          .setHttpTransportFactory(transportFactory)
-          .setAudience(audience)
-          .setSubjectTokenType(subjectTokenType)
-          .setTokenUrl(tokenUrl)
-          .setTokenInfoUrl(tokenInfoUrl)
-          .setCredentialSource(new AwsCredentialSource(credentialSourceMap))
-          .setServiceAccountImpersonationUrl(serviceAccountImpersonationUrl)
-          .setQuotaProjectId(quotaProjectId)
-          .setClientId(clientId)
-          .setClientSecret(clientSecret)
-          .setServiceAccountImpersonationOptions(impersonationOptionsMap)
-          .setUniverseDomain(universeDomain)
-          .build();
+      AwsCredentials.Builder builder =
+          AwsCredentials.newBuilder()
+              .setHttpTransportFactory(transportFactory)
+              .setAudience(audience)
+              .setSubjectTokenType(subjectTokenType)
+              .setTokenUrl(tokenUrl)
+              .setTokenInfoUrl(tokenInfoUrl)
+              .setServiceAccountImpersonationUrl(serviceAccountImpersonationUrl)
+              .setQuotaProjectId(quotaProjectId)
+              .setClientId(clientId)
+              .setClientSecret(clientSecret)
+              .setServiceAccountImpersonationOptions(impersonationOptionsMap)
+              .setUniverseDomain(universeDomain);
+      if (awsSecurityCredentialsSupplierClass != null) {
+        builder.setAwsSecurityCredentialsSupplier(
+            createAwsSecurityCredentialsSupplierClass(awsSecurityCredentialsSupplierClass));
+      } else {
+        builder.setCredentialSource(new AwsCredentialSource(credentialSourceMap));
+      }
+      return builder.build();
     } else if (isPluggableAuthCredential(credentialSourceMap)) {
       return PluggableAuthCredentials.newBuilder()
           .setHttpTransportFactory(transportFactory)
@@ -465,6 +476,21 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
         .setServiceAccountImpersonationOptions(impersonationOptionsMap)
         .setUniverseDomain(universeDomain)
         .build();
+  }
+
+  private static AwsSecurityCredentialsSupplier createAwsSecurityCredentialsSupplierClass(
+      String awsSecurityCredentialsSupplierClass) {
+    try {
+      return (AwsSecurityCredentialsSupplier)
+          Class.forName(awsSecurityCredentialsSupplierClass).getConstructor().newInstance();
+    } catch (ClassNotFoundException
+        | NoSuchMethodException
+        | InstantiationException
+        | IllegalAccessException
+        | InvocationTargetException e) {
+      throw new IllegalArgumentException(
+          "AwsCredentials can not initialize an AwsSecurityCredentialsSupplier", e);
+    }
   }
 
   private static boolean isPluggableAuthCredential(Map<String, Object> credentialSource) {
@@ -570,7 +596,9 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     return serviceAccountImpersonationUrl;
   }
 
-  /** @return The service account email to be impersonated, if available */
+  /**
+   * @return The service account email to be impersonated, if available
+   */
   @Nullable
   public String getServiceAccountEmail() {
     if (serviceAccountImpersonationUrl == null || serviceAccountImpersonationUrl.isEmpty()) {
