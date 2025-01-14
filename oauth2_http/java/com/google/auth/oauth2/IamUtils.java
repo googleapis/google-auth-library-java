@@ -63,7 +63,7 @@ import java.util.Set;
  */
 class IamUtils {
 
-  // iam credentials endpoints are to be formatted with universe domain and client email
+  // IAM credentials endpoints are to be formatted with universe domain and client email.
   static final String IAM_ID_TOKEN_ENDPOINT_FORMAT =
       "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:generateIdToken";
   static final String IAM_ACCESS_TOKEN_ENDPOINT_FORMAT =
