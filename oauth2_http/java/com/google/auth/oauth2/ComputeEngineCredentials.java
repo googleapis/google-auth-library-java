@@ -95,9 +95,6 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
   static final String DEFAULT_METADATA_SERVER_URL = "http://metadata.google.internal";
 
-  static final String SIGN_BLOB_URL_FORMAT =
-      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
-
   // Note: the explicit `timeout` and `tries` below is a workaround. The underlying
   // issue is that resolving an unknown host on some networks will take
   // 20-30 seconds; making this timeout short fixes the issue, but
@@ -675,11 +672,18 @@ public class ComputeEngineCredentials extends GoogleCredentials
     try {
       String account = getAccount();
       return IamUtils.sign(
-          account, this, transportFactory.create(), toSign, Collections.<String, Object>emptyMap());
+          account,
+          this,
+          this.getUniverseDomain(),
+          transportFactory.create(),
+          toSign,
+          Collections.<String, Object>emptyMap());
     } catch (SigningException ex) {
       throw ex;
     } catch (RuntimeException ex) {
       throw new SigningException("Signing failed", ex);
+    } catch (IOException ex) {
+      throw new SigningException("Failed to sign: Error obtaining universe domain", ex);
     }
   }
 

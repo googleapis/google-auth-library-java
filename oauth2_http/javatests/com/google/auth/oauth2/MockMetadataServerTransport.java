@@ -325,7 +325,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
   protected boolean isSignRequestUrl(String url) {
     return serviceAccountEmail != null
         && url.equals(
-            String.format(ComputeEngineCredentials.SIGN_BLOB_URL_FORMAT, serviceAccountEmail));
+            String.format(
+                IamUtils.IAM_SIGN_BLOB_ENDPOINT_FORMAT, "googleapis.com", serviceAccountEmail));
   }
 
   protected boolean isIdentityDocumentUrl(String url) {
