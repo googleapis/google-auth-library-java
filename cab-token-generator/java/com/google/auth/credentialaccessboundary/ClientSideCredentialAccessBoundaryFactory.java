@@ -134,7 +134,8 @@ public class ClientSideCredentialAccessBoundaryFactory {
    * @return The Client-Side CAB token in an {@link AccessToken} object
    * @throws IOException
    */
-  public AccessToken generateToken(CredentialAccessBoundary accessBoundary) throws IOException {
+  public AccessToken generateToken(CredentialAccessBoundary accessBoundary)
+      throws IOException, CelValidationException, GeneralSecurityException {
     this.refreshCredentialsIfRequired();
 
     String intermediateToken, sessionKey;
@@ -471,7 +472,8 @@ public class ClientSideCredentialAccessBoundaryFactory {
    * Serializes a {@link CredentialAccessBoundary} object into Protobuf wire format.
    */
   private byte[] serializeCredentialAccessBoundary(
-      CredentialAccessBoundary credentialAccessBoundary) throws IOException {
+      CredentialAccessBoundary credentialAccessBoundary)
+      throws CelValidationException {
     List<AccessBoundaryRule> rules =
         credentialAccessBoundary.getAccessBoundaryRules();
     ClientSideAccessBoundary.Builder accessBoundaryBuilder =
@@ -483,6 +485,7 @@ public class ClientSideCredentialAccessBoundaryFactory {
               .addAllAvailablePermissions(rule.getAvailablePermissions())
               .setAvailableResource(rule.getAvailableResource());
 
+      // Availability condition is an optional field from the CredentialAccessBoundary
       if (rule.getAvailabilityCondition() != null) {
         String availabilityCondition =
             rule.getAvailabilityCondition().getExpression();
@@ -498,37 +501,28 @@ public class ClientSideCredentialAccessBoundaryFactory {
   /**
    * Compiles CEL expression from String to an {@link Expr} proto object. 
    */
-  private Expr compileCel(String expr) throws IOException {
-    try {
-      CelAbstractSyntaxTree ast = celCompiler.parse(expr).getAst();
+  private Expr compileCel(String expr) throws CelValidationException {
+    CelAbstractSyntaxTree ast = celCompiler.parse(expr).getAst();
 
-      CelProtoAbstractSyntaxTree astProto =
-          CelProtoAbstractSyntaxTree.fromCelAst(ast);
+    CelProtoAbstractSyntaxTree astProto =
+        CelProtoAbstractSyntaxTree.fromCelAst(ast);
 
-      return astProto.getExpr();
-    } catch (CelValidationException exception) {
-      throw new IOException("Failed to parse CEL expression: " +
-                            exception.getMessage());
-    }
+    return astProto.getExpr();
   }
 
   /**
    * Encrypts the given bytes using a sessionKey using Tink Aead.
    */
-  private byte[] encryptRestrictions(byte[] restriction, String sessionKey) throws InternalError {
-    try {
-      byte[] rawKey = Base64.getDecoder().decode(sessionKey);
+  private byte[] encryptRestrictions(byte[] restriction, String sessionKey) throws GeneralSecurityException {
+    byte[] rawKey = Base64.getDecoder().decode(sessionKey);
 
-      KeysetHandle keysetHandle = TinkProtoKeysetFormat.parseKeyset(
-          rawKey, InsecureSecretKeyAccess.get());
+    KeysetHandle keysetHandle = TinkProtoKeysetFormat.parseKeyset(
+        rawKey, InsecureSecretKeyAccess.get());
 
-      Aead aead =
-          keysetHandle.getPrimitive(RegistryConfiguration.get(), Aead.class);
+    Aead aead =
+        keysetHandle.getPrimitive(RegistryConfiguration.get(), Aead.class);
 
-      return aead.encrypt(restriction, /*associatedData=*/new byte[0]);
-    } catch (GeneralSecurityException exception) {
-      throw new InternalError("Failed to parse keyset: " + exception.getMessage());
-    }
+    return aead.encrypt(restriction, /*associatedData=*/new byte[0]);
   }
 
   public static Builder newBuilder() {

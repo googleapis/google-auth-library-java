@@ -62,6 +62,7 @@ import com.google.crypto.tink.KeysetHandle;
 import com.google.crypto.tink.RegistryConfiguration;
 import com.google.crypto.tink.TinkProtoKeysetFormat;
 
+import dev.cel.common.CelValidationException;
 import dev.cel.expr.Expr;
 
 import java.io.IOException;
@@ -752,7 +753,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
                     .build())
             .build();
 
-    assertThrows(IOException.class,
+    assertThrows(CelValidationException.class,
                  () -> { factory.generateToken(accessBoundary); });
   }
 }
