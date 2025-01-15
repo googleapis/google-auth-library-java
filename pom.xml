@@ -76,6 +76,8 @@
     <project.findbugs.version>3.0.2</project.findbugs.version>
     <deploy.autorelease>false</deploy.autorelease>
     <project.error-prone.version>2.36.0</project.error-prone.version>
+    <project.gson.version>2.11.0</project.gson.version>
+    <project.slf4j.version>2.0.16</project.slf4j.version>
   </properties>
 
   <dependencyManagement>

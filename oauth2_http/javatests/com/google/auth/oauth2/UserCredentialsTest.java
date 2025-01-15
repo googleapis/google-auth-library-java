@@ -70,9 +70,9 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class UserCredentialsTest extends BaseSerializationTest {
 
-  private static final String CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
-  private static final String CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
-  private static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
+  static final String CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
+  static final String CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
+  static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
   private static final String QUOTA_PROJECT = "sample-quota-project-id";
   private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");

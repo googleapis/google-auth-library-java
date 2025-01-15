@@ -243,6 +243,35 @@
       <artifactId>error_prone_annotations</artifactId>
       <scope>compile</scope>
     </dependency>
+
+
+    <!--  TODO: clean up versions  -->
+    <!--  Logging dependencies  -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${project.slf4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>${project.gson.version}</version>
+    </dependency>
+    <!--    Logback  for testing -->
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <!--   Latest version with java8 support   -->
+      <version>1.3.14</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <version>1.3.14</version>
+      <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
