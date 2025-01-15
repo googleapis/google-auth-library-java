@@ -66,6 +66,7 @@ import dev.cel.common.CelValidationException;
 import dev.cel.expr.Expr;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.Map;
@@ -589,7 +590,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
   }
 
   @Test
-  public void generateToken() throws Exception {
+  public void generateToken_withAvailablityCondition_success() throws Exception {
     MockStsTransportFactory transportFactory = new MockStsTransportFactory();
     transportFactory.transport.setReturnAccessBoundarySessionKey(true);
 
@@ -662,7 +663,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
   }
 
   @Test
-  public void generateToken_withoutAvailabilityCondition() throws Exception {
+  public void generateToken_withoutAvailabilityCondition_success() throws Exception {
     MockStsTransportFactory transportFactory = new MockStsTransportFactory();
     transportFactory.transport.setReturnAccessBoundarySessionKey(true);
 
@@ -719,7 +720,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
   }
 
   @Test
-  public void generateToken_withInvalidCelExpression() throws Exception {
+  public void generateToken_withInvalidAvailabilityCondition_failure() throws Exception {
     MockStsTransportFactory transportFactory = new MockStsTransportFactory();
     transportFactory.transport.setReturnAccessBoundarySessionKey(true);
 
@@ -754,6 +755,86 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
             .build();
 
     assertThrows(CelValidationException.class,
+                 () -> { factory.generateToken(accessBoundary); });
+  }
+
+  @Test
+  public void generateToken_withSessionKeyNotBase64Encoded_failure() throws Exception {
+    MockStsTransportFactory transportFactory = new MockStsTransportFactory();
+    transportFactory.transport.setReturnAccessBoundarySessionKey(true);
+    transportFactory.transport.setAccessBoundarySessionKey("invalid_key");
+
+    ClientSideCredentialAccessBoundaryFactory.Builder builder =
+        ClientSideCredentialAccessBoundaryFactory.newBuilder();
+
+    ClientSideCredentialAccessBoundaryFactory factory =
+        builder
+            .setSourceCredential(getServiceAccountSourceCredentials(
+                mockTokenServerTransportFactory))
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    CredentialAccessBoundary.Builder cabBuilder =
+        CredentialAccessBoundary.newBuilder();
+    CredentialAccessBoundary accessBoundary =
+        cabBuilder
+            .addRule(
+                CredentialAccessBoundary.AccessBoundaryRule.newBuilder()
+                    .setAvailableResource("//storage.googleapis.com/projects/"
+                                          + "_/buckets/example-bucket")
+                    .setAvailablePermissions(
+                        ImmutableList.of("inRole:roles/storage.objectViewer"))
+                    .setAvailabilityCondition(
+                        CredentialAccessBoundary.AccessBoundaryRule
+                            .AvailabilityCondition.newBuilder()
+                            .setExpression(
+                                "resource.name.startsWith('projects/_/"
+                                + "buckets/example-bucket/objects/customer-a')")
+                            .build())
+                    .build())
+            .build();
+
+    assertThrows(IllegalArgumentException.class,
+                 () -> { factory.generateToken(accessBoundary); });
+  }
+
+  @Test
+  public void generateToken_withMalformSessionKey_failure() throws Exception {
+    MockStsTransportFactory transportFactory = new MockStsTransportFactory();
+    transportFactory.transport.setReturnAccessBoundarySessionKey(true);
+    transportFactory.transport.setAccessBoundarySessionKey("aW52YWxpZF9rZXk=");
+
+    ClientSideCredentialAccessBoundaryFactory.Builder builder =
+        ClientSideCredentialAccessBoundaryFactory.newBuilder();
+
+    ClientSideCredentialAccessBoundaryFactory factory =
+        builder
+            .setSourceCredential(getServiceAccountSourceCredentials(
+                mockTokenServerTransportFactory))
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    CredentialAccessBoundary.Builder cabBuilder =
+        CredentialAccessBoundary.newBuilder();
+    CredentialAccessBoundary accessBoundary =
+        cabBuilder
+            .addRule(
+                CredentialAccessBoundary.AccessBoundaryRule.newBuilder()
+                    .setAvailableResource("//storage.googleapis.com/projects/"
+                                          + "_/buckets/example-bucket")
+                    .setAvailablePermissions(
+                        ImmutableList.of("inRole:roles/storage.objectViewer"))
+                    .setAvailabilityCondition(
+                        CredentialAccessBoundary.AccessBoundaryRule
+                            .AvailabilityCondition.newBuilder()
+                            .setExpression(
+                                "resource.name.startsWith('projects/_/"
+                                + "buckets/example-bucket/objects/customer-a')")
+                            .build())
+                    .build())
+            .build();
+
+    assertThrows(GeneralSecurityException.class,
                  () -> { factory.generateToken(accessBoundary); });
   }
 }

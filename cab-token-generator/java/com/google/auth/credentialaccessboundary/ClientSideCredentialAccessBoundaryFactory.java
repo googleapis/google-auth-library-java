@@ -486,6 +486,7 @@ public class ClientSideCredentialAccessBoundaryFactory {
               .setAvailableResource(rule.getAvailableResource());
 
       // Availability condition is an optional field from the CredentialAccessBoundary
+      // CEL compliation is only performed if there is a non-empty availablity condition.
       if (rule.getAvailabilityCondition() != null) {
         String availabilityCondition =
             rule.getAvailabilityCondition().getExpression();
@@ -522,6 +523,8 @@ public class ClientSideCredentialAccessBoundaryFactory {
     Aead aead =
         keysetHandle.getPrimitive(RegistryConfiguration.get(), Aead.class);
 
+    // For Client-Side CAB token encryption, empty associated data is expected.
+    // Tink requires a byte[0] to be passed for this case.
     return aead.encrypt(restriction, /*associatedData=*/new byte[0]);
   }
 

@@ -76,6 +76,7 @@ public final class MockStsTransport extends MockHttpTransport {
 
   private boolean returnExpiresIn = true;
   private boolean returnAccessBoundarySessionKey = false;
+  private String accessBoundarySessionKey = ACCESS_BOUNDARY_SESSION_KEY_VALUE;
   private MockLowLevelHttpRequest request;
   private int requestCount = 0;
 
@@ -142,7 +143,7 @@ public final class MockStsTransport extends MockHttpTransport {
             }
 
             if (returnAccessBoundarySessionKey) {
-              response.put("access_boundary_session_key", ACCESS_BOUNDARY_SESSION_KEY_VALUE);
+              response.put("access_boundary_session_key", accessBoundarySessionKey);
             }
 
             return new MockLowLevelHttpResponse()
@@ -187,6 +188,10 @@ public final class MockStsTransport extends MockHttpTransport {
 
   public void setReturnExpiresIn(boolean returnExpiresIn) {
     this.returnExpiresIn = returnExpiresIn;
+  }
+
+  public void setAccessBoundarySessionKey(String accessBoundarySessionKey) {
+    this.accessBoundarySessionKey = accessBoundarySessionKey;
   }
 
   public void setReturnAccessBoundarySessionKey(boolean returnAccessBoundarySessionKey) {
