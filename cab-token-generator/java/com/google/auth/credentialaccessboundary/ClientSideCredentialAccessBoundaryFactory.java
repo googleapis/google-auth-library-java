@@ -473,7 +473,8 @@ public class ClientSideCredentialAccessBoundaryFactory {
   /**
    * Serializes a {@link CredentialAccessBoundary} object into Protobuf wire format.
    */
-  private byte[] serializeCredentialAccessBoundary(
+  @VisibleForTesting
+  byte[] serializeCredentialAccessBoundary(
       CredentialAccessBoundary credentialAccessBoundary)
       throws CelValidationException {
     List<AccessBoundaryRule> rules =

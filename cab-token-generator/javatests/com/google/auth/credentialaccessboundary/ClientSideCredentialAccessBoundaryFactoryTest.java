@@ -33,6 +33,7 @@ package com.google.auth.credentialaccessboundary;
 
 import static com.google.auth.oauth2.OAuth2Utils.TOKEN_EXCHANGE_URL_FORMAT;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -589,6 +590,40 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
     }
   }
 
+  private static class CabToken {
+    String intermediateToken;
+    String encryptedRestriction;
+
+    CabToken(String intermediateToken, String encryptedRestriction) {
+      this.intermediateToken = intermediateToken;
+      this.encryptedRestriction = encryptedRestriction;
+    }
+  }
+
+  private static CabToken parseCabToken(AccessToken token) throws Exception {
+    String[] parts = token.getTokenValue().split("\\.");
+    assertEquals(parts.length, 2);
+
+    return new CabToken(parts[0], parts[1]);
+  }
+
+  private static ClientSideAccessBoundary decryptRestriction(String restriction,
+                                                             String sessionKey)
+      throws Exception {
+    byte[] rawKey = Base64.getDecoder().decode(sessionKey);
+
+    KeysetHandle keysetHandle = TinkProtoKeysetFormat.parseKeyset(
+        rawKey, InsecureSecretKeyAccess.get());
+
+    Aead aead =
+        keysetHandle.getPrimitive(RegistryConfiguration.get(), Aead.class);
+    byte[] rawRestrictions =
+        aead.decrypt(Base64.getUrlDecoder().decode(restriction),
+                     /*associatedData=*/new byte[0]);
+
+    return ClientSideAccessBoundary.parseFrom(rawRestrictions);
+  }
+
   @Test
   public void generateToken_withAvailablityCondition_success() throws Exception {
     MockStsTransportFactory transportFactory = new MockStsTransportFactory();
@@ -610,56 +645,42 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
         cabBuilder
             .addRule(
                 CredentialAccessBoundary.AccessBoundaryRule.newBuilder()
-                    .setAvailableResource("//storage.googleapis.com/projects/"
-                                          + "_/buckets/example-bucket")
-                    .setAvailablePermissions(
-                        ImmutableList.of("inRole:roles/storage.objectViewer"))
+                    .setAvailableResource("resource")
+                    .setAvailablePermissions(ImmutableList.of("role1", "role2"))
                     .setAvailabilityCondition(
                         CredentialAccessBoundary.AccessBoundaryRule
                             .AvailabilityCondition.newBuilder()
-                            .setExpression(
-                                "resource.name.startsWith('projects/_/"
-                                + "buckets/example-bucket/objects/customer-a')")
+                            .setExpression("a == b")
                             .build())
                     .build())
             .build();
 
     AccessToken token = factory.generateToken(accessBoundary);
 
-    String[] parts = token.getTokenValue().split("\\.");
-    assertEquals(parts.length, 2);
-    assertEquals(parts[0], "accessToken");
+    CabToken cabToken = parseCabToken(token);
+    assertEquals(cabToken.intermediateToken, "accessToken");
 
-    byte[] rawKey = Base64.getDecoder().decode(
+    // Checks the encrypted restriction is the correct proto format of the
+    // CredentialAccessBoundary
+    ClientSideAccessBoundary clientSideAccessBoundary = decryptRestriction(
+        cabToken.encryptedRestriction,
         transportFactory.transport.getAccessBoundarySessionKey());
-
-    KeysetHandle keysetHandle = TinkProtoKeysetFormat.parseKeyset(
-        rawKey, InsecureSecretKeyAccess.get());
-
-    Aead aead =
-        keysetHandle.getPrimitive(RegistryConfiguration.get(), Aead.class);
-    byte[] rawRestrictions =
-        aead.decrypt(Base64.getUrlDecoder().decode(parts[1]), new byte[0]);
-    ClientSideAccessBoundary clientSideAccessBoundary =
-        ClientSideAccessBoundary.parseFrom(rawRestrictions);
     assertEquals(clientSideAccessBoundary.getAccessBoundaryRulesCount(), 1);
+
     ClientSideAccessBoundaryRule rule =
         clientSideAccessBoundary.getAccessBoundaryRules(0);
-    assertEquals(rule.getAvailableResource(),
-                 "//storage.googleapis.com/projects/_/buckets/example-bucket");
-    assertEquals(rule.getAvailablePermissions(0),
-                 "inRole:roles/storage.objectViewer");
+
+    // Available resource and available permission should be the exact same as
+    // in original format
+    assertEquals(rule.getAvailableResource(), "resource");
+    assertEquals(rule.getAvailablePermissionsList(),
+                 ImmutableList.of("role1", "role2"));
+
+    // Availablity condition should be in the correct compiled proto format
     Expr expr = rule.getCompiledAvailabilityCondition();
-    assertEquals(expr.getCallExpr()
-                     .getTarget()
-                     .getSelectExpr()
-                     .getOperand()
-                     .getIdentExpr()
-                     .getName(),
-                 "resource");
-    assertEquals(expr.getCallExpr().getFunction(), "startsWith");
-    assertEquals(expr.getCallExpr().getArgs(0).getConstExpr().getStringValue(),
-                 "projects/_/buckets/example-bucket/objects/customer-a");
+    assertEquals(expr.getCallExpr().getFunction(), "_==_");
+    assertEquals(expr.getCallExpr().getArgs(0).getIdentExpr().getName(), "a");
+    assertEquals(expr.getCallExpr().getArgs(1).getIdentExpr().getName(), "b");
   }
 
   @Test
@@ -681,42 +702,102 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
         CredentialAccessBoundary.newBuilder();
     CredentialAccessBoundary accessBoundary =
         cabBuilder
-            .addRule(
-                CredentialAccessBoundary.AccessBoundaryRule.newBuilder()
-                    .setAvailableResource("//storage.googleapis.com/projects/"
-                                          + "_/buckets/example-bucket")
-                    .setAvailablePermissions(
-                        ImmutableList.of("inRole:roles/storage.objectViewer"))
-                    .build())
+            .addRule(CredentialAccessBoundary.AccessBoundaryRule.newBuilder()
+                         .setAvailableResource("resource")
+                         .setAvailablePermissions(ImmutableList.of("role"))
+                         .build())
             .build();
 
     AccessToken token = factory.generateToken(accessBoundary);
 
-    String[] parts = token.getTokenValue().split("\\.");
-    assertEquals(parts.length, 2);
-    assertEquals(parts[0], "accessToken");
+    CabToken cabToken = parseCabToken(token);
+    assertEquals(cabToken.intermediateToken, "accessToken");
 
-    byte[] rawKey = Base64.getDecoder().decode(
+    // Checks the encrypted restriction is the correct proto format of the
+    // CredentialAccessBoundary
+    ClientSideAccessBoundary clientSideAccessBoundary = decryptRestriction(
+        cabToken.encryptedRestriction,
         transportFactory.transport.getAccessBoundarySessionKey());
-
-    KeysetHandle keysetHandle = TinkProtoKeysetFormat.parseKeyset(
-        rawKey, InsecureSecretKeyAccess.get());
-
-    Aead aead =
-        keysetHandle.getPrimitive(RegistryConfiguration.get(), Aead.class);
-    byte[] rawRestrictions =
-        aead.decrypt(Base64.getUrlDecoder().decode(parts[1]), new byte[0]);
-    ClientSideAccessBoundary clientSideAccessBoundary =
-        ClientSideAccessBoundary.parseFrom(rawRestrictions);
     assertEquals(clientSideAccessBoundary.getAccessBoundaryRulesCount(), 1);
+
     ClientSideAccessBoundaryRule rule =
         clientSideAccessBoundary.getAccessBoundaryRules(0);
-    assertEquals(rule.getAvailableResource(),
-                 "//storage.googleapis.com/projects/_/buckets/example-bucket");
-    assertEquals(rule.getAvailablePermissions(0),
-                 "inRole:roles/storage.objectViewer");
-    assertTrue(rule.getCompiledAvailabilityCondition().equals(
-        Expr.getDefaultInstance()));
+
+    // Available resource and available permission should be the exact same as
+    // in original format
+    assertEquals(rule.getAvailableResource(), "resource");
+    assertEquals(rule.getAvailablePermissionsList(), ImmutableList.of("role"));
+
+    // Availablity condition should be empty since it's not provided
+    assertFalse(rule.hasCompiledAvailabilityCondition());
+  }
+
+  @Test
+  public void generateToken_withMultipleRules_success() throws Exception {
+    MockStsTransportFactory transportFactory = new MockStsTransportFactory();
+    transportFactory.transport.setReturnAccessBoundarySessionKey(true);
+
+    ClientSideCredentialAccessBoundaryFactory.Builder builder =
+        ClientSideCredentialAccessBoundaryFactory.newBuilder();
+
+    ClientSideCredentialAccessBoundaryFactory factory =
+        builder
+            .setSourceCredential(getServiceAccountSourceCredentials(
+                mockTokenServerTransportFactory))
+            .setHttpTransportFactory(transportFactory)
+            .build();
+
+    CredentialAccessBoundary.Builder cabBuilder =
+        CredentialAccessBoundary.newBuilder();
+    CredentialAccessBoundary accessBoundary =
+        cabBuilder
+            .addRule(CredentialAccessBoundary.AccessBoundaryRule.newBuilder()
+                         .setAvailableResource("resource1")
+                         .setAvailablePermissions(
+                             ImmutableList.of("role1-1", "role1-2"))
+                         .setAvailabilityCondition(
+                             CredentialAccessBoundary.AccessBoundaryRule
+                                 .AvailabilityCondition.newBuilder()
+                                 .setExpression("a == b")
+                                 .build())
+                         .build())
+            .addRule(CredentialAccessBoundary.AccessBoundaryRule.newBuilder()
+                         .setAvailableResource("resource")
+                         .setAvailablePermissions(ImmutableList.of("role2"))
+                         .build())
+            .build();
+
+    AccessToken token = factory.generateToken(accessBoundary);
+
+    CabToken cabToken = parseCabToken(token);
+    assertEquals(cabToken.intermediateToken, "accessToken");
+
+    // Checks the encrypted restriction is the correct proto format of the
+    // CredentialAccessBoundary
+    ClientSideAccessBoundary clientSideAccessBoundary = decryptRestriction(
+        cabToken.encryptedRestriction,
+        transportFactory.transport.getAccessBoundarySessionKey());
+    assertEquals(clientSideAccessBoundary.getAccessBoundaryRulesCount(), 2);
+
+    // Checks the first rule
+    ClientSideAccessBoundaryRule rule1 =
+        clientSideAccessBoundary.getAccessBoundaryRules(0);
+    assertEquals(rule1.getAvailableResource(), "resource1");
+    assertEquals(rule1.getAvailablePermissionsList(),
+                 ImmutableList.of("role1-1", "role1-2"));
+
+    Expr expr = rule1.getCompiledAvailabilityCondition();
+    assertEquals(expr.getCallExpr().getFunction(), "_==_");
+    assertEquals(expr.getCallExpr().getArgs(0).getIdentExpr().getName(), "a");
+    assertEquals(expr.getCallExpr().getArgs(1).getIdentExpr().getName(), "b");
+
+    // Checks the second rule
+    ClientSideAccessBoundaryRule rule2 =
+        clientSideAccessBoundary.getAccessBoundaryRules(1);
+    assertEquals(rule2.getAvailableResource(), "resource");
+    assertEquals(rule2.getAvailablePermissionsList(),
+                 ImmutableList.of("role2"));
+    assertFalse(rule2.hasCompiledAvailabilityCondition());
   }
 
   @Test
@@ -738,20 +819,21 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
         CredentialAccessBoundary.newBuilder();
     CredentialAccessBoundary accessBoundary =
         cabBuilder
-            .addRule(
-                CredentialAccessBoundary.AccessBoundaryRule.newBuilder()
-                    .setAvailableResource("//storage.googleapis.com/projects/"
-                                          + "_/buckets/example-bucket")
-                    .setAvailablePermissions(
-                        ImmutableList.of("inRole:roles/storage.objectViewer"))
-                    .setAvailabilityCondition(
-                        CredentialAccessBoundary.AccessBoundaryRule
-                            .AvailabilityCondition.newBuilder()
-                            .setExpression(
-                                "resource.name.startsWith('projects/_/"
-                                + "buckets/example-bucket/objects/customer-a'")
-                            .build())
-                    .build())
+            .addRule(CredentialAccessBoundary.AccessBoundaryRule.newBuilder()
+                         .setAvailableResource(
+                             "//storage.googleapis.com/projects/"
+                             + "_/buckets/example-bucket")
+                         .setAvailablePermissions(ImmutableList.of(
+                             "inRole:roles/storage.objectViewer"))
+                         .setAvailabilityCondition(
+                             CredentialAccessBoundary.AccessBoundaryRule
+                                 .AvailabilityCondition.newBuilder()
+                                 .setExpression(
+                                     "resource.name.startsWith('projects/_/"
+                                     + "buckets/example-bucket/objects/" +
+                                       "customer-a'") // No closing bracket
+                                 .build())
+                         .build())
             .build();
 
     assertThrows(CelValidationException.class,
