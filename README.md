@@ -60,7 +60,7 @@ If you are using Maven, add this to your pom.xml file (notice that you can repla
 <dependency>
   <groupId>com.google.auth</groupId>
   <artifactId>google-auth-library-oauth2-http</artifactId>
-  <version>1.19.0</version>
+  <version>1.31.0</version>
 </dependency>
 ```
 [//]: # ({x-version-update-end})
@@ -70,7 +70,7 @@ If you are using Gradle, add this to your dependencies
 
 [//]: # ({x-version-update-start:google-auth-library-oauth2-http:released})
 ```Groovy
-implementation 'com.google.auth:google-auth-library-oauth2-http:1.19.0'
+implementation 'com.google.auth:google-auth-library-oauth2-http:1.31.0'
 ```
 [//]: # ({x-version-update-end})
 
@@ -78,7 +78,7 @@ If you are using SBT, add this to your dependencies
 
 [//]: # ({x-version-update-start:google-auth-library-oauth2-http:released})
 ```Scala
-libraryDependencies += "com.google.auth" % "google-auth-library-oauth2-http" % "1.19.0"
+libraryDependencies += "com.google.auth" % "google-auth-library-oauth2-http" % "1.31.0"
 ```
 [//]: # ({x-version-update-end})
 
