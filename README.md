@@ -16,6 +16,11 @@ credentials. This artifact depends on the App Engine SDK.
 - [*google-auth-library-oauth2-http*](#google-auth-library-oauth2-http): contains a wide variety of
 credentials as well as utility methods to create them and to get Application Default Credentials
 
+> ⚠️ Important: If you accept a credential configuration (credential JSON/File/Stream) from an external source for
+authentication to Google Cloud Platform, you must validate it before providing it to any Google API or library. Providing
+an unvalidated credential configuration to Google APIs can compromise the security of your systems and data. For more
+information, refer to [documentation](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
+
 **Table of contents:**
 
 
