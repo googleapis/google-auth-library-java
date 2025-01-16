@@ -71,13 +71,13 @@ import dev.cel.compiler.CelCompiler;
 import dev.cel.compiler.CelCompilerFactory;
 import dev.cel.expr.Expr;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.time.Duration;
+import java.util.Base64;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
-import java.util.Base64;
-import java.util.List;
-import java.security.GeneralSecurityException;
 
 public class ClientSideCredentialAccessBoundaryFactory {
   static final Duration DEFAULT_REFRESH_MARGIN = Duration.ofMinutes(30);
@@ -113,10 +113,7 @@ public class ClientSideCredentialAccessBoundaryFactory {
     }
 
     CelOptions options = CelOptions.current().build();
-    this.celCompiler = CelCompilerFactory
-      .standardCelCompilerBuilder()
-      .setOptions(options)
-      .build();
+    this.celCompiler = CelCompilerFactory.standardCelCompilerBuilder().setOptions(options).build();
 
     this.refreshMargin =
         builder.refreshMargin != null ? builder.refreshMargin : DEFAULT_REFRESH_MARGIN;
@@ -129,7 +126,7 @@ public class ClientSideCredentialAccessBoundaryFactory {
 
   /**
    * Generates a Client-Side CAB token given the {@link CredentialAccessBoundary}.
-   * 
+   *
    * @param accessBoundary
    * @return The Client-Side CAB token in an {@link AccessToken} object
    * @throws IOException If an I/O error occurs while refrehsing the source credentials
@@ -144,23 +141,18 @@ public class ClientSideCredentialAccessBoundaryFactory {
     Date intermediateTokenExpirationTime;
 
     synchronized (refreshLock) {
-      intermediateToken =
-          this.intermediateCredentials.intermediateAccessToken.getTokenValue();
+      intermediateToken = this.intermediateCredentials.intermediateAccessToken.getTokenValue();
       intermediateTokenExpirationTime =
-          this.intermediateCredentials.intermediateAccessToken
-              .getExpirationTime();
+          this.intermediateCredentials.intermediateAccessToken.getExpirationTime();
       sessionKey = this.intermediateCredentials.accessBoundarySessionKey;
     }
 
-    byte[] rawRestrictions =
-        this.serializeCredentialAccessBoundary(accessBoundary);
+    byte[] rawRestrictions = this.serializeCredentialAccessBoundary(accessBoundary);
 
-    byte[] encryptedRestrictions =
-        this.encryptRestrictions(rawRestrictions, sessionKey);
+    byte[] encryptedRestrictions = this.encryptRestrictions(rawRestrictions, sessionKey);
 
     String tokenValue =
-        intermediateToken + "." +
-        Base64.getUrlEncoder().encodeToString(encryptedRestrictions);
+        intermediateToken + "." + Base64.getUrlEncoder().encodeToString(encryptedRestrictions);
 
     return new AccessToken(tokenValue, intermediateTokenExpirationTime);
   }
@@ -470,29 +462,24 @@ public class ClientSideCredentialAccessBoundaryFactory {
     }
   }
 
-  /**
-   * Serializes a {@link CredentialAccessBoundary} object into Protobuf wire format.
-   */
+  /** Serializes a {@link CredentialAccessBoundary} object into Protobuf wire format. */
   @VisibleForTesting
-  byte[] serializeCredentialAccessBoundary(
-      CredentialAccessBoundary credentialAccessBoundary)
+  byte[] serializeCredentialAccessBoundary(CredentialAccessBoundary credentialAccessBoundary)
       throws CelValidationException {
-    List<AccessBoundaryRule> rules =
-        credentialAccessBoundary.getAccessBoundaryRules();
-    ClientSideAccessBoundary.Builder accessBoundaryBuilder =
-        ClientSideAccessBoundary.newBuilder();
+    List<AccessBoundaryRule> rules = credentialAccessBoundary.getAccessBoundaryRules();
+    ClientSideAccessBoundary.Builder accessBoundaryBuilder = ClientSideAccessBoundary.newBuilder();
 
     for (AccessBoundaryRule rule : rules) {
       ClientSideAccessBoundaryRule.Builder ruleBuilder =
-          accessBoundaryBuilder.addAccessBoundaryRulesBuilder()
+          accessBoundaryBuilder
+              .addAccessBoundaryRulesBuilder()
               .addAllAvailablePermissions(rule.getAvailablePermissions())
               .setAvailableResource(rule.getAvailableResource());
 
       // Availability condition is an optional field from the CredentialAccessBoundary
       // CEL compliation is only performed if there is a non-empty availablity condition.
       if (rule.getAvailabilityCondition() != null) {
-        String availabilityCondition =
-            rule.getAvailabilityCondition().getExpression();
+        String availabilityCondition = rule.getAvailabilityCondition().getExpression();
 
         Expr availabilityConditionExpr = this.compileCel(availabilityCondition);
         ruleBuilder.setCompiledAvailabilityCondition(availabilityConditionExpr);
@@ -502,22 +489,18 @@ public class ClientSideCredentialAccessBoundaryFactory {
     return accessBoundaryBuilder.build().toByteArray();
   }
 
-  /**
-   * Compiles CEL expression from String to an {@link Expr} proto object. 
-   */
+  /** Compiles CEL expression from String to an {@link Expr} proto object. */
   private Expr compileCel(String expr) throws CelValidationException {
     CelAbstractSyntaxTree ast = celCompiler.parse(expr).getAst();
 
-    CelProtoAbstractSyntaxTree astProto =
-        CelProtoAbstractSyntaxTree.fromCelAst(ast);
+    CelProtoAbstractSyntaxTree astProto = CelProtoAbstractSyntaxTree.fromCelAst(ast);
 
     return astProto.getExpr();
   }
 
-  /**
-   * Encrypts the given bytes using a sessionKey using Tink Aead.
-   */
-  private byte[] encryptRestrictions(byte[] restriction, String sessionKey) throws GeneralSecurityException {
+  /** Encrypts the given bytes using a sessionKey using Tink Aead. */
+  private byte[] encryptRestrictions(byte[] restriction, String sessionKey)
+      throws GeneralSecurityException {
     byte[] rawKey;
 
     try {
@@ -527,15 +510,14 @@ public class ClientSideCredentialAccessBoundaryFactory {
       throw new IllegalStateException("Session key is not Base64 encoded", e);
     }
 
-    KeysetHandle keysetHandle = TinkProtoKeysetFormat.parseKeyset(
-        rawKey, InsecureSecretKeyAccess.get());
+    KeysetHandle keysetHandle =
+        TinkProtoKeysetFormat.parseKeyset(rawKey, InsecureSecretKeyAccess.get());
 
-    Aead aead =
-        keysetHandle.getPrimitive(RegistryConfiguration.get(), Aead.class);
+    Aead aead = keysetHandle.getPrimitive(RegistryConfiguration.get(), Aead.class);
 
     // For Client-Side CAB token encryption, empty associated data is expected.
     // Tink requires a byte[0] to be passed for this case.
-    return aead.encrypt(restriction, /*associatedData=*/new byte[0]);
+    return aead.encrypt(restriction, /*associatedData=*/ new byte[0]);
   }
 
   public static Builder newBuilder() {
