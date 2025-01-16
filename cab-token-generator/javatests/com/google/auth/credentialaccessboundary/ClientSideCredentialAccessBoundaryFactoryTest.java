@@ -36,7 +36,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -876,7 +875,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
                     .build())
             .build();
 
-    assertThrows(IllegalArgumentException.class,
+    assertThrows(IllegalStateException.class,
                  () -> { factory.generateToken(accessBoundary); });
   }
 

@@ -518,7 +518,14 @@ public class ClientSideCredentialAccessBoundaryFactory {
    * Encrypts the given bytes using a sessionKey using Tink Aead.
    */
   private byte[] encryptRestrictions(byte[] restriction, String sessionKey) throws GeneralSecurityException {
-    byte[] rawKey = Base64.getDecoder().decode(sessionKey);
+    byte[] rawKey;
+
+    try {
+      rawKey = Base64.getDecoder().decode(sessionKey);
+    } catch (IllegalArgumentException e) {
+      // Session key from the server is expected to be Base64 encoded
+      throw new IllegalStateException("Session key is not Base64 encoded", e);
+    }
 
     KeysetHandle keysetHandle = TinkProtoKeysetFormat.parseKeyset(
         rawKey, InsecureSecretKeyAccess.get());
