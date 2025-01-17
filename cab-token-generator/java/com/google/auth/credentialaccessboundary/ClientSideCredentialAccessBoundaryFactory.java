@@ -37,9 +37,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.api.client.util.Clock;
 import com.google.auth.Credentials;
+import com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto.ClientSideAccessBoundary;
+import com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto.ClientSideAccessBoundaryRule;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.CredentialAccessBoundary;
+import com.google.auth.oauth2.CredentialAccessBoundary.AccessBoundaryRule;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.OAuth2Utils;
 import com.google.auth.oauth2.StsRequestHandler;
@@ -53,10 +56,26 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.crypto.tink.Aead;
+import com.google.crypto.tink.InsecureSecretKeyAccess;
+import com.google.crypto.tink.KeysetHandle;
+import com.google.crypto.tink.RegistryConfiguration;
+import com.google.crypto.tink.TinkProtoKeysetFormat;
+import com.google.crypto.tink.aead.AeadConfig;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import dev.cel.common.CelAbstractSyntaxTree;
+import dev.cel.common.CelOptions;
+import dev.cel.common.CelProtoAbstractSyntaxTree;
+import dev.cel.common.CelValidationException;
+import dev.cel.compiler.CelCompiler;
+import dev.cel.compiler.CelCompilerFactory;
+import dev.cel.expr.Expr;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.time.Duration;
+import java.util.Base64;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 
@@ -72,6 +91,7 @@ public class ClientSideCredentialAccessBoundaryFactory {
   private final Object refreshLock = new byte[0];
   private volatile IntermediateCredentials intermediateCredentials = null;
   private final Clock clock;
+  private final CelCompiler celCompiler;
 
   enum RefreshType {
     NONE,
@@ -83,6 +103,18 @@ public class ClientSideCredentialAccessBoundaryFactory {
     this.transportFactory = builder.transportFactory;
     this.sourceCredential = builder.sourceCredential;
     this.tokenExchangeEndpoint = builder.tokenExchangeEndpoint;
+
+    // Initializes the Tink AEAD registry for encrypting the client-side
+    // restrictions.
+    try {
+      AeadConfig.register();
+    } catch (GeneralSecurityException e) {
+      throw new IllegalStateException("Error occurred when registering Tink", e);
+    }
+
+    CelOptions options = CelOptions.current().build();
+    this.celCompiler = CelCompilerFactory.standardCelCompilerBuilder().setOptions(options).build();
+
     this.refreshMargin =
         builder.refreshMargin != null ? builder.refreshMargin : DEFAULT_REFRESH_MARGIN;
     this.minimumTokenLifetime =
@@ -92,10 +124,37 @@ public class ClientSideCredentialAccessBoundaryFactory {
     this.clock = builder.clock;
   }
 
-  public AccessToken generateToken(CredentialAccessBoundary accessBoundary) {
-    // TODO(negarb/jiahuah): Implement generateToken
-    // Note: This method will call refreshCredentialsIfRequired().
-    throw new UnsupportedOperationException("generateToken is not yet implemented.");
+  /**
+   * Generates a Client-Side CAB token given the {@link CredentialAccessBoundary}.
+   *
+   * @param accessBoundary
+   * @return The Client-Side CAB token in an {@link AccessToken} object
+   * @throws IOException If an I/O error occurs while refreshing the source credentials
+   * @throws CelValidationException If the availability condition is an invalid CEL expression
+   * @throws GeneralSecurityException If an error occurs during encryption
+   */
+  public AccessToken generateToken(CredentialAccessBoundary accessBoundary)
+      throws IOException, CelValidationException, GeneralSecurityException {
+    this.refreshCredentialsIfRequired();
+
+    String intermediateToken, sessionKey;
+    Date intermediateTokenExpirationTime;
+
+    synchronized (refreshLock) {
+      intermediateToken = this.intermediateCredentials.intermediateAccessToken.getTokenValue();
+      intermediateTokenExpirationTime =
+          this.intermediateCredentials.intermediateAccessToken.getExpirationTime();
+      sessionKey = this.intermediateCredentials.accessBoundarySessionKey;
+    }
+
+    byte[] rawRestrictions = this.serializeCredentialAccessBoundary(accessBoundary);
+
+    byte[] encryptedRestrictions = this.encryptRestrictions(rawRestrictions, sessionKey);
+
+    String tokenValue =
+        intermediateToken + "." + Base64.getUrlEncoder().encodeToString(encryptedRestrictions);
+
+    return new AccessToken(tokenValue, intermediateTokenExpirationTime);
   }
 
   /**
@@ -401,6 +460,64 @@ public class ClientSideCredentialAccessBoundaryFactory {
     public void run() {
       task.run();
     }
+  }
+
+  /** Serializes a {@link CredentialAccessBoundary} object into Protobuf wire format. */
+  @VisibleForTesting
+  byte[] serializeCredentialAccessBoundary(CredentialAccessBoundary credentialAccessBoundary)
+      throws CelValidationException {
+    List<AccessBoundaryRule> rules = credentialAccessBoundary.getAccessBoundaryRules();
+    ClientSideAccessBoundary.Builder accessBoundaryBuilder = ClientSideAccessBoundary.newBuilder();
+
+    for (AccessBoundaryRule rule : rules) {
+      ClientSideAccessBoundaryRule.Builder ruleBuilder =
+          accessBoundaryBuilder
+              .addAccessBoundaryRulesBuilder()
+              .addAllAvailablePermissions(rule.getAvailablePermissions())
+              .setAvailableResource(rule.getAvailableResource());
+
+      // Availability condition is an optional field from the CredentialAccessBoundary
+      // CEL compliation is only performed if there is a non-empty availablity condition.
+      if (rule.getAvailabilityCondition() != null) {
+        String availabilityCondition = rule.getAvailabilityCondition().getExpression();
+
+        Expr availabilityConditionExpr = this.compileCel(availabilityCondition);
+        ruleBuilder.setCompiledAvailabilityCondition(availabilityConditionExpr);
+      }
+    }
+
+    return accessBoundaryBuilder.build().toByteArray();
+  }
+
+  /** Compiles CEL expression from String to an {@link Expr} proto object. */
+  private Expr compileCel(String expr) throws CelValidationException {
+    CelAbstractSyntaxTree ast = celCompiler.parse(expr).getAst();
+
+    CelProtoAbstractSyntaxTree astProto = CelProtoAbstractSyntaxTree.fromCelAst(ast);
+
+    return astProto.getExpr();
+  }
+
+  /** Encrypts the given bytes using a sessionKey using Tink Aead. */
+  private byte[] encryptRestrictions(byte[] restriction, String sessionKey)
+      throws GeneralSecurityException {
+    byte[] rawKey;
+
+    try {
+      rawKey = Base64.getDecoder().decode(sessionKey);
+    } catch (IllegalArgumentException e) {
+      // Session key from the server is expected to be Base64 encoded
+      throw new IllegalStateException("Session key is not Base64 encoded", e);
+    }
+
+    KeysetHandle keysetHandle =
+        TinkProtoKeysetFormat.parseKeyset(rawKey, InsecureSecretKeyAccess.get());
+
+    Aead aead = keysetHandle.getPrimitive(RegistryConfiguration.get(), Aead.class);
+
+    // For Client-Side CAB token encryption, empty associated data is expected.
+    // Tink requires a byte[0] to be passed for this case.
+    return aead.encrypt(restriction, /*associatedData=*/ new byte[0]);
   }
 
   public static Builder newBuilder() {

@@ -65,7 +65,10 @@ public final class MockStsTransport extends MockHttpTransport {
   private static final String ACCESS_TOKEN = "accessToken";
   private static final String TOKEN_TYPE = "Bearer";
   private static final Long EXPIRES_IN = 3600L;
-  private static final String ACCESS_BOUNDARY_SESSION_KEY_VALUE = "accessBoundarySessionKey";
+  private static final String ACCESS_BOUNDARY_SESSION_KEY_VALUE =
+      "CPaEhYsKEmQKWAowdHlwZS5nb29nbGVhcGlzLmNvbS9nb29nbGUuY3J5cHRvLnRpbmsuQW"
+          + "VzR2NtS2V5EiIaIMx8syvGIGGu5yvrdq/"
+          + "I0Q9ZWIR1oqJXFnDFxHuwX4SEGAEQARj2hIWLCiAB";
 
   private final Queue<IOException> responseErrorSequence = new ArrayDeque<>();
   private final Queue<List<String>> scopeSequence = new ArrayDeque<>();
@@ -73,6 +76,7 @@ public final class MockStsTransport extends MockHttpTransport {
 
   private boolean returnExpiresIn = true;
   private boolean returnAccessBoundarySessionKey = false;
+  private String accessBoundarySessionKey = ACCESS_BOUNDARY_SESSION_KEY_VALUE;
   private MockLowLevelHttpRequest request;
   private int requestCount = 0;
 
@@ -139,7 +143,7 @@ public final class MockStsTransport extends MockHttpTransport {
             }
 
             if (returnAccessBoundarySessionKey) {
-              response.put("access_boundary_session_key", ACCESS_BOUNDARY_SESSION_KEY_VALUE);
+              response.put("access_boundary_session_key", accessBoundarySessionKey);
             }
 
             return new MockLowLevelHttpResponse()
@@ -184,6 +188,10 @@ public final class MockStsTransport extends MockHttpTransport {
 
   public void setReturnExpiresIn(boolean returnExpiresIn) {
     this.returnExpiresIn = returnExpiresIn;
+  }
+
+  public void setAccessBoundarySessionKey(String accessBoundarySessionKey) {
+    this.accessBoundarySessionKey = accessBoundarySessionKey;
   }
 
   public void setReturnAccessBoundarySessionKey(boolean returnAccessBoundarySessionKey) {
