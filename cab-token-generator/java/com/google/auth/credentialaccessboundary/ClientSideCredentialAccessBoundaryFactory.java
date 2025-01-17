@@ -129,7 +129,7 @@ public class ClientSideCredentialAccessBoundaryFactory {
    *
    * @param accessBoundary
    * @return The Client-Side CAB token in an {@link AccessToken} object
-   * @throws IOException If an I/O error occurs while refrehsing the source credentials
+   * @throws IOException If an I/O error occurs while refreshing the source credentials
    * @throws CelValidationException If the availability condition is an invalid CEL expression
    * @throws GeneralSecurityException If an error occurs during encryption
    */
