@@ -83,7 +83,7 @@ If you are using Maven, add this to your pom.xml file (notice that you can repla
 <dependency>
   <groupId>com.google.auth</groupId>
   <!-- Let the BOM manage the transitive dependencies and module version. -->
-  <!-- Replace with the implementation module that suits your needs -->
+  <!-- Replace with the module(s) that are needed -->
   <artifactId>google-auth-library-oauth2-http</artifactId>
 </dependency>
 ```
