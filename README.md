@@ -106,7 +106,7 @@ If you are using Maven, add this to your pom.xml file (notice that you can repla
 <dependency>
   <groupId>com.google.auth</groupId>
   <!-- Let the BOM manage the transitive dependencies and module version. -->
-  <!-- Replace with the implementation module that suits your needs -->
+  <!-- Replace with the module(s) that are needed -->
   <artifactId>google-auth-library-oauth2-http</artifactId>
 </dependency>
 ```
@@ -119,7 +119,7 @@ If you are using Gradle, add this to your dependencies
 dependencies {
     // The BOM will manage the module versions and transitive dependencies
     implementation platform('com.google.auth:google-auth-library-bom:1.30.1')
-    // Replace this with the implementation module that suits your needs
+    // Replace with the module(s) that are needed
     implementation 'com.google.auth:google-auth-library-oauth2-http'
 }
 
