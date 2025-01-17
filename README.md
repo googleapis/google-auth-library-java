@@ -50,6 +50,29 @@ credentials as well as utility methods to create them and to get Application Def
 
 ## Quickstart
 
+### Alternative: using `java-libraries-bom`
+If your use case is to enable authentication for a GAPIC library such as `google-cloud-datastore`,
+you may want simply add `libraries-bom`, which automatically imports the auth bom, to your pom.xml
+as follows:
+
+[//]: # ({x-version-update-start:google-auth-library-bom:released})
+```xml
+<dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>libraries-bom</artifactId>
+      <version>26.53.0</version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+  </dependencies>
+</dependencyManagement>
+```
+
+Otherwise, if you don't plan using libraries-bom, see the next section on 
+_Google Auth Library Bill of Materials_.
+
 ### Using Maven
 
 #### Google Auth Library Bill of Materials
