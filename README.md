@@ -105,7 +105,7 @@ If you are using Maven, add this to your pom.xml file (notice that you can repla
 ```xml
 <dependency>
   <groupId>com.google.auth</groupId>
-  <!-- Let the BOM manage the transitive dependencies and module version. -->
+  <!-- Let the BOM manage the module and dependency versions -->
   <!-- Replace with the module(s) that are needed -->
   <artifactId>google-auth-library-oauth2-http</artifactId>
 </dependency>
