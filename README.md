@@ -50,7 +50,7 @@ credentials as well as utility methods to create them and to get Application Def
 
 ## Quickstart
 
-### Alternative: using `java-libraries-bom`
+### Preferred method: using `java-libraries-bom`
 If your use case is to enable authentication for a GAPIC library such as `google-cloud-datastore`,
 you may want simply add `libraries-bom`, which automatically imports the auth bom, to your pom.xml
 as follows:
