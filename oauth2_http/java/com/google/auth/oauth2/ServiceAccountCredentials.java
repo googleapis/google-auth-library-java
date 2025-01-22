@@ -650,8 +650,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     // `getUniverseDomain()` throws an IOException that would need to be caught
     URI iamIdTokenUri =
         URI.create(
-            String.format(
-                OAuth2Utils.IAM_ID_TOKEN_ENDPOINT_FORMAT, getUniverseDomain(), clientEmail));
+            String.format(IamUtils.IAM_ID_TOKEN_ENDPOINT_FORMAT, getUniverseDomain(), clientEmail));
     HttpRequest request = buildIdTokenRequest(iamIdTokenUri, transportFactory, content);
     // Use the Access Token from the SSJWT to request the ID Token from IAM Endpoint
     request.setHeaders(new HttpHeaders().set(AuthHttpConstants.AUTHORIZATION, accessToken));

@@ -31,7 +31,7 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.auth.oauth2.OAuth2Utils.IAM_ID_TOKEN_ENDPOINT_FORMAT;
+import static com.google.auth.oauth2.IamUtils.IAM_ID_TOKEN_ENDPOINT_FORMAT;
 
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.http.LowLevelHttpRequest;
