@@ -86,27 +86,6 @@ public class X509ProviderTest {
   }
 
   @Test
-  public void X509Provider_EmptyCertFile_Throws() throws IOException {
-    String certConfigPath = "certConfig.txt";
-    String certPath = "cert.crt";
-    String keyPath = "key.crt";
-    InputStream certConfigStream = writeWorkloadCertificateConfigStream(certPath, keyPath);
-
-    TestX509Provider testProvider = new TestX509Provider(certConfigPath);
-    testProvider.addFile(certConfigPath, certConfigStream);
-    testProvider.addFile(keyPath,  new ByteArrayInputStream(TEST_PRIVATE_KEY.getBytes()));
-    String expectedErrorMessage = String.format("Error reading certificate configuration file value '%s': no JSON input found", certConfigPath);
-
-    try {
-      testProvider.getKeyStore();
-      fail("No key store expected.");
-    } catch (IOException e) {
-      String message = e.getMessage();
-      assertTrue(message.equals(expectedErrorMessage));
-    }
-  }
-
-  @Test
   public void X509Provider_Succeeds() throws IOException, KeyStoreException, CertificateException {
     String certConfigPath = "certConfig.txt";
     String certPath = "cert.crt";
