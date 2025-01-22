@@ -66,6 +66,7 @@ import java.util.Queue;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -188,6 +189,110 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     assertEquals(2, scopes.size());
     assertEquals("foo", scopes.toArray()[0]);
     assertEquals("bar", scopes.toArray()[1]);
+  }
+
+  @Test
+  public void buildTokenUrl_nullTransport() {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder()
+            .setGoogleAuthTransport(null)
+            .setBindingEnforcement(ComputeEngineCredentials.BindingEnforcement.ON)
+            .build();
+    String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
+
+    assertEquals(TOKEN_URL + "?binding-enforcement=on", softBoundTokenUrl);
+  }
+
+  @Test
+  public void buildTokenUrl_nullBindingEnforcement() {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder()
+            .setGoogleAuthTransport(ComputeEngineCredentials.GoogleAuthTransport.MTLS)
+            .setBindingEnforcement(null)
+            .build();
+    String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
+
+    assertEquals(TOKEN_URL + "?transport=mtls", softBoundTokenUrl);
+  }
+
+  @Test
+  public void buildTokenUrl_nullTransport_nullBindingEnforcement() {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder()
+            .setGoogleAuthTransport(null)
+            .setBindingEnforcement(null)
+            .build();
+    String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
+
+    assertEquals(TOKEN_URL, softBoundTokenUrl);
+  }
+
+  @Test
+  public void buildTokenUrlSoftMtlsBound_mtls_transport() {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder()
+            .setGoogleAuthTransport(ComputeEngineCredentials.GoogleAuthTransport.MTLS)
+            .build();
+    String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
+
+    assertEquals(TOKEN_URL + "?transport=mtls", softBoundTokenUrl);
+  }
+
+  @Test
+  public void buildTokenUrlSoftMtlsBound_iam_enforcement() {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder()
+            .setBindingEnforcement(ComputeEngineCredentials.BindingEnforcement.IAM_POLICY)
+            .build();
+    String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
+
+    assertEquals(TOKEN_URL + "?binding-enforcement=iam-policy", softBoundTokenUrl);
+  }
+
+  @Test
+  public void buildTokenUrlSoftMtlsBound_mtls_transport_iam_enforcement() {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder()
+            .setGoogleAuthTransport(ComputeEngineCredentials.GoogleAuthTransport.MTLS)
+            .setBindingEnforcement(ComputeEngineCredentials.BindingEnforcement.IAM_POLICY)
+            .build();
+    String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
+
+    assertEquals(TOKEN_URL + "?transport=mtls&binding-enforcement=iam-policy", softBoundTokenUrl);
+  }
+
+  @Test
+  public void buildTokenUrlHardMtlsBound_always_enforced() {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder()
+            .setBindingEnforcement(ComputeEngineCredentials.BindingEnforcement.ON)
+            .build();
+    String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
+
+    assertEquals(TOKEN_URL + "?binding-enforcement=on", softBoundTokenUrl);
+  }
+
+  @Test
+  public void buildTokenUrlHardMtlsBound_mtls_transport_always_enforced() {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder()
+            .setGoogleAuthTransport(ComputeEngineCredentials.GoogleAuthTransport.MTLS)
+            .setBindingEnforcement(ComputeEngineCredentials.BindingEnforcement.ON)
+            .build();
+    String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
+
+    assertEquals(TOKEN_URL + "?transport=mtls&binding-enforcement=on", softBoundTokenUrl);
+  }
+
+  @Test
+  public void buildTokenUrlHardDirectPathBound_alts_transport() {
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder()
+            .setGoogleAuthTransport(ComputeEngineCredentials.GoogleAuthTransport.ALTS)
+            .build();
+    String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
+
+    assertEquals(TOKEN_URL + "?transport=alts", softBoundTokenUrl);
   }
 
   @Test
@@ -541,7 +646,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void sign_sameAs() throws IOException {
+  public void sign_sameAs() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     String defaultAccountEmail = "mail@mail.com";
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
@@ -555,7 +660,25 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void sign_getAccountFails() throws IOException {
+  public void sign_getUniverseException() {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+
+    String defaultAccountEmail = "mail@mail.com";
+    transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+    transportFactory.transport.setRequestStatusCode(501);
+    Assert.assertThrows(IOException.class, credentials::getUniverseDomain);
+
+    byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
+    SigningException signingException =
+        Assert.assertThrows(SigningException.class, () -> credentials.sign(expectedSignature));
+    assertEquals("Failed to sign: Error obtaining universe domain", signingException.getMessage());
+  }
+
+  @Test
+  public void sign_getAccountFails() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
@@ -563,13 +686,10 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
-    try {
-      credentials.sign(expectedSignature);
-      fail("Should not be able to use credential without exception.");
-    } catch (SigningException ex) {
-      assertNotNull(ex.getMessage());
-      assertNotNull(ex.getCause());
-    }
+    SigningException exception =
+        Assert.assertThrows(SigningException.class, () -> credentials.sign(expectedSignature));
+    assertNotNull(exception.getMessage());
+    assertNotNull(exception.getCause());
   }
 
   @Test
@@ -601,15 +721,13 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
-    try {
-      byte[] bytes = {0xD, 0xE, 0xA, 0xD};
-      credentials.sign(bytes);
-      fail("Signing should have failed");
-    } catch (SigningException e) {
-      assertEquals("Failed to sign the provided bytes", e.getMessage());
-      assertNotNull(e.getCause());
-      assertTrue(e.getCause().getMessage().contains("403"));
-    }
+    byte[] bytes = {0xD, 0xE, 0xA, 0xD};
+
+    SigningException exception =
+        Assert.assertThrows(SigningException.class, () -> credentials.sign(bytes));
+    assertEquals("Failed to sign the provided bytes", exception.getMessage());
+    assertNotNull(exception.getCause());
+    assertTrue(exception.getCause().getMessage().contains("403"));
   }
 
   @Test
@@ -641,15 +759,13 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
-    try {
-      byte[] bytes = {0xD, 0xE, 0xA, 0xD};
-      credentials.sign(bytes);
-      fail("Signing should have failed");
-    } catch (SigningException e) {
-      assertEquals("Failed to sign the provided bytes", e.getMessage());
-      assertNotNull(e.getCause());
-      assertTrue(e.getCause().getMessage().contains("500"));
-    }
+    byte[] bytes = {0xD, 0xE, 0xA, 0xD};
+
+    SigningException exception =
+        Assert.assertThrows(SigningException.class, () -> credentials.sign(bytes));
+    assertEquals("Failed to sign the provided bytes", exception.getMessage());
+    assertNotNull(exception.getCause());
+    assertTrue(exception.getCause().getMessage().contains("500"));
   }
 
   @Test
@@ -674,14 +790,11 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
-    try {
-      credentials.refreshAccessToken();
-      fail("Should have failed");
-    } catch (IOException e) {
-      assertTrue(e.getCause().getMessage().contains("503"));
-      assertTrue(e instanceof GoogleAuthException);
-      assertTrue(((GoogleAuthException) e).isRetryable());
-    }
+    IOException exception =
+        Assert.assertThrows(IOException.class, () -> credentials.refreshAccessToken());
+    assertTrue(exception.getCause().getMessage().contains("503"));
+    assertTrue(exception instanceof GoogleAuthException);
+    assertTrue(((GoogleAuthException) exception).isRetryable());
   }
 
   @Test
@@ -714,12 +827,9 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
       ComputeEngineCredentials credentials =
           ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
-      try {
-        credentials.refreshAccessToken();
-        fail("Should have failed");
-      } catch (IOException e) {
-        assertFalse(e instanceof GoogleAuthException);
-      }
+      IOException exception =
+          Assert.assertThrows(IOException.class, () -> credentials.refreshAccessToken());
+      assertFalse(exception instanceof GoogleAuthException);
     }
   }
 
@@ -889,15 +999,13 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
-    try {
-      byte[] bytes = {0xD, 0xE, 0xA, 0xD};
-      credentials.sign(bytes);
-      fail("Signing should have failed");
-    } catch (SigningException e) {
-      assertEquals("Failed to sign the provided bytes", e.getMessage());
-      assertNotNull(e.getCause());
-      assertTrue(e.getCause().getMessage().contains("Empty content"));
-    }
+    byte[] bytes = {0xD, 0xE, 0xA, 0xD};
+
+    SigningException exception =
+        Assert.assertThrows(SigningException.class, () -> credentials.sign(bytes));
+    assertEquals("Failed to sign the provided bytes", exception.getMessage());
+    assertNotNull(exception.getCause());
+    assertTrue(exception.getCause().getMessage().contains("Empty content"));
   }
 
   @Test
