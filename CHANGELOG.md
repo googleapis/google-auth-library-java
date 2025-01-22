@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.31.0](https://github.com/googleapis/google-auth-library-java/compare/v1.30.1...v1.31.0) (2025-01-22)
+
+
+### Features
+
+* ImpersonatedCredentials to support universe domain for idtoken and signblob ([#1566](https://github.com/googleapis/google-auth-library-java/issues/1566)) ([adc2ff3](https://github.com/googleapis/google-auth-library-java/commit/adc2ff3dcabb79e367d0d66b5b3fd8a51e35bc2b))
+* Support transport and binding-enforcement MDS parameters. ([#1558](https://github.com/googleapis/google-auth-library-java/issues/1558)) ([9828a8e](https://github.com/googleapis/google-auth-library-java/commit/9828a8eeb9f144f7c341df0c03282a8790356962))
+
+
+### Documentation
+
+* Promote use of bill of materials in quickstart documentation ([#1620](https://github.com/googleapis/google-auth-library-java/issues/1620)) ([fc20d9c](https://github.com/googleapis/google-auth-library-java/commit/fc20d9c9d33b7eada964cf41297f8a3e13c27fe1)), closes [#1552](https://github.com/googleapis/google-auth-library-java/issues/1552)
+
 ## [1.30.1](https://github.com/googleapis/google-auth-library-java/compare/v1.30.0...v1.30.1) (2024-12-11)
 
 
