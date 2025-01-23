@@ -997,28 +997,41 @@ CredentialAccessBoundary:
 
 * Server-side: Uses the `DownscopedCredentials` class. Each time a
   downscoped token is needed, the client makes a call to the Security Token Service (STS).
-  This is suitable for applications that require downscoped tokens infrequently.
+  This is suitable for applications that require downscoped tokens infrequently, or applications that reuse a single downscoped credential many times.
 * Client-side: Uses the `ClientSideCredentialAccessBoundaryFactory` class. This
   approach minimizes calls to STS. The client retrieves necessary cryptographic
   material once and then generates multiple downscoped tokens locally. This is
-  more efficient for applications that need to generate many downscoped tokens.
+  more efficient for applications that need to generate many unique downscoped tokens.
 
 #### Server-side CAB
 
 The `DownscopedCredentials` class can be used to produce a downscoped access
-token from a source credential and the `CredentialAccessBoundary` created above
-in the Token Broker:
+token from a source credential and the `CredentialAccessBoundary`.
 
 ```java
 // Retrieve the source credentials from ADC.
 GoogleCredentials sourceCredentials = GoogleCredentials.getApplicationDefault()
         .createScoped("https://www.googleapis.com/auth/cloud-platform");
 
+// Create an Access Boundary Rule which will restrict the downscoped token to having readonly
+// access to objects starting with "customer-a" in bucket "bucket-123".
+String availableResource = "//storage.googleapis.com/projects/_/buckets/bucket-123";
+String availablePermission = "inRole:roles/storage.objectViewer";
+String expression =  "resource.name.startsWith('projects/_/buckets/bucket-123/objects/customer-a')";
+        
+CredentialAccessBoundary.AccessBoundaryRule rule =
+    CredentialAccessBoundary.AccessBoundaryRule.newBuilder()
+        .setAvailableResource(availableResource)
+        .addAvailablePermission(availablePermission)
+        .setAvailabilityCondition(
+            new AvailabilityCondition(expression, /* title= */ null, /* description= */ null))
+        .build();
+
 // Initialize the DownscopedCredentials class.
 DownscopedCredentials downscopedCredentials =
     DownscopedCredentials.newBuilder()
         .setSourceCredential(sourceCredentials)
-        .setCredentialAccessBoundary(credentialAccessBoundary)
+        .setCredentialAccessBoundary(CredentialAccessBoundary.newBuilder().addRule(rule).build())
         .build();
 
 // Retrieve the downscoped access token.
@@ -1038,11 +1051,29 @@ objects to create multiple downscoped tokens.
 GoogleCredentials sourceCredentials = GoogleCredentials.getApplicationDefault()
         .createScoped("https://www.googleapis.com/auth/cloud-platform");
 
+// Create an Access Boundary Rule which will restrict the downscoped token to having readonly
+// access to objects starting with "customer-a" in bucket "bucket-123".
+String availableResource = "//storage.googleapis.com/projects/_/buckets/bucket-123";
+String availablePermission = "inRole:roles/storage.objectViewer";
+String expression =  "resource.name.startsWith('projects/_/buckets/bucket-123/objects/customer-a')";
+        
+CredentialAccessBoundary.AccessBoundaryRule rule =
+    CredentialAccessBoundary.AccessBoundaryRule.newBuilder()
+        .setAvailableResource(availableResource)
+        .addAvailablePermission(availablePermission)
+        .setAvailabilityCondition(
+            new AvailabilityCondition(expression, /* title= */ null, /* description= */ null))
+        .build();
+
 // Initialize the ClientSideCredentialAccessBoundaryFactory.
 ClientSideCredentialAccessBoundaryFactory factory =
     ClientSideCredentialAccessBoundaryFactory.newBuilder()
         .setSourceCredential(sourceCredentials)
         .build();
+
+// Create the CredentialAccessBoundary with the rule.
+CredentialAccessBoundary credentialAccessBoundary = 
+        CredentialAccessBoundary.newBuilder().addRule(rule).build();
 
 // Generate the downscoped access token.
 // This will need to be passed to the Token Consumer.
