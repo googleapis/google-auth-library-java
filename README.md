@@ -995,14 +995,19 @@ resources.
 There are two ways to generate downscoped tokens using a
 CredentialAccessBoundary:
 
-* Server-side: Uses the `DownscopedCredentials` class. Each time a
-  downscoped token is needed, the client makes a call to the Security Token Service (STS).
-  This is suitable for applications that require downscoped tokens infrequently, or applications that reuse a single downscoped credential many times.
-* Client-side: Uses the `ClientSideCredentialAccessBoundaryFactory` class. This
-  approach minimizes calls to STS. The client retrieves necessary cryptographic
-  material once and then generates multiple downscoped tokens locally. This is
-  more efficient for applications that need to generate many unique downscoped tokens.
+* **Server-side (using `DownscopedCredentials`):** The client calls the Security
+Token Service (STS) each time a downscoped token is needed. This is suitable for
+applications where the Credential Access Boundary rules change infrequently or 
+when a single downscoped credential is reused many times.  A key consideration 
+is that every rule change requires a new call to the STS.
 
+
+* **Client-side (using `ClientSideCredentialAccessBoundaryFactory`):** The client 
+retrieves cryptographic material once and then generates multiple downscoped 
+tokens locally. This minimizes calls to the STS and is more efficient when 
+Credential Access Boundary rules change frequently, as the client doesn't need 
+to contact the STS for each rule change.  This is also more efficient for 
+applications that need to generate many *unique* downscoped tokens.
 #### Server-side CAB
 
 The `DownscopedCredentials` class can be used to produce a downscoped access
