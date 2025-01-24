@@ -89,7 +89,7 @@ public class ClientSideCredentialAccessBoundaryFactory {
   private final Duration refreshMargin;
   private transient RefreshTask refreshTask;
   private final Object refreshLock = new byte[0];
-  private volatile IntermediateCredentials intermediateCredentials = null;
+  private IntermediateCredentials intermediateCredentials = null;
   private final Clock clock;
   private final CelCompiler celCompiler;
 
@@ -127,7 +127,8 @@ public class ClientSideCredentialAccessBoundaryFactory {
   /**
    * Generates a Client-Side CAB token given the {@link CredentialAccessBoundary}.
    *
-   * @param accessBoundary
+   * @param accessBoundary The credential access boundary that defines the restrictions for the
+   *     generated CAB token.
    * @return The Client-Side CAB token in an {@link AccessToken} object
    * @throws IOException If an I/O error occurs while refreshing the source credentials
    * @throws CelValidationException If the availability condition is an invalid CEL expression
@@ -220,13 +221,16 @@ public class ClientSideCredentialAccessBoundaryFactory {
   }
 
   private RefreshType determineRefreshType() {
-    if (intermediateCredentials == null
-        || intermediateCredentials.intermediateAccessToken == null) {
-      // A blocking refresh is needed if the intermediate access token doesn't exist.
-      return RefreshType.BLOCKING;
+    AccessToken intermediateAccessToken;
+    synchronized (refreshLock) {
+      if (intermediateCredentials == null
+          || intermediateCredentials.intermediateAccessToken == null) {
+        // A blocking refresh is needed if the intermediate access token doesn't exist.
+        return RefreshType.BLOCKING;
+      }
+      intermediateAccessToken = intermediateCredentials.intermediateAccessToken;
     }
 
-    AccessToken intermediateAccessToken = intermediateCredentials.intermediateAccessToken;
     Date expirationTime = intermediateAccessToken.getExpirationTime();
     if (expirationTime == null) {
       return RefreshType.NONE; // Token does not expire, no refresh needed.
@@ -363,18 +367,6 @@ public class ClientSideCredentialAccessBoundaryFactory {
         }
       }
     }
-  }
-
-  @VisibleForTesting
-  String getAccessBoundarySessionKey() {
-    return intermediateCredentials != null
-        ? intermediateCredentials.accessBoundarySessionKey
-        : null;
-  }
-
-  @VisibleForTesting
-  AccessToken getIntermediateAccessToken() {
-    return intermediateCredentials != null ? intermediateCredentials.intermediateAccessToken : null;
   }
 
   @VisibleForTesting
@@ -517,7 +509,7 @@ public class ClientSideCredentialAccessBoundaryFactory {
 
     // For Client-Side CAB token encryption, empty associated data is expected.
     // Tink requires a byte[0] to be passed for this case.
-    return aead.encrypt(restriction, /*associatedData=*/ new byte[0]);
+    return aead.encrypt(restriction, /* associatedData= */ new byte[0]);
   }
 
   public static Builder newBuilder() {
