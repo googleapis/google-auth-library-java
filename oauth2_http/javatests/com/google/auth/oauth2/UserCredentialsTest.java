@@ -889,7 +889,11 @@ public class UserCredentialsTest extends BaseSerializationTest {
   }
 
   static GenericJson writeUserJson(
-      String clientId, String clientSecret, String refreshToken, String quotaProjectId, String tokenUrl) {
+      String clientId,
+      String clientSecret,
+      String refreshToken,
+      String quotaProjectId,
+      String tokenUrl) {
     GenericJson json = new GenericJson();
     if (clientId != null) {
       json.put("client_id", clientId);
