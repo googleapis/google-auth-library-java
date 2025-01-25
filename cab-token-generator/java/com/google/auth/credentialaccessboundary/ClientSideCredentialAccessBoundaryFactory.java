@@ -80,8 +80,8 @@ import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 
 public class ClientSideCredentialAccessBoundaryFactory {
-  static final Duration DEFAULT_REFRESH_MARGIN = Duration.ofMinutes(30);
-  static final Duration DEFAULT_MINIMUM_TOKEN_LIFETIME = Duration.ofMinutes(3);
+  static final Duration DEFAULT_REFRESH_MARGIN = Duration.ofMinutes(45);
+  static final Duration DEFAULT_MINIMUM_TOKEN_LIFETIME = Duration.ofMinutes(30);
   private final GoogleCredentials sourceCredential;
   private final transient HttpTransportFactory transportFactory;
   private final String tokenExchangeEndpoint;
@@ -103,6 +103,9 @@ public class ClientSideCredentialAccessBoundaryFactory {
     this.transportFactory = builder.transportFactory;
     this.sourceCredential = builder.sourceCredential;
     this.tokenExchangeEndpoint = builder.tokenExchangeEndpoint;
+    this.refreshMargin = builder.refreshMargin;
+    this.minimumTokenLifetime = builder.minimumTokenLifetime;
+    this.clock = builder.clock;
 
     // Initializes the Tink AEAD registry for encrypting the client-side
     // restrictions.
@@ -114,14 +117,6 @@ public class ClientSideCredentialAccessBoundaryFactory {
 
     CelOptions options = CelOptions.current().build();
     this.celCompiler = CelCompilerFactory.standardCelCompilerBuilder().setOptions(options).build();
-
-    this.refreshMargin =
-        builder.refreshMargin != null ? builder.refreshMargin : DEFAULT_REFRESH_MARGIN;
-    this.minimumTokenLifetime =
-        builder.minimumTokenLifetime != null
-            ? builder.minimumTokenLifetime
-            : DEFAULT_MINIMUM_TOKEN_LIFETIME;
-    this.clock = builder.clock;
   }
 
   /**
@@ -377,6 +372,16 @@ public class ClientSideCredentialAccessBoundaryFactory {
   @VisibleForTesting
   HttpTransportFactory getTransportFactory() {
     return transportFactory;
+  }
+
+  @VisibleForTesting
+  Duration getRefreshMargin() {
+    return refreshMargin;
+  }
+
+  @VisibleForTesting
+  Duration getMinimumTokenLifetime() {
+    return minimumTokenLifetime;
   }
 
   /**
@@ -643,6 +648,23 @@ public class ClientSideCredentialAccessBoundaryFactory {
         // Throwing an IOException would be a breaking change, so wrap it here.
         throw new IllegalStateException(
             "Error occurred when attempting to retrieve source credential universe domain.", e);
+      }
+
+      // Use default values for refreshMargin if not provided.
+      if (refreshMargin == null) {
+        this.refreshMargin = DEFAULT_REFRESH_MARGIN;
+      }
+
+      // Use default values for minimumTokenLifetime if not provided.
+      if (minimumTokenLifetime == null) {
+        this.minimumTokenLifetime = DEFAULT_MINIMUM_TOKEN_LIFETIME;
+      }
+
+      // Check if refreshMargin is at least one minute longer than minimumTokenLifetime.
+      Duration minRefreshMargin = minimumTokenLifetime.plusMinutes(1);
+      if (refreshMargin.compareTo(minRefreshMargin) < 0) {
+        throw new IllegalArgumentException(
+            "Refresh margin must be at least one minute longer than the minimum token lifetime.");
       }
 
       this.tokenExchangeEndpoint = String.format(TOKEN_EXCHANGE_URL_FORMAT, universeDomain);

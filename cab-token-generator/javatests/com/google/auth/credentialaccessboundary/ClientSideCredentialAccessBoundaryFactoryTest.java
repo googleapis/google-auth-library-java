@@ -149,8 +149,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
   public void fetchIntermediateCredentials_withCustomUniverseDomain() throws IOException {
     String universeDomain = "foobar";
     GoogleCredentials sourceCredentials =
-        getServiceAccountSourceCredentials(mockTokenServerTransportFactory)
-            .toBuilder()
+        getServiceAccountSourceCredentials(mockTokenServerTransportFactory).toBuilder()
             .setUniverseDomain(universeDomain)
             .build();
 
@@ -483,6 +482,58 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
         exception.getMessage());
   }
 
+  @Test
+  public void builder_invalidRefreshMarginAndMinimumTokenLifetime_throws() throws IOException {
+    GoogleCredentials sourceCredentials =
+        getServiceAccountSourceCredentials(mockTokenServerTransportFactory);
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> {
+              ClientSideCredentialAccessBoundaryFactory.newBuilder()
+                  .setSourceCredential(sourceCredentials)
+                  .setRefreshMargin(Duration.ofMinutes(50))
+                  .setMinimumTokenLifetime(Duration.ofMinutes(50))
+                  .build();
+            });
+    assertEquals(
+        "Refresh margin must be at least one minute longer than the minimum token lifetime.",
+        exception.getMessage());
+  }
+
+  @Test
+  public void builder_minimumTokenLifetimeNotSet_usesDefault() throws IOException {
+    GoogleCredentials sourceCredentials =
+        getServiceAccountSourceCredentials(mockTokenServerTransportFactory);
+
+    ClientSideCredentialAccessBoundaryFactory factory =
+        ClientSideCredentialAccessBoundaryFactory.newBuilder()
+            .setSourceCredential(sourceCredentials)
+            .setRefreshMargin(Duration.ofMinutes(50))
+            .build();
+
+    assertEquals(
+        ClientSideCredentialAccessBoundaryFactory.DEFAULT_MINIMUM_TOKEN_LIFETIME,
+        factory.getMinimumTokenLifetime());
+  }
+
+  @Test
+  public void builder_refreshMarginNotSet_usesDefault() throws IOException {
+    GoogleCredentials sourceCredentials =
+        getServiceAccountSourceCredentials(mockTokenServerTransportFactory);
+
+    ClientSideCredentialAccessBoundaryFactory factory =
+        ClientSideCredentialAccessBoundaryFactory.newBuilder()
+            .setSourceCredential(sourceCredentials)
+            .setMinimumTokenLifetime(Duration.ofMinutes(20))
+            .build();
+
+    assertEquals(
+        ClientSideCredentialAccessBoundaryFactory.DEFAULT_REFRESH_MARGIN,
+        factory.getRefreshMargin());
+  }
+
   private static GoogleCredentials getServiceAccountSourceCredentials(
       MockTokenServerTransportFactory transportFactory) throws IOException {
     String email = "service-account@google.com";
@@ -613,7 +664,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
 
     Aead aead = keysetHandle.getPrimitive(RegistryConfiguration.get(), Aead.class);
     byte[] rawRestrictions =
-        aead.decrypt(Base64.getUrlDecoder().decode(restriction), /*associatedData=*/ new byte[0]);
+        aead.decrypt(Base64.getUrlDecoder().decode(restriction), /* associatedData= */ new byte[0]);
 
     return ClientSideAccessBoundary.parseFrom(rawRestrictions);
   }
