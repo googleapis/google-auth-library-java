@@ -82,6 +82,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Executor;
+import org.slf4j.Logger;
 
 /**
  * OAuth2 credentials representing a Service Account for calling Google APIs.
@@ -96,6 +97,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final int TWELVE_HOURS_IN_SECONDS = 43200;
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
+  private static final Logger LOGGER = LoggingConfigs.getLogger(ServiceAccountCredentials.class);
 
   private final String clientId;
   private final String clientEmail;
@@ -503,6 +505,11 @@ public class ServiceAccountCredentials extends GoogleCredentials
     return serviceAccountUser != null && serviceAccountUser.length() > 0;
   }
 
+  private GenericData parseResponseAs(HttpResponse response) throws IOException {
+    GenericData genericData = response.parseAs(GenericData.class);
+    LoggingUtils.logGenericData(genericData, LOGGER, "Response payload");
+    return genericData;
+  }
   /**
    * Refreshes the OAuth2 access token by getting a new access token using a JSON Web Token (JWT).
    */
@@ -531,6 +538,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     }
     request.setParser(new JsonObjectParser(jsonFactory));
 
+    LoggingUtils.logRequest(request, LOGGER, "Sending request to refresh access token");
     ExponentialBackOff backoff =
         new ExponentialBackOff.Builder()
             .setInitialIntervalMillis(OAuth2Utils.INITIAL_RETRY_INTERVAL_MILLIS)
@@ -553,6 +561,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
     try {
       response = request.execute();
+      LoggingUtils.logResponse(response, LOGGER, "Response received for refresh access token");
     } catch (HttpResponseException re) {
       String message = String.format(errorTemplate, re.getMessage(), getIssuer());
       throw GoogleAuthException.createWithTokenEndpointResponseException(re, message);
@@ -561,7 +570,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
           e, String.format(errorTemplate, e.getMessage(), getIssuer()));
     }
 
-    GenericData responseData = response.parseAs(GenericData.class);
+    GenericData responseData = parseResponseAs(response);
     String accessToken =
         OAuth2Utils.validateString(responseData, "access_token", PARSE_ERROR_PREFIX);
     int expiresInSeconds =
@@ -611,9 +620,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
         MetricsUtils.getGoogleCredentialsMetricsHeader(
             RequestType.ID_TOKEN_REQUEST, getMetricsCredentialType()));
 
+    LoggingUtils.logRequest(request, LOGGER, "Sending request to get Id token via Oauth endpoint");
     HttpResponse httpResponse = executeRequest(request);
 
-    GenericData responseData = httpResponse.parseAs(GenericData.class);
+    GenericData responseData = parseResponseAs(httpResponse);
     String rawToken = OAuth2Utils.validateString(responseData, "id_token", PARSE_ERROR_PREFIX);
     return IdToken.create(rawToken);
   }
@@ -654,9 +664,11 @@ public class ServiceAccountCredentials extends GoogleCredentials
     HttpRequest request = buildIdTokenRequest(iamIdTokenUri, transportFactory, content);
     // Use the Access Token from the SSJWT to request the ID Token from IAM Endpoint
     request.setHeaders(new HttpHeaders().set(AuthHttpConstants.AUTHORIZATION, accessToken));
+
+    LoggingUtils.logRequest(request, LOGGER, "Sending request to get id token via Iam Endpoint");
     HttpResponse httpResponse = executeRequest(request);
 
-    GenericData responseData = httpResponse.parseAs(GenericData.class);
+    GenericData responseData = parseResponseAs(httpResponse);
     // IAM Endpoint returns `token` instead of `id_token`
     String rawToken = OAuth2Utils.validateString(responseData, "token", PARSE_ERROR_PREFIX);
     return IdToken.create(rawToken);
