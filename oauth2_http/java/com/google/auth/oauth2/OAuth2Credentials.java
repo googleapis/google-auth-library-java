@@ -484,7 +484,16 @@ public class OAuth2Credentials extends Credentials {
     }
   }
 
-  protected static <T> T getFromServiceLoader(Class<? extends T> clazz, T defaultInstance) {
+  /**
+   * Returns the first service provider from the given service loader.
+   *
+   * @param clazz The class of the service provider to load.
+   * @param defaultInstance The default instance to return if no service providers are found.
+   * @param <T> The type of the service provider.
+   * @return The first service provider from the service loader, or the {@code defaultInstance} if
+   *     no service providers are found.
+   */
+  public static <T> T getFromServiceLoader(Class<? extends T> clazz, T defaultInstance) {
     return Iterables.getFirst(ServiceLoader.load(clazz), defaultInstance);
   }
 

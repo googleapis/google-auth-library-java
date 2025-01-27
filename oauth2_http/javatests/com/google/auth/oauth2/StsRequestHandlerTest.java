@@ -275,4 +275,22 @@ public final class StsRequestHandlerTest {
     assertEquals(transport.getIssuedTokenType(), response.getIssuedTokenType());
     assertNull(response.getExpiresInSeconds());
   }
+
+  @Test
+  public void exchangeToken_withAccessBoundarySessionKey() throws IOException {
+    transport.setReturnAccessBoundarySessionKey(/* returnAccessBoundarySessionKey= */ true);
+
+    StsTokenExchangeRequest stsTokenExchangeRequest =
+        StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
+
+    StsRequestHandler requestHandler =
+        StsRequestHandler.newBuilder(
+                TOKEN_URL, stsTokenExchangeRequest, transport.createRequestFactory())
+            .build();
+
+    StsTokenExchangeResponse response = requestHandler.exchangeToken();
+
+    // Validate response.
+    assertEquals(transport.getAccessBoundarySessionKey(), response.getAccessBoundarySessionKey());
+  }
 }

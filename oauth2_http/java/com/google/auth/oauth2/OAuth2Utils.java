@@ -70,13 +70,18 @@ import java.util.Map;
 import java.util.Set;
 
 /** Internal utilities for the com.google.auth.oauth2 namespace. */
-class OAuth2Utils {
+public class OAuth2Utils {
+
   static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
 
-  static final String TOKEN_TYPE_ACCESS_TOKEN = "urn:ietf:params:oauth:token-type:access_token";
+  public static final String TOKEN_TYPE_ACCESS_TOKEN =
+      "urn:ietf:params:oauth:token-type:access_token";
   static final String TOKEN_TYPE_TOKEN_EXCHANGE = "urn:ietf:params:oauth:token-type:token-exchange";
+  public static final String TOKEN_TYPE_ACCESS_BOUNDARY_INTERMEDIARY_TOKEN =
+      "urn:ietf:params:oauth:token-type:access_boundary_intermediary_token";
   static final String GRANT_TYPE_JWT_BEARER = "urn:ietf:params:oauth:grant-type:jwt-bearer";
 
+  public static final String TOKEN_EXCHANGE_URL_FORMAT = "https://sts.%s/v1/token";
   static final URI TOKEN_SERVER_URI = URI.create("https://oauth2.googleapis.com/token");
 
   static final URI TOKEN_REVOKE_URI = URI.create("https://oauth2.googleapis.com/revoke");
@@ -84,7 +89,8 @@ class OAuth2Utils {
 
   static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 
-  static final HttpTransportFactory HTTP_TRANSPORT_FACTORY = new DefaultHttpTransportFactory();
+  public static final HttpTransportFactory HTTP_TRANSPORT_FACTORY =
+      new DefaultHttpTransportFactory();
 
   static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
@@ -241,8 +247,15 @@ class OAuth2Utils {
     return (Map) value;
   }
 
-  /** Helper to convert from a PKCS#8 String to an RSA private key */
-  static PrivateKey privateKeyFromPkcs8(String privateKeyPkcs8) throws IOException {
+  /**
+   * Converts a PKCS#8 string to an RSA private key.
+   *
+   * @param privateKeyPkcs8 the PKCS#8 string.
+   * @return the RSA private key.
+   * @throws IOException if the PKCS#8 data is invalid or if an unexpected exception occurs during
+   *     key creation.
+   */
+  public static PrivateKey privateKeyFromPkcs8(String privateKeyPkcs8) throws IOException {
     Reader reader = new StringReader(privateKeyPkcs8);
     Section section = PemReader.readFirstSectionAndClose(reader, "PRIVATE KEY");
     if (section == null) {
