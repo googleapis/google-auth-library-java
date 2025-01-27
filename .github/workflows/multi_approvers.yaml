@@ -26,12 +26,6 @@ concurrency:
 
 jobs:
   multi-approvers:
-    steps:
-      - name: Download members.json
-        run: |
-          mkdir -p .github/workflows
-          wget https://raw.githubusercontent.com/googleapis/google-auth-library-java/refs/heads/main/.github/workflows/members.json -O .github/workflows/members.json
-
-      - uses: 'abcxyz/pkg/.github/workflows/multi-approvers.yml@main'
-        with:
-          org-members-path: '.github/workflows/members.json'
+    uses: 'abcxyz/pkg/.github/workflows/multi-approvers.yml@main'
+    with:
+      org-members-path: '.github/workflows/members.json'
