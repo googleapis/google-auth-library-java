@@ -953,7 +953,7 @@ enables restricting the Identity and Access Management (IAM) permissions that a
 short-lived credential can use for Cloud Storage. This involves creating a
 `CredentialAccessBoundary` that defines the restrictions applied to the
 downscoped token. Using downscoped credentials ensures tokens in flight always
-have the least privileges (Principle of Least Privilege).
+have the least privileges ([Principle of Least Privilege](https://en.wikipedia.org/wiki/Principle_of_least_privilege)).
 
 #### Creating a CredentialAccessBoundary
 
