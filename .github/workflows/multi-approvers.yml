@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: 'multi-approvers'
+name: 'multi-approvers-remote'
 
 on:
   workflow_call:
