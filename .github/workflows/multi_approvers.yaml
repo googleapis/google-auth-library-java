@@ -25,7 +25,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+ download_members:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download members.json
+        id: 'download_members'
+        run: |-
+            MEMBERS_JSON="${RUNNER_TEMP}/${GITHUB_SHA:0:7}.members.json"
+
+            # Download the file, passing in authentication to get a higher rate
+            # limit: https://docs.github.com/en/rest/overview/resources-in-the-rest-api?apiVersion=2022-11-28#rate-limits-for-requests-from-github-actions
+            curl "https://raw.githubusercontent.com/googleapis/google-auth-library-java/refs/heads/main/.github/workflows/members.json" \
+              --silent \
+              --fail \
+              --location \
+              --header "Authorization: Token ${{ github.token }}" \
+              --output "${MEMBERS_JSON}"
+
+            # Save the result to an output.
+            echo "::notice::Downloaded members.json to ${MEMBERS_JSON}"
+            echo "output-file=${MEMBERS_JSON}" >> "${GITHUB_OUTPUT}"
+    outputs:
+        members_path: ${{ steps.download_members.outputs.output-file }}
+
   multi-approvers:
+    needs: download_members
     uses: 'abcxyz/pkg/.github/workflows/multi-approvers.yml@main'
     with:
-      org-members-path: '.github/workflows/members.json'
+      org-members-path: ${{ needs.download_members.outputs.members_path }}
