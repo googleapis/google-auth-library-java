@@ -50,6 +50,6 @@ jobs:
 
   multi-approvers:
     needs: download_members
-    uses: 'abcxyz/pkg/.github/workflows/multi-approvers.yml@main'
+    uses: './.github/workflows/multi-approvers.yml'
     with:
       org-members-path: ${{ needs.download_members.outputs.members_path }}
