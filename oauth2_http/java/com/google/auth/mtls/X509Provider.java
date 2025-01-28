@@ -21,7 +21,7 @@ public class X509Provider {
     this.certConfigPathOverride = certConfigPathOverride;
   }
 
-  public X509Provider(){
+  public X509Provider() {
     this.certConfigPathOverride = null;
   }
 
@@ -37,7 +37,8 @@ public class X509Provider {
       InputStream privateKeyStream = readStream(privateKeyFile);
 
       // Merge the two streams into a single stream.
-      SequenceInputStream certAndPrivateKeyStream = new SequenceInputStream(certStream, privateKeyStream);
+      SequenceInputStream certAndPrivateKeyStream =
+          new SequenceInputStream(certStream, privateKeyStream);
 
       // Build a key store using the combined stream.
       return SecurityUtils.createMtlsKeyStore(certAndPrivateKeyStream);
@@ -46,7 +47,8 @@ public class X509Provider {
     }
   }
 
-  private WorkloadCertificateConfiguration getWorkloadCertificateConfiguration() throws IOException {
+  private WorkloadCertificateConfiguration getWorkloadCertificateConfiguration()
+      throws IOException {
     String envCredentialsPath = getEnv(CERTIFICATE_CONFIGURATION_ENV_VARIABLE);
     File certConfig;
     if (this.certConfigPathOverride != null) {

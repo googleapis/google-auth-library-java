@@ -27,7 +27,8 @@ public class WorkloadCertificateConfiguration {
     return privateKeyPath;
   }
 
-  public static WorkloadCertificateConfiguration fromCertificateConfigurationStream (InputStream certConfigStream) throws IOException {
+  public static WorkloadCertificateConfiguration fromCertificateConfigurationStream(
+      InputStream certConfigStream) throws IOException {
     JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
     JsonObjectParser parser = new JsonObjectParser(jsonFactory);
 

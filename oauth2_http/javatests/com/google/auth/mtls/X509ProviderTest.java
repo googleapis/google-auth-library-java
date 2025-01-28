@@ -21,22 +21,24 @@ import org.junit.Test;
 
 public class X509ProviderTest {
 
-  static String TEST_CERT = "-----BEGIN CERTIFICATE-----\n"
-      + "MIICGzCCAYSgAwIBAgIIWrt6xtmHPs4wDQYJKoZIhvcNAQEFBQAwMzExMC8GA1UE\n"
-      + "AxMoMTAwOTEyMDcyNjg3OC5hcHBzLmdvb2dsZXVzZXJjb250ZW50LmNvbTAeFw0x\n"
-      + "MjEyMDExNjEwNDRaFw0yMjExMjkxNjEwNDRaMDMxMTAvBgNVBAMTKDEwMDkxMjA3\n"
-      + "MjY4NzguYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20wgZ8wDQYJKoZIhvcNAQEB\n"
-      + "BQADgY0AMIGJAoGBAL1SdY8jTUVU7O4/XrZLYTw0ON1lV6MQRGajFDFCqD2Fd9tQ\n"
-      + "GLW8Iftx9wfXe1zuaehJSgLcyCxazfyJoN3RiONBihBqWY6d3lQKqkgsRTNZkdFJ\n"
-      + "Wdzl/6CxhK9sojh2p0r3tydtv9iwq5fuuWIvtODtT98EgphhncQAqkKoF3zVAgMB\n"
-      + "AAGjODA2MAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgeAMBYGA1UdJQEB/wQM\n"
-      + "MAoGCCsGAQUFBwMCMA0GCSqGSIb3DQEBBQUAA4GBAD8XQEqzGePa9VrvtEGpf+R4\n"
-      + "fkxKbcYAzqYq202nKu0kfjhIYkYSBj6gi348YaxE64yu60TVl42l5HThmswUheW4\n"
-      + "uQIaq36JvwvsDP5Zoj5BgiNSnDAFQp+jJFBRUA5vooJKgKgMDf/r/DCOsbO6VJF1\n"
-      + "kWwa9n19NFiV0z3m6isj\n"
-      + "-----END CERTIFICATE-----\n";
+  static String TEST_CERT =
+      "-----BEGIN CERTIFICATE-----\n"
+          + "MIICGzCCAYSgAwIBAgIIWrt6xtmHPs4wDQYJKoZIhvcNAQEFBQAwMzExMC8GA1UE\n"
+          + "AxMoMTAwOTEyMDcyNjg3OC5hcHBzLmdvb2dsZXVzZXJjb250ZW50LmNvbTAeFw0x\n"
+          + "MjEyMDExNjEwNDRaFw0yMjExMjkxNjEwNDRaMDMxMTAvBgNVBAMTKDEwMDkxMjA3\n"
+          + "MjY4NzguYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20wgZ8wDQYJKoZIhvcNAQEB\n"
+          + "BQADgY0AMIGJAoGBAL1SdY8jTUVU7O4/XrZLYTw0ON1lV6MQRGajFDFCqD2Fd9tQ\n"
+          + "GLW8Iftx9wfXe1zuaehJSgLcyCxazfyJoN3RiONBihBqWY6d3lQKqkgsRTNZkdFJ\n"
+          + "Wdzl/6CxhK9sojh2p0r3tydtv9iwq5fuuWIvtODtT98EgphhncQAqkKoF3zVAgMB\n"
+          + "AAGjODA2MAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgeAMBYGA1UdJQEB/wQM\n"
+          + "MAoGCCsGAQUFBwMCMA0GCSqGSIb3DQEBBQUAA4GBAD8XQEqzGePa9VrvtEGpf+R4\n"
+          + "fkxKbcYAzqYq202nKu0kfjhIYkYSBj6gi348YaxE64yu60TVl42l5HThmswUheW4\n"
+          + "uQIaq36JvwvsDP5Zoj5BgiNSnDAFQp+jJFBRUA5vooJKgKgMDf/r/DCOsbO6VJF1\n"
+          + "kWwa9n19NFiV0z3m6isj\n"
+          + "-----END CERTIFICATE-----\n";
 
-  static String TEST_PRIVATE_KEY = "-----BEGIN PRIVATE KEY-----\n"
+  static String TEST_PRIVATE_KEY =
+      "-----BEGIN PRIVATE KEY-----\n"
           + "MIICdQIBADANBgkqhkiG9w0BAQEFAASCAl8wggJbAgEAAoGBAL1SdY8jTUVU7O4/\n"
           + "XrZLYTw0ON1lV6MQRGajFDFCqD2Fd9tQGLW8Iftx9wfXe1zuaehJSgLcyCxazfyJ\n"
           + "oN3RiONBihBqWY6d3lQKqkgsRTNZkdFJWdzl/6CxhK9sojh2p0r3tydtv9iwq5fu\n"
@@ -57,7 +59,10 @@ public class X509ProviderTest {
   public void X509Provider_FileDoesntExist_Throws() {
     String certConfigPath = "badfile.txt";
     X509Provider testProvider = new TestX509Provider(certConfigPath);
-    String expectedErrorMessage = String.format("Error reading certificate configuration file value '%s': File does not exist.", certConfigPath);
+    String expectedErrorMessage =
+        String.format(
+            "Error reading certificate configuration file value '%s': File does not exist.",
+            certConfigPath);
 
     try {
       testProvider.getKeyStore();
@@ -74,7 +79,10 @@ public class X509ProviderTest {
     InputStream certConfigStream = new ByteArrayInputStream("".getBytes());
     TestX509Provider testProvider = new TestX509Provider(certConfigPath);
     testProvider.addFile(certConfigPath, certConfigStream);
-    String expectedErrorMessage = String.format("Error reading certificate configuration file value '%s': no JSON input found", certConfigPath);
+    String expectedErrorMessage =
+        String.format(
+            "Error reading certificate configuration file value '%s': no JSON input found",
+            certConfigPath);
 
     try {
       testProvider.getKeyStore();
@@ -95,10 +103,11 @@ public class X509ProviderTest {
     TestX509Provider testProvider = new TestX509Provider(certConfigPath);
     testProvider.addFile(certConfigPath, certConfigStream);
     testProvider.addFile(certPath, new ByteArrayInputStream(TEST_CERT.getBytes()));
-    testProvider.addFile(keyPath,  new ByteArrayInputStream(TEST_PRIVATE_KEY.getBytes()));
+    testProvider.addFile(keyPath, new ByteArrayInputStream(TEST_PRIVATE_KEY.getBytes()));
 
     CertificateFactory cf = CertificateFactory.getInstance("X.509");
-    Certificate expectedCert = cf.generateCertificate(new ByteArrayInputStream(TEST_CERT.getBytes()));
+    Certificate expectedCert =
+        cf.generateCertificate(new ByteArrayInputStream(TEST_CERT.getBytes()));
 
     // Assert that the store has the expected certificate and only the expected certificate.
     KeyStore store = testProvider.getKeyStore();
@@ -106,18 +115,13 @@ public class X509ProviderTest {
     assertTrue(store.getCertificateAlias(expectedCert) != null);
   }
 
-  static InputStream writeWorkloadCertificateConfigStream(
-      String certPath,
-      String privateKeyPath)
+  static InputStream writeWorkloadCertificateConfigStream(String certPath, String privateKeyPath)
       throws IOException {
-    GenericJson json =
-        writeWorkloadCertificateConfigJson(certPath, privateKeyPath);
+    GenericJson json = writeWorkloadCertificateConfigJson(certPath, privateKeyPath);
     return TestUtils.jsonToInputStream(json);
   }
 
-  static GenericJson writeWorkloadCertificateConfigJson(
-      String certPath,
-      String privateKeyPath) {
+  static GenericJson writeWorkloadCertificateConfigJson(String certPath, String privateKeyPath) {
     GenericJson json = new GenericJson();
     json.put("version", 1);
     GenericJson certConfigs = new GenericJson();
@@ -136,9 +140,9 @@ public class X509ProviderTest {
   static class TestX509Provider extends X509Provider {
     private final Map<String, InputStream> files = new HashMap<>();
 
-    TestX509Provider () {}
+    TestX509Provider() {}
 
-    TestX509Provider (String filePathOverride) {
+    TestX509Provider(String filePathOverride) {
       super(filePathOverride);
     }
 
@@ -146,14 +150,14 @@ public class X509ProviderTest {
       files.put(file, stream);
     }
 
-    //@Override
-    //String getEnv(String name) {
+    // @Override
+    // String getEnv(String name) {
     //  return variables.get(name);
-    //}
+    // }
 
-    //void setEnv(String name, String value) {
+    // void setEnv(String name, String value) {
     //  variables.put(name, value);
-    //}
+    // }
 
     @Override
     boolean isFile(File file) {
