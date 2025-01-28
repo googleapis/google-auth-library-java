@@ -141,7 +141,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
         new MockLowLevelHttpRequest(url) {
           @Override
           public LowLevelHttpResponse execute() {
-            if (statusCode != null && (statusCode > 400 && statusCode < 500)) {
+            if (statusCode != null && (statusCode >= 400 && statusCode < 600)) {
               return new MockLowLevelHttpResponse()
                   .setStatusCode(statusCode)
                   .setContent("Metadata Error");
@@ -197,7 +197,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
       @Override
       public LowLevelHttpResponse execute() throws IOException {
 
-        if (statusCode != null && (statusCode > 400 && statusCode < 500)) {
+        if (statusCode != null && (statusCode >= 400 && statusCode < 600)) {
           return new MockLowLevelHttpResponse()
               .setStatusCode(statusCode)
               .setContent("Token Fetch Error");
