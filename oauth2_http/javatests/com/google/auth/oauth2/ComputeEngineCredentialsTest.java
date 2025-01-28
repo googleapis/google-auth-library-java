@@ -31,12 +31,14 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.oauth2.ComputeEngineCredentials.METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -420,7 +422,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   @Test
   public void getRequestMetadata_missingServiceAccount_throws() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-    transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_NOT_FOUND);
+    transportFactory.transport.setStatusCode(HttpStatusCodes.STATUS_CODE_NOT_FOUND);
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
     try {
@@ -437,7 +439,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   @Test
   public void getRequestMetadata_serverError_throws() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-    transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_SERVER_ERROR);
+    transportFactory.transport.setStatusCode(HttpStatusCodes.STATUS_CODE_SERVER_ERROR);
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
     try {
@@ -668,7 +670,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
-    transportFactory.transport.setRequestStatusCode(501);
+    transportFactory.transport.setStatusCode(501);
     Assert.assertThrows(IOException.class, credentials::getUniverseDomain);
 
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
@@ -962,7 +964,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
         continue;
       }
       try {
-        transportFactory.transport.setRequestStatusCode(status);
+        transportFactory.transport.setStatusCode(status);
         credentials.getUniverseDomain();
         fail("Should not be able to use credential without exception.");
       } catch (GoogleAuthException ex) {
@@ -1093,6 +1095,45 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     assertTrue("Full ID Token format not provided", p.containsKey("google"));
     ArrayMap<String, ArrayMap> googleClaim = (ArrayMap<String, ArrayMap>) p.get("google");
     assertTrue(googleClaim.containsKey("license"));
+  }
+
+  @Test
+  public void idTokenWithAudience_404StatusCode() {
+    int statusCode = HttpStatusCodes.STATUS_CODE_NOT_FOUND;
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    transportFactory.transport.setStatusCode(HttpStatusCodes.STATUS_CODE_NOT_FOUND);
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+    IOException exception =
+        assertThrows(IOException.class, () -> credentials.idTokenWithAudience("Audience", null));
+    assertEquals(
+        String.format(
+            "Error code %s trying to get identity token from"
+                + " Compute Engine metadata. This may be because the virtual machine instance"
+                + " does not have permission scopes specified.",
+            statusCode),
+        exception.getMessage());
+  }
+
+  @Test
+  public void idTokenWithAudience_emptyContent() {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    transportFactory.transport.setEmptyContent(true);
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+    IOException exception =
+        assertThrows(IOException.class, () -> credentials.idTokenWithAudience("Audience", null));
+    assertEquals(METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE, exception.getMessage());
+  }
+
+  @Test
+  public void idTokenWithAudience_503StatusCode() {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    transportFactory.transport.setStatusCode(HttpStatusCodes.STATUS_CODE_SERVICE_UNAVAILABLE);
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+    assertThrows(
+        GoogleAuthException.class, () -> credentials.idTokenWithAudience("Audience", null));
   }
 
   static class MockMetadataServerTransportFactory implements HttpTransportFactory {
