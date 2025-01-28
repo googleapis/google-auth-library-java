@@ -49,7 +49,7 @@ jobs:
         members_path: ${{ steps.download_members.outputs.output-file }}
 
   multi-approvers:
-    needs: download_members
     uses: ./.github/workflows/multi-approvers.yml
+    needs: download_members
     with:
       org-members-path: ${{ needs.download_members.outputs.members_path }}
