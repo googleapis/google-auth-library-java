@@ -491,13 +491,13 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
     IllegalArgumentException exception =
         assertThrows(
             IllegalArgumentException.class,
-            () -> {
-              ClientSideCredentialAccessBoundaryFactory.newBuilder()
-                  .setSourceCredential(sourceCredentials)
-                  .setRefreshMargin(Duration.ofMinutes(50))
-                  .setMinimumTokenLifetime(Duration.ofMinutes(50))
-                  .build();
-            });
+            () ->
+                ClientSideCredentialAccessBoundaryFactory.newBuilder()
+                    .setSourceCredential(sourceCredentials)
+                    .setRefreshMargin(Duration.ofMinutes(50))
+                    .setMinimumTokenLifetime(Duration.ofMinutes(50))
+                    .build());
+
     assertEquals(
         "Refresh margin must be at least one minute longer than the minimum token lifetime.",
         exception.getMessage());
@@ -649,9 +649,9 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
     }
   }
 
-  private static CabToken parseCabToken(AccessToken token) throws Exception {
+  private static CabToken parseCabToken(AccessToken token) {
     String[] parts = token.getTokenValue().split("\\.");
-    assertEquals(parts.length, 2);
+    assertEquals(2, parts.length);
 
     return new CabToken(parts[0], parts[1]);
   }
@@ -703,7 +703,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
     AccessToken token = factory.generateToken(accessBoundary);
 
     CabToken cabToken = parseCabToken(token);
-    assertEquals(cabToken.intermediateToken, "accessToken");
+    assertEquals("accessToken", cabToken.intermediateToken);
 
     // Checks the encrypted restriction is the correct proto format of the
     // CredentialAccessBoundary
@@ -711,20 +711,20 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
         decryptRestriction(
             cabToken.encryptedRestriction,
             transportFactory.transport.getAccessBoundarySessionKey());
-    assertEquals(clientSideAccessBoundary.getAccessBoundaryRulesCount(), 1);
+    assertEquals(1, clientSideAccessBoundary.getAccessBoundaryRulesCount());
 
     ClientSideAccessBoundaryRule rule = clientSideAccessBoundary.getAccessBoundaryRules(0);
 
     // Available resource and available permission should be the exact same as
     // in original format
-    assertEquals(rule.getAvailableResource(), "resource");
-    assertEquals(rule.getAvailablePermissionsList(), ImmutableList.of("role1", "role2"));
+    assertEquals("resource", rule.getAvailableResource());
+    assertEquals(ImmutableList.of("role1", "role2"), rule.getAvailablePermissionsList());
 
     // Availablity condition should be in the correct compiled proto format
     Expr expr = rule.getCompiledAvailabilityCondition();
-    assertEquals(expr.getCallExpr().getFunction(), "_==_");
-    assertEquals(expr.getCallExpr().getArgs(0).getIdentExpr().getName(), "a");
-    assertEquals(expr.getCallExpr().getArgs(1).getIdentExpr().getName(), "b");
+    assertEquals("_==_", expr.getCallExpr().getFunction());
+    assertEquals("a", expr.getCallExpr().getArgs(0).getIdentExpr().getName());
+    assertEquals("b", expr.getCallExpr().getArgs(1).getIdentExpr().getName());
   }
 
   @Test
@@ -755,7 +755,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
     AccessToken token = factory.generateToken(accessBoundary);
 
     CabToken cabToken = parseCabToken(token);
-    assertEquals(cabToken.intermediateToken, "accessToken");
+    assertEquals("accessToken", cabToken.intermediateToken);
 
     // Checks the encrypted restriction is the correct proto format of the
     // CredentialAccessBoundary
@@ -763,14 +763,14 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
         decryptRestriction(
             cabToken.encryptedRestriction,
             transportFactory.transport.getAccessBoundarySessionKey());
-    assertEquals(clientSideAccessBoundary.getAccessBoundaryRulesCount(), 1);
+    assertEquals(1, clientSideAccessBoundary.getAccessBoundaryRulesCount());
 
     ClientSideAccessBoundaryRule rule = clientSideAccessBoundary.getAccessBoundaryRules(0);
 
     // Available resource and available permission should be the exact same as
     // in original format
-    assertEquals(rule.getAvailableResource(), "resource");
-    assertEquals(rule.getAvailablePermissionsList(), ImmutableList.of("role"));
+    assertEquals("resource", rule.getAvailableResource());
+    assertEquals(ImmutableList.of("role"), rule.getAvailablePermissionsList());
 
     // Availablity condition should be empty since it's not provided
     assertFalse(rule.hasCompiledAvailabilityCondition());
@@ -814,7 +814,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
     AccessToken token = factory.generateToken(accessBoundary);
 
     CabToken cabToken = parseCabToken(token);
-    assertEquals(cabToken.intermediateToken, "accessToken");
+    assertEquals("accessToken", cabToken.intermediateToken);
 
     // Checks the encrypted restriction is the correct proto format of the
     // CredentialAccessBoundary
@@ -822,22 +822,22 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
         decryptRestriction(
             cabToken.encryptedRestriction,
             transportFactory.transport.getAccessBoundarySessionKey());
-    assertEquals(clientSideAccessBoundary.getAccessBoundaryRulesCount(), 2);
+    assertEquals(2, clientSideAccessBoundary.getAccessBoundaryRulesCount());
 
     // Checks the first rule
     ClientSideAccessBoundaryRule rule1 = clientSideAccessBoundary.getAccessBoundaryRules(0);
-    assertEquals(rule1.getAvailableResource(), "resource1");
-    assertEquals(rule1.getAvailablePermissionsList(), ImmutableList.of("role1-1", "role1-2"));
+    assertEquals("resource1", rule1.getAvailableResource());
+    assertEquals(ImmutableList.of("role1-1", "role1-2"), rule1.getAvailablePermissionsList());
 
     Expr expr = rule1.getCompiledAvailabilityCondition();
-    assertEquals(expr.getCallExpr().getFunction(), "_==_");
-    assertEquals(expr.getCallExpr().getArgs(0).getIdentExpr().getName(), "a");
-    assertEquals(expr.getCallExpr().getArgs(1).getIdentExpr().getName(), "b");
+    assertEquals("_==_", expr.getCallExpr().getFunction());
+    assertEquals("a", expr.getCallExpr().getArgs(0).getIdentExpr().getName());
+    assertEquals("b", expr.getCallExpr().getArgs(1).getIdentExpr().getName());
 
     // Checks the second rule
     ClientSideAccessBoundaryRule rule2 = clientSideAccessBoundary.getAccessBoundaryRules(1);
-    assertEquals(rule2.getAvailableResource(), "resource");
-    assertEquals(rule2.getAvailablePermissionsList(), ImmutableList.of("role2"));
+    assertEquals("resource", rule2.getAvailableResource());
+    assertEquals(ImmutableList.of("role2"), rule2.getAvailablePermissionsList());
     assertFalse(rule2.hasCompiledAvailabilityCondition());
   }
 
@@ -875,11 +875,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
                     .build())
             .build();
 
-    assertThrows(
-        CelValidationException.class,
-        () -> {
-          factory.generateToken(accessBoundary);
-        });
+    assertThrows(CelValidationException.class, () -> factory.generateToken(accessBoundary));
   }
 
   @Test
@@ -916,11 +912,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
                     .build())
             .build();
 
-    assertThrows(
-        IllegalStateException.class,
-        () -> {
-          factory.generateToken(accessBoundary);
-        });
+    assertThrows(IllegalStateException.class, () -> factory.generateToken(accessBoundary));
   }
 
   @Test
@@ -957,10 +949,6 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
                     .build())
             .build();
 
-    assertThrows(
-        GeneralSecurityException.class,
-        () -> {
-          factory.generateToken(accessBoundary);
-        });
+    assertThrows(GeneralSecurityException.class, () -> factory.generateToken(accessBoundary));
   }
 }
