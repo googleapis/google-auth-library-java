@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package com.google.auth.credentialaccessboundary.proto;
+
+import "cel/expr/syntax.proto";
+
+option java_multiple_files = false;
+option java_package = "com.google.auth.credentialaccessboundary.protobuf";
+option java_outer_classname = "ClientSideAccessBoundaryProto";
+
+
+message ClientSideAccessBoundaryRule {
+  string available_resource = 1;
+
+  repeated string available_permissions = 2;
+
+  cel.expr.Expr compiled_availability_condition = 4;
+}
+
+message ClientSideAccessBoundary {
+  repeated ClientSideAccessBoundaryRule access_boundary_rules = 1;
+}
