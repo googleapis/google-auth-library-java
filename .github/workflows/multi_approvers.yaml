@@ -28,4 +28,4 @@ jobs:
   multi-approvers:
     uses: 'googleapis/google-auth-library-java/.github/workflows/multi-approvers.yml@multi-approvers'
     with:
-      org-members-path: .github/workflows/members.json
+      org-members-path: googleapis/google-auth-library-java/main/.github/workflows/members.json

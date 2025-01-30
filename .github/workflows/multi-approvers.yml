@@ -18,7 +18,7 @@ on:
   workflow_call:
     inputs:
       # Path to a JSON file containing the members of the org. This should be
-      # the full path from the repo root without a leading `/`.
+      # the full path that should work with the https://raw.githubusercontent.com/ prefix.
       # See the README for more.
       org-members-path:
         required: true
@@ -43,6 +43,24 @@ jobs:
       - name: 'Checkout the calling repo'
         uses: 'actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683' # ratchet:actions/checkout@v4
 
+      - name: Download members.json
+        id: 'download-members-json'
+        run: |-
+          MEMBERS_JSON="${RUNNER_TEMP}/${GITHUB_SHA:0:7}.members.json"
+
+          # Download the file, passing in authentication to get a higher rate
+          # limit: https://docs.github.com/en/rest/overview/resources-in-the-rest-api?apiVersion=2022-11-28#rate-limits-for-requests-from-github-actions
+          curl "https://raw.githubusercontent.com/${{ inputs.org-members-path }}" \
+              --silent \
+              --fail \
+              --location \
+              --header "Authorization: Token ${{ github.token }}" \
+              --output "${MEMBERS_JSON}"
+
+          # Save the result to an output.
+          echo "::notice::Downloaded members.json to ${MEMBERS_JSON}"
+          echo "output-file=${MEMBERS_JSON}" >> "${GITHUB_OUTPUT}"
+
       - name: 'Download multi-approvers.js'
         id: 'download-multi-approvers-js'
         run: |-
@@ -66,7 +84,7 @@ jobs:
         with:
           retries: 3
           script: |-
-            const orgMembersPath = '${{ github.action_path }}/${{ inputs.org-members-path }}';
+            const orgMembersPath = '${{ steps.download-members-json.outputs.output-file }}';
             // Warning: this should not be quoted, otherwise comparisons will not work in JS.
             const prNumber = ${{ github.event.pull_request.number }}
             const repoName = '${{ github.event.repository.name }}'
