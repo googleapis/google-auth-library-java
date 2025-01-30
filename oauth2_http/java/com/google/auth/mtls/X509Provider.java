@@ -1,7 +1,6 @@
 package com.google.auth.mtls;
 
 import com.google.api.client.util.SecurityUtils;
-import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -110,7 +109,7 @@ public class X509Provider {
   /*
    * End of methods to allow overriding in the test code to isolate from the environment.
    */
-  
+
   private File getWellKnownCertificateConfigFile() {
     File cloudConfigPath;
     String envPath = getEnv("CLOUDSDK_CONFIG");
