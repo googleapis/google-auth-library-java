@@ -40,9 +40,6 @@ jobs:
       contains(fromJSON('["pull_request", "pull_request_review"]'), github.event_name)
     runs-on: 'ubuntu-latest'
     steps:
-      - name: 'Checkout the calling repo'
-        uses: 'actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683' # ratchet:actions/checkout@v4
-
       - name: Download members.json
         id: 'download-members-json'
         run: |-
