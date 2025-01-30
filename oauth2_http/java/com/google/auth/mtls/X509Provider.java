@@ -1,6 +1,7 @@
 package com.google.auth.mtls;
 
 import com.google.api.client.util.SecurityUtils;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -49,14 +50,16 @@ public class X509Provider {
 
   private WorkloadCertificateConfiguration getWorkloadCertificateConfiguration()
       throws IOException {
-    String envCredentialsPath = getEnv(CERTIFICATE_CONFIGURATION_ENV_VARIABLE);
     File certConfig;
     if (this.certConfigPathOverride != null) {
       certConfig = new File(certConfigPathOverride);
-    } else if (envCredentialsPath != null && envCredentialsPath.length() > 0) {
-      certConfig = new File(envCredentialsPath);
     } else {
-      certConfig = getWellKnownCertificateConfigFile();
+      String envCredentialsPath = getEnv(CERTIFICATE_CONFIGURATION_ENV_VARIABLE);
+      if (envCredentialsPath != null && !envCredentialsPath.isEmpty()) {
+        certConfig = new File(envCredentialsPath);
+      } else {
+        certConfig = getWellKnownCertificateConfigFile();
+      }
     }
     InputStream certConfigStream = null;
     try {
@@ -82,6 +85,9 @@ public class X509Provider {
     }
   }
 
+  /*
+   * Start of methods to allow overriding in the test code to isolate from the environment.
+   */
   boolean isFile(File file) {
     return file.isFile();
   }
@@ -101,8 +107,11 @@ public class X509Provider {
   String getProperty(String property, String def) {
     return System.getProperty(property, def);
   }
-
-  File getWellKnownCertificateConfigFile() {
+  /*
+   * End of methods to allow overriding in the test code to isolate from the environment.
+   */
+  
+  private File getWellKnownCertificateConfigFile() {
     File cloudConfigPath;
     String envPath = getEnv("CLOUDSDK_CONFIG");
     if (envPath != null) {

@@ -36,10 +36,28 @@ public class WorkloadCertificateConfiguration {
         parser.parseAndClose(certConfigStream, StandardCharsets.UTF_8, GenericJson.class);
 
     Map<String, Object> certConfigs = (Map<String, Object>) fileContents.get("cert_configs");
+    if (certConfigs == null) {
+      throw new IllegalArgumentException(
+          "The cert_configs object must be provided in the certificate configuration file.");
+    }
+
     Map<String, Object> workloadConfig = (Map<String, Object>) certConfigs.get("workload");
+    if (workloadConfig == null) {
+      throw new IllegalArgumentException(
+          "A workload certificate configuration must be provided in the cert_configs object.");
+    }
 
     String certPath = (String) workloadConfig.get("cert_path");
+    if (certPath.isEmpty() || certPath == null) {
+      throw new IllegalArgumentException(
+          "The cert_path field must be provided in the workload certificate configuration.");
+    }
+
     String privateKeyPath = (String) workloadConfig.get("key_path");
+    if (privateKeyPath.isEmpty() || privateKeyPath == null) {
+      throw new IllegalArgumentException(
+          "The key_path field must be provided in the workload certificate configuration.");
+    }
 
     return new WorkloadCertificateConfiguration(certPath, privateKeyPath);
   }

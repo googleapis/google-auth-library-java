@@ -1,10 +1,39 @@
+/*
+ * Copyright 2025, Google Inc. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ *    * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ *    * Redistributions in binary form must reproduce the above
+ * copyright notice, this list of conditions and the following disclaimer
+ * in the documentation and/or other materials provided with the
+ * distribution.
+ *
+ *    * Neither the name of Google Inc. nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 package com.google.auth.mtls;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.google.api.client.json.GenericJson;
-import com.google.auth.TestUtils;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -21,7 +50,7 @@ import org.junit.Test;
 
 public class X509ProviderTest {
 
-  static String TEST_CERT =
+  private static String TEST_CERT =
       "-----BEGIN CERTIFICATE-----\n"
           + "MIICGzCCAYSgAwIBAgIIWrt6xtmHPs4wDQYJKoZIhvcNAQEFBQAwMzExMC8GA1UE\n"
           + "AxMoMTAwOTEyMDcyNjg3OC5hcHBzLmdvb2dsZXVzZXJjb250ZW50LmNvbTAeFw0x\n"
@@ -37,7 +66,7 @@ public class X509ProviderTest {
           + "kWwa9n19NFiV0z3m6isj\n"
           + "-----END CERTIFICATE-----\n";
 
-  static String TEST_PRIVATE_KEY =
+  private static String TEST_PRIVATE_KEY =
       "-----BEGIN PRIVATE KEY-----\n"
           + "MIICdQIBADANBgkqhkiG9w0BAQEFAASCAl8wggJbAgEAAoGBAL1SdY8jTUVU7O4/\n"
           + "XrZLYTw0ON1lV6MQRGajFDFCqD2Fd9tQGLW8Iftx9wfXe1zuaehJSgLcyCxazfyJ\n"
@@ -56,7 +85,7 @@ public class X509ProviderTest {
           + "-----END PRIVATE KEY-----";
 
   @Test
-  public void X509Provider_FileDoesntExist_Throws() {
+  public void x509Provider_fileDoesntExist_throws() {
     String certConfigPath = "badfile.txt";
     X509Provider testProvider = new TestX509Provider(certConfigPath);
     String expectedErrorMessage =
@@ -74,7 +103,7 @@ public class X509ProviderTest {
   }
 
   @Test
-  public void X509Provider_EmptyFile_Throws() {
+  public void x509Provider_emptyFile_throws() {
     String certConfigPath = "certConfig.txt";
     InputStream certConfigStream = new ByteArrayInputStream("".getBytes());
     TestX509Provider testProvider = new TestX509Provider(certConfigPath);
@@ -94,11 +123,13 @@ public class X509ProviderTest {
   }
 
   @Test
-  public void X509Provider_Succeeds() throws IOException, KeyStoreException, CertificateException {
+  public void x509Provider_succeeds() throws IOException, KeyStoreException, CertificateException {
     String certConfigPath = "certConfig.txt";
     String certPath = "cert.crt";
     String keyPath = "key.crt";
-    InputStream certConfigStream = writeWorkloadCertificateConfigStream(certPath, keyPath);
+    InputStream certConfigStream =
+        WorkloadCertificateConfigurationTest.writeWorkloadCertificateConfigStream(
+            certPath, keyPath);
 
     TestX509Provider testProvider = new TestX509Provider(certConfigPath);
     testProvider.addFile(certConfigPath, certConfigStream);
@@ -115,30 +146,62 @@ public class X509ProviderTest {
     assertTrue(store.getCertificateAlias(expectedCert) != null);
   }
 
-  static InputStream writeWorkloadCertificateConfigStream(String certPath, String privateKeyPath)
-      throws IOException {
-    GenericJson json = writeWorkloadCertificateConfigJson(certPath, privateKeyPath);
-    return TestUtils.jsonToInputStream(json);
+  @Test
+  public void x509Provider_succeeds_withEnvVariable()
+      throws IOException, KeyStoreException, CertificateException {
+    String certConfigPath = "certConfig.txt";
+    String certPath = "cert.crt";
+    String keyPath = "key.crt";
+    InputStream certConfigStream =
+        WorkloadCertificateConfigurationTest.writeWorkloadCertificateConfigStream(
+            certPath, keyPath);
+
+    TestX509Provider testProvider = new TestX509Provider();
+    testProvider.setEnv("GOOGLE_API_CERTIFICATE_CONFIG", certConfigPath);
+    testProvider.addFile(certConfigPath, certConfigStream);
+    testProvider.addFile(certPath, new ByteArrayInputStream(TEST_CERT.getBytes()));
+    testProvider.addFile(keyPath, new ByteArrayInputStream(TEST_PRIVATE_KEY.getBytes()));
+
+    CertificateFactory cf = CertificateFactory.getInstance("X.509");
+    Certificate expectedCert =
+        cf.generateCertificate(new ByteArrayInputStream(TEST_CERT.getBytes()));
+
+    // Assert that the store has the expected certificate and only the expected certificate.
+    KeyStore store = testProvider.getKeyStore();
+    assertTrue(store.size() == 1);
+    assertTrue(store.getCertificateAlias(expectedCert) != null);
   }
 
-  static GenericJson writeWorkloadCertificateConfigJson(String certPath, String privateKeyPath) {
-    GenericJson json = new GenericJson();
-    json.put("version", 1);
-    GenericJson certConfigs = new GenericJson();
-    GenericJson workloadConfig = new GenericJson();
-    if (certPath != null) {
-      workloadConfig.put("cert_path", certPath);
-    }
-    if (privateKeyPath != null) {
-      workloadConfig.put("key_path", privateKeyPath);
-    }
-    certConfigs.put("workload", workloadConfig);
-    json.put("cert_configs", certConfigs);
-    return json;
+  @Test
+  public void x509Provider_succeeds_withWellKnownPath()
+      throws IOException, KeyStoreException, CertificateException {
+    String certConfigPath = "certConfig.txt";
+    String certPath = "cert.crt";
+    String keyPath = "key.crt";
+    InputStream certConfigStream =
+        WorkloadCertificateConfigurationTest.writeWorkloadCertificateConfigStream(
+            certPath, keyPath);
+
+    TestX509Provider testProvider = new TestX509Provider();
+    testProvider.setEnv("GOOGLE_API_CERTIFICATE_CONFIG", certConfigPath);
+    testProvider.addFile(certConfigPath, certConfigStream);
+    testProvider.addFile(certPath, new ByteArrayInputStream(TEST_CERT.getBytes()));
+    testProvider.addFile(keyPath, new ByteArrayInputStream(TEST_PRIVATE_KEY.getBytes()));
+
+    CertificateFactory cf = CertificateFactory.getInstance("X.509");
+    Certificate expectedCert =
+        cf.generateCertificate(new ByteArrayInputStream(TEST_CERT.getBytes()));
+
+    // Assert that the store has the expected certificate and only the expected certificate.
+    KeyStore store = testProvider.getKeyStore();
+    assertTrue(store.size() == 1);
+    assertTrue(store.getCertificateAlias(expectedCert) != null);
   }
 
   static class TestX509Provider extends X509Provider {
     private final Map<String, InputStream> files = new HashMap<>();
+    private final Map<String, String> variables = new HashMap<>();
+    private final Map<String, String> properties = new HashMap<>();
 
     TestX509Provider() {}
 
@@ -150,14 +213,24 @@ public class X509ProviderTest {
       files.put(file, stream);
     }
 
-    // @Override
-    // String getEnv(String name) {
-    //  return variables.get(name);
-    // }
+    @Override
+    String getEnv(String name) {
+      return variables.get(name);
+    }
 
-    // void setEnv(String name, String value) {
-    //  variables.put(name, value);
-    // }
+    void setEnv(String name, String value) {
+      variables.put(name, value);
+    }
+
+    @Override
+    String getProperty(String property, String def) {
+      String value = properties.get(property);
+      return value == null ? def : value;
+    }
+
+    void setProperty(String name, String value) {
+      properties.put(name, value);
+    }
 
     @Override
     boolean isFile(File file) {
