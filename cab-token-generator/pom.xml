@@ -31,7 +31,7 @@
         <version>0.6.1</version>
         <configuration>
           <protoSourceRoot>${project.basedir}/proto</protoSourceRoot>
-          <protocArtifact>com.google.protobuf:protoc:${project.protobuf.version}:exe:${os.detected.classifier}</protocArtifact>
+          <protocArtifact>com.google.protobuf:protoc:${project.protoc.version}:exe:${os.detected.classifier}</protocArtifact>
         </configuration>
         <executions>
           <execution>
