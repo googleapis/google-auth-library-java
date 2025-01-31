@@ -10,7 +10,7 @@
     </version><!-- {x-version-update:google-auth-library-parent:current} -->
   </parent>
 
-  <artifactId>cab-token-generator</artifactId>
+  <artifactId>google-auth-library-cab-token-generator</artifactId>
   <name>Google Auth Library for Java - Cab Token Generator</name>
 
   <build>
@@ -19,6 +19,7 @@
   </build>
 
   <dependencies>
+    <!-- Compile and Runtime Dependencies -->
     <dependency>
       <groupId>com.google.auth</groupId>
       <artifactId>google-auth-library-oauth2-http</artifactId>
@@ -32,11 +33,6 @@
       <artifactId>google-http-client</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.google.http-client</groupId>
-      <artifactId>google-http-client-gson</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>com.google.errorprone</groupId>
       <artifactId>error_prone_annotations</artifactId>
     </dependency>
@@ -44,6 +40,24 @@
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>dev.cel</groupId>
+      <artifactId>cel</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>jsr305</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.crypto.tink</groupId>
+      <artifactId>tink</artifactId>
+    </dependency>
+
+    <!-- Test Dependencies -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -63,20 +77,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.google.protobuf</groupId>
-      <artifactId>protobuf-java</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>dev.cel</groupId>
-      <artifactId>cel</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.google.code.findbugs</groupId>
-      <artifactId>jsr305</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.google.crypto.tink</groupId>
-      <artifactId>tink</artifactId>
+      <groupId>com.google.http-client</groupId>
+      <artifactId>google-http-client-gson</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 

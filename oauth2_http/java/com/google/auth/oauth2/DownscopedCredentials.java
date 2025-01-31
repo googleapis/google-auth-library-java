@@ -45,6 +45,13 @@ import java.io.IOException;
  * DownscopedCredentials enables the ability to downscope, or restrict, the Identity and Access
  * Management (IAM) permissions that a short-lived credential can use for Cloud Storage.
  *
+ * <p>This class provides a server-side approach for generating downscoped tokens, suitable for
+ * situations where Credential Access Boundary rules change infrequently or a single downscoped
+ * credential is reused many times. For scenarios where rules change frequently, or you need to
+ * generate many unique downscoped tokens, the client-side approach using {@code
+ * com.google.auth.credentialaccessboundary.ClientSideCredentialAccessBoundaryFactory} is more
+ * efficient.
+ *
  * <p>To downscope permissions you must define a {@link CredentialAccessBoundary} which specifies
  * the upper bound of permissions that the credential can access. You must also provide a source
  * credential which will be used to acquire the downscoped credential.

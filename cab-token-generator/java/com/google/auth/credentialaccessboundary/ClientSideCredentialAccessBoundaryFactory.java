@@ -1,5 +1,5 @@
 /*
- * Copyright 2024, Google LLC
+ * Copyright 2025, Google LLC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -43,7 +43,9 @@ import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.CredentialAccessBoundary;
 import com.google.auth.oauth2.CredentialAccessBoundary.AccessBoundaryRule;
+import com.google.auth.oauth2.DownscopedCredentials;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.oauth2.OAuth2CredentialsWithRefresh;
 import com.google.auth.oauth2.OAuth2Utils;
 import com.google.auth.oauth2.StsRequestHandler;
 import com.google.auth.oauth2.StsTokenExchangeRequest;
@@ -79,6 +81,63 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 
+/**
+ * A factory for generating downscoped access tokens using a client-side approach.
+ *
+ * <p>Downscoped tokens enable the ability to downscope, or restrict, the Identity and Access
+ * Management (IAM) permissions that a short-lived credential can use for accessing Google Cloud
+ * Storage. This factory allows clients to efficiently generate multiple downscoped tokens locally,
+ * minimizing calls to the Security Token Service (STS). This client-side approach is particularly
+ * beneficial when Credential Access Boundary rules change frequently or when many unique downscoped
+ * tokens are required. For scenarios where rules change infrequently or a single downscoped
+ * credential is reused many times, the server-side approach using {@link DownscopedCredentials} is
+ * more appropriate.
+ *
+ * <p>To downscope permissions you must define a {@link CredentialAccessBoundary} which specifies
+ * the upper bound of permissions that the credential can access. You must also provide a source
+ * credential which will be used to acquire the downscoped credential.
+ *
+ * <p>The factory can be configured with options such as the {@code refreshMargin} and {@code
+ * minimumTokenLifetime}. The {@code refreshMargin} controls how far in advance of the underlying
+ * credentials' expiry a refresh is attempted. The {@code minimumTokenLifetime} ensures that
+ * generated tokens have a minimum usable lifespan. See the {@link Builder} class for more details
+ * on these options.
+ *
+ * <p>Usage:
+ *
+ * <pre><code>
+ * GoogleCredentials sourceCredentials = GoogleCredentials.getApplicationDefault()
+ *     .createScoped("https://www.googleapis.com/auth/cloud-platform");
+ *
+ * ClientSideCredentialAccessBoundaryFactory factory =
+ *     ClientSideCredentialAccessBoundaryFactory.newBuilder()
+ *         .setSourceCredential(sourceCredentials)
+ *         .build();
+ *
+ * CredentialAccessBoundary.AccessBoundaryRule rule =
+ *     CredentialAccessBoundary.AccessBoundaryRule.newBuilder()
+ *         .setAvailableResource(
+ *             "//storage.googleapis.com/projects/_/buckets/bucket")
+ *         .addAvailablePermission("inRole:roles/storage.objectViewer")
+ *         .build();
+ *
+ * CredentialAccessBoundary credentialAccessBoundary =
+ *     CredentialAccessBoundary.newBuilder().addRule(rule).build();
+ *
+ * AccessToken downscopedAccessToken = factory.generateToken(credentialAccessBoundary);
+ *
+ * OAuth2Credentials credentials = OAuth2Credentials.create(downscopedAccessToken);
+ *
+ * Storage storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
+ *
+ * Blob blob = storage.get(BlobId.of("bucket", "object"));
+ * System.out.printf("Blob %s retrieved.", blob.getBlobId());
+ * </code></pre>
+ *
+ * Note that {@link OAuth2CredentialsWithRefresh} can instead be used to consume the downscoped
+ * token, allowing for automatic token refreshes by providing a {@link
+ * OAuth2CredentialsWithRefresh.OAuth2RefreshHandler}.
+ */
 public class ClientSideCredentialAccessBoundaryFactory {
   static final Duration DEFAULT_REFRESH_MARGIN = Duration.ofMinutes(45);
   static final Duration DEFAULT_MINIMUM_TOKEN_LIFETIME = Duration.ofMinutes(30);
@@ -87,7 +146,7 @@ public class ClientSideCredentialAccessBoundaryFactory {
   private final String tokenExchangeEndpoint;
   private final Duration minimumTokenLifetime;
   private final Duration refreshMargin;
-  private transient RefreshTask refreshTask;
+  private RefreshTask refreshTask;
   private final Object refreshLock = new byte[0];
   private IntermediateCredentials intermediateCredentials = null;
   private final Clock clock;
@@ -107,8 +166,7 @@ public class ClientSideCredentialAccessBoundaryFactory {
     this.minimumTokenLifetime = builder.minimumTokenLifetime;
     this.clock = builder.clock;
 
-    // Initializes the Tink AEAD registry for encrypting the client-side
-    // restrictions.
+    // Initializes the Tink AEAD registry for encrypting the client-side restrictions.
     try {
       AeadConfig.register();
     } catch (GeneralSecurityException e) {
@@ -120,11 +178,11 @@ public class ClientSideCredentialAccessBoundaryFactory {
   }
 
   /**
-   * Generates a Client-Side CAB token given the {@link CredentialAccessBoundary}.
+   * Generates a downscoped access token given the {@link CredentialAccessBoundary}.
    *
    * @param accessBoundary The credential access boundary that defines the restrictions for the
    *     generated CAB token.
-   * @return The Client-Side CAB token in an {@link AccessToken} object
+   * @return The downscoped access token in an {@link AccessToken} object
    * @throws IOException If an I/O error occurs while refreshing the source credentials
    * @throws CelValidationException If the availability condition is an invalid CEL expression
    * @throws GeneralSecurityException If an error occurs during encryption
@@ -133,7 +191,8 @@ public class ClientSideCredentialAccessBoundaryFactory {
       throws IOException, CelValidationException, GeneralSecurityException {
     this.refreshCredentialsIfRequired();
 
-    String intermediateToken, sessionKey;
+    String intermediateToken;
+    String sessionKey;
     Date intermediateTokenExpirationTime;
 
     synchronized (refreshLock) {
@@ -168,21 +227,23 @@ public class ClientSideCredentialAccessBoundaryFactory {
     RefreshType refreshType = determineRefreshType();
 
     if (refreshType == RefreshType.NONE) {
-      return; // No refresh needed, token is still valid.
+      // No refresh needed, token is still valid.
+      return;
     }
 
     // If a refresh is required, create or retrieve the refresh task.
-    RefreshTask refreshTask = getOrCreateRefreshTask();
+    RefreshTask currentRefreshTask = getOrCreateRefreshTask();
 
     // Handle the refresh based on the determined refresh type.
     switch (refreshType) {
       case BLOCKING:
-        if (refreshTask.isNew) {
-          // Start a new refresh task only if the task is new
-          MoreExecutors.directExecutor().execute(refreshTask.task);
+        if (currentRefreshTask.isNew) {
+          // Start a new refresh task only if the task is new.
+          MoreExecutors.directExecutor().execute(currentRefreshTask.task);
         }
         try {
-          refreshTask.task.get(); // Wait for the refresh task to complete.
+          // Wait for the refresh task to complete.
+          currentRefreshTask.task.get();
         } catch (InterruptedException e) {
           // Restore the interrupted status and throw an exception.
           Thread.currentThread().interrupt();
@@ -202,16 +263,20 @@ public class ClientSideCredentialAccessBoundaryFactory {
         }
         break;
       case ASYNC:
-        if (refreshTask.isNew) {
+        if (currentRefreshTask.isNew) {
           // Starts a new background thread for the refresh task if it's a new task.
           // We create a new thread because the Auth Library doesn't currently include a background
           // executor. Introducing an executor would add complexity in managing its lifecycle and
           // could potentially lead to memory leaks.
           // We limit the number of concurrent refresh threads to 1, so the overhead of creating new
           // threads for asynchronous calls should be acceptable.
-          new Thread(refreshTask.task).start();
+          new Thread(currentRefreshTask.task).start();
         } // (No else needed - if not new, another thread is handling the refresh)
         break;
+      default:
+        // This should not happen unless RefreshType enum is extended and this method is not
+        // updated.
+        throw new IllegalStateException("Unexpected refresh type: " + refreshType);
     }
   }
 
@@ -228,7 +293,8 @@ public class ClientSideCredentialAccessBoundaryFactory {
 
     Date expirationTime = intermediateAccessToken.getExpirationTime();
     if (expirationTime == null) {
-      return RefreshType.NONE; // Token does not expire, no refresh needed.
+      // Token does not expire, no refresh needed.
+      return RefreshType.NONE;
     }
 
     Duration remaining = Duration.ofMillis(expirationTime.getTime() - clock.currentTimeMillis());
@@ -332,15 +398,16 @@ public class ClientSideCredentialAccessBoundaryFactory {
 
     // The STS endpoint will only return the expiration time for the intermediate token
     // if the original access token represents a service account.
-    // The intermediate token's expiration time will always match the source credential
-    // expiration.
+    // The intermediate token's expiration time will always match the source credential expiration.
     // When no expires_in is returned, we can copy the source credential's expiration time.
     if (intermediateToken.getExpirationTime() == null
         && sourceAccessToken.getExpirationTime() != null) {
       return new AccessToken(
           intermediateToken.getTokenValue(), sourceAccessToken.getExpirationTime());
     }
-    return intermediateToken; // Return original if no modification needed
+
+    // Return original if no modification needed.
+    return intermediateToken;
   }
 
   /**
@@ -474,7 +541,7 @@ public class ClientSideCredentialAccessBoundaryFactory {
               .setAvailableResource(rule.getAvailableResource());
 
       // Availability condition is an optional field from the CredentialAccessBoundary
-      // CEL compliation is only performed if there is a non-empty availablity condition.
+      // CEL compilation is only performed if there is a non-empty availability condition.
       if (rule.getAvailabilityCondition() != null) {
         String availabilityCondition = rule.getAvailabilityCondition().getExpression();
 
@@ -503,7 +570,7 @@ public class ClientSideCredentialAccessBoundaryFactory {
     try {
       rawKey = Base64.getDecoder().decode(sessionKey);
     } catch (IllegalArgumentException e) {
-      // Session key from the server is expected to be Base64 encoded
+      // Session key from the server is expected to be Base64 encoded.
       throw new IllegalStateException("Session key is not Base64 encoded", e);
     }
 
@@ -512,7 +579,7 @@ public class ClientSideCredentialAccessBoundaryFactory {
 
     Aead aead = keysetHandle.getPrimitive(RegistryConfiguration.get(), Aead.class);
 
-    // For Client-Side CAB token encryption, empty associated data is expected.
+    // For downscoped access token encryption, empty associated data is expected.
     // Tink requires a byte[0] to be passed for this case.
     return aead.encrypt(restriction, /* associatedData= */ new byte[0]);
   }
@@ -521,6 +588,12 @@ public class ClientSideCredentialAccessBoundaryFactory {
     return new Builder();
   }
 
+  /**
+   * Builder for {@link ClientSideCredentialAccessBoundaryFactory}.
+   *
+   * <p>Use this builder to create instances of {@code ClientSideCredentialAccessBoundaryFactory}
+   * with the desired configuration options.
+   */
   public static class Builder {
     private GoogleCredentials sourceCredential;
     private HttpTransportFactory transportFactory;
@@ -535,27 +608,33 @@ public class ClientSideCredentialAccessBoundaryFactory {
     /**
      * Sets the required source credential.
      *
-     * @param sourceCredential the {@code GoogleCredentials} to set
-     * @return this {@code Builder} object
+     * @param sourceCredential the {@code GoogleCredentials} to set. This is a
+     *     <strong>required</strong> parameter.
+     * @return this {@code Builder} object for chaining.
+     * @throws NullPointerException if {@code sourceCredential} is {@code null}.
      */
     @CanIgnoreReturnValue
     public Builder setSourceCredential(GoogleCredentials sourceCredential) {
+      checkNotNull(sourceCredential, "Source credential must not be null.");
       this.sourceCredential = sourceCredential;
       return this;
     }
 
     /**
-     * Sets the minimum acceptable lifetime for a generated CAB token.
+     * Sets the minimum acceptable lifetime for a generated downscoped access token.
      *
-     * <p>This value determines the minimum remaining lifetime required on the intermediate token
-     * before a CAB token can be generated. If the intermediate token's remaining lifetime is less
-     * than this value, CAB token generation will be blocked and a refresh will be initiated. This
-     * ensures that generated CAB tokens have a sufficient lifetime for use.
+     * <p>This parameter ensures that any generated downscoped access token has a minimum validity
+     * period. If the time remaining before the underlying credentials expire is less than this
+     * value, the factory will perform a blocking refresh, meaning that it will wait until the
+     * credentials are refreshed before generating a new downscoped token. This guarantees that the
+     * generated token will be valid for at least {@code minimumTokenLifetime}. A reasonable value
+     * should be chosen based on the expected duration of operations using the downscoped token. If
+     * not set, the default value is defined by {@link #DEFAULT_MINIMUM_TOKEN_LIFETIME}.
      *
-     * @param minimumTokenLifetime The minimum acceptable lifetime for a generated CAB token. Must
-     *     be greater than zero.
+     * @param minimumTokenLifetime The minimum acceptable lifetime for a generated downscoped access
+     *     token. Must be greater than zero.
      * @return This {@code Builder} object.
-     * @throws IllegalArgumentException if minimumTokenLifetime is negative or zero.
+     * @throws IllegalArgumentException if {@code minimumTokenLifetime} is negative or zero.
      */
     @CanIgnoreReturnValue
     public Builder setMinimumTokenLifetime(Duration minimumTokenLifetime) {
@@ -568,15 +647,19 @@ public class ClientSideCredentialAccessBoundaryFactory {
     }
 
     /**
-     * Sets the refresh margin for the intermediate access token.
+     * Sets the refresh margin for the underlying credentials.
      *
-     * <p>This duration specifies how far in advance of the intermediate access token's expiration
-     * time an asynchronous refresh should be initiated. If not provided, it will default to 30
-     * minutes.
+     * <p>This duration specifies how far in advance of the credentials' expiration time an
+     * asynchronous refresh should be initiated. This refresh happens in the background, without
+     * blocking the main thread. If not provided, it will default to the value defined by {@link
+     * #DEFAULT_REFRESH_MARGIN}.
+     *
+     * <p>Note: The {@code refreshMargin} must be at least one minute longer than the {@code
+     * minimumTokenLifetime}.
      *
      * @param refreshMargin The refresh margin. Must be greater than zero.
      * @return This {@code Builder} object.
-     * @throws IllegalArgumentException if refreshMargin is negative or zero.
+     * @throws IllegalArgumentException if {@code refreshMargin} is negative or zero.
      */
     @CanIgnoreReturnValue
     public Builder setRefreshMargin(Duration refreshMargin) {
@@ -623,6 +706,16 @@ public class ClientSideCredentialAccessBoundaryFactory {
       return this;
     }
 
+    /**
+     * Creates a new {@code ClientSideCredentialAccessBoundaryFactory} instance based on the current
+     * builder configuration.
+     *
+     * @return A new {@code ClientSideCredentialAccessBoundaryFactory} instance.
+     * @throws IllegalStateException if the builder is not properly configured (e.g., if the source
+     *     credential is not set).
+     * @throws IllegalArgumentException if the refresh margin is not at least one minute longer than
+     *     the minimum token lifetime.
+     */
     public ClientSideCredentialAccessBoundaryFactory build() {
       checkNotNull(sourceCredential, "Source credential must not be null.");
 

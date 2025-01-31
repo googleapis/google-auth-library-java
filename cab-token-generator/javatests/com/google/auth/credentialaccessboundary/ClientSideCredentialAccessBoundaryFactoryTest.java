@@ -1,5 +1,5 @@
 /*
- * Copyright 2024, Google LLC
+ * Copyright 2025, Google LLC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -190,7 +190,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
   @Test
   public void fetchIntermediateCredentials_noExpiresInReturned_copiesSourceExpiration()
       throws Exception {
-    // Simulate STS not returning expires_in
+    // Simulate STS not returning expires_in.
     mockStsTransportFactory.transport.setReturnExpiresIn(false);
 
     GoogleCredentials sourceCredentials =
@@ -211,7 +211,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
 
     // Validate that the expires_in has been copied from the source credential.
     AccessToken sourceAccessToken = sourceCredentials.getAccessToken();
-    assertNotNull(sourceAccessToken); // Assert that sourceAccessToken is not null
+    assertNotNull(sourceAccessToken);
     assertEquals(
         sourceAccessToken.getExpirationTime(), intermediateAccessToken.getExpirationTime());
   }
@@ -377,7 +377,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
     assertEquals("Unable to refresh the provided source credential.", exception.getMessage());
   }
 
-  // Tests related to the builder methods
+  // Tests related to the builder methods.
   @Test
   public void builder_noSourceCredential_throws() {
     NullPointerException exception =
@@ -504,6 +504,44 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
   }
 
   @Test
+  public void builder_invalidRefreshMargin_throws() throws IOException {
+    GoogleCredentials sourceCredentials =
+        getServiceAccountSourceCredentials(mockTokenServerTransportFactory);
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                ClientSideCredentialAccessBoundaryFactory.newBuilder()
+                    .setSourceCredential(sourceCredentials)
+                    .setRefreshMargin(Duration.ofMinutes(25))
+                    .build());
+
+    assertEquals(
+        "Refresh margin must be at least one minute longer than the minimum token lifetime.",
+        exception.getMessage());
+  }
+
+  @Test
+  public void builder_invalidMinimumTokenLifetime_throws() throws IOException {
+    GoogleCredentials sourceCredentials =
+        getServiceAccountSourceCredentials(mockTokenServerTransportFactory);
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                ClientSideCredentialAccessBoundaryFactory.newBuilder()
+                    .setSourceCredential(sourceCredentials)
+                    .setMinimumTokenLifetime(Duration.ofMinutes(50))
+                    .build());
+
+    assertEquals(
+        "Refresh margin must be at least one minute longer than the minimum token lifetime.",
+        exception.getMessage());
+  }
+
+  @Test
   public void builder_minimumTokenLifetimeNotSet_usesDefault() throws IOException {
     GoogleCredentials sourceCredentials =
         getServiceAccountSourceCredentials(mockTokenServerTransportFactory);
@@ -610,14 +648,14 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
     CountDownLatch latch = new CountDownLatch(numThreads);
     long timeoutMillis = 5000; // 5 seconds
 
-    // Create and start the threads
+    // Create and start threads to concurrently call refreshCredentialsIfRequired().
     for (int i = 0; i < numThreads; i++) {
       threads[i] =
           new Thread(
               () -> {
                 try {
-                  latch.countDown(); // Signal thread is ready
-                  latch.await(); // Wait for all threads to be ready
+                  latch.countDown();
+                  latch.await();
                   factory.refreshCredentialsIfRequired();
                 } catch (InterruptedException e) {
                   Thread.currentThread().interrupt();
@@ -627,10 +665,12 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
               });
       threads[i].start();
     }
+
+    // Wait for each thread to complete, with a timeout.
     for (Thread thread : threads) {
-      thread.join(timeoutMillis); // Wait for each thread to complete
+      thread.join(timeoutMillis);
       if (thread.isAlive()) {
-        thread.interrupt(); // Interrupt the thread if it's still running after the timeout
+        thread.interrupt();
         throw new AssertionError(
             "Thread running refreshCredentialsIfRequired timed out after "
                 + timeoutMillis
@@ -705,8 +745,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
     CabToken cabToken = parseCabToken(token);
     assertEquals("accessToken", cabToken.intermediateToken);
 
-    // Checks the encrypted restriction is the correct proto format of the
-    // CredentialAccessBoundary
+    // Checks the encrypted restriction is the correct proto format of the CredentialAccessBoundary.
     ClientSideAccessBoundary clientSideAccessBoundary =
         decryptRestriction(
             cabToken.encryptedRestriction,
@@ -715,12 +754,11 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
 
     ClientSideAccessBoundaryRule rule = clientSideAccessBoundary.getAccessBoundaryRules(0);
 
-    // Available resource and available permission should be the exact same as
-    // in original format
+    // Available resource and available permission should be the exact same as in original format.
     assertEquals("resource", rule.getAvailableResource());
     assertEquals(ImmutableList.of("role1", "role2"), rule.getAvailablePermissionsList());
 
-    // Availablity condition should be in the correct compiled proto format
+    // Availability condition should be in the correct compiled proto format.
     Expr expr = rule.getCompiledAvailabilityCondition();
     assertEquals("_==_", expr.getCallExpr().getFunction());
     assertEquals("a", expr.getCallExpr().getArgs(0).getIdentExpr().getName());
@@ -757,8 +795,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
     CabToken cabToken = parseCabToken(token);
     assertEquals("accessToken", cabToken.intermediateToken);
 
-    // Checks the encrypted restriction is the correct proto format of the
-    // CredentialAccessBoundary
+    // Checks the encrypted restriction is the correct proto format of the CredentialAccessBoundary.
     ClientSideAccessBoundary clientSideAccessBoundary =
         decryptRestriction(
             cabToken.encryptedRestriction,
@@ -767,12 +804,11 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
 
     ClientSideAccessBoundaryRule rule = clientSideAccessBoundary.getAccessBoundaryRules(0);
 
-    // Available resource and available permission should be the exact same as
-    // in original format
+    // Available resource and available permission should be the exact same as in original format.
     assertEquals("resource", rule.getAvailableResource());
     assertEquals(ImmutableList.of("role"), rule.getAvailablePermissionsList());
 
-    // Availablity condition should be empty since it's not provided
+    // Availability condition should be empty since it's not provided.
     assertFalse(rule.hasCompiledAvailabilityCondition());
   }
 
@@ -816,15 +852,14 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
     CabToken cabToken = parseCabToken(token);
     assertEquals("accessToken", cabToken.intermediateToken);
 
-    // Checks the encrypted restriction is the correct proto format of the
-    // CredentialAccessBoundary
+    // Checks the encrypted restriction is the correct proto format of the CredentialAccessBoundary.
     ClientSideAccessBoundary clientSideAccessBoundary =
         decryptRestriction(
             cabToken.encryptedRestriction,
             transportFactory.transport.getAccessBoundarySessionKey());
     assertEquals(2, clientSideAccessBoundary.getAccessBoundaryRulesCount());
 
-    // Checks the first rule
+    // Checks the first rule.
     ClientSideAccessBoundaryRule rule1 = clientSideAccessBoundary.getAccessBoundaryRules(0);
     assertEquals("resource1", rule1.getAvailableResource());
     assertEquals(ImmutableList.of("role1-1", "role1-2"), rule1.getAvailablePermissionsList());
@@ -834,7 +869,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
     assertEquals("a", expr.getCallExpr().getArgs(0).getIdentExpr().getName());
     assertEquals("b", expr.getCallExpr().getArgs(1).getIdentExpr().getName());
 
-    // Checks the second rule
+    // Checks the second rule.
     ClientSideAccessBoundaryRule rule2 = clientSideAccessBoundary.getAccessBoundaryRules(1);
     assertEquals("resource", rule2.getAvailableResource());
     assertEquals(ImmutableList.of("role2"), rule2.getAvailablePermissionsList());

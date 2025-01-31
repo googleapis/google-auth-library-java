@@ -55,7 +55,7 @@ import java.security.GeneralSecurityException;
 import org.junit.Test;
 
 /**
- * Integration tests for the Client Side Credential Access Boundary Factory.
+ * Integration tests for {@link ClientSideCredentialAccessBoundaryFactory}. *
  *
  * <p>The only requirements for this test suite to run is to set the environment variable
  * GOOGLE_APPLICATION_CREDENTIALS to point to the same service account configured in the setup
