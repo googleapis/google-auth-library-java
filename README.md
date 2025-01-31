@@ -998,7 +998,7 @@ CredentialAccessBoundary:
 * **Server-side (using `DownscopedCredentials`):** The client calls the Security
 Token Service (STS) each time a downscoped token is needed. This is suitable for
 applications where the Credential Access Boundary rules change infrequently or 
-when a single downscoped credential is reused many times.  A key consideration 
+when a single downscoped credential is reused many times. A key consideration 
 is that every rule change requires a new call to the STS.
 
 
@@ -1006,8 +1006,9 @@ is that every rule change requires a new call to the STS.
 retrieves cryptographic material once and then generates multiple downscoped 
 tokens locally. This minimizes calls to the STS and is more efficient when 
 Credential Access Boundary rules change frequently, as the client doesn't need 
-to contact the STS for each rule change.  This is also more efficient for 
+to contact the STS for each rule change. This is also more efficient for 
 applications that need to generate many *unique* downscoped tokens.
+
 #### Server-side CAB
 
 The `DownscopedCredentials` class can be used to produce a downscoped access
