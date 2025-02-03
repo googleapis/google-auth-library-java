@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.http.LowLevelHttpRequest;
 import com.google.api.client.http.LowLevelHttpResponse;
 import com.google.api.client.json.GenericJson;
@@ -55,7 +56,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
   // key are scopes as in request url string following "?scopes="
   private Map<String, String> scopesToAccessToken;
-  private Integer requestStatusCode;
+  private Integer statusCode;
 
   private String serviceAccountEmail;
 
@@ -91,8 +92,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
     scopesToAccessToken.put(scopes, accessToken);
   }
 
-  public void setRequestStatusCode(Integer requestStatusCode) {
-    this.requestStatusCode = requestStatusCode;
+  public void setStatusCode(Integer statusCode) {
+    this.statusCode = statusCode;
   }
 
   public void setServiceAccountEmail(String serviceAccountEmail) {
@@ -140,14 +141,15 @@ public class MockMetadataServerTransport extends MockHttpTransport {
         new MockLowLevelHttpRequest(url) {
           @Override
           public LowLevelHttpResponse execute() {
-            if (requestStatusCode != null) {
+            if (statusCode != null && (statusCode >= 400 && statusCode < 600)) {
               return new MockLowLevelHttpResponse()
-                  .setStatusCode(requestStatusCode)
+                  .setStatusCode(statusCode)
                   .setContent("Metadata Error");
             }
 
             MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
             response.addHeader("Metadata-Flavor", "Google");
+            response.setStatusCode(HttpStatusCodes.STATUS_CODE_OK);
             return response;
           }
         };
@@ -195,9 +197,9 @@ public class MockMetadataServerTransport extends MockHttpTransport {
       @Override
       public LowLevelHttpResponse execute() throws IOException {
 
-        if (requestStatusCode != null) {
+        if (statusCode != null && (statusCode >= 400 && statusCode < 600)) {
           return new MockLowLevelHttpResponse()
-              .setStatusCode(requestStatusCode)
+              .setStatusCode(statusCode)
               .setContent("Token Fetch Error");
         }
 
@@ -224,6 +226,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
         return new MockLowLevelHttpResponse()
             .setContentType(Json.MEDIA_TYPE)
+            .setStatusCode(HttpStatusCodes.STATUS_CODE_OK)
             .setContent(refreshText);
       }
     };
@@ -231,11 +234,25 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
   private MockLowLevelHttpRequest getMockRequestForIdentityDocument(String url)
       throws MalformedURLException, UnsupportedEncodingException {
-    if (idToken != null) {
+    if (statusCode != null && statusCode != HttpStatusCodes.STATUS_CODE_OK) {
       return new MockLowLevelHttpRequest(url) {
         @Override
-        public LowLevelHttpResponse execute() throws IOException {
+        public LowLevelHttpResponse execute() {
+          return new MockLowLevelHttpResponse().setStatusCode(statusCode);
+        }
+      };
+    } else if (idToken != null) {
+      return new MockLowLevelHttpRequest(url) {
+        @Override
+        public LowLevelHttpResponse execute() {
           return new MockLowLevelHttpResponse().setContent(idToken);
+        }
+      };
+    } else if (emptyContent) {
+      return new MockLowLevelHttpRequest(url) {
+        @Override
+        public LowLevelHttpResponse execute() {
+          return new MockLowLevelHttpResponse();
         }
       };
     }
@@ -299,15 +316,15 @@ public class MockMetadataServerTransport extends MockHttpTransport {
         // Create the JSON response
         GenericJson content = new GenericJson();
         content.setFactory(OAuth2Utils.JSON_FACTORY);
-        if (requestStatusCode == 200) {
+        if (statusCode == HttpStatusCodes.STATUS_CODE_OK) {
           content.put(SecureSessionAgent.S2A_JSON_KEY, s2aContentMap);
         }
         String contentText = content.toPrettyString();
 
         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
 
-        if (requestStatusCode != null) {
-          response.setStatusCode(requestStatusCode);
+        if (statusCode != null) {
+          response.setStatusCode(statusCode);
         }
         if (emptyContent == true) {
           return response.setZeroContent();
