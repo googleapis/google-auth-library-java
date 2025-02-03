@@ -124,13 +124,16 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
           "Error reading user credential from JSON, "
               + " expecting 'client_id', 'client_secret' and 'refresh_token'.");
     }
+    // currently "token_uri" is not a default field and needs to be added to json file manually
+    String tokenUrl = (String) json.get("token_uri");
+    URI tokenUri = (tokenUrl == null || tokenUrl.isEmpty()) ? null : URI.create(tokenUrl);
     return UserCredentials.newBuilder()
         .setClientId(clientId)
         .setClientSecret(clientSecret)
         .setRefreshToken(refreshToken)
         .setAccessToken(null)
         .setHttpTransportFactory(transportFactory)
-        .setTokenServerUri(null)
+        .setTokenServerUri(tokenUri)
         .setQuotaProjectId(quotaProjectId)
         .build();
   }
