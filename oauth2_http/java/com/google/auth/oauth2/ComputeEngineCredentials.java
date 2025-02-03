@@ -83,6 +83,8 @@ import java.util.logging.Logger;
 public class ComputeEngineCredentials extends GoogleCredentials
     implements ServiceAccountSigner, IdTokenProvider {
 
+  static final String METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE =
+      "Empty content from metadata token server request.";
   // Decrease timing margins on GCE.
   // This is needed because GCE VMs maintain their own OAuth cache that expires T-4 mins, attempting
   // to refresh a token before then, will yield the same stale token. To enable pre-emptive
@@ -366,7 +368,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
     if (content == null) {
       // Throw explicitly here on empty content to avoid NullPointerException from parseAs call.
       // Mock transports will have success code with empty content by default.
-      throw new IOException("Empty content from metadata token server request.");
+      throw new IOException(METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE);
     }
     GenericData responseData = response.parseAs(GenericData.class);
     String accessToken =
@@ -408,9 +410,24 @@ public class ComputeEngineCredentials extends GoogleCredentials
     documentUrl.set("audience", targetAudience);
     HttpResponse response =
         getMetadataResponse(documentUrl.toString(), RequestType.ID_TOKEN_REQUEST, true);
+    int statusCode = response.getStatusCode();
+    if (statusCode == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
+      throw new IOException(
+          String.format(
+              "Error code %s trying to get identity token from"
+                  + " Compute Engine metadata. This may be because the virtual machine instance"
+                  + " does not have permission scopes specified.",
+              statusCode));
+    }
+    if (statusCode != HttpStatusCodes.STATUS_CODE_OK) {
+      throw new IOException(
+          String.format(
+              "Unexpected Error code %s trying to get identity token from Compute Engine metadata: %s",
+              statusCode, response.parseAsString()));
+    }
     InputStream content = response.getContent();
     if (content == null) {
-      throw new IOException("Empty content from metadata token server request.");
+      throw new IOException(METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE);
     }
     String rawToken = response.parseAsString();
     return IdToken.create(rawToken);
@@ -710,7 +727,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
     if (content == null) {
       // Throw explicitly here on empty content to avoid NullPointerException from parseAs call.
       // Mock transports will have success code with empty content by default.
-      throw new IOException("Empty content from metadata token server request.");
+      throw new IOException(METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE);
     }
     GenericData responseData = response.parseAs(GenericData.class);
     Map<String, Object> defaultAccount =
