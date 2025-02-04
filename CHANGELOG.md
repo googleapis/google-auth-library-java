@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.32.0](https://github.com/googleapis/google-auth-library-java/compare/v1.31.0...v1.32.0) (2025-02-04)
+
+
+### Features
+
+* Introduce Client-Side Credential Access Boundary (CAB) functionality ([#1629](https://github.com/googleapis/google-auth-library-java/issues/1629)) ([f481123](https://github.com/googleapis/google-auth-library-java/commit/f4811236018502595987eea8ce5f3fa1c7fdbfaf))
+
+
+### Bug Fixes
+
+* Handle 404 and non 200 Status Code from MDS Identity Token calls ([#1636](https://github.com/googleapis/google-auth-library-java/issues/1636)) ([152c851](https://github.com/googleapis/google-auth-library-java/commit/152c851bfb90196437f268a6975e66a89985444b))
+* Respect token_uri from json in UserCredentials creation. ([#1630](https://github.com/googleapis/google-auth-library-java/issues/1630)) ([f92cc4f](https://github.com/googleapis/google-auth-library-java/commit/f92cc4faf46ab6b0b2b5659fdbbd4c83c1c2f0fe))
+
+
+### Documentation
+
+* Re-organize the README + Add a section on migrating to GoogleCredentials ([#1644](https://github.com/googleapis/google-auth-library-java/issues/1644)) ([30b26b2](https://github.com/googleapis/google-auth-library-java/commit/30b26b280268530eb46fb85baa1ca808245e8d26))
+
 ## [1.31.0](https://github.com/googleapis/google-auth-library-java/compare/v1.30.1...v1.31.0) (2025-01-22)
 
 
