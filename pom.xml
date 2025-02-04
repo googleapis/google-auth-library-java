@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.auth</groupId>
   <artifactId>google-auth-library-parent</artifactId>
@@ -27,7 +27,8 @@
     <site>
       <id>googleapis.dev</id>
       <name>Google self-hosted documentation site</name>
-      <url>https://googleapis.dev/java/google-auth-library/${project.version}</url>
+      <url>https://googleapis.dev/java/google-auth-library/${project.version}
+      </url>
     </site>
   </distributionManagement>
 
@@ -58,11 +59,15 @@
     <module>oauth2_http</module>
     <module>appengine</module>
     <module>bom</module>
+    <module>cab-token-generator</module>
   </modules>
 
   <scm>
-    <connection>scm:git:https://github.com/googleapis/google-auth-library-java.git</connection>
-    <developerConnection>scm:git:https://github.com/googleapis/google-auth-library-java.git
+    <connection>
+      scm:git:https://github.com/googleapis/google-auth-library-java.git
+    </connection>
+    <developerConnection>
+      scm:git:https://github.com/googleapis/google-auth-library-java.git
     </developerConnection>
     <url>https://github.com/googleapis/google-auth-library-java</url>
   </scm>
@@ -76,6 +81,9 @@
     <project.findbugs.version>3.0.2</project.findbugs.version>
     <deploy.autorelease>false</deploy.autorelease>
     <project.error-prone.version>2.36.0</project.error-prone.version>
+    <project.protobuf.version>3.25.5</project.protobuf.version>
+    <project.cel.version>0.9.0-proto3</project.cel.version>
+    <project.tink.version>1.15.0</project.tink.version>
   </properties>
 
   <dependencyManagement>
@@ -111,12 +119,12 @@
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
         <version>${project.guava.version}</version>
-		<exclusions>
-			<exclusion>
-        		<groupId>com.google.j2objc</groupId>
-        		<artifactId>j2objc-annotations</artifactId>
-			</exclusion>
-		</exclusions>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.j2objc</groupId>
+            <artifactId>j2objc-annotations</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>com.google.code.findbugs</groupId>
@@ -143,10 +151,47 @@
         <classifier>testlib</classifier>
       </dependency>
       <dependency>
-          <groupId>com.google.errorprone</groupId>
-          <artifactId>error_prone_annotations</artifactId>
-          <version>${project.error-prone.version}</version>
-          <scope>compile</scope>
+        <groupId>com.google.errorprone</groupId>
+        <artifactId>error_prone_annotations</artifactId>
+        <version>${project.error-prone.version}</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-java</artifactId>
+        <version>${project.protobuf.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>dev.cel</groupId>
+        <artifactId>cel</artifactId>
+        <version>${project.cel.version}</version>
+        <exclusions>
+          <!-- CEL's version for guava, findbugs and errorprone is causing build errors -->
+          <!-- so we are excluding them here. -->
+          <exclusion>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>annotations</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.google.errorprone</groupId>
+            <artifactId>error_prone_annotations</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>com.google.crypto.tink</groupId>
+        <artifactId>tink</artifactId>
+        <version>${project.tink.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -272,7 +317,8 @@
               <testSourceDirectories>
                 <testSourceDirectory>src/test</testSourceDirectory>
               </testSourceDirectories>
-              <excludes>com.google.auth.oauth2.ExternalAccountCredentials</excludes>
+              <excludes>com.google.auth.oauth2.ExternalAccountCredentials
+              </excludes>
             </configuration>
           </execution>
         </executions>
@@ -308,7 +354,8 @@
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>clirr-maven-plugin</artifactId>
         <configuration>
-          <ignoredDifferencesFile>clirr-ignored-differences.xml</ignoredDifferencesFile>
+          <ignoredDifferencesFile>clirr-ignored-differences.xml
+          </ignoredDifferencesFile>
           <logResults>true</logResults>
         </configuration>
         <executions>
