@@ -1,6 +1,10 @@
 [
 {"login":"renovate-bot"},
-{"login":"release-please"},
+{"login":"release-please[bot]"},
+{"login":"cloud-java-bot"},
+{"login":"gcf-owl-bot[bot]"},
+{"login":"dependabot[bot]"},
+{"login":"yoshi-code-bot"},
 {"login":"suztomo"},
 {"login":"dangazineu"},
 {"login":"ldetmer"},
