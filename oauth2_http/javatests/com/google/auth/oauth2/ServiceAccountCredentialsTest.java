@@ -38,6 +38,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -973,6 +974,55 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertNotEquals(
         targetAudience,
         tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
+  }
+
+  @Test
+  public void idTokenWithAudience_oauthEndpoint_non2XXError() throws IOException {
+    String universeDomain = "test.com";
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.setError(new IOException("404 Not Found"));
+    ServiceAccountCredentials credentials =
+        createDefaultBuilder()
+            .setScopes(SCOPES)
+            .setHttpTransportFactory(transportFactory)
+            .setUniverseDomain(universeDomain)
+            .build();
+
+    String targetAudience = "differentAudience";
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(credentials)
+            .setTargetAudience(targetAudience)
+            .build();
+
+    assertThrows(IOException.class, tokenCredential::refresh);
+  }
+
+  @Test
+  public void idTokenWithAudience_iamEndpoint_non2XXError() throws IOException {
+    String universeDomain = "test.com";
+    MockIAMCredentialsServiceTransportFactory transportFactory =
+        new MockIAMCredentialsServiceTransportFactory(universeDomain);
+    transportFactory.getTransport().setTargetPrincipal(CLIENT_EMAIL);
+    transportFactory.getTransport().setIdToken(DEFAULT_ID_TOKEN);
+    transportFactory
+        .getTransport()
+        .addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_NOT_FOUND, "Not Found");
+    ServiceAccountCredentials credentials =
+        createDefaultBuilder()
+            .setScopes(SCOPES)
+            .setHttpTransportFactory(transportFactory)
+            .setUniverseDomain(universeDomain)
+            .build();
+
+    String targetAudience = "differentAudience";
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(credentials)
+            .setTargetAudience(targetAudience)
+            .build();
+
+    assertThrows(IOException.class, tokenCredential::refresh);
   }
 
   @Test

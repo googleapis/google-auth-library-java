@@ -37,6 +37,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -811,6 +812,21 @@ public class UserCredentialsTest extends BaseSerializationTest {
       assertTrue(ex.isRetryable());
       assertEquals(0, ex.getRetryCount());
     }
+  }
+
+  @Test
+  public void idTokenWithAudience_non2xxError() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.setError(new IOException("404 Not Found"));
+    String refreshToken = MockTokenServerTransport.REFRESH_TOKEN_WITH_USER_SCOPE;
+    InputStream userStream = writeUserStream(CLIENT_ID, CLIENT_SECRET, refreshToken, QUOTA_PROJECT);
+
+    UserCredentials credentials = UserCredentials.fromStream(userStream, transportFactory);
+
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder().setIdTokenProvider(credentials).build();
+
+    assertThrows(GoogleAuthException.class, tokenCredential::refresh);
   }
 
   @Test
