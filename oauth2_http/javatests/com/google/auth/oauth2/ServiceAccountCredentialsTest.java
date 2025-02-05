@@ -988,13 +988,14 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             .setUniverseDomain(universeDomain)
             .build();
 
-    String targetAudience = "differentAudience";
+    String targetAudience = "audience";
     IdTokenCredentials tokenCredential =
         IdTokenCredentials.newBuilder()
             .setIdTokenProvider(credentials)
             .setTargetAudience(targetAudience)
             .build();
 
+    // Ensure that a non 2xx status code returns an exception and doesn't continue execution
     assertThrows(IOException.class, tokenCredential::refresh);
   }
 
@@ -1015,13 +1016,15 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             .setUniverseDomain(universeDomain)
             .build();
 
-    String targetAudience = "differentAudience";
+    String targetAudience = "audience";
     IdTokenCredentials tokenCredential =
         IdTokenCredentials.newBuilder()
             .setIdTokenProvider(credentials)
             .setTargetAudience(targetAudience)
             .build();
 
+    // Ensure that a non 2xx status code returns an exception and doesn't continue execution
+    // Non 2xx status codes will be returned as HttpResponseException
     assertThrows(IOException.class, tokenCredential::refresh);
   }
 
