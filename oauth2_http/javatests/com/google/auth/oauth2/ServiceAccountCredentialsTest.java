@@ -977,7 +977,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void idTokenWithAudience_oauthEndpoint_non2XXError() throws IOException {
+  public void idTokenWithAudience_oauthEndpoint_non2XXStatusCode() throws IOException {
     String universeDomain = "test.com";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.setError(new IOException("404 Not Found"));
@@ -1000,7 +1000,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void idTokenWithAudience_iamEndpoint_non2XXError() throws IOException {
+  public void idTokenWithAudience_iamEndpoint_non2XXStatusCode() throws IOException {
     String universeDomain = "test.com";
     MockIAMCredentialsServiceTransportFactory transportFactory =
         new MockIAMCredentialsServiceTransportFactory(universeDomain);
