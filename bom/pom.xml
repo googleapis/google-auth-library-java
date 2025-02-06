@@ -64,6 +64,11 @@
         <artifactId>google-auth-library-appengine</artifactId>
         <version>${project.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.google.auth</groupId>
+        <artifactId>google-auth-library-cab-token-generator</artifactId>
+        <version>${project.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
