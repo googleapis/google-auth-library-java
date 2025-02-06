@@ -53,6 +53,12 @@
       "matchPackageNames": [
         "/^com.google.auto.value:auto-/"
       ]
+    },
+    {
+      "enabled": false,
+      "matchPackageNames": [
+        "/^com.google.protobuf:/"
+      ]
     }
   ]
 }
