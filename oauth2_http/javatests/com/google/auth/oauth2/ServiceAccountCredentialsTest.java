@@ -978,15 +978,10 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void idTokenWithAudience_oauthEndpoint_non2XXStatusCode() throws IOException {
-    String universeDomain = "test.com";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.setError(new IOException("404 Not Found"));
     ServiceAccountCredentials credentials =
-        createDefaultBuilder()
-            .setScopes(SCOPES)
-            .setHttpTransportFactory(transportFactory)
-            .setUniverseDomain(universeDomain)
-            .build();
+        createDefaultBuilder().setScopes(SCOPES).setHttpTransportFactory(transportFactory).build();
 
     String targetAudience = "audience";
     IdTokenCredentials tokenCredential =
