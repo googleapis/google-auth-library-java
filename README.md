@@ -7,14 +7,18 @@ Open source authentication client library for Java.
 
 -  [API Documentation](https://googleapis.dev/java/google-auth-library/latest)
 
-This project consists of 3 artifacts:
+This project consists of 4 artifacts:
 
 - [*google-auth-library-credentials*](#google-auth-library-credentials): contains base classes and
 interfaces for Google credentials
 - [*google-auth-library-appengine*](#google-auth-library-appengine): contains App Engine
 credentials. This artifact depends on the App Engine SDK.
-- [*google-auth-library-oauth2-http*](#google-auth-library-oauth2-http): contains a wide variety of
-credentials as well as utility methods to create them and to get Application Default Credentials
+- [*google-auth-library-oauth2-http*](#google-auth-library-oauth2-http): contains 
+a wide variety of credentials and utility methods, including functionality to get 
+Application Default Credentials. Also provides the server-side approach for generating
+downscoped tokens.
+- [*google-auth-library-cab-token-generator*](#google-auth-library-cab-token-generator):
+provides the client-side approach for generating downscoped tokens.
 
 **Table of contents:**
 
@@ -991,23 +995,28 @@ to a token consumer via some secure authenticated channel for limited access to 
 resources.
 
 #### Generating Downscoped Tokens
+There are two ways to generate downscoped tokens using a CredentialAccessBoundary:
 
-There are two ways to generate downscoped tokens using a
-CredentialAccessBoundary:
-
-* **Server-side (using `DownscopedCredentials`):** The client calls the Security
+* **Server-side (using `DownscopedCredentials`):** The client calls the Security 
 Token Service (STS) each time a downscoped token is needed. This is suitable for
 applications where the Credential Access Boundary rules change infrequently or 
-when a single downscoped credential is reused many times. A key consideration 
-is that every rule change requires a new call to the STS.
+when a single downscoped credential is reused many times.  A key consideration
+is that every rule change requires a new call to the STS. This approach is available 
+within the `google-auth-library-oauth2-http` library and does not require any additional 
+dependencies, making it simpler to integrate.  It's a good choice if your use case 
+doesn't demand the specific benefits of the client-side approach.
 
 
 * **Client-side (using `ClientSideCredentialAccessBoundaryFactory`):** The client 
-retrieves cryptographic material once and then generates multiple downscoped 
-tokens locally. This minimizes calls to the STS and is more efficient when 
-Credential Access Boundary rules change frequently, as the client doesn't need 
-to contact the STS for each rule change. This is also more efficient for 
-applications that need to generate many *unique* downscoped tokens.
+retrieves cryptographic material once and then generates multiple downscoped tokens 
+locally. This minimizes calls to the STS and is more efficient when Credential Access 
+Boundary rules change frequently, as the client doesn't need to contact the STS 
+for each rule change. This is also more efficient for applications that need to 
+generate many *unique* downscoped tokens.  This approach is available in the 
+`google-auth-library-cab-token-generator` module.  However, this module comes with 
+its own set of dependencies, which can add complexity to your project.  Consider
+this approach if minimizing STS calls and generating numerous unique tokens are 
+primary concerns and you are willing to manage the additional dependencies.
 
 #### Server-side CAB
 
@@ -1310,6 +1319,19 @@ Credentials credentials =
 
 **Important: `com.google.auth.appengine.AppEngineCredentials` is a separate class from
 `com.google.auth.oauth2.AppEngineCredentials`.**
+
+## google-auth-library-cab-token-generator
+
+This module provides the `ClientSideCredentialAccessBoundaryFactory` class, 
+enabling client-side generation of downscoped tokens for Cloud Storage using 
+Credential Access Boundaries. This approach is particularly useful for applications 
+requiring frequent changes to Credential Access Boundary rules or the generation 
+of many unique downscoped tokens, as it minimizes calls to the Security Token 
+Service (STS). For more details on when to consider this approach and how it 
+compares to the server-side method, see [Downscoping with Credential Access Boundaries](#downscoping-with-credential-access-boundaries). 
+For usage examples, see the [Client-side CAB](#client-side-cab) section. 
+This module comes with its own set of dependencies, so evaluate whether the 
+benefits of client-side downscoping outweigh the added complexity for your specific use case.
 
 ## CI Status
 
