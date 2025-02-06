@@ -57,7 +57,7 @@ public class SecureSessionAgentTest {
             S2A_PLAINTEXT_ADDRESS,
             SecureSessionAgent.S2A_MTLS_ADDRESS_JSON_KEY,
             S2A_MTLS_ADDRESS));
-    transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_OK);
+    transportFactory.transport.setStatusCode(HttpStatusCodes.STATUS_CODE_OK);
 
     SecureSessionAgent s2aUtils =
         SecureSessionAgent.newBuilder().setHttpTransportFactory(transportFactory).build();
@@ -77,8 +77,7 @@ public class SecureSessionAgentTest {
             S2A_PLAINTEXT_ADDRESS,
             SecureSessionAgent.S2A_MTLS_ADDRESS_JSON_KEY,
             S2A_MTLS_ADDRESS));
-    transportFactory.transport.setRequestStatusCode(
-        HttpStatusCodes.STATUS_CODE_SERVICE_UNAVAILABLE);
+    transportFactory.transport.setStatusCode(HttpStatusCodes.STATUS_CODE_SERVICE_UNAVAILABLE);
 
     SecureSessionAgent s2aUtils =
         SecureSessionAgent.newBuilder().setHttpTransportFactory(transportFactory).build();
@@ -98,7 +97,7 @@ public class SecureSessionAgentTest {
             S2A_PLAINTEXT_ADDRESS,
             SecureSessionAgent.S2A_MTLS_ADDRESS_JSON_KEY,
             S2A_MTLS_ADDRESS));
-    transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_OK);
+    transportFactory.transport.setStatusCode(HttpStatusCodes.STATUS_CODE_OK);
     transportFactory.transport.setEmptyContent(true);
 
     SecureSessionAgent s2aUtils =
@@ -119,7 +118,7 @@ public class SecureSessionAgentTest {
             S2A_PLAINTEXT_ADDRESS,
             SecureSessionAgent.S2A_MTLS_ADDRESS_JSON_KEY,
             S2A_MTLS_ADDRESS));
-    transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_OK);
+    transportFactory.transport.setStatusCode(HttpStatusCodes.STATUS_CODE_OK);
 
     SecureSessionAgent s2aUtils =
         SecureSessionAgent.newBuilder().setHttpTransportFactory(transportFactory).build();
@@ -139,7 +138,7 @@ public class SecureSessionAgentTest {
             S2A_PLAINTEXT_ADDRESS,
             INVALID_JSON_KEY,
             S2A_MTLS_ADDRESS));
-    transportFactory.transport.setRequestStatusCode(HttpStatusCodes.STATUS_CODE_OK);
+    transportFactory.transport.setStatusCode(HttpStatusCodes.STATUS_CODE_OK);
 
     SecureSessionAgent s2aUtils =
         SecureSessionAgent.newBuilder().setHttpTransportFactory(transportFactory).build();
