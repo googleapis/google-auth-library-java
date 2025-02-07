@@ -10,7 +10,13 @@ branchProtectionRules:
       - clirr
       - units (8)
       - units (11)
+      - units (17)
+      - units (21)
       - cla/google
+      - Kokoro - Test: Integration
+      - Kokoro - Test: Java GraalVM Native Image A
+      - Kokoro - Test: Java GraalVM Native Image B
+      - conventionalcommits.org
     requiredApprovingReviewCount: 1
     requiresCodeOwnerReviews: true
     requiresStrictStatusChecks: true
