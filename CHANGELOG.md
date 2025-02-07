@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.32.1](https://github.com/googleapis/google-auth-library-java/compare/v1.32.0...v1.32.1) (2025-02-07)
+
+
+### Bug Fixes
+
+* Add cab-token-generator module to Auth BOM ([#1662](https://github.com/googleapis/google-auth-library-java/issues/1662)) ([e409b02](https://github.com/googleapis/google-auth-library-java/commit/e409b02b124619ffd6af95890c6ce340b204554a))
+* Remove unnecessary nexus-staging-maven-plugin activation ([#1665](https://github.com/googleapis/google-auth-library-java/issues/1665)) ([d138023](https://github.com/googleapis/google-auth-library-java/commit/d138023aae55abb7b36d2bef6b21cd00a2ec4511))
+
+
+### Dependencies
+
+* Update dependency com.google.http-client:google-http-client-bom to v1.46.0 ([e53c441](https://github.com/googleapis/google-auth-library-java/commit/e53c4415f472594f56c53e92d302f745b96c4fba))
+
+
+### Documentation
+
+* Update README with client-side CAB instructions ([#1607](https://github.com/googleapis/google-auth-library-java/issues/1607)) ([#1666](https://github.com/googleapis/google-auth-library-java/issues/1666)) ([2996297](https://github.com/googleapis/google-auth-library-java/commit/2996297f54823c43a2bb7c96a634013a79be6fd4))
+
 ## [1.32.0](https://github.com/googleapis/google-auth-library-java/compare/v1.31.0...v1.32.0) (2025-02-04)
 
 
