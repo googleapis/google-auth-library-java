@@ -201,6 +201,8 @@
     <pluginManagement>
       <plugins>
         <plugin>
+          <!-- nexus-staging-maven-plugin is activated by the release-sonatype
+             profile defined in native-image-shared-config -->
           <groupId>org.sonatype.plugins</groupId>
           <artifactId>nexus-staging-maven-plugin</artifactId>
           <version>1.7.0</version>
@@ -282,10 +284,6 @@
           <target>1.8</target>
           <encoding>UTF-8</encoding>
         </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.sonatype.plugins</groupId>
-        <artifactId>nexus-staging-maven-plugin</artifactId>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
