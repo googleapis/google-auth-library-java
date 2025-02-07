@@ -7,14 +7,18 @@ Open source authentication client library for Java.
 
 -  [API Documentation](https://googleapis.dev/java/google-auth-library/latest)
 
-This project consists of 3 artifacts:
+This project consists of 4 artifacts:
 
 - [*google-auth-library-credentials*](#google-auth-library-credentials): contains base classes and
 interfaces for Google credentials
 - [*google-auth-library-appengine*](#google-auth-library-appengine): contains App Engine
 credentials. This artifact depends on the App Engine SDK.
-- [*google-auth-library-oauth2-http*](#google-auth-library-oauth2-http): contains a wide variety of
-credentials as well as utility methods to create them and to get Application Default Credentials
+- [*google-auth-library-oauth2-http*](#google-auth-library-oauth2-http): contains 
+a wide variety of credentials and utility methods, including functionality to get 
+Application Default Credentials. Also provides the server-side approach for generating
+downscoped tokens.
+- [*google-auth-library-cab-token-generator*](#google-auth-library-cab-token-generator):
+provides the client-side approach for generating downscoped tokens.
 
 > ⚠️ Important: If you accept a credential configuration (credential JSON/File/Stream) from an external source for
 authentication to Google Cloud Platform, you must validate it before providing it to any Google API or library. Providing
@@ -1034,16 +1038,19 @@ googleapis.com domain.
 ### Downscoping with Credential Access Boundaries
 
 [Downscoping with Credential Access Boundaries](https://cloud.google.com/iam/docs/downscoping-short-lived-credentials)
-enables the ability to downscope, or restrict, the Identity and Access Management (IAM) permissions
-that a short-lived credential can use for Cloud Storage.
+enables restricting the Identity and Access Management (IAM) permissions that a
+short-lived credential can use for Cloud Storage. This involves creating a
+`CredentialAccessBoundary` that defines the restrictions applied to the
+downscoped token. Using downscoped credentials ensures tokens in flight always
+have the least privileges ([Principle of Least Privilege](https://en.wikipedia.org/wiki/Principle_of_least_privilege)).
 
-The `DownscopedCredentials` class can be used to produce a downscoped access token from a 
-`CredentialAccessBoundary` and a source credential. The Credential Access Boundary specifies which
-resources the newly created credential can access, as well as an upper bound on the permissions that
-are available on each resource. Using downscoped credentials ensures tokens in flight always have
-the least privileges (Principle of Least Privilege).
+#### Creating a CredentialAccessBoundary
 
-The snippet below shows how to initialize a CredentialAccessBoundary with one AccessBoundaryRule 
+The Credential Access Boundary specifies which resources the newly created credential can access,
+as well as an upper bound on the permissions that are available on each resource. 
+It consists of one or more `AccessBoundaryRule` objects.
+
+The snippet below shows how to initialize a `CredentialAccessBoundary` with one `AccessBoundaryRule` 
 which specifies that the downscoped token will have readonly access to objects starting with
 "customer-a" in bucket "bucket-123":
 ```java
@@ -1065,37 +1072,42 @@ CredentialAccessBoundary credentialAccessBoundary =
         CredentialAccessBoundary.newBuilder().addRule(rule).build();
 ```
 
+#### Common Usage Pattern
+
 The common pattern of usage is to have a token broker with elevated access generate these downscoped
 credentials from higher access source credentials and pass the downscoped short-lived access tokens
 to a token consumer via some secure authenticated channel for limited access to Google Cloud Storage
 resources.
 
-Using the CredentialAccessBoundary created above in the Token Broker:
-```java
-// Retrieve the source credentials from ADC.
-GoogleCredentials sourceCredentials = GoogleCredentials.getApplicationDefault()
-        .createScoped("https://www.googleapis.com/auth/cloud-platform");
+#### Generating Downscoped Tokens
+There are two ways to generate downscoped tokens using a CredentialAccessBoundary:
 
-// Initialize the DownscopedCredentials class.
-DownscopedCredentials downscopedCredentials =
-    DownscopedCredentials.newBuilder()
-        .setSourceCredential(credentials)
-        .setCredentialAccessBoundary(credentialAccessBoundary)
-        .build();
+* **Server-side (using `DownscopedCredentials`):** The client calls the Security 
+Token Service (STS) each time a downscoped token is needed. This is suitable for
+applications where the Credential Access Boundary rules change infrequently or 
+when a single downscoped credential is reused many times.  A key consideration
+is that every rule change requires a new call to the STS. This approach is available 
+within the `google-auth-library-oauth2-http` library and does not require any additional 
+dependencies, making it simpler to integrate.  It's a good choice if your use case 
+doesn't demand the specific benefits of the client-side approach.
 
-// Retrieve the downscoped access token.
-// This will need to be passed to the Token Consumer.
-AccessToken downscopedAccessToken = downscopedCredentials.refreshAccessToken();
-```
 
-A token broker can be set up on a server in a private network. Various workloads 
-(token consumers) in the same network will send authenticated requests to that broker for downscoped
-tokens to access or modify specific google cloud storage buckets.
+* **Client-side (using `ClientSideCredentialAccessBoundaryFactory`):** The client 
+retrieves cryptographic material once and then generates multiple downscoped tokens 
+locally. This minimizes calls to the STS and is more efficient when Credential Access 
+Boundary rules change frequently, as the client doesn't need to contact the STS 
+for each rule change. This is also more efficient for applications that need to 
+generate many *unique* downscoped tokens.  This approach is available in the 
+`google-auth-library-cab-token-generator` module.  However, this module comes with 
+its own set of dependencies, which can add complexity to your project.  Consider
+this approach if minimizing STS calls and generating numerous unique tokens are 
+primary concerns and you are willing to manage the additional dependencies.
 
-The broker will instantiate downscoped credentials instances that can be used to generate short 
-lived downscoped access tokens which will be passed to the token consumer. 
+#### Server-side CAB
 
-Putting it all together:
+The `DownscopedCredentials` class can be used to produce a downscoped access
+token from a source credential and the `CredentialAccessBoundary`.
+
 ```java
 // Retrieve the source credentials from ADC.
 GoogleCredentials sourceCredentials = GoogleCredentials.getApplicationDefault()
@@ -1118,7 +1130,7 @@ CredentialAccessBoundary.AccessBoundaryRule rule =
 // Initialize the DownscopedCredentials class.
 DownscopedCredentials downscopedCredentials =
     DownscopedCredentials.newBuilder()
-        .setSourceCredential(credentials)
+        .setSourceCredential(sourceCredentials)
         .setCredentialAccessBoundary(CredentialAccessBoundary.newBuilder().addRule(rule).build())
         .build();
 
@@ -1126,6 +1138,58 @@ DownscopedCredentials downscopedCredentials =
 // This will need to be passed to the Token Consumer.
 AccessToken downscopedAccessToken = downscopedCredentials.refreshAccessToken();
 ```
+
+#### Client-side CAB
+
+For client-side CAB, the `ClientSideCredentialAccessBoundaryFactory` is used
+with a source credential. After initializing the factory, the `generateToken()`
+method can be called repeatedly with different `CredentialAccessBoundary`
+objects to create multiple downscoped tokens.
+
+```java
+// Retrieve the source credentials from ADC.
+GoogleCredentials sourceCredentials = GoogleCredentials.getApplicationDefault()
+        .createScoped("https://www.googleapis.com/auth/cloud-platform");
+
+// Create an Access Boundary Rule which will restrict the downscoped token to having readonly
+// access to objects starting with "customer-a" in bucket "bucket-123".
+String availableResource = "//storage.googleapis.com/projects/_/buckets/bucket-123";
+String availablePermission = "inRole:roles/storage.objectViewer";
+String expression =  "resource.name.startsWith('projects/_/buckets/bucket-123/objects/customer-a')";
+        
+CredentialAccessBoundary.AccessBoundaryRule rule =
+    CredentialAccessBoundary.AccessBoundaryRule.newBuilder()
+        .setAvailableResource(availableResource)
+        .addAvailablePermission(availablePermission)
+        .setAvailabilityCondition(
+            new AvailabilityCondition(expression, /* title= */ null, /* description= */ null))
+        .build();
+
+// Initialize the ClientSideCredentialAccessBoundaryFactory.
+ClientSideCredentialAccessBoundaryFactory factory =
+    ClientSideCredentialAccessBoundaryFactory.newBuilder()
+        .setSourceCredential(sourceCredentials)
+        .build();
+
+// Create the CredentialAccessBoundary with the rule.
+CredentialAccessBoundary credentialAccessBoundary = 
+        CredentialAccessBoundary.newBuilder().addRule(rule).build();
+
+// Generate the downscoped access token.
+// This will need to be passed to the Token Consumer.
+AccessToken downscopedAccessToken = factory.generateToken(credentialAccessBoundary);
+```
+
+#### Using Downscoped Access Tokens
+
+A token broker can be set up on a server in a private network. Various workloads
+(token consumers) in the same network will send authenticated requests to that
+broker for downscoped tokens to access or modify specific google cloud storage
+buckets.
+
+The broker will instantiate downscoped credentials instances that can be used to
+generate short-lived downscoped access tokens which will be passed to the token
+consumer.
 
 These downscoped access tokens can be used by the Token Consumer via `OAuth2Credentials` or
 `OAuth2CredentialsWithRefresh`. This credential can then be used to initialize a storage client 
@@ -1340,6 +1404,19 @@ Credentials credentials =
 
 **Important: `com.google.auth.appengine.AppEngineCredentials` is a separate class from
 `com.google.auth.oauth2.AppEngineCredentials`.**
+
+## google-auth-library-cab-token-generator
+
+This module provides the `ClientSideCredentialAccessBoundaryFactory` class, 
+enabling client-side generation of downscoped tokens for Cloud Storage using 
+Credential Access Boundaries. This approach is particularly useful for applications 
+requiring frequent changes to Credential Access Boundary rules or the generation 
+of many unique downscoped tokens, as it minimizes calls to the Security Token 
+Service (STS). For more details on when to consider this approach and how it 
+compares to the server-side method, see [Downscoping with Credential Access Boundaries](#downscoping-with-credential-access-boundaries). 
+For usage examples, see the [Client-side CAB](#client-side-cab) section. 
+This module comes with its own set of dependencies, so evaluate whether the 
+benefits of client-side downscoping outweigh the added complexity for your specific use case.
 
 ## CI Status
 
