@@ -38,6 +38,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -974,6 +975,53 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertNotEquals(
         targetAudience,
         tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
+  }
+
+  @Test
+  public void idTokenWithAudience_oauthEndpoint_non2XXStatusCode() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    transportFactory.transport.setError(new IOException("404 Not Found"));
+    ServiceAccountCredentials credentials =
+        createDefaultBuilder().setScopes(SCOPES).setHttpTransportFactory(transportFactory).build();
+
+    String targetAudience = "audience";
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(credentials)
+            .setTargetAudience(targetAudience)
+            .build();
+
+    // Ensure that a non 2xx status code returns an exception and doesn't continue execution
+    assertThrows(IOException.class, tokenCredential::refresh);
+  }
+
+  @Test
+  public void idTokenWithAudience_iamEndpoint_non2XXStatusCode() throws IOException {
+    String universeDomain = "test.com";
+    MockIAMCredentialsServiceTransportFactory transportFactory =
+        new MockIAMCredentialsServiceTransportFactory(universeDomain);
+    transportFactory.getTransport().setTargetPrincipal(CLIENT_EMAIL);
+    transportFactory.getTransport().setIdToken(DEFAULT_ID_TOKEN);
+    transportFactory
+        .getTransport()
+        .addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_NOT_FOUND, "Not Found");
+    ServiceAccountCredentials credentials =
+        createDefaultBuilder()
+            .setScopes(SCOPES)
+            .setHttpTransportFactory(transportFactory)
+            .setUniverseDomain(universeDomain)
+            .build();
+
+    String targetAudience = "audience";
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(credentials)
+            .setTargetAudience(targetAudience)
+            .build();
+
+    // Ensure that a non 2xx status code returns an exception and doesn't continue execution
+    // Non 2xx status codes will be returned as HttpResponseException
+    assertThrows(IOException.class, tokenCredential::refresh);
   }
 
   @Test

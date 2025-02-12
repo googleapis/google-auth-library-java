@@ -1,5 +1,61 @@
 # Changelog
 
+## [1.32.1](https://github.com/googleapis/google-auth-library-java/compare/v1.32.0...v1.32.1) (2025-02-07)
+
+
+### Bug Fixes
+
+* Add cab-token-generator module to Auth BOM ([#1662](https://github.com/googleapis/google-auth-library-java/issues/1662)) ([e409b02](https://github.com/googleapis/google-auth-library-java/commit/e409b02b124619ffd6af95890c6ce340b204554a))
+* Remove unnecessary nexus-staging-maven-plugin activation ([#1665](https://github.com/googleapis/google-auth-library-java/issues/1665)) ([d138023](https://github.com/googleapis/google-auth-library-java/commit/d138023aae55abb7b36d2bef6b21cd00a2ec4511))
+
+
+### Dependencies
+
+* Update dependency com.google.http-client:google-http-client-bom to v1.46.0 ([e53c441](https://github.com/googleapis/google-auth-library-java/commit/e53c4415f472594f56c53e92d302f745b96c4fba))
+
+
+### Documentation
+
+* Update README with client-side CAB instructions ([#1607](https://github.com/googleapis/google-auth-library-java/issues/1607)) ([#1666](https://github.com/googleapis/google-auth-library-java/issues/1666)) ([2996297](https://github.com/googleapis/google-auth-library-java/commit/2996297f54823c43a2bb7c96a634013a79be6fd4))
+
+## [1.32.0](https://github.com/googleapis/google-auth-library-java/compare/v1.31.0...v1.32.0) (2025-02-04)
+
+
+### Features
+
+* Introduce Client-Side Credential Access Boundary (CAB) functionality ([#1629](https://github.com/googleapis/google-auth-library-java/issues/1629)) ([f481123](https://github.com/googleapis/google-auth-library-java/commit/f4811236018502595987eea8ce5f3fa1c7fdbfaf))
+
+
+### Bug Fixes
+
+* Handle 404 and non 200 Status Code from MDS Identity Token calls ([#1636](https://github.com/googleapis/google-auth-library-java/issues/1636)) ([152c851](https://github.com/googleapis/google-auth-library-java/commit/152c851bfb90196437f268a6975e66a89985444b))
+* Respect token_uri from json in UserCredentials creation. ([#1630](https://github.com/googleapis/google-auth-library-java/issues/1630)) ([f92cc4f](https://github.com/googleapis/google-auth-library-java/commit/f92cc4faf46ab6b0b2b5659fdbbd4c83c1c2f0fe))
+
+
+### Documentation
+
+* Re-organize the README + Add a section on migrating to GoogleCredentials ([#1644](https://github.com/googleapis/google-auth-library-java/issues/1644)) ([30b26b2](https://github.com/googleapis/google-auth-library-java/commit/30b26b280268530eb46fb85baa1ca808245e8d26))
+
+## [1.31.0](https://github.com/googleapis/google-auth-library-java/compare/v1.30.1...v1.31.0) (2025-01-22)
+
+
+### Features
+
+* ImpersonatedCredentials to support universe domain for idtoken and signblob ([#1566](https://github.com/googleapis/google-auth-library-java/issues/1566)) ([adc2ff3](https://github.com/googleapis/google-auth-library-java/commit/adc2ff3dcabb79e367d0d66b5b3fd8a51e35bc2b))
+* Support transport and binding-enforcement MDS parameters. ([#1558](https://github.com/googleapis/google-auth-library-java/issues/1558)) ([9828a8e](https://github.com/googleapis/google-auth-library-java/commit/9828a8eeb9f144f7c341df0c03282a8790356962))
+
+
+### Documentation
+
+* Promote use of bill of materials in quickstart documentation ([#1620](https://github.com/googleapis/google-auth-library-java/issues/1620)) ([fc20d9c](https://github.com/googleapis/google-auth-library-java/commit/fc20d9c9d33b7eada964cf41297f8a3e13c27fe1)), closes [#1552](https://github.com/googleapis/google-auth-library-java/issues/1552)
+
+## [1.30.1](https://github.com/googleapis/google-auth-library-java/compare/v1.30.0...v1.30.1) (2024-12-11)
+
+
+### Bug Fixes
+
+* JSON parsing of S2A addresses. ([#1589](https://github.com/googleapis/google-auth-library-java/issues/1589)) ([9d5ebfe](https://github.com/googleapis/google-auth-library-java/commit/9d5ebfe8870a11d27af3a7c7f3fd9930ab207162))
+
 ## [1.30.0](https://github.com/googleapis/google-auth-library-java/compare/v1.29.0...v1.30.0) (2024-11-08)
 
 

@@ -63,10 +63,14 @@ import org.slf4j.Logger;
  * features like signing.
  */
 class IamUtils {
-  private static final String SIGN_BLOB_URL_FORMAT =
-      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
-  private static final String ID_TOKEN_URL_FORMAT =
-      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateIdToken";
+
+  // IAM credentials endpoints are to be formatted with universe domain and client email.
+  static final String IAM_ID_TOKEN_ENDPOINT_FORMAT =
+      "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:generateIdToken";
+  static final String IAM_ACCESS_TOKEN_ENDPOINT_FORMAT =
+      "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:generateAccessToken";
+  static final String IAM_SIGN_BLOB_ENDPOINT_FORMAT =
+      "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:signBlob";
   private static final String PARSE_ERROR_MESSAGE = "Error parsing error message response. ";
   private static final String PARSE_ERROR_SIGNATURE = "Error parsing signature response. ";
   private static final Logger LOGGER = LoggingConfigs.getLogger(IamUtils.class);
@@ -90,6 +94,7 @@ class IamUtils {
   static byte[] sign(
       String serviceAccountEmail,
       Credentials credentials,
+      String universeDomain,
       HttpTransport transport,
       byte[] toSign,
       Map<String, ?> additionalFields) {
@@ -99,7 +104,12 @@ class IamUtils {
     String signature;
     try {
       signature =
-          getSignature(serviceAccountEmail, base64.encode(toSign), additionalFields, factory);
+          getSignature(
+              serviceAccountEmail,
+              universeDomain,
+              base64.encode(toSign),
+              additionalFields,
+              factory);
     } catch (IOException ex) {
       throw new ServiceAccountSigner.SigningException("Failed to sign the provided bytes", ex);
     }
@@ -108,11 +118,13 @@ class IamUtils {
 
   private static String getSignature(
       String serviceAccountEmail,
+      String universeDomain,
       String bytes,
       Map<String, ?> additionalFields,
       HttpRequestFactory factory)
       throws IOException {
-    String signBlobUrl = String.format(SIGN_BLOB_URL_FORMAT, serviceAccountEmail);
+    String signBlobUrl =
+        String.format(IAM_SIGN_BLOB_ENDPOINT_FORMAT, universeDomain, serviceAccountEmail);
     GenericUrl genericUrl = new GenericUrl(signBlobUrl);
 
     GenericData signRequest = new GenericData();
@@ -198,10 +210,12 @@ class IamUtils {
       String targetAudience,
       boolean includeEmail,
       Map<String, ?> additionalFields,
-      CredentialTypeForMetrics credentialTypeForMetrics)
+      CredentialTypeForMetrics credentialTypeForMetrics,
+      String universeDomain)
       throws IOException {
 
-    String idTokenUrl = String.format(ID_TOKEN_URL_FORMAT, serviceAccountEmail);
+    String idTokenUrl =
+        String.format(IAM_ID_TOKEN_ENDPOINT_FORMAT, universeDomain, serviceAccountEmail);
     GenericUrl genericUrl = new GenericUrl(idTokenUrl);
 
     GenericData idTokenRequest = new GenericData();
