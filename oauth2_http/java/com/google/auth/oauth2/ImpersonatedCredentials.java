@@ -65,7 +65,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import org.slf4j.Logger;
 
 /**
  * ImpersonatedCredentials allowing credentials issued to a user or service account to impersonate
@@ -111,7 +110,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
   private int lifetime;
   private String iamEndpointOverride;
   private final String transportFactoryClassName;
-  private static final Logger LOGGER = LoggingConfigs.getLogger(ImpersonatedCredentials.class);
+  private static final LoggerProvider LOGGER_PROVIDER =
+      LoggerProvider.forClazz(ImpersonatedCredentials.class);
 
   private transient HttpTransportFactory transportFactory;
 
@@ -555,15 +555,15 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
     HttpResponse response = null;
     try {
-      LoggingUtils.logRequest(request, LOGGER, "Sending request to refresh access token");
+      Slf4jUtils.logRequest(request, LOGGER_PROVIDER, "Sending request to refresh access token");
       response = request.execute();
-      LoggingUtils.logResponse(response, LOGGER, "Received response for access token");
+      Slf4jUtils.logResponse(response, LOGGER_PROVIDER, "Received response for refresh access token");
     } catch (IOException e) {
       throw new IOException("Error requesting access token", e);
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
-    LoggingUtils.logGenericData(responseData, LOGGER, "Response payload for access token");
+    Slf4jUtils.logGenericData(responseData, LOGGER_PROVIDER, "Response payload for access token");
     response.disconnect();
 
     String accessToken =

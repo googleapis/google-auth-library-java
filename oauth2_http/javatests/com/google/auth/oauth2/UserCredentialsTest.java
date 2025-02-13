@@ -767,7 +767,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getAccessToken().getTokenValue());
     assertEquals(DEFAULT_ID_TOKEN, tokenCredential.getIdToken().getTokenValue());
 
-    // verify id token request metrics headers, same as access token request
+    // verify ID token request metrics headers, same as access token request
     Map<String, List<String>> idTokenRequestHeader =
         transportFactory.transport.getRequest().getHeaders();
     com.google.auth.oauth2.TestUtils.validateMetricsHeader(idTokenRequestHeader, "untracked", "u");

@@ -885,7 +885,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
         targetAudience,
         tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
 
-    // verify id token request metrics headers
+    // verify ID token request metrics headers
     Map<String, List<String>> idTokenRequestHeader =
         transportFactory.transport.getRequest().getHeaders();
     com.google.auth.oauth2.TestUtils.validateMetricsHeader(idTokenRequestHeader, "it", "sa");

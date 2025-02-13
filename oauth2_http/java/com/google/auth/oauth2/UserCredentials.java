@@ -61,7 +61,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import org.slf4j.Logger;
 
 /** OAuth2 Credentials representing a user's identity and consent. */
 public class UserCredentials extends GoogleCredentials implements IdTokenProvider {
@@ -69,7 +68,8 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
   private static final String GRANT_TYPE = "refresh_token";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final long serialVersionUID = -4800758775038679176L;
-  private static final Logger LOGGER = LoggingConfigs.getLogger(UserCredentials.class);
+  private static final LoggerProvider LOGGER_PROVIDER =
+      LoggerProvider.forClazz(UserCredentials.class);
 
   private final String clientId;
   private final String clientSecret;
@@ -285,9 +285,10 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     HttpResponse response;
 
     try {
-      LoggingUtils.logRequest(request, LOGGER, "Sending request to refresh access token");
+      Slf4jUtils.logRequest(request, LOGGER_PROVIDER, "Sending request to refresh access token");
       response = request.execute();
-      LoggingUtils.logResponse(response, LOGGER, "Received respond for refresh access token");
+      Slf4jUtils.logResponse(
+          response, LOGGER_PROVIDER, "Received response for refresh access token");
     } catch (HttpResponseException re) {
       throw GoogleAuthException.createWithTokenEndpointResponseException(re);
     } catch (IOException e) {
@@ -296,7 +297,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
 
     GenericData data = response.parseAs(GenericData.class);
 
-    LoggingUtils.logGenericData(data, LOGGER, "Response payload for refresh access token");
+    Slf4jUtils.logGenericData(data, LOGGER_PROVIDER, "Response payload for access token");
     return data;
   }
 

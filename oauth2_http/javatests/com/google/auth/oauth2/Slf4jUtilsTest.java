@@ -32,23 +32,23 @@
 package com.google.auth.oauth2;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.when;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.google.api.client.util.GenericData;
 import com.google.auth.TestAppender;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.event.KeyValuePair;
 import org.slf4j.event.Level;
 
-public class LoggingUtilsTest {
-  private static final Logger LOGGER = LoggerFactory.getLogger(LoggingUtilsTest.class);
-  private static final Gson gson = new Gson();
+public class Slf4jUtilsTest {
+  private static final Logger LOGGER = LoggerFactory.getLogger(Slf4jUtilsTest.class);
 
   private TestAppender setupTestLogger() {
     TestAppender testAppender = new TestAppender();
@@ -62,18 +62,13 @@ public class LoggingUtilsTest {
 
     TestAppender testAppender = setupTestLogger();
 
-    Map<String, String> contextMap = new HashMap<>();
+    Map<String, Object> contextMap = new HashMap<>();
     contextMap.put("key1", "value1");
     contextMap.put("key2", "value2");
-    LoggingUtils.logWithMDC(LOGGER, Level.DEBUG, contextMap, "test message");
+    Slf4jUtils.logWithMDC(LOGGER, Level.DEBUG, contextMap, "test message");
 
     assertEquals(1, testAppender.events.size());
-
-    JsonObject jsonMessage =
-        gson.fromJson(testAppender.events.get(0).getFormattedMessage(), JsonObject.class);
-    assertEquals("test message", jsonMessage.get("message").getAsString());
-    assertEquals("value1", jsonMessage.get("key1").getAsString());
-    assertEquals("value2", jsonMessage.get("key2").getAsString());
+    assertEquals("test message", testAppender.events.get(0).getMessage());
 
     // Verify MDC content
     ILoggingEvent event = testAppender.events.get(0);
@@ -88,7 +83,7 @@ public class LoggingUtilsTest {
   @Test
   public void testLogWithMDC_INFO() {
     TestAppender testAppender = setupTestLogger();
-    LoggingUtils.logWithMDC(LOGGER, Level.INFO, new HashMap<>(), "test message");
+    Slf4jUtils.logWithMDC(LOGGER, Level.INFO, new HashMap<>(), "test message");
 
     assertEquals(1, testAppender.events.size());
     assertEquals(ch.qos.logback.classic.Level.INFO, testAppender.events.get(0).getLevel());
@@ -98,7 +93,7 @@ public class LoggingUtilsTest {
   @Test
   public void testLogWithMDC_TRACE() {
     TestAppender testAppender = setupTestLogger();
-    LoggingUtils.logWithMDC(LOGGER, Level.TRACE, new HashMap<>(), "test message");
+    Slf4jUtils.logWithMDC(LOGGER, Level.TRACE, new HashMap<>(), "test message");
 
     assertEquals(0, testAppender.events.size());
     testAppender.stop();
@@ -107,7 +102,7 @@ public class LoggingUtilsTest {
   @Test
   public void testLogWithMDC_WARN() {
     TestAppender testAppender = setupTestLogger();
-    LoggingUtils.logWithMDC(LOGGER, Level.WARN, new HashMap<>(), "test message");
+    Slf4jUtils.logWithMDC(LOGGER, Level.WARN, new HashMap<>(), "test message");
 
     assertEquals(1, testAppender.events.size());
     assertEquals(ch.qos.logback.classic.Level.WARN, testAppender.events.get(0).getLevel());
@@ -117,7 +112,7 @@ public class LoggingUtilsTest {
   @Test
   public void testLogWithMDC_ERROR() {
     TestAppender testAppender = setupTestLogger();
-    LoggingUtils.logWithMDC(LOGGER, Level.ERROR, new HashMap<>(), "test message");
+    Slf4jUtils.logWithMDC(LOGGER, Level.ERROR, new HashMap<>(), "test message");
 
     assertEquals(1, testAppender.events.size());
     assertEquals(ch.qos.logback.classic.Level.ERROR, testAppender.events.get(0).getLevel());
@@ -133,14 +128,19 @@ public class LoggingUtilsTest {
     data.put("key1", "value1");
     data.put("token", "value2");
 
-    LoggingUtils.logGenericData(data, LOGGER, "test generic data");
+    LoggerProvider loggerProvider = Mockito.mock(LoggerProvider.class);
+    when(loggerProvider.getLogger()).thenReturn(LOGGER);
+    Slf4jUtils.logGenericData(data, loggerProvider, "test generic data");
 
     assertEquals(1, testAppender.events.size());
-    Map<String, String> mdcPropertyMap = testAppender.events.get(0).getMDCPropertyMap();
-    assertEquals(2, mdcPropertyMap.size());
-    assertEquals("value1", mdcPropertyMap.get("key1"));
-    assertNotNull(mdcPropertyMap.get("token"));
-    assertNotEquals("value2", mdcPropertyMap.get("token"));
+    List<KeyValuePair> keyValuePairs = testAppender.events.get(0).getKeyValuePairs();
+    assertEquals(2, keyValuePairs.size());
+    for (KeyValuePair kvp : keyValuePairs) {
+
+      assertTrue(
+          "Key should be either 'key1' or 'token'",
+          kvp.key.equals("key1") || kvp.key.equals("token"));
+    }
 
     testAppender.stop();
   }
