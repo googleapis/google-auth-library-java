@@ -11,11 +11,11 @@ class LoggerProvider {
     this.clazz = clazz;
   }
 
-  public static LoggerProvider forClazz(Class<?> clazz) {
+  static LoggerProvider forClazz(Class<?> clazz) {
     return new LoggerProvider(clazz);
   }
 
-  public Logger getLogger() {
+  Logger getLogger() {
     if (logger == null) {
       this.logger = Slf4jUtils.getLogger(clazz);
     }

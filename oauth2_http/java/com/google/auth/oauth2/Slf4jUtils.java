@@ -57,7 +57,6 @@ import org.slf4j.spi.LoggingEventBuilder;
 class Slf4jUtils {
 
   private static final Logger NO_OP_LOGGER = org.slf4j.helpers.NOPLogger.NOP_LOGGER;
-  private static boolean loggingEnabled = LoggingUtils.isLoggingEnabled();
   private static final Gson gson = new Gson();
   private static final Set<String> SENSITIVE_KEYS = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
   private static boolean hasAddKeyValue;
@@ -95,7 +94,7 @@ class Slf4jUtils {
 
   // constructor with LoggerFactoryProvider to make testing easier
   static Logger getLogger(Class<?> clazz, LoggerFactoryProvider factoryProvider) {
-    if (loggingEnabled) {
+    if (LoggingUtils.isLoggingEnabled()) {
       ILoggerFactory loggerFactory = factoryProvider.getLoggerFactory();
       return loggerFactory.getLogger(clazz.getName());
     } else {
@@ -122,7 +121,6 @@ class Slf4jUtils {
         Object value = entry.getValue();
 
         MDC.put(key, value instanceof String ? (String) value : gson.toJson(value));
-        // MDC.put(key, value.toString()); // different from gax, to not bring in gson (that logic is not used in auth)
       }
     }
     switch (level) {

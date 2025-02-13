@@ -155,10 +155,10 @@ class IamUtils {
                     IamUtils.IAM_RETRYABLE_STATUS_CODES.contains(response.getStatusCode())));
     request.setIOExceptionHandler(new HttpBackOffIOExceptionHandler(backoff));
 
-    Slf4jUtils.logRequest(
+    LoggingUtils.logRequest(
         request, LOGGER_PROVIDER, "Sending request to get signature to sign the blob");
     HttpResponse response = request.execute();
-    Slf4jUtils.logResponse(
+    LoggingUtils.logResponse(
         response, LOGGER_PROVIDER, "Received response for signature to sign the blob");
     int statusCode = response.getStatusCode();
     if (statusCode >= 400 && statusCode < HttpStatusCodes.STATUS_CODE_SERVER_ERROR) {
@@ -186,7 +186,7 @@ class IamUtils {
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
-    Slf4jUtils.logGenericData(responseData, LOGGER_PROVIDER, "Response payload for sign blob");
+    LoggingUtils.logGenericData(responseData, LOGGER_PROVIDER, "Response payload for sign blob");
     return OAuth2Utils.validateString(responseData, "signedBlob", PARSE_ERROR_SIGNATURE);
   }
 
@@ -240,10 +240,10 @@ class IamUtils {
         MetricsUtils.getGoogleCredentialsMetricsHeader(
             RequestType.ID_TOKEN_REQUEST, credentialTypeForMetrics));
 
-    Slf4jUtils.logRequest(request, LOGGER_PROVIDER, "Sending request to get ID token");
+    LoggingUtils.logRequest(request, LOGGER_PROVIDER, "Sending request to get ID token");
     HttpResponse response = request.execute();
 
-    Slf4jUtils.logResponse(response, LOGGER_PROVIDER, "Received response for ID token request");
+    LoggingUtils.logResponse(response, LOGGER_PROVIDER, "Received response for ID token request");
     int statusCode = response.getStatusCode();
     if (statusCode >= 400 && statusCode < HttpStatusCodes.STATUS_CODE_SERVER_ERROR) {
       GenericData responseError = response.parseAs(GenericData.class);
@@ -268,7 +268,7 @@ class IamUtils {
     }
 
     GenericJson responseData = response.parseAs(GenericJson.class);
-    Slf4jUtils.logGenericData(
+    LoggingUtils.logGenericData(
         responseData, LOGGER_PROVIDER, "Response payload for ID token request");
     String rawToken = OAuth2Utils.validateString(responseData, "token", PARSE_ERROR_MESSAGE);
     return IdToken.create(rawToken);

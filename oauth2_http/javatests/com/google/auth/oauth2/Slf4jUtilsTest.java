@@ -35,26 +35,45 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestFactory;
+import com.google.api.client.http.UrlEncodedContent;
 import com.google.api.client.util.GenericData;
-import com.google.auth.TestAppender;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.KeyValuePair;
 import org.slf4j.event.Level;
+import org.slf4j.helpers.NOPLogger;
 
 public class Slf4jUtilsTest {
   private static final Logger LOGGER = LoggerFactory.getLogger(Slf4jUtilsTest.class);
 
-  private TestAppender setupTestLogger() {
-    TestAppender testAppender = new TestAppender();
-    testAppender.start();
-    ((ch.qos.logback.classic.Logger) LOGGER).addAppender(testAppender);
-    return testAppender;
+  private TestEnvironmentProvider testEnvironmentProvider;
+
+  @Before
+  public void setup() {
+    testEnvironmentProvider = new TestEnvironmentProvider();
+  }
+  // This test mimics GOOGLE_SDK_JAVA_LOGGING != true
+  @Test
+  public void testGetLogger_loggingDisabled_shouldGetNOPLogger() {
+    testEnvironmentProvider.setEnv(LoggingUtils.GOOGLE_SDK_JAVA_LOGGING, "false");
+    LoggingUtils.setEnvironmentProvider(testEnvironmentProvider);
+    Logger logger = Slf4jUtils.getLogger(Slf4jUtilsTest.class);
+
+    assertEquals(NOPLogger.class, logger.getClass());
+    assertFalse(logger.isInfoEnabled());
+    assertFalse(logger.isDebugEnabled());
   }
 
   @Test
@@ -121,6 +140,10 @@ public class Slf4jUtilsTest {
 
   @Test
   public void testLogGenericData() {
+    // mimic GOOGLE_SDK_JAVA_LOGGING = true
+    testEnvironmentProvider.setEnv(LoggingUtils.GOOGLE_SDK_JAVA_LOGGING, "true");
+    LoggingUtils.setEnvironmentProvider(testEnvironmentProvider);
+
     TestAppender testAppender = setupTestLogger();
     GenericData genericData = Mockito.mock(GenericData.class);
 
@@ -130,7 +153,7 @@ public class Slf4jUtilsTest {
 
     LoggerProvider loggerProvider = Mockito.mock(LoggerProvider.class);
     when(loggerProvider.getLogger()).thenReturn(LOGGER);
-    Slf4jUtils.logGenericData(data, loggerProvider, "test generic data");
+    LoggingUtils.logGenericData(data, loggerProvider, "test generic data");
 
     assertEquals(1, testAppender.events.size());
     List<KeyValuePair> keyValuePairs = testAppender.events.get(0).getKeyValuePairs();
@@ -143,5 +166,68 @@ public class Slf4jUtilsTest {
     }
 
     testAppender.stop();
+  }
+
+  @Test
+  public void testLogRequest() throws IOException {
+    // mimic GOOGLE_SDK_JAVA_LOGGING = true
+    testEnvironmentProvider.setEnv(LoggingUtils.GOOGLE_SDK_JAVA_LOGGING, "true");
+    LoggingUtils.setEnvironmentProvider(testEnvironmentProvider);
+
+    TestAppender testAppender = setupTestLogger();
+    GenericData genericData = Mockito.mock(GenericData.class);
+
+    GenericData tokenRequest = new GenericData();
+    tokenRequest.set("client_id", "clientId");
+    tokenRequest.set("client_secret", "clientSecret");
+    UrlEncodedContent content = new UrlEncodedContent(tokenRequest);
+
+    MockHttpTransportFactory mockHttpTransportFactory = new MockHttpTransportFactory();
+
+    HttpRequestFactory requestFactory = mockHttpTransportFactory.create().createRequestFactory();
+    HttpRequest request =
+        requestFactory.buildPostRequest(new GenericUrl(OAuth2Utils.TOKEN_SERVER_URI), content);
+
+    LoggerProvider loggerProvider = Mockito.mock(LoggerProvider.class);
+    when(loggerProvider.getLogger()).thenReturn(LOGGER);
+    LoggingUtils.logRequest(request, loggerProvider, "test log request");
+
+    assertEquals(1, testAppender.events.size());
+    assertEquals("test log request", testAppender.events.get(0).getMessage());
+    List<KeyValuePair> keyValuePairs = testAppender.events.get(0).getKeyValuePairs();
+    assertEquals(4, keyValuePairs.size());
+    for (KeyValuePair kvp : testAppender.events.get(0).getKeyValuePairs()) {
+      assertTrue(
+          kvp.key.equals("request.headers")
+              || kvp.key.equals("request.payload")
+              || kvp.key.equals("request.method")
+              || kvp.key.equals("request.url"));
+      if (kvp.key.equals("request.headers") || kvp.key.equals("request.payload")) {
+        assertTrue(isValidJson((String) kvp.value));
+      }
+    }
+    testAppender.stop();
+  }
+
+  boolean isValidJson(String jsonString) {
+    try {
+      JsonParser.parseString(jsonString);
+      return true;
+    } catch (JsonSyntaxException e) {
+      return false;
+    }
+  }
+
+  @Test
+  public void testCheckIfClazzAvailable() {
+    assertFalse(Slf4jUtils.checkIfClazzAvailable("fake.class.should.not.be.in.classpath"));
+    assertTrue(Slf4jUtils.checkIfClazzAvailable("org.slf4j.event.KeyValuePair"));
+  }
+
+  private TestAppender setupTestLogger() {
+    TestAppender testAppender = new TestAppender();
+    testAppender.start();
+    ((ch.qos.logback.classic.Logger) LOGGER).addAppender(testAppender);
+    return testAppender;
   }
 }

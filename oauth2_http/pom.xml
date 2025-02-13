@@ -91,6 +91,28 @@
       <activation>
         <activeByDefault>true</activeByDefault>
       </activation>
+      <build>
+        <plugins>
+
+<!--          <plugin>-->
+<!--            <artifactId>maven-compiler-plugin</artifactId>-->
+<!--            <version>3.13.0</version>-->
+<!--            <configuration>-->
+<!--              <source>1.8</source>-->
+<!--              <target>1.8</target>-->
+<!--              <encoding>UTF-8</encoding>-->
+
+<!--              &lt;!&ndash;    excluding tests depending on logback/env var by default    &ndash;&gt;-->
+<!--              <testIncludes>-->
+<!--                <testInclude>**/Slf4jUtilsTest.java</testInclude>-->
+<!--                <testInclude>**/Slf4jUtils1xTest.java</testInclude>-->
+<!--                <testInclude>**/TestAppender.java</testInclude>-->
+<!--                <testInclude>**/LoggingTest.java</testInclude>-->
+<!--              </testIncludes>-->
+<!--            </configuration>-->
+<!--          </plugin>-->
+        </plugins>
+      </build>
       <dependencies>
 <!--gets gson from com.google.http-client:google-http-client-gson-->
         <!--    Logback  for testing -->

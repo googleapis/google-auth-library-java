@@ -53,7 +53,6 @@ import static org.junit.Assert.assertTrue;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.webtoken.JsonWebToken.Payload;
 import com.google.api.client.util.ArrayMap;
-import com.google.auth.TestAppender;
 import com.google.auth.TestUtils;
 import com.google.auth.oauth2.ComputeEngineCredentialsTest.MockMetadataServerTransportFactory;
 import com.google.gson.Gson;
@@ -63,6 +62,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,6 +85,17 @@ public class LoggingTest {
     ((ch.qos.logback.classic.Logger) logger).addAppender(testAppender);
     return testAppender;
   }
+
+  @BeforeClass
+  public static void setup() {
+    // mimic GOOGLE_SDK_JAVA_LOGGING = true
+    TestEnvironmentProvider testEnvironmentProvider = new TestEnvironmentProvider();
+    testEnvironmentProvider.setEnv(LoggingUtils.GOOGLE_SDK_JAVA_LOGGING, "true");
+    LoggingUtils.setEnvironmentProvider(testEnvironmentProvider);
+  }
+
+  @AfterClass
+  public static void cleanup() {}
 
   @Test
   public void userCredentials_getRequestMetadata_fromRefreshToken_hasAccessToken()

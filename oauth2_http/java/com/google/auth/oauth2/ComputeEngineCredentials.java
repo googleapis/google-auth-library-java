@@ -470,9 +470,9 @@ public class ComputeEngineCredentials extends GoogleCredentials
         requestMessage = "Sending request for universe domain/default service account";
         responseMessage = "Received response for universe domain/default service account";
       }
-      Slf4jUtils.logRequest(request, LOGGER_PROVIDER, requestMessage);
+      LoggingUtils.logRequest(request, LOGGER_PROVIDER, requestMessage);
       response = request.execute();
-      Slf4jUtils.logResponse(response, LOGGER_PROVIDER, responseMessage);
+      LoggingUtils.logResponse(response, LOGGER_PROVIDER, responseMessage);
     } catch (UnknownHostException exception) {
       throw new IOException(
           "ComputeEngineCredentials cannot find the metadata server. This is"
@@ -573,9 +573,10 @@ public class ComputeEngineCredentials extends GoogleCredentials
             MetricsUtils.getGoogleCredentialsMetricsHeader(
                 RequestType.METADATA_SERVER_PING, CredentialTypeForMetrics.DO_NOT_SEND));
 
-        Slf4jUtils.logRequest(request, LOGGER_PROVIDER, "Pinging Metadata Server");
+        LoggingUtils.logRequest(request, LOGGER_PROVIDER, "Pinging Metadata Server");
         HttpResponse response = request.execute();
-        Slf4jUtils.logResponse(response, LOGGER_PROVIDER, "Received response from Metadata Server");
+        LoggingUtils.logResponse(
+            response, LOGGER_PROVIDER, "Received response from Metadata Server");
         try {
           // Internet providers can return a generic response to all requests, so it is necessary
           // to check that metadata header is present also.
@@ -754,7 +755,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
       throw new IOException(METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE);
     }
     GenericData responseData = response.parseAs(GenericData.class);
-    Slf4jUtils.logGenericData(
+    LoggingUtils.logGenericData(
         responseData, LOGGER_PROVIDER, "Received default service account payload");
     Map<String, Object> defaultAccount =
         OAuth2Utils.validateMap(responseData, "default", PARSE_ERROR_ACCOUNT);

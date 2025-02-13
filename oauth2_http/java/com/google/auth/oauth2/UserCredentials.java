@@ -285,9 +285,9 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     HttpResponse response;
 
     try {
-      Slf4jUtils.logRequest(request, LOGGER_PROVIDER, "Sending request to refresh access token");
+      LoggingUtils.logRequest(request, LOGGER_PROVIDER, "Sending request to refresh access token");
       response = request.execute();
-      Slf4jUtils.logResponse(
+      LoggingUtils.logResponse(
           response, LOGGER_PROVIDER, "Received response for refresh access token");
     } catch (HttpResponseException re) {
       throw GoogleAuthException.createWithTokenEndpointResponseException(re);
@@ -297,7 +297,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
 
     GenericData data = response.parseAs(GenericData.class);
 
-    Slf4jUtils.logGenericData(data, LOGGER_PROVIDER, "Response payload for access token");
+    LoggingUtils.logGenericData(data, LOGGER_PROVIDER, "Response payload for access token");
     return data;
   }
 

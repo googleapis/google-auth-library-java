@@ -6,8 +6,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 
 import com.google.api.client.util.GenericData;
-import com.google.auth.TestAppender;
 import java.util.Map;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
@@ -25,6 +25,7 @@ public class Slf4jUtils1xTest {
   }
 
   @Test
+  @Ignore("This test needs slf4j1.x")
   public void testLogGenericData() {
     TestAppender testAppender = setupTestLogger();
     GenericData genericData = Mockito.mock(GenericData.class);
@@ -35,7 +36,7 @@ public class Slf4jUtils1xTest {
 
     LoggerProvider loggerProvider = Mockito.mock(LoggerProvider.class);
     when(loggerProvider.getLogger()).thenReturn(LOGGER);
-    Slf4jUtils.logGenericData(data, loggerProvider, "test generic data");
+    LoggingUtils.logGenericData(data, loggerProvider, "test generic data");
 
     assertEquals(1, testAppender.events.size());
     Map<String, String> mdcPropertyMap = testAppender.events.get(0).getMDCPropertyMap();

@@ -4,13 +4,22 @@ import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.util.GenericData;
 
-public class LoggingUtils {
+class LoggingUtils {
+
+  static final String GOOGLE_SDK_JAVA_LOGGING = "GOOGLE_SDK_JAVA_LOGGING";
+  private static EnvironmentProvider environmentProvider =
+      SystemEnvironmentProvider.getInstance(); // this may be reset for testing purpose
 
   private static boolean loggingEnabled = isLoggingEnabled();
-  static final String GOOGLE_SDK_JAVA_LOGGING = "GOOGLE_SDK_JAVA_LOGGING";
+  // expose this setter only for testing purposes
+  static void setEnvironmentProvider(EnvironmentProvider provider) {
+    environmentProvider = provider;
+    // Recalculate LOGGING_ENABLED after setting the new provider
+    loggingEnabled = isLoggingEnabled();
+  }
 
   static boolean isLoggingEnabled() {
-    String enableLogging = System.getenv(GOOGLE_SDK_JAVA_LOGGING);
+    String enableLogging = environmentProvider.getEnv(GOOGLE_SDK_JAVA_LOGGING);
     return "true".equalsIgnoreCase(enableLogging);
   }
 
@@ -32,18 +41,4 @@ public class LoggingUtils {
       Slf4jUtils.logGenericData(genericData, loggerProvider, message);
     }
   }
-
-  //
-  //   public static void executeWithTryCatch(ThrowingRunnable action) {
-  //   try {
-  //     action.run();
-  //   } catch (Throwable t) {
-  //     // let logging exceptions fail silently
-  //   }
-  // }
-  //
-  // @FunctionalInterface
-  // public interface ThrowingRunnable {
-  //   void run() throws Throwable;
-  // }
 }
