@@ -36,7 +36,22 @@ jobs:
     - run: .kokoro/build.sh
       env:
         JOB_TYPE: test
-        GOOGLE_SDK_JAVA_LOGGING: true
+  units-logging:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java: [11, 17, 21]
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: ${{matrix.java}}
+    - run: java -version
+    - run: .kokoro/build.sh
+      env:
+        JOB_TYPE: test-logging
   units-java8:
     # Building using Java 17 and run the tests with Java 8 runtime
     name: "units (8)"
@@ -59,7 +74,6 @@ jobs:
       - run: .kokoro/build.sh
         env:
           JOB_TYPE: test
-          GOOGLE_SDK_JAVA_LOGGING: true
   windows:
     runs-on: windows-latest
     steps:
@@ -74,7 +88,6 @@ jobs:
     - run: .kokoro/build.bat
       env:
         JOB_TYPE: test
-        GOOGLE_SDK_JAVA_LOGGING: true
   dependencies:
     runs-on: ubuntu-latest
     strategy:
