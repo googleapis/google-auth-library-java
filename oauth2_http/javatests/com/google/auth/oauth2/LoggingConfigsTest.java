@@ -97,7 +97,8 @@
 //         .thenReturn(org.slf4j.helpers.NOPLogger.NOP_LOGGER);
 //
 //     // Use the mock LoggerFactoryProvider in getLogger()
-//     Logger logger = LoggingConfigs.getLogger(LoggingConfigsTest.class, mockLoggerFactoryProvider);
+//     Logger logger = LoggingConfigs.getLogger(LoggingConfigsTest.class,
+// mockLoggerFactoryProvider);
 //
 //     // Assert that the returned logger is a NOPLogger
 //     assertTrue(logger instanceof org.slf4j.helpers.NOPLogger);

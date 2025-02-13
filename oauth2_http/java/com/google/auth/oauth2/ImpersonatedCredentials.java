@@ -557,7 +557,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
     try {
       Slf4jUtils.logRequest(request, LOGGER_PROVIDER, "Sending request to refresh access token");
       response = request.execute();
-      Slf4jUtils.logResponse(response, LOGGER_PROVIDER, "Received response for refresh access token");
+      Slf4jUtils.logResponse(
+          response, LOGGER_PROVIDER, "Received response for refresh access token");
     } catch (IOException e) {
       throw new IOException("Error requesting access token", e);
     }

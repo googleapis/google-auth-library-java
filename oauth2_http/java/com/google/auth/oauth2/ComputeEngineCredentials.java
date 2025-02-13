@@ -373,8 +373,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
       throw new IOException(METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE);
     }
     GenericData responseData = response.parseAs(GenericData.class);
-    LoggingUtils.logGenericData(
-        responseData, LOGGER_PROVIDER, "Response from refresh access token payload");
+    LoggingUtils.logGenericData(responseData, LOGGER_PROVIDER, "Response payload for access token");
     String accessToken =
         OAuth2Utils.validateString(responseData, "access_token", PARSE_ERROR_PREFIX);
     int expiresInSeconds =
@@ -435,6 +434,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
       throw new IOException(METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE);
     }
     String rawToken = response.parseAsString();
+    // TODO: log payload here
     return IdToken.create(rawToken);
   }
 
@@ -459,10 +459,10 @@ public class ComputeEngineCredentials extends GoogleCredentials
       String requestMessage;
       String responseMessage;
       if (requestType.equals(RequestType.ID_TOKEN_REQUEST)) {
-        requestMessage = "Sending request for id token";
+        requestMessage = "Sending request to get ID token";
         responseMessage = "Received response for ID token request";
       } else if (requestType.equals(RequestType.ACCESS_TOKEN_REQUEST)) {
-        requestMessage = "Sending request for access token";
+        requestMessage = "Sending request to refresh access token";
         responseMessage = "Received response for refresh access token";
       } else {
         // TODO: this includes get universe domain and get default sa.
