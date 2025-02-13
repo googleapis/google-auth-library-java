@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Google LLC
+ * Copyright 2025 Google LLC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -36,8 +36,6 @@ import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.UrlEncodedContent;
 import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.util.GenericData;
-// import com.google.auth.oauth2.LoggingConfigs.DefaultLoggerFactoryProvider;
-// import com.google.auth.oauth2.LoggingConfigs.LoggerFactoryProvider;
 import com.google.gson.Gson;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

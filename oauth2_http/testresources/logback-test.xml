@@ -1,6 +1,6 @@
-<configuration>
-  <appender name="TEST_APPENDER" class="com.google.auth.oauth2.TestAppender" />
-  <root level="DEBUG">
-    <appender-ref ref="TEST_APPENDER" />
-  </root>
-</configuration>
+<!--<configuration>-->
+<!--  <appender name="TEST_APPENDER" class="com.google.auth.oauth2.TestAppender" />-->
+<!--  <root level="DEBUG">-->
+<!--    <appender-ref ref="TEST_APPENDER" />-->
+<!--  </root>-->
+<!--</configuration>-->

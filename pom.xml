@@ -278,23 +278,24 @@
       </plugins>
     </pluginManagement>
     <plugins>
-<!--      <plugin>-->
-<!--        <artifactId>maven-compiler-plugin</artifactId>-->
-<!--        <version>3.13.0</version>-->
-<!--        <configuration>-->
-<!--          <source>1.8</source>-->
-<!--          <target>1.8</target>-->
-<!--          <encoding>UTF-8</encoding>-->
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+          <encoding>UTF-8</encoding>
 
-<!--          &lt;!&ndash;    excluding tests depending on logback/env var by default    &ndash;&gt;-->
-<!--          <testExcludes>-->
-<!--            <testExclude>**/Slf4jUtilsTest.java</testExclude>-->
-<!--            <testExclude>**/Slf4jUtils1xTest.java</testExclude>-->
-<!--            <testExclude>**/TestAppender.java</testExclude>-->
-<!--            <testExclude>**/LoggingTest.java</testExclude>-->
-<!--          </testExcludes>-->
-<!--        </configuration>-->
-<!--      </plugin>-->
+          <!--    excluding tests depending on logback/env var by default    -->
+          <testExcludes>
+            <testExclude>**/Slf4jUtilsLogbackTest.java</testExclude>
+            <testExclude>**/Slf4jUtils1xTest.java</testExclude>
+            <testExclude>**/Slf4jUtilsTest.java</testExclude>
+            <testExclude>**/TestAppender.java</testExclude>
+            <testExclude>**/LoggingTest.java</testExclude>
+          </testExcludes>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>

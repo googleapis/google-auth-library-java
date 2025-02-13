@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Google LLC
+ * Copyright 2025 Google LLC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -34,16 +34,10 @@ package com.google.auth.oauth2;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-// import ch.qos.logback.classic.LoggerContext;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class LoggingUtilsTest {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(LoggingUtilsTest.class);
 
   private TestEnvironmentProvider testEnvironmentProvider;
 
@@ -51,49 +45,6 @@ public class LoggingUtilsTest {
   public void setup() {
     testEnvironmentProvider = new TestEnvironmentProvider();
   }
-
-  // @After
-  // public void tearDown() {
-  //   LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-  //   loggerContext.getLogger(Logger.ROOT_LOGGER_NAME).detachAppender("CONSOLE");
-  // }
-
-  // @Test
-  // public void testGetLogger_loggingEnabled_slf4jBindingPresent() {
-  //   testEnvironmentProvider.setEnv(LoggingUtils.GOOGLE_SDK_JAVA_LOGGING, "true");
-  //   LoggingUtils.setEnvironmentProvider(testEnvironmentProvider);
-  //   Logger logger = LoggingUtils.getLogger(LoggingUtilsTest.class);
-  //   assertNotNull(logger);
-  //   assertNotEquals(NOPLogger.class, logger.getClass());
-  // }
-  //
-  //   @Test
-  //   public void testGetLogger_loggingDisabled() {
-  //     testEnvironmentProvider.setEnv(LoggingUtils.GOOGLE_SDK_JAVA_LOGGING, "false");
-  //     LoggingConfigs.setEnvironmentProvider(testEnvironmentProvider);
-  //
-  //     Logger logger = LoggingConfigs.getLogger(LoggingUtilsTest.class);
-  //     assertEquals(NOPLogger.class, logger.getClass());
-  //   }
-  //
-  //   @Test
-  //   public void testGetLogger_loggingEnabled_noBinding() {
-  //     testEnvironmentProvider.setEnv(LoggingUtils.GOOGLE_SDK_JAVA_LOGGING, "true");
-  //     LoggingConfigs.setEnvironmentProvider(testEnvironmentProvider);
-  //     // Create a mock LoggerFactoryProvider
-  //     LoggerFactoryProvider mockLoggerFactoryProvider = mock(LoggerFactoryProvider.class);
-  //     ILoggerFactory mockLoggerFactory = mock(ILoggerFactory.class);
-  //     when(mockLoggerFactoryProvider.getLoggerFactory()).thenReturn(mockLoggerFactory);
-  //     when(mockLoggerFactory.getLogger(anyString()))
-  //         .thenReturn(org.slf4j.helpers.NOPLogger.NOP_LOGGER);
-  //
-  //     // Use the mock LoggerFactoryProvider in getLogger()
-  //     Logger logger = LoggingConfigs.getLogger(LoggingUtilsTest.class,
-  // mockLoggerFactoryProvider);
-  //
-  //     // Assert that the returned logger is a NOPLogger
-  //     assertTrue(logger instanceof org.slf4j.helpers.NOPLogger);
-  //   }
 
   @Test
   public void testIsLoggingEnabled_true() {

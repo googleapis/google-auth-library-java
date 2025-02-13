@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Google LLC
+ * Copyright 2025 Google LLC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -182,6 +182,7 @@ public class LoggingTest {
               || kvp.key.equals("request.method")
               || kvp.key.equals("request.url"));
       if (kvp.key.equals("request.payload")) {
+        // ensure correctly formatted as JSON
         assertTrue(isValidJson((String) kvp.value));
       }
     }
@@ -520,9 +521,6 @@ public class LoggingTest {
               || kvp.key.equals("response.status")
               || kvp.key.equals("response.status.message"));
     }
-    // assertEquals("Response payload for ID token request",
-    // testAppender.events.get(2).getMessage());
-    // assertEquals(1, testAppender.events.get(2).getKeyValuePairs().size());
 
     testAppender.stop();
   }
