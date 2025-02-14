@@ -101,7 +101,7 @@ public class Slf4jUtilsLogbackTest {
   }
 
   @Test
-  public void testLogWithMDC_TRACE() {
+  public void testLogWithMDC_TRACE_notEnabled() {
     TestAppender testAppender = setupTestLogger();
     Slf4jUtils.logWithMDC(LOGGER, Level.TRACE, new HashMap<>(), "test message");
 
