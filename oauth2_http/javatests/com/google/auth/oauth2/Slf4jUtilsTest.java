@@ -65,6 +65,7 @@ public class Slf4jUtilsTest {
     assertFalse(logger.isDebugEnabled());
   }
 
+  // This test require binding (e.g. logback) be present
   @Test
   public void testGetLogger_loggingEnabled_slf4jBindingPresent() {
     testEnvironmentProvider.setEnv(LoggingUtils.GOOGLE_SDK_JAVA_LOGGING, "true");

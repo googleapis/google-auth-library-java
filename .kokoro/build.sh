@@ -53,7 +53,7 @@ test)
     ;;
 test-logging)
     echo "SUREFIRE_JVM_OPT: ${SUREFIRE_JVM_OPT}"
-    mvn test -P '!slf4j2x,slf4j2x-test' -B -ntp -Dclirr.skip=true -Denforcer.skip=true ${SUREFIRE_JVM_OPT}
+    mvn clean test -P '!slf4j2x,slf4j2x-test' -B -ntp -Dclirr.skip=true -Denforcer.skip=true ${SUREFIRE_JVM_OPT}
     RETURN_CODE=$?
     ;;
 lint)
