@@ -39,6 +39,7 @@ jobs:
         GOOGLE_SDK_JAVA_LOGGING: true
       run: |
         mvn -B verify -Dcheckstyle.skip \
+            -Djacoco.skip=true
             -DenableFullTestCoverage \
             -Dsonar.coverage.jacoco.xmlReportPaths=oauth2_http/target/site/jacoco/jacoco.xml \
             org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
