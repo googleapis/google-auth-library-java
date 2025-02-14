@@ -72,6 +72,7 @@ integration)
       -DtrimStackTrace=false \
       -Dclirr.skip=true \
       -Denforcer.skip=true \
+      -Djacoco.skip=true  \
       -fae \
       verify
     RETURN_CODE=$?

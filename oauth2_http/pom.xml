@@ -68,6 +68,23 @@
             </includes>
             </configuration>
           </plugin>
+          <plugin>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.13.0</version>
+            <configuration>
+              <source>1.8</source>
+              <target>1.8</target>
+              <encoding>UTF-8</encoding>
+              <!--    excluding tests depending on logback/env var by default    -->
+              <testExcludes>
+                <testExclude>**/Slf4jUtilsLogbackTest.java</testExclude>
+                <testExclude>**/Slf4jUtils1xTest.java</testExclude>
+                <testExclude>**/Slf4jUtilsTest.java</testExclude>
+                <testExclude>**/TestAppender.java</testExclude>
+                <testExclude>**/LoggingTest.java</testExclude>
+              </testExcludes>
+            </configuration>
+          </plugin>
         </plugins>
       </build>
     </profile>
@@ -104,6 +121,11 @@
           <artifactId>slf4j-api</artifactId>
           <version>${project.slf4j.version}</version>
           <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>com.google.code.gson</groupId>
+          <artifactId>gson</artifactId>
+          <version>${project.gson.version}</version>
         </dependency>
       </dependencies>
     </profile>
