@@ -144,7 +144,7 @@ public class Slf4jUtilsLogbackTest {
 
     LoggerProvider loggerProvider = mock(LoggerProvider.class);
     when(loggerProvider.getLogger()).thenReturn(LOGGER);
-    LoggingUtils.logGenericData(data, loggerProvider, "test generic data");
+    LoggingUtils.logResponsePayload(data, loggerProvider, "test generic data");
 
     assertEquals(1, testAppender.events.size());
     List<KeyValuePair> keyValuePairs = testAppender.events.get(0).getKeyValuePairs();

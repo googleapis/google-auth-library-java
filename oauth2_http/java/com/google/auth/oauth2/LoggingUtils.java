@@ -66,10 +66,10 @@ class LoggingUtils {
     }
   }
 
-  static void logGenericData(
+  static void logResponsePayload(
       GenericData genericData, LoggerProvider loggerProvider, String message) {
     if (loggingEnabled) {
-      Slf4jUtils.logGenericData(genericData, loggerProvider, message);
+      Slf4jUtils.logResponsePayload(genericData, loggerProvider, message);
     }
   }
 }

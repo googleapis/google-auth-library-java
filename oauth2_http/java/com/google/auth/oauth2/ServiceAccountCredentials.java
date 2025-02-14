@@ -507,7 +507,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   private GenericData parseResponseAs(HttpResponse response) throws IOException {
     GenericData genericData = response.parseAs(GenericData.class);
-    LoggingUtils.logGenericData(genericData, LOGGER_PROVIDER, "Response payload");
+    LoggingUtils.logResponsePayload(genericData, LOGGER_PROVIDER, "Response payload");
     return genericData;
   }
   /**

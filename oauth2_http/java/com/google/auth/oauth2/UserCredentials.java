@@ -297,7 +297,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
 
     GenericData data = response.parseAs(GenericData.class);
 
-    LoggingUtils.logGenericData(data, LOGGER_PROVIDER, "Response payload for access token");
+    LoggingUtils.logResponsePayload(data, LOGGER_PROVIDER, "Response payload for access token");
     return data;
   }
 

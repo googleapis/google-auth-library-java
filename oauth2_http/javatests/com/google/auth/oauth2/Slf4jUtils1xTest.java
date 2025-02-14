@@ -67,7 +67,7 @@ public class Slf4jUtils1xTest {
 
     LoggerProvider loggerProvider = Mockito.mock(LoggerProvider.class);
     when(loggerProvider.getLogger()).thenReturn(LOGGER);
-    LoggingUtils.logGenericData(data, loggerProvider, "test generic data");
+    LoggingUtils.logResponsePayload(data, loggerProvider, "test generic data");
 
     assertEquals(1, testAppender.events.size());
     Map<String, String> mdcPropertyMap = testAppender.events.get(0).getMDCPropertyMap();

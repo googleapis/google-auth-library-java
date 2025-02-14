@@ -214,7 +214,7 @@ class Slf4jUtils {
         }
       }
     } catch (Exception e) {
-
+      // let logging fail silently
     }
   }
 
@@ -231,12 +231,11 @@ class Slf4jUtils {
         log(logger, org.slf4j.event.Level.INFO, responseLogDataMap, message);
       }
     } catch (Exception e) {
-
-      // logger.error("Error logging response: ", e);
+      // let logging fail silently
     }
   }
 
-  static void logGenericData(
+  static void logResponsePayload(
       GenericData genericData, LoggerProvider loggerProvider, String message) {
     try {
 
@@ -246,7 +245,7 @@ class Slf4jUtils {
         log(logger, org.slf4j.event.Level.DEBUG, contextMap, message);
       }
     } catch (Exception e) {
-      // logger.error("Error logging GenericData: ", e);
+      // let logging fail silently
     }
   }
 

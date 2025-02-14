@@ -373,7 +373,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
       throw new IOException(METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE);
     }
     GenericData responseData = response.parseAs(GenericData.class);
-    LoggingUtils.logGenericData(responseData, LOGGER_PROVIDER, "Response payload for access token");
+    LoggingUtils.logResponsePayload(responseData, LOGGER_PROVIDER, "Response payload for access token");
     String accessToken =
         OAuth2Utils.validateString(responseData, "access_token", PARSE_ERROR_PREFIX);
     int expiresInSeconds =
@@ -755,7 +755,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
       throw new IOException(METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE);
     }
     GenericData responseData = response.parseAs(GenericData.class);
-    LoggingUtils.logGenericData(
+    LoggingUtils.logResponsePayload(
         responseData, LOGGER_PROVIDER, "Received default service account payload");
     Map<String, Object> defaultAccount =
         OAuth2Utils.validateMap(responseData, "default", PARSE_ERROR_ACCOUNT);

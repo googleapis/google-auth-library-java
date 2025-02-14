@@ -564,7 +564,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
-    LoggingUtils.logGenericData(responseData, LOGGER_PROVIDER, "Response payload for access token");
+    LoggingUtils.logResponsePayload(responseData, LOGGER_PROVIDER, "Response payload for access token");
     response.disconnect();
 
     String accessToken =

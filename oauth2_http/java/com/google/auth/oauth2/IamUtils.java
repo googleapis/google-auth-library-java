@@ -186,7 +186,7 @@ class IamUtils {
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
-    LoggingUtils.logGenericData(responseData, LOGGER_PROVIDER, "Response payload for sign blob");
+    LoggingUtils.logResponsePayload(responseData, LOGGER_PROVIDER, "Response payload for sign blob");
     return OAuth2Utils.validateString(responseData, "signedBlob", PARSE_ERROR_SIGNATURE);
   }
 
@@ -268,7 +268,7 @@ class IamUtils {
     }
 
     GenericJson responseData = response.parseAs(GenericJson.class);
-    LoggingUtils.logGenericData(
+    LoggingUtils.logResponsePayload(
         responseData, LOGGER_PROVIDER, "Response payload for ID token request");
     String rawToken = OAuth2Utils.validateString(responseData, "token", PARSE_ERROR_MESSAGE);
     return IdToken.create(rawToken);
