@@ -133,7 +133,8 @@
       <id>slf4j2x-test</id>
       <!--   This profile is for logging test only,
       use instead of the default slf4j2x.
-      This should merge with parent modules same name profile-->
+      This should merge with the profile with the same name
+      in the parent module -->
       <build>
         <plugins>
           <plugin>

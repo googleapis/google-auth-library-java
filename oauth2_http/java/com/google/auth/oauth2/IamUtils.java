@@ -186,7 +186,8 @@ class IamUtils {
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
-    LoggingUtils.logResponsePayload(responseData, LOGGER_PROVIDER, "Response payload for sign blob");
+    LoggingUtils.logResponsePayload(
+        responseData, LOGGER_PROVIDER, "Response payload for sign blob");
     return OAuth2Utils.validateString(responseData, "signedBlob", PARSE_ERROR_SIGNATURE);
   }
 

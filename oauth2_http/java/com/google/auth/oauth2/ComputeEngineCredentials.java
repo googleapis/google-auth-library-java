@@ -373,7 +373,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
       throw new IOException(METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE);
     }
     GenericData responseData = response.parseAs(GenericData.class);
-    LoggingUtils.logResponsePayload(responseData, LOGGER_PROVIDER, "Response payload for access token");
+    LoggingUtils.logResponsePayload(
+        responseData, LOGGER_PROVIDER, "Response payload for access token");
     String accessToken =
         OAuth2Utils.validateString(responseData, "access_token", PARSE_ERROR_PREFIX);
     int expiresInSeconds =
