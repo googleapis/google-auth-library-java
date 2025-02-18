@@ -109,6 +109,7 @@ class Slf4jLoggingHelpers {
     }
   }
 
+  /** Logs response status code, status.message, and headers */
   static void logResponse(HttpResponse response, LoggerProvider loggerProvider, String message) {
     try {
       Logger logger = loggerProvider.getLogger();
@@ -126,6 +127,7 @@ class Slf4jLoggingHelpers {
     }
   }
 
+  /** Logs parsed response payload */
   static void logResponsePayload(
       GenericData genericData, LoggerProvider loggerProvider, String message) {
     try {
@@ -155,6 +157,7 @@ class Slf4jLoggingHelpers {
     return contextMap;
   }
 
+  // calculate SHA256Hash so we do not print secrets directly to log
   private static String calculateSHA256Hash(String data) {
     try {
       MessageDigest digest = MessageDigest.getInstance("SHA-256");

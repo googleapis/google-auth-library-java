@@ -48,6 +48,10 @@ class Slf4jUtils {
   private static boolean isSLF4J2x;
 
   static {
+    // this class was added as part of the Fluent API introduced since v2.0.0
+    // (https://www.slf4j.org/manual.html#fluent), not available in v1.7.36
+    // see
+    // https://github.com/qos-ch/slf4j/commits/v_2.0.0/slf4j-api/src/main/java/org/slf4j/event/KeyValuePair.java
     isSLF4J2x = checkIfClazzAvailable("org.slf4j.event.KeyValuePair");
   }
 
