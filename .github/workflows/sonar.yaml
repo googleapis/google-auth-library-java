@@ -45,3 +45,18 @@ jobs:
             -Dsonar.projectKey=googleapis_google-auth-library-java \
             -Dsonar.organization=googleapis \
             -Dsonar.host.url=https://sonarcloud.io
+    - name: Build and analyze for logging tests
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: |
+        mvn -B verify -P '!slf4j2x,slf4j2x-test' \
+            -Dcheckstyle.skip \
+            -Djacoco.skip=true \
+            -DenableFullTestCoverage \
+            -Dsonar.coverage.jacoco.xmlReportPaths=oauth2_http/target/site/jacoco/jacoco.xml \
+            org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            -Dsonar.projectKey=googleapis_google-auth-library-java \
+            -Dsonar.organization=googleapis \
+            -Dsonar.host.url=https://sonarcloud.io
+
