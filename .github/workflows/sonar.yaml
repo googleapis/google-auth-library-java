@@ -38,7 +38,7 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: |
         mvn -B verify -Dcheckstyle.skip \
-            -Djacoco.skip=true
+            -Djacoco.skip=true \
             -DenableFullTestCoverage \
             -Dsonar.coverage.jacoco.xmlReportPaths=oauth2_http/target/site/jacoco/jacoco.xml \
             org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
