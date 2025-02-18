@@ -135,27 +135,7 @@
       use instead of the default slf4j2x.
       This should merge with the profile with the same name
       in the parent module -->
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <version>3.13.0</version>
-            <configuration>
-              <source>1.8</source>
-              <target>1.8</target>
-              <encoding>UTF-8</encoding>
-              <!--    excluding tests depending on logback/env var by default    -->
-              <testIncludes>
-                <testInclude>**/Slf4jUtilsLogbackTest.java</testInclude>
-                <testInclude>**/Slf4jUtils1xTest.java</testInclude>
-                <testInclude>**/Slf4jUtilsTest.java</testInclude>
-                <testInclude>**/TestAppender.java</testInclude>
-                <testInclude>**/LoggingTest.java</testInclude>
-              </testIncludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
+      <!--  Run test with `mvn clean test -P '!slf4j2x,slf4j2x-test'`   -->
       <dependencies>
         <dependency>
           <groupId>org.slf4j</groupId>

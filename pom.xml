@@ -423,7 +423,11 @@
   <profiles>
     <profile>
       <id>slf4j2x-test</id>
-      <!--   This profile is for logging test only, use instead of the default slf4j2x  -->
+      <!--  This profile is for logging test only, use instead of the default slf4j2x  -->
+      <!--  testInclude for compiler is in this parent pom because it affects
+      test classes from other modules  -->
+      <!--  To run logging tests, use this in addition to `slf4j2x-test`profile
+      in oauth2_http module  -->
       <build>
         <plugins>
           <plugin>
