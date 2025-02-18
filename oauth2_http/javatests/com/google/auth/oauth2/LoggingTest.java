@@ -55,14 +55,12 @@ import com.google.api.client.json.webtoken.JsonWebToken.Payload;
 import com.google.api.client.util.ArrayMap;
 import com.google.auth.TestUtils;
 import com.google.auth.oauth2.ComputeEngineCredentialsTest.MockMetadataServerTransportFactory;
-import com.google.gson.Gson;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -75,8 +73,6 @@ import org.slf4j.event.KeyValuePair;
  * This duplicates tests setups, but centralizes logging test setup in this class.
  */
 public class LoggingTest {
-
-  private static final Gson gson = new Gson();
 
   private TestAppender setupTestLogger(Class<?> clazz) {
     TestAppender testAppender = new TestAppender();
@@ -93,9 +89,6 @@ public class LoggingTest {
     testEnvironmentProvider.setEnv(LoggingUtils.GOOGLE_SDK_JAVA_LOGGING, "true");
     LoggingUtils.setEnvironmentProvider(testEnvironmentProvider);
   }
-
-  @AfterClass
-  public static void cleanup() {}
 
   @Test
   public void userCredentials_getRequestMetadata_fromRefreshToken_hasAccessToken()

@@ -41,11 +41,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.NOPLogger;
 
 public class Slf4jUtilsTest {
-  private static final Logger LOGGER = LoggerFactory.getLogger(Slf4jUtilsTest.class);
 
   private TestEnvironmentProvider testEnvironmentProvider;
 

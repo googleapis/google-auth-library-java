@@ -42,6 +42,7 @@ class LoggingUtils {
       SystemEnvironmentProvider.getInstance(); // this may be reset for testing purpose
 
   private static boolean loggingEnabled = isLoggingEnabled();
+
   // expose this setter only for testing purposes
   static void setEnvironmentProvider(EnvironmentProvider provider) {
     environmentProvider = provider;
@@ -72,4 +73,6 @@ class LoggingUtils {
       Slf4jUtils.logResponsePayload(genericData, loggerProvider, message);
     }
   }
+
+  private LoggingUtils() {}
 }

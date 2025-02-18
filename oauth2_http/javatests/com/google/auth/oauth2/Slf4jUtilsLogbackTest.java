@@ -136,7 +136,6 @@ public class Slf4jUtilsLogbackTest {
     LoggingUtils.setEnvironmentProvider(testEnvironmentProvider);
 
     TestAppender testAppender = setupTestLogger();
-    GenericData genericData = mock(GenericData.class);
 
     GenericData data = new GenericData();
     data.put("key1", "value1");
@@ -166,7 +165,6 @@ public class Slf4jUtilsLogbackTest {
     LoggingUtils.setEnvironmentProvider(testEnvironmentProvider);
 
     TestAppender testAppender = setupTestLogger();
-    GenericData genericData = mock(GenericData.class);
 
     GenericData tokenRequest = new GenericData();
     tokenRequest.set("client_id", "clientId");
