@@ -177,4 +177,6 @@ class Slf4jLoggingHelpers {
     }
     return hexString.toString();
   }
+
+  private Slf4jLoggingHelpers() {}
 }
