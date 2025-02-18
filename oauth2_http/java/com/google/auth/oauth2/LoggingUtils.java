@@ -57,20 +57,20 @@ class LoggingUtils {
 
   static void logRequest(HttpRequest request, LoggerProvider loggerProvider, String message) {
     if (loggingEnabled) {
-      Slf4jUtils.logRequest(request, loggerProvider, message);
+      Slf4jLoggingHelpers.logRequest(request, loggerProvider, message);
     }
   }
 
   static void logResponse(HttpResponse response, LoggerProvider loggerProvider, String message) {
     if (loggingEnabled) {
-      Slf4jUtils.logResponse(response, loggerProvider, message);
+      Slf4jLoggingHelpers.logResponse(response, loggerProvider, message);
     }
   }
 
   static void logResponsePayload(
       GenericData genericData, LoggerProvider loggerProvider, String message) {
     if (loggingEnabled) {
-      Slf4jUtils.logResponsePayload(genericData, loggerProvider, message);
+      Slf4jLoggingHelpers.logResponsePayload(genericData, loggerProvider, message);
     }
   }
 

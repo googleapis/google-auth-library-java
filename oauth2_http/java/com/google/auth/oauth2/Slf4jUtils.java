@@ -31,56 +31,32 @@
 
 package com.google.auth.oauth2;
 
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpResponse;
-import com.google.api.client.http.UrlEncodedContent;
-import com.google.api.client.http.json.JsonHttpContent;
-import com.google.api.client.util.GenericData;
 import com.google.gson.Gson;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeSet;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.slf4j.spi.LoggingEventBuilder;
 
+/** Contains util methods to get SLF4J logger and log conditionally based SLF4J major version */
 class Slf4jUtils {
 
   private static final Logger NO_OP_LOGGER = org.slf4j.helpers.NOPLogger.NOP_LOGGER;
   private static final Gson gson = new Gson();
-  private static final Set<String> SENSITIVE_KEYS = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-  private static boolean hasAddKeyValue;
+  private static boolean isSLF4J2x;
 
   static {
-    hasAddKeyValue = checkIfClazzAvailable("org.slf4j.event.KeyValuePair");
-  }
-
-  static {
-    SENSITIVE_KEYS.addAll(
-        Arrays.asList(
-            "token",
-            "assertion",
-            "access_token",
-            "client_secret",
-            "refresh_token",
-            "signedBlob",
-            "authorization"));
+    isSLF4J2x = checkIfClazzAvailable("org.slf4j.event.KeyValuePair");
   }
 
   static boolean checkIfClazzAvailable(String clazzName) {
     try {
       Class.forName(clazzName);
-      return true; // SLF4j 2.x or later
+      return true;
     } catch (ClassNotFoundException e) {
-      return false; // SLF4j 1.x or earlier
+      return false;
     }
   }
 
@@ -103,7 +79,7 @@ class Slf4jUtils {
 
   static void log(
       Logger logger, org.slf4j.event.Level level, Map<String, Object> contextMap, String message) {
-    if (hasAddKeyValue) {
+    if (isSLF4J2x) {
       logWithKeyValuePair(logger, level, contextMap, message);
     } else {
       logWithMDC(logger, level, contextMap, message);
@@ -173,120 +149,6 @@ class Slf4jUtils {
     }
     contextMap.forEach(loggingEventBuilder::addKeyValue);
     loggingEventBuilder.log(message);
-  }
-
-  static void logRequest(HttpRequest request, LoggerProvider loggerProvider, String message) {
-    try {
-      Logger logger = loggerProvider.getLogger();
-      if (logger.isInfoEnabled()) {
-        Map<String, Object> loggingDataMap = new HashMap<>();
-        loggingDataMap.put("request.method", request.getRequestMethod());
-        loggingDataMap.put("request.url", request.getUrl().toString());
-
-        Map<String, Object> headers = new HashMap<>();
-        request
-            .getHeaders()
-            .forEach(
-                (key, val) -> {
-                  if (SENSITIVE_KEYS.contains(key)) {
-                    String hashedVal = calculateSHA256Hash(String.valueOf(val));
-                    headers.put(key, hashedVal);
-                  } else {
-                    headers.put(key, val);
-                  }
-                });
-        loggingDataMap.put("request.headers", gson.toJson(headers));
-
-        if (request.getContent() != null && logger.isDebugEnabled()) {
-          // are payload always GenericData? If so, can parse and store in json
-          if (request.getContent() instanceof UrlEncodedContent) {
-            // this is parsed to GenericData because that is how it is constructed.
-            GenericData data = (GenericData) ((UrlEncodedContent) request.getContent()).getData();
-            Map<String, Object> contextMap = parseGenericData(data);
-            loggingDataMap.put("request.payload", gson.toJson(contextMap));
-          } else if (request.getContent() instanceof JsonHttpContent) {
-            String jsonData = gson.toJson(((JsonHttpContent) request.getContent()).getData());
-            loggingDataMap.put("request.payload", jsonData);
-          }
-
-          log(logger, org.slf4j.event.Level.DEBUG, loggingDataMap, message);
-        } else {
-
-          log(logger, org.slf4j.event.Level.INFO, loggingDataMap, message);
-        }
-      }
-    } catch (Exception e) {
-      // let logging fail silently
-    }
-  }
-
-  static void logResponse(HttpResponse response, LoggerProvider loggerProvider, String message) {
-    try {
-      Logger logger = loggerProvider.getLogger();
-      if (logger.isInfoEnabled()) {
-        Map<String, Object> responseLogDataMap = new HashMap<>();
-        responseLogDataMap.put("response.status", String.valueOf(response.getStatusCode()));
-        responseLogDataMap.put("response.status.message", response.getStatusMessage());
-
-        Map<String, Object> headers = new HashMap<>(response.getHeaders());
-        responseLogDataMap.put("response.headers", headers.toString());
-        log(logger, org.slf4j.event.Level.INFO, responseLogDataMap, message);
-      }
-    } catch (Exception e) {
-      // let logging fail silently
-    }
-  }
-
-  static void logResponsePayload(
-      GenericData genericData, LoggerProvider loggerProvider, String message) {
-    try {
-
-      Logger logger = loggerProvider.getLogger();
-      if (logger.isDebugEnabled()) {
-        Map<String, Object> contextMap = parseGenericData(genericData);
-        log(logger, org.slf4j.event.Level.DEBUG, contextMap, message);
-      }
-    } catch (Exception e) {
-      // let logging fail silently
-    }
-  }
-
-  private static Map<String, Object> parseGenericData(GenericData genericData) {
-    Map<String, Object> contextMap = new HashMap<>();
-    genericData.forEach(
-        (key, val) -> {
-          if (SENSITIVE_KEYS.contains(key)) {
-            String secretString = String.valueOf(val);
-            String hashedVal = calculateSHA256Hash(secretString);
-            contextMap.put(key, hashedVal);
-          } else {
-            contextMap.put(key, val.toString());
-          }
-        });
-    return contextMap;
-  }
-
-  private static String calculateSHA256Hash(String data) {
-    try {
-      MessageDigest digest = MessageDigest.getInstance("SHA-256");
-      byte[] inputBytes = data.getBytes(StandardCharsets.UTF_8);
-      byte[] hashBytes = digest.digest(inputBytes);
-      return bytesToHex(hashBytes);
-    } catch (NoSuchAlgorithmException e) {
-      return "Error calculating SHA-256 hash."; // do not fail for logging failures
-    }
-  }
-
-  private static String bytesToHex(byte[] hash) {
-    StringBuilder hexString = new StringBuilder(2 * hash.length);
-    for (byte b : hash) {
-      String hex = Integer.toHexString(0xff & b);
-      if (hex.length() == 1) {
-        hexString.append('0');
-      }
-      hexString.append(hex);
-    }
-    return hexString.toString();
   }
 
   interface LoggerFactoryProvider {
