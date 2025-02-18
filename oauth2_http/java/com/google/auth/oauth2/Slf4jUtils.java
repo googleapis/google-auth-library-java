@@ -142,6 +142,8 @@ class Slf4jUtils {
         // Default to DEBUG level
     }
     if (!contextMap.isEmpty()) {
+      // MDC carries contextual information in log messages.
+      // It is tied to thread, and is safer to clear it as we intend to tie info to log entries.
       MDC.clear();
     }
   }
