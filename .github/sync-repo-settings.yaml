@@ -117,6 +117,18 @@ branchProtectionRules:
     requiredApprovingReviewCount: 1
     requiresCodeOwnerReviews: true
     requiresStrictStatusChecks: true
+  - pattern: bump-minor-v-for-LTS8
+    isAdminEnforced: true
+    requiredStatusCheckContexts:
+      - dependencies (17)
+      - lint
+      - clirr
+      - units (8)
+      - units (11)
+      - cla/google
+    requiredApprovingReviewCount: 1
+    requiresCodeOwnerReviews: true
+    requiresStrictStatusChecks: true
 permissionRules:
   - team: Googlers
     permission: pull
