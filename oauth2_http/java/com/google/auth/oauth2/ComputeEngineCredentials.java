@@ -435,7 +435,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
       throw new IOException(METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE);
     }
     String rawToken = response.parseAsString();
-    // TODO: log payload here
+    // possible to log payload here
     return IdToken.create(rawToken);
   }
 
