@@ -493,7 +493,7 @@ public class LoggingTest {
     ArrayMap<String, ArrayMap> googleClaim = (ArrayMap<String, ArrayMap>) p.get("google");
     assertTrue(googleClaim.containsKey("compute_engine"));
 
-    assertEquals(2, testAppender.events.size());
+    assertEquals(3, testAppender.events.size());
 
     assertEquals("Sending request to get ID token", testAppender.events.get(0).getMessage());
     assertEquals(3, testAppender.events.get(0).getKeyValuePairs().size());
@@ -515,6 +515,12 @@ public class LoggingTest {
               || kvp.key.equals("response.status.message"));
     }
 
+    assertEquals("Response Payload for ID token", testAppender.events.get(2).getMessage());
+    assertEquals(1, testAppender.events.get(2).getKeyValuePairs().size());
+    assertEquals("id-token", testAppender.events.get(2).getKeyValuePairs().get(0).key);
+    assertEquals(
+        ComputeEngineCredentialsTest.FULL_ID_TOKEN,
+        testAppender.events.get(2).getKeyValuePairs().get(0).value);
     testAppender.stop();
   }
 }

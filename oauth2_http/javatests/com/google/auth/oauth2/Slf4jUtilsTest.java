@@ -37,6 +37,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.auth.oauth2.Slf4jUtils.LoggerFactoryProvider;
+import java.util.logging.Level;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.ILoggerFactory;
@@ -95,5 +96,19 @@ public class Slf4jUtilsTest {
   public void testCheckIfClazzAvailable() {
     assertFalse(Slf4jUtils.checkIfClazzAvailable("fake.class.should.not.be.in.classpath"));
     assertTrue(Slf4jUtils.checkIfClazzAvailable("org.slf4j.event.KeyValuePair"));
+  }
+
+  @Test
+  public void testMatchLevelSevere() {
+    assertEquals(
+        org.slf4j.event.Level.ERROR, Slf4jLoggingHelpers.matchUtilLevelToSLF4JLevel(Level.SEVERE));
+    assertEquals(
+        org.slf4j.event.Level.WARN, Slf4jLoggingHelpers.matchUtilLevelToSLF4JLevel(Level.WARNING));
+    assertEquals(
+        org.slf4j.event.Level.INFO, Slf4jLoggingHelpers.matchUtilLevelToSLF4JLevel(Level.INFO));
+    assertEquals(
+        org.slf4j.event.Level.DEBUG, Slf4jLoggingHelpers.matchUtilLevelToSLF4JLevel(Level.FINE));
+    assertEquals(
+        org.slf4j.event.Level.TRACE, Slf4jLoggingHelpers.matchUtilLevelToSLF4JLevel(Level.FINER));
   }
 }

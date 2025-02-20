@@ -45,6 +45,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.logging.Level;
 import org.slf4j.Logger;
 
 /** Contains helper methods to log auth requests and responses */
@@ -139,6 +140,31 @@ class Slf4jLoggingHelpers {
       }
     } catch (Exception e) {
       // let logging fail silently
+    }
+  }
+
+  static void log(
+      LoggerProvider loggerProvider, Level level, Map<String, Object> contextMap, String message) {
+    try {
+      Logger logger = loggerProvider.getLogger();
+      org.slf4j.event.Level slf4jLevel = matchUtilLevelToSLF4JLevel(level);
+      Slf4jUtils.log(logger, slf4jLevel, contextMap, message);
+    } catch (Exception e) {
+      // let logging fail silently
+    }
+  }
+
+  static org.slf4j.event.Level matchUtilLevelToSLF4JLevel(Level level) {
+    if (level == Level.SEVERE) {
+      return org.slf4j.event.Level.ERROR;
+    } else if (level == Level.WARNING) {
+      return org.slf4j.event.Level.WARN;
+    } else if (level == Level.INFO) {
+      return org.slf4j.event.Level.INFO;
+    } else if (level == Level.FINE) {
+      return org.slf4j.event.Level.DEBUG;
+    } else {
+      return org.slf4j.event.Level.TRACE;
     }
   }
 

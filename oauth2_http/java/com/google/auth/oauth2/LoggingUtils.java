@@ -34,6 +34,8 @@ package com.google.auth.oauth2;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.util.GenericData;
+import java.util.Map;
+import java.util.logging.Level;
 
 class LoggingUtils {
 
@@ -71,6 +73,14 @@ class LoggingUtils {
       GenericData genericData, LoggerProvider loggerProvider, String message) {
     if (loggingEnabled) {
       Slf4jLoggingHelpers.logResponsePayload(genericData, loggerProvider, message);
+    }
+  }
+
+  // generic log method to use when not logging standard request, response and payload
+  static void log(
+      LoggerProvider loggerProvider, Level level, Map<String, Object> contextMap, String message) {
+    if (loggingEnabled) {
+      Slf4jLoggingHelpers.log(loggerProvider, level, contextMap, message);
     }
   }
 
