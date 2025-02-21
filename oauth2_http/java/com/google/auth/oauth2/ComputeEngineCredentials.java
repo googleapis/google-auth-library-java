@@ -579,11 +579,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
             request,
             MetricsUtils.getGoogleCredentialsMetricsHeader(
                 RequestType.METADATA_SERVER_PING, CredentialTypeForMetrics.DO_NOT_SEND));
-
-        LoggingUtils.logRequest(request, LOGGER_PROVIDER, "Pinging Metadata Server");
         HttpResponse response = request.execute();
-        LoggingUtils.logResponse(
-            response, LOGGER_PROVIDER, "Received response from Metadata Server");
         try {
           // Internet providers can return a generic response to all requests, so it is necessary
           // to check that metadata header is present also.
