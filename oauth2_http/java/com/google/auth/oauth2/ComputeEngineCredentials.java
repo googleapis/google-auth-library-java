@@ -51,6 +51,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.BufferedReader;
@@ -94,6 +95,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
   static final Duration COMPUTE_REFRESH_MARGIN = Duration.ofMinutes(3).plusSeconds(45);
 
   private static final Logger LOGGER = Logger.getLogger(ComputeEngineCredentials.class.getName());
+  private static final LoggerProvider LOGGER_PROVIDER =
+      LoggerProvider.forClazz(ComputeEngineCredentials.class);
 
   static final String DEFAULT_METADATA_SERVER_URL = "http://metadata.google.internal";
 
@@ -371,11 +374,14 @@ public class ComputeEngineCredentials extends GoogleCredentials
       throw new IOException(METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE);
     }
     GenericData responseData = response.parseAs(GenericData.class);
+    LoggingUtils.logResponsePayload(
+        responseData, LOGGER_PROVIDER, "Response payload for access token");
     String accessToken =
         OAuth2Utils.validateString(responseData, "access_token", PARSE_ERROR_PREFIX);
     int expiresInSeconds =
         OAuth2Utils.validateInt32(responseData, "expires_in", PARSE_ERROR_PREFIX);
     long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000;
+
     return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
   }
 
@@ -430,6 +436,12 @@ public class ComputeEngineCredentials extends GoogleCredentials
       throw new IOException(METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE);
     }
     String rawToken = response.parseAsString();
+
+    LoggingUtils.log(
+        LOGGER_PROVIDER,
+        Level.FINE,
+        ImmutableMap.of("idToken", rawToken),
+        "Response Payload for ID token");
     return IdToken.create(rawToken);
   }
 
@@ -451,7 +463,23 @@ public class ComputeEngineCredentials extends GoogleCredentials
     request.setThrowExceptionOnExecuteError(false);
     HttpResponse response;
     try {
+      String requestMessage;
+      String responseMessage;
+      if (requestType.equals(RequestType.ID_TOKEN_REQUEST)) {
+        requestMessage = "Sending request to get ID token";
+        responseMessage = "Received response for ID token request";
+      } else if (requestType.equals(RequestType.ACCESS_TOKEN_REQUEST)) {
+        requestMessage = "Sending request to refresh access token";
+        responseMessage = "Received response for refresh access token";
+      } else {
+        // TODO: this includes get universe domain and get default sa.
+        // refactor for more clear logging message.
+        requestMessage = "Sending request for universe domain/default service account";
+        responseMessage = "Received response for universe domain/default service account";
+      }
+      LoggingUtils.logRequest(request, LOGGER_PROVIDER, requestMessage);
       response = request.execute();
+      LoggingUtils.logResponse(response, LOGGER_PROVIDER, responseMessage);
     } catch (UnknownHostException exception) {
       throw new IOException(
           "ComputeEngineCredentials cannot find the metadata server. This is"
@@ -730,6 +758,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
       throw new IOException(METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE);
     }
     GenericData responseData = response.parseAs(GenericData.class);
+    LoggingUtils.logResponsePayload(
+        responseData, LOGGER_PROVIDER, "Received default service account payload");
     Map<String, Object> defaultAccount =
         OAuth2Utils.validateMap(responseData, "default", PARSE_ERROR_ACCOUNT);
     return OAuth2Utils.validateString(defaultAccount, "email", PARSE_ERROR_ACCOUNT);

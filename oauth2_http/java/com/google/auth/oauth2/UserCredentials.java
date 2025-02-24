@@ -68,6 +68,8 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
   private static final String GRANT_TYPE = "refresh_token";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final long serialVersionUID = -4800758775038679176L;
+  private static final LoggerProvider LOGGER_PROVIDER =
+      LoggerProvider.forClazz(UserCredentials.class);
 
   private final String clientId;
   private final String clientSecret;
@@ -283,14 +285,20 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     HttpResponse response;
 
     try {
+      LoggingUtils.logRequest(request, LOGGER_PROVIDER, "Sending request to refresh access token");
       response = request.execute();
+      LoggingUtils.logResponse(
+          response, LOGGER_PROVIDER, "Received response for refresh access token");
     } catch (HttpResponseException re) {
       throw GoogleAuthException.createWithTokenEndpointResponseException(re);
     } catch (IOException e) {
       throw GoogleAuthException.createWithTokenEndpointIOException(e);
     }
 
-    return response.parseAs(GenericData.class);
+    GenericData data = response.parseAs(GenericData.class);
+
+    LoggingUtils.logResponsePayload(data, LOGGER_PROVIDER, "Response payload for access token");
+    return data;
   }
 
   /**

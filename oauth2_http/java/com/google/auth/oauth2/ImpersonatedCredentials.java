@@ -110,6 +110,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
   private int lifetime;
   private String iamEndpointOverride;
   private final String transportFactoryClassName;
+  private static final LoggerProvider LOGGER_PROVIDER =
+      LoggerProvider.forClazz(ImpersonatedCredentials.class);
 
   private transient HttpTransportFactory transportFactory;
 
@@ -553,12 +555,17 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
     HttpResponse response = null;
     try {
+      LoggingUtils.logRequest(request, LOGGER_PROVIDER, "Sending request to refresh access token");
       response = request.execute();
+      LoggingUtils.logResponse(
+          response, LOGGER_PROVIDER, "Received response for refresh access token");
     } catch (IOException e) {
       throw new IOException("Error requesting access token", e);
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
+    LoggingUtils.logResponsePayload(
+        responseData, LOGGER_PROVIDER, "Response payload for access token");
     response.disconnect();
 
     String accessToken =

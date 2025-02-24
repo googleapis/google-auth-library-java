@@ -120,8 +120,8 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   private static final String PROJECT_ID = "project-id";
   public static final String IMPERSONATED_CLIENT_EMAIL =
       "impersonated-account@iam.gserviceaccount.com";
-  private static final List<String> IMMUTABLE_SCOPES_LIST = ImmutableList.of("scope1", "scope2");
-  private static final int VALID_LIFETIME = 300;
+  static final List<String> IMMUTABLE_SCOPES_LIST = ImmutableList.of("scope1", "scope2");
+  static final int VALID_LIFETIME = 300;
   private static final int INVALID_LIFETIME = 43210;
   private static JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
@@ -164,7 +164,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     mockTransportFactory = new MockIAMCredentialsServiceTransportFactory();
   }
 
-  private GoogleCredentials getSourceCredentials() throws IOException {
+  static GoogleCredentials getSourceCredentials() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountCredentials sourceCredentials =

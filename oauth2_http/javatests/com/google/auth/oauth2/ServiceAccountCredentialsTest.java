@@ -87,7 +87,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
-  private static final String CLIENT_EMAIL =
+  static final String CLIENT_EMAIL =
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr@developer.gserviceaccount.com";
   private static final String CLIENT_ID =
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr.apps.googleusercontent.com";
@@ -105,14 +105,14 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
           + "gidhycxS86dxpEljnOMCw8CKoUBd5I880IUahEiUltk7OLJYS/Ts1wbn3kPOVX3wyJs8WBDtBkFrDHW2ezth2QJ"
           + "ADj3e1YhMVdjJW5jqwlD/VNddGjgzyunmiZg0uOXsHXbytYmsA545S8KRQFaJKFXYYFo2kOjqOiC1T2cAzMDjCQ"
           + "==\n-----END PRIVATE KEY-----\n";
-  private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
-  private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
+  static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
+  static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
   private static final Collection<String> DEFAULT_SCOPES =
       Collections.singletonList("dummy.default.scope");
   private static final String USER = "user@example.com";
   private static final String PROJECT_ID = "project-id";
   private static final Collection<String> EMPTY_SCOPES = Collections.emptyList();
-  private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
+  static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
   private static final String JWT_AUDIENCE = "http://googleapis.com/";
   private static final HttpTransportFactory DUMMY_TRANSPORT_FACTORY =
       new MockTokenServerTransportFactory();
@@ -127,19 +127,20 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   private static final int INVALID_LIFETIME = 43210;
   private static final String JWT_ACCESS_PREFIX = "Bearer ";
 
-  private ServiceAccountCredentials.Builder createDefaultBuilderWithToken(String accessToken)
+  static ServiceAccountCredentials.Builder createDefaultBuilderWithToken(String accessToken)
       throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, accessToken);
     return createDefaultBuilder().setHttpTransportFactory(transportFactory);
   }
 
-  private ServiceAccountCredentials.Builder createDefaultBuilderWithScopes(
+  private static ServiceAccountCredentials.Builder createDefaultBuilderWithScopes(
       Collection<String> scopes) throws IOException {
     return createDefaultBuilder().setScopes(scopes);
   }
 
-  private ServiceAccountCredentials.Builder createDefaultBuilderWithKey(PrivateKey privateKey) {
+  private static ServiceAccountCredentials.Builder createDefaultBuilderWithKey(
+      PrivateKey privateKey) {
     ServiceAccountCredentials.Builder builder =
         ServiceAccountCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -153,7 +154,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     return builder;
   }
 
-  private ServiceAccountCredentials.Builder createDefaultBuilder() throws IOException {
+  static ServiceAccountCredentials.Builder createDefaultBuilder() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     return createDefaultBuilderWithKey(privateKey);
   }
@@ -884,7 +885,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
         targetAudience,
         tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
 
-    // verify id token request metrics headers
+    // verify ID token request metrics headers
     Map<String, List<String>> idTokenRequestHeader =
         transportFactory.transport.getRequest().getHeaders();
     com.google.auth.oauth2.TestUtils.validateMetricsHeader(idTokenRequestHeader, "it", "sa");
