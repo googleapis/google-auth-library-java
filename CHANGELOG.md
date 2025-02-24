@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.33.0](https://github.com/googleapis/google-auth-library-java/compare/v1.32.1...v1.33.0) (2025-02-24)
+
+
+### Features
+
+* Add client logging with slf4j ([#1586](https://github.com/googleapis/google-auth-library-java/issues/1586)) ([24761d6](https://github.com/googleapis/google-auth-library-java/commit/24761d6cc3590c4b08c56c8c992b740e235b31c5))
+
+
+### Dependencies
+
+* Update dependency com.google.http-client:google-http-client-bom to v1.46.1 ([96a5ad8](https://github.com/googleapis/google-auth-library-java/commit/96a5ad88a7b187e1a0d472dca06ff39d74804d61))
+
 ## [1.32.1](https://github.com/googleapis/google-auth-library-java/compare/v1.32.0...v1.32.1) (2025-02-07)
 
 
