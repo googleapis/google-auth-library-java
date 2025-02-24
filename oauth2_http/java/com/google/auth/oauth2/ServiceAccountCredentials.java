@@ -622,11 +622,11 @@ public class ServiceAccountCredentials extends GoogleCredentials
             RequestType.ID_TOKEN_REQUEST, getMetricsCredentialType()));
 
     LoggingUtils.logRequest(
-        request, LOGGER_PROVIDER, "Sending request to get ID token via Oauth endpoint");
+        request, LOGGER_PROVIDER, "Sending request to get ID token");
     HttpResponse httpResponse = executeRequest(request);
 
     LoggingUtils.logResponse(
-        httpResponse, LOGGER_PROVIDER, "Received response for ID token request via Oauth endpoint");
+        httpResponse, LOGGER_PROVIDER, "Received response for ID token request");
     GenericData responseData = parseResponseAs(httpResponse);
     String rawToken = OAuth2Utils.validateString(responseData, "id_token", PARSE_ERROR_PREFIX);
     return IdToken.create(rawToken);
@@ -670,10 +670,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
     request.setHeaders(new HttpHeaders().set(AuthHttpConstants.AUTHORIZATION, accessToken));
 
     LoggingUtils.logRequest(
-        request, LOGGER_PROVIDER, "Sending request to get ID token via Iam Endpoint");
+        request, LOGGER_PROVIDER, "Sending request to get ID token");
     HttpResponse httpResponse = executeRequest(request);
     LoggingUtils.logResponse(
-        httpResponse, LOGGER_PROVIDER, "Received response for ID token request via Iam endpoint");
+        httpResponse, LOGGER_PROVIDER, "Received response for ID token request");
 
     GenericData responseData = parseResponseAs(httpResponse);
     // IAM Endpoint returns `token` instead of `id_token`

@@ -440,7 +440,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
     LoggingUtils.log(
         LOGGER_PROVIDER,
         Level.FINE,
-        ImmutableMap.of("id-token", rawToken),
+        ImmutableMap.of("idToken", rawToken),
         "Response Payload for ID token");
     return IdToken.create(rawToken);
   }

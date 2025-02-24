@@ -234,7 +234,7 @@ public class LoggingTest {
     assertEquals(3, testAppender.events.size());
 
     assertEquals(
-        "Sending request to get ID token via Iam Endpoint",
+        "Sending request to get ID token",
         testAppender.events.get(0).getMessage());
     assertEquals(4, testAppender.events.get(0).getKeyValuePairs().size());
     for (KeyValuePair kvp : testAppender.events.get(0).getKeyValuePairs()) {
@@ -248,7 +248,7 @@ public class LoggingTest {
       }
     }
     assertEquals(
-        "Received response for ID token request via Iam endpoint",
+        "Received response for ID token request",
         testAppender.events.get(1).getMessage());
     assertEquals(3, testAppender.events.get(1).getKeyValuePairs().size());
     for (KeyValuePair kvp : testAppender.events.get(1).getKeyValuePairs()) {
@@ -517,7 +517,7 @@ public class LoggingTest {
 
     assertEquals("Response Payload for ID token", testAppender.events.get(2).getMessage());
     assertEquals(1, testAppender.events.get(2).getKeyValuePairs().size());
-    assertEquals("id-token", testAppender.events.get(2).getKeyValuePairs().get(0).key);
+    assertEquals("idToken", testAppender.events.get(2).getKeyValuePairs().get(0).key);
     assertEquals(
         ComputeEngineCredentialsTest.FULL_ID_TOKEN,
         testAppender.events.get(2).getKeyValuePairs().get(0).value);
