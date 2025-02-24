@@ -233,9 +233,7 @@ public class LoggingTest {
 
     assertEquals(3, testAppender.events.size());
 
-    assertEquals(
-        "Sending request to get ID token",
-        testAppender.events.get(0).getMessage());
+    assertEquals("Sending request to get ID token", testAppender.events.get(0).getMessage());
     assertEquals(4, testAppender.events.get(0).getKeyValuePairs().size());
     for (KeyValuePair kvp : testAppender.events.get(0).getKeyValuePairs()) {
       assertTrue(
@@ -247,9 +245,7 @@ public class LoggingTest {
         assertTrue(isValidJson((String) kvp.value));
       }
     }
-    assertEquals(
-        "Received response for ID token request",
-        testAppender.events.get(1).getMessage());
+    assertEquals("Received response for ID token request", testAppender.events.get(1).getMessage());
     assertEquals(3, testAppender.events.get(1).getKeyValuePairs().size());
     for (KeyValuePair kvp : testAppender.events.get(1).getKeyValuePairs()) {
       assertTrue(

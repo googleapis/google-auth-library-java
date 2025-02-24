@@ -621,8 +621,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         MetricsUtils.getGoogleCredentialsMetricsHeader(
             RequestType.ID_TOKEN_REQUEST, getMetricsCredentialType()));
 
-    LoggingUtils.logRequest(
-        request, LOGGER_PROVIDER, "Sending request to get ID token");
+    LoggingUtils.logRequest(request, LOGGER_PROVIDER, "Sending request to get ID token");
     HttpResponse httpResponse = executeRequest(request);
 
     LoggingUtils.logResponse(
@@ -669,8 +668,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     // Use the Access Token from the SSJWT to request the ID Token from IAM Endpoint
     request.setHeaders(new HttpHeaders().set(AuthHttpConstants.AUTHORIZATION, accessToken));
 
-    LoggingUtils.logRequest(
-        request, LOGGER_PROVIDER, "Sending request to get ID token");
+    LoggingUtils.logRequest(request, LOGGER_PROVIDER, "Sending request to get ID token");
     HttpResponse httpResponse = executeRequest(request);
     LoggingUtils.logResponse(
         httpResponse, LOGGER_PROVIDER, "Received response for ID token request");
