@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.33.1](https://github.com/googleapis/google-auth-library-java/compare/v1.33.0...v1.33.1) (2025-02-25)
+
+
+### Dependencies
+
+* Update dependency com.google.cloud:google-cloud-shared-config to v1.14.4 ([53a2abc](https://github.com/googleapis/google-auth-library-java/commit/53a2abc5b19e25079113ebff501aebc18efca309))
+
 ## [1.33.0](https://github.com/googleapis/google-auth-library-java/compare/v1.32.1...v1.33.0) (2025-02-24)
 
 
