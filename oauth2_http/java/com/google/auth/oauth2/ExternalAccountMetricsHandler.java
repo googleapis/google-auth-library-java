@@ -36,6 +36,8 @@ package com.google.auth.oauth2;
  * credentials.
  */
 class ExternalAccountMetricsHandler implements java.io.Serializable {
+  private static final long serialVersionUID = 7825203615911901249L;
+  
   private static final String SOURCE_KEY = "source";
   private static final String IMPERSONATION_KEY = "sa-impersonation";
   private static final String CONFIG_LIFETIME_KEY = "config-lifetime";
