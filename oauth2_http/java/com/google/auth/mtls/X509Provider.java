@@ -22,7 +22,7 @@ public class X509Provider {
   }
 
   public X509Provider() {
-    this.certConfigPathOverride = null;
+    super(null);
   }
 
   public KeyStore getKeyStore() throws IOException {
