@@ -1,3 +1,34 @@
+/*
+ * Copyright 2025, Google Inc. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ *    * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ *    * Redistributions in binary form must reproduce the above
+ * copyright notice, this list of conditions and the following disclaimer
+ * in the documentation and/or other materials provided with the
+ * distribution.
+ *
+ *    * Neither the name of Google Inc. nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 package com.google.auth.mtls;
 
 import com.google.api.client.util.SecurityUtils;
@@ -21,20 +52,34 @@ public class X509Provider {
     this.certConfigPathOverride = certConfigPathOverride;
   }
 
-  public X509Provider() {
-    super(null);
+  public X509Provider(){
+    this(null);
   }
 
+  /**
+   * Finds the certificate configuration file, then builds a Keystore using the X.509 certificate
+   * and private key pointed to by the configuration. This will check the following locations in
+   * order.
+   * <ul>
+   *   <li>The certificate config override path, if set.
+   *   <li>The path pointed to by the "GOOGLE_API_CERTIFICATE_CONFIG" environment variable
+   *   <li>The well known gcloud location for the certificate configuration file.
+   * </ul>
+   * @return a KeyStore containing the X.509 certificate specified by the certificate configuration.
+   * @throws IOException if there is an error retrieving the certificate configuration.
+   */
   public KeyStore getKeyStore() throws IOException {
 
     WorkloadCertificateConfiguration workloadCertConfig = getWorkloadCertificateConfiguration();
 
+    InputStream certStream = null;
+    InputStream privateKeyStream = null;
     try {
       // Read the certificate and private key file paths into separate streams.
       File certFile = new File(workloadCertConfig.getCertPath());
       File privateKeyFile = new File(workloadCertConfig.getPrivateKeyPath());
-      InputStream certStream = readStream(certFile);
-      InputStream privateKeyStream = readStream(privateKeyFile);
+      certStream = readStream(certFile);
+      privateKeyStream = readStream(privateKeyFile);
 
       // Merge the two streams into a single stream.
       SequenceInputStream certAndPrivateKeyStream =
@@ -44,6 +89,13 @@ public class X509Provider {
       return SecurityUtils.createMtlsKeyStore(certAndPrivateKeyStream);
     } catch (Exception e) {
       throw new IOException(e);
+    } finally {
+      if (certStream != null) {
+        certStream.close();
+      }
+      if (privateKeyStream != null) {
+        privateKeyStream.close();
+      }
     }
   }
 

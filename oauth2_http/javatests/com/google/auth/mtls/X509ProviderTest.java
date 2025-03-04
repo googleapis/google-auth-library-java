@@ -199,14 +199,17 @@ public class X509ProviderTest {
   }
 
   static class TestX509Provider extends X509Provider {
-    private final Map<String, InputStream> files = new HashMap<>();
-    private final Map<String, String> variables = new HashMap<>();
-    private final Map<String, String> properties = new HashMap<>();
+    private Map<String, InputStream> files;
+    private Map<String, String> variables;
+    private Map<String, String> properties;
 
-    TestX509Provider() {}
+    TestX509Provider() {this(null);}
 
     TestX509Provider(String filePathOverride) {
       super(filePathOverride);
+      this.files = new HashMap<>();
+      this.variables = new HashMap<>();
+      this.properties = new HashMap<>();
     }
 
     void addFile(String file, InputStream stream) {
