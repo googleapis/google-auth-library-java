@@ -118,10 +118,9 @@ public class ComputeEngineCredentials extends GoogleCredentials
    *
    * <p>Behavior of setting {@link GoogleAuthTransport} / {@link BindingEnforcement}:
    *
-   * <p>MTLS-bound token where binding enforcement depends on IAM policy: MTLS / {}, {} /
-   * IAM_POLICY, MTLS / IAM_POLICY
+   * <p>MTLS-bound token where binding enforcement depends on IAM policy: MTLS / IAM_POLICY
    *
-   * <p>MTLS-bound token where bindings are always enforced: {} / ON, MTLS / ON
+   * <p>MTLS-bound token where bindings are always enforced: MTLS / ON
    *
    * <p>DirectPath bound token: ALTS / {}
    */

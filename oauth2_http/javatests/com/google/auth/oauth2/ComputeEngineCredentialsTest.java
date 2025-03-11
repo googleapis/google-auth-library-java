@@ -200,9 +200,9 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
             .setGoogleAuthTransport(null)
             .setBindingEnforcement(ComputeEngineCredentials.BindingEnforcement.ON)
             .build();
-    String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
+    String tokenUrl = credentials.createTokenUrlWithScopes();
 
-    assertEquals(TOKEN_URL + "?binding-enforcement=on", softBoundTokenUrl);
+    assertEquals(TOKEN_URL + "?binding-enforcement=on", tokenUrl);
   }
 
   @Test
@@ -212,9 +212,9 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
             .setGoogleAuthTransport(ComputeEngineCredentials.GoogleAuthTransport.MTLS)
             .setBindingEnforcement(null)
             .build();
-    String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
+    String tokenUrl = credentials.createTokenUrlWithScopes();
 
-    assertEquals(TOKEN_URL + "?transport=mtls", softBoundTokenUrl);
+    assertEquals(TOKEN_URL + "?transport=mtls", tokenUrl);
   }
 
   @Test
@@ -230,25 +230,25 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void buildTokenUrlSoftMtlsBound_mtls_transport() {
+  public void buildTokenUrl_mtls_transport() {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder()
             .setGoogleAuthTransport(ComputeEngineCredentials.GoogleAuthTransport.MTLS)
             .build();
-    String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
+    String tokenUrl = credentials.createTokenUrlWithScopes();
 
-    assertEquals(TOKEN_URL + "?transport=mtls", softBoundTokenUrl);
+    assertEquals(TOKEN_URL + "?transport=mtls", tokenUrl);
   }
 
   @Test
-  public void buildTokenUrlSoftMtlsBound_iam_enforcement() {
+  public void buildTokenUrl_iam_enforcement() {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder()
             .setBindingEnforcement(ComputeEngineCredentials.BindingEnforcement.IAM_POLICY)
             .build();
-    String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
+    String tokenUrl = credentials.createTokenUrlWithScopes();
 
-    assertEquals(TOKEN_URL + "?binding-enforcement=iam-policy", softBoundTokenUrl);
+    assertEquals(TOKEN_URL + "?binding-enforcement=iam-policy", tokenUrl);
   }
 
   @Test
@@ -264,14 +264,14 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void buildTokenUrlHardMtlsBound_always_enforced() {
+  public void buildTokenUrl_always_enforced() {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder()
             .setBindingEnforcement(ComputeEngineCredentials.BindingEnforcement.ON)
             .build();
-    String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
+    String tokenUrl = credentials.createTokenUrlWithScopes();
 
-    assertEquals(TOKEN_URL + "?binding-enforcement=on", softBoundTokenUrl);
+    assertEquals(TOKEN_URL + "?binding-enforcement=on", tokenUrl);
   }
 
   @Test
@@ -281,9 +281,9 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
             .setGoogleAuthTransport(ComputeEngineCredentials.GoogleAuthTransport.MTLS)
             .setBindingEnforcement(ComputeEngineCredentials.BindingEnforcement.ON)
             .build();
-    String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
+    String hardBoundTokenUrl = credentials.createTokenUrlWithScopes();
 
-    assertEquals(TOKEN_URL + "?transport=mtls&binding-enforcement=on", softBoundTokenUrl);
+    assertEquals(TOKEN_URL + "?transport=mtls&binding-enforcement=on", hardBoundTokenUrl);
   }
 
   @Test
@@ -292,9 +292,9 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
         ComputeEngineCredentials.newBuilder()
             .setGoogleAuthTransport(ComputeEngineCredentials.GoogleAuthTransport.ALTS)
             .build();
-    String softBoundTokenUrl = credentials.createTokenUrlWithScopes();
+    String hardBoundTokenUrl = credentials.createTokenUrlWithScopes();
 
-    assertEquals(TOKEN_URL + "?transport=alts", softBoundTokenUrl);
+    assertEquals(TOKEN_URL + "?transport=alts", hardBoundTokenUrl);
   }
 
   @Test
