@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.34.0](https://github.com/googleapis/google-auth-library-java/compare/v1.33.1...v1.34.0) (2025-03-11)
+
+
+### Features
+
+* Next release from main branch is 1.34.0 ([#1698](https://github.com/googleapis/google-auth-library-java/issues/1698)) ([fe43815](https://github.com/googleapis/google-auth-library-java/commit/fe4381513db1340190c4309a53c6265718682dde))
+* Next release from main branch is 1.34.0 ([#1702](https://github.com/googleapis/google-auth-library-java/issues/1702)) ([4507cf9](https://github.com/googleapis/google-auth-library-java/commit/4507cf9e17e7ff40cf142056d3929c87f5742dd1))
+
 ## [1.33.1](https://github.com/googleapis/google-auth-library-java/compare/v1.33.0...v1.33.1) (2025-02-25)
 
 
