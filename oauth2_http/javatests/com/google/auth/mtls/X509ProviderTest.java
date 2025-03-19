@@ -46,6 +46,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class X509ProviderTest {
@@ -93,13 +94,9 @@ public class X509ProviderTest {
             "Error reading certificate configuration file value '%s': File does not exist.",
             certConfigPath);
 
-    try {
-      testProvider.getKeyStore();
-      fail("No key stores expected.");
-    } catch (IOException e) {
-      String message = e.getMessage();
-      assertTrue(message.equals(expectedErrorMessage));
-    }
+    IOException exception =
+        Assert.assertThrows(IOException.class, () -> testProvider.getKeyStore());
+    assertTrue(exception.getMessage().contains(expectedErrorMessage));
   }
 
   @Test
@@ -113,13 +110,9 @@ public class X509ProviderTest {
             "Error reading certificate configuration file value '%s': no JSON input found",
             certConfigPath);
 
-    try {
-      testProvider.getKeyStore();
-      fail("No key store expected.");
-    } catch (IOException e) {
-      String message = e.getMessage();
-      assertTrue(message.equals(expectedErrorMessage));
-    }
+    IOException exception =
+        Assert.assertThrows(IOException.class, () -> testProvider.getKeyStore());
+    assertTrue(exception.getMessage().contains(expectedErrorMessage));
   }
 
   @Test
@@ -203,7 +196,9 @@ public class X509ProviderTest {
     private Map<String, String> variables;
     private Map<String, String> properties;
 
-    TestX509Provider() {this(null);}
+    TestX509Provider() {
+      this(null);
+    }
 
     TestX509Provider(String filePathOverride) {
       super(filePathOverride);

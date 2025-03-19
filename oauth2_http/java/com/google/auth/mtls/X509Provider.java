@@ -52,7 +52,7 @@ public class X509Provider {
     this.certConfigPathOverride = certConfigPathOverride;
   }
 
-  public X509Provider(){
+  public X509Provider() {
     this(null);
   }
 
@@ -60,11 +60,13 @@ public class X509Provider {
    * Finds the certificate configuration file, then builds a Keystore using the X.509 certificate
    * and private key pointed to by the configuration. This will check the following locations in
    * order.
+   *
    * <ul>
    *   <li>The certificate config override path, if set.
    *   <li>The path pointed to by the "GOOGLE_API_CERTIFICATE_CONFIG" environment variable
    *   <li>The well known gcloud location for the certificate configuration file.
    * </ul>
+   *
    * @return a KeyStore containing the X.509 certificate specified by the certificate configuration.
    * @throws IOException if there is an error retrieving the certificate configuration.
    */

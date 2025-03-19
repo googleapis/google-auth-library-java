@@ -62,11 +62,9 @@ class WorkloadCertificateConfiguration {
     return privateKeyPath;
   }
 
-
-
   static WorkloadCertificateConfiguration fromCertificateConfigurationStream(
       InputStream certConfigStream) throws IOException {
-    if (certConfigStream == null){
+    if (certConfigStream == null) {
       throw new IllegalArgumentException("certConfigStream must not be null.");
     }
 

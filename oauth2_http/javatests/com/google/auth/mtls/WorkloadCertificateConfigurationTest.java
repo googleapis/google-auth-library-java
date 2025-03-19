@@ -33,12 +33,14 @@ package com.google.auth.mtls;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.api.client.json.GenericJson;
 import com.google.auth.TestUtils;
 import java.io.IOException;
 import java.io.InputStream;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class WorkloadCertificateConfigurationTest {
@@ -60,15 +62,9 @@ public class WorkloadCertificateConfigurationTest {
     String privateKeyPath = "key.crt";
     InputStream configStream = writeWorkloadCertificateConfigStream(certPath, privateKeyPath);
 
-    try {
-      WorkloadCertificateConfiguration config =
-          WorkloadCertificateConfiguration.fromCertificateConfigurationStream(configStream);
-      fail("Expected an error due to missing the certificate path field.");
-    } catch (IllegalArgumentException e) {
-      assertEquals(
-          "The cert_path field must be provided in the workload certificate configuration.",
-          e.getMessage());
-    }
+    IllegalArgumentException exception =
+        Assert.assertThrows(IllegalArgumentException.class, () -> WorkloadCertificateConfiguration.fromCertificateConfigurationStream(configStream));
+    assertTrue(exception.getMessage().contains("The cert_path field must be provided in the workload certificate configuration."));
   }
 
   @Test
@@ -77,15 +73,9 @@ public class WorkloadCertificateConfigurationTest {
     String privateKeyPath = "";
     InputStream configStream = writeWorkloadCertificateConfigStream(certPath, privateKeyPath);
 
-    try {
-      WorkloadCertificateConfiguration config =
-          WorkloadCertificateConfiguration.fromCertificateConfigurationStream(configStream);
-      fail("Expected an error due to missing the private key path field.");
-    } catch (IllegalArgumentException e) {
-      assertEquals(
-          "The key_path field must be provided in the workload certificate configuration.",
-          e.getMessage());
-    }
+    IllegalArgumentException exception =
+        Assert.assertThrows(IllegalArgumentException.class, () -> WorkloadCertificateConfiguration.fromCertificateConfigurationStream(configStream));
+    assertTrue(exception.getMessage().contains("The key_path field must be provided in the workload certificate configuration."));
   }
 
   @Test
@@ -94,15 +84,9 @@ public class WorkloadCertificateConfigurationTest {
     json.put("cert_configs", new GenericJson());
     InputStream configStream = TestUtils.jsonToInputStream(json);
 
-    try {
-      WorkloadCertificateConfiguration config =
-          WorkloadCertificateConfiguration.fromCertificateConfigurationStream(configStream);
-      fail("Expected an error due to missing the workload field.");
-    } catch (IllegalArgumentException e) {
-      assertEquals(
-          "A workload certificate configuration must be provided in the cert_configs object.",
-          e.getMessage());
-    }
+    IllegalArgumentException exception =
+        Assert.assertThrows(IllegalArgumentException.class, () -> WorkloadCertificateConfiguration.fromCertificateConfigurationStream(configStream));
+    assertTrue(exception.getMessage().contains("A workload certificate configuration must be provided in the cert_configs object."));
   }
 
   @Test
@@ -110,15 +94,9 @@ public class WorkloadCertificateConfigurationTest {
     GenericJson json = new GenericJson();
     InputStream configStream = TestUtils.jsonToInputStream(json);
 
-    try {
-      WorkloadCertificateConfiguration config =
-          WorkloadCertificateConfiguration.fromCertificateConfigurationStream(configStream);
-      fail("Expected an error due to missing the cert_config field.");
-    } catch (IllegalArgumentException e) {
-      assertEquals(
-          "The cert_configs object must be provided in the certificate configuration file.",
-          e.getMessage());
-    }
+    IllegalArgumentException exception =
+        Assert.assertThrows(IllegalArgumentException.class, () -> WorkloadCertificateConfiguration.fromCertificateConfigurationStream(configStream));
+    assertTrue(exception.getMessage().contains("The cert_configs object must be provided in the certificate configuration file."));
   }
 
   static InputStream writeWorkloadCertificateConfigStream(String certPath, String privateKeyPath)
