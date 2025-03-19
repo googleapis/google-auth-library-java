@@ -32,6 +32,7 @@
 package com.google.auth.mtls;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -45,6 +46,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.util.HashMap;
 import java.util.Map;
+import net.bytebuddy.pool.TypePool.Resolution.Illegal;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -88,14 +90,10 @@ public class X509ProviderTest {
   public void x509Provider_fileDoesntExist_throws() {
     String certConfigPath = "badfile.txt";
     X509Provider testProvider = new TestX509Provider(certConfigPath);
-    String expectedErrorMessage =
-        String.format(
-            "Error reading certificate configuration file value '%s': File does not exist.",
-            certConfigPath);
+    String expectedErrorMessage = "File does not exist.";
 
     CertificateSourceUnavailableException exception =
-        Assert.assertThrows(
-            CertificateSourceUnavailableException.class, () -> testProvider.getKeyStore());
+        Assert.assertThrows(CertificateSourceUnavailableException.class, () -> testProvider.getKeyStore());
     assertTrue(exception.getMessage().contains(expectedErrorMessage));
   }
 
@@ -107,11 +105,11 @@ public class X509ProviderTest {
     testProvider.addFile(certConfigPath, certConfigStream);
     String expectedErrorMessage =
         String.format(
-            "Error reading certificate configuration file value '%s': no JSON input found",
+            "no JSON input found",
             certConfigPath);
 
-    IOException exception =
-        Assert.assertThrows(IOException.class, () -> testProvider.getKeyStore());
+    IllegalArgumentException exception =
+        Assert.assertThrows(IllegalArgumentException.class, () -> testProvider.getKeyStore());
     assertTrue(exception.getMessage().contains(expectedErrorMessage));
   }
 

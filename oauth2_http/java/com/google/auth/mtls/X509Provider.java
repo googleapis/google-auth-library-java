@@ -144,19 +144,10 @@ public class X509Provider {
     try {
       if (!isFile(certConfig)) {
         // Path will be put in the message from the catch block below
-        throw new IOException("File does not exist.");
+        throw new CertificateSourceUnavailableException("File does not exist.");
       }
       certConfigStream = createInputStream(certConfig);
       return WorkloadCertificateConfiguration.fromCertificateConfigurationStream(certConfigStream);
-    } catch (Exception e) {
-      // Although it is also the cause, the message of the caught exception can have very
-      // important information for diagnosing errors, so include its message in the
-      // outer exception message also.
-      throw new CertificateSourceUnavailableException(
-          String.format(
-              "Error reading certificate configuration file value '%s': %s",
-              certConfig.getPath(), e.getMessage()),
-          e);
     } finally {
       if (certConfigStream != null) {
         certConfigStream.close();
