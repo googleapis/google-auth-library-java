@@ -32,7 +32,6 @@
 package com.google.auth.mtls;
 
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -94,8 +93,9 @@ public class X509ProviderTest {
             "Error reading certificate configuration file value '%s': File does not exist.",
             certConfigPath);
 
-    IOException exception =
-        Assert.assertThrows(IOException.class, () -> testProvider.getKeyStore());
+    CertificateSourceUnavailableException exception =
+        Assert.assertThrows(
+            CertificateSourceUnavailableException.class, () -> testProvider.getKeyStore());
     assertTrue(exception.getMessage().contains(expectedErrorMessage));
   }
 
@@ -236,7 +236,7 @@ public class X509ProviderTest {
     }
 
     @Override
-    InputStream readStream(File file) throws FileNotFoundException {
+    InputStream createInputStream(File file) throws FileNotFoundException {
       InputStream stream = files.get(file.getPath());
       if (stream == null) {
         throw new FileNotFoundException(file.getPath());

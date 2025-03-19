@@ -35,6 +35,7 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.gson.GsonFactory;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import java.io.IOException;
 import java.io.InputStream;
@@ -64,9 +65,7 @@ class WorkloadCertificateConfiguration {
 
   static WorkloadCertificateConfiguration fromCertificateConfigurationStream(
       InputStream certConfigStream) throws IOException {
-    if (certConfigStream == null) {
-      throw new IllegalArgumentException("certConfigStream must not be null.");
-    }
+    Preconditions.checkNotNull(certConfigStream);
 
     GenericJson fileContents =
         parser.parseAndClose(certConfigStream, StandardCharsets.UTF_8, GenericJson.class);
@@ -79,7 +78,7 @@ class WorkloadCertificateConfiguration {
 
     Map<String, Object> workloadConfig = (Map<String, Object>) certConfigs.get("workload");
     if (workloadConfig == null) {
-      throw new IllegalArgumentException(
+      throw new CertificateSourceUnavailableException(
           "A workload certificate configuration must be provided in the cert_configs object.");
     }
 

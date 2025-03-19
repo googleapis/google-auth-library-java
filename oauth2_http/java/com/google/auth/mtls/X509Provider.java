@@ -32,6 +32,7 @@
 package com.google.auth.mtls;
 
 import com.google.api.client.util.SecurityUtils;
+import com.google.common.base.Strings;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -41,6 +42,12 @@ import java.io.SequenceInputStream;
 import java.security.KeyStore;
 import java.util.Locale;
 
+/**
+ * This class provides certificate key stores to the Google Auth library transport layer via
+ * certificate configuration files. This is only meant to be used internally to Google Cloud
+ * libraries, and the public facing methods may be changed without notice, and have no guarantee of
+ * backwards compatability.
+ */
 public class X509Provider {
   static final String CERTIFICATE_CONFIGURATION_ENV_VARIABLE = "GOOGLE_API_CERTIFICATE_CONFIG";
   static final String WELL_KNOWN_CERTIFICATE_CONFIG_FILE = "certificate_config.json";
@@ -48,10 +55,22 @@ public class X509Provider {
 
   private String certConfigPathOverride;
 
+  /**
+   * Creates an X509 provider with an override path for the certificate configuration, bypassing the
+   * normal checks for the well known certificate configuration file path and environment variable.
+   * This is meant for internal Google Cloud usage and behavior may be changed without warning.
+   *
+   * @param certConfigPathOverride the path to read the certificate configuration from.
+   */
   public X509Provider(String certConfigPathOverride) {
     this.certConfigPathOverride = certConfigPathOverride;
   }
 
+  /**
+   * Creates a new X.509 provider that will check the environment variable path and the well known
+   * Gcloud certificate configuration location. This is meant for internal Google Cloud usage and
+   * behavior may be changed without warning.
+   */
   public X509Provider() {
     this(null);
   }
@@ -76,20 +95,24 @@ public class X509Provider {
 
     InputStream certStream = null;
     InputStream privateKeyStream = null;
+    SequenceInputStream certAndPrivateKeyStream = null;
     try {
       // Read the certificate and private key file paths into separate streams.
       File certFile = new File(workloadCertConfig.getCertPath());
       File privateKeyFile = new File(workloadCertConfig.getPrivateKeyPath());
-      certStream = readStream(certFile);
-      privateKeyStream = readStream(privateKeyFile);
+      certStream = createInputStream(certFile);
+      privateKeyStream = createInputStream(privateKeyFile);
 
       // Merge the two streams into a single stream.
-      SequenceInputStream certAndPrivateKeyStream =
-          new SequenceInputStream(certStream, privateKeyStream);
+      certAndPrivateKeyStream = new SequenceInputStream(certStream, privateKeyStream);
 
       // Build a key store using the combined stream.
       return SecurityUtils.createMtlsKeyStore(certAndPrivateKeyStream);
+    } catch (CertificateSourceUnavailableException e) {
+      // Throw the CertificateSourceUnavailableException without wrapping.
+      throw e;
     } catch (Exception e) {
+      // Wrap all other exception types to an IOException.
       throw new IOException(e);
     } finally {
       if (certStream != null) {
@@ -97,6 +120,9 @@ public class X509Provider {
       }
       if (privateKeyStream != null) {
         privateKeyStream.close();
+      }
+      if (certAndPrivateKeyStream != null) {
+        certAndPrivateKeyStream.close();
       }
     }
   }
@@ -108,7 +134,7 @@ public class X509Provider {
       certConfig = new File(certConfigPathOverride);
     } else {
       String envCredentialsPath = getEnv(CERTIFICATE_CONFIGURATION_ENV_VARIABLE);
-      if (envCredentialsPath != null && !envCredentialsPath.isEmpty()) {
+      if (!Strings.isNullOrEmpty(envCredentialsPath)) {
         certConfig = new File(envCredentialsPath);
       } else {
         certConfig = getWellKnownCertificateConfigFile();
@@ -120,13 +146,13 @@ public class X509Provider {
         // Path will be put in the message from the catch block below
         throw new IOException("File does not exist.");
       }
-      certConfigStream = readStream(certConfig);
+      certConfigStream = createInputStream(certConfig);
       return WorkloadCertificateConfiguration.fromCertificateConfigurationStream(certConfigStream);
     } catch (Exception e) {
       // Although it is also the cause, the message of the caught exception can have very
       // important information for diagnosing errors, so include its message in the
       // outer exception message also.
-      throw new IOException(
+      throw new CertificateSourceUnavailableException(
           String.format(
               "Error reading certificate configuration file value '%s': %s",
               certConfig.getPath(), e.getMessage()),
@@ -145,7 +171,7 @@ public class X509Provider {
     return file.isFile();
   }
 
-  InputStream readStream(File file) throws FileNotFoundException {
+  InputStream createInputStream(File file) throws FileNotFoundException {
     return new FileInputStream(file);
   }
 
