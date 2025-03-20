@@ -78,6 +78,8 @@ class WorkloadCertificateConfiguration {
 
     Map<String, Object> workloadConfig = (Map<String, Object>) certConfigs.get("workload");
     if (workloadConfig == null) {
+      // Throw a CertificateSourceUnavailableException because there is no workload cert source.
+      // This tells the transport layer that it should check for another certificate source type.
       throw new CertificateSourceUnavailableException(
           "A workload certificate configuration must be provided in the cert_configs object.");
     }

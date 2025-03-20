@@ -31,8 +31,9 @@
 
 package com.google.auth.mtls;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -46,7 +47,6 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.util.HashMap;
 import java.util.Map;
-import net.bytebuddy.pool.TypePool.Resolution.Illegal;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -93,7 +93,8 @@ public class X509ProviderTest {
     String expectedErrorMessage = "File does not exist.";
 
     CertificateSourceUnavailableException exception =
-        Assert.assertThrows(CertificateSourceUnavailableException.class, () -> testProvider.getKeyStore());
+        Assert.assertThrows(
+            CertificateSourceUnavailableException.class, () -> testProvider.getKeyStore());
     assertTrue(exception.getMessage().contains(expectedErrorMessage));
   }
 
@@ -103,10 +104,7 @@ public class X509ProviderTest {
     InputStream certConfigStream = new ByteArrayInputStream("".getBytes());
     TestX509Provider testProvider = new TestX509Provider(certConfigPath);
     testProvider.addFile(certConfigPath, certConfigStream);
-    String expectedErrorMessage =
-        String.format(
-            "no JSON input found",
-            certConfigPath);
+    String expectedErrorMessage = String.format("no JSON input found", certConfigPath);
 
     IllegalArgumentException exception =
         Assert.assertThrows(IllegalArgumentException.class, () -> testProvider.getKeyStore());
@@ -133,8 +131,8 @@ public class X509ProviderTest {
 
     // Assert that the store has the expected certificate and only the expected certificate.
     KeyStore store = testProvider.getKeyStore();
-    assertTrue(store.size() == 1);
-    assertTrue(store.getCertificateAlias(expectedCert) != null);
+    assertEquals(1, store.size());
+    assertNotNull(store.getCertificateAlias(expectedCert));
   }
 
   @Test
@@ -159,8 +157,8 @@ public class X509ProviderTest {
 
     // Assert that the store has the expected certificate and only the expected certificate.
     KeyStore store = testProvider.getKeyStore();
-    assertTrue(store.size() == 1);
-    assertTrue(store.getCertificateAlias(expectedCert) != null);
+    assertEquals(1, store.size());
+    assertNotNull(store.getCertificateAlias(expectedCert));
   }
 
   @Test
