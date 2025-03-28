@@ -93,8 +93,7 @@ public class X509ProviderTest {
     String expectedErrorMessage = "File does not exist.";
 
     CertificateSourceUnavailableException exception =
-        Assert.assertThrows(
-            CertificateSourceUnavailableException.class, testProvider::getKeyStore);
+        Assert.assertThrows(CertificateSourceUnavailableException.class, testProvider::getKeyStore);
     assertTrue(exception.getMessage().contains(expectedErrorMessage));
   }
 
@@ -183,7 +182,7 @@ public class X509ProviderTest {
 
     // Assert that the store has the expected certificate and only the expected certificate.
     KeyStore store = testProvider.getKeyStore();
-    assertEquals(1,store.size());
+    assertEquals(1, store.size());
     assertNotNull(store.getCertificateAlias(expectedCert));
   }
 
