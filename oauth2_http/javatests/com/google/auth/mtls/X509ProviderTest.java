@@ -52,7 +52,7 @@ import org.junit.Test;
 
 public class X509ProviderTest {
 
-  private static String TEST_CERT =
+  private static final String TEST_CERT =
       "-----BEGIN CERTIFICATE-----\n"
           + "MIICGzCCAYSgAwIBAgIIWrt6xtmHPs4wDQYJKoZIhvcNAQEFBQAwMzExMC8GA1UE\n"
           + "AxMoMTAwOTEyMDcyNjg3OC5hcHBzLmdvb2dsZXVzZXJjb250ZW50LmNvbTAeFw0x\n"
@@ -68,7 +68,7 @@ public class X509ProviderTest {
           + "kWwa9n19NFiV0z3m6isj\n"
           + "-----END CERTIFICATE-----\n";
 
-  private static String TEST_PRIVATE_KEY =
+  private static final String TEST_PRIVATE_KEY =
       "-----BEGIN PRIVATE KEY-----\n"
           + "MIICdQIBADANBgkqhkiG9w0BAQEFAASCAl8wggJbAgEAAoGBAL1SdY8jTUVU7O4/\n"
           + "XrZLYTw0ON1lV6MQRGajFDFCqD2Fd9tQGLW8Iftx9wfXe1zuaehJSgLcyCxazfyJ\n"
@@ -94,7 +94,7 @@ public class X509ProviderTest {
 
     CertificateSourceUnavailableException exception =
         Assert.assertThrows(
-            CertificateSourceUnavailableException.class, () -> testProvider.getKeyStore());
+            CertificateSourceUnavailableException.class, testProvider::getKeyStore);
     assertTrue(exception.getMessage().contains(expectedErrorMessage));
   }
 
@@ -104,10 +104,10 @@ public class X509ProviderTest {
     InputStream certConfigStream = new ByteArrayInputStream("".getBytes());
     TestX509Provider testProvider = new TestX509Provider(certConfigPath);
     testProvider.addFile(certConfigPath, certConfigStream);
-    String expectedErrorMessage = String.format("no JSON input found", certConfigPath);
+    String expectedErrorMessage = "no JSON input found: " + certConfigPath;
 
     IllegalArgumentException exception =
-        Assert.assertThrows(IllegalArgumentException.class, () -> testProvider.getKeyStore());
+        Assert.assertThrows(IllegalArgumentException.class, testProvider::getKeyStore);
     assertTrue(exception.getMessage().contains(expectedErrorMessage));
   }
 
@@ -183,8 +183,8 @@ public class X509ProviderTest {
 
     // Assert that the store has the expected certificate and only the expected certificate.
     KeyStore store = testProvider.getKeyStore();
-    assertTrue(store.size() == 1);
-    assertTrue(store.getCertificateAlias(expectedCert) != null);
+    assertEquals(1,store.size());
+    assertNotNull(store.getCertificateAlias(expectedCert));
   }
 
   static class TestX509Provider extends X509Provider {
