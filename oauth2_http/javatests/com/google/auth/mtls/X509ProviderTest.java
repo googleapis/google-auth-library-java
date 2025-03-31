@@ -103,7 +103,7 @@ public class X509ProviderTest {
     InputStream certConfigStream = new ByteArrayInputStream("".getBytes());
     TestX509Provider testProvider = new TestX509Provider(certConfigPath);
     testProvider.addFile(certConfigPath, certConfigStream);
-    String expectedErrorMessage = "no JSON input found: " + certConfigPath;
+    String expectedErrorMessage = "no JSON input found";
 
     IllegalArgumentException exception =
         Assert.assertThrows(IllegalArgumentException.class, testProvider::getKeyStore);
@@ -187,9 +187,9 @@ public class X509ProviderTest {
   }
 
   static class TestX509Provider extends X509Provider {
-    private Map<String, InputStream> files;
-    private Map<String, String> variables;
-    private Map<String, String> properties;
+    private final Map<String, InputStream> files;
+    private final Map<String, String> variables;
+    private final Map<String, String> properties;
 
     TestX509Provider() {
       this(null);
@@ -219,10 +219,6 @@ public class X509ProviderTest {
     String getProperty(String property, String def) {
       String value = properties.get(property);
       return value == null ? def : value;
-    }
-
-    void setProperty(String name, String value) {
-      properties.put(name, value);
     }
 
     @Override
