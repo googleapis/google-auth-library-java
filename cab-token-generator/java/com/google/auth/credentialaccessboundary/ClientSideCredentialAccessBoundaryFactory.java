@@ -207,7 +207,7 @@ public class ClientSideCredentialAccessBoundaryFactory {
     byte[] encryptedRestrictions = this.encryptRestrictions(rawRestrictions, sessionKey);
 
     String tokenValue =
-        intermediateToken + "." + Base64.getUrlEncoder().encodeToString(encryptedRestrictions);
+        intermediateToken + "." + Base64.getUrlEncoder().withoutPadding().encodeToString(encryptedRestrictions);
 
     return new AccessToken(tokenValue, intermediateTokenExpirationTime);
   }
