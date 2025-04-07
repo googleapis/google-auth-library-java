@@ -48,7 +48,7 @@ import java.util.Locale;
  * libraries, and the public facing methods may be changed without notice, and have no guarantee of
  * backwards compatability.
  */
-public class X509Provider {
+public class X509Provider implements MtlsProvider{
   static final String CERTIFICATE_CONFIGURATION_ENV_VARIABLE = "GOOGLE_API_CERTIFICATE_CONFIG";
   static final String WELL_KNOWN_CERTIFICATE_CONFIG_FILE = "certificate_config.json";
   static final String CLOUDSDK_CONFIG_DIRECTORY = "gcloud";
@@ -89,6 +89,7 @@ public class X509Provider {
    * @return a KeyStore containing the X.509 certificate specified by the certificate configuration.
    * @throws IOException if there is an error retrieving the certificate configuration.
    */
+  @Override
   public KeyStore getKeyStore() throws IOException {
 
     WorkloadCertificateConfiguration workloadCertConfig = getWorkloadCertificateConfiguration();
