@@ -48,7 +48,7 @@ import java.util.List;
  * Provider class for mutual TLS. It is used to configure the mutual TLS in the transport with the
  * default client certificate on device.
  */
-public class SecureConnectProvider implements MtlsProvider{
+public class SecureConnectProvider implements MtlsProvider {
   interface ProcessProvider {
     public Process createProcess(InputStream metadata) throws IOException;
   }
@@ -88,9 +88,11 @@ public class SecureConnectProvider implements MtlsProvider{
     } catch (InterruptedException e) {
       throw new IOException("Interrupted executing certificate provider command", e);
     } catch (GeneralSecurityException e) {
-      throw new CertificateSourceUnavailableException("SecureConnect encountered GeneralSecurityException:", e);
+      throw new CertificateSourceUnavailableException(
+          "SecureConnect encountered GeneralSecurityException:", e);
     } catch (FileNotFoundException exception) {
-      // If the metadata file doesn't exist, then there is no key store, so we will throw sentinel error
+      // If the metadata file doesn't exist, then there is no key store, so we will throw sentinel
+      // error
       throw new CertificateSourceUnavailableException("SecureConnect metadata does not exist.");
     }
   }

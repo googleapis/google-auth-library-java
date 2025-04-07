@@ -32,8 +32,6 @@
 package com.google.auth.mtls;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
@@ -113,16 +111,15 @@ public class SecureConnectProviderTest {
         assertThrows(
             IOException.class,
             () -> SecureConnectProvider.getKeyStore(metadata, new TestProcessProvider(1)));
-    assertTrue("expected to fail with nonzero exit code",
+    assertTrue(
+        "expected to fail with nonzero exit code",
         actual.getMessage().contains("Cert provider command failed with exit code: 1"));
   }
 
   @Test
   public void testExtractCertificateProviderCommand() throws IOException {
     InputStream inputStream =
-        this.getClass()
-            .getClassLoader()
-            .getResourceAsStream("mtls_context_aware_metadata.json");
+        this.getClass().getClassLoader().getResourceAsStream("mtls_context_aware_metadata.json");
     List<String> command = SecureConnectProvider.extractCertificateProviderCommand(inputStream);
     assertEquals(2, command.size());
     assertEquals("some_binary", command.get(0));
@@ -143,18 +140,19 @@ public class SecureConnectProviderTest {
         assertThrows(
             IOException.class,
             () -> SecureConnectProvider.runCertificateProviderCommand(certCommandProcess, 100));
-    assertTrue("expected to fail with timeout",
+    assertTrue(
+        "expected to fail with timeout",
         actual.getMessage().contains("cert provider command timed out"));
   }
 
   @Test
-  public void testGetKeyStore_FileNotFoundException() throws IOException, GeneralSecurityException, InterruptedException {
-    SecureConnectProvider provider = new SecureConnectProvider(new TestProcessProvider(0), "/invalid/metadata/path.json");
+  public void testGetKeyStore_FileNotFoundException()
+      throws IOException, GeneralSecurityException, InterruptedException {
+    SecureConnectProvider provider =
+        new SecureConnectProvider(new TestProcessProvider(0), "/invalid/metadata/path.json");
 
-    CertificateSourceUnavailableException exception = assertThrows(
-        CertificateSourceUnavailableException.class,
-            provider::getKeyStore
-    );
+    CertificateSourceUnavailableException exception =
+        assertThrows(CertificateSourceUnavailableException.class, provider::getKeyStore);
 
     assertEquals("SecureConnect metadata does not exist.", exception.getMessage());
   }

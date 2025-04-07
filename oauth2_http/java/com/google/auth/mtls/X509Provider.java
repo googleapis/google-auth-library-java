@@ -48,7 +48,7 @@ import java.util.Locale;
  * libraries, and the public facing methods may be changed without notice, and have no guarantee of
  * backwards compatability.
  */
-public class X509Provider implements MtlsProvider{
+public class X509Provider implements MtlsProvider {
   static final String CERTIFICATE_CONFIGURATION_ENV_VARIABLE = "GOOGLE_API_CERTIFICATE_CONFIG";
   static final String WELL_KNOWN_CERTIFICATE_CONFIG_FILE = "certificate_config.json";
   static final String CLOUDSDK_CONFIG_DIRECTORY = "gcloud";

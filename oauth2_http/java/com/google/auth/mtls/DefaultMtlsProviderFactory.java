@@ -31,28 +31,27 @@
 
 package com.google.auth.mtls;
 
-import com.google.auth.mtls.CertificateSourceUnavailableException;
-import com.google.auth.mtls.X509Provider;
 import java.io.IOException;
 
 public class DefaultMtlsProviderFactory {
 
   /**
-   * Creates an instance of {@link MtlsProvider}. It first attempts to create an
-   * {@link X509Provider}. If the certificate source is unavailable, it falls back to creating a
-   * {@link SecureConnectProvider}. If the secure connect provider also fails, it throws the
-   * original {@link CertificateSourceUnavailableException}.
+   * Creates an instance of {@link MtlsProvider}. It first attempts to create an {@link
+   * com.google.auth.mtls.X509Provider}. If the certificate source is unavailable, it falls back to
+   * creating a {@link SecureConnectProvider}. If the secure connect provider also fails, it throws
+   * the original {@link com.google.auth.mtls.CertificateSourceUnavailableException}.
    *
    * @return an instance of {@link MtlsProvider}.
-   * @throws CertificateSourceUnavailableException if neither provider can be created.
+   * @throws com.google.auth.mtls.CertificateSourceUnavailableException if neither provider can be
+   *     created.
    * @throws IOException if an I/O error occurs during provider creation.
    */
   public static MtlsProvider create() throws IOException {
     MtlsProvider mtlsProvider;
     try {
-       mtlsProvider = new X509Provider();
-       mtlsProvider.getKeyStore();
-       return mtlsProvider;
+      mtlsProvider = new X509Provider();
+      mtlsProvider.getKeyStore();
+      return mtlsProvider;
     } catch (CertificateSourceUnavailableException e) {
       try {
         mtlsProvider = new SecureConnectProvider();
