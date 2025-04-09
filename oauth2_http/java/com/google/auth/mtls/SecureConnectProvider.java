@@ -1,18 +1,17 @@
 /*
- * Copyright 2025, Google Inc. All rights reserved.
+ * Copyright 2025 Google LLC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met:
  *
- *    * Redistributions of source code must retain the above copyright
+ *     * Redistributions of source code must retain the above copyright
  * notice, this list of conditions and the following disclaimer.
- *    * Redistributions in binary form must reproduce the above
+ *     * Redistributions in binary form must reproduce the above
  * copyright notice, this list of conditions and the following disclaimer
  * in the documentation and/or other materials provided with the
  * distribution.
- *
- *    * Neither the name of Google Inc. nor the names of its
+ *     * Neither the name of Google LLC nor the names of its
  * contributors may be used to endorse or promote products derived from
  * this software without specific prior written permission.
  *
@@ -45,8 +44,20 @@ import java.security.KeyStore;
 import java.util.List;
 
 /**
- * Provider class for mutual TLS. It is used to configure the mutual TLS in the transport with the
- * default client certificate on device.
+ * This class implements {@link MtlsProvider} for the Google Auth library transport layer via {@link
+ * ContextAwareMetadataJson}. This is only meant to be used internally by Google Cloud libraries,
+ * and the public facing methods may be changed without notice, and have no guarantee of backwards
+ * compatability.
+ *
+ * <p>Note: This implementation is derived from the existing "MtlsProvider" found in the Gax
+ * library, with two notable differences: 1) All logic associated with parsing environment variables
+ * related to "mTLS usage" are omitted - a separate helper class will be introduced in the Gax
+ * library to serve this purpose. 2) getKeyStore throws {@link
+ * com.google.auth.mtls.CertificateSourceUnavailableException} instead of returning "null" if this
+ * cert source is not available on the device.
+ *
+ * <p>Additionally, this implementation will replace the existing "MtlsProvider" in the Gax library.
+ * The Gax library version of MtlsProvider will be marked as deprecated.
  */
 public class SecureConnectProvider implements MtlsProvider {
   interface ProcessProvider {
