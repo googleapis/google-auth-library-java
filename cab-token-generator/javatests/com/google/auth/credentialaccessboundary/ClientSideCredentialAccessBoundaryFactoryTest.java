@@ -745,6 +745,9 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
     CabToken cabToken = parseCabToken(token);
     assertEquals("accessToken", cabToken.intermediateToken);
 
+    // Verifies the encrypted restriction has no padding
+    assertFalse(cabToken.encryptedRestriction.contains(String.valueOf("=")));
+
     // Checks the encrypted restriction is the correct proto format of the CredentialAccessBoundary.
     ClientSideAccessBoundary clientSideAccessBoundary =
         decryptRestriction(
@@ -794,6 +797,9 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
 
     CabToken cabToken = parseCabToken(token);
     assertEquals("accessToken", cabToken.intermediateToken);
+
+    // Verifies the encrypted restriction has no padding
+    assertFalse(cabToken.encryptedRestriction.contains(String.valueOf("=")));
 
     // Checks the encrypted restriction is the correct proto format of the CredentialAccessBoundary.
     ClientSideAccessBoundary clientSideAccessBoundary =
