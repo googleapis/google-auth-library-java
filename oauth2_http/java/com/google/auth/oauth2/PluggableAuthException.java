@@ -37,7 +37,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 class PluggableAuthException extends OAuthException {
 
   PluggableAuthException(String errorCode, String errorDescription) {
-    super(errorCode, checkNotNull(errorDescription), /* errorUri=*/ null);
+    super(errorCode, checkNotNull(errorDescription), /* errorUri= */ null);
   }
 
   /** The message with format: Error code {errorCode}: {errorDescription}. */

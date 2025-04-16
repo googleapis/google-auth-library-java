@@ -120,8 +120,7 @@ public class DownscopedCredentialsTest {
     MockStsTransportFactory transportFactory = new MockStsTransportFactory();
     String universeDomain = "foobar";
     GoogleCredentials sourceCredentials =
-        getServiceAccountSourceCredentials(/* canRefresh= */ true)
-            .toBuilder()
+        getServiceAccountSourceCredentials(/* canRefresh= */ true).toBuilder()
             .setUniverseDomain(universeDomain)
             .build();
 

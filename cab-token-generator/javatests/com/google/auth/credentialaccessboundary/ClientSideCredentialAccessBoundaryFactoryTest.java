@@ -149,8 +149,7 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
   public void fetchIntermediateCredentials_withCustomUniverseDomain() throws IOException {
     String universeDomain = "foobar";
     GoogleCredentials sourceCredentials =
-        getServiceAccountSourceCredentials(mockTokenServerTransportFactory)
-            .toBuilder()
+        getServiceAccountSourceCredentials(mockTokenServerTransportFactory).toBuilder()
             .setUniverseDomain(universeDomain)
             .build();
 
