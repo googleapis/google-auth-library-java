@@ -584,7 +584,9 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     return serviceAccountImpersonationUrl;
   }
 
-  /** @return The service account email to be impersonated, if available */
+  /**
+   * @return The service account email to be impersonated, if available
+   */
   @Nullable
   public String getServiceAccountEmail() {
     if (serviceAccountImpersonationUrl == null || serviceAccountImpersonationUrl.isEmpty()) {

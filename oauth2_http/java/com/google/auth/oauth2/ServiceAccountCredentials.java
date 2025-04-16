@@ -510,6 +510,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     LoggingUtils.logResponsePayload(genericData, LOGGER_PROVIDER, "Response payload");
     return genericData;
   }
+
   /**
    * Refreshes the OAuth2 access token by getting a new access token using a JSON Web Token (JWT).
    */
