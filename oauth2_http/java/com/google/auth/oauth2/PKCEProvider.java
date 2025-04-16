@@ -47,6 +47,7 @@ public interface PKCEProvider {
    * @return The code_challenge_method String.
    */
   String getCodeChallengeMethod();
+
   /**
    * Get the code_verifier parameter used in PKCE.
    *
