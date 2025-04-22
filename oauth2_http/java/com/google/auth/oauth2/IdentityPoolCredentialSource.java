@@ -31,6 +31,8 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -48,6 +50,157 @@ public class IdentityPoolCredentialSource extends ExternalAccountCredentials.Cre
   String credentialLocation;
   @Nullable String subjectTokenFieldName;
   @Nullable Map<String, String> headers;
+  @Nullable CertificateConfig certificateConfig;
+
+  /**
+   * Extracts and configures the {@link CertificateConfig} from the provided credential source.
+   *
+   * @param credentialSourceMap A map containing the certificate configuration.
+   * @return A new {@link CertificateConfig} instance.
+   * @throws IllegalArgumentException if the 'certificate' entry is not a Map or if required fields
+   *     within the certificate configuration have invalid types.
+   */
+  private CertificateConfig getCertificateConfig(Map<String, Object> credentialSourceMap) {
+    Object certValue = credentialSourceMap.get("certificate");
+    if (!(certValue instanceof Map)) {
+      throw new IllegalArgumentException(
+          "The 'certificate' credential source must be a JSON object (Map).");
+    }
+    Map<String, Object> certificateMap = (Map<String, Object>) certValue;
+
+    Boolean useDefaultCertificateConfig =
+        getOptionalBoolean(certificateMap, "use_default_certificate_config");
+    String trustChain = getOptionalString(certificateMap, "trust_chain_path");
+    String certificateConfigLocation =
+        getOptionalString(certificateMap, "certificate_config_location");
+
+    return new CertificateConfig(
+        useDefaultCertificateConfig, certificateConfigLocation, trustChain);
+  }
+
+  /**
+   * Retrieves an optional boolean value from a map.
+   *
+   * @param map The map to retrieve from.
+   * @param key The key of the boolean value.
+   * @return The boolean value if present and of the correct type, otherwise null.
+   * @throws IllegalArgumentException if the value is present but not a boolean.
+   */
+  private @Nullable Boolean getOptionalBoolean(Map<String, Object> map, String key) {
+    Object value = map.get(key);
+    if (value == null) {
+      return null;
+    }
+    if (!(value instanceof Boolean)) {
+      throw new IllegalArgumentException(
+          String.format(
+              "Invalid type for '%s' in certificate configuration: expected Boolean, got %s.",
+              key, value.getClass().getSimpleName()));
+    }
+    return (Boolean) value;
+  }
+
+  /**
+   * Retrieves an optional string value from a map.
+   *
+   * @param map The map to retrieve from.
+   * @param key The key of the string value.
+   * @return The string value if present and of the correct type, otherwise null.
+   * @throws IllegalArgumentException if the value is present but not a string.
+   */
+  private @Nullable String getOptionalString(Map<String, Object> map, String key) {
+    Object value = map.get(key);
+    if (value == null) {
+      return null;
+    }
+    if (!(value instanceof String)) {
+      throw new IllegalArgumentException(
+          String.format(
+              "Invalid type for '%s' in certificate configuration: expected String, got %s.",
+              key, value.getClass().getSimpleName()));
+    }
+    return (String) value;
+  }
+  /**
+   * Represents the configuration options for X.509-based workload credentials (mTLS). It specifies
+   * how to locate and use the client certificate, private key, and optional trust chain for mutual
+   * TLS authentication.
+   */
+  public static class CertificateConfig implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * If true, attempts to load the default certificate configuration. It checks the
+     * GOOGLE_API_CERTIFICATE_CONFIG environment variable first, then a conventional default file
+     * location. Cannot be true if {@code certificateConfigLocation} is set.
+     */
+    private final boolean useDefaultCertificateConfig;
+
+    /**
+     * Specifies the path to the client certificate and private key file. This is used when {@code
+     * useDefaultCertificateConfig} is false or unset. Must be set if {@code
+     * useDefaultCertificateConfig} is false.
+     */
+    @Nullable private final String certificateConfigLocation;
+
+    /**
+     * Specifies the path to a PEM-formatted file containing the X.509 certificate trust chain. This
+     * file should contain any intermediate certificates required to complete the trust chain
+     * between the leaf certificate (used for mTLS) and the root certificate(s) in your workload
+     * identity pool's trust store. The leaf certificate and any certificates already present in the
+     * workload identity pool's trust store are optional in this file. Certificates should be
+     * ordered with the leaf certificate (or the certificate which signed the leaf) first.
+     */
+    @Nullable private final String trustChainPath;
+
+    /**
+     * Constructor for {@code CertificateConfig}.
+     *
+     * @param useDefaultCertificateConfig Whether to use the default certificate configuration.
+     * @param certificateConfigLocation Path to the client certificate and private key file.
+     * @param trustChainPath Path to the trust chain file.
+     * @throws IllegalArgumentException if the configuration is invalid (e.g., neither default nor
+     *     location is specified, or both are specified).
+     */
+    CertificateConfig(
+        @Nullable Boolean useDefaultCertificateConfig,
+        @Nullable String certificateConfigLocation,
+        @Nullable String trustChainPath) {
+
+      boolean useDefault = useDefaultCertificateConfig != null && useDefaultCertificateConfig;
+      boolean locationIsPresent =
+          certificateConfigLocation != null && !certificateConfigLocation.isEmpty();
+
+      checkArgument(
+          !(!useDefault && !locationIsPresent),
+          "credentials: \"certificate\" object must either specify a certificate_config_location or use_default_certificate_config should be true");
+
+      checkArgument(
+          !(useDefault && locationIsPresent),
+          "credentials: \"certificate\" object cannot specify both a certificate_config_location and use_default_certificate_config=true");
+
+      this.useDefaultCertificateConfig = useDefault;
+      this.certificateConfigLocation = certificateConfigLocation;
+      this.trustChainPath = trustChainPath;
+    }
+
+    /** Returns whether the default certificate configuration should be used. */
+    public boolean useDefaultCertificateConfig() {
+      return useDefaultCertificateConfig;
+    }
+
+    /** Returns the path to the client certificate file, or null if not set. */
+    @Nullable
+    public String getCertificateConfigLocation() {
+      return certificateConfigLocation;
+    }
+
+    /** Returns the path to the trust chain file, or null if not set. */
+    @Nullable
+    public String getTrustChainPath() {
+      return trustChainPath;
+    }
+  }
 
   /**
    * The source of the 3P credential.
@@ -69,9 +222,15 @@ public class IdentityPoolCredentialSource extends ExternalAccountCredentials.Cre
   public IdentityPoolCredentialSource(Map<String, Object> credentialSourceMap) {
     super(credentialSourceMap);
 
-    if (credentialSourceMap.containsKey("file") && credentialSourceMap.containsKey("url")) {
+    boolean filePresent = credentialSourceMap.containsKey("file");
+    boolean urlPresent = credentialSourceMap.containsKey("url");
+    boolean certificatePresent = credentialSourceMap.containsKey("certificate");
+
+    if ((filePresent && urlPresent)
+        || (filePresent && certificatePresent)
+        || (urlPresent && certificatePresent)) {
       throw new IllegalArgumentException(
-          "Only one credential source type can be set, either file or url.");
+          "Only one credential source type can be set: 'file', 'url', or 'certificate'.");
     }
 
     if (credentialSourceMap.containsKey("file")) {
@@ -80,6 +239,9 @@ public class IdentityPoolCredentialSource extends ExternalAccountCredentials.Cre
     } else if (credentialSourceMap.containsKey("url")) {
       credentialLocation = (String) credentialSourceMap.get("url");
       credentialSourceType = IdentityPoolCredentialSourceType.URL;
+    } else if (credentialSourceMap.containsKey("certificate")) {
+      credentialSourceType = IdentityPoolCredentialSourceType.CERTIFICATE;
+      this.certificateConfig = getCertificateConfig(credentialSourceMap);
     } else {
       throw new IllegalArgumentException(
           "Missing credential source file location or URL. At least one must be specified.");
@@ -121,7 +283,8 @@ public class IdentityPoolCredentialSource extends ExternalAccountCredentials.Cre
 
   enum IdentityPoolCredentialSourceType {
     FILE,
-    URL
+    URL,
+    CERTIFICATE
   }
 
   enum CredentialFormatType {
