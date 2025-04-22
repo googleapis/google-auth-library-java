@@ -744,6 +744,11 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
     CabToken cabToken = parseCabToken(token);
     assertEquals("accessToken", cabToken.intermediateToken);
 
+    // Base64 encoding output by default has `=` padding at the end if the input length
+    // is not a multiple of 3. Here we verify the use of `withoutPadding` that removes
+    // this padding.
+    assertFalse(cabToken.encryptedRestriction.contains(String.valueOf("=")));
+
     // Checks the encrypted restriction is the correct proto format of the CredentialAccessBoundary.
     ClientSideAccessBoundary clientSideAccessBoundary =
         decryptRestriction(
@@ -793,6 +798,11 @@ public class ClientSideCredentialAccessBoundaryFactoryTest {
 
     CabToken cabToken = parseCabToken(token);
     assertEquals("accessToken", cabToken.intermediateToken);
+
+    // Base64 encoding output by default has `=` padding at the end if the input length
+    // is not a multiple of 3. Here we verify the use of `withoutPadding` that removes
+    // this padding.
+    assertFalse(cabToken.encryptedRestriction.contains(String.valueOf("=")));
 
     // Checks the encrypted restriction is the correct proto format of the CredentialAccessBoundary.
     ClientSideAccessBoundary clientSideAccessBoundary =
