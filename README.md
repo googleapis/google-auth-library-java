@@ -173,7 +173,7 @@ For [Cloud Client Libraries](https://cloud.google.com/apis/docs/client-libraries
 default GoogleCredential. Users do not need to manually create any Credentials or pass it into the library.
 
 ### Troubleshooting
-This library provides log for debugging purposes. Please refer to [this guide](https://cloud.google.com/java/docs/bom#client_library_debug_logging) to enable debug logging feature.
+This library provides logging for debugging purposes. Please refer to [this guide](https://cloud.google.com/java/docs/bom#client_library_debug_logging) to enable debug logging feature.
 
 ## google-auth-library-oauth2-http
 
