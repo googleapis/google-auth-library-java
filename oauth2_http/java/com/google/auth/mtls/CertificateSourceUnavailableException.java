@@ -1,5 +1,5 @@
 /*
- * Copyright 2023, Google Inc. All rights reserved.
+ * Copyright 2025, Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -29,29 +29,46 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.google.auth.oauth2;
+package com.google.auth.mtls;
 
-public interface PKCEProvider {
-  /**
-   * Get the code_challenge parameter used in PKCE.
-   *
-   * @return The code_challenge String.
-   */
-  String getCodeChallenge();
+import java.io.IOException;
 
-  /**
-   * Get the code_challenge_method parameter used in PKCE.
-   *
-   * <p>Currently possible values are: S256,plain
-   *
-   * @return The code_challenge_method String.
-   */
-  String getCodeChallengeMethod();
+/**
+ * This exception is thrown by certificate providers in the Google auth library when the certificate
+ * source is unavailable. This means that the transport layer should move on to the next certificate
+ * source provider type.
+ */
+public class CertificateSourceUnavailableException extends IOException {
 
   /**
-   * Get the code_verifier parameter used in PKCE.
+   * Constructor with a message and throwable cause.
    *
-   * @return The code_verifier String.
+   * @param message The detail message (which is saved for later retrieval by the {@link
+   *     #getMessage()} method)
+   * @param cause The cause (which is saved for later retrieval by the {@link #getCause()} method).
+   *     (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
    */
-  String getCodeVerifier();
+  public CertificateSourceUnavailableException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
+  /**
+   * Constructor with a throwable cause.
+   *
+   * @param cause The cause (which is saved for later retrieval by the {@link #getCause()} method).
+   *     (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
+   */
+  public CertificateSourceUnavailableException(Throwable cause) {
+    super(cause);
+  }
+
+  /**
+   * Constructor with a message.
+   *
+   * @param message The detail message (which is saved for later retrieval by the {@link
+   *     #getMessage()} method)
+   */
+  public CertificateSourceUnavailableException(String message) {
+    super(message);
+  }
 }

@@ -24,6 +24,7 @@ public final class ClientSideAccessBoundaryProto {
      * @return The availableResource.
      */
     java.lang.String getAvailableResource();
+
     /**
      * <code>string available_resource = 1;</code>
      *
@@ -37,12 +38,14 @@ public final class ClientSideAccessBoundaryProto {
      * @return A list containing the availablePermissions.
      */
     java.util.List<java.lang.String> getAvailablePermissionsList();
+
     /**
      * <code>repeated string available_permissions = 2;</code>
      *
      * @return The count of availablePermissions.
      */
     int getAvailablePermissionsCount();
+
     /**
      * <code>repeated string available_permissions = 2;</code>
      *
@@ -50,6 +53,7 @@ public final class ClientSideAccessBoundaryProto {
      * @return The availablePermissions at the given index.
      */
     java.lang.String getAvailablePermissions(int index);
+
     /**
      * <code>repeated string available_permissions = 2;</code>
      *
@@ -64,15 +68,18 @@ public final class ClientSideAccessBoundaryProto {
      * @return Whether the compiledAvailabilityCondition field is set.
      */
     boolean hasCompiledAvailabilityCondition();
+
     /**
      * <code>.cel.expr.Expr compiled_availability_condition = 4;</code>
      *
      * @return The compiledAvailabilityCondition.
      */
     dev.cel.expr.Expr getCompiledAvailabilityCondition();
+
     /** <code>.cel.expr.Expr compiled_availability_condition = 4;</code> */
     dev.cel.expr.ExprOrBuilder getCompiledAvailabilityConditionOrBuilder();
   }
+
   /**
    * Protobuf type {@code
    * com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule}
@@ -83,6 +90,7 @@ public final class ClientSideAccessBoundaryProto {
       // @@protoc_insertion_point(message_implements:com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule)
       ClientSideAccessBoundaryRuleOrBuilder {
     private static final long serialVersionUID = 0L;
+
     // Use ClientSideAccessBoundaryRule.newBuilder() to construct.
     private ClientSideAccessBoundaryRule(
         com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
@@ -122,6 +130,7 @@ public final class ClientSideAccessBoundaryProto {
 
     @SuppressWarnings("serial")
     private volatile java.lang.Object availableResource_ = "";
+
     /**
      * <code>string available_resource = 1;</code>
      *
@@ -139,6 +148,7 @@ public final class ClientSideAccessBoundaryProto {
         return s;
       }
     }
+
     /**
      * <code>string available_resource = 1;</code>
      *
@@ -162,6 +172,7 @@ public final class ClientSideAccessBoundaryProto {
     @SuppressWarnings("serial")
     private com.google.protobuf.LazyStringArrayList availablePermissions_ =
         com.google.protobuf.LazyStringArrayList.emptyList();
+
     /**
      * <code>repeated string available_permissions = 2;</code>
      *
@@ -170,6 +181,7 @@ public final class ClientSideAccessBoundaryProto {
     public com.google.protobuf.ProtocolStringList getAvailablePermissionsList() {
       return availablePermissions_;
     }
+
     /**
      * <code>repeated string available_permissions = 2;</code>
      *
@@ -178,6 +190,7 @@ public final class ClientSideAccessBoundaryProto {
     public int getAvailablePermissionsCount() {
       return availablePermissions_.size();
     }
+
     /**
      * <code>repeated string available_permissions = 2;</code>
      *
@@ -187,6 +200,7 @@ public final class ClientSideAccessBoundaryProto {
     public java.lang.String getAvailablePermissions(int index) {
       return availablePermissions_.get(index);
     }
+
     /**
      * <code>repeated string available_permissions = 2;</code>
      *
@@ -199,6 +213,7 @@ public final class ClientSideAccessBoundaryProto {
 
     public static final int COMPILED_AVAILABILITY_CONDITION_FIELD_NUMBER = 4;
     private dev.cel.expr.Expr compiledAvailabilityCondition_;
+
     /**
      * <code>.cel.expr.Expr compiled_availability_condition = 4;</code>
      *
@@ -208,6 +223,7 @@ public final class ClientSideAccessBoundaryProto {
     public boolean hasCompiledAvailabilityCondition() {
       return ((bitField0_ & 0x00000001) != 0);
     }
+
     /**
      * <code>.cel.expr.Expr compiled_availability_condition = 4;</code>
      *
@@ -219,6 +235,7 @@ public final class ClientSideAccessBoundaryProto {
           ? dev.cel.expr.Expr.getDefaultInstance()
           : compiledAvailabilityCondition_;
     }
+
     /** <code>.cel.expr.Expr compiled_availability_condition = 4;</code> */
     @java.lang.Override
     public dev.cel.expr.ExprOrBuilder getCompiledAvailabilityConditionOrBuilder() {
@@ -450,6 +467,7 @@ public final class ClientSideAccessBoundaryProto {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /**
      * Protobuf type {@code
      * com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule}
@@ -717,6 +735,7 @@ public final class ClientSideAccessBoundaryProto {
       private int bitField0_;
 
       private java.lang.Object availableResource_ = "";
+
       /**
        * <code>string available_resource = 1;</code>
        *
@@ -733,6 +752,7 @@ public final class ClientSideAccessBoundaryProto {
           return (java.lang.String) ref;
         }
       }
+
       /**
        * <code>string available_resource = 1;</code>
        *
@@ -749,6 +769,7 @@ public final class ClientSideAccessBoundaryProto {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
        * <code>string available_resource = 1;</code>
        *
@@ -764,6 +785,7 @@ public final class ClientSideAccessBoundaryProto {
         onChanged();
         return this;
       }
+
       /**
        * <code>string available_resource = 1;</code>
        *
@@ -775,6 +797,7 @@ public final class ClientSideAccessBoundaryProto {
         onChanged();
         return this;
       }
+
       /**
        * <code>string available_resource = 1;</code>
        *
@@ -802,6 +825,7 @@ public final class ClientSideAccessBoundaryProto {
         }
         bitField0_ |= 0x00000002;
       }
+
       /**
        * <code>repeated string available_permissions = 2;</code>
        *
@@ -811,6 +835,7 @@ public final class ClientSideAccessBoundaryProto {
         availablePermissions_.makeImmutable();
         return availablePermissions_;
       }
+
       /**
        * <code>repeated string available_permissions = 2;</code>
        *
@@ -819,6 +844,7 @@ public final class ClientSideAccessBoundaryProto {
       public int getAvailablePermissionsCount() {
         return availablePermissions_.size();
       }
+
       /**
        * <code>repeated string available_permissions = 2;</code>
        *
@@ -828,6 +854,7 @@ public final class ClientSideAccessBoundaryProto {
       public java.lang.String getAvailablePermissions(int index) {
         return availablePermissions_.get(index);
       }
+
       /**
        * <code>repeated string available_permissions = 2;</code>
        *
@@ -837,6 +864,7 @@ public final class ClientSideAccessBoundaryProto {
       public com.google.protobuf.ByteString getAvailablePermissionsBytes(int index) {
         return availablePermissions_.getByteString(index);
       }
+
       /**
        * <code>repeated string available_permissions = 2;</code>
        *
@@ -854,6 +882,7 @@ public final class ClientSideAccessBoundaryProto {
         onChanged();
         return this;
       }
+
       /**
        * <code>repeated string available_permissions = 2;</code>
        *
@@ -870,6 +899,7 @@ public final class ClientSideAccessBoundaryProto {
         onChanged();
         return this;
       }
+
       /**
        * <code>repeated string available_permissions = 2;</code>
        *
@@ -883,6 +913,7 @@ public final class ClientSideAccessBoundaryProto {
         onChanged();
         return this;
       }
+
       /**
        * <code>repeated string available_permissions = 2;</code>
        *
@@ -895,6 +926,7 @@ public final class ClientSideAccessBoundaryProto {
         onChanged();
         return this;
       }
+
       /**
        * <code>repeated string available_permissions = 2;</code>
        *
@@ -917,6 +949,7 @@ public final class ClientSideAccessBoundaryProto {
       private com.google.protobuf.SingleFieldBuilderV3<
               dev.cel.expr.Expr, dev.cel.expr.Expr.Builder, dev.cel.expr.ExprOrBuilder>
           compiledAvailabilityConditionBuilder_;
+
       /**
        * <code>.cel.expr.Expr compiled_availability_condition = 4;</code>
        *
@@ -925,6 +958,7 @@ public final class ClientSideAccessBoundaryProto {
       public boolean hasCompiledAvailabilityCondition() {
         return ((bitField0_ & 0x00000004) != 0);
       }
+
       /**
        * <code>.cel.expr.Expr compiled_availability_condition = 4;</code>
        *
@@ -939,6 +973,7 @@ public final class ClientSideAccessBoundaryProto {
           return compiledAvailabilityConditionBuilder_.getMessage();
         }
       }
+
       /** <code>.cel.expr.Expr compiled_availability_condition = 4;</code> */
       public Builder setCompiledAvailabilityCondition(dev.cel.expr.Expr value) {
         if (compiledAvailabilityConditionBuilder_ == null) {
@@ -953,6 +988,7 @@ public final class ClientSideAccessBoundaryProto {
         onChanged();
         return this;
       }
+
       /** <code>.cel.expr.Expr compiled_availability_condition = 4;</code> */
       public Builder setCompiledAvailabilityCondition(dev.cel.expr.Expr.Builder builderForValue) {
         if (compiledAvailabilityConditionBuilder_ == null) {
@@ -964,6 +1000,7 @@ public final class ClientSideAccessBoundaryProto {
         onChanged();
         return this;
       }
+
       /** <code>.cel.expr.Expr compiled_availability_condition = 4;</code> */
       public Builder mergeCompiledAvailabilityCondition(dev.cel.expr.Expr value) {
         if (compiledAvailabilityConditionBuilder_ == null) {
@@ -983,6 +1020,7 @@ public final class ClientSideAccessBoundaryProto {
         }
         return this;
       }
+
       /** <code>.cel.expr.Expr compiled_availability_condition = 4;</code> */
       public Builder clearCompiledAvailabilityCondition() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -994,12 +1032,14 @@ public final class ClientSideAccessBoundaryProto {
         onChanged();
         return this;
       }
+
       /** <code>.cel.expr.Expr compiled_availability_condition = 4;</code> */
       public dev.cel.expr.Expr.Builder getCompiledAvailabilityConditionBuilder() {
         bitField0_ |= 0x00000004;
         onChanged();
         return getCompiledAvailabilityConditionFieldBuilder().getBuilder();
       }
+
       /** <code>.cel.expr.Expr compiled_availability_condition = 4;</code> */
       public dev.cel.expr.ExprOrBuilder getCompiledAvailabilityConditionOrBuilder() {
         if (compiledAvailabilityConditionBuilder_ != null) {
@@ -1010,6 +1050,7 @@ public final class ClientSideAccessBoundaryProto {
               : compiledAvailabilityCondition_;
         }
       }
+
       /** <code>.cel.expr.Expr compiled_availability_condition = 4;</code> */
       private com.google.protobuf.SingleFieldBuilderV3<
               dev.cel.expr.Expr, dev.cel.expr.Expr.Builder, dev.cel.expr.ExprOrBuilder>
@@ -1110,6 +1151,7 @@ public final class ClientSideAccessBoundaryProto {
             com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto
                 .ClientSideAccessBoundaryRule>
         getAccessBoundaryRulesList();
+
     /**
      * <code>
      * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
@@ -1118,12 +1160,14 @@ public final class ClientSideAccessBoundaryProto {
     com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto
             .ClientSideAccessBoundaryRule
         getAccessBoundaryRules(int index);
+
     /**
      * <code>
      * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
      * </code>
      */
     int getAccessBoundaryRulesCount();
+
     /**
      * <code>
      * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
@@ -1134,6 +1178,7 @@ public final class ClientSideAccessBoundaryProto {
                 com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto
                     .ClientSideAccessBoundaryRuleOrBuilder>
         getAccessBoundaryRulesOrBuilderList();
+
     /**
      * <code>
      * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
@@ -1143,6 +1188,7 @@ public final class ClientSideAccessBoundaryProto {
             .ClientSideAccessBoundaryRuleOrBuilder
         getAccessBoundaryRulesOrBuilder(int index);
   }
+
   /**
    * Protobuf type {@code com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundary}
    */
@@ -1151,6 +1197,7 @@ public final class ClientSideAccessBoundaryProto {
       // @@protoc_insertion_point(message_implements:com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundary)
       ClientSideAccessBoundaryOrBuilder {
     private static final long serialVersionUID = 0L;
+
     // Use ClientSideAccessBoundary.newBuilder() to construct.
     private ClientSideAccessBoundary(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -1190,6 +1237,7 @@ public final class ClientSideAccessBoundaryProto {
             com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto
                 .ClientSideAccessBoundaryRule>
         accessBoundaryRules_;
+
     /**
      * <code>
      * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
@@ -1202,6 +1250,7 @@ public final class ClientSideAccessBoundaryProto {
         getAccessBoundaryRulesList() {
       return accessBoundaryRules_;
     }
+
     /**
      * <code>
      * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
@@ -1215,6 +1264,7 @@ public final class ClientSideAccessBoundaryProto {
         getAccessBoundaryRulesOrBuilderList() {
       return accessBoundaryRules_;
     }
+
     /**
      * <code>
      * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
@@ -1224,6 +1274,7 @@ public final class ClientSideAccessBoundaryProto {
     public int getAccessBoundaryRulesCount() {
       return accessBoundaryRules_.size();
     }
+
     /**
      * <code>
      * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
@@ -1235,6 +1286,7 @@ public final class ClientSideAccessBoundaryProto {
         getAccessBoundaryRules(int index) {
       return accessBoundaryRules_.get(index);
     }
+
     /**
      * <code>
      * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
@@ -1439,6 +1491,7 @@ public final class ClientSideAccessBoundaryProto {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /**
      * Protobuf type {@code com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundary}
      */
@@ -1740,6 +1793,7 @@ public final class ClientSideAccessBoundaryProto {
           return accessBoundaryRulesBuilder_.getMessageList();
         }
       }
+
       /**
        * <code>
        * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
@@ -1752,6 +1806,7 @@ public final class ClientSideAccessBoundaryProto {
           return accessBoundaryRulesBuilder_.getCount();
         }
       }
+
       /**
        * <code>
        * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
@@ -1766,6 +1821,7 @@ public final class ClientSideAccessBoundaryProto {
           return accessBoundaryRulesBuilder_.getMessage(index);
         }
       }
+
       /**
        * <code>
        * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
@@ -1788,6 +1844,7 @@ public final class ClientSideAccessBoundaryProto {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
@@ -1807,6 +1864,7 @@ public final class ClientSideAccessBoundaryProto {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
@@ -1828,6 +1886,7 @@ public final class ClientSideAccessBoundaryProto {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
@@ -1850,6 +1909,7 @@ public final class ClientSideAccessBoundaryProto {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
@@ -1868,6 +1928,7 @@ public final class ClientSideAccessBoundaryProto {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
@@ -1887,6 +1948,7 @@ public final class ClientSideAccessBoundaryProto {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
@@ -1907,6 +1969,7 @@ public final class ClientSideAccessBoundaryProto {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
@@ -1922,6 +1985,7 @@ public final class ClientSideAccessBoundaryProto {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
@@ -1937,6 +2001,7 @@ public final class ClientSideAccessBoundaryProto {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
@@ -1947,6 +2012,7 @@ public final class ClientSideAccessBoundaryProto {
           getAccessBoundaryRulesBuilder(int index) {
         return getAccessBoundaryRulesFieldBuilder().getBuilder(index);
       }
+
       /**
        * <code>
        * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
@@ -1961,6 +2027,7 @@ public final class ClientSideAccessBoundaryProto {
           return accessBoundaryRulesBuilder_.getMessageOrBuilder(index);
         }
       }
+
       /**
        * <code>
        * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
@@ -1977,6 +2044,7 @@ public final class ClientSideAccessBoundaryProto {
           return java.util.Collections.unmodifiableList(accessBoundaryRules_);
         }
       }
+
       /**
        * <code>
        * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
@@ -1990,6 +2058,7 @@ public final class ClientSideAccessBoundaryProto {
                 com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto
                     .ClientSideAccessBoundaryRule.getDefaultInstance());
       }
+
       /**
        * <code>
        * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
@@ -2004,6 +2073,7 @@ public final class ClientSideAccessBoundaryProto {
                 com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto
                     .ClientSideAccessBoundaryRule.getDefaultInstance());
       }
+
       /**
        * <code>
        * repeated .com.google.auth.credentialaccessboundary.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;

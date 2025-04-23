@@ -52,6 +52,7 @@ public class Slf4jUtilsTest {
   public void setup() {
     testEnvironmentProvider = new TestEnvironmentProvider();
   }
+
   // This test mimics GOOGLE_SDK_JAVA_LOGGING != true
   @Test
   public void testGetLogger_loggingDisabled_shouldGetNOPLogger() {

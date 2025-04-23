@@ -206,8 +206,13 @@ public class ClientSideCredentialAccessBoundaryFactory {
 
     byte[] encryptedRestrictions = this.encryptRestrictions(rawRestrictions, sessionKey);
 
+    // withoutPadding() is used to stay consistent with server-side CAB
+    // withoutPadding() avoids additional URL encoded token issues (i.e. extra equal signs `=` in
+    // the path)
     String tokenValue =
-        intermediateToken + "." + Base64.getUrlEncoder().encodeToString(encryptedRestrictions);
+        intermediateToken
+            + "."
+            + Base64.getUrlEncoder().withoutPadding().encodeToString(encryptedRestrictions);
 
     return new AccessToken(tokenValue, intermediateTokenExpirationTime);
   }

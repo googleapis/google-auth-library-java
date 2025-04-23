@@ -63,7 +63,9 @@ public class HttpCredentialsAdapter
 
   private final Credentials credentials;
 
-  /** @param credentials Credentials instance to adapt for HTTP */
+  /**
+   * @param credentials Credentials instance to adapt for HTTP
+   */
   public HttpCredentialsAdapter(Credentials credentials) {
     Preconditions.checkNotNull(credentials);
     this.credentials = credentials;
