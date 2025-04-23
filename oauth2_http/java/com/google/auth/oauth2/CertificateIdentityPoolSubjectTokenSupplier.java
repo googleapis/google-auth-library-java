@@ -33,6 +33,7 @@ package com.google.auth.oauth2;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonPrimitive;
@@ -83,7 +84,8 @@ public class CertificateIdentityPoolSubjectTokenSupplier
     return parseCertificate(leafCertBytes);
   }
 
-  private static X509Certificate parseCertificate(byte[] certData) throws CertificateException {
+  @VisibleForTesting
+  static X509Certificate parseCertificate(byte[] certData) throws CertificateException {
     if (certData == null || certData.length == 0) {
       throw new IllegalArgumentException("Invalid certificate data: empty or null input");
     }
