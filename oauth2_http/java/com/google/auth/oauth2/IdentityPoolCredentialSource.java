@@ -172,7 +172,7 @@ public class IdentityPoolCredentialSource extends ExternalAccountCredentials.Cre
           certificateConfigLocation != null && !certificateConfigLocation.isEmpty();
 
       checkArgument(
-          !(!useDefault && !locationIsPresent),
+          (useDefault || locationIsPresent),
           "credentials: \"certificate\" object must either specify a certificate_config_location or use_default_certificate_config should be true");
 
       checkArgument(

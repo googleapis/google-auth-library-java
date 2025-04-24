@@ -98,7 +98,7 @@ public class X509Provider {
     String certPath = loadedConfig.getCertPath();
     if (Strings.isNullOrEmpty(certPath)) {
       // Ensure the loaded configuration actually contains the required path.
-      throw new IOException(
+      throw new CertificateSourceUnavailableException(
           "Certificate configuration loaded successfully, but does not contain a 'certificate_file' path.");
     }
     return certPath;
