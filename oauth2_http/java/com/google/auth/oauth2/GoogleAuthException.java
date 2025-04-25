@@ -156,8 +156,6 @@ class GoogleAuthException extends IOException implements Retryable {
       IOException ioException, String message) {
 
     if (message == null) {
-      // TODO: temporarily setting retry Count to service account default to remove a direct
-      // dependency, to be reverted after release
       return new GoogleAuthException(true, OAuth2Utils.DEFAULT_NUMBER_OF_RETRIES, ioException);
     } else {
       return new GoogleAuthException(

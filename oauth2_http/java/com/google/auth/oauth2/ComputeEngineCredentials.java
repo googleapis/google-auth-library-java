@@ -51,6 +51,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.BufferedReader;
@@ -83,6 +84,8 @@ import java.util.logging.Logger;
 public class ComputeEngineCredentials extends GoogleCredentials
     implements ServiceAccountSigner, IdTokenProvider {
 
+  static final String METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE =
+      "Empty content from metadata token server request.";
   // Decrease timing margins on GCE.
   // This is needed because GCE VMs maintain their own OAuth cache that expires T-4 mins, attempting
   // to refresh a token before then, will yield the same stale token. To enable pre-emptive
@@ -92,11 +95,10 @@ public class ComputeEngineCredentials extends GoogleCredentials
   static final Duration COMPUTE_REFRESH_MARGIN = Duration.ofMinutes(3).plusSeconds(45);
 
   private static final Logger LOGGER = Logger.getLogger(ComputeEngineCredentials.class.getName());
+  private static final LoggerProvider LOGGER_PROVIDER =
+      LoggerProvider.forClazz(ComputeEngineCredentials.class);
 
   static final String DEFAULT_METADATA_SERVER_URL = "http://metadata.google.internal";
-
-  static final String SIGN_BLOB_URL_FORMAT =
-      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
 
   // Note: the explicit `timeout` and `tries` below is a workaround. The underlying
   // issue is that resolving an unknown host on some networks will take
@@ -108,6 +110,67 @@ public class ComputeEngineCredentials extends GoogleCredentials
   // for developer desktop scenarios.
   static final int MAX_COMPUTE_PING_TRIES = 3;
   static final int COMPUTE_PING_CONNECTION_TIMEOUT_MS = 500;
+
+  /**
+   * Experimental Feature.
+   *
+   * <p>{@link GoogleAuthTransport} specifies how to authenticate to Google APIs.
+   *
+   * <p>Behavior of setting {@link GoogleAuthTransport} / {@link BindingEnforcement}:
+   *
+   * <p>MTLS-bound token where binding enforcement depends on IAM policy: MTLS / IAM_POLICY
+   *
+   * <p>MTLS-bound token where bindings are always enforced: MTLS / ON
+   *
+   * <p>DirectPath bound token: ALTS / {}
+   */
+  public enum GoogleAuthTransport {
+    // Authenticating to Google APIs via DirectPath
+    ALTS("alts"),
+    // Authenticating to Google APIs via GFE
+    MTLS("mtls");
+
+    private final String label;
+
+    private GoogleAuthTransport(String label) {
+      this.label = label;
+    }
+
+    public String getLabel() {
+      return label;
+    }
+  }
+
+  /**
+   * Experimental Feature.
+   *
+   * <p>{@link BindingEnforcement} specifies how binding info in tokens will be enforced.
+   *
+   * <p>Behavior of setting {@link GoogleAuthTransport} / {@link BindingEnforcement}:
+   *
+   * <p>MTLS-bound token where binding enforcement depends on IAM policy: MTLS / {}, {} /
+   * IAM_POLICY, MTLS / IAM_POLICY
+   *
+   * <p>MTLS-bound token where bindings are always enforced: {} / ON, MTLS / ON
+   *
+   * <p>DirectPath bound token: ALTS / {}
+   */
+  public enum BindingEnforcement {
+    // Binding enforcement will always happen, irrespective of the IAM policy.
+    ON("on"),
+    // Binding enforcement will depend on IAM policy.
+    IAM_POLICY("iam-policy");
+
+    private final String label;
+
+    private BindingEnforcement(String label) {
+      this.label = label;
+    }
+
+    public String getLabel() {
+      return label;
+    }
+  }
 
   private static final String METADATA_FLAVOR = "Metadata-Flavor";
   private static final String GOOGLE = "Google";
@@ -121,6 +184,9 @@ public class ComputeEngineCredentials extends GoogleCredentials
   private final String transportFactoryClassName;
 
   private final Collection<String> scopes;
+
+  private final GoogleAuthTransport transport;
+  private final BindingEnforcement bindingEnforcement;
 
   private transient HttpTransportFactory transportFactory;
   private transient String serviceAccountEmail;
@@ -152,6 +218,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
       scopeList.removeAll(Arrays.asList("", null));
       this.scopes = ImmutableSet.<String>copyOf(scopeList);
     }
+    this.transport = builder.getGoogleAuthTransport();
+    this.bindingEnforcement = builder.getBindingEnforcement();
   }
 
   @Override
@@ -191,7 +259,10 @@ public class ComputeEngineCredentials extends GoogleCredentials
   }
 
   /**
-   * If scopes is specified, add "?scopes=comma-separated-list-of-scopes" to the token url.
+   * If scopes is specified, add "?scopes=comma-separated-list-of-scopes" to the token url. If
+   * transport is specified, add "?transport=xyz" to the token url; xyz is one of "alts" or "mtls".
+   * If bindingEnforcement is specified, add "?binding-enforcement=xyz" to the token url; xyz is one
+   * of "iam-policy" or "on".
    *
    * @return token url with the given scopes
    */
@@ -199,6 +270,12 @@ public class ComputeEngineCredentials extends GoogleCredentials
     GenericUrl tokenUrl = new GenericUrl(getTokenServerEncodedUrl());
     if (!scopes.isEmpty()) {
       tokenUrl.set("scopes", Joiner.on(',').join(scopes));
+    }
+    if (transport != null) {
+      tokenUrl.set("transport", transport.getLabel());
+    }
+    if (bindingEnforcement != null) {
+      tokenUrl.set("binding-enforcement", bindingEnforcement.getLabel());
     }
     return tokenUrl.toString();
   }
@@ -293,14 +370,17 @@ public class ComputeEngineCredentials extends GoogleCredentials
     if (content == null) {
       // Throw explicitly here on empty content to avoid NullPointerException from parseAs call.
       // Mock transports will have success code with empty content by default.
-      throw new IOException("Empty content from metadata token server request.");
+      throw new IOException(METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE);
     }
     GenericData responseData = response.parseAs(GenericData.class);
+    LoggingUtils.logResponsePayload(
+        responseData, LOGGER_PROVIDER, "Response payload for access token");
     String accessToken =
         OAuth2Utils.validateString(responseData, "access_token", PARSE_ERROR_PREFIX);
     int expiresInSeconds =
         OAuth2Utils.validateInt32(responseData, "expires_in", PARSE_ERROR_PREFIX);
     long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000;
+
     return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
   }
 
@@ -335,11 +415,32 @@ public class ComputeEngineCredentials extends GoogleCredentials
     documentUrl.set("audience", targetAudience);
     HttpResponse response =
         getMetadataResponse(documentUrl.toString(), RequestType.ID_TOKEN_REQUEST, true);
+    int statusCode = response.getStatusCode();
+    if (statusCode == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
+      throw new IOException(
+          String.format(
+              "Error code %s trying to get identity token from"
+                  + " Compute Engine metadata. This may be because the virtual machine instance"
+                  + " does not have permission scopes specified.",
+              statusCode));
+    }
+    if (statusCode != HttpStatusCodes.STATUS_CODE_OK) {
+      throw new IOException(
+          String.format(
+              "Unexpected Error code %s trying to get identity token from Compute Engine metadata: %s",
+              statusCode, response.parseAsString()));
+    }
     InputStream content = response.getContent();
     if (content == null) {
-      throw new IOException("Empty content from metadata token server request.");
+      throw new IOException(METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE);
     }
     String rawToken = response.parseAsString();
+
+    LoggingUtils.log(
+        LOGGER_PROVIDER,
+        Level.FINE,
+        ImmutableMap.of("idToken", rawToken),
+        "Response Payload for ID token");
     return IdToken.create(rawToken);
   }
 
@@ -361,7 +462,23 @@ public class ComputeEngineCredentials extends GoogleCredentials
     request.setThrowExceptionOnExecuteError(false);
     HttpResponse response;
     try {
+      String requestMessage;
+      String responseMessage;
+      if (requestType.equals(RequestType.ID_TOKEN_REQUEST)) {
+        requestMessage = "Sending request to get ID token";
+        responseMessage = "Received response for ID token request";
+      } else if (requestType.equals(RequestType.ACCESS_TOKEN_REQUEST)) {
+        requestMessage = "Sending request to refresh access token";
+        responseMessage = "Received response for refresh access token";
+      } else {
+        // TODO: this includes get universe domain and get default sa.
+        // refactor for more clear logging message.
+        requestMessage = "Sending request for universe domain/default service account";
+        responseMessage = "Received response for universe domain/default service account";
+      }
+      LoggingUtils.logRequest(request, LOGGER_PROVIDER, requestMessage);
       response = request.execute();
+      LoggingUtils.logResponse(response, LOGGER_PROVIDER, responseMessage);
     } catch (UnknownHostException exception) {
       throw new IOException(
           "ComputeEngineCredentials cannot find the metadata server. This is"
@@ -599,11 +716,18 @@ public class ComputeEngineCredentials extends GoogleCredentials
     try {
       String account = getAccount();
       return IamUtils.sign(
-          account, this, transportFactory.create(), toSign, Collections.<String, Object>emptyMap());
+          account,
+          this,
+          this.getUniverseDomain(),
+          transportFactory.create(),
+          toSign,
+          Collections.<String, Object>emptyMap());
     } catch (SigningException ex) {
       throw ex;
     } catch (RuntimeException ex) {
       throw new SigningException("Signing failed", ex);
+    } catch (IOException ex) {
+      throw new SigningException("Failed to sign: Error obtaining universe domain", ex);
     }
   }
 
@@ -630,9 +754,11 @@ public class ComputeEngineCredentials extends GoogleCredentials
     if (content == null) {
       // Throw explicitly here on empty content to avoid NullPointerException from parseAs call.
       // Mock transports will have success code with empty content by default.
-      throw new IOException("Empty content from metadata token server request.");
+      throw new IOException(METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE);
     }
     GenericData responseData = response.parseAs(GenericData.class);
+    LoggingUtils.logResponsePayload(
+        responseData, LOGGER_PROVIDER, "Received default service account payload");
     Map<String, Object> defaultAccount =
         OAuth2Utils.validateMap(responseData, "default", PARSE_ERROR_ACCOUNT);
     return OAuth2Utils.validateString(defaultAccount, "email", PARSE_ERROR_ACCOUNT);
@@ -642,6 +768,9 @@ public class ComputeEngineCredentials extends GoogleCredentials
     private HttpTransportFactory transportFactory;
     private Collection<String> scopes;
     private Collection<String> defaultScopes;
+
+    private GoogleAuthTransport transport;
+    private BindingEnforcement bindingEnforcement;
 
     protected Builder() {
       setRefreshMargin(COMPUTE_REFRESH_MARGIN);
@@ -684,6 +813,28 @@ public class ComputeEngineCredentials extends GoogleCredentials
       return this;
     }
 
+    /**
+     * Set the {@code GoogleAuthTransport} type.
+     *
+     * @param transport the transport type over which to authenticate to Google APIs
+     */
+    @CanIgnoreReturnValue
+    public Builder setGoogleAuthTransport(GoogleAuthTransport transport) {
+      this.transport = transport;
+      return this;
+    }
+
+    /**
+     * Set the {@code BindingEnforcement} type.
+     *
+     * @param bindingEnforcement the token binding enforcement policy.
+     */
+    @CanIgnoreReturnValue
+    public Builder setBindingEnforcement(BindingEnforcement bindingEnforcement) {
+      this.bindingEnforcement = bindingEnforcement;
+      return this;
+    }
+
     public HttpTransportFactory getHttpTransportFactory() {
       return transportFactory;
     }
@@ -694,6 +845,24 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
     public Collection<String> getDefaultScopes() {
       return defaultScopes;
+    }
+
+    /**
+     * Get the {@code GoogleAuthTransport} type.
+     *
+     * @return the transport type over which to authenticate to Google APIs
+     */
+    public GoogleAuthTransport getGoogleAuthTransport() {
+      return transport;
+    }
+
+    /**
+     * Get the {@code BindingEnforcement} type.
+     *
+     * @return the token binding enforcement policy.
+     */
+    public BindingEnforcement getBindingEnforcement() {
+      return bindingEnforcement;
     }
 
     @Override

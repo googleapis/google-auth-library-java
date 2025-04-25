@@ -7,7 +7,7 @@
   <parent>
     <groupId>com.google.auth</groupId>
     <artifactId>google-auth-library-parent</artifactId>
-    <version>1.29.1-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
+    <version>1.33.2-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -68,8 +68,94 @@
             </includes>
             </configuration>
           </plugin>
+          <plugin>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.14.0</version>
+            <configuration>
+              <source>1.8</source>
+              <target>1.8</target>
+              <encoding>UTF-8</encoding>
+              <!--    excluding tests depending on logback/env var by default    -->
+              <testExcludes>
+                <testExclude>**/Slf4jUtilsLogbackTest.java</testExclude>
+                <testExclude>**/Slf4jUtils1xTest.java</testExclude>
+                <testExclude>**/Slf4jUtilsTest.java</testExclude>
+                <testExclude>**/TestAppender.java</testExclude>
+                <testExclude>**/LoggingTest.java</testExclude>
+              </testExcludes>
+            </configuration>
+          </plugin>
         </plugins>
       </build>
+    </profile>
+    <profile>
+      <id>slf4j2x</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.14.0</version>
+            <configuration>
+              <source>1.8</source>
+              <target>1.8</target>
+              <encoding>UTF-8</encoding>
+
+              <!--    excluding tests depending on logback/env var by default    -->
+              <testExcludes>
+                <testExclude>**/Slf4jUtilsLogbackTest.java</testExclude>
+                <testExclude>**/Slf4jUtils1xTest.java</testExclude>
+                <testExclude>**/Slf4jUtilsTest.java</testExclude>
+                <testExclude>**/TestAppender.java</testExclude>
+                <testExclude>**/LoggingTest.java</testExclude>
+              </testExcludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+      <dependencies>
+        <dependency>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+          <version>${project.slf4j.version}</version>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>com.google.code.gson</groupId>
+          <artifactId>gson</artifactId>
+          <version>${project.gson.version}</version>
+        </dependency>
+      </dependencies>
+    </profile>
+    <profile>
+      <id>slf4j2x-test</id>
+      <!--   This profile is for logging test only,
+      use instead of the default slf4j2x.
+      This should merge with the profile with the same name
+      in the parent module -->
+      <!--  Run test with `mvn clean test -P '!slf4j2x,slf4j2x-test'`   -->
+      <dependencies>
+        <dependency>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+          <version>${project.slf4j.version}</version>
+        </dependency>
+        <!--    Logback  for testing -->
+        <dependency>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
+          <version>1.5.18</version>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-core</artifactId>
+          <version>1.5.18</version>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
     </profile>
   </profiles>
 
@@ -98,10 +184,6 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.sonatype.plugins</groupId>
-        <artifactId>nexus-staging-maven-plugin</artifactId>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -152,7 +234,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>3.5.1</version>
+        <version>3.5.3</version>
         <configuration>
           <forkedProcessTimeoutInSeconds>1200</forkedProcessTimeoutInSeconds>
           <reportNameSuffix>sponge_log</reportNameSuffix>

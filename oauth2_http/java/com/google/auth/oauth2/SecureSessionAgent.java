@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
 import javax.annotation.concurrent.ThreadSafe;
@@ -58,7 +59,8 @@ import javax.annotation.concurrent.ThreadSafe;
  * <p>This is an experimental utility.
  */
 @ThreadSafe
-public final class S2A {
+public class SecureSessionAgent {
+  static final String S2A_JSON_KEY = "s2a";
   static final String S2A_PLAINTEXT_ADDRESS_JSON_KEY = "plaintext_address";
   static final String S2A_MTLS_ADDRESS_JSON_KEY = "mtls_address";
   static final String S2A_CONFIG_ENDPOINT_POSTFIX =
@@ -72,23 +74,27 @@ public final class S2A {
   private static final String MDS_MTLS_ENDPOINT =
       ComputeEngineCredentials.getMetadataServerUrl() + S2A_CONFIG_ENDPOINT_POSTFIX;
 
-  private S2AConfig config;
-
   private transient HttpTransportFactory transportFactory;
 
-  S2A(S2A.Builder builder) {
+  SecureSessionAgent(SecureSessionAgent.Builder builder) {
     this.transportFactory = builder.getHttpTransportFactory();
-    this.config = getS2AConfigFromMDS();
   }
 
-  /** @return the mTLS S2A Address from the mTLS config. */
-  public String getMtlsS2AAddress() {
-    return config.getMtlsAddress();
+  /**
+   * This method makes a network call to MDS to get the {@link SecureSessionAgentConfig} which
+   * contains the plaintext and mtls address to reach the S2A (Secure Session Agent).
+   *
+   * @return a SecureSessionAgentConfig.
+   */
+  public SecureSessionAgentConfig getConfig() {
+    return getSecureSessionAgentConfigFromMDS();
   }
 
-  /** @return the plaintext S2A Address from the mTLS config. */
-  public String getPlaintextS2AAddress() {
-    return config.getPlaintextAddress();
+  /**
+   * @return default instance of SecureSessionAgent
+   */
+  public static SecureSessionAgent create() {
+    return newBuilder().build();
   }
 
   public static Builder newBuilder() {
@@ -110,17 +116,18 @@ public final class S2A {
       return this.transportFactory;
     }
 
-    public S2A build() {
-      return new S2A(this);
+    public SecureSessionAgent build() {
+      return new SecureSessionAgent(this);
     }
   }
 
   /**
-   * Queries the MDS mTLS Autoconfiguration endpoint and returns the {@link S2AConfig}.
+   * Queries the MDS mTLS Autoconfiguration endpoint and returns the {@link
+   * SecureSessionAgentConfig}.
    *
-   * <p>Returns {@link S2AConfig}. If S2A is not running, or if any error occurs when making the
-   * request to MDS / processing the response, {@link S2AConfig} will be populated with empty
-   * addresses.
+   * <p>Returns {@link SecureSessionAgentConfig}. If S2A is not running, or if any error occurs when
+   * making the request to MDS / processing the response, {@link SecureSessionAgentConfig} will be
+   * populated with empty addresses.
    *
    * <p>Users are expected to try to fetch the mTLS-S2A address first (via {@link
    * getMtlsS2AAddress}). If it is empty or they have some problem loading the mTLS-MDS credentials,
@@ -129,9 +136,9 @@ public final class S2A {
    * when talking to the MDS / processing the response or that S2A is not running in the
    * environment; in either case this indicates S2A shouldn't be used.
    *
-   * @return the {@link S2AConfig}.
+   * @return the {@link SecureSessionAgentConfig}.
    */
-  private S2AConfig getS2AConfigFromMDS() {
+  private SecureSessionAgentConfig getSecureSessionAgentConfigFromMDS() {
     if (transportFactory == null) {
       transportFactory =
           Iterables.getFirst(
@@ -144,9 +151,9 @@ public final class S2A {
       request = transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
     } catch (IOException ignore) {
       /*
-       * Return empty addresses in {@link S2AConfig} if error building the GET request.
+       * Return empty addresses in {@link SecureSessionAgentConfig} if error building the GET request.
        */
-      return S2AConfig.createBuilder().build();
+      return SecureSessionAgentConfig.createBuilder().build();
     }
 
     request.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
@@ -173,36 +180,44 @@ public final class S2A {
       HttpResponse response = request.execute();
       InputStream content = response.getContent();
       if (content == null) {
-        return S2AConfig.createBuilder().build();
+        return SecureSessionAgentConfig.createBuilder().build();
       }
       responseData = response.parseAs(GenericData.class);
     } catch (IOException ignore) {
       /*
-       * Return empty addresses in {@link S2AConfig} once all retries have been exhausted.
+       * Return empty addresses in {@link SecureSessionAgentConfig} once all retries have been exhausted.
        */
-      return S2AConfig.createBuilder().build();
+      return SecureSessionAgentConfig.createBuilder().build();
     }
 
     String plaintextS2AAddress = "";
     String mtlsS2AAddress = "";
+    Map<String, Object> s2aAddressConfig = (Map<String, Object>) responseData.get(S2A_JSON_KEY);
+    if (s2aAddressConfig == null) {
+      /*
+       * Return empty addresses in {@link SecureSessionAgentConfig} if endpoint doesn't return anything.
+       */
+      return SecureSessionAgentConfig.createBuilder().build();
+    }
     try {
       plaintextS2AAddress =
-          OAuth2Utils.validateString(responseData, S2A_PLAINTEXT_ADDRESS_JSON_KEY, PARSE_ERROR_S2A);
+          OAuth2Utils.validateString(
+              s2aAddressConfig, S2A_PLAINTEXT_ADDRESS_JSON_KEY, PARSE_ERROR_S2A);
     } catch (IOException ignore) {
       /*
-       * Do not throw error because of parsing error, just leave the address as empty in {@link S2AConfig}.
+       * Do not throw error because of parsing error, just leave the address as empty in {@link SecureSessionAgentConfig}.
        */
     }
     try {
       mtlsS2AAddress =
-          OAuth2Utils.validateString(responseData, S2A_MTLS_ADDRESS_JSON_KEY, PARSE_ERROR_S2A);
+          OAuth2Utils.validateString(s2aAddressConfig, S2A_MTLS_ADDRESS_JSON_KEY, PARSE_ERROR_S2A);
     } catch (IOException ignore) {
       /*
-       * Do not throw error because of parsing error, just leave the address as empty in {@link S2AConfig}.
+       * Do not throw error because of parsing error, just leave the address as empty in {@link SecureSessionAgentConfig}.
        */
     }
 
-    return S2AConfig.createBuilder()
+    return SecureSessionAgentConfig.createBuilder()
         .setPlaintextAddress(plaintextS2AAddress)
         .setMtlsAddress(mtlsS2AAddress)
         .build();

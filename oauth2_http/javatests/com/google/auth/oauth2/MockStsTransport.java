@@ -65,13 +65,20 @@ public final class MockStsTransport extends MockHttpTransport {
   private static final String ACCESS_TOKEN = "accessToken";
   private static final String TOKEN_TYPE = "Bearer";
   private static final Long EXPIRES_IN = 3600L;
+  private static final String ACCESS_BOUNDARY_SESSION_KEY_VALUE =
+      "CPaEhYsKEmQKWAowdHlwZS5nb29nbGVhcGlzLmNvbS9nb29nbGUuY3J5cHRvLnRpbmsuQW"
+          + "VzR2NtS2V5EiIaIMx8syvGIGGu5yvrdq/"
+          + "I0Q9ZWIR1oqJXFnDFxHuwX4SEGAEQARj2hIWLCiAB";
 
   private final Queue<IOException> responseErrorSequence = new ArrayDeque<>();
   private final Queue<List<String>> scopeSequence = new ArrayDeque<>();
   private final Queue<String> refreshTokenSequence = new ArrayDeque<>();
 
   private boolean returnExpiresIn = true;
+  private boolean returnAccessBoundarySessionKey = false;
+  private String accessBoundarySessionKey = ACCESS_BOUNDARY_SESSION_KEY_VALUE;
   private MockLowLevelHttpRequest request;
+  private int requestCount = 0;
 
   public void addResponseErrorSequence(IOException... errors) {
     Collections.addAll(responseErrorSequence, errors);
@@ -87,6 +94,7 @@ public final class MockStsTransport extends MockHttpTransport {
 
   @Override
   public LowLevelHttpRequest buildRequest(final String method, final String url) {
+    requestCount++;
     this.request =
         new MockLowLevelHttpRequest(url) {
           @Override
@@ -133,6 +141,11 @@ public final class MockStsTransport extends MockHttpTransport {
                 response.put("refresh_token", refreshTokenSequence.poll());
               }
             }
+
+            if (returnAccessBoundarySessionKey) {
+              response.put("access_boundary_session_key", accessBoundarySessionKey);
+            }
+
             return new MockLowLevelHttpResponse()
                 .setContentType(Json.MEDIA_TYPE)
                 .setContent(response.toPrettyString());
@@ -169,7 +182,23 @@ public final class MockStsTransport extends MockHttpTransport {
     return EXPIRES_IN;
   }
 
+  public String getAccessBoundarySessionKey() {
+    return ACCESS_BOUNDARY_SESSION_KEY_VALUE;
+  }
+
   public void setReturnExpiresIn(boolean returnExpiresIn) {
     this.returnExpiresIn = returnExpiresIn;
+  }
+
+  public void setAccessBoundarySessionKey(String accessBoundarySessionKey) {
+    this.accessBoundarySessionKey = accessBoundarySessionKey;
+  }
+
+  public void setReturnAccessBoundarySessionKey(boolean returnAccessBoundarySessionKey) {
+    this.returnAccessBoundarySessionKey = returnAccessBoundarySessionKey;
+  }
+
+  public int getRequestCount() {
+    return requestCount;
   }
 }

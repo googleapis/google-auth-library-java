@@ -9,6 +9,8 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-22.04
+    # Sonar Token can't be passed to PRs from forks. Disable Sonar workflow unless PR is from a branch.
+    if: github.event.pull_request.head.repo.full_name == github.repository
     steps:
     - uses: actions/checkout@v4
       with:
@@ -36,10 +38,11 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: |
         mvn -B verify -Dcheckstyle.skip \
+            -Djacoco.skip=true \
             -DenableFullTestCoverage \
             -Dsonar.coverage.jacoco.xmlReportPaths=oauth2_http/target/site/jacoco/jacoco.xml \
             org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-            -Pcoverage \
             -Dsonar.projectKey=googleapis_google-auth-library-java \
             -Dsonar.organization=googleapis \
             -Dsonar.host.url=https://sonarcloud.io
+

@@ -40,6 +40,8 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.GenericJson;
@@ -118,8 +120,8 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   private static final String PROJECT_ID = "project-id";
   public static final String IMPERSONATED_CLIENT_EMAIL =
       "impersonated-account@iam.gserviceaccount.com";
-  private static final List<String> IMMUTABLE_SCOPES_LIST = ImmutableList.of("scope1", "scope2");
-  private static final int VALID_LIFETIME = 300;
+  static final List<String> IMMUTABLE_SCOPES_LIST = ImmutableList.of("scope1", "scope2");
+  static final int VALID_LIFETIME = 300;
   private static final int INVALID_LIFETIME = 43210;
   private static JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
@@ -133,12 +135,12 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
           + ":generateAccessToken";
   public static final String DEFAULT_IMPERSONATION_URL =
       String.format(
-          OAuth2Utils.IAM_ACCESS_TOKEN_ENDPOINT_FORMAT,
+          IamUtils.IAM_ACCESS_TOKEN_ENDPOINT_FORMAT,
           DEFAULT_UNIVERSE_DOMAIN,
           IMPERSONATED_CLIENT_EMAIL);
   private static final String NONGDU_IMPERSONATION_URL =
       String.format(
-          OAuth2Utils.IAM_ACCESS_TOKEN_ENDPOINT_FORMAT,
+          IamUtils.IAM_ACCESS_TOKEN_ENDPOINT_FORMAT,
           TEST_UNIVERSE_DOMAIN,
           IMPERSONATED_CLIENT_EMAIL);
   public static final String IMPERSONATION_OVERRIDE_URL =
@@ -162,7 +164,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     mockTransportFactory = new MockIAMCredentialsServiceTransportFactory();
   }
 
-  private GoogleCredentials getSourceCredentials() throws IOException {
+  static GoogleCredentials getSourceCredentials() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountCredentials sourceCredentials =
@@ -528,9 +530,9 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     ServiceAccountCredentials sourceCredentialsSSJ =
         ((ServiceAccountCredentials) sourceCredentials)
             .toBuilder()
-            .setHttpTransportFactory(mockTransportFactory)
-            .setUseJwtAccessWithScope(true)
-            .build();
+                .setHttpTransportFactory(mockTransportFactory)
+                .setUseJwtAccessWithScope(true)
+                .build();
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
             sourceCredentialsSSJ,
@@ -557,9 +559,9 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     ServiceAccountCredentials sourceCredentialsNonGDU =
         ((ServiceAccountCredentials) sourceCredentials)
             .toBuilder()
-            .setUniverseDomain(TEST_UNIVERSE_DOMAIN)
-            .setHttpTransportFactory(transportFactory)
-            .build();
+                .setUniverseDomain(TEST_UNIVERSE_DOMAIN)
+                .setHttpTransportFactory(transportFactory)
+                .build();
     ImpersonatedCredentials impersonatedCredentials =
         ImpersonatedCredentials.create(
             sourceCredentialsNonGDU,
@@ -909,6 +911,64 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void sign_sameAs_nonGDU() {
+
+    MockIAMCredentialsServiceTransportFactory transportFactory =
+        new MockIAMCredentialsServiceTransportFactory("test.com");
+    transportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    transportFactory.getTransport().setAccessToken(ACCESS_TOKEN);
+    transportFactory.getTransport().setExpireTime(getDefaultExpireTime());
+    transportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
+    ServiceAccountCredentials sourceCredentialsNonGDU =
+        ((ServiceAccountCredentials) sourceCredentials)
+            .toBuilder()
+                .setUniverseDomain("test.com")
+                .setHttpTransportFactory(transportFactory)
+                .build();
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            sourceCredentialsNonGDU,
+            IMPERSONATED_CLIENT_EMAIL,
+            null,
+            IMMUTABLE_SCOPES_LIST,
+            VALID_LIFETIME,
+            transportFactory);
+
+    byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
+
+    transportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    transportFactory.getTransport().setSignedBlob(expectedSignature);
+
+    assertArrayEquals(expectedSignature, targetCredentials.sign(expectedSignature));
+  }
+
+  @Test
+  public void sign_universeDomainException() throws IOException {
+    // Currently, no credentials allowed as source credentials throws exception for
+    // getUniverseDomain(), mock this behavior for test only. ServiceAccountCredentials
+    // should not throw for getUniverseDomain() calls.
+    ServiceAccountCredentials sourceCredentialsMock = mock(ServiceAccountCredentials.class);
+    when(sourceCredentialsMock.getUniverseDomain()).thenThrow(IOException.class);
+
+    MockIAMCredentialsServiceTransportFactory transportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            sourceCredentialsMock,
+            IMPERSONATED_CLIENT_EMAIL,
+            null,
+            IMMUTABLE_SCOPES_LIST,
+            VALID_LIFETIME,
+            transportFactory);
+
+    byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
+
+    SigningException exception =
+        assertThrows(SigningException.class, () -> targetCredentials.sign(expectedSignature));
+    assertEquals("Failed to sign: Error obtaining universe domain", exception.getMessage());
+  }
+
+  @Test
   public void idTokenWithAudience_sameAs() throws IOException {
     mockTransportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mockTransportFactory.getTransport().setAccessToken(ACCESS_TOKEN);
@@ -975,6 +1035,45 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
         mockTransportFactory.getTransport().getRequest().getHeaders();
     com.google.auth.oauth2.TestUtils.validateMetricsHeader(requestHeader, "it", "imp");
     assertTrue(requestHeader.containsKey("authorization"));
+  }
+
+  @Test
+  public void idTokenWithAudience_sameAs_nonGDU() throws IOException {
+    MockIAMCredentialsServiceTransportFactory transportFactory =
+        new MockIAMCredentialsServiceTransportFactory("test.com");
+    transportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    transportFactory.getTransport().setAccessToken(ACCESS_TOKEN);
+    transportFactory.getTransport().setExpireTime(getDefaultExpireTime());
+    transportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
+    ServiceAccountCredentials sourceCredentialsNonGDU =
+        ((ServiceAccountCredentials) sourceCredentials)
+            .toBuilder()
+                .setUniverseDomain("test.com")
+                .setHttpTransportFactory(transportFactory)
+                .build();
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            sourceCredentialsNonGDU,
+            IMPERSONATED_CLIENT_EMAIL,
+            null,
+            IMMUTABLE_SCOPES_LIST,
+            VALID_LIFETIME,
+            transportFactory);
+
+    transportFactory.getTransport().setIdToken(STANDARD_ID_TOKEN);
+
+    String targetAudience = "https://foo.bar";
+    IdTokenCredentials tokenCredential =
+        IdTokenCredentials.newBuilder()
+            .setIdTokenProvider(targetCredentials)
+            .setTargetAudience(targetAudience)
+            .build();
+    tokenCredential.refresh();
+    assertEquals(STANDARD_ID_TOKEN, tokenCredential.getAccessToken().getTokenValue());
+    assertEquals(STANDARD_ID_TOKEN, tokenCredential.getIdToken().getTokenValue());
+    assertEquals(
+        targetAudience,
+        (String) tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
   }
 
   @Test

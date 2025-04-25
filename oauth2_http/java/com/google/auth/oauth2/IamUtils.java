@@ -62,12 +62,17 @@ import java.util.Set;
  * features like signing.
  */
 class IamUtils {
-  private static final String SIGN_BLOB_URL_FORMAT =
-      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:signBlob";
-  private static final String ID_TOKEN_URL_FORMAT =
-      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateIdToken";
+
+  // IAM credentials endpoints are to be formatted with universe domain and client email.
+  static final String IAM_ID_TOKEN_ENDPOINT_FORMAT =
+      "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:generateIdToken";
+  static final String IAM_ACCESS_TOKEN_ENDPOINT_FORMAT =
+      "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:generateAccessToken";
+  static final String IAM_SIGN_BLOB_ENDPOINT_FORMAT =
+      "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s:signBlob";
   private static final String PARSE_ERROR_MESSAGE = "Error parsing error message response. ";
   private static final String PARSE_ERROR_SIGNATURE = "Error parsing signature response. ";
+  private static final LoggerProvider LOGGER_PROVIDER = LoggerProvider.forClazz(IamUtils.class);
 
   // Following guidance for IAM retries:
   // https://cloud.google.com/iam/docs/retry-strategy#errors-to-retry
@@ -88,6 +93,7 @@ class IamUtils {
   static byte[] sign(
       String serviceAccountEmail,
       Credentials credentials,
+      String universeDomain,
       HttpTransport transport,
       byte[] toSign,
       Map<String, ?> additionalFields) {
@@ -97,7 +103,12 @@ class IamUtils {
     String signature;
     try {
       signature =
-          getSignature(serviceAccountEmail, base64.encode(toSign), additionalFields, factory);
+          getSignature(
+              serviceAccountEmail,
+              universeDomain,
+              base64.encode(toSign),
+              additionalFields,
+              factory);
     } catch (IOException ex) {
       throw new ServiceAccountSigner.SigningException("Failed to sign the provided bytes", ex);
     }
@@ -106,11 +117,13 @@ class IamUtils {
 
   private static String getSignature(
       String serviceAccountEmail,
+      String universeDomain,
       String bytes,
       Map<String, ?> additionalFields,
       HttpRequestFactory factory)
       throws IOException {
-    String signBlobUrl = String.format(SIGN_BLOB_URL_FORMAT, serviceAccountEmail);
+    String signBlobUrl =
+        String.format(IAM_SIGN_BLOB_ENDPOINT_FORMAT, universeDomain, serviceAccountEmail);
     GenericUrl genericUrl = new GenericUrl(signBlobUrl);
 
     GenericData signRequest = new GenericData();
@@ -142,7 +155,11 @@ class IamUtils {
                     IamUtils.IAM_RETRYABLE_STATUS_CODES.contains(response.getStatusCode())));
     request.setIOExceptionHandler(new HttpBackOffIOExceptionHandler(backoff));
 
+    LoggingUtils.logRequest(
+        request, LOGGER_PROVIDER, "Sending request to get signature to sign the blob");
     HttpResponse response = request.execute();
+    LoggingUtils.logResponse(
+        response, LOGGER_PROVIDER, "Received response for signature to sign the blob");
     int statusCode = response.getStatusCode();
     if (statusCode >= 400 && statusCode < HttpStatusCodes.STATUS_CODE_SERVER_ERROR) {
       GenericData responseError = response.parseAs(GenericData.class);
@@ -169,6 +186,8 @@ class IamUtils {
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
+    LoggingUtils.logResponsePayload(
+        responseData, LOGGER_PROVIDER, "Response payload for sign blob");
     return OAuth2Utils.validateString(responseData, "signedBlob", PARSE_ERROR_SIGNATURE);
   }
 
@@ -193,10 +212,12 @@ class IamUtils {
       String targetAudience,
       boolean includeEmail,
       Map<String, ?> additionalFields,
-      CredentialTypeForMetrics credentialTypeForMetrics)
+      CredentialTypeForMetrics credentialTypeForMetrics,
+      String universeDomain)
       throws IOException {
 
-    String idTokenUrl = String.format(ID_TOKEN_URL_FORMAT, serviceAccountEmail);
+    String idTokenUrl =
+        String.format(IAM_ID_TOKEN_ENDPOINT_FORMAT, universeDomain, serviceAccountEmail);
     GenericUrl genericUrl = new GenericUrl(idTokenUrl);
 
     GenericData idTokenRequest = new GenericData();
@@ -220,7 +241,10 @@ class IamUtils {
         MetricsUtils.getGoogleCredentialsMetricsHeader(
             RequestType.ID_TOKEN_REQUEST, credentialTypeForMetrics));
 
+    LoggingUtils.logRequest(request, LOGGER_PROVIDER, "Sending request to get ID token");
     HttpResponse response = request.execute();
+
+    LoggingUtils.logResponse(response, LOGGER_PROVIDER, "Received response for ID token request");
     int statusCode = response.getStatusCode();
     if (statusCode >= 400 && statusCode < HttpStatusCodes.STATUS_CODE_SERVER_ERROR) {
       GenericData responseError = response.parseAs(GenericData.class);
@@ -245,6 +269,8 @@ class IamUtils {
     }
 
     GenericJson responseData = response.parseAs(GenericJson.class);
+    LoggingUtils.logResponsePayload(
+        responseData, LOGGER_PROVIDER, "Response payload for ID token request");
     String rawToken = OAuth2Utils.validateString(responseData, "token", PARSE_ERROR_MESSAGE);
     return IdToken.create(rawToken);
   }

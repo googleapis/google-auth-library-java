@@ -32,6 +32,7 @@
 package com.google.auth.oauth2;
 
 import static com.google.auth.Credentials.GOOGLE_DEFAULT_UNIVERSE;
+import static com.google.auth.oauth2.OAuth2Utils.TOKEN_EXCHANGE_URL_FORMAT;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -50,7 +51,6 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class DownscopedCredentialsTest {
 
-  private final String TOKEN_EXCHANGE_URL_FORMAT = "https://sts.%s/v1/token";
   private static final String SA_PRIVATE_KEY_PKCS8 =
       "-----BEGIN PRIVATE KEY-----\n"
           + "MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBALX0PQoe1igW12i"
@@ -120,8 +120,7 @@ public class DownscopedCredentialsTest {
     MockStsTransportFactory transportFactory = new MockStsTransportFactory();
     String universeDomain = "foobar";
     GoogleCredentials sourceCredentials =
-        getServiceAccountSourceCredentials(/* canRefresh= */ true)
-            .toBuilder()
+        getServiceAccountSourceCredentials(/* canRefresh= */ true).toBuilder()
             .setUniverseDomain(universeDomain)
             .build();
 

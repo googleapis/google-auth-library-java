@@ -158,6 +158,13 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    * <p>The stream can contain a Service Account key file in JSON format from the Google Developers
    * Console or a stored user credential using the format supported by the Cloud SDK.
    *
+   * <p>Important: If you accept a credential configuration (credential JSON/File/Stream) from an
+   * external source for authentication to Google Cloud Platform, you must validate it before
+   * providing it to any Google API or library. Providing an unvalidated credential configuration to
+   * Google APIs can compromise the security of your systems and data. For more information, refer
+   * to {@link <a
+   * href="https://cloud.google.com/docs/authentication/external/externally-sourced-credentials">documentation</a>}.
+   *
    * @param credentialsStream the stream with the credential definition.
    * @return the credential defined by the credentialsStream.
    * @throws IOException if the credential cannot be created from the stream.
@@ -171,6 +178,13 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    *
    * <p>The stream can contain a Service Account key file in JSON format from the Google Developers
    * Console or a stored user credential using the format supported by the Cloud SDK.
+   *
+   * <p>Important: If you accept a credential configuration (credential JSON/File/Stream) from an
+   * external source for authentication to Google Cloud Platform, you must validate it before
+   * providing it to any Google API or library. Providing an unvalidated credential configuration to
+   * Google APIs can compromise the security of your systems and data. For more information, refer
+   * to {@link <a
+   * href="https://cloud.google.com/docs/authentication/external/externally-sourced-credentials">documentation</a>}.
    *
    * @param credentialsStream the stream with the credential definition.
    * @param transportFactory HTTP transport factory, creates the transport used to get access

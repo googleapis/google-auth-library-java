@@ -33,7 +33,7 @@ package com.google.auth.oauth2;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 
 /** Holds an mTLS configuration (consists of address of S2A) retrieved from the Metadata Server. */
-final class S2AConfig {
+public class SecureSessionAgentConfig {
   // plaintextAddress is the plaintext address to reach the S2A.
   private final String plaintextAddress;
 
@@ -44,12 +44,16 @@ final class S2AConfig {
     return new Builder();
   }
 
-  /** @return the plaintext S2A Address. */
+  /**
+   * @return the plaintext S2A Address.
+   */
   public String getPlaintextAddress() {
     return plaintextAddress;
   }
 
-  /** @return the mTLS S2A Address. */
+  /**
+   * @return the mTLS S2A Address.
+   */
   public String getMtlsAddress() {
     return mtlsAddress;
   }
@@ -86,12 +90,12 @@ final class S2AConfig {
       return this;
     }
 
-    public S2AConfig build() {
-      return new S2AConfig(plaintextAddress, mtlsAddress);
+    public SecureSessionAgentConfig build() {
+      return new SecureSessionAgentConfig(plaintextAddress, mtlsAddress);
     }
   }
 
-  private S2AConfig(String plaintextAddress, String mtlsAddress) {
+  private SecureSessionAgentConfig(String plaintextAddress, String mtlsAddress) {
     this.plaintextAddress = plaintextAddress;
     this.mtlsAddress = mtlsAddress;
   }

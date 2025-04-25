@@ -54,6 +54,7 @@ retry_with_backoff 3 10 \
   mvn install -B -V -ntp \
     -DskipTests=true \
     -Dmaven.javadoc.skip=true \
+    -Djacoco.skip=true \
     -Dclirr.skip=true
 
 mvn -B dependency:analyze -DfailOnWarning=true

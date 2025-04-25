@@ -68,6 +68,8 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
   private static final String GRANT_TYPE = "refresh_token";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final long serialVersionUID = -4800758775038679176L;
+  private static final LoggerProvider LOGGER_PROVIDER =
+      LoggerProvider.forClazz(UserCredentials.class);
 
   private final String clientId;
   private final String clientSecret;
@@ -124,13 +126,16 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
           "Error reading user credential from JSON, "
               + " expecting 'client_id', 'client_secret' and 'refresh_token'.");
     }
+    // currently "token_uri" is not a default field and needs to be added to json file manually
+    String tokenUrl = (String) json.get("token_uri");
+    URI tokenUri = (tokenUrl == null || tokenUrl.isEmpty()) ? null : URI.create(tokenUrl);
     return UserCredentials.newBuilder()
         .setClientId(clientId)
         .setClientSecret(clientSecret)
         .setRefreshToken(refreshToken)
         .setAccessToken(null)
         .setHttpTransportFactory(transportFactory)
-        .setTokenServerUri(null)
+        .setTokenServerUri(tokenUri)
         .setQuotaProjectId(quotaProjectId)
         .build();
   }
@@ -280,14 +285,20 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     HttpResponse response;
 
     try {
+      LoggingUtils.logRequest(request, LOGGER_PROVIDER, "Sending request to refresh access token");
       response = request.execute();
+      LoggingUtils.logResponse(
+          response, LOGGER_PROVIDER, "Received response for refresh access token");
     } catch (HttpResponseException re) {
       throw GoogleAuthException.createWithTokenEndpointResponseException(re);
     } catch (IOException e) {
       throw GoogleAuthException.createWithTokenEndpointIOException(e);
     }
 
-    return response.parseAs(GenericData.class);
+    GenericData data = response.parseAs(GenericData.class);
+
+    LoggingUtils.logResponsePayload(data, LOGGER_PROVIDER, "Response payload for access token");
+    return data;
   }
 
   /**

@@ -96,6 +96,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final int TWELVE_HOURS_IN_SECONDS = 43200;
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
+  private static final LoggerProvider LOGGER_PROVIDER =
+      LoggerProvider.forClazz(ServiceAccountCredentials.class);
 
   private final String clientId;
   private final String clientEmail;
@@ -446,6 +448,13 @@ public class ServiceAccountCredentials extends GoogleCredentials
    * Returns credentials defined by a Service Account key file in JSON format from the Google
    * Developers Console.
    *
+   * <p>Important: If you accept a credential configuration (credential JSON/File/Stream) from an
+   * external source for authentication to Google Cloud Platform, you must validate it before
+   * providing it to any Google API or library. Providing an unvalidated credential configuration to
+   * Google APIs can compromise the security of your systems and data. For more information, refer
+   * to {@link <a
+   * href="https://cloud.google.com/docs/authentication/external/externally-sourced-credentials">documentation</a>}.
+   *
    * @param credentialsStream the stream with the credential definition.
    * @return the credential defined by the credentialsStream.
    * @throws IOException if the credential cannot be created from the stream.
@@ -458,6 +467,13 @@ public class ServiceAccountCredentials extends GoogleCredentials
   /**
    * Returns credentials defined by a Service Account key file in JSON format from the Google
    * Developers Console.
+   *
+   * <p>Important: If you accept a credential configuration (credential JSON/File/Stream) from an
+   * external source for authentication to Google Cloud Platform, you must validate it before
+   * providing it to any Google API or library. Providing an unvalidated credential configuration to
+   * Google APIs can compromise the security of your systems and data. For more information, refer
+   * to {@link <a
+   * href="https://cloud.google.com/docs/authentication/external/externally-sourced-credentials">documentation</a>}.
    *
    * @param credentialsStream the stream with the credential definition.
    * @param transportFactory HTTP transport factory, creates the transport used to get access
@@ -489,6 +505,12 @@ public class ServiceAccountCredentials extends GoogleCredentials
     return serviceAccountUser != null && serviceAccountUser.length() > 0;
   }
 
+  private GenericData parseResponseAs(HttpResponse response) throws IOException {
+    GenericData genericData = response.parseAs(GenericData.class);
+    LoggingUtils.logResponsePayload(genericData, LOGGER_PROVIDER, "Response payload");
+    return genericData;
+  }
+
   /**
    * Refreshes the OAuth2 access token by getting a new access token using a JSON Web Token (JWT).
    */
@@ -517,6 +539,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     }
     request.setParser(new JsonObjectParser(jsonFactory));
 
+    LoggingUtils.logRequest(request, LOGGER_PROVIDER, "Sending request to refresh access token");
     ExponentialBackOff backoff =
         new ExponentialBackOff.Builder()
             .setInitialIntervalMillis(OAuth2Utils.INITIAL_RETRY_INTERVAL_MILLIS)
@@ -539,6 +562,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
     try {
       response = request.execute();
+      LoggingUtils.logResponse(
+          response, LOGGER_PROVIDER, "Received response for refresh access token");
     } catch (HttpResponseException re) {
       String message = String.format(errorTemplate, re.getMessage(), getIssuer());
       throw GoogleAuthException.createWithTokenEndpointResponseException(re, message);
@@ -547,7 +572,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
           e, String.format(errorTemplate, e.getMessage(), getIssuer()));
     }
 
-    GenericData responseData = response.parseAs(GenericData.class);
+    GenericData responseData = parseResponseAs(response);
     String accessToken =
         OAuth2Utils.validateString(responseData, "access_token", PARSE_ERROR_PREFIX);
     int expiresInSeconds =
@@ -597,9 +622,12 @@ public class ServiceAccountCredentials extends GoogleCredentials
         MetricsUtils.getGoogleCredentialsMetricsHeader(
             RequestType.ID_TOKEN_REQUEST, getMetricsCredentialType()));
 
+    LoggingUtils.logRequest(request, LOGGER_PROVIDER, "Sending request to get ID token");
     HttpResponse httpResponse = executeRequest(request);
 
-    GenericData responseData = httpResponse.parseAs(GenericData.class);
+    LoggingUtils.logResponse(
+        httpResponse, LOGGER_PROVIDER, "Received response for ID token request");
+    GenericData responseData = parseResponseAs(httpResponse);
     String rawToken = OAuth2Utils.validateString(responseData, "id_token", PARSE_ERROR_PREFIX);
     return IdToken.create(rawToken);
   }
@@ -636,14 +664,17 @@ public class ServiceAccountCredentials extends GoogleCredentials
     // `getUniverseDomain()` throws an IOException that would need to be caught
     URI iamIdTokenUri =
         URI.create(
-            String.format(
-                OAuth2Utils.IAM_ID_TOKEN_ENDPOINT_FORMAT, getUniverseDomain(), clientEmail));
+            String.format(IamUtils.IAM_ID_TOKEN_ENDPOINT_FORMAT, getUniverseDomain(), clientEmail));
     HttpRequest request = buildIdTokenRequest(iamIdTokenUri, transportFactory, content);
     // Use the Access Token from the SSJWT to request the ID Token from IAM Endpoint
     request.setHeaders(new HttpHeaders().set(AuthHttpConstants.AUTHORIZATION, accessToken));
-    HttpResponse httpResponse = executeRequest(request);
 
-    GenericData responseData = httpResponse.parseAs(GenericData.class);
+    LoggingUtils.logRequest(request, LOGGER_PROVIDER, "Sending request to get ID token");
+    HttpResponse httpResponse = executeRequest(request);
+    LoggingUtils.logResponse(
+        httpResponse, LOGGER_PROVIDER, "Received response for ID token request");
+
+    GenericData responseData = parseResponseAs(httpResponse);
     // IAM Endpoint returns `token` instead of `id_token`
     String rawToken = OAuth2Utils.validateString(responseData, "token", PARSE_ERROR_PREFIX);
     return IdToken.create(rawToken);

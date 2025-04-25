@@ -51,8 +51,13 @@ test)
     mvn test -B -ntp -Dclirr.skip=true -Denforcer.skip=true ${SUREFIRE_JVM_OPT}
     RETURN_CODE=$?
     ;;
+test-logging)
+    echo "SUREFIRE_JVM_OPT: ${SUREFIRE_JVM_OPT}"
+    mvn clean test -P '!slf4j2x,slf4j2x-test' -B -ntp -Dclirr.skip=true -Denforcer.skip=true ${SUREFIRE_JVM_OPT}
+    RETURN_CODE=$?
+    ;;
 lint)
-    mvn com.coveo:fmt-maven-plugin:check -B -ntp
+    mvn com.spotify.fmt:fmt-maven-plugin:check -B -ntp
     RETURN_CODE=$?
     ;;
 javadoc)
@@ -66,18 +71,16 @@ integration)
       -DtrimStackTrace=false \
       -Dclirr.skip=true \
       -Denforcer.skip=true \
+      -Djacoco.skip=true  \
       -fae \
       verify
     RETURN_CODE=$?
     ;;
-graalvmA)
+graalvm)
     # Run Unit and Integration Tests with Native Image
-    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Pnative-test test -pl 'oauth2_http'
-    RETURN_CODE=$?
-    ;;
-graalvmB)
-    # Run Unit and Integration Tests with Native Image
-    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Pnative-test test -pl 'oauth2_http'
+    bash .kokoro/populate-secrets.sh
+    export GOOGLE_APPLICATION_CREDENTIALS="${KOKORO_GFILE_DIR}/secret_manager/java-it-service-account"
+    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Pnative-test -Pslf4j2x test -pl 'oauth2_http'
     RETURN_CODE=$?
     ;;
 samples)

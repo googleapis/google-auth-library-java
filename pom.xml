@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.auth</groupId>
   <artifactId>google-auth-library-parent</artifactId>
-  <version>1.29.1-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
+  <version>1.33.2-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
   <packaging>pom</packaging>
   <name>Google Auth Library for Java</name>
   <description>Client libraries providing authentication and
@@ -16,7 +16,7 @@
   <parent>
     <groupId>com.google.cloud</groupId>
     <artifactId>google-cloud-shared-config</artifactId>
-    <version>1.11.3</version>
+    <version>1.15.4</version>
   </parent>
 
   <distributionManagement>
@@ -27,7 +27,8 @@
     <site>
       <id>googleapis.dev</id>
       <name>Google self-hosted documentation site</name>
-      <url>https://googleapis.dev/java/google-auth-library/${project.version}</url>
+      <url>https://googleapis.dev/java/google-auth-library/${project.version}
+      </url>
     </site>
   </distributionManagement>
 
@@ -58,24 +59,33 @@
     <module>oauth2_http</module>
     <module>appengine</module>
     <module>bom</module>
+    <module>cab-token-generator</module>
   </modules>
 
   <scm>
-    <connection>scm:git:https://github.com/googleapis/google-auth-library-java.git</connection>
-    <developerConnection>scm:git:https://github.com/googleapis/google-auth-library-java.git
+    <connection>
+      scm:git:https://github.com/googleapis/google-auth-library-java.git
+    </connection>
+    <developerConnection>
+      scm:git:https://github.com/googleapis/google-auth-library-java.git
     </developerConnection>
     <url>https://github.com/googleapis/google-auth-library-java</url>
   </scm>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.google.http.version>1.45.0</project.google.http.version>
+    <project.google.http.version>1.46.3</project.google.http.version>
     <project.junit.version>4.13.2</project.junit.version>
-    <project.guava.version>33.3.1-android</project.guava.version>
-    <project.appengine.version>2.0.31</project.appengine.version>
+    <project.guava.version>33.4.0-android</project.guava.version>
+    <project.appengine.version>2.0.33</project.appengine.version>
     <project.findbugs.version>3.0.2</project.findbugs.version>
     <deploy.autorelease>false</deploy.autorelease>
-    <project.error-prone.version>2.35.1</project.error-prone.version>
+    <project.error-prone.version>2.37.0</project.error-prone.version>
+    <project.protobuf.version>3.25.5</project.protobuf.version>
+    <project.cel.version>0.9.0-proto3</project.cel.version>
+    <project.tink.version>1.15.0</project.tink.version>
+    <project.slf4j.version>2.0.17</project.slf4j.version>
+    <project.gson.version>2.12.1</project.gson.version>
   </properties>
 
   <dependencyManagement>
@@ -111,12 +121,12 @@
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
         <version>${project.guava.version}</version>
-		<exclusions>
-			<exclusion>
-        		<groupId>com.google.j2objc</groupId>
-        		<artifactId>j2objc-annotations</artifactId>
-			</exclusion>
-		</exclusions>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.j2objc</groupId>
+            <artifactId>j2objc-annotations</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>com.google.code.findbugs</groupId>
@@ -143,10 +153,47 @@
         <classifier>testlib</classifier>
       </dependency>
       <dependency>
-          <groupId>com.google.errorprone</groupId>
-          <artifactId>error_prone_annotations</artifactId>
-          <version>${project.error-prone.version}</version>
-          <scope>compile</scope>
+        <groupId>com.google.errorprone</groupId>
+        <artifactId>error_prone_annotations</artifactId>
+        <version>${project.error-prone.version}</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-java</artifactId>
+        <version>${project.protobuf.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>dev.cel</groupId>
+        <artifactId>cel</artifactId>
+        <version>${project.cel.version}</version>
+        <exclusions>
+          <!-- CEL's version for guava, findbugs and errorprone is causing build errors -->
+          <!-- so we are excluding them here. -->
+          <exclusion>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>annotations</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.google.errorprone</groupId>
+            <artifactId>error_prone_annotations</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>com.google.crypto.tink</groupId>
+        <artifactId>tink</artifactId>
+        <version>${project.tink.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -156,6 +203,8 @@
     <pluginManagement>
       <plugins>
         <plugin>
+          <!-- nexus-staging-maven-plugin is activated by the release-sonatype
+             profile defined in native-image-shared-config -->
           <groupId>org.sonatype.plugins</groupId>
           <artifactId>nexus-staging-maven-plugin</artifactId>
           <version>1.7.0</version>
@@ -182,7 +231,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>3.10.1</version>
+          <version>3.11.2</version>
           <configuration>
             <source>8</source>
             <failOnError>false</failOnError>
@@ -211,7 +260,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.5.1</version>
+          <version>3.5.2</version>
           <configuration>
             <reportNameSuffix>sponge_log</reportNameSuffix>
           </configuration>
@@ -231,16 +280,12 @@
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.13.0</version>
+        <version>3.14.0</version>
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
           <encoding>UTF-8</encoding>
         </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.sonatype.plugins</groupId>
-        <artifactId>nexus-staging-maven-plugin</artifactId>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -272,7 +317,8 @@
               <testSourceDirectories>
                 <testSourceDirectory>src/test</testSourceDirectory>
               </testSourceDirectories>
-              <excludes>com.google.auth.oauth2.ExternalAccountCredentials</excludes>
+              <excludes>com.google.auth.oauth2.ExternalAccountCredentials
+              </excludes>
             </configuration>
           </execution>
         </executions>
@@ -308,7 +354,8 @@
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>clirr-maven-plugin</artifactId>
         <configuration>
-          <ignoredDifferencesFile>clirr-ignored-differences.xml</ignoredDifferencesFile>
+          <ignoredDifferencesFile>clirr-ignored-differences.xml
+          </ignoredDifferencesFile>
           <logResults>true</logResults>
         </configuration>
         <executions>
@@ -332,7 +379,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.10.1</version>
+        <version>3.11.2</version>
         <reportSets>
           <reportSet>
             <id>html</id>
@@ -375,6 +422,35 @@
 
   <profiles>
     <profile>
+      <id>slf4j2x-test</id>
+      <!--  This profile is for logging test only, use instead of the default slf4j2x  -->
+      <!--  testInclude for compiler is in this parent pom because it affects
+      test classes from other modules  -->
+      <!--  To run logging tests, use this in addition to `slf4j2x-test`profile
+      in oauth2_http module  -->
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.14.0</version>
+            <configuration>
+              <source>1.8</source>
+              <target>1.8</target>
+              <encoding>UTF-8</encoding>
+              <!--    excluding tests depending on logback/env var by default    -->
+              <testIncludes>
+                <testInclude>**/Slf4jUtilsLogbackTest.java</testInclude>
+                <testInclude>**/Slf4jUtils1xTest.java</testInclude>
+                <testInclude>**/Slf4jUtilsTest.java</testInclude>
+                <testInclude>**/TestAppender.java</testInclude>
+                <testInclude>**/LoggingTest.java</testInclude>
+              </testIncludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
       <id>release-sign-artifacts</id>
       <activation>
         <property>
@@ -400,7 +476,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
-            <version>3.10.1</version>
+            <version>3.11.2</version>
             <executions>
               <execution>
                 <id>attach-javadocs</id>
