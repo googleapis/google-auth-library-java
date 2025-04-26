@@ -121,6 +121,7 @@ public class IdentityPoolCredentialSource extends ExternalAccountCredentials.Cre
     }
     return (String) value;
   }
+
   /**
    * Represents the configuration options for X.509-based workload credentials (mTLS). It specifies
    * how to locate and use the client certificate, private key, and optional trust chain for mutual
