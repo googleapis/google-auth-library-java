@@ -41,7 +41,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
@@ -74,13 +73,7 @@ public class CertificateIdentityPoolSubjectTokenSupplier
   private static X509Certificate loadLeafCertificate(String path)
       throws IOException, CertificateException {
     byte[] leafCertBytes;
-    try {
-      // IdentityPoolCredentials should have already validated the path exists via X509Provider.
-      leafCertBytes = Files.readAllBytes(Paths.get(path));
-    } catch (InvalidPathException e) {
-      throw new IOException("Invalid certificate file path provided: " + path, e);
-    }
-    // Files.readAllBytes throws IOException for other read errors.
+    leafCertBytes = Files.readAllBytes(Paths.get(path));
     return parseCertificate(leafCertBytes);
   }
 
@@ -95,6 +88,8 @@ public class CertificateIdentityPoolSubjectTokenSupplier
       InputStream certificateStream = new ByteArrayInputStream(certData);
       return (X509Certificate) certificateFactory.generateCertificate(certificateStream);
     } catch (CertificateException e) {
+      // Catch the original exception to add context about the operation being performed.
+      // This helps pinpoint the failure point during debugging.
       throw new CertificateException("Failed to parse X.509 certificate data.", e);
     }
   }
@@ -117,6 +112,9 @@ public class CertificateIdentityPoolSubjectTokenSupplier
 
       return GSON.toJson(certChain);
     } catch (CertificateException e) {
+      // Catch CertificateException to provide a more specific error message including
+      // the path of the file that failed to parse, and re-throw as IOException
+      // as expected by the getSubjectToken method signature for I/O related issues.
       throw new IOException(
           "Failed to parse certificate from: " + credentialSource.credentialLocation, e);
     }

@@ -174,11 +174,11 @@ public class IdentityPoolCredentialSource extends ExternalAccountCredentials.Cre
 
       checkArgument(
           (useDefault || locationIsPresent),
-          "credentials: \"certificate\" object must either specify a certificate_config_location or use_default_certificate_config should be true");
+          "Invalid 'certificate' configuration in credential source: Must specify either 'certificate_config_location' or set 'use_default_certificate_config' to true.");
 
       checkArgument(
           !(useDefault && locationIsPresent),
-          "credentials: \"certificate\" object cannot specify both a certificate_config_location and use_default_certificate_config=true");
+          "Invalid 'certificate' configuration in credential source: Cannot specify both 'certificate_config_location' and set 'use_default_certificate_config' to true.");
 
       this.useDefaultCertificateConfig = useDefault;
       this.certificateConfigLocation = certificateConfigLocation;
@@ -245,7 +245,7 @@ public class IdentityPoolCredentialSource extends ExternalAccountCredentials.Cre
       this.certificateConfig = getCertificateConfig(credentialSourceMap);
     } else {
       throw new IllegalArgumentException(
-          "Missing credential source file location or URL. At least one must be specified.");
+          "Missing credential source file location, URL, or certificate. At least one must be specified.");
     }
 
     Map<String, String> headersMap = (Map<String, String>) credentialSourceMap.get("headers");

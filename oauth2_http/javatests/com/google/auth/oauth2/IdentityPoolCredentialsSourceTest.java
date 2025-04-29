@@ -31,83 +31,73 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.auth.Credentials.GOOGLE_DEFAULT_UNIVERSE;
-import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
-import static com.google.auth.oauth2.OAuth2Utils.JSON_FACTORY;
 import static org.junit.Assert.*;
 
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.json.GenericJson;
-import com.google.api.client.util.Clock;
-import com.google.auth.TestUtils;
-import com.google.auth.http.HttpTransportFactory;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import com.google.auth.oauth2.IdentityPoolCredentialSource.IdentityPoolCredentialSourceType;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import javax.annotation.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import com.google.auth.oauth2.IdentityPoolCredentialSource.IdentityPoolCredentialSourceType;
 
 /** Tests for {@link IdentityPoolCredentialSource}. */
 @RunWith(JUnit4.class)
 public class IdentityPoolCredentialsSourceTest {
 
   @Test
-  public void constructor_certificateConfig(){
+  public void constructor_certificateConfig() {
     Map<String, Object> certificateMap = new HashMap<>();
     certificateMap.put("certificate_config_location", "/path/to/certificate");
 
     Map<String, Object> credentialSourceMap = new HashMap<>();
     credentialSourceMap.put("certificate", certificateMap);
 
-    IdentityPoolCredentialSource credentialSource = new IdentityPoolCredentialSource(credentialSourceMap);
-    assertEquals(IdentityPoolCredentialSourceType.CERTIFICATE, credentialSource.credentialSourceType);
+    IdentityPoolCredentialSource credentialSource =
+        new IdentityPoolCredentialSource(credentialSourceMap);
+    assertEquals(
+        IdentityPoolCredentialSourceType.CERTIFICATE, credentialSource.credentialSourceType);
     assertNotNull(credentialSource.certificateConfig);
     assertFalse(credentialSource.certificateConfig.useDefaultCertificateConfig());
-    assertEquals("/path/to/certificate", credentialSource.certificateConfig.getCertificateConfigLocation());
+    assertEquals(
+        "/path/to/certificate", credentialSource.certificateConfig.getCertificateConfigLocation());
   }
 
   @Test
-  public void constructor_certificateConfig_useDefault(){
+  public void constructor_certificateConfig_useDefault() {
     Map<String, Object> certificateMap = new HashMap<>();
     certificateMap.put("use_default_certificate_config", true);
 
     Map<String, Object> credentialSourceMap = new HashMap<>();
     credentialSourceMap.put("certificate", certificateMap);
 
-    IdentityPoolCredentialSource credentialSource = new IdentityPoolCredentialSource(credentialSourceMap);
-    assertEquals(IdentityPoolCredentialSourceType.CERTIFICATE, credentialSource.credentialSourceType);
+    IdentityPoolCredentialSource credentialSource =
+        new IdentityPoolCredentialSource(credentialSourceMap);
+    assertEquals(
+        IdentityPoolCredentialSourceType.CERTIFICATE, credentialSource.credentialSourceType);
     assertNotNull(credentialSource.certificateConfig);
     assertTrue(credentialSource.certificateConfig.useDefaultCertificateConfig());
   }
 
   @Test
-  public void constructor_certificateConfig_missingRequiredFields_throws(){
+  public void constructor_certificateConfig_missingRequiredFields_throws() {
     Map<String, Object> certificateMap = new HashMap<>();
-    //Missing both use_default_certificate_config and certificate_config_location
+    // Missing both use_default_certificate_config and certificate_config_location.
     certificateMap.put("trust_chain_path", "path/to/trust/chain");
 
     Map<String, Object> credentialSourceMap = new HashMap<>();
     credentialSourceMap.put("certificate", certificateMap);
 
-    IllegalArgumentException exception = assertThrows(
-        IllegalArgumentException.class,
-        () -> new IdentityPoolCredentialSource(credentialSourceMap)
-    );
-    assertTrue(exception.getMessage().contains("must either specify a certificate_config_location or use_default_certificate_config should be true"));
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> new IdentityPoolCredentialSource(credentialSourceMap));
+    assertEquals(
+        "Invalid 'certificate' configuration in credential source: Must specify either 'certificate_config_location' or set 'use_default_certificate_config' to true.",
+        exception.getMessage());
   }
 
   @Test
-  public void constructor_certificateConfig_bothFieldsSet_throws(){
+  public void constructor_certificateConfig_bothFieldsSet_throws() {
     Map<String, Object> certificateMap = new HashMap<>();
     certificateMap.put("use_default_certificate_config", true);
     certificateMap.put("certificate_config_location", "/path/to/certificate");
@@ -115,15 +105,18 @@ public class IdentityPoolCredentialsSourceTest {
     Map<String, Object> credentialSourceMap = new HashMap<>();
     credentialSourceMap.put("certificate", certificateMap);
 
-    IllegalArgumentException exception = assertThrows(
-        IllegalArgumentException.class,
-        () -> new IdentityPoolCredentialSource(credentialSourceMap)
-    );
-    assertTrue(exception.getMessage().contains("cannot specify both a certificate_config_location and use_default_certificate_config=true"));
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> new IdentityPoolCredentialSource(credentialSourceMap));
+
+    assertEquals(
+        "Invalid 'certificate' configuration in credential source: Cannot specify both 'certificate_config_location' and set 'use_default_certificate_config' to true.",
+        exception.getMessage());
   }
 
   @Test
-  public void constructor_certificateConfig_trustChainPath(){
+  public void constructor_certificateConfig_trustChainPath() {
     Map<String, Object> certificateMap = new HashMap<>();
     certificateMap.put("use_default_certificate_config", true);
     certificateMap.put("trust_chain_path", "path/to/trust/chain");
@@ -131,26 +124,29 @@ public class IdentityPoolCredentialsSourceTest {
     Map<String, Object> credentialSourceMap = new HashMap<>();
     credentialSourceMap.put("certificate", certificateMap);
 
-    IdentityPoolCredentialSource credentialSource = new IdentityPoolCredentialSource(credentialSourceMap);
-    assertEquals(IdentityPoolCredentialSourceType.CERTIFICATE, credentialSource.credentialSourceType);
+    IdentityPoolCredentialSource credentialSource =
+        new IdentityPoolCredentialSource(credentialSourceMap);
+    assertEquals(
+        IdentityPoolCredentialSourceType.CERTIFICATE, credentialSource.credentialSourceType);
     assertNotNull(credentialSource.certificateConfig);
     assertEquals("path/to/trust/chain", credentialSource.certificateConfig.getTrustChainPath());
   }
 
-
   @Test
-  public void constructor_certificateConfig_invalidType_throws(){
+  public void constructor_certificateConfig_invalidType_throws() {
     Map<String, Object> certificateMap = new HashMap<>();
     certificateMap.put("use_default_certificate_config", "invalid-type");
 
     Map<String, Object> credentialSourceMap = new HashMap<>();
     credentialSourceMap.put("certificate", certificateMap);
 
-    IllegalArgumentException exception = assertThrows(
-        IllegalArgumentException.class,
-        () -> new IdentityPoolCredentialSource(credentialSourceMap)
-    );
-    assertTrue(exception.getMessage().contains("Invalid type for 'use_default_certificate_config' in certificate configuration: expected Boolean"));
-  }
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> new IdentityPoolCredentialSource(credentialSourceMap));
 
+    assertEquals(
+        "Invalid type for 'use_default_certificate_config' in certificate configuration: expected Boolean, got String.",
+        exception.getMessage());
+  }
 }

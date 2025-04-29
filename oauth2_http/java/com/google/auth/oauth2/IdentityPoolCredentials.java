@@ -100,18 +100,18 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
         final IdentityPoolCredentialSource.CertificateConfig certConfig =
             credentialSource.certificateConfig;
 
-        // Determine the certificate path based on the configuration.
-        String explicitCertConfigPath = null;
-        if (!certConfig.useDefaultCertificateConfig()) {
-          explicitCertConfigPath = certConfig.getCertificateConfigLocation();
-          if (explicitCertConfigPath == null || explicitCertConfigPath.isEmpty()) {
-            throw new IllegalArgumentException(
-                "certificateConfigLocation must be provided when useDefaultCertificateConfig is false.");
-          }
-        }
+        // Use the provided X509Provider if available.
+        X509Provider x509Provider = builder.x509Provider;
+        if (x509Provider == null) {
+          // Determine the certificate path based on the configuration.
+          String explicitCertConfigPath =
+              certConfig.useDefaultCertificateConfig()
+                  ? null
+                  : certConfig.getCertificateConfigLocation();
 
-        // Initialize X509Provider with the explicit path (if provided).
-        X509Provider x509Provider = new X509Provider(explicitCertConfigPath);
+          // Initialize X509Provider with the explicit path (if provided).
+          x509Provider = new X509Provider(explicitCertConfigPath);
+        }
 
         // Update the transport factory to use a mTLS transport with the provided certificate.
         KeyStore mtlsKeyStore = x509Provider.getKeyStore();
@@ -129,7 +129,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       } catch (GeneralSecurityException | IOException e) {
         // Catch exceptions from X509Provider or transport creation
         throw new RuntimeException(
-            "Failed to initialize mTLS transport for IdentityPoolCredentials using X509Provider",
+            "Failed to initialize mTLS transport for IdentityPoolCredentials using X509Provider.",
             e);
       }
     } else {
@@ -184,6 +184,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
   public static class Builder extends ExternalAccountCredentials.Builder {
 
     private IdentityPoolSubjectTokenSupplier subjectTokenSupplier;
+    private X509Provider x509Provider;
 
     Builder() {}
 
@@ -192,6 +193,21 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       if (this.credentialSource == null) {
         this.subjectTokenSupplier = credentials.subjectTokenSupplier;
       }
+    }
+
+    /**
+     * Sets a custom {@link X509Provider} to manage the client certificate and private key for mTLS.
+     * If set, this provider will be used instead of the default behavior which initializes an
+     * {@code X509Provider} based on the {@code certificateConfigLocation} or default paths found in
+     * the {@code credentialSource}. This is primarily used for testing.
+     *
+     * @param x509Provider the custom X509 provider to use.
+     * @return this {@code Builder} object
+     */
+    @CanIgnoreReturnValue
+    public Builder setX509Provider(X509Provider x509Provider) {
+      this.x509Provider = x509Provider;
+      return this;
     }
 
     /**
