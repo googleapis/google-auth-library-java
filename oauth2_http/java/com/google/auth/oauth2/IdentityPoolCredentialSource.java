@@ -234,13 +234,13 @@ public class IdentityPoolCredentialSource extends ExternalAccountCredentials.Cre
           "Only one credential source type can be set: 'file', 'url', or 'certificate'.");
     }
 
-    if (credentialSourceMap.containsKey("file")) {
+    if (filePresent) {
       credentialLocation = (String) credentialSourceMap.get("file");
       credentialSourceType = IdentityPoolCredentialSourceType.FILE;
-    } else if (credentialSourceMap.containsKey("url")) {
+    } else if (urlPresent) {
       credentialLocation = (String) credentialSourceMap.get("url");
       credentialSourceType = IdentityPoolCredentialSourceType.URL;
-    } else if (credentialSourceMap.containsKey("certificate")) {
+    } else if (certificatePresent) {
       credentialSourceType = IdentityPoolCredentialSourceType.CERTIFICATE;
       this.certificateConfig = getCertificateConfig(credentialSourceMap);
     } else {
