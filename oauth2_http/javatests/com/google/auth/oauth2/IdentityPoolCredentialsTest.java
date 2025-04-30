@@ -1105,7 +1105,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     RuntimeException exception = assertThrows(RuntimeException.class, builder::build);
 
     assertEquals(
-        "Failed to initialize mTLS transport for IdentityPoolCredentials using X509Provider.",
+        "Failed to initialize IdentityPoolCredentials from certificate source due to an I/O error.",
         exception.getMessage());
   }
 

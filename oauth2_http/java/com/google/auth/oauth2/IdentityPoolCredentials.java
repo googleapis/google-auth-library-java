@@ -31,14 +31,13 @@
 
 package com.google.auth.oauth2;
 
-import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.mtls.MtlsHttpTransportFactory;
 import com.google.auth.mtls.X509Provider;
 import com.google.auth.oauth2.IdentityPoolCredentialSource.IdentityPoolCredentialSourceType;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -53,7 +52,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   static final String FILE_METRICS_HEADER_VALUE = "file";
   static final String URL_METRICS_HEADER_VALUE = "url";
-  static final String CERTIFICATE_METRICS_HEADER_VALUE = "certificate"; // Added constant
+  static final String CERTIFICATE_METRICS_HEADER_VALUE = "certificate";
 
   private static final long serialVersionUID = 2471046175477275881L;
   private final IdentityPoolSubjectTokenSupplier subjectTokenSupplier;
@@ -94,44 +93,8 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       this.metricsHeaderValue = URL_METRICS_HEADER_VALUE;
     } else if (credentialSource.credentialSourceType
         == IdentityPoolCredentialSourceType.CERTIFICATE) {
-      assert credentialSource.certificateConfig != null;
-
-      try {
-        final IdentityPoolCredentialSource.CertificateConfig certConfig =
-            credentialSource.certificateConfig;
-
-        // Use the provided X509Provider if available.
-        X509Provider x509Provider = builder.x509Provider;
-        if (x509Provider == null) {
-          // Determine the certificate path based on the configuration.
-          String explicitCertConfigPath =
-              certConfig.useDefaultCertificateConfig()
-                  ? null
-                  : certConfig.getCertificateConfigLocation();
-
-          // Initialize X509Provider with the explicit path (if provided).
-          x509Provider = new X509Provider(explicitCertConfigPath);
-        }
-
-        // Update the transport factory to use a mTLS transport with the provided certificate.
-        KeyStore mtlsKeyStore = x509Provider.getKeyStore();
-        final NetHttpTransport mtlsTransport =
-            new NetHttpTransport.Builder().trustCertificates(null, mtlsKeyStore, "").build();
-        this.transportFactory = () -> mtlsTransport;
-
-        // Initialize the subject token supplier with the certificate path
-        credentialSource.credentialLocation = x509Provider.getCertificatePath();
-        this.subjectTokenSupplier =
-            new CertificateIdentityPoolSubjectTokenSupplier(credentialSource);
-
-        this.metricsHeaderValue = CERTIFICATE_METRICS_HEADER_VALUE;
-
-      } catch (GeneralSecurityException | IOException e) {
-        // Catch exceptions from X509Provider or transport creation
-        throw new RuntimeException(
-            "Failed to initialize mTLS transport for IdentityPoolCredentials using X509Provider.",
-            e);
-      }
+      this.subjectTokenSupplier = createCertificateSubjectTokenSupplier(builder, credentialSource);
+      this.metricsHeaderValue = CERTIFICATE_METRICS_HEADER_VALUE;
     } else {
       throw new IllegalArgumentException("Source type not supported.");
     }
@@ -181,6 +144,45 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
     return new Builder(identityPoolCredentials);
   }
 
+  private IdentityPoolSubjectTokenSupplier createCertificateSubjectTokenSupplier(
+      Builder builder, IdentityPoolCredentialSource credentialSource) {
+    try {
+      // Configure the mTLS transport with the x509 keystore.
+      X509Provider x509Provider = getX509Provider(builder, credentialSource);
+      KeyStore mtlsKeyStore = x509Provider.getKeyStore();
+      this.transportFactory = new MtlsHttpTransportFactory(mtlsKeyStore);
+
+      // Initialize the subject token supplier with the certificate path.
+      credentialSource.credentialLocation = x509Provider.getCertificatePath();
+      return new CertificateIdentityPoolSubjectTokenSupplier(credentialSource);
+
+    } catch (IOException e) {
+      throw new RuntimeException(
+          // Wrap IOException in RuntimeException because constructors cannot throw checked
+          // exceptions.
+          "Failed to initialize IdentityPoolCredentials from certificate source due to an I/O error.",
+          e);
+    }
+  }
+
+  private X509Provider getX509Provider(
+      Builder builder, IdentityPoolCredentialSource credentialSource) {
+    final IdentityPoolCredentialSource.CertificateConfig certConfig =
+        credentialSource.certificateConfig;
+
+    // Use the provided X509Provider if available, otherwise initialize a default one.
+    X509Provider x509Provider = builder.x509Provider;
+    if (x509Provider == null) {
+      // Determine the certificate path based on the configuration.
+      String explicitCertConfigPath =
+          certConfig.useDefaultCertificateConfig()
+              ? null
+              : certConfig.getCertificateConfigLocation();
+      x509Provider = new X509Provider(explicitCertConfigPath);
+    }
+    return x509Provider;
+  }
+
   public static class Builder extends ExternalAccountCredentials.Builder {
 
     private IdentityPoolSubjectTokenSupplier subjectTokenSupplier;
@@ -205,7 +207,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
      * @return this {@code Builder} object
      */
     @CanIgnoreReturnValue
-    public Builder setX509Provider(X509Provider x509Provider) {
+    Builder setX509Provider(X509Provider x509Provider) {
       this.x509Provider = x509Provider;
       return this;
     }
