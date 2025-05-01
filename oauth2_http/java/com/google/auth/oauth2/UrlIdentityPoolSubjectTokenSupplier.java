@@ -70,7 +70,7 @@ class UrlIdentityPoolSubjectTokenSupplier implements IdentityPoolSubjectTokenSup
         transportFactory
             .create()
             .createRequestFactory()
-            .buildGetRequest(new GenericUrl(credentialSource.credentialLocation));
+            .buildGetRequest(new GenericUrl(credentialSource.getCredentialLocation()));
     request.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
 
     if (credentialSource.hasHeaders()) {

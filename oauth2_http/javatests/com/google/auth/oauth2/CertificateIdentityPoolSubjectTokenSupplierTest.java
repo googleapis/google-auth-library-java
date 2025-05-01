@@ -32,6 +32,7 @@
 package com.google.auth.oauth2;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.when;
 
 import com.google.auth.oauth2.IdentityPoolCredentialSource.CertificateConfig;
 import com.google.gson.Gson;
@@ -40,8 +41,11 @@ import com.google.gson.JsonPrimitive;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -49,7 +53,6 @@ import java.util.Base64;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mock;
@@ -61,7 +64,6 @@ import org.mockito.junit.MockitoRule;
 public class CertificateIdentityPoolSubjectTokenSupplierTest {
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
-  @Rule public TemporaryFolder tempFolder = new TemporaryFolder();
 
   @Mock private IdentityPoolCredentialSource mockCredentialSource;
   @Mock private CertificateConfig mockCertificateConfig;
@@ -70,40 +72,33 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
   private CertificateIdentityPoolSubjectTokenSupplier supplier;
   private static final Gson GSON = new Gson();
 
-  // Certificate data from X509ProviderTest
-  private static final String TEST_CERT_PEM =
-      "-----BEGIN CERTIFICATE-----\n"
-          + "MIICGzCCAYSgAwIBAgIIWrt6xtmHPs4wDQYJKoZIhvcNAQEFBQAwMzExMC8GA1UE\n"
-          + "AxMoMTAwOTEyMDcyNjg3OC5hcHBzLmdvb2dsZXVzZXJjb250ZW50LmNvbTAeFw0x\n"
-          + "MjEyMDExNjEwNDRaFw0yMjExMjkxNjEwNDRaMDMxMTAvBgNVBAMTKDEwMDkxMjA3\n"
-          + "MjY4NzguYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20wgZ8wDQYJKoZIhvcNAQEB\n"
-          + "BQADgY0AMIGJAoGBAL1SdY8jTUVU7O4/XrZLYTw0ON1lV6MQRGajFDFCqD2Fd9tQ\n"
-          + "GLW8Iftx9wfXe1zuaehJSgLcyCxazfyJoN3RiONBihBqWY6d3lQKqkgsRTNZkdFJ\n"
-          + "Wdzl/6CxhK9sojh2p0r3tydtv9iwq5fuuWIvtODtT98EgphhncQAqkKoF3zVAgMB\n"
-          + "AAGjODA2MAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgeAMBYGA1UdJQEB/wQM\n"
-          + "MAoGCCsGAQUFBwMCMA0GCSqGSIb3DQEBBQUAA4GBAD8XQEqzGePa9VrvtEGpf+R4\n"
-          + "fkxKbcYAzqYq202nKu0kfjhIYkYSBj6gi348YaxE64yu60TVl42l5HThmswUheW4\n"
-          + "uQIaq36JvwvsDP5Zoj5BgiNSnDAFQp+jJFBRUA5vooJKgKgMDf/r/DCOsbO6VJF1\n"
-          + "kWwa9n19NFiV0z3m6isj\n"
-          + "-----END CERTIFICATE-----\n";
-
-  private static final byte[] TEST_CERT_BYTES = TEST_CERT_PEM.getBytes(StandardCharsets.UTF_8);
   private static final byte[] INVALID_CERT_BYTES =
       "invalid certificate data".getBytes(StandardCharsets.UTF_8);
 
+  private byte[] testCertBytesFromFile;
+
   @Before
-  public void setUp() throws IOException {
-    File testCertFile = tempFolder.newFile("certificate.pem");
-    Files.write(testCertFile.toPath(), TEST_CERT_BYTES);
-    mockCredentialSource.certificateConfig = mockCertificateConfig;
-    mockCredentialSource.credentialLocation = testCertFile.getAbsolutePath();
+  public void setUp() throws IOException, URISyntaxException {
+    ClassLoader classLoader = getClass().getClassLoader();
+    URL leafCertUrl = classLoader.getResource("x509_leaf_certificate.pem");
+    assertNotNull("Test leaf certificate file not found!", leafCertUrl);
+    File testCertFile = new File(leafCertUrl.getFile());
+
+    when(mockCertificateConfig.useDefaultCertificateConfig()).thenReturn(false);
+    when(mockCertificateConfig.getCertificateConfigLocation())
+        .thenReturn(testCertFile.getAbsolutePath());
+
+    when(mockCredentialSource.getCertificateConfig()).thenReturn(mockCertificateConfig);
+    when(mockCredentialSource.getCredentialLocation()).thenReturn(testCertFile.getAbsolutePath());
+
     supplier = new CertificateIdentityPoolSubjectTokenSupplier(mockCredentialSource);
+    testCertBytesFromFile = Files.readAllBytes(Paths.get(leafCertUrl.toURI()));
   }
 
   @Test
   public void parseCertificate_validData_returnsCertificate() throws Exception {
     X509Certificate cert =
-        CertificateIdentityPoolSubjectTokenSupplier.parseCertificate(TEST_CERT_BYTES);
+        CertificateIdentityPoolSubjectTokenSupplier.parseCertificate(testCertBytesFromFile);
     assertNotNull(cert);
   }
 
@@ -136,10 +131,10 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
 
   @Test
   public void getSubjectToken_success() throws Exception {
-    // Calculate expected result
+    // Calculate expected result based on the file content.
     CertificateFactory cf = CertificateFactory.getInstance("X.509");
     X509Certificate expectedCert =
-        (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(TEST_CERT_BYTES));
+        (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(testCertBytesFromFile));
     String expectedEncodedDer = Base64.getEncoder().encodeToString(expectedCert.getEncoded());
     JsonArray expectedJsonArray = new JsonArray();
     expectedJsonArray.add(new JsonPrimitive(expectedEncodedDer));

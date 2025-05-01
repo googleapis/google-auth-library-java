@@ -153,7 +153,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       this.transportFactory = new MtlsHttpTransportFactory(mtlsKeyStore);
 
       // Initialize the subject token supplier with the certificate path.
-      credentialSource.credentialLocation = x509Provider.getCertificatePath();
+      credentialSource.setCredentialLocation(x509Provider.getCertificatePath());
       return new CertificateIdentityPoolSubjectTokenSupplier(credentialSource);
 
     } catch (IOException e) {
@@ -168,7 +168,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
   private X509Provider getX509Provider(
       Builder builder, IdentityPoolCredentialSource credentialSource) {
     final IdentityPoolCredentialSource.CertificateConfig certConfig =
-        credentialSource.certificateConfig;
+        credentialSource.getCertificateConfig();
 
     // Use the provided X509Provider if available, otherwise initialize a default one.
     X509Provider x509Provider = builder.x509Provider;

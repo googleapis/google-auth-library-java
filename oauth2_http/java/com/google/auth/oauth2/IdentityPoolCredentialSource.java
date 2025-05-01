@@ -47,10 +47,41 @@ public class IdentityPoolCredentialSource extends ExternalAccountCredentials.Cre
   private static final long serialVersionUID = -745855247050085694L;
   IdentityPoolCredentialSourceType credentialSourceType;
   CredentialFormatType credentialFormatType;
-  String credentialLocation;
+  private String credentialLocation;
   @Nullable String subjectTokenFieldName;
   @Nullable Map<String, String> headers;
-  @Nullable CertificateConfig certificateConfig;
+  @Nullable private CertificateConfig certificateConfig;
+
+  /**
+   * Gets the location of the credential source. This could be a file path or a URL, depending on
+   * the {@link IdentityPoolCredentialSourceType}.
+   *
+   * @return The location of the credential source.
+   */
+  public String getCredentialLocation() {
+    return credentialLocation;
+  }
+
+  /**
+   * Sets the location of the credential source. This method should be used to update the credential
+   * location.
+   *
+   * @param credentialLocation The new location of the credential source.
+   */
+  public void setCredentialLocation(String credentialLocation) {
+    this.credentialLocation = credentialLocation;
+  }
+
+  /**
+   * Gets the configuration for X.509-based workload credentials (mTLS), if configured.
+   *
+   * @return The {@link CertificateConfig} object, or {@code null} if not configured for
+   *     certificate-based credentials.
+   */
+  @Nullable
+  public CertificateConfig getCertificateConfig() {
+    return certificateConfig;
+  }
 
   /**
    * Extracts and configures the {@link CertificateConfig} from the provided credential source.
@@ -60,7 +91,8 @@ public class IdentityPoolCredentialSource extends ExternalAccountCredentials.Cre
    * @throws IllegalArgumentException if the 'certificate' entry is not a Map or if required fields
    *     within the certificate configuration have invalid types.
    */
-  private CertificateConfig getCertificateConfig(Map<String, Object> credentialSourceMap) {
+  private CertificateConfig certificateConfigFromSourceMap(
+      Map<String, Object> credentialSourceMap) {
     Object certValue = credentialSourceMap.get("certificate");
     if (!(certValue instanceof Map)) {
       throw new IllegalArgumentException(
@@ -242,7 +274,7 @@ public class IdentityPoolCredentialSource extends ExternalAccountCredentials.Cre
       credentialSourceType = IdentityPoolCredentialSourceType.URL;
     } else if (certificatePresent) {
       credentialSourceType = IdentityPoolCredentialSourceType.CERTIFICATE;
-      this.certificateConfig = getCertificateConfig(credentialSourceMap);
+      this.certificateConfig = certificateConfigFromSourceMap(credentialSourceMap);
     } else {
       throw new IllegalArgumentException(
           "Missing credential source file location, URL, or certificate. At least one must be specified.");
