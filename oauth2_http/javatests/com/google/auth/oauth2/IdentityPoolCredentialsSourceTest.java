@@ -56,10 +56,11 @@ public class IdentityPoolCredentialsSourceTest {
         new IdentityPoolCredentialSource(credentialSourceMap);
     assertEquals(
         IdentityPoolCredentialSourceType.CERTIFICATE, credentialSource.credentialSourceType);
-    assertNotNull(credentialSource.certificateConfig);
-    assertFalse(credentialSource.certificateConfig.useDefaultCertificateConfig());
+    assertNotNull(credentialSource.getCertificateConfig());
+    assertFalse(credentialSource.getCertificateConfig().useDefaultCertificateConfig());
     assertEquals(
-        "/path/to/certificate", credentialSource.certificateConfig.getCertificateConfigLocation());
+        "/path/to/certificate",
+        credentialSource.getCertificateConfig().getCertificateConfigLocation());
   }
 
   @Test
@@ -74,8 +75,8 @@ public class IdentityPoolCredentialsSourceTest {
         new IdentityPoolCredentialSource(credentialSourceMap);
     assertEquals(
         IdentityPoolCredentialSourceType.CERTIFICATE, credentialSource.credentialSourceType);
-    assertNotNull(credentialSource.certificateConfig);
-    assertTrue(credentialSource.certificateConfig.useDefaultCertificateConfig());
+    assertNotNull(credentialSource.getCertificateConfig());
+    assertTrue(credentialSource.getCertificateConfig().useDefaultCertificateConfig());
   }
 
   @Test
@@ -128,8 +129,9 @@ public class IdentityPoolCredentialsSourceTest {
         new IdentityPoolCredentialSource(credentialSourceMap);
     assertEquals(
         IdentityPoolCredentialSourceType.CERTIFICATE, credentialSource.credentialSourceType);
-    assertNotNull(credentialSource.certificateConfig);
-    assertEquals("path/to/trust/chain", credentialSource.certificateConfig.getTrustChainPath());
+    assertNotNull(credentialSource.getCertificateConfig());
+    assertEquals(
+        "path/to/trust/chain", credentialSource.getCertificateConfig().getTrustChainPath());
   }
 
   @Test
