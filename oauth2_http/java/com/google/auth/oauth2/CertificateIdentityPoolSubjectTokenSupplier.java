@@ -79,7 +79,8 @@ public class CertificateIdentityPoolSubjectTokenSupplier
   @VisibleForTesting
   static X509Certificate parseCertificate(byte[] certData) throws CertificateException {
     if (certData == null || certData.length == 0) {
-      throw new IllegalArgumentException("Invalid certificate data: empty or null input");
+      throw new IllegalArgumentException(
+          "Invalid certificate data: Certificate file is empty or null.");
     }
 
     try {
@@ -98,6 +99,17 @@ public class CertificateIdentityPoolSubjectTokenSupplier
     return Base64.getEncoder().encodeToString(certificate.getEncoded());
   }
 
+  /**
+   * Retrieves the X509 subject token. This method loads the leaf certificate specified by the
+   * {@code credentialSource.credentialLocation}. The subject token is constructed as a JSON array
+   * containing the base64-encoded (DER format) leaf certificate. This JSON array serves as the
+   * subject token for mTLS authentication.
+   *
+   * @param context The external account supplier context. This parameter is currently not used in
+   *     this implementation.
+   * @return The JSON string representation of the base64-encoded leaf certificate in a JSON array.
+   * @throws IOException If an I/O error occurs while reading the certificate file.
+   */
   @Override
   public String getSubjectToken(ExternalAccountSupplierContext context) throws IOException {
     try {

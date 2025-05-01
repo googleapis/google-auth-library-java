@@ -122,15 +122,14 @@ public class X509Provider {
     if (loadedConfig == null) {
       loadedConfig = getWorkloadCertificateConfiguration();
     }
-    WorkloadCertificateConfiguration workloadCertConfig = loadedConfig;
 
     InputStream certStream = null;
     InputStream privateKeyStream = null;
     SequenceInputStream certAndPrivateKeyStream = null;
     try {
       // Read the certificate and private key file paths into separate streams.
-      File certFile = new File(workloadCertConfig.getCertPath());
-      File privateKeyFile = new File(workloadCertConfig.getPrivateKeyPath());
+      File certFile = new File(loadedConfig.getCertPath());
+      File privateKeyFile = new File(loadedConfig.getPrivateKeyPath());
       certStream = createInputStream(certFile);
       privateKeyStream = createInputStream(privateKeyFile);
 

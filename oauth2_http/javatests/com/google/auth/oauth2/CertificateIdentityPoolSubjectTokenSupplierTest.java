@@ -108,7 +108,8 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
         assertThrows(
             IllegalArgumentException.class,
             () -> CertificateIdentityPoolSubjectTokenSupplier.parseCertificate(new byte[0]));
-    assertEquals("Invalid certificate data: empty or null input", exception.getMessage());
+    assertEquals(
+        "Invalid certificate data: Certificate file is empty or null.", exception.getMessage());
   }
 
   @Test
@@ -117,7 +118,8 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
         assertThrows(
             IllegalArgumentException.class,
             () -> CertificateIdentityPoolSubjectTokenSupplier.parseCertificate(null));
-    assertEquals("Invalid certificate data: empty or null input", exception.getMessage());
+    assertEquals(
+        "Invalid certificate data: Certificate file is empty or null.", exception.getMessage());
   }
 
   @Test

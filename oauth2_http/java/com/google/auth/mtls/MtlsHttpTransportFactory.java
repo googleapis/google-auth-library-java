@@ -41,6 +41,9 @@ import java.util.Objects;
  * An HttpTransportFactory that creates {@link NetHttpTransport} instances configured for mTLS
  * (mutual TLS) using a specific {@link KeyStore} containing the client's certificate and private
  * key.
+ *
+ * <p><b>Warning:</b> This class is considered internal and is not intended for direct use by
+ * library consumers. Its API and behavior may change without notice.
  */
 public class MtlsHttpTransportFactory implements HttpTransportFactory {
   private final KeyStore mtlsKeyStore;
