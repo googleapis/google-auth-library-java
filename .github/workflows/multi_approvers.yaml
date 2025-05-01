@@ -32,5 +32,5 @@ jobs:
       - name: 'Multi-approvers'
         uses: 'abcxyz/actions/.github/actions/multi-approvers@986a6a133d0ffb38ab46a27c0777749a6735791a'
         with:
-          team: 'multi-approvers'
+          team: 'googlers'
           token: '${{ secrets.MULTI_APPROVERS_TOKEN }}'
