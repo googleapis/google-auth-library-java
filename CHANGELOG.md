@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.34.0](https://github.com/googleapis/google-auth-library-java/compare/v1.33.1...v1.34.0) (2025-04-29)
+
+
+### Features
+
+* Implement X509 certificate provider ([#1722](https://github.com/googleapis/google-auth-library-java/issues/1722)) ([4340684](https://github.com/googleapis/google-auth-library-java/commit/4340684fe29c9e9bffa90e88d0b1746f19b623ab))
+* Next release from main branch is 1.34.0 ([#1698](https://github.com/googleapis/google-auth-library-java/issues/1698)) ([fe43815](https://github.com/googleapis/google-auth-library-java/commit/fe4381513db1340190c4309a53c6265718682dde))
+* Next release from main branch is 1.34.0 ([#1702](https://github.com/googleapis/google-auth-library-java/issues/1702)) ([4507cf9](https://github.com/googleapis/google-auth-library-java/commit/4507cf9e17e7ff40cf142056d3929c87f5742dd1))
+
+
+### Bug Fixes
+
+* Do not add padding in Client-Side CAB tokens. ([#1728](https://github.com/googleapis/google-auth-library-java/issues/1728)) ([8a75ccd](https://github.com/googleapis/google-auth-library-java/commit/8a75ccd1c09191abd8ebf463bc41810a38e185f5))
+
 ## [1.33.1](https://github.com/googleapis/google-auth-library-java/compare/v1.33.0...v1.33.1) (2025-02-25)
 
 
