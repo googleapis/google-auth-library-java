@@ -35,9 +35,6 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
 import com.google.auth.oauth2.IdentityPoolCredentialSource.CertificateConfig;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonPrimitive;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -70,7 +67,6 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
   @Mock private ExternalAccountSupplierContext mockContext;
 
   private CertificateIdentityPoolSubjectTokenSupplier supplier;
-  private static final Gson GSON = new Gson();
 
   private static final byte[] INVALID_CERT_BYTES =
       "invalid certificate data".getBytes(StandardCharsets.UTF_8);
@@ -137,10 +133,9 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
     CertificateFactory cf = CertificateFactory.getInstance("X.509");
     X509Certificate expectedCert =
         (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(testCertBytesFromFile));
-    String expectedEncodedDer = Base64.getEncoder().encodeToString(expectedCert.getEncoded());
-    JsonArray expectedJsonArray = new JsonArray();
-    expectedJsonArray.add(new JsonPrimitive(expectedEncodedDer));
-    String expectedSubjectToken = GSON.toJson(expectedJsonArray);
+    String expectedEncodedLeaf = Base64.getEncoder().encodeToString(expectedCert.getEncoded());
+    String[] expectedCertChainArray = new String[] {expectedEncodedLeaf};
+    String expectedSubjectToken = OAuth2Utils.JSON_FACTORY.toString(expectedCertChainArray);
 
     // Execute
     String actualSubjectToken = supplier.getSubjectToken(mockContext);
