@@ -46,8 +46,8 @@ import java.nio.file.LinkOption;
 import java.nio.file.Paths;
 
 /**
- * Internal provider for retrieving subject tokens for {@link IdentityPoolCredentials} to exchange
- * for GCP access tokens via a local file.
+ * Internal provider for retrieving the subject tokens for {@link IdentityPoolCredentials} to
+ * exchange for GCP access tokens via a local file.
  */
 class FileIdentityPoolSubjectTokenSupplier implements IdentityPoolSubjectTokenSupplier {
 

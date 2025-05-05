@@ -52,7 +52,6 @@ public class X509Provider {
   static final String CERTIFICATE_CONFIGURATION_ENV_VARIABLE = "GOOGLE_API_CERTIFICATE_CONFIG";
   static final String WELL_KNOWN_CERTIFICATE_CONFIG_FILE = "certificate_config.json";
   static final String CLOUDSDK_CONFIG_DIRECTORY = "gcloud";
-  private WorkloadCertificateConfiguration loadedConfig;
 
   private final String certConfigPathOverride;
 
@@ -90,12 +89,7 @@ public class X509Provider {
    * @throws CertificateSourceUnavailableException if the configuration file is not found.
    */
   public String getCertificatePath() throws IOException {
-    if (loadedConfig == null) {
-      // Attempt to load the configuration. This call might throw IOException or
-      // CertificateSourceUnavailableException if loading fails.
-      loadedConfig = getWorkloadCertificateConfiguration();
-    }
-    String certPath = loadedConfig.getCertPath();
+    String certPath = getWorkloadCertificateConfiguration().getCertPath();
     if (Strings.isNullOrEmpty(certPath)) {
       // Ensure the loaded configuration actually contains the required path.
       throw new CertificateSourceUnavailableException(
@@ -119,17 +113,14 @@ public class X509Provider {
    * @throws IOException if there is an error retrieving the certificate configuration.
    */
   public KeyStore getKeyStore() throws IOException {
-    if (loadedConfig == null) {
-      loadedConfig = getWorkloadCertificateConfiguration();
-    }
-
+    WorkloadCertificateConfiguration workloadCertConfig = getWorkloadCertificateConfiguration();
     InputStream certStream = null;
     InputStream privateKeyStream = null;
     SequenceInputStream certAndPrivateKeyStream = null;
     try {
       // Read the certificate and private key file paths into separate streams.
-      File certFile = new File(loadedConfig.getCertPath());
-      File privateKeyFile = new File(loadedConfig.getPrivateKeyPath());
+      File certFile = new File(workloadCertConfig.getCertPath());
+      File privateKeyFile = new File(workloadCertConfig.getPrivateKeyPath());
       certStream = createInputStream(certFile);
       privateKeyStream = createInputStream(privateKeyFile);
 

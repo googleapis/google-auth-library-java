@@ -93,7 +93,16 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       this.metricsHeaderValue = URL_METRICS_HEADER_VALUE;
     } else if (credentialSource.credentialSourceType
         == IdentityPoolCredentialSourceType.CERTIFICATE) {
-      this.subjectTokenSupplier = createCertificateSubjectTokenSupplier(builder, credentialSource);
+      try {
+        this.subjectTokenSupplier =
+            createCertificateSubjectTokenSupplier(builder, credentialSource);
+      } catch (IOException e) {
+        throw new RuntimeException(
+            // Wrap IOException in RuntimeException because constructors cannot throw checked
+            // exceptions.
+            "Failed to initialize IdentityPoolCredentials from certificate source due to an I/O error.",
+            e);
+      }
       this.metricsHeaderValue = CERTIFICATE_METRICS_HEADER_VALUE;
     } else {
       throw new IllegalArgumentException("Source type not supported.");
@@ -145,24 +154,15 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
   }
 
   private IdentityPoolSubjectTokenSupplier createCertificateSubjectTokenSupplier(
-      Builder builder, IdentityPoolCredentialSource credentialSource) {
-    try {
-      // Configure the mTLS transport with the x509 keystore.
-      X509Provider x509Provider = getX509Provider(builder, credentialSource);
-      KeyStore mtlsKeyStore = x509Provider.getKeyStore();
-      this.transportFactory = new MtlsHttpTransportFactory(mtlsKeyStore);
+      Builder builder, IdentityPoolCredentialSource credentialSource) throws IOException {
+    // Configure the mTLS transport with the x509 keystore.
+    X509Provider x509Provider = getX509Provider(builder, credentialSource);
+    KeyStore mtlsKeyStore = x509Provider.getKeyStore();
+    this.transportFactory = new MtlsHttpTransportFactory(mtlsKeyStore);
 
-      // Initialize the subject token supplier with the certificate path.
-      credentialSource.setCredentialLocation(x509Provider.getCertificatePath());
-      return new CertificateIdentityPoolSubjectTokenSupplier(credentialSource);
-
-    } catch (IOException e) {
-      throw new RuntimeException(
-          // Wrap IOException in RuntimeException because constructors cannot throw checked
-          // exceptions.
-          "Failed to initialize IdentityPoolCredentials from certificate source due to an I/O error.",
-          e);
-    }
+    // Initialize the subject token supplier with the certificate path.
+    credentialSource.setCredentialLocation(x509Provider.getCertificatePath());
+    return new CertificateIdentityPoolSubjectTokenSupplier(credentialSource);
   }
 
   private X509Provider getX509Provider(

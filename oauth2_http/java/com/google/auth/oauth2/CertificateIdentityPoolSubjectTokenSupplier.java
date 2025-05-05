@@ -34,9 +34,6 @@ package com.google.auth.oauth2;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonPrimitive;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,15 +46,14 @@ import java.security.cert.X509Certificate;
 import java.util.Base64;
 
 /**
- * Provider for retrieving subject tokens for {@link IdentityPoolCredentials} by reading an X.509
- * certificate from the filesystem. The certificate file (e.g., PEM or DER encoded) is read, the
- * leaf certificate is base64-encoded (DER format), wrapped in a JSON array, and used as the subject
- * token for STS exchange.
+ * Provider for retrieving the subject tokens for {@link IdentityPoolCredentials} by reading an
+ * X.509 certificate from the filesystem. The certificate file (e.g., PEM or DER encoded) is read,
+ * the leaf certificate is base64-encoded (DER format), wrapped in a JSON array, and used as the
+ * subject token for STS exchange.
  */
 public class CertificateIdentityPoolSubjectTokenSupplier
     implements IdentityPoolSubjectTokenSupplier {
 
-  private static final Gson GSON = new Gson();
   private final IdentityPoolCredentialSource credentialSource;
 
   CertificateIdentityPoolSubjectTokenSupplier(IdentityPoolCredentialSource credentialSource) {
@@ -118,10 +114,10 @@ public class CertificateIdentityPoolSubjectTokenSupplier
       X509Certificate leafCert = loadLeafCertificate(credentialSource.getCredentialLocation());
       String encodedLeafCert = encodeCert(leafCert);
 
-      JsonArray certChain = new JsonArray();
-      certChain.add(new JsonPrimitive(encodedLeafCert));
+      java.util.List<String> certChain = new java.util.ArrayList<>();
+      certChain.add(encodedLeafCert);
 
-      return GSON.toJson(certChain);
+      return OAuth2Utils.JSON_FACTORY.toString(certChain);
     } catch (CertificateException e) {
       // Catch CertificateException to provide a more specific error message including
       // the path of the file that failed to parse, and re-throw as IOException

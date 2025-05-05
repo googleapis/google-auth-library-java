@@ -1088,7 +1088,8 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
   public void build_withDefaultCertificate_throwsOnTransportInitFailure() {
     // Setup credential source to use default certificate config.
     Map<String, Object> certificateMap = new HashMap<>();
-    certificateMap.put("use_default_certificate_config", true);
+    certificateMap.put("use_default_certificate_config", false);
+    certificateMap.put("certificate_config_location", "/non/existing/path/to/certificate.json");
     Map<String, Object> credentialSourceMap = new HashMap<>();
     credentialSourceMap.put("certificate", certificateMap);
     IdentityPoolCredentialSource credentialSource =
