@@ -37,7 +37,6 @@ import com.google.auth.oauth2.IdentityPoolCredentialSource.CredentialFormatType;
 import com.google.common.io.CharStreams;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -47,8 +46,8 @@ import java.nio.file.LinkOption;
 import java.nio.file.Paths;
 
 /**
- * Internal provider for retrieving subject tokens for {@link IdentityPoolCredentials} to exchange
- * for GCP access tokens via a local file.
+ * Internal provider for retrieving the subject tokens for {@link IdentityPoolCredentials} to
+ * exchange for GCP access tokens via a local file.
  */
 class FileIdentityPoolSubjectTokenSupplier implements IdentityPoolSubjectTokenSupplier {
 
@@ -67,14 +66,15 @@ class FileIdentityPoolSubjectTokenSupplier implements IdentityPoolSubjectTokenSu
 
   @Override
   public String getSubjectToken(ExternalAccountSupplierContext context) throws IOException {
-    String credentialFilePath = this.credentialSource.credentialLocation;
+    String credentialFilePath = this.credentialSource.getCredentialLocation();
     if (!Files.exists(Paths.get(credentialFilePath), LinkOption.NOFOLLOW_LINKS)) {
       throw new IOException(
           String.format(
               "Invalid credential location. The file at %s does not exist.", credentialFilePath));
     }
     try {
-      return parseToken(new FileInputStream(new File(credentialFilePath)), this.credentialSource);
+      return parseToken(
+          Files.newInputStream(new File(credentialFilePath).toPath()), this.credentialSource);
     } catch (IOException e) {
       throw new IOException(
           "Error when attempting to read the subject token from the credential file.", e);

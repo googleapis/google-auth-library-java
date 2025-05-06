@@ -36,8 +36,8 @@ import java.io.Serializable;
 
 @FunctionalInterface
 /**
- * Provider for retrieving subject tokens for {@Link IdentityPoolCredentials} to exchange for GCP
- * access tokens.
+ * Provider for retrieving the subject tokens for {@Link IdentityPoolCredentials} to exchange for
+ * GCP access tokens.
  */
 public interface IdentityPoolSubjectTokenSupplier extends Serializable {
 

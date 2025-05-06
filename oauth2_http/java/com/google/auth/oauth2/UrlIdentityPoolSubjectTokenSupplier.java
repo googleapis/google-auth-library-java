@@ -42,8 +42,8 @@ import com.google.auth.http.HttpTransportFactory;
 import java.io.IOException;
 
 /**
- * Provider for retrieving subject tokens for {@link IdentityPoolCredentials} to exchange for GCP
- * access tokens. The subject token is retrieved by calling a URL that returns the token.
+ * Provider for retrieving the subject tokens for {@link IdentityPoolCredentials} to exchange for
+ * GCP access tokens. The subject token is retrieved by calling a URL that returns the token.
  */
 class UrlIdentityPoolSubjectTokenSupplier implements IdentityPoolSubjectTokenSupplier {
 
@@ -70,7 +70,7 @@ class UrlIdentityPoolSubjectTokenSupplier implements IdentityPoolSubjectTokenSup
         transportFactory
             .create()
             .createRequestFactory()
-            .buildGetRequest(new GenericUrl(credentialSource.credentialLocation));
+            .buildGetRequest(new GenericUrl(credentialSource.getCredentialLocation()));
     request.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
 
     if (credentialSource.hasHeaders()) {

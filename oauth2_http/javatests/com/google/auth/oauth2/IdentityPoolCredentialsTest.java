@@ -35,17 +35,24 @@ import static com.google.auth.Credentials.GOOGLE_DEFAULT_UNIVERSE;
 import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
 import static com.google.auth.oauth2.OAuth2Utils.JSON_FACTORY;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.mtls.X509Provider;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -53,56 +60,21 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.mockito.junit.MockitoJUnitRunner;
 
 /** Tests for {@link IdentityPoolCredentials}. */
-@RunWith(JUnit4.class)
+@RunWith(MockitoJUnitRunner.class)
 public class IdentityPoolCredentialsTest extends BaseSerializationTest {
 
   private static final String STS_URL = "https://sts.googleapis.com/v1/token";
 
-  private static final Map<String, Object> FILE_CREDENTIAL_SOURCE_MAP =
-      new HashMap<String, Object>() {
-        {
-          put("file", "file");
-        }
-      };
-
-  private static final IdentityPoolCredentialSource FILE_CREDENTIAL_SOURCE =
-      new IdentityPoolCredentialSource(FILE_CREDENTIAL_SOURCE_MAP);
-
-  private static final IdentityPoolCredentials FILE_SOURCED_CREDENTIAL =
-      IdentityPoolCredentials.newBuilder()
-          .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-          .setAudience(
-              "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
-          .setSubjectTokenType("subjectTokenType")
-          .setTokenUrl(STS_URL)
-          .setTokenInfoUrl("tokenInfoUrl")
-          .setCredentialSource(FILE_CREDENTIAL_SOURCE)
-          .build();
-
   private static final IdentityPoolSubjectTokenSupplier testProvider =
       (ExternalAccountSupplierContext context) -> "testSubjectToken";
-
-  private static final ExternalAccountSupplierContext emptyContext =
-      ExternalAccountSupplierContext.newBuilder().setAudience("").setSubjectTokenType("").build();
-
-  static class MockExternalAccountCredentialsTransportFactory implements HttpTransportFactory {
-
-    MockExternalAccountCredentialsTransport transport =
-        new MockExternalAccountCredentialsTransport();
-
-    @Override
-    public HttpTransport create() {
-      return transport;
-    }
-  }
 
   @Test
   public void createdScoped_clonedCredentialWithAddedScopes() throws IOException {
     IdentityPoolCredentials credentials =
-        IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+        IdentityPoolCredentials.newBuilder(createBaseFileSourcedCredentials())
             .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
             .setQuotaProjectId("quotaProjectId")
             .setClientId("clientId")
@@ -147,7 +119,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
         new IdentityPoolCredentialSource(credentialSourceMap);
 
     IdentityPoolCredentials credentials =
-        IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+        IdentityPoolCredentials.newBuilder(createBaseFileSourcedCredentials())
             .setCredentialSource(credentialSource)
             .build();
 
@@ -187,7 +159,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
         file.getAbsolutePath());
 
     IdentityPoolCredentials credential =
-        IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+        IdentityPoolCredentials.newBuilder(createBaseFileSourcedCredentials())
             .setHttpTransportFactory(transportFactory)
             .setCredentialSource(credentialSource)
             .build();
@@ -227,7 +199,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
         new IdentityPoolCredentialSource(credentialSourceMap);
 
     IdentityPoolCredentials credentials =
-        IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+        IdentityPoolCredentials.newBuilder(createBaseFileSourcedCredentials())
             .setCredentialSource(credentialSource)
             .build();
 
@@ -247,7 +219,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
         new MockExternalAccountCredentialsTransportFactory();
 
     IdentityPoolCredentials credential =
-        IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+        IdentityPoolCredentials.newBuilder(createBaseFileSourcedCredentials())
             .setHttpTransportFactory(transportFactory)
             .setCredentialSource(
                 buildUrlBasedCredentialSource(transportFactory.transport.getMetadataUrl()))
@@ -273,7 +245,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
         buildUrlBasedCredentialSource(transportFactory.transport.getMetadataUrl(), formatMap);
 
     IdentityPoolCredentials credential =
-        IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+        IdentityPoolCredentials.newBuilder(createBaseFileSourcedCredentials())
             .setHttpTransportFactory(transportFactory)
             .setCredentialSource(credentialSource)
             .build();
@@ -292,7 +264,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addResponseErrorSequence(response);
 
     IdentityPoolCredentials credential =
-        IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+        IdentityPoolCredentials.newBuilder(createBaseFileSourcedCredentials())
             .setHttpTransportFactory(transportFactory)
             .setCredentialSource(
                 buildUrlBasedCredentialSource(transportFactory.transport.getMetadataUrl()))
@@ -311,9 +283,10 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void retrieveSubjectToken_provider() throws IOException {
-
+    ExternalAccountSupplierContext emptyContext =
+        ExternalAccountSupplierContext.newBuilder().setAudience("").setSubjectTokenType("").build();
     IdentityPoolCredentials credentials =
-        IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+        IdentityPoolCredentials.newBuilder(createBaseFileSourcedCredentials())
             .setCredentialSource(null)
             .setSubjectTokenSupplier(testProvider)
             .build();
@@ -332,7 +305,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
           throw testException;
         };
     IdentityPoolCredentials credentials =
-        IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+        IdentityPoolCredentials.newBuilder(createBaseFileSourcedCredentials())
             .setCredentialSource(null)
             .setSubjectTokenSupplier(errorProvider)
             .build();
@@ -349,8 +322,8 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
   public void retrieveSubjectToken_supplierPassesContext() throws IOException {
     ExternalAccountSupplierContext expectedContext =
         ExternalAccountSupplierContext.newBuilder()
-            .setAudience(FILE_SOURCED_CREDENTIAL.getAudience())
-            .setSubjectTokenType(FILE_SOURCED_CREDENTIAL.getSubjectTokenType())
+            .setAudience(createBaseFileSourcedCredentials().getAudience())
+            .setSubjectTokenType(createBaseFileSourcedCredentials().getSubjectTokenType())
             .build();
 
     IdentityPoolSubjectTokenSupplier testSupplier =
@@ -360,7 +333,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
           return "token";
         };
     IdentityPoolCredentials credentials =
-        IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+        IdentityPoolCredentials.newBuilder(createBaseFileSourcedCredentials())
             .setCredentialSource(null)
             .setSubjectTokenSupplier(testSupplier)
             .build();
@@ -379,7 +352,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
                 "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
             .setSubjectTokenType("subjectTokenType")
             .setTokenInfoUrl("tokenInfoUrl")
-            .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+            .setCredentialSource(createFileCredentialSource())
             .setTokenUrl(transportFactory.transport.getStsUrl())
             .setHttpTransportFactory(transportFactory)
             .setCredentialSource(
@@ -402,7 +375,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
         new MockExternalAccountCredentialsTransportFactory();
 
     IdentityPoolCredentials credential =
-        IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+        IdentityPoolCredentials.newBuilder(createBaseFileSourcedCredentials())
             .setWorkforcePoolUserProject("userProject")
             .setAudience(
                 "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
@@ -565,7 +538,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
 
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
     IdentityPoolCredentials credential =
-        IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+        IdentityPoolCredentials.newBuilder(createBaseFileSourcedCredentials())
             .setAudience(
                 "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
             .setTokenUrl(transportFactory.transport.getStsUrl())
@@ -601,7 +574,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
 
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
     IdentityPoolCredentials credential =
-        IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+        IdentityPoolCredentials.newBuilder(createBaseFileSourcedCredentials())
             .setAudience(
                 "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
             .setTokenUrl(transportFactory.transport.getStsUrl())
@@ -722,7 +695,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
       fail("Should not be able to continue without exception.");
     } catch (IllegalArgumentException exception) {
       assertEquals(
-          "Missing credential source file location or URL. At least one must be specified.",
+          "Missing credential source file location, URL, or certificate. At least one must be specified.",
           exception.getMessage());
     }
   }
@@ -783,6 +756,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
   @Test
   public void builder_allFields() throws IOException {
     List<String> scopes = Arrays.asList("scope1", "scope2");
+    IdentityPoolCredentialSource credentialSource = createFileCredentialSource();
 
     IdentityPoolCredentials credentials =
         IdentityPoolCredentials.newBuilder()
@@ -791,7 +765,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
             .setSubjectTokenType("subjectTokenType")
             .setTokenUrl(STS_URL)
             .setTokenInfoUrl("tokenInfoUrl")
-            .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+            .setCredentialSource(credentialSource)
             .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
             .setQuotaProjectId("quotaProjectId")
             .setClientId("clientId")
@@ -806,7 +780,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     assertEquals("tokenInfoUrl", credentials.getTokenInfoUrl());
     assertEquals(
         SERVICE_ACCOUNT_IMPERSONATION_URL, credentials.getServiceAccountImpersonationUrl());
-    assertEquals(FILE_CREDENTIAL_SOURCE, credentials.getCredentialSource());
+    assertEquals(credentialSource, credentials.getCredentialSource());
     assertEquals("quotaProjectId", credentials.getQuotaProjectId());
     assertEquals("clientId", credentials.getClientId());
     assertEquals("clientSecret", credentials.getClientSecret());
@@ -860,7 +834,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
             .setSubjectTokenType("subjectTokenType")
             .setTokenUrl(STS_URL)
             .setTokenInfoUrl("tokenInfoUrl")
-            .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+            .setCredentialSource(createFileCredentialSource())
             .setQuotaProjectId("quotaProjectId")
             .build();
         fail("Exception should be thrown.");
@@ -884,7 +858,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
             .setSubjectTokenType("subjectTokenType")
             .setTokenUrl(STS_URL)
             .setTokenInfoUrl("tokenInfoUrl")
-            .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+            .setCredentialSource(createFileCredentialSource())
             .setQuotaProjectId("quotaProjectId")
             .build();
 
@@ -892,7 +866,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void builder_supplierAndCredSourceThrows() throws IOException {
+  public void builder_supplierAndCredSourceThrows() {
     try {
       IdentityPoolCredentials credentials =
           IdentityPoolCredentials.newBuilder()
@@ -901,7 +875,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
               .setAudience("audience")
               .setSubjectTokenType("subjectTokenType")
               .setTokenUrl(STS_URL)
-              .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+              .setCredentialSource(createFileCredentialSource())
               .build();
       fail("Should not be able to continue without exception.");
     } catch (IllegalArgumentException exception) {
@@ -929,8 +903,10 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     }
   }
 
+  @Test
   public void builder_missingUniverseDomain_defaults() throws IOException {
     List<String> scopes = Arrays.asList("scope1", "scope2");
+    IdentityPoolCredentialSource credentialSource = createFileCredentialSource();
 
     IdentityPoolCredentials credentials =
         IdentityPoolCredentials.newBuilder()
@@ -939,7 +915,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
             .setSubjectTokenType("subjectTokenType")
             .setTokenUrl(STS_URL)
             .setTokenInfoUrl("tokenInfoUrl")
-            .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+            .setCredentialSource(credentialSource)
             .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
             .setQuotaProjectId("quotaProjectId")
             .setClientId("clientId")
@@ -953,7 +929,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     assertEquals("tokenInfoUrl", credentials.getTokenInfoUrl());
     assertEquals(
         SERVICE_ACCOUNT_IMPERSONATION_URL, credentials.getServiceAccountImpersonationUrl());
-    assertEquals(FILE_CREDENTIAL_SOURCE, credentials.getCredentialSource());
+    assertEquals(credentialSource, credentials.getCredentialSource());
     assertEquals("quotaProjectId", credentials.getQuotaProjectId());
     assertEquals("clientId", credentials.getClientId());
     assertEquals("clientSecret", credentials.getClientSecret());
@@ -974,7 +950,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
             .setSubjectTokenType("subjectTokenType")
             .setTokenUrl(STS_URL)
             .setTokenInfoUrl("tokenInfoUrl")
-            .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+            .setCredentialSource(createFileCredentialSource())
             .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
             .setQuotaProjectId("quotaProjectId")
             .setClientId("clientId")
@@ -1016,7 +992,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
             .setSubjectTokenType("subjectTokenType")
             .setTokenUrl(STS_URL)
             .setTokenInfoUrl("tokenInfoUrl")
-            .setCredentialSource(FILE_CREDENTIAL_SOURCE)
+            .setCredentialSource(createFileCredentialSource())
             .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
             .setQuotaProjectId("quotaProjectId")
             .setClientId("clientId")
@@ -1048,7 +1024,7 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
   @Test
   public void serialize() throws IOException, ClassNotFoundException {
     IdentityPoolCredentials testCredentials =
-        IdentityPoolCredentials.newBuilder(FILE_SOURCED_CREDENTIAL)
+        IdentityPoolCredentials.newBuilder(createBaseFileSourcedCredentials())
             .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
             .setQuotaProjectId("quotaProjectId")
             .setClientId("clientId")
@@ -1060,7 +1036,154 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     assertEquals(testCredentials, deserializedCredentials);
     assertEquals(testCredentials.hashCode(), deserializedCredentials.hashCode());
     assertEquals(testCredentials.toString(), deserializedCredentials.toString());
-    assertSame(deserializedCredentials.clock, Clock.SYSTEM);
+    assertSame(Clock.SYSTEM, deserializedCredentials.clock);
+  }
+
+  @Test
+  public void build_withCertificateSourceAndCustomX509Provider_success()
+      throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException {
+    // Create an empty KeyStore and a spy on a custom X509Provider.
+    KeyStore keyStore = KeyStore.getInstance("JKS");
+    keyStore.load(null, null);
+    TestX509Provider x509Provider =
+        spy(new TestX509Provider(keyStore, "/path/to/certificate.json"));
+
+    // Set up credential source for certificate type.
+    Map<String, Object> certificateMap = new HashMap<>();
+    certificateMap.put("use_default_certificate_config", true);
+    Map<String, Object> credentialSourceMap = new HashMap<>();
+    credentialSourceMap.put("certificate", certificateMap);
+    IdentityPoolCredentialSource credentialSource =
+        new IdentityPoolCredentialSource(credentialSourceMap);
+    MockExternalAccountCredentialsTransportFactory mockTransportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+
+    // Build credentials with the custom provider.
+    IdentityPoolCredentials credentials =
+        IdentityPoolCredentials.newBuilder()
+            .setX509Provider(x509Provider)
+            .setHttpTransportFactory(mockTransportFactory)
+            .setAudience("test-audience")
+            .setSubjectTokenType("test-token-type")
+            .setCredentialSource(credentialSource)
+            .build();
+
+    // Verify successful creation and correct internal setup.
+    assertNotNull("Credentials should be successfully created", credentials);
+    assertTrue(
+        "Subject token supplier should be for certificates",
+        credentials.getIdentityPoolSubjectTokenSupplier()
+            instanceof CertificateIdentityPoolSubjectTokenSupplier);
+    assertEquals(
+        "Metrics header should indicate certificate source",
+        IdentityPoolCredentials.CERTIFICATE_METRICS_HEADER_VALUE,
+        credentials.getCredentialSourceType());
+
+    // Verify the custom provider methods were called during build.
+    verify(x509Provider).getKeyStore();
+    verify(x509Provider).getCertificatePath();
+  }
+
+  @Test
+  public void build_withDefaultCertificate_throwsOnTransportInitFailure() {
+    // Setup credential source to use default certificate config.
+    Map<String, Object> certificateMap = new HashMap<>();
+    certificateMap.put("use_default_certificate_config", false);
+    certificateMap.put("certificate_config_location", "/non/existing/path/to/certificate.json");
+    Map<String, Object> credentialSourceMap = new HashMap<>();
+    credentialSourceMap.put("certificate", certificateMap);
+    IdentityPoolCredentialSource credentialSource =
+        new IdentityPoolCredentialSource(credentialSourceMap);
+
+    // Expect RuntimeException during build due to mTLS setup failure because the certificate file
+    // doesn't exist.
+    IdentityPoolCredentials.Builder builder =
+        IdentityPoolCredentials.newBuilder()
+            .setHttpTransportFactory(new MockExternalAccountCredentialsTransportFactory())
+            .setAudience("test-audience")
+            .setSubjectTokenType("test-token-type")
+            .setCredentialSource(credentialSource);
+    RuntimeException exception = assertThrows(RuntimeException.class, builder::build);
+
+    assertEquals(
+        "Failed to initialize IdentityPoolCredentials from certificate source due to an I/O error.",
+        exception.getMessage());
+  }
+
+  @Test
+  public void build_withCustomProvider_throwsOnGetKeyStore()
+      throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException {
+    // Simulate a scenario where the X509Provider fails to load the KeyStore, typically due to an
+    // IOException when reading the certificate or private key files.
+    KeyStore keyStore = KeyStore.getInstance("JKS");
+    keyStore.load(null, null);
+    TestX509Provider x509Provider = new TestX509Provider(keyStore, "/path/to/certificate.json");
+    x509Provider.setShouldThrowOnGetKeyStore(true); // Configure to throw
+
+    Map<String, Object> certificateMap = new HashMap<>();
+    certificateMap.put("certificate_config_location", "/path/to/certificate.json");
+
+    // Expect RuntimeException because the constructor wraps the IOException.
+    RuntimeException exception =
+        assertThrows(
+            RuntimeException.class,
+            () -> createCredentialsWithCertificate(x509Provider, certificateMap));
+
+    // Verify the cause is the expected IOException from the mock.
+    assertNotNull(exception.getCause());
+    assertTrue(exception.getCause() instanceof IOException);
+    assertEquals("Simulated IOException on get keystore", exception.getCause().getMessage());
+
+    // Verify the wrapper exception message
+    assertEquals(
+        "Failed to initialize IdentityPoolCredentials from certificate source due to an I/O error.",
+        exception.getMessage());
+  }
+
+  @Test
+  public void build_withCustomProvider_throwsOnGetCertificatePath()
+      throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException {
+    // Simulate a scenario where the X509Provider cannot access or read the certificate
+    // configuration file needed to determine the certificate path, resulting in an IOException.
+    KeyStore keyStore = KeyStore.getInstance("JKS");
+    keyStore.load(null, null);
+    TestX509Provider x509Provider = new TestX509Provider(keyStore, "/path/to/certificate.json");
+    x509Provider.setShouldThrowOnGetCertificatePath(true); // Configure to throw
+
+    Map<String, Object> certificateMap = new HashMap<>();
+    certificateMap.put("certificate_config_location", "/path/to/certificate.json");
+
+    // Expect RuntimeException because the constructor wraps the IOException.
+    RuntimeException exception =
+        assertThrows(
+            RuntimeException.class,
+            () -> createCredentialsWithCertificate(x509Provider, certificateMap));
+
+    // Verify the cause is the expected IOException from the mock.
+    assertNotNull(exception.getCause());
+    assertTrue(exception.getCause() instanceof IOException);
+    assertEquals("Simulated IOException on certificate path", exception.getCause().getMessage());
+
+    // Verify the wrapper exception message
+    assertEquals(
+        "Failed to initialize IdentityPoolCredentials from certificate source due to an I/O error.",
+        exception.getMessage());
+  }
+
+  private void createCredentialsWithCertificate(
+      X509Provider x509Provider, Map<String, Object> certificateMap) {
+    Map<String, Object> credentialSourceMap = new HashMap<>();
+    credentialSourceMap.put("certificate", certificateMap);
+    IdentityPoolCredentialSource credentialSource =
+        new IdentityPoolCredentialSource(credentialSourceMap);
+
+    IdentityPoolCredentials.newBuilder()
+        .setX509Provider(x509Provider)
+        .setHttpTransportFactory(new MockExternalAccountCredentialsTransportFactory())
+        .setAudience("")
+        .setSubjectTokenType("")
+        .setCredentialSource(credentialSource)
+        .build();
   }
 
   static InputStream writeIdentityPoolCredentialsStream(
@@ -1108,5 +1231,76 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     credentialSourceMap.put("format", formatMap);
 
     return new IdentityPoolCredentialSource(credentialSourceMap);
+  }
+
+  private IdentityPoolCredentials createBaseFileSourcedCredentials() {
+    Map<String, Object> fileCredentialSourceMap = new HashMap<>();
+    fileCredentialSourceMap.put("file", "file"); // Consider using a real temp file setup if needed
+    IdentityPoolCredentialSource identityPoolCredentialSource =
+        new IdentityPoolCredentialSource(fileCredentialSourceMap);
+
+    return IdentityPoolCredentials.newBuilder()
+        .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+        .setAudience(
+            "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider")
+        .setSubjectTokenType("subjectTokenType")
+        .setTokenUrl(STS_URL)
+        .setTokenInfoUrl("tokenInfoUrl")
+        .setCredentialSource(identityPoolCredentialSource)
+        .build();
+  }
+
+  private IdentityPoolCredentialSource createFileCredentialSource() {
+    Map<String, Object> fileCredentialSourceMap = new HashMap<>();
+    fileCredentialSourceMap.put("file", "file");
+    return new IdentityPoolCredentialSource(fileCredentialSourceMap);
+  }
+
+  static class MockExternalAccountCredentialsTransportFactory implements HttpTransportFactory {
+
+    MockExternalAccountCredentialsTransport transport =
+        new MockExternalAccountCredentialsTransport();
+
+    @Override
+    public HttpTransport create() {
+      return transport;
+    }
+  }
+
+  private static class TestX509Provider extends X509Provider {
+    private final KeyStore keyStore;
+    private final String certificatePath;
+    private boolean shouldThrowOnGetKeyStore = false;
+    private boolean shouldThrowOnGetCertificatePath = false;
+
+    TestX509Provider(KeyStore keyStore, String certificatePath) {
+      super();
+      this.keyStore = keyStore;
+      this.certificatePath = certificatePath;
+    }
+
+    @Override
+    public KeyStore getKeyStore() throws IOException {
+      if (shouldThrowOnGetKeyStore) {
+        throw new IOException("Simulated IOException on get keystore");
+      }
+      return keyStore;
+    }
+
+    @Override
+    public String getCertificatePath() throws IOException {
+      if (shouldThrowOnGetCertificatePath) {
+        throw new IOException("Simulated IOException on certificate path");
+      }
+      return certificatePath;
+    }
+
+    void setShouldThrowOnGetKeyStore(boolean shouldThrow) {
+      this.shouldThrowOnGetKeyStore = shouldThrow;
+    }
+
+    void setShouldThrowOnGetCertificatePath(boolean shouldThrow) {
+      this.shouldThrowOnGetCertificatePath = shouldThrow;
+    }
   }
 }
