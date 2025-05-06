@@ -1,18 +1,17 @@
 /*
- * Copyright 2025, Google Inc. All rights reserved.
+ * Copyright 2025 Google LLC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met:
  *
- *    * Redistributions of source code must retain the above copyright
+ *     * Redistributions of source code must retain the above copyright
  * notice, this list of conditions and the following disclaimer.
- *    * Redistributions in binary form must reproduce the above
+ *     * Redistributions in binary form must reproduce the above
  * copyright notice, this list of conditions and the following disclaimer
  * in the documentation and/or other materials provided with the
  * distribution.
- *
- *    * Neither the name of Google Inc. nor the names of its
+ *     * Neither the name of Google LLC nor the names of its
  * contributors may be used to endorse or promote products derived from
  * this software without specific prior written permission.
  *
@@ -43,12 +42,12 @@ import java.security.KeyStore;
 import java.util.Locale;
 
 /**
- * This class provides certificate key stores to the Google Auth library transport layer via
- * certificate configuration files. This is only meant to be used internally to Google Cloud
+ * This class implements {@link MtlsProvider} for the Google Auth library transport layer via {@link
+ * WorkloadCertificateConfiguration}. This is only meant to be used internally by Google Cloud
  * libraries, and the public facing methods may be changed without notice, and have no guarantee of
  * backwards compatability.
  */
-public class X509Provider {
+public class X509Provider implements MtlsProvider {
   static final String CERTIFICATE_CONFIGURATION_ENV_VARIABLE = "GOOGLE_API_CERTIFICATE_CONFIG";
   static final String WELL_KNOWN_CERTIFICATE_CONFIG_FILE = "certificate_config.json";
   static final String CLOUDSDK_CONFIG_DIRECTORY = "gcloud";
@@ -112,6 +111,7 @@ public class X509Provider {
    * @return a KeyStore containing the X.509 certificate specified by the certificate configuration.
    * @throws IOException if there is an error retrieving the certificate configuration.
    */
+  @Override
   public KeyStore getKeyStore() throws IOException {
     WorkloadCertificateConfiguration workloadCertConfig = getWorkloadCertificateConfiguration();
     InputStream certStream = null;
