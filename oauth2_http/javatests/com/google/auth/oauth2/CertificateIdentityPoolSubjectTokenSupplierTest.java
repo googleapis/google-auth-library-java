@@ -42,11 +42,13 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -69,9 +71,16 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
   private CertificateIdentityPoolSubjectTokenSupplier supplier;
 
   private static final byte[] INVALID_CERT_BYTES =
-      "invalid certificate data".getBytes(StandardCharsets.UTF_8);
+      ("-----BEGIN CERTIFICATE-----\n"
+              // This content is intentionally not valid Base64 or a valid DER encoding.
+              // The presence of spaces and non-Base64 characters will cause a parsing error.
+              + "This is not valid base64 encoded certificate data.\n"
+              + "It will cause a CertificateException during parsing.\n"
+              + "-----END CERTIFICATE-----\n")
+          .getBytes(StandardCharsets.UTF_8);
 
   private byte[] testCertBytesFromFile;
+  private byte[] intermediateCertBytesFromFile;
 
   @Before
   public void setUp() throws IOException, URISyntaxException {
@@ -79,6 +88,9 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
     URL leafCertUrl = classLoader.getResource("x509_leaf_certificate.pem");
     assertNotNull("Test leaf certificate file not found!", leafCertUrl);
     File testCertFile = new File(leafCertUrl.getFile());
+
+    URL intermediateCertUrl = classLoader.getResource("x509_intermediate_certificate.pem");
+    assertNotNull("Test intermediate certificate file not found!", intermediateCertUrl);
 
     when(mockCertificateConfig.useDefaultCertificateConfig()).thenReturn(false);
     when(mockCertificateConfig.getCertificateConfigLocation())
@@ -89,6 +101,7 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
 
     supplier = new CertificateIdentityPoolSubjectTokenSupplier(mockCredentialSource);
     testCertBytesFromFile = Files.readAllBytes(Paths.get(leafCertUrl.toURI()));
+    intermediateCertBytesFromFile = Files.readAllBytes(Paths.get(intermediateCertUrl.toURI()));
   }
 
   @Test
@@ -128,7 +141,7 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
   }
 
   @Test
-  public void getSubjectToken_success() throws Exception {
+  public void getSubjectToken_withoutTrustChain_success() throws Exception {
     // Calculate expected result based on the file content.
     CertificateFactory cf = CertificateFactory.getInstance("X.509");
     X509Certificate expectedCert =
@@ -142,5 +155,267 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
 
     // Verify
     assertEquals(expectedSubjectToken, actualSubjectToken);
+  }
+
+  @Test
+  public void getSubjectToken_trustChainWithLeaf_success() throws Exception {
+    // Configure mock to return the path to the trust chain file with leaf.
+    ClassLoader classLoader = getClass().getClassLoader();
+    URL trustChainUrl = classLoader.getResource("trust_chain_with_leaf.pem");
+    assertNotNull("Test trust chain file not found!", trustChainUrl);
+    when(mockCertificateConfig.getTrustChainPath())
+        .thenReturn(new File(trustChainUrl.getFile()).getAbsolutePath());
+
+    CertificateFactory cf = CertificateFactory.getInstance("X.509");
+
+    // Parse and encode the leaf certificate.
+    X509Certificate expectedLeafCert =
+        (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(testCertBytesFromFile));
+    String expectedEncodedLeaf = Base64.getEncoder().encodeToString(expectedLeafCert.getEncoded());
+
+    // Parse and encode the intermediate certificate.
+    X509Certificate expectedIntermediateCert =
+        (X509Certificate)
+            cf.generateCertificate(new ByteArrayInputStream(intermediateCertBytesFromFile));
+    String expectedEncodedIntermediate =
+        Base64.getEncoder().encodeToString(expectedIntermediateCert.getEncoded());
+
+    // Expected: JSON array with encoded leaf and then encoded intermediate.
+    String[] expectedCertChain = new String[] {expectedEncodedLeaf, expectedEncodedIntermediate};
+    String expectedSubjectToken = OAuth2Utils.JSON_FACTORY.toString(expectedCertChain);
+
+    // Execute
+    String actualSubjectToken = supplier.getSubjectToken(mockContext);
+
+    // Verify
+    assertEquals(expectedSubjectToken, actualSubjectToken);
+  }
+
+  @Test
+  public void getSubjectToken_trustChainWithoutLeaf_success() throws Exception {
+    // Configure mock to return the path to the trust chain file WITHOUT leaf.
+    ClassLoader classLoader = getClass().getClassLoader();
+    URL trustChainUrl = classLoader.getResource("trust_chain_without_leaf.pem");
+    assertNotNull("Test trust chain file (without leaf) not found!", trustChainUrl);
+    when(mockCertificateConfig.getTrustChainPath())
+        .thenReturn(new File(trustChainUrl.getFile()).getAbsolutePath());
+
+    CertificateFactory cf = CertificateFactory.getInstance("X.509");
+
+    // Parse and encode the leaf certificate.
+    X509Certificate expectedLeafCert =
+        (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(testCertBytesFromFile));
+    String expectedEncodedLeaf = Base64.getEncoder().encodeToString(expectedLeafCert.getEncoded());
+
+    // Parse and encode the intermediate certificate.
+    X509Certificate expectedIntermediateCert =
+        (X509Certificate)
+            cf.generateCertificate(new ByteArrayInputStream(intermediateCertBytesFromFile));
+    String expectedEncodedIntermediate =
+        Base64.getEncoder().encodeToString(expectedIntermediateCert.getEncoded());
+
+    // Expected: JSON array with encoded leaf and then encoded intermediate.
+    String[] expectedCertChainArray =
+        new String[] {expectedEncodedLeaf, expectedEncodedIntermediate};
+    String expectedSubjectToken = OAuth2Utils.JSON_FACTORY.toString(expectedCertChainArray);
+
+    // Execute
+    String actualSubjectToken = supplier.getSubjectToken(mockContext);
+
+    // Verify
+    assertEquals(expectedSubjectToken, actualSubjectToken);
+  }
+
+  @Test
+  public void getSubjectToken_trustChainWrongOrder_throwsIllegalArgumentException() {
+    ClassLoader classLoader = getClass().getClassLoader();
+    URL trustChainUrl = classLoader.getResource("trust_chain_wrong_order.pem");
+    assertNotNull("Test trust chain file (wrong order) not found!", trustChainUrl);
+    String trustChainPath = new File(trustChainUrl.getFile()).getAbsolutePath();
+    when(mockCertificateConfig.getTrustChainPath()).thenReturn(trustChainPath);
+
+    // Execute & Verify
+    Exception exception =
+        assertThrows(IllegalArgumentException.class, () -> supplier.getSubjectToken(mockContext));
+    assertEquals(
+        "The leaf certificate should only appear at the beginning of the trust chain file, or be omitted entirely.",
+        exception.getMessage());
+  }
+
+  @Test
+  public void getSubjectToken_trustChainOnlyLeaf_success() throws Exception {
+    // Configure mock to use the leaf certificate file itself as the trust chain file,
+    // simulating a scenario where the trust chain file contains only the leaf.
+    ClassLoader classLoader = getClass().getClassLoader();
+    URL trustChainUrl = classLoader.getResource("x509_leaf_certificate.pem");
+    assertNotNull("Leaf certificate file not found!", trustChainUrl);
+    when(mockCertificateConfig.getTrustChainPath())
+        .thenReturn(new File(trustChainUrl.getFile()).getAbsolutePath());
+
+    CertificateFactory cf = CertificateFactory.getInstance("X.509");
+
+    // Parse and encode the leaf certificate
+    X509Certificate expectedLeafCert =
+        (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(testCertBytesFromFile));
+    String expectedEncodedLeaf = Base64.getEncoder().encodeToString(expectedLeafCert.getEncoded());
+
+    // Expected: JSON array with only the encoded leaf.
+    String[] expectedCertChainArray = new String[] {expectedEncodedLeaf};
+    String expectedSubjectToken = OAuth2Utils.JSON_FACTORY.toString(expectedCertChainArray);
+
+    // Execute
+    String actualSubjectToken = supplier.getSubjectToken(mockContext);
+
+    // Verify
+    assertEquals(expectedSubjectToken, actualSubjectToken);
+  }
+
+  @Test
+  public void getSubjectToken_trustChainFileNotFound_throwsIOException() {
+    // Configure mock to return a non-existent path for the trust chain.
+    String nonExistentPath = "/path/to/non/existent/trust_chain.pem";
+    when(mockCertificateConfig.getTrustChainPath()).thenReturn(nonExistentPath);
+
+    // Execute & Verify
+    IOException exception =
+        assertThrows(IOException.class, () -> supplier.getSubjectToken(mockContext));
+
+    // Check that the cause is NoSuchFileException from readTrustChain.
+    assertTrue(exception.getCause() instanceof NoSuchFileException);
+
+    // Check the outer exception message added in getSubjectToken.
+    assertEquals(exception.getMessage(), "Trust chain file not found: " + nonExistentPath);
+  }
+
+  @Test
+  public void getSubjectToken_trustChainInvalidFormat_throwsIOException() throws Exception {
+    // Create a temporary file with invalid cert data for the trust chain.
+    File invalidTrustChainFile = File.createTempFile("invalid_trust_chain", ".pem");
+    invalidTrustChainFile.deleteOnExit();
+    Files.write(invalidTrustChainFile.toPath(), INVALID_CERT_BYTES);
+
+    // Configure mock to return the path to the temporary invalid trust chain file.
+    String invalidPath = invalidTrustChainFile.getAbsolutePath();
+    when(mockCertificateConfig.getTrustChainPath()).thenReturn(invalidPath);
+
+    // Execute & Verify
+    IOException exception =
+        assertThrows(IOException.class, () -> supplier.getSubjectToken(mockContext));
+
+    // Construct the expected outer exception message
+    String expectedLeafPath = mockCredentialSource.getCredentialLocation();
+    String expectedMessage =
+        "Failed to read certificate file(s). Leaf path: "
+            + expectedLeafPath
+            + "\nTrust chain path: "
+            + invalidPath;
+
+    // The final exception is an IOException thrown by getSubjectToken.
+    assertEquals(expectedMessage, exception.getMessage());
+
+    // Check that the cause is CertificateException from readTrustChain
+    assertTrue(exception.getCause() instanceof CertificateException);
+
+    // Verify the cause's message specifically points to the trust chain parsing failure
+    // and includes the path of the invalid trust chain file.
+    assertTrue(
+        exception
+            .getCause()
+            .getMessage()
+            .startsWith(
+                "Error loading PEM certificates from the trust chain file: " + invalidPath));
+  }
+
+  @Test
+  public void getSubjectToken_leafCertFileNotFound_throwsIOException() {
+    // Configure mock to return a non-existent path for the leaf certificate
+    String nonExistentPath = "/path/to/non/existent/leaf.pem";
+    when(mockCredentialSource.getCredentialLocation()).thenReturn(nonExistentPath);
+    // Re-initialize supplier with the bad leaf path
+    supplier = new CertificateIdentityPoolSubjectTokenSupplier(mockCredentialSource);
+
+    // Execute & Verify: Expect the wrapper IOException
+    IOException exception =
+        assertThrows(IOException.class, () -> supplier.getSubjectToken(mockContext));
+
+    // Check the message of the wrapper IOException
+    assertEquals("Leaf certificate file not found: " + nonExistentPath, exception.getMessage());
+
+    // Check that the cause is the original NoSuchFileException
+    assertNotNull("Exception should have a cause", exception.getCause());
+    assertTrue(
+        "Cause should be NoSuchFileException", exception.getCause() instanceof NoSuchFileException);
+    // Optionally, check the message of the cause (which is the path)
+    assertEquals(nonExistentPath, exception.getCause().getMessage());
+  }
+
+  @Test
+  public void getSubjectToken_leafCertInvalidFormat_throwsIOException() throws Exception {
+    // Create a temporary file with invalid cert data.
+    File invalidLeafFile = File.createTempFile("invalid_leaf", ".pem");
+    invalidLeafFile.deleteOnExit();
+    Files.write(invalidLeafFile.toPath(), INVALID_CERT_BYTES);
+
+    // Configure mock to return the path to the invalid leaf certificate file
+    when(mockCredentialSource.getCredentialLocation())
+        .thenReturn(invalidLeafFile.getAbsolutePath());
+    // Re-initialize supplier with the bad leaf path
+    supplier = new CertificateIdentityPoolSubjectTokenSupplier(mockCredentialSource);
+
+    // Execute & Verify
+    IOException exception =
+        assertThrows(IOException.class, () -> supplier.getSubjectToken(mockContext));
+
+    // Check that the cause is CertificateException from parseCertificate (via
+    // loadLeafCertificate)
+    assertTrue(exception.getCause() instanceof CertificateException);
+    assertEquals("Failed to parse X.509 certificate data.", exception.getCause().getMessage());
+
+    // Check the outer exception message
+    assertEquals(
+        exception.getMessage(),
+        "Failed to read certificate file(s). Leaf path: " + invalidLeafFile.getAbsolutePath());
+  }
+
+  @Test
+  public void readTrustChain_whenFileIsNotEmptyButContainsNoPemBlocks_throwsCertificateException()
+      throws IOException {
+    // Create a temporary file with content that does not match PEM certificate blocks.
+    File trustChainFile = File.createTempFile("non_pem_content_trust_chain", ".txt");
+    trustChainFile.deleteOnExit();
+    String fileContent = "This is a test file with some data, but no actual PEM certificates.";
+    Files.write(trustChainFile.toPath(), fileContent.getBytes(StandardCharsets.UTF_8));
+    String trustChainPath = trustChainFile.getAbsolutePath();
+
+    // Execute & Verify
+    CertificateException exception =
+        assertThrows(
+            CertificateException.class,
+            () -> CertificateIdentityPoolSubjectTokenSupplier.readTrustChain(trustChainPath));
+
+    // Verify the exception message.
+    String expectedMessage =
+        "Trust chain file was not empty but no PEM certificates were found: " + trustChainPath;
+    assertEquals(expectedMessage, exception.getMessage());
+  }
+
+  @Test
+  public void readTrustChain_nullPath_returnsEmptyList() throws Exception {
+    List<X509Certificate> certs = CertificateIdentityPoolSubjectTokenSupplier.readTrustChain(null);
+    assertNotNull(certs);
+    assertTrue(certs.isEmpty());
+  }
+
+  @Test
+  public void readTrustChain_emptyFile_returnsEmptyList() throws IOException, CertificateException {
+    // Create an empty temporary file.
+    File emptyFile = File.createTempFile("empty_trust_chain", ".pem");
+    emptyFile.deleteOnExit();
+
+    String emptyFilePath = emptyFile.getAbsolutePath();
+    List<X509Certificate> certs =
+        CertificateIdentityPoolSubjectTokenSupplier.readTrustChain(emptyFilePath);
+    assertNotNull(certs);
+    assertTrue(certs.isEmpty());
   }
 }

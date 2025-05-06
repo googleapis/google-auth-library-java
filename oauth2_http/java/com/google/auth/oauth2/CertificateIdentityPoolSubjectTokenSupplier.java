@@ -38,12 +38,18 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Provider for retrieving the subject tokens for {@link IdentityPoolCredentials} by reading an
@@ -97,33 +103,153 @@ public class CertificateIdentityPoolSubjectTokenSupplier
 
   /**
    * Retrieves the X509 subject token. This method loads the leaf certificate specified by the
-   * {@code credentialSource.credentialLocation}. The subject token is constructed as a JSON array
-   * containing the base64-encoded (DER format) leaf certificate. This JSON array serves as the
-   * subject token for mTLS authentication.
+   * {@code credentialSource.credentialLocation}. If a trust chain path is configured in the {@code
+   * credentialSource.certificateConfig}, it also loads and includes the trust chain certificates.
+   * The subject token is constructed as a JSON array containing the base64-encoded (DER format)
+   * leaf certificate, followed by the base64-encoded (DER format) certificates in the trust chain.
+   * This JSON array serves as the subject token for mTLS authentication.
    *
    * @param context The external account supplier context. This parameter is currently not used in
    *     this implementation.
-   * @return The JSON string representation of the base64-encoded leaf certificate in a JSON array.
-   * @throws IOException If an I/O error occurs while reading the certificate file.
+   * @return The JSON string representation of the base64-encoded certificate chain (leaf
+   *     certificate followed by the trust chain, if present).
+   * @throws IOException If an I/O error occurs while reading the certificate file(s).
    */
   @Override
   public String getSubjectToken(ExternalAccountSupplierContext context) throws IOException {
+    String leafCertPath = credentialSource.getCredentialLocation();
+    String trustChainPath = null;
+    if (credentialSource.getCertificateConfig() != null) {
+      trustChainPath = credentialSource.getCertificateConfig().getTrustChainPath();
+    }
+
     try {
-      // credentialSource.credentialLocation is expected to be non-null here,
-      // set during IdentityPoolCredentials construction for certificate type.
-      X509Certificate leafCert = loadLeafCertificate(credentialSource.getCredentialLocation());
+      // Load the leaf certificate.
+      X509Certificate leafCert = loadLeafCertificate(leafCertPath);
       String encodedLeafCert = encodeCert(leafCert);
 
+      // Add the leaf certificate first.
       java.util.List<String> certChain = new java.util.ArrayList<>();
       certChain.add(encodedLeafCert);
 
+      // Read the trust chain.
+      List<X509Certificate> trustChainCerts = readTrustChain(trustChainPath);
+
+      // Process the trust chain certificates read from the file.
+      if (!trustChainCerts.isEmpty()) {
+        // Check the first certificate in the trust chain file.
+        X509Certificate firstTrustCert = trustChainCerts.get(0);
+        String encodedFirstTrustCert = encodeCert(firstTrustCert);
+
+        // Add the first certificate only if it is not the same as the leaf certificate.
+        if (!encodedFirstTrustCert.equals(encodedLeafCert)) {
+          certChain.add(encodedFirstTrustCert);
+        }
+
+        // Iterate over the remaining certificates in the trust chain.
+        for (int i = 1; i < trustChainCerts.size(); i++) {
+          X509Certificate currentCert = trustChainCerts.get(i);
+          String encodedCurrentCert = encodeCert(currentCert);
+
+          // Throw an error if the current certificate is the same as the leaf certificate.
+          if (encodedCurrentCert.equals(encodedLeafCert)) {
+            throw new IllegalArgumentException(
+                "The leaf certificate should only appear at the beginning of the trust chain file, or be omitted entirely.");
+          }
+
+          // Add the current certificate to the chain.
+          certChain.add(encodedCurrentCert);
+        }
+      }
+
       return OAuth2Utils.JSON_FACTORY.toString(certChain);
-    } catch (CertificateException e) {
-      // Catch CertificateException to provide a more specific error message including
-      // the path of the file that failed to parse, and re-throw as IOException
-      // as expected by the getSubjectToken method signature for I/O related issues.
-      throw new IOException(
-          "Failed to parse certificate(s) from: " + credentialSource.getCredentialLocation(), e);
     }
+    // The following catch blocks handle specific exceptions that can occur during
+    // certificate loading and parsing. These exceptions are wrapped in a new IOException,
+    // as declared by this method's signature.
+    catch (NoSuchFileException e) {
+      // Handles the case where the leaf certificate file itself cannot be found.
+      throw new IOException(String.format("Leaf certificate file not found: %s", leafCertPath), e);
+    } catch (CertificateException e) {
+      // Handles errors during the parsing of certificate data, which could stem from
+      // issues in either the leaf certificate or the trust chain. The message includes
+      // paths to both for comprehensive error reporting.
+      throw new IOException(
+          "Failed to read certificate file(s). Leaf path: "
+              + leafCertPath
+              + (trustChainPath != null ? "\nTrust chain path: " + trustChainPath : ""),
+          e);
+    }
+  }
+
+  /**
+   * Reads a file containing PEM-encoded X509 certificates and returns a list of parsed
+   * certificates. It splits the file content based on PEM headers and parses each certificate.
+   * Returns an empty list if the trust chain path is empty.
+   *
+   * @param trustChainPath The path to the trust chain file.
+   * @return A list of parsed X509 certificates.
+   * @throws IOException If an error occurs while reading the file.
+   * @throws CertificateException If an error occurs while parsing a certificate.
+   */
+  @VisibleForTesting
+  static List<X509Certificate> readTrustChain(String trustChainPath)
+      throws IOException, CertificateException {
+    List<X509Certificate> certificateTrustChain = new ArrayList<>();
+
+    // If no trust chain path is provided, return an empty list.
+    if (trustChainPath == null || trustChainPath.isEmpty()) {
+      return certificateTrustChain;
+    }
+
+    // initialize certificate factory to retrieve x509 certificates.
+    CertificateFactory cf = CertificateFactory.getInstance("X.509");
+
+    // Read the trust chain file.
+    byte[] trustChainData;
+    try {
+      trustChainData = Files.readAllBytes(Paths.get(trustChainPath));
+    } catch (NoSuchFileException e) {
+      throw new IOException("Trust chain file not found: " + trustChainPath, e);
+    } catch (IOException e) {
+      throw new IOException("Failed to read trust chain file: " + trustChainPath, e);
+    }
+
+    // Split the file content into PEM certificate blocks.
+    String content = new String(trustChainData);
+    Pattern pemCertPattern =
+        Pattern.compile("-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----", Pattern.DOTALL);
+    Matcher matcher = pemCertPattern.matcher(content);
+
+    while (matcher.find()) {
+      String pemCertBlock = matcher.group(0);
+      try (InputStream certStream = new ByteArrayInputStream(pemCertBlock.getBytes())) {
+        // Parse the certificate data.
+        Certificate cert = cf.generateCertificate(certStream);
+
+        // Append the certificate to the trust chain.
+        if (cert instanceof X509Certificate) {
+          certificateTrustChain.add((X509Certificate) cert);
+        } else {
+          throw new CertificateException(
+              "Found non-X.509 certificate in trust chain file: " + trustChainPath);
+        }
+      } catch (CertificateException e) {
+        // If parsing an individual PEM block fails, re-throw with more context.
+        throw new CertificateException(
+            "Error loading PEM certificates from the trust chain file: "
+                + trustChainPath
+                + " - "
+                + e.getMessage(),
+            e);
+      }
+    }
+
+    if (trustChainData.length > 0 && certificateTrustChain.isEmpty()) {
+      throw new CertificateException(
+          "Trust chain file was not empty but no PEM certificates were found: " + trustChainPath);
+    }
+
+    return certificateTrustChain;
   }
 }
