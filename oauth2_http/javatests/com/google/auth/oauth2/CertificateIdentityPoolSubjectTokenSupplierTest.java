@@ -43,6 +43,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -328,25 +329,30 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
 
   @Test
   public void getSubjectToken_leafCertFileNotFound_throwsIOException() {
-    // Configure mock to return a non-existent path for the leaf certificate
+    // Configure mock to return a non-existent path for the leaf certificate.
     String nonExistentPath = "/path/to/non/existent/leaf.pem";
     when(mockCredentialSource.getCredentialLocation()).thenReturn(nonExistentPath);
     // Re-initialize supplier with the bad leaf path
     supplier = new CertificateIdentityPoolSubjectTokenSupplier(mockCredentialSource);
 
-    // Execute & Verify: Expect the wrapper IOException
+    // Execute & Verify: Expect the wrapper IOException.
     IOException exception =
         assertThrows(IOException.class, () -> supplier.getSubjectToken(mockContext));
 
-    // Check the message of the wrapper IOException
+    // Check the message of the wrapper IOException.
     assertEquals("Leaf certificate file not found: " + nonExistentPath, exception.getMessage());
 
-    // Check that the cause is the original NoSuchFileException
+    // Check that the cause is the original NoSuchFileException.
     assertNotNull("Exception should have a cause", exception.getCause());
     assertTrue(
         "Cause should be NoSuchFileException", exception.getCause() instanceof NoSuchFileException);
-    // Optionally, check the message of the cause (which is the path)
-    assertEquals(nonExistentPath, exception.getCause().getMessage());
+
+    // Check the message of the cause (which is the path) in a platform-agnostic way.
+    Path expectedCausePath = Paths.get(nonExistentPath);
+    Path actualCausePath = Paths.get(exception.getCause().getMessage());
+    assertEquals(
+        expectedCausePath,
+        actualCausePath);
   }
 
   @Test
