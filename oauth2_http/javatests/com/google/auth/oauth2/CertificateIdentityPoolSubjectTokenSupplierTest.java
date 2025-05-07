@@ -350,9 +350,7 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
     // Check the message of the cause (which is the path) in a platform-agnostic way.
     Path expectedCausePath = Paths.get(nonExistentPath);
     Path actualCausePath = Paths.get(exception.getCause().getMessage());
-    assertEquals(
-        expectedCausePath,
-        actualCausePath);
+    assertEquals(expectedCausePath, actualCausePath);
   }
 
   @Test
