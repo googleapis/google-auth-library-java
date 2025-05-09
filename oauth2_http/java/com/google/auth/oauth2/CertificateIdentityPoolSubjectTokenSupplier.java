@@ -50,6 +50,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import jdk.internal.joptsimple.internal.Strings;
 
 /**
  * Provider for retrieving the subject tokens for {@link IdentityPoolCredentials} by reading an
@@ -224,7 +225,7 @@ public class CertificateIdentityPoolSubjectTokenSupplier
     List<X509Certificate> certificateTrustChain = new ArrayList<>();
 
     // If no trust chain path is provided, return an empty list.
-    if (trustChainPath == null || trustChainPath.isEmpty()) {
+    if (Strings.isNullOrEmpty(trustChainPath)) {
       return certificateTrustChain;
     }
 
