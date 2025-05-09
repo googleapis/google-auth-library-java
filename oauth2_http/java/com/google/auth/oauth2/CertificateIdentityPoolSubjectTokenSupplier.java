@@ -34,6 +34,7 @@ package com.google.auth.oauth2;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,7 +51,6 @@ import java.util.Base64;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import jdk.internal.joptsimple.internal.Strings;
 
 /**
  * Provider for retrieving the subject tokens for {@link IdentityPoolCredentials} by reading an
