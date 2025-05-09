@@ -159,7 +159,7 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
   }
 
   @Test
-  public void getSubjectToken_trustChainWithLeaf_success() throws Exception {
+  public void getSubjectToken_trustChainWithLeafFirst_success() throws Exception {
     // Configure mock to return the path to the trust chain file with leaf.
     ClassLoader classLoader = getClass().getClassLoader();
     URL trustChainUrl = classLoader.getResource("trust_chain_with_leaf.pem");
@@ -227,6 +227,10 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
     assertEquals(expectedSubjectToken, actualSubjectToken);
   }
 
+  // Tests that an IllegalArgumentException (wrapped in IOException) is thrown
+  // when the trust chain file is provided and contains the leaf certificate,
+  // but the leaf certificate is not the *first* certificate in that file.
+  // For example, an intermediate certificate appears before the leaf certificate.
   @Test
   public void getSubjectToken_trustChainWrongOrder_throwsIllegalArgumentException() {
     ClassLoader classLoader = getClass().getClassLoader();
@@ -260,7 +264,9 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
     // simulating a scenario where the trust chain file contains only the leaf.
     ClassLoader classLoader = getClass().getClassLoader();
     URL trustChainUrl = classLoader.getResource("x509_leaf_certificate.pem");
-    assertNotNull("Leaf certificate file not found!", trustChainUrl);
+    assertNotNull(
+        "Test resource 'x509_leaf_certificate.pem' (used as trust chain) not found!",
+        trustChainUrl);
     when(mockCertificateConfig.getTrustChainPath())
         .thenReturn(new File(trustChainUrl.getFile()).getAbsolutePath());
 

@@ -38,6 +38,7 @@ import com.google.common.base.Strings;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
@@ -84,7 +85,6 @@ public class CertificateIdentityPoolSubjectTokenSupplier
     } catch (NoSuchFileException e) {
       throw new IOException(String.format("Leaf certificate file not found: %s", path), e);
     } catch (CertificateException e) {
-      // This catches parsing errors if the leaf certificate file is invalid.
       throw new IOException(
           String.format("Failed to parse leaf certificate from file: %s", path), e);
     } catch (IOException e) {
@@ -145,7 +145,7 @@ public class CertificateIdentityPoolSubjectTokenSupplier
     // Initialize the certificate chain for the subject token. The Security Token Service (STS)
     // requires that the leaf certificate (the one used for authenticating this workload) must be
     // the first certificate in this chain.
-    java.util.List<String> certChain = new java.util.ArrayList<>();
+    List<String> certChain = new ArrayList<>();
     certChain.add(encodedLeafCert);
 
     // Handle trust chain loading and processing.
@@ -155,39 +155,7 @@ public class CertificateIdentityPoolSubjectTokenSupplier
 
       // Process the trust chain certificates read from the file.
       if (!trustChainCerts.isEmpty()) {
-        // Get the first certificate from the user-provided trust chain file.
-        X509Certificate firstTrustCert = trustChainCerts.get(0);
-        String encodedFirstTrustCert = encodeCert(firstTrustCert);
-
-        // If the first certificate in the user-provided trust chain file is *not* the leaf
-        // certificate (which has already been added as the first element to `certChain`), then add
-        // this certificate to `certChain`. This handles cases where the user's trust chain file
-        // starts with an intermediate certificate. If the first certificate in the trust chain file
-        // *is* the leaf certificate, this means the user has explicitly included the leaf in their
-        // trust chain file. In this case, we skip adding it again to prevent duplication, as the
-        // leaf is already at the beginning of `certChain`.
-        if (!encodedFirstTrustCert.equals(encodedLeafCert)) {
-          certChain.add(encodedFirstTrustCert);
-        }
-
-        // Iterate over the remaining certificates in the trust chain.
-        for (int i = 1; i < trustChainCerts.size(); i++) {
-          X509Certificate currentCert = trustChainCerts.get(i);
-          String encodedCurrentCert = encodeCert(currentCert);
-
-          // Throw an error if the current certificate (from the user-provided trust chain file,
-          // at an index beyond the first) is the same as the leaf certificate.
-          // This enforces that if the leaf certificate is included in the trust chain file by the
-          // user, it must be the very first certificate in that file. It should not appear
-          // elsewhere in the chain.
-          if (encodedCurrentCert.equals(encodedLeafCert)) {
-            throw new IllegalArgumentException(
-                "The leaf certificate should only appear at the beginning of the trust chain file, or be omitted entirely.");
-          }
-
-          // Add the current certificate to the chain.
-          certChain.add(encodedCurrentCert);
-        }
+        populateCertChainFromTrustChain(certChain, trustChainCerts, encodedLeafCert);
       }
     } catch (IllegalArgumentException e) {
       // This catches the specific error for misconfigured trust chain (e.g., leaf in wrong place).
@@ -195,7 +163,6 @@ public class CertificateIdentityPoolSubjectTokenSupplier
     } catch (NoSuchFileException e) {
       throw new IOException(String.format("Trust chain file not found: %s", trustChainPath), e);
     } catch (CertificateException e) {
-      // This catches parsing errors if certificates in the trust chain file are invalid.
       throw new IOException(
           String.format("Failed to parse certificate(s) from trust chain file: %s", trustChainPath),
           e);
@@ -207,6 +174,58 @@ public class CertificateIdentityPoolSubjectTokenSupplier
     }
 
     return OAuth2Utils.JSON_FACTORY.toString(certChain);
+  }
+
+  /**
+   * Extends {@code certChainToPopulate} with encoded certificates from {@code trustChainCerts},
+   * applying validation rules for the leaf certificate's presence and order within the trust chain.
+   *
+   * @param certChainToPopulate The list of encoded certificate strings to populate.
+   * @param trustChainCerts The list of X509Certificates from the trust chain file (non-empty).
+   * @param encodedLeafCert The Base64-encoded leaf certificate.
+   * @throws CertificateEncodingException If an error occurs during certificate encoding.
+   * @throws IllegalArgumentException If the leaf certificate is found in an invalid position in the
+   *     trust chain.
+   */
+  private void populateCertChainFromTrustChain(
+      List<String> certChainToPopulate,
+      List<X509Certificate> trustChainCerts,
+      String encodedLeafCert)
+      throws CertificateEncodingException, IllegalArgumentException {
+
+    // Get the first certificate from the user-provided trust chain file.
+    X509Certificate firstTrustCert = trustChainCerts.get(0);
+    String encodedFirstTrustCert = encodeCert(firstTrustCert);
+
+    // If the first certificate in the user-provided trust chain file is *not* the leaf
+    // certificate (which has already been added as the first element to `certChainToPopulate`),
+    // then add this certificate. This handles cases where the user's trust chain file
+    // starts with an intermediate certificate. If the first certificate in the trust chain file
+    // *is* the leaf certificate, this means the user has explicitly included the leaf in their
+    // trust chain file. In this case, we skip adding it again to prevent duplication, as the
+    // leaf is already at the beginning of `certChainToPopulate`.
+    if (!encodedFirstTrustCert.equals(encodedLeafCert)) {
+      certChainToPopulate.add(encodedFirstTrustCert);
+    }
+
+    // Iterate over the remaining certificates in the trust chain.
+    for (int i = 1; i < trustChainCerts.size(); i++) {
+      X509Certificate currentCert = trustChainCerts.get(i);
+      String encodedCurrentCert = encodeCert(currentCert);
+
+      // Throw an error if the current certificate (from the user-provided trust chain file,
+      // at an index beyond the first) is the same as the leaf certificate.
+      // This enforces that if the leaf certificate is included in the trust chain file by the
+      // user, it must be the very first certificate in that file. It should not appear
+      // elsewhere in the chain.
+      if (encodedCurrentCert.equals(encodedLeafCert)) {
+        throw new IllegalArgumentException(
+            "The leaf certificate should only appear at the beginning of the trust chain file, or be omitted entirely.");
+      }
+
+      // Add the current certificate to the chain.
+      certChainToPopulate.add(encodedCurrentCert);
+    }
   }
 
   /**
@@ -237,13 +256,14 @@ public class CertificateIdentityPoolSubjectTokenSupplier
     trustChainData = Files.readAllBytes(Paths.get(trustChainPath));
 
     // Split the file content into PEM certificate blocks.
-    String content = new String(trustChainData);
+    String content = new String(trustChainData, StandardCharsets.UTF_8);
 
     Matcher matcher = PEM_CERT_PATTERN.matcher(content);
 
     while (matcher.find()) {
       String pemCertBlock = matcher.group(0);
-      try (InputStream certStream = new ByteArrayInputStream(pemCertBlock.getBytes())) {
+      try (InputStream certStream =
+          new ByteArrayInputStream(pemCertBlock.getBytes(StandardCharsets.UTF_8))) {
         // Parse the certificate data.
         Certificate cert = cf.generateCertificate(certStream);
 
