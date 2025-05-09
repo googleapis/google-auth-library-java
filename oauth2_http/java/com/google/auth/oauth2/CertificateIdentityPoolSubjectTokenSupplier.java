@@ -62,6 +62,9 @@ public class CertificateIdentityPoolSubjectTokenSupplier
 
   private final IdentityPoolCredentialSource credentialSource;
 
+  private static final Pattern PEM_CERT_PATTERN =
+      Pattern.compile("-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----", Pattern.DOTALL);
+
   CertificateIdentityPoolSubjectTokenSupplier(IdentityPoolCredentialSource credentialSource) {
     this.credentialSource = checkNotNull(credentialSource, "credentialSource cannot be null");
     // This check ensures that the credential source was intended for certificate usage.
@@ -72,10 +75,22 @@ public class CertificateIdentityPoolSubjectTokenSupplier
             + " CertificateIdentityPoolSubjectTokenSupplier");
   }
 
-  private static X509Certificate loadLeafCertificate(String path)
-      throws IOException, CertificateException {
-    byte[] leafCertBytes = Files.readAllBytes(Paths.get(path));
-    return parseCertificate(leafCertBytes);
+  private static String loadAndEncodeLeafCertificate(String path) throws IOException {
+    try {
+      byte[] leafCertBytes = Files.readAllBytes(Paths.get(path));
+      X509Certificate leafCert = parseCertificate(leafCertBytes);
+      return encodeCert(leafCert);
+    } catch (NoSuchFileException e) {
+      throw new IOException(String.format("Leaf certificate file not found: %s", path), e);
+    } catch (CertificateException e) {
+      // This catches parsing errors if the leaf certificate file is invalid.
+      throw new IOException(
+          String.format("Failed to parse leaf certificate from file: %s", path), e);
+    } catch (IOException e) {
+      // This catches any other general I/O errors during leaf certificate file reading (e.g.,
+      // permissions).
+      throw new IOException(String.format("Failed to read leaf certificate file: %s", path), e);
+    }
   }
 
   @VisibleForTesting
@@ -123,25 +138,33 @@ public class CertificateIdentityPoolSubjectTokenSupplier
       trustChainPath = credentialSource.getCertificateConfig().getTrustChainPath();
     }
 
+    // Load and encode the leaf certificate.
+    String encodedLeafCert = loadAndEncodeLeafCertificate(leafCertPath);
+
+    // Initialize the certificate chain for the subject token. The Security Token Service (STS)
+    // requires that the leaf certificate (the one used for authenticating this workload) must be
+    // the first certificate in this chain.
+    java.util.List<String> certChain = new java.util.ArrayList<>();
+    certChain.add(encodedLeafCert);
+
+    // Handle trust chain loading and processing.
     try {
-      // Load the leaf certificate.
-      X509Certificate leafCert = loadLeafCertificate(leafCertPath);
-      String encodedLeafCert = encodeCert(leafCert);
-
-      // Add the leaf certificate first.
-      java.util.List<String> certChain = new java.util.ArrayList<>();
-      certChain.add(encodedLeafCert);
-
       // Read the trust chain.
       List<X509Certificate> trustChainCerts = readTrustChain(trustChainPath);
 
       // Process the trust chain certificates read from the file.
       if (!trustChainCerts.isEmpty()) {
-        // Check the first certificate in the trust chain file.
+        // Get the first certificate from the user-provided trust chain file.
         X509Certificate firstTrustCert = trustChainCerts.get(0);
         String encodedFirstTrustCert = encodeCert(firstTrustCert);
 
-        // Add the first certificate only if it is not the same as the leaf certificate.
+        // If the first certificate in the user-provided trust chain file is *not* the leaf
+        // certificate (which has already been added as the first element to `certChain`), then add
+        // this certificate to `certChain`. This handles cases where the user's trust chain file
+        // starts with an intermediate certificate. If the first certificate in the trust chain file
+        // *is* the leaf certificate, this means the user has explicitly included the leaf in their
+        // trust chain file. In this case, we skip adding it again to prevent duplication, as the
+        // leaf is already at the beginning of `certChain`.
         if (!encodedFirstTrustCert.equals(encodedLeafCert)) {
           certChain.add(encodedFirstTrustCert);
         }
@@ -151,7 +174,11 @@ public class CertificateIdentityPoolSubjectTokenSupplier
           X509Certificate currentCert = trustChainCerts.get(i);
           String encodedCurrentCert = encodeCert(currentCert);
 
-          // Throw an error if the current certificate is the same as the leaf certificate.
+          // Throw an error if the current certificate (from the user-provided trust chain file,
+          // at an index beyond the first) is the same as the leaf certificate.
+          // This enforces that if the leaf certificate is included in the trust chain file by the
+          // user, it must be the very first certificate in that file. It should not appear
+          // elsewhere in the chain.
           if (encodedCurrentCert.equals(encodedLeafCert)) {
             throw new IllegalArgumentException(
                 "The leaf certificate should only appear at the beginning of the trust chain file, or be omitted entirely.");
@@ -161,25 +188,24 @@ public class CertificateIdentityPoolSubjectTokenSupplier
           certChain.add(encodedCurrentCert);
         }
       }
-
-      return OAuth2Utils.JSON_FACTORY.toString(certChain);
-    }
-    // The following catch blocks handle specific exceptions that can occur during
-    // certificate loading and parsing. These exceptions are wrapped in a new IOException,
-    // as declared by this method's signature.
-    catch (NoSuchFileException e) {
-      // Handles the case where the leaf certificate file itself cannot be found.
-      throw new IOException(String.format("Leaf certificate file not found: %s", leafCertPath), e);
+    } catch (IllegalArgumentException e) {
+      // This catches the specific error for misconfigured trust chain (e.g., leaf in wrong place).
+      throw new IOException("Trust chain misconfiguration: " + e.getMessage(), e);
+    } catch (NoSuchFileException e) {
+      throw new IOException(String.format("Trust chain file not found: %s", trustChainPath), e);
     } catch (CertificateException e) {
-      // Handles errors during the parsing of certificate data, which could stem from
-      // issues in either the leaf certificate or the trust chain. The message includes
-      // paths to both for comprehensive error reporting.
+      // This catches parsing errors if certificates in the trust chain file are invalid.
       throw new IOException(
-          "Failed to read certificate file(s). Leaf path: "
-              + leafCertPath
-              + (trustChainPath != null ? "\nTrust chain path: " + trustChainPath : ""),
+          String.format("Failed to parse certificate(s) from trust chain file: %s", trustChainPath),
           e);
+    } catch (IOException e) {
+      // This catches any other general I/O errors during trust chain file reading (e.g.,
+      // permissions).
+      throw new IOException(
+          String.format("Failed to read trust chain file: %s", trustChainPath), e);
     }
+
+    return OAuth2Utils.JSON_FACTORY.toString(certChain);
   }
 
   /**
@@ -207,19 +233,12 @@ public class CertificateIdentityPoolSubjectTokenSupplier
 
     // Read the trust chain file.
     byte[] trustChainData;
-    try {
-      trustChainData = Files.readAllBytes(Paths.get(trustChainPath));
-    } catch (NoSuchFileException e) {
-      throw new IOException("Trust chain file not found: " + trustChainPath, e);
-    } catch (IOException e) {
-      throw new IOException("Failed to read trust chain file: " + trustChainPath, e);
-    }
+    trustChainData = Files.readAllBytes(Paths.get(trustChainPath));
 
     // Split the file content into PEM certificate blocks.
     String content = new String(trustChainData);
-    Pattern pemCertPattern =
-        Pattern.compile("-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----", Pattern.DOTALL);
-    Matcher matcher = pemCertPattern.matcher(content);
+
+    Matcher matcher = PEM_CERT_PATTERN.matcher(content);
 
     while (matcher.find()) {
       String pemCertBlock = matcher.group(0);

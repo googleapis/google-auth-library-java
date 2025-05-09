@@ -235,12 +235,23 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
     String trustChainPath = new File(trustChainUrl.getFile()).getAbsolutePath();
     when(mockCertificateConfig.getTrustChainPath()).thenReturn(trustChainPath);
 
+    String expectedRootErrorMessage =
+        "The leaf certificate should only appear at the beginning of the trust chain file, or be omitted entirely.";
+    String expectedOuterExceptionMessage =
+        "Trust chain misconfiguration: " + expectedRootErrorMessage;
+
     // Execute & Verify
-    Exception exception =
-        assertThrows(IllegalArgumentException.class, () -> supplier.getSubjectToken(mockContext));
-    assertEquals(
-        "The leaf certificate should only appear at the beginning of the trust chain file, or be omitted entirely.",
-        exception.getMessage());
+    IOException exception =
+        assertThrows(IOException.class, () -> supplier.getSubjectToken(mockContext));
+
+    assertEquals(expectedOuterExceptionMessage, exception.getMessage());
+
+    Throwable cause = exception.getCause();
+    assertNotNull("Exception cause should not be null", cause);
+    assertTrue(
+        "Exception cause should be an IllegalArgumentException",
+        cause instanceof IllegalArgumentException);
+    assertEquals(expectedRootErrorMessage, cause.getMessage());
   }
 
   @Test
@@ -285,7 +296,7 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
     assertTrue(exception.getCause() instanceof NoSuchFileException);
 
     // Check the outer exception message added in getSubjectToken.
-    assertEquals(exception.getMessage(), "Trust chain file not found: " + nonExistentPath);
+    assertEquals("Trust chain file not found: " + nonExistentPath, exception.getMessage());
   }
 
   @Test
@@ -303,16 +314,10 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
     IOException exception =
         assertThrows(IOException.class, () -> supplier.getSubjectToken(mockContext));
 
-    // Construct the expected outer exception message
-    String expectedLeafPath = mockCredentialSource.getCredentialLocation();
-    String expectedMessage =
-        "Failed to read certificate file(s). Leaf path: "
-            + expectedLeafPath
-            + "\nTrust chain path: "
-            + invalidPath;
-
     // The final exception is an IOException thrown by getSubjectToken.
-    assertEquals(expectedMessage, exception.getMessage());
+    assertEquals(
+        "Failed to parse certificate(s) from trust chain file: " + invalidPath,
+        exception.getMessage());
 
     // Check that the cause is CertificateException from readTrustChain
     assertTrue(exception.getCause() instanceof CertificateException);
@@ -377,8 +382,8 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
 
     // Check the outer exception message
     assertEquals(
-        exception.getMessage(),
-        "Failed to read certificate file(s). Leaf path: " + invalidLeafFile.getAbsolutePath());
+        "Failed to parse leaf certificate from file: " + invalidLeafFile.getAbsolutePath(),
+        exception.getMessage());
   }
 
   @Test
