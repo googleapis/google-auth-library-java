@@ -31,7 +31,10 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 import com.google.auth.oauth2.IdentityPoolCredentialSource.CertificateConfig;
