@@ -43,4 +43,7 @@ import java.security.KeyStore;
 public interface MtlsProvider {
   /** Returns the mutual TLS key store. */
   KeyStore getKeyStore() throws IOException;
+
+  /** Returns true if the underlying certificate source is available. */
+  boolean isCertificateSourceAvailable() throws IOException;
 }

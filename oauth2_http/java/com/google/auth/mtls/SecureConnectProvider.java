@@ -68,7 +68,7 @@ public class SecureConnectProvider implements MtlsProvider {
     @Override
     public Process createProcess(InputStream metadata) throws IOException {
       if (metadata == null) {
-        return null;
+        throw new IOException("Error creating Process: metadata is null");
       }
       List<String> command = extractCertificateProviderCommand(metadata);
       return new ProcessBuilder(command).start();
@@ -108,12 +108,24 @@ public class SecureConnectProvider implements MtlsProvider {
     }
   }
 
+  @Override
+  public boolean isCertificateSourceAvailable() throws IOException {
+    try {
+      this.getKeyStore();
+    } catch (CertificateSourceUnavailableException e) {
+      return false;
+    }
+    return true;
+  }
+
   @VisibleForTesting
   static KeyStore getKeyStore(InputStream metadata, ProcessProvider processProvider)
       throws IOException, InterruptedException, GeneralSecurityException {
     Process process = processProvider.createProcess(metadata);
 
     // Run the command and timeout after 1000 milliseconds.
+    // The cert provider command usually finishes instantly (if it doesn't hang),
+    // so 1000 milliseconds is plenty of time.
     int exitCode = runCertificateProviderCommand(process, 1000);
     if (exitCode != 0) {
       throw new IOException("Cert provider command failed with exit code: " + exitCode);
@@ -134,28 +146,11 @@ public class SecureConnectProvider implements MtlsProvider {
   @VisibleForTesting
   static int runCertificateProviderCommand(Process commandProcess, long timeoutMilliseconds)
       throws IOException, InterruptedException {
-    long startTime = System.currentTimeMillis();
-    long remainTime = timeoutMilliseconds;
-
-    // In the while loop, keep checking if the process is terminated every 100 milliseconds
-    // until timeout is reached or process is terminated. In getKeyStore we set timeout to
-    // 1000 milliseconds, so 100 millisecond is a good number for the sleep.
-    while (remainTime > 0) {
-      Thread.sleep(Math.min(remainTime + 1, 100));
-      remainTime -= System.currentTimeMillis() - startTime;
-
-      try {
-        return commandProcess.exitValue();
-      } catch (IllegalThreadStateException ignored) {
-        // exitValue throws IllegalThreadStateException if process has not yet terminated.
-        // Once the process is terminated, exitValue no longer throws exception. Therefore
-        // in the while loop, we use exitValue to check if process is terminated. See
-        // https://docs.oracle.com/javase/7/docs/api/java/lang/Process.html#exitValue()
-        // for more details.
-      }
+    boolean terminated = commandProcess.waitFor(timeoutMilliseconds, TimeUnit.MILLISECONDS);
+    if (!terminated) {
+      commandProcess.destroy();
+      throw new IOException("Cert provider command timed out");
     }
-
-    commandProcess.destroy();
-    throw new IOException("cert provider command timed out");
+    return commandProcess.exitValue();
   }
 }

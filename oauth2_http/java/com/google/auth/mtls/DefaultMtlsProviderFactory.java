@@ -46,20 +46,15 @@ public class DefaultMtlsProviderFactory {
    * @throws IOException if an I/O error occurs during provider creation.
    */
   public static MtlsProvider create() throws IOException {
-    MtlsProvider mtlsProvider;
-    try {
-      mtlsProvider = new X509Provider();
-      mtlsProvider.getKeyStore();
+    MtlsProvider mtlsProvider = new X509Provider();
+    if (mtlsProvider.isCertificateSourceAvailable()) {
       return mtlsProvider;
-    } catch (CertificateSourceUnavailableException e) {
-      try {
-        mtlsProvider = new SecureConnectProvider();
-        mtlsProvider.getKeyStore();
-        return mtlsProvider;
-      } catch (CertificateSourceUnavailableException ex) {
-        throw new CertificateSourceUnavailableException(
-            "No MtlsSource is available on this device.");
-      }
     }
+    mtlsProvider = new SecureConnectProvider();
+    if (mtlsProvider.isCertificateSourceAvailable()) {
+      return mtlsProvider;
+    }
+    throw new CertificateSourceUnavailableException(
+        "No Certificate Source is available on this device.");
   }
 }

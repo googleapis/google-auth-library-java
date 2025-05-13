@@ -93,18 +93,12 @@ public class X509Provider implements MtlsProvider {
 
     WorkloadCertificateConfiguration workloadCertConfig = getWorkloadCertificateConfiguration();
 
-    InputStream certStream = null;
-    InputStream privateKeyStream = null;
-    SequenceInputStream certAndPrivateKeyStream = null;
-    try {
-      // Read the certificate and private key file paths into separate streams.
-      File certFile = new File(workloadCertConfig.getCertPath());
-      File privateKeyFile = new File(workloadCertConfig.getPrivateKeyPath());
-      certStream = createInputStream(certFile);
-      privateKeyStream = createInputStream(privateKeyFile);
-
-      // Merge the two streams into a single stream.
-      certAndPrivateKeyStream = new SequenceInputStream(certStream, privateKeyStream);
+    // Read the certificate and private key file paths into streams.
+    try (InputStream certStream = createInputStream(new File(workloadCertConfig.getCertPath()));
+        InputStream privateKeyStream =
+            createInputStream(new File(workloadCertConfig.getPrivateKeyPath()));
+        SequenceInputStream certAndPrivateKeyStream =
+            new SequenceInputStream(certStream, privateKeyStream)) {
 
       // Build a key store using the combined stream.
       return SecurityUtils.createMtlsKeyStore(certAndPrivateKeyStream);
@@ -114,17 +108,17 @@ public class X509Provider implements MtlsProvider {
     } catch (Exception e) {
       // Wrap all other exception types to an IOException.
       throw new IOException(e);
-    } finally {
-      if (certStream != null) {
-        certStream.close();
-      }
-      if (privateKeyStream != null) {
-        privateKeyStream.close();
-      }
-      if (certAndPrivateKeyStream != null) {
-        certAndPrivateKeyStream.close();
-      }
     }
+  }
+
+  @Override
+  public boolean isCertificateSourceAvailable() throws IOException {
+    try {
+      this.getKeyStore();
+    } catch (CertificateSourceUnavailableException e) {
+      return false;
+    }
+    return true;
   }
 
   private WorkloadCertificateConfiguration getWorkloadCertificateConfiguration()
