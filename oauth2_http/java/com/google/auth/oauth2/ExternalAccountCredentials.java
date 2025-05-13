@@ -36,6 +36,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
+import com.google.api.client.util.Data;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
@@ -418,15 +419,16 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     Map<String, Object> credentialSourceMap = (Map<String, Object>) json.get("credential_source");
 
     // Optional params.
-    String serviceAccountImpersonationUrl = (String) json.get("service_account_impersonation_url");
-    String tokenInfoUrl = (String) json.get("token_info_url");
-    String clientId = (String) json.get("client_id");
-    String clientSecret = (String) json.get("client_secret");
-    String quotaProjectId = (String) json.get("quota_project_id");
-    String userProject = (String) json.get("workforce_pool_user_project");
-    String universeDomain = (String) json.get("universe_domain");
+    String serviceAccountImpersonationUrl =
+        getOptional(json, "service_account_impersonation_url", String.class);
+    String tokenInfoUrl = getOptional(json, "token_info_url", String.class);
+    String clientId = getOptional(json, "client_id", String.class);
+    String clientSecret = getOptional(json, "client_secret", String.class);
+    String quotaProjectId = getOptional(json, "quota_project_id", String.class);
+    String userProject = getOptional(json, "workforce_pool_user_project", String.class);
+    String universeDomain = getOptional(json, "universe_domain", String.class);
     Map<String, Object> impersonationOptionsMap =
-        (Map<String, Object>) json.get("service_account_impersonation");
+        getOptional(json, "service_account_impersonation", Map.class);
 
     if (impersonationOptionsMap == null) {
       impersonationOptionsMap = new HashMap<String, Object>();
@@ -479,6 +481,14 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
         .setServiceAccountImpersonationOptions(impersonationOptionsMap)
         .setUniverseDomain(universeDomain)
         .build();
+  }
+
+  private static <T> T getOptional(Map<String, Object> json, String fieldName, Class<T> clazz) {
+    Object value = json.get(fieldName);
+    if (value == null || Data.isNull(value)) {
+      return null;
+    }
+    return clazz.cast(value);
   }
 
   private static boolean isPluggableAuthCredential(Map<String, Object> credentialSource) {
@@ -584,7 +594,9 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     return serviceAccountImpersonationUrl;
   }
 
-  /** @return The service account email to be impersonated, if available */
+  /**
+   * @return The service account email to be impersonated, if available
+   */
   @Nullable
   public String getServiceAccountEmail() {
     if (serviceAccountImpersonationUrl == null || serviceAccountImpersonationUrl.isEmpty()) {

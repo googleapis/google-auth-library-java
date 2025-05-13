@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.auth</groupId>
   <artifactId>google-auth-library-parent</artifactId>
-  <version>1.33.2-SNAPSHOT</version><!-- {x-version-update:google-auth-library-parent:current} -->
+  <version>1.35.0</version><!-- {x-version-update:google-auth-library-parent:current} -->
   <packaging>pom</packaging>
   <name>Google Auth Library for Java</name>
   <description>Client libraries providing authentication and
@@ -16,7 +16,7 @@
   <parent>
     <groupId>com.google.cloud</groupId>
     <artifactId>google-cloud-shared-config</artifactId>
-    <version>1.15.0</version>
+    <version>1.15.4</version>
   </parent>
 
   <distributionManagement>
@@ -74,7 +74,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.google.http.version>1.46.3</project.google.http.version>
+    <project.google.http.version>1.47.0</project.google.http.version>
     <project.junit.version>4.13.2</project.junit.version>
     <project.guava.version>33.4.0-android</project.guava.version>
     <project.appengine.version>2.0.33</project.appengine.version>

@@ -52,7 +52,7 @@ public class X509Provider implements MtlsProvider {
   static final String WELL_KNOWN_CERTIFICATE_CONFIG_FILE = "certificate_config.json";
   static final String CLOUDSDK_CONFIG_DIRECTORY = "gcloud";
 
-  private String certConfigPathOverride;
+  private final String certConfigPathOverride;
 
   /**
    * Creates an X509 provider with an override path for the certificate configuration, bypassing the
@@ -75,6 +75,29 @@ public class X509Provider implements MtlsProvider {
   }
 
   /**
+   * Returns the path to the client certificate file specified by the loaded workload certificate
+   * configuration.
+   *
+   * <p>If the configuration has not been loaded yet (e.g., if {@link #getKeyStore()} has not been
+   * called), this method will attempt to load it first by searching the override path, environment
+   * variable, and well-known locations.
+   *
+   * @return The path to the certificate file.
+   * @throws IOException if the certificate configuration cannot be found or loaded, or if the
+   *     configuration file does not specify a certificate path.
+   * @throws CertificateSourceUnavailableException if the configuration file is not found.
+   */
+  public String getCertificatePath() throws IOException {
+    String certPath = getWorkloadCertificateConfiguration().getCertPath();
+    if (Strings.isNullOrEmpty(certPath)) {
+      // Ensure the loaded configuration actually contains the required path.
+      throw new CertificateSourceUnavailableException(
+          "Certificate configuration loaded successfully, but does not contain a 'certificate_file' path.");
+    }
+    return certPath;
+  }
+
+  /**
    * Finds the certificate configuration file, then builds a Keystore using the X.509 certificate
    * and private key pointed to by the configuration. This will check the following locations in
    * order.
@@ -90,7 +113,6 @@ public class X509Provider implements MtlsProvider {
    */
   @Override
   public KeyStore getKeyStore() throws IOException {
-
     WorkloadCertificateConfiguration workloadCertConfig = getWorkloadCertificateConfiguration();
 
     // Read the certificate and private key file paths into streams.
@@ -171,6 +193,7 @@ public class X509Provider implements MtlsProvider {
   String getProperty(String property, String def) {
     return System.getProperty(property, def);
   }
+
   /*
    * End of methods to allow overriding in the test code to isolate from the environment.
    */
