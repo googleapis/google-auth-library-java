@@ -149,6 +149,23 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void fromStream_nullOptionalField() throws IOException {
+    ExternalAccountCredentials credentials =
+        ExternalAccountCredentials.fromStream(
+            new ByteArrayInputStream(
+                ("{"
+                        + "\"service_account_impersonation_url\": null,"
+                        +
+                        // required
+                        "\"audience\": \"audience\","
+                        + "\"subject_token_type\": \"subjectTokenType\","
+                        + "\"credential_source\": {\"file\":\"file\"}"
+                        + "}")
+                    .getBytes()));
+    assertNull(credentials.getServiceAccountImpersonationUrl());
+  }
+
+  @Test
   public void fromStream_nullStream_throws() throws IOException {
     try {
       ExternalAccountCredentials.fromStream(
