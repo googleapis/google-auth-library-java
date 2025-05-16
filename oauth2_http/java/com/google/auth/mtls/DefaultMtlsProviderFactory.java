@@ -32,42 +32,29 @@ package com.google.auth.mtls;
 
 import java.io.IOException;
 
-/**
- * This exception is thrown by certificate providers in the Google auth library when the certificate
- * source is unavailable. This means that the transport layer should move on to the next certificate
- * source provider type.
- */
-public class CertificateSourceUnavailableException extends IOException {
+public class DefaultMtlsProviderFactory {
 
   /**
-   * Constructor with a message and throwable cause.
+   * Creates an instance of {@link MtlsProvider}. It first attempts to create an {@link
+   * com.google.auth.mtls.X509Provider}. If the certificate source is unavailable, it falls back to
+   * creating a {@link SecureConnectProvider}. If the secure connect provider also fails, it throws
+   * the original {@link com.google.auth.mtls.CertificateSourceUnavailableException}.
    *
-   * @param message The detail message (which is saved for later retrieval by the {@link
-   *     #getMessage()} method)
-   * @param cause The cause (which is saved for later retrieval by the {@link #getCause()} method).
-   *     (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
+   * @return an instance of {@link MtlsProvider}.
+   * @throws com.google.auth.mtls.CertificateSourceUnavailableException if neither provider can be
+   *     created.
+   * @throws IOException if an I/O error occurs during provider creation.
    */
-  public CertificateSourceUnavailableException(String message, Throwable cause) {
-    super(message, cause);
-  }
-
-  /**
-   * Constructor with a throwable cause.
-   *
-   * @param cause The cause (which is saved for later retrieval by the {@link #getCause()} method).
-   *     (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
-   */
-  public CertificateSourceUnavailableException(Throwable cause) {
-    super(cause);
-  }
-
-  /**
-   * Constructor with a message.
-   *
-   * @param message The detail message (which is saved for later retrieval by the {@link
-   *     #getMessage()} method)
-   */
-  public CertificateSourceUnavailableException(String message) {
-    super(message);
+  public static MtlsProvider create() throws IOException {
+    MtlsProvider mtlsProvider = new X509Provider();
+    if (mtlsProvider.isCertificateSourceAvailable()) {
+      return mtlsProvider;
+    }
+    mtlsProvider = new SecureConnectProvider();
+    if (mtlsProvider.isCertificateSourceAvailable()) {
+      return mtlsProvider;
+    }
+    throw new CertificateSourceUnavailableException(
+        "No Certificate Source is available on this device.");
   }
 }
