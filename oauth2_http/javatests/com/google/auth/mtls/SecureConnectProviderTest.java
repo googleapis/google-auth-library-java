@@ -142,7 +142,7 @@ public class SecureConnectProviderTest {
             () -> SecureConnectProvider.runCertificateProviderCommand(certCommandProcess, 100));
     assertTrue(
         "expected to fail with timeout",
-        actual.getMessage().contains("cert provider command timed out"));
+        actual.getMessage().contains("Cert provider command timed out"));
   }
 
   @Test
