@@ -277,6 +277,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
         // return licenses only if format=full is set
         if (queryPairs.containsKey("licenses")) {
+          // The metadata server defaults to false and matches "on", "off" and ::absl::SimpleAtob.
+          // See https://abseil.io/docs/cpp/guides/strings#numericConversion for more information.
           if (BOOL_PARAMETER_VALUE.matcher((String) queryPairs.get("licenses")).matches()) {
             return new MockLowLevelHttpRequest(url) {
               @Override
