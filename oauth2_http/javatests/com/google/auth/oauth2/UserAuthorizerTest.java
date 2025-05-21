@@ -207,6 +207,7 @@ public class UserAuthorizerTest {
     assertEquals("code", parameters.get("response_type"));
     assertEquals(pkce.getCodeChallenge(), parameters.get("code_challenge"));
     assertEquals(pkce.getCodeChallengeMethod(), parameters.get("code_challenge_method"));
+    assertEquals("consent", parameters.get("prompt"));
   }
 
   @Test
