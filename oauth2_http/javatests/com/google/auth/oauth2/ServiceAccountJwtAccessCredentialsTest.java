@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.Credentials.GOOGLE_DEFAULT_UNIVERSE;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -111,6 +112,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
     assertEquals(privateKey, credentials.getPrivateKey());
     assertEquals(SA_PRIVATE_KEY_ID, credentials.getPrivateKeyId());
     assertEquals(QUOTA_PROJECT, credentials.getQuotaProjectId());
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
   @Test
@@ -827,6 +829,20 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
         });
 
     assertTrue("Should have run onSuccess() callback", success.get());
+  }
+
+  @Test
+  public void getUniverseDomain_defaultUniverse() throws IOException {
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    ServiceAccountJwtAccessCredentials credentials =
+            ServiceAccountJwtAccessCredentials.newBuilder()
+                    .setClientId(SA_CLIENT_ID)
+                    .setClientEmail(SA_CLIENT_EMAIL)
+                    .setPrivateKey(privateKey)
+                    .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+                    .setDefaultAudience(URI.create("default-audience"))
+                    .build();
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
   private void verifyJwtAccess(
