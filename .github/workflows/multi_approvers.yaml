@@ -30,7 +30,8 @@ jobs:
     runs-on: 'ubuntu-latest'
     steps:
       - name: 'Multi-approvers'
-        uses: 'abcxyz/actions/.github/actions/multi-approvers@986a6a133d0ffb38ab46a27c0777749a6735791a'
+        uses: 'abcxyz/actions/.github/actions/multi-approvers@b1b53fb1dfed3b3ced19ea966281a46bca610593'
         with:
           team: 'multi-approvers'
           token: '${{ secrets.MULTI_APPROVERS_TOKEN }}'
+          user-id-allowlist: 'renovate-bot,release-please[bot],cloud-java-bot,gcf-owl-bot[bot],dependabot[bot],yoshi-code-bot,yoshi-automation'
