@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.35.1](https://github.com/googleapis/google-auth-library-java/compare/v1.35.0...v1.35.1) (2025-05-21)
+
+
+### Bug Fixes
+
+* IdTokenCredentials should fetch license id claim when requested ([#1450](https://github.com/googleapis/google-auth-library-java/issues/1450)) ([c5648a5](https://github.com/googleapis/google-auth-library-java/commit/c5648a55f15a75b1d616fbdc37cd331811e66f3a))
+
 ## [1.35.0](https://github.com/googleapis/google-auth-library-java/compare/v1.34.0...v1.35.0) (2025-05-12)
 
 
