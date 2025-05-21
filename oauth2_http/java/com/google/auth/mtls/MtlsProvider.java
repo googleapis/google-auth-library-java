@@ -31,43 +31,19 @@
 package com.google.auth.mtls;
 
 import java.io.IOException;
+import java.security.KeyStore;
 
 /**
- * This exception is thrown by certificate providers in the Google auth library when the certificate
- * source is unavailable. This means that the transport layer should move on to the next certificate
- * source provider type.
+ * MtlsProvider is used by the Gax library for configuring mutual TLS in the HTTP and GRPC transport
+ * layer. The source of the client certificate is up to the implementation.
+ *
+ * <p>Note: This interface will replace the identically named "MtlsProvider" implementation in the
+ * Gax library. The Gax library version of MtlsProvider will be marked as deprecated.
  */
-public class CertificateSourceUnavailableException extends IOException {
+public interface MtlsProvider {
+  /** Returns the mutual TLS key store. */
+  KeyStore getKeyStore() throws IOException;
 
-  /**
-   * Constructor with a message and throwable cause.
-   *
-   * @param message The detail message (which is saved for later retrieval by the {@link
-   *     #getMessage()} method)
-   * @param cause The cause (which is saved for later retrieval by the {@link #getCause()} method).
-   *     (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
-   */
-  public CertificateSourceUnavailableException(String message, Throwable cause) {
-    super(message, cause);
-  }
-
-  /**
-   * Constructor with a throwable cause.
-   *
-   * @param cause The cause (which is saved for later retrieval by the {@link #getCause()} method).
-   *     (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
-   */
-  public CertificateSourceUnavailableException(Throwable cause) {
-    super(cause);
-  }
-
-  /**
-   * Constructor with a message.
-   *
-   * @param message The detail message (which is saved for later retrieval by the {@link
-   *     #getMessage()} method)
-   */
-  public CertificateSourceUnavailableException(String message) {
-    super(message);
-  }
+  /** Returns true if the underlying certificate source is available. */
+  boolean isCertificateSourceAvailable() throws IOException;
 }
