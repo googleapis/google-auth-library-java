@@ -888,6 +888,21 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
     assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
+  @Test
+  public void getUniverseDomain_customUniverse() throws IOException {
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    ServiceAccountJwtAccessCredentials credentials =
+        ServiceAccountJwtAccessCredentials.newBuilder()
+            .setClientId(SA_CLIENT_ID)
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(privateKey)
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setDefaultAudience(URI.create("default-audience"))
+            .setUniverseDomain("example.com")
+            .build();
+    assertEquals("example.com", credentials.getUniverseDomain());
+  }
+
   private void verifyJwtAccess(
       Map<String, List<String>> metadata,
       String expectedEmail,
