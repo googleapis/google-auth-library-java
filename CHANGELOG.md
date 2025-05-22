@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.35.0](https://github.com/googleapis/google-auth-library-java/compare/v1.34.0...v1.35.0) (2025-05-12)
+
+
+### Features
+
+* Add support for mTLS authentication via X.509 certificates ([#1736](https://github.com/googleapis/google-auth-library-java/issues/1736)) ([b347603](https://github.com/googleapis/google-auth-library-java/commit/b347603db4deabb4eb34ed14b96178c95d3e7b45))
+* Return X509 certificate chain as the subject token. ([#1746](https://github.com/googleapis/google-auth-library-java/issues/1746)) ([6d05be8](https://github.com/googleapis/google-auth-library-java/commit/6d05be8e5cecf62ca0952bc3ef23c527c9e0d01d))
+
+
+### Bug Fixes
+
+* Handle optional fields in ExternalAccountCredentials with null JSON value gracefully ([#1706](https://github.com/googleapis/google-auth-library-java/issues/1706)) ([f1f306d](https://github.com/googleapis/google-auth-library-java/commit/f1f306dffd874741663238283deed173ce02bea9))
+
 ## [1.34.0](https://github.com/googleapis/google-auth-library-java/compare/v1.33.1...v1.34.0) (2025-04-29)
 
 

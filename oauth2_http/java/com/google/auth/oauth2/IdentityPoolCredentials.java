@@ -32,9 +32,13 @@
 package com.google.auth.oauth2;
 
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.mtls.MtlsHttpTransportFactory;
+import com.google.auth.mtls.X509Provider;
+import com.google.auth.oauth2.IdentityPoolCredentialSource.IdentityPoolCredentialSourceType;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
+import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -48,6 +52,8 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   static final String FILE_METRICS_HEADER_VALUE = "file";
   static final String URL_METRICS_HEADER_VALUE = "url";
+  static final String CERTIFICATE_METRICS_HEADER_VALUE = "certificate";
+
   private static final long serialVersionUID = 2471046175477275881L;
   private final IdentityPoolSubjectTokenSupplier subjectTokenSupplier;
   private final ExternalAccountSupplierContext supplierContext;
@@ -63,6 +69,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
             .setAudience(this.getAudience())
             .setSubjectTokenType(this.getSubjectTokenType())
             .build();
+
     // Check that one and only one of supplier or credential source are provided.
     if (builder.subjectTokenSupplier != null && credentialSource != null) {
       throw new IllegalArgumentException(
@@ -72,17 +79,33 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       throw new IllegalArgumentException(
           "A subjectTokenSupplier or a credentialSource must be provided.");
     }
+
+    // Initialize based on the source type
     if (builder.subjectTokenSupplier != null) {
       this.subjectTokenSupplier = builder.subjectTokenSupplier;
       this.metricsHeaderValue = PROGRAMMATIC_METRICS_HEADER_VALUE;
-    } else if (credentialSource.credentialSourceType
-        == IdentityPoolCredentialSource.IdentityPoolCredentialSourceType.FILE) {
+    } else if (credentialSource.credentialSourceType == IdentityPoolCredentialSourceType.FILE) {
       this.subjectTokenSupplier = new FileIdentityPoolSubjectTokenSupplier(credentialSource);
       this.metricsHeaderValue = FILE_METRICS_HEADER_VALUE;
-    } else {
+    } else if (credentialSource.credentialSourceType == IdentityPoolCredentialSourceType.URL) {
       this.subjectTokenSupplier =
           new UrlIdentityPoolSubjectTokenSupplier(credentialSource, this.transportFactory);
       this.metricsHeaderValue = URL_METRICS_HEADER_VALUE;
+    } else if (credentialSource.credentialSourceType
+        == IdentityPoolCredentialSourceType.CERTIFICATE) {
+      try {
+        this.subjectTokenSupplier =
+            createCertificateSubjectTokenSupplier(builder, credentialSource);
+      } catch (IOException e) {
+        throw new RuntimeException(
+            // Wrap IOException in RuntimeException because constructors cannot throw checked
+            // exceptions.
+            "Failed to initialize IdentityPoolCredentials from certificate source due to an I/O error.",
+            e);
+      }
+      this.metricsHeaderValue = CERTIFICATE_METRICS_HEADER_VALUE;
+    } else {
+      throw new IllegalArgumentException("Source type not supported.");
     }
   }
 
@@ -119,8 +142,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
   /** Clones the IdentityPoolCredentials with the specified scopes. */
   @Override
   public IdentityPoolCredentials createScoped(Collection<String> newScopes) {
-    return new IdentityPoolCredentials(
-        (IdentityPoolCredentials.Builder) newBuilder(this).setScopes(newScopes));
+    return new IdentityPoolCredentials(newBuilder(this).setScopes(newScopes));
   }
 
   public static Builder newBuilder() {
@@ -131,9 +153,40 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
     return new Builder(identityPoolCredentials);
   }
 
+  private IdentityPoolSubjectTokenSupplier createCertificateSubjectTokenSupplier(
+      Builder builder, IdentityPoolCredentialSource credentialSource) throws IOException {
+    // Configure the mTLS transport with the x509 keystore.
+    X509Provider x509Provider = getX509Provider(builder, credentialSource);
+    KeyStore mtlsKeyStore = x509Provider.getKeyStore();
+    this.transportFactory = new MtlsHttpTransportFactory(mtlsKeyStore);
+
+    // Initialize the subject token supplier with the certificate path.
+    credentialSource.setCredentialLocation(x509Provider.getCertificatePath());
+    return new CertificateIdentityPoolSubjectTokenSupplier(credentialSource);
+  }
+
+  private X509Provider getX509Provider(
+      Builder builder, IdentityPoolCredentialSource credentialSource) {
+    final IdentityPoolCredentialSource.CertificateConfig certConfig =
+        credentialSource.getCertificateConfig();
+
+    // Use the provided X509Provider if available, otherwise initialize a default one.
+    X509Provider x509Provider = builder.x509Provider;
+    if (x509Provider == null) {
+      // Determine the certificate path based on the configuration.
+      String explicitCertConfigPath =
+          certConfig.useDefaultCertificateConfig()
+              ? null
+              : certConfig.getCertificateConfigLocation();
+      x509Provider = new X509Provider(explicitCertConfigPath);
+    }
+    return x509Provider;
+  }
+
   public static class Builder extends ExternalAccountCredentials.Builder {
 
     private IdentityPoolSubjectTokenSupplier subjectTokenSupplier;
+    private X509Provider x509Provider;
 
     Builder() {}
 
@@ -142,6 +195,21 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       if (this.credentialSource == null) {
         this.subjectTokenSupplier = credentials.subjectTokenSupplier;
       }
+    }
+
+    /**
+     * Sets a custom {@link X509Provider} to manage the client certificate and private key for mTLS.
+     * If set, this provider will be used instead of the default behavior which initializes an
+     * {@code X509Provider} based on the {@code certificateConfigLocation} or default paths found in
+     * the {@code credentialSource}. This is primarily used for testing.
+     *
+     * @param x509Provider the custom X509 provider to use.
+     * @return this {@code Builder} object
+     */
+    @CanIgnoreReturnValue
+    Builder setX509Provider(X509Provider x509Provider) {
+      this.x509Provider = x509Provider;
+      return this;
     }
 
     /**

@@ -407,9 +407,9 @@ public class ComputeEngineCredentials extends GoogleCredentials
         documentUrl.set("format", "full");
       }
       if (options.contains(IdTokenProvider.Option.LICENSES_TRUE)) {
-        // license will only get returned if format is also full
+        // licenses will only get returned if format is also full
         documentUrl.set("format", "full");
-        documentUrl.set("license", "TRUE");
+        documentUrl.set("licenses", "TRUE");
       }
     }
     documentUrl.set("audience", targetAudience);
