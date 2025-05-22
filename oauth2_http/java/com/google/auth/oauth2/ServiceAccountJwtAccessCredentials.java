@@ -116,7 +116,8 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    * @param privateKey RSA private key object for the service account.
    * @param privateKeyId Private key identifier for the service account. May be null.
    * @param defaultAudience Audience to use if not provided by transport. May be null.
-   * @param universeDomain Universe domain
+   * @param universeDomain universe domain in the format some-domain.xyz. By default, returns
+   *     googleapis.com.
    */
   private ServiceAccountJwtAccessCredentials(
       String clientId,
@@ -169,7 +170,8 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     String privateKeyId = (String) json.get("private_key_id");
     String quoataProjectId = (String) json.get("quota_project_id");
     String rawUniverseDomain = (String) json.get("universe_domain");
-    String resolvedUniverseDomain = (rawUniverseDomain == null) ? Credentials.GOOGLE_DEFAULT_UNIVERSE : rawUniverseDomain;
+    String resolvedUniverseDomain =
+        (rawUniverseDomain == null) ? Credentials.GOOGLE_DEFAULT_UNIVERSE : rawUniverseDomain;
 
     if (clientId == null
         || clientEmail == null
@@ -180,9 +182,14 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
               + "expecting  'client_id', 'client_email', 'private_key' and 'private_key_id'.");
     }
     return ServiceAccountJwtAccessCredentials.fromPkcs8(
-        clientId, clientEmail, privateKeyPkcs8, privateKeyId, defaultAudience, quoataProjectId, resolvedUniverseDomain);
+        clientId,
+        clientEmail,
+        privateKeyPkcs8,
+        privateKeyId,
+        defaultAudience,
+        quoataProjectId,
+        resolvedUniverseDomain);
   }
-
 
   /**
    * Factory using PKCS#8 for the private key.
@@ -367,11 +374,11 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     }
     try {
       JwtClaims defaultClaims =
-              JwtClaims.newBuilder()
-                      .setAudience(uri.toString())
-                      .setIssuer(clientEmail)
-                      .setSubject(clientEmail)
-                      .build();
+          JwtClaims.newBuilder()
+              .setAudience(uri.toString())
+              .setIssuer(clientEmail)
+              .setSubject(clientEmail)
+              .build();
       JwtCredentials credentials = credentialsCache.get(defaultClaims);
       Map<String, List<String>> requestMetadata = credentials.getRequestMetadata(uri);
       return addQuotaProjectIdToRequestMetadata(quotaProjectId, requestMetadata);
@@ -379,7 +386,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
       Throwables.propagateIfPossible(e.getCause(), IOException.class);
       // Should never happen
       throw new IllegalStateException(
-              "generateJwtAccess threw an unexpected checked exception", e.getCause());
+          "generateJwtAccess threw an unexpected checked exception", e.getCause());
 
     } catch (UncheckedExecutionException e) {
       Throwables.throwIfUnchecked(e);
