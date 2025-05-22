@@ -30,8 +30,16 @@ jobs:
     runs-on: 'ubuntu-latest'
     steps:
       - name: 'Multi-approvers'
-        uses: 'abcxyz/actions/.github/actions/multi-approvers@5b9d36fcab440b731c3dc2ab6cc854d290b3b657'
+        uses: 'abcxyz/actions/.github/actions/multi-approvers@5d94796fb79fd38c346e223cebdd615fddfb03d0e'
         with:
           team: 'multi-approvers'
           token: '${{ secrets.MULTI_APPROVERS_TOKEN }}'
-          user-id-allowlist: 'renovate-bot,release-please[bot],cloud-java-bot,gcf-owl-bot[bot],dependabot[bot],yoshi-code-bot,yoshi-automation'
+          user-id-allowlist: '25180681,7163701,7163701,122572305,78513119,27347476,70984784,44816363'
+          # username to ID mapping (https://api.github.com/users{username}):
+          #   renovate-bot: 25180681
+          #   release-please[bot]: 7163701
+          #   cloud-java-bot: 122572305
+          #   gcf-owl-bot[bot]: 78513119
+          #   dependabot[bot]: 27347476
+          #   yoshi-code-bot: 70984784
+          #   yoshi-automation: 44816363
