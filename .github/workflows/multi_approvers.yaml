@@ -30,7 +30,7 @@ jobs:
     runs-on: 'ubuntu-latest'
     steps:
       - name: 'Multi-approvers'
-        uses: 'abcxyz/actions/.github/actions/multi-approvers@d94796fb79fd38c346e223cebdd615fddfb03d0e'
+        uses: 'abcxyz/actions/.github/actions/multi-approvers@893209ed79a3d2508eeec375ffaf3d21012f5cd0'
         with:
           team: 'multi-approvers'
           token: '${{ secrets.MULTI_APPROVERS_TOKEN }}'
