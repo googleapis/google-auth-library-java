@@ -104,8 +104,15 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    * @param privateKeyId Private key identifier for the service account. May be null.
    */
   private ServiceAccountJwtAccessCredentials(
-          String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId) {
-    this(clientId, clientEmail, privateKey, privateKeyId, null, null,Credentials.GOOGLE_DEFAULT_UNIVERSE);
+      String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId) {
+    this(
+        clientId,
+        clientEmail,
+        privateKey,
+        privateKeyId,
+        null,
+        null,
+        Credentials.GOOGLE_DEFAULT_UNIVERSE);
   }
 
   /**
@@ -226,7 +233,13 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
       URI defaultAudience)
       throws IOException {
     return ServiceAccountJwtAccessCredentials.fromPkcs8(
-        clientId, clientEmail, privateKeyPkcs8, privateKeyId, defaultAudience, null, Credentials.GOOGLE_DEFAULT_UNIVERSE);
+        clientId,
+        clientEmail,
+        privateKeyPkcs8,
+        privateKeyId,
+        defaultAudience,
+        null,
+        Credentials.GOOGLE_DEFAULT_UNIVERSE);
   }
 
   static ServiceAccountJwtAccessCredentials fromPkcs8(
@@ -240,7 +253,13 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
       throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(privateKeyPkcs8);
     return new ServiceAccountJwtAccessCredentials(
-        clientId, clientEmail, privateKey, privateKeyId, defaultAudience, quotaProjectId, universeDomain);
+        clientId,
+        clientEmail,
+        privateKey,
+        privateKeyId,
+        defaultAudience,
+        quotaProjectId,
+        universeDomain);
   }
 
   /**
@@ -554,7 +573,6 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
       return this;
     }
 
-
     public String getClientId() {
       return clientId;
     }
@@ -585,7 +603,13 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
 
     public ServiceAccountJwtAccessCredentials build() {
       return new ServiceAccountJwtAccessCredentials(
-          clientId, clientEmail, privateKey, privateKeyId, defaultAudience, quotaProjectId, universeDomain);
+          clientId,
+          clientEmail,
+          privateKey,
+          privateKeyId,
+          defaultAudience,
+          quotaProjectId,
+          universeDomain);
     }
   }
 }
