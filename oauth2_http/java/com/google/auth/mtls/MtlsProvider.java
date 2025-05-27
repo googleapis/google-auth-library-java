@@ -38,8 +38,8 @@ import java.security.KeyStore;
  * layer. The source of the client certificate is up to the implementation.
  *
  * <p>Note: This interface will replace the identically named "MtlsProvider" implementation in the
- * Gax library. The Gax library version of MtlsProvider will be marked as deprecated.
- * See https://github.com/googleapis/google-auth-library-java/issues/1758
+ * Gax library. The Gax library version of MtlsProvider will be marked as deprecated. See
+ * https://github.com/googleapis/google-auth-library-java/issues/1758
  */
 public interface MtlsProvider {
   /** Returns the mutual TLS key store. */
