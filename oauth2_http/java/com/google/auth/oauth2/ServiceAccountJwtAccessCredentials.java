@@ -418,6 +418,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     return privateKeyId;
   }
 
+  @Override
   public final String getUniverseDomain() {
     return universeDomain;
   }
