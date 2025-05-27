@@ -854,7 +854,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
   }
 
   @Test
-  public void fromJSON_UniverseDomain() throws IOException {
+  public void fromJSON_UniverseDomainSet() throws IOException {
     GenericJson json =
         writeServiceAccountJson(
             SA_CLIENT_ID,
@@ -875,7 +875,39 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
   }
 
   @Test
-  public void getUniverseDomain_defaultUniverse() throws IOException {
+  public void fromPkcs8_DefaultUniverseDomain() throws IOException {
+    ServiceAccountJwtAccessCredentials credentials =
+        ServiceAccountJwtAccessCredentials.fromPkcs8(
+            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
+    assertEquals(SA_CLIENT_ID, credentials.getClientId());
+    assertEquals(SA_CLIENT_EMAIL, credentials.getClientEmail());
+    assertEquals(
+        OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8), credentials.getPrivateKey());
+    assertNull(credentials.getQuotaProjectId());
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
+  }
+
+  @Test
+  public void fromPkcs8_CustomUniverseDomain() throws IOException {
+    ServiceAccountJwtAccessCredentials credentials =
+        ServiceAccountJwtAccessCredentials.fromPkcs8(
+            SA_CLIENT_ID,
+            SA_CLIENT_EMAIL,
+            SA_PRIVATE_KEY_PKCS8,
+            SA_PRIVATE_KEY_ID,
+            URI.create("default-aud"),
+            QUOTA_PROJECT,
+            "example.com");
+    assertEquals(SA_CLIENT_ID, credentials.getClientId());
+    assertEquals(SA_CLIENT_EMAIL, credentials.getClientEmail());
+    assertEquals(
+        OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8), credentials.getPrivateKey());
+    assertEquals(QUOTA_PROJECT, credentials.getQuotaProjectId());
+    assertEquals("example.com", credentials.getUniverseDomain());
+  }
+
+  @Test
+  public void builder_defaultUniverseDomain() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()
@@ -889,7 +921,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
   }
 
   @Test
-  public void getUniverseDomain_customUniverse() throws IOException {
+  public void builder_customUniverseDomain() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()
