@@ -878,13 +878,13 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
   public void getUniverseDomain_defaultUniverse() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials =
-            ServiceAccountJwtAccessCredentials.newBuilder()
-                    .setClientId(SA_CLIENT_ID)
-                    .setClientEmail(SA_CLIENT_EMAIL)
-                    .setPrivateKey(privateKey)
-                    .setPrivateKeyId(SA_PRIVATE_KEY_ID)
-                    .setDefaultAudience(URI.create("default-audience"))
-                    .build();
+        ServiceAccountJwtAccessCredentials.newBuilder()
+            .setClientId(SA_CLIENT_ID)
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(privateKey)
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setDefaultAudience(URI.create("default-audience"))
+            .build();
     assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
@@ -937,14 +937,15 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
       assertTrue(expected.getMessage().contains(expectedMessageContent));
     }
   }
+
   private GenericJson writeServiceAccountJson(
-          String clientId,
-          String clientEmail,
-          String privateKeyPkcs8,
-          String privateKeyId,
-          String projectId,
-          String quotaProjectId,
-          String universeDomain) {
+      String clientId,
+      String clientEmail,
+      String privateKeyPkcs8,
+      String privateKeyId,
+      String projectId,
+      String quotaProjectId,
+      String universeDomain) {
     GenericJson json = new GenericJson();
     if (clientId != null) {
       json.put("client_id", clientId);
