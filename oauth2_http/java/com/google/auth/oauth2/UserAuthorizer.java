@@ -206,7 +206,7 @@ public class UserAuthorizer {
       url.put("state", state);
     }
     url.put("access_type", "offline");
-    url.put("approval_prompt", "force");
+    url.put("prompt", "consent");
     if (userId != null) {
       url.put("login_hint", userId);
     }
