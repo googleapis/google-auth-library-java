@@ -141,11 +141,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     this.defaultAudience = defaultAudience;
     this.credentialsCache = createCache();
     this.quotaProjectId = quotaProjectId;
-    if (universeDomain == null || universeDomain.trim().isEmpty()) {
-      this.universeDomain = Credentials.GOOGLE_DEFAULT_UNIVERSE;
-    } else {
-      this.universeDomain = universeDomain;
-    }
+    this.universeDomain = universeDomain;
   }
 
   /**
@@ -437,6 +433,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     return privateKeyId;
   }
 
+  /** Returns the universe domain (example, googleapis.com) for the credentials instance. */
   @Override
   public final String getUniverseDomain() {
     return universeDomain;
@@ -568,6 +565,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     }
 
     @CanIgnoreReturnValue
+    /** Sets the universe domain (example, googleapis.com). */
     public Builder setUniverseDomain(String universeDomain) {
       this.universeDomain = universeDomain;
       return this;
@@ -597,6 +595,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
       return quotaProjectId;
     }
 
+    /** Returns the universe domain (example, googleapis.com) for the credentials instance. */
     public String getUniverseDomain() {
       return universeDomain;
     }
