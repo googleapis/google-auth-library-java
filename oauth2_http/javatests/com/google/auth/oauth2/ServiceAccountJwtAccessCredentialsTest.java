@@ -884,7 +884,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
     assertEquals(
         OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8), credentials.getPrivateKey());
     assertNull(credentials.getQuotaProjectId());
-    assertNull(credentials.getUniverseDomain());
+    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
   @Test

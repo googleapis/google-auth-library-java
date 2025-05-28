@@ -234,7 +234,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
         privateKeyId,
         defaultAudience,
         null,
-        null);
+            Credentials.GOOGLE_DEFAULT_UNIVERSE);
   }
 
   static ServiceAccountJwtAccessCredentials fromPkcs8(
