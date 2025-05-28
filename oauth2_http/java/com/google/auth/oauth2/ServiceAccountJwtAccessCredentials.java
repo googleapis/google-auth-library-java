@@ -88,6 +88,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   private final String privateKeyId;
   private final URI defaultAudience;
   private final String quotaProjectId;
+  private final String universeDomain;
 
   private transient LoadingCache<JwtClaims, JwtCredentials> credentialsCache;
 
@@ -104,7 +105,14 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    */
   private ServiceAccountJwtAccessCredentials(
       String clientId, String clientEmail, PrivateKey privateKey, String privateKeyId) {
-    this(clientId, clientEmail, privateKey, privateKeyId, null, null);
+    this(
+        clientId,
+        clientEmail,
+        privateKey,
+        privateKeyId,
+        null,
+        null,
+        Credentials.GOOGLE_DEFAULT_UNIVERSE);
   }
 
   /**
@@ -115,6 +123,8 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    * @param privateKey RSA private key object for the service account.
    * @param privateKeyId Private key identifier for the service account. May be null.
    * @param defaultAudience Audience to use if not provided by transport. May be null.
+   * @param universeDomain universe domain in the format some-domain.xyz. By default, sets it to
+   *     googleapis.com
    */
   private ServiceAccountJwtAccessCredentials(
       String clientId,
@@ -122,7 +132,8 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
       PrivateKey privateKey,
       String privateKeyId,
       URI defaultAudience,
-      String quotaProjectId) {
+      String quotaProjectId,
+      String universeDomain) {
     this.clientId = clientId;
     this.clientEmail = Preconditions.checkNotNull(clientEmail);
     this.privateKey = Preconditions.checkNotNull(privateKey);
@@ -130,6 +141,11 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     this.defaultAudience = defaultAudience;
     this.credentialsCache = createCache();
     this.quotaProjectId = quotaProjectId;
+    if (universeDomain == null || universeDomain.trim().isEmpty()) {
+      this.universeDomain = Credentials.GOOGLE_DEFAULT_UNIVERSE;
+    } else {
+      this.universeDomain = universeDomain;
+    }
   }
 
   /**
@@ -160,6 +176,10 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     String privateKeyPkcs8 = (String) json.get("private_key");
     String privateKeyId = (String) json.get("private_key_id");
     String quoataProjectId = (String) json.get("quota_project_id");
+    String rawUniverseDomain = (String) json.get("universe_domain");
+    String resolvedUniverseDomain =
+        (rawUniverseDomain == null) ? Credentials.GOOGLE_DEFAULT_UNIVERSE : rawUniverseDomain;
+
     if (clientId == null
         || clientEmail == null
         || privateKeyPkcs8 == null
@@ -169,7 +189,13 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
               + "expecting  'client_id', 'client_email', 'private_key' and 'private_key_id'.");
     }
     return ServiceAccountJwtAccessCredentials.fromPkcs8(
-        clientId, clientEmail, privateKeyPkcs8, privateKeyId, defaultAudience, quoataProjectId);
+        clientId,
+        clientEmail,
+        privateKeyPkcs8,
+        privateKeyId,
+        defaultAudience,
+        quoataProjectId,
+        resolvedUniverseDomain);
   }
 
   /**
@@ -207,7 +233,13 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
       URI defaultAudience)
       throws IOException {
     return ServiceAccountJwtAccessCredentials.fromPkcs8(
-        clientId, clientEmail, privateKeyPkcs8, privateKeyId, defaultAudience, null);
+        clientId,
+        clientEmail,
+        privateKeyPkcs8,
+        privateKeyId,
+        defaultAudience,
+        null,
+        Credentials.GOOGLE_DEFAULT_UNIVERSE);
   }
 
   static ServiceAccountJwtAccessCredentials fromPkcs8(
@@ -216,11 +248,18 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
       String privateKeyPkcs8,
       String privateKeyId,
       URI defaultAudience,
-      String quotaProjectId)
+      String quotaProjectId,
+      String universeDomain)
       throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(privateKeyPkcs8);
     return new ServiceAccountJwtAccessCredentials(
-        clientId, clientEmail, privateKey, privateKeyId, defaultAudience, quotaProjectId);
+        clientId,
+        clientEmail,
+        privateKey,
+        privateKeyId,
+        defaultAudience,
+        quotaProjectId,
+        universeDomain);
   }
 
   /**
@@ -352,7 +391,6 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
                 + "defaultAudience to be specified");
       }
     }
-
     try {
       JwtClaims defaultClaims =
           JwtClaims.newBuilder()
@@ -397,6 +435,12 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
 
   public final String getPrivateKeyId() {
     return privateKeyId;
+  }
+
+  /** Returns the universe domain (example, googleapis.com) for the credentials instance. */
+  @Override
+  public final String getUniverseDomain() {
+    return universeDomain;
   }
 
   @Override
@@ -474,6 +518,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     private String privateKeyId;
     private URI defaultAudience;
     private String quotaProjectId;
+    private String universeDomain;
 
     protected Builder() {}
 
@@ -484,6 +529,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
       this.privateKeyId = credentials.privateKeyId;
       this.defaultAudience = credentials.defaultAudience;
       this.quotaProjectId = credentials.quotaProjectId;
+      this.universeDomain = credentials.universeDomain;
     }
 
     @CanIgnoreReturnValue
@@ -522,6 +568,13 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
       return this;
     }
 
+    @CanIgnoreReturnValue
+    /** Sets the universe domain (example, googleapis.com). */
+    public Builder setUniverseDomain(String universeDomain) {
+      this.universeDomain = universeDomain;
+      return this;
+    }
+
     public String getClientId() {
       return clientId;
     }
@@ -546,9 +599,20 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
       return quotaProjectId;
     }
 
+    /** Returns the universe domain (example, googleapis.com) for the credentials instance. */
+    public String getUniverseDomain() {
+      return universeDomain;
+    }
+
     public ServiceAccountJwtAccessCredentials build() {
       return new ServiceAccountJwtAccessCredentials(
-          clientId, clientEmail, privateKey, privateKeyId, defaultAudience, quotaProjectId);
+          clientId,
+          clientEmail,
+          privateKey,
+          privateKeyId,
+          defaultAudience,
+          quotaProjectId,
+          universeDomain);
     }
   }
 }
