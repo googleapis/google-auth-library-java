@@ -112,7 +112,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
         privateKeyId,
         null,
         null,
-        null);
+        Credentials.GOOGLE_DEFAULT_UNIVERSE);
   }
 
   /**
@@ -123,7 +123,8 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
    * @param privateKey RSA private key object for the service account.
    * @param privateKeyId Private key identifier for the service account. May be null.
    * @param defaultAudience Audience to use if not provided by transport. May be null.
-   * @param universeDomain universe domain in the format some-domain.xyz.
+   * @param universeDomain universe domain in the format some-domain.xyz. By default, sets it to
+   *     googleapis.com
    */
   private ServiceAccountJwtAccessCredentials(
       String clientId,
@@ -140,7 +141,11 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     this.defaultAudience = defaultAudience;
     this.credentialsCache = createCache();
     this.quotaProjectId = quotaProjectId;
-    this.universeDomain = universeDomain;
+    if (universeDomain == null || universeDomain.trim().isEmpty()) {
+      this.universeDomain = Credentials.GOOGLE_DEFAULT_UNIVERSE;
+    } else {
+      this.universeDomain = universeDomain;
+    }
   }
 
   /**
@@ -234,7 +239,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
         privateKeyId,
         defaultAudience,
         null,
-            Credentials.GOOGLE_DEFAULT_UNIVERSE);
+        Credentials.GOOGLE_DEFAULT_UNIVERSE);
   }
 
   static ServiceAccountJwtAccessCredentials fromPkcs8(

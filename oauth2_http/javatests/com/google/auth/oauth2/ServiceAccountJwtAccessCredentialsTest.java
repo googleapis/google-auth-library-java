@@ -113,7 +113,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
     assertEquals(privateKey, credentials.getPrivateKey());
     assertEquals(SA_PRIVATE_KEY_ID, credentials.getPrivateKeyId());
     assertEquals(QUOTA_PROJECT, credentials.getQuotaProjectId());
-    assertNull(credentials.getUniverseDomain());
+    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
   @Test
@@ -917,7 +917,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
             .setPrivateKeyId(SA_PRIVATE_KEY_ID)
             .setDefaultAudience(URI.create("default-audience"))
             .build();
-    assertNull(credentials.getUniverseDomain());
+    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
   @Test
