@@ -875,7 +875,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
   }
 
   @Test
-  public void fromPkcs8_DefaultUniverseDomain() throws IOException {
+  public void fromPkcs8_NoUniverseDomain() throws IOException {
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.fromPkcs8(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
@@ -884,7 +884,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
     assertEquals(
         OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8), credentials.getPrivateKey());
     assertNull(credentials.getQuotaProjectId());
-    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
+    assertNull(credentials.getUniverseDomain());
   }
 
   @Test
