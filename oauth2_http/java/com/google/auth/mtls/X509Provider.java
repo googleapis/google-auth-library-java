@@ -45,7 +45,7 @@ import java.util.Locale;
  * This class implements {@link MtlsProvider} for the Google Auth library transport layer via {@link
  * WorkloadCertificateConfiguration}. This is only meant to be used internally by Google Cloud
  * libraries, and the public facing methods may be changed without notice, and have no guarantee of
- * backwards compatability.
+ * backwards compatibility.
  */
 public class X509Provider implements MtlsProvider {
   static final String CERTIFICATE_CONFIGURATION_ENV_VARIABLE = "GOOGLE_API_CERTIFICATE_CONFIG";
@@ -109,10 +109,12 @@ public class X509Provider implements MtlsProvider {
    * </ul>
    *
    * @return a KeyStore containing the X.509 certificate specified by the certificate configuration.
-   * @throws IOException if there is an error retrieving the certificate configuration.
+   * @throws CertificateSourceUnavailableException if the certificate source is unavailable (ex.
+   *     missing configuration file)
+   * @throws IOException if a general I/O error occurs while creating the KeyStore
    */
   @Override
-  public KeyStore getKeyStore() throws IOException {
+  public KeyStore getKeyStore() throws CertificateSourceUnavailableException, IOException {
     WorkloadCertificateConfiguration workloadCertConfig = getWorkloadCertificateConfiguration();
 
     // Read the certificate and private key file paths into streams.
@@ -133,6 +135,12 @@ public class X509Provider implements MtlsProvider {
     }
   }
 
+  /**
+   * Returns true if the X509 certificate source is available.
+   *
+   * @throws IOException if a general I/O error occurs while determining certificate source
+   *     availability
+   */
   @Override
   public boolean isCertificateSourceAvailable() throws IOException {
     try {

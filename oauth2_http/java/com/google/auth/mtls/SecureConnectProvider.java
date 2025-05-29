@@ -48,7 +48,7 @@ import java.util.concurrent.TimeUnit;
  * This class implements {@link MtlsProvider} for the Google Auth library transport layer via {@link
  * ContextAwareMetadataJson}. This is only meant to be used internally by Google Cloud libraries,
  * and the public facing methods may be changed without notice, and have no guarantee of backwards
- * compatability.
+ * compatibility.
  *
  * <p>Note: This implementation is derived from the existing "MtlsProvider" found in the Gax
  * library, with two notable differences: 1) All logic associated with parsing environment variables
@@ -92,9 +92,16 @@ public class SecureConnectProvider implements MtlsProvider {
     this(new DefaultProcessProvider(), DEFAULT_CONTEXT_AWARE_METADATA_PATH);
   }
 
-  /** The mutual TLS key store created with the default client certificate on device. */
+  /**
+   * Returns a mutual TLS key store backed by the certificate provided by the SecureConnect tool.
+   *
+   * @return a KeyStore containing the certificate provided by the SecureConnect tool.
+   * @throws CertificateSourceUnavailableException if the certificate source is unavailable (ex.
+   *     missing configuration file).
+   * @throws IOException if a general I/O error occurs while creating the KeyStore.
+   */
   @Override
-  public KeyStore getKeyStore() throws IOException {
+  public KeyStore getKeyStore() throws CertificateSourceUnavailableException, IOException {
     try (InputStream stream = new FileInputStream(metadataPath)) {
       return getKeyStore(stream, processProvider);
     } catch (InterruptedException e) {
@@ -109,6 +116,12 @@ public class SecureConnectProvider implements MtlsProvider {
     }
   }
 
+  /**
+   * Returns true if the SecureConnect certificate source is available.
+   *
+   * @throws IOException if a general I/O error occurs while determining certificate source
+   *     availability
+   */
   @Override
   public boolean isCertificateSourceAvailable() throws IOException {
     try {

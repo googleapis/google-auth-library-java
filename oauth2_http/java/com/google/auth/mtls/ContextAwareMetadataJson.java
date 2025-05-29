@@ -35,7 +35,14 @@ import com.google.api.client.util.Key;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 
-/** Data class representing context_aware_metadata.json file. */
+/**
+ * Data class representing context_aware_metadata.json file. This is meant for internal Google Cloud
+ * usage and behavior may be changed without warning.
+ *
+ * <p>Note: This implementation is duplicated from the existing ContextAwareMetadataJson found in
+ * the Gax library. The Gax library version of ContextAwareMetadataJson will be marked as deprecated
+ * in the future.
+ */
 public class ContextAwareMetadataJson extends GenericJson {
   /** Cert provider command */
   @Key("cert_provider_command")

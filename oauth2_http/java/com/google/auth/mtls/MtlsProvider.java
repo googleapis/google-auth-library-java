@@ -42,9 +42,21 @@ import java.security.KeyStore;
  * https://github.com/googleapis/google-auth-library-java/issues/1758
  */
 public interface MtlsProvider {
-  /** Returns the mutual TLS key store. */
-  KeyStore getKeyStore() throws IOException;
+  /**
+   * Returns a mutual TLS key store.
+   *
+   * @return KeyStore for configuring mTLS.
+   * @throws CertificateSourceUnavailableException if the certificate source is unavailable (ex.
+   *     missing configuration file).
+   * @throws IOException if a general I/O error occurs while creating the KeyStore
+   */
+  KeyStore getKeyStore() throws CertificateSourceUnavailableException, IOException;
 
-  /** Returns true if the underlying certificate source is available. */
+  /**
+   * Returns true if the underlying certificate source is available.
+   *
+   * @throws IOException if a general I/O error occurs while determining certificate source
+   *     availability.
+   */
   boolean isCertificateSourceAvailable() throws IOException;
 }

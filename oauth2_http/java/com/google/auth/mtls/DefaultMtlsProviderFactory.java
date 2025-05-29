@@ -40,6 +40,9 @@ public class DefaultMtlsProviderFactory {
    * creating a {@link SecureConnectProvider}. If the secure connect provider also fails, it throws
    * the original {@link com.google.auth.mtls.CertificateSourceUnavailableException}.
    *
+   * <p>This is only meant to be used internally by Google Cloud libraries, and the public facing
+   * methods may be changed without notice, and have no guarantee of backwards compatibility.
+   *
    * @return an instance of {@link MtlsProvider}.
    * @throws com.google.auth.mtls.CertificateSourceUnavailableException if neither provider can be
    *     created.
