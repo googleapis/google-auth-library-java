@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.Credentials.GOOGLE_DEFAULT_UNIVERSE;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -41,6 +42,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
@@ -111,6 +113,7 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
     assertEquals(privateKey, credentials.getPrivateKey());
     assertEquals(SA_PRIVATE_KEY_ID, credentials.getPrivateKeyId());
     assertEquals(QUOTA_PROJECT, credentials.getQuotaProjectId());
+    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
   @Test
@@ -829,6 +832,109 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
     assertTrue("Should have run onSuccess() callback", success.get());
   }
 
+  @Test
+  public void fromJSON_noUniverseDomain() throws IOException {
+    GenericJson json =
+        writeServiceAccountJson(
+            SA_CLIENT_ID,
+            SA_CLIENT_EMAIL,
+            SA_PRIVATE_KEY_PKCS8,
+            "test-project-id",
+            SA_PRIVATE_KEY_ID,
+            QUOTA_PROJECT,
+            null);
+    ServiceAccountJwtAccessCredentials credentials =
+        ServiceAccountJwtAccessCredentials.fromJson(json, URI.create("default-aud"));
+    assertEquals(SA_CLIENT_ID, credentials.getClientId());
+    assertEquals(SA_CLIENT_EMAIL, credentials.getClientEmail());
+    assertEquals(
+        OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8), credentials.getPrivateKey());
+    assertEquals(QUOTA_PROJECT, credentials.getQuotaProjectId());
+    assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
+  }
+
+  @Test
+  public void fromJSON_UniverseDomainSet() throws IOException {
+    GenericJson json =
+        writeServiceAccountJson(
+            SA_CLIENT_ID,
+            SA_CLIENT_EMAIL,
+            SA_PRIVATE_KEY_PKCS8,
+            "test-project-id",
+            SA_PRIVATE_KEY_ID,
+            QUOTA_PROJECT,
+            "example.com");
+    ServiceAccountJwtAccessCredentials credentials =
+        ServiceAccountJwtAccessCredentials.fromJson(json, URI.create("default-aud"));
+    assertEquals(SA_CLIENT_ID, credentials.getClientId());
+    assertEquals(SA_CLIENT_EMAIL, credentials.getClientEmail());
+    assertEquals(
+        OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8), credentials.getPrivateKey());
+    assertEquals(QUOTA_PROJECT, credentials.getQuotaProjectId());
+    assertEquals("example.com", credentials.getUniverseDomain());
+  }
+
+  @Test
+  public void fromPkcs8_NoUniverseDomain() throws IOException {
+    ServiceAccountJwtAccessCredentials credentials =
+        ServiceAccountJwtAccessCredentials.fromPkcs8(
+            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
+    assertEquals(SA_CLIENT_ID, credentials.getClientId());
+    assertEquals(SA_CLIENT_EMAIL, credentials.getClientEmail());
+    assertEquals(
+        OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8), credentials.getPrivateKey());
+    assertNull(credentials.getQuotaProjectId());
+    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
+  }
+
+  @Test
+  public void fromPkcs8_CustomUniverseDomain() throws IOException {
+    ServiceAccountJwtAccessCredentials credentials =
+        ServiceAccountJwtAccessCredentials.fromPkcs8(
+            SA_CLIENT_ID,
+            SA_CLIENT_EMAIL,
+            SA_PRIVATE_KEY_PKCS8,
+            SA_PRIVATE_KEY_ID,
+            URI.create("default-aud"),
+            QUOTA_PROJECT,
+            "example.com");
+    assertEquals(SA_CLIENT_ID, credentials.getClientId());
+    assertEquals(SA_CLIENT_EMAIL, credentials.getClientEmail());
+    assertEquals(
+        OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8), credentials.getPrivateKey());
+    assertEquals(QUOTA_PROJECT, credentials.getQuotaProjectId());
+    assertEquals("example.com", credentials.getUniverseDomain());
+  }
+
+  @Test
+  public void builder_defaultUniverseDomain() throws IOException {
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    ServiceAccountJwtAccessCredentials credentials =
+        ServiceAccountJwtAccessCredentials.newBuilder()
+            .setClientId(SA_CLIENT_ID)
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(privateKey)
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setDefaultAudience(URI.create("default-audience"))
+            .build();
+    assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
+  }
+
+  @Test
+  public void builder_customUniverseDomain() throws IOException {
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    ServiceAccountJwtAccessCredentials credentials =
+        ServiceAccountJwtAccessCredentials.newBuilder()
+            .setClientId(SA_CLIENT_ID)
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(privateKey)
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setDefaultAudience(URI.create("default-audience"))
+            .setUniverseDomain("example.com")
+            .build();
+    assertEquals("example.com", credentials.getUniverseDomain());
+  }
+
   private void verifyJwtAccess(
       Map<String, List<String>> metadata,
       String expectedEmail,
@@ -862,5 +968,39 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
     } catch (IOException expected) {
       assertTrue(expected.getMessage().contains(expectedMessageContent));
     }
+  }
+
+  private GenericJson writeServiceAccountJson(
+      String clientId,
+      String clientEmail,
+      String privateKeyPkcs8,
+      String privateKeyId,
+      String projectId,
+      String quotaProjectId,
+      String universeDomain) {
+    GenericJson json = new GenericJson();
+    if (clientId != null) {
+      json.put("client_id", clientId);
+    }
+    if (clientEmail != null) {
+      json.put("client_email", clientEmail);
+    }
+    if (privateKeyPkcs8 != null) {
+      json.put("private_key", privateKeyPkcs8);
+    }
+    if (privateKeyId != null) {
+      json.put("private_key_id", privateKeyId);
+    }
+    if (projectId != null) {
+      json.put("project_id", projectId);
+    }
+    if (quotaProjectId != null) {
+      json.put("quota_project_id", quotaProjectId);
+    }
+    if (universeDomain != null) {
+      json.put("universe_domain", universeDomain);
+    }
+    json.put("type", GoogleCredentials.SERVICE_ACCOUNT_FILE_TYPE);
+    return json;
   }
 }

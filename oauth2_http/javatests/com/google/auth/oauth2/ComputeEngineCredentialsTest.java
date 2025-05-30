@@ -103,19 +103,19 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
           + "20iLCJzdWIiOiIxMTIxNzkwNjI3MjAzOTEzMDU4ODUifQ.redacted";
 
   // Id Token which includes GCE extended claims and any VM License data (if applicable)
-  public static final String FULL_ID_TOKEN_WITH_LICENSE =
+  public static final String FULL_ID_TOKEN_WITH_LICENSES =
       "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRmMzc1ODkwOG"
           + "I3OTIyOTNhZDk3N2EwYjk5MWQ5OGE3N2Y0ZWVlY2QiLCJ0eXAiOiJKV1QifQ.ew0KICAiYXVkIjogImh0dHBzOi8"
           + "vZm9vLmJhciIsDQogICJhenAiOiAiMTEyMTc5MDYyNzIwMzkxMzA1ODg1IiwNCiAgImVtYWlsIjogIjEyMzQ1Ni1"
           + "jb21wdXRlQGRldmVsb3Blci5nc2VydmljZWFjY291bnQuY29tIiwNCiAgImVtYWlsX3ZlcmlmaWVkIjogdHJ1ZSw"
           + "NCiAgImV4cCI6IDE1NjQ1MTk0OTYsDQogICJnb29nbGUiOiB7DQogICAgImNvbXB1dGVfZW5naW5lIjogew0KICA"
           + "gICAgImluc3RhbmNlX2NyZWF0aW9uX3RpbWVzdGFtcCI6IDE1NjMyMzA5MDcsDQogICAgICAiaW5zdGFuY2VfaWQ"
-          + "iOiAiMzQ5Nzk3NDM5MzQ0MTE3OTI0MyIsDQogICAgICAiaW5zdGFuY2VfbmFtZSI6ICJpYW0iLA0KICAgICAgInB"
-          + "yb2plY3RfaWQiOiAiZm9vLWJhci04MjAiLA0KICAgICAgInByb2plY3RfbnVtYmVyIjogMTA3MTI4NDE4NDQzNiw"
-          + "NCiAgICAgICJ6b25lIjogInVzLWNlbnRyYWwxLWEiDQogICAgfSwNCiAgICAibGljZW5zZSI6IFsNCiAgICAgICA"
-          + "iTElDRU5TRV8xIiwNCiAgICAgICAiTElDRU5TRV8yIg0KICAgIF0NCiAgfSwNCiAgImlhdCI6IDE1NjQ1MTU4OTY"
-          + "sDQogICJpc3MiOiAiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwNCiAgInN1YiI6ICIxMTIxNzkwNjI3MjA"
-          + "zOTEzMDU4ODUiDQp9.redacted";
+          + "iOiAiMzQ5Nzk3NDM5MzQ0MTE3OTI0MyIsDQogICAgICAiaW5zdGFuY2VfbmFtZSI6ICJpYW0iLA0KICAgICAgImx"
+          + "pY2Vuc2VfaWQiOiBbDQogICAgICAgICIxMDAxMDAwIiwNCiAgICAgICAgIjEwMDEwMDEiLA0KICAgICAgICAiMTA"
+          + "wMTAwOCINCiAgICAgIF0sDQogICAgICAicHJvamVjdF9pZCI6ICJmb28tYmFyLTgyMCIsDQogICAgICAicHJvamV"
+          + "jdF9udW1iZXIiOiAxMDcxMjg0MTg0NDM2LA0KICAgICAgInpvbmUiOiAidXMtY2VudHJhbDEtYSINCiAgICB9DQo"
+          + "gIH0sDQogICJpYXQiOiAxNTY0NTE1ODk2LA0KICAiaXNzIjogImh0dHBzOi8vYWNjb3VudHMuZ29vZ2xlLmNvbSI"
+          + "sDQogICJzdWIiOiAiMTEyMTc5MDYyNzIwMzkxMzA1ODg1Ig0KfQ.redacted";
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
   private static final List<String> SCOPES = Arrays.asList("foo", "bar");
   private static final String ACCESS_TOKEN_WITH_SCOPES = "1/MkSJoj1xsli0AccessTokenScoped_NKPY2";
@@ -1066,7 +1066,8 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     tokenCredential.refresh();
     Payload p = tokenCredential.getIdToken().getJsonWebSignature().getPayload();
     assertTrue("Full ID Token format not provided", p.containsKey("google"));
-    ArrayMap<String, ArrayMap> googleClaim = (ArrayMap<String, ArrayMap>) p.get("google");
+    ArrayMap<String, ArrayMap<String, ?>> googleClaim =
+        (ArrayMap<String, ArrayMap<String, ?>>) p.get("google");
     assertTrue(googleClaim.containsKey("compute_engine"));
 
     // verify metrics header
@@ -1076,7 +1077,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void idTokenWithAudience_license() throws IOException {
+  public void idTokenWithAudience_licenses() throws IOException {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
@@ -1093,8 +1094,12 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     tokenCredential.refresh();
     Payload p = tokenCredential.getIdToken().getJsonWebSignature().getPayload();
     assertTrue("Full ID Token format not provided", p.containsKey("google"));
-    ArrayMap<String, ArrayMap> googleClaim = (ArrayMap<String, ArrayMap>) p.get("google");
-    assertTrue(googleClaim.containsKey("license"));
+    ArrayMap<String, ArrayMap<String, ?>> googleClaim =
+        (ArrayMap<String, ArrayMap<String, ?>>) p.get("google");
+    assertTrue(googleClaim.containsKey("compute_engine"));
+    ArrayMap<String, ?> computeEngineClaim =
+        (ArrayMap<String, ?>) googleClaim.get("compute_engine");
+    assertTrue(computeEngineClaim.containsKey("license_id"));
   }
 
   @Test

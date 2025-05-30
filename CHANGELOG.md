@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.36.0](https://github.com/googleapis/google-auth-library-java/compare/v1.35.0...v1.36.0) (2025-05-28)
+
+
+### Features
+
+* Support ability to set universe domain in ServiceAccountJwtAccessCredentials ([#1754](https://github.com/googleapis/google-auth-library-java/issues/1754)) ([919ae32](https://github.com/googleapis/google-auth-library-java/commit/919ae320bf5a4f06fd39871bf055b8487ed55d71))
+
+
+### Bug Fixes
+
+* IdTokenCredentials should fetch license id claim when requested ([#1450](https://github.com/googleapis/google-auth-library-java/issues/1450)) ([c5648a5](https://github.com/googleapis/google-auth-library-java/commit/c5648a55f15a75b1d616fbdc37cd331811e66f3a))
+* Update approval_prompt=force to prompt=consent ([#1752](https://github.com/googleapis/google-auth-library-java/issues/1752)) ([4543d04](https://github.com/googleapis/google-auth-library-java/commit/4543d0423775f1e568249eb782b88dc0e6d64a59))
+
 ## [1.35.0](https://github.com/googleapis/google-auth-library-java/compare/v1.34.0...v1.35.0) (2025-05-12)
 
 
