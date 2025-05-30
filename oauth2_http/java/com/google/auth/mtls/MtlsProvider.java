@@ -31,43 +31,31 @@
 package com.google.auth.mtls;
 
 import java.io.IOException;
+import java.security.KeyStore;
 
 /**
- * This exception is thrown by certificate providers in the Google auth library when the certificate
- * source is unavailable. This means that the transport layer should move on to the next certificate
- * source provider type.
+ * MtlsProvider is used by the Gax library for configuring mutual TLS in the HTTP and GRPC transport
+ * layer. The source of the client certificate is up to the implementation.
+ *
+ * <p>Note: This interface will replace the identically named "MtlsProvider" implementation in the
+ * Gax library. The Gax library version of MtlsProvider will be marked as deprecated. See
+ * https://github.com/googleapis/google-auth-library-java/issues/1758
  */
-public class CertificateSourceUnavailableException extends IOException {
+public interface MtlsProvider {
+  /**
+   * Returns a mutual TLS key store.
+   *
+   * @return KeyStore for configuring mTLS.
+   * @throws CertificateSourceUnavailableException if the certificate source is unavailable (ex.
+   *     missing configuration file).
+   * @throws IOException if a general I/O error occurs while creating the KeyStore
+   */
+  KeyStore getKeyStore() throws CertificateSourceUnavailableException, IOException;
 
   /**
-   * Constructor with a message and throwable cause.
+   * Returns true if the underlying mTLS provider is available.
    *
-   * @param message The detail message (which is saved for later retrieval by the {@link
-   *     #getMessage()} method)
-   * @param cause The cause (which is saved for later retrieval by the {@link #getCause()} method).
-   *     (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
+   * @throws IOException if a general I/O error occurs while determining availability.
    */
-  public CertificateSourceUnavailableException(String message, Throwable cause) {
-    super(message, cause);
-  }
-
-  /**
-   * Constructor with a throwable cause.
-   *
-   * @param cause The cause (which is saved for later retrieval by the {@link #getCause()} method).
-   *     (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
-   */
-  public CertificateSourceUnavailableException(Throwable cause) {
-    super(cause);
-  }
-
-  /**
-   * Constructor with a message.
-   *
-   * @param message The detail message (which is saved for later retrieval by the {@link
-   *     #getMessage()} method)
-   */
-  public CertificateSourceUnavailableException(String message) {
-    super(message);
-  }
+  boolean isAvailable() throws IOException;
 }
