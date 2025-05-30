@@ -105,7 +105,7 @@ public class SecureConnectProvider implements MtlsProvider {
     try (InputStream stream = new FileInputStream(metadataPath)) {
       return getKeyStore(stream, processProvider);
     } catch (InterruptedException e) {
-      throw new IOException("Interrupted executing certificate provider command", e);
+      throw new IOException("SecureConnect: Interrupted executing certificate provider command", e);
     } catch (GeneralSecurityException e) {
       throw new CertificateSourceUnavailableException(
           "SecureConnect encountered GeneralSecurityException:", e);
@@ -117,13 +117,12 @@ public class SecureConnectProvider implements MtlsProvider {
   }
 
   /**
-   * Returns true if the SecureConnect certificate source is available.
+   * Returns true if the SecureConnect mTLS provider is available.
    *
-   * @throws IOException if a general I/O error occurs while determining certificate source
-   *     availability
+   * @throws IOException if a general I/O error occurs while determining availability.
    */
   @Override
-  public boolean isCertificateSourceAvailable() throws IOException {
+  public boolean isAvailable() throws IOException {
     try {
       this.getKeyStore();
     } catch (CertificateSourceUnavailableException e) {
@@ -142,7 +141,8 @@ public class SecureConnectProvider implements MtlsProvider {
     // so 1000 milliseconds is plenty of time.
     int exitCode = runCertificateProviderCommand(process, 1000);
     if (exitCode != 0) {
-      throw new IOException("Cert provider command failed with exit code: " + exitCode);
+      throw new IOException(
+          "SecureConnect: Cert provider command failed with exit code: " + exitCode);
     }
 
     // Create mTLS key store with the input certificates from shell command.
@@ -163,7 +163,7 @@ public class SecureConnectProvider implements MtlsProvider {
     boolean terminated = commandProcess.waitFor(timeoutMilliseconds, TimeUnit.MILLISECONDS);
     if (!terminated) {
       commandProcess.destroy();
-      throw new IOException("Cert provider command timed out");
+      throw new IOException("SecureConnect: Cert provider command timed out");
     }
     return commandProcess.exitValue();
   }

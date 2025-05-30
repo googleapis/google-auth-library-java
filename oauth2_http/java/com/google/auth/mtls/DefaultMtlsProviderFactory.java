@@ -38,7 +38,7 @@ public class DefaultMtlsProviderFactory {
    * Creates an instance of {@link MtlsProvider}. It first attempts to create an {@link
    * com.google.auth.mtls.X509Provider}. If the certificate source is unavailable, it falls back to
    * creating a {@link SecureConnectProvider}. If the secure connect provider also fails, it throws
-   * the original {@link com.google.auth.mtls.CertificateSourceUnavailableException}.
+   * a {@link com.google.auth.mtls.CertificateSourceUnavailableException}.
    *
    * <p>This is only meant to be used internally by Google Cloud libraries, and the public facing
    * methods may be changed without notice, and have no guarantee of backwards compatibility.
@@ -49,12 +49,15 @@ public class DefaultMtlsProviderFactory {
    * @throws IOException if an I/O error occurs during provider creation.
    */
   public static MtlsProvider create() throws IOException {
+    // Note: The caller should handle CertificateSourceUnavailableException gracefully, since
+    // it is an expected error case. All other IOExceptions are unexpected and should be surfaced
+    // up the call stack.
     MtlsProvider mtlsProvider = new X509Provider();
-    if (mtlsProvider.isCertificateSourceAvailable()) {
+    if (mtlsProvider.isAvailable()) {
       return mtlsProvider;
     }
     mtlsProvider = new SecureConnectProvider();
-    if (mtlsProvider.isCertificateSourceAvailable()) {
+    if (mtlsProvider.isAvailable()) {
       return mtlsProvider;
     }
     throw new CertificateSourceUnavailableException(

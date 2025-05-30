@@ -113,7 +113,9 @@ public class SecureConnectProviderTest {
             () -> SecureConnectProvider.getKeyStore(metadata, new TestProcessProvider(1)));
     assertTrue(
         "expected to fail with nonzero exit code",
-        actual.getMessage().contains("Cert provider command failed with exit code: 1"));
+        actual
+            .getMessage()
+            .contains("SecureConnect: Cert provider command failed with exit code: 1"));
   }
 
   @Test
@@ -142,7 +144,7 @@ public class SecureConnectProviderTest {
             () -> SecureConnectProvider.runCertificateProviderCommand(certCommandProcess, 100));
     assertTrue(
         "expected to fail with timeout",
-        actual.getMessage().contains("Cert provider command timed out"));
+        actual.getMessage().contains("SecureConnect: Cert provider command timed out"));
   }
 
   @Test

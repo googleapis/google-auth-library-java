@@ -53,10 +53,9 @@ public interface MtlsProvider {
   KeyStore getKeyStore() throws CertificateSourceUnavailableException, IOException;
 
   /**
-   * Returns true if the underlying certificate source is available.
+   * Returns true if the underlying mTLS provider is available.
    *
-   * @throws IOException if a general I/O error occurs while determining certificate source
-   *     availability.
+   * @throws IOException if a general I/O error occurs while determining availability.
    */
-  boolean isCertificateSourceAvailable() throws IOException;
+  boolean isAvailable() throws IOException;
 }

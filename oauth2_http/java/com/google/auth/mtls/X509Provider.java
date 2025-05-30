@@ -131,18 +131,17 @@ public class X509Provider implements MtlsProvider {
       throw e;
     } catch (Exception e) {
       // Wrap all other exception types to an IOException.
-      throw new IOException(e);
+      throw new IOException("X509Provider: Unexpected IOException:", e);
     }
   }
 
   /**
-   * Returns true if the X509 certificate source is available.
+   * Returns true if the X509 mTLS provider is available.
    *
-   * @throws IOException if a general I/O error occurs while determining certificate source
-   *     availability
+   * @throws IOException if a general I/O error occurs while determining availability.
    */
   @Override
-  public boolean isCertificateSourceAvailable() throws IOException {
+  public boolean isAvailable() throws IOException {
     try {
       this.getKeyStore();
     } catch (CertificateSourceUnavailableException e) {
