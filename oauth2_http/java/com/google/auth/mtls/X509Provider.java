@@ -1,18 +1,17 @@
 /*
- * Copyright 2025, Google Inc. All rights reserved.
+ * Copyright 2025 Google LLC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met:
  *
- *    * Redistributions of source code must retain the above copyright
+ *     * Redistributions of source code must retain the above copyright
  * notice, this list of conditions and the following disclaimer.
- *    * Redistributions in binary form must reproduce the above
+ *     * Redistributions in binary form must reproduce the above
  * copyright notice, this list of conditions and the following disclaimer
  * in the documentation and/or other materials provided with the
  * distribution.
- *
- *    * Neither the name of Google Inc. nor the names of its
+ *     * Neither the name of Google LLC nor the names of its
  * contributors may be used to endorse or promote products derived from
  * this software without specific prior written permission.
  *
@@ -43,12 +42,12 @@ import java.security.KeyStore;
 import java.util.Locale;
 
 /**
- * This class provides certificate key stores to the Google Auth library transport layer via
- * certificate configuration files. This is only meant to be used internally to Google Cloud
+ * This class implements {@link MtlsProvider} for the Google Auth library transport layer via {@link
+ * WorkloadCertificateConfiguration}. This is only meant to be used internally by Google Cloud
  * libraries, and the public facing methods may be changed without notice, and have no guarantee of
- * backwards compatability.
+ * backwards compatibility.
  */
-public class X509Provider {
+public class X509Provider implements MtlsProvider {
   static final String CERTIFICATE_CONFIGURATION_ENV_VARIABLE = "GOOGLE_API_CERTIFICATE_CONFIG";
   static final String WELL_KNOWN_CERTIFICATE_CONFIG_FILE = "certificate_config.json";
   static final String CLOUDSDK_CONFIG_DIRECTORY = "gcloud";
@@ -110,22 +109,20 @@ public class X509Provider {
    * </ul>
    *
    * @return a KeyStore containing the X.509 certificate specified by the certificate configuration.
-   * @throws IOException if there is an error retrieving the certificate configuration.
+   * @throws CertificateSourceUnavailableException if the certificate source is unavailable (ex.
+   *     missing configuration file)
+   * @throws IOException if a general I/O error occurs while creating the KeyStore
    */
-  public KeyStore getKeyStore() throws IOException {
+  @Override
+  public KeyStore getKeyStore() throws CertificateSourceUnavailableException, IOException {
     WorkloadCertificateConfiguration workloadCertConfig = getWorkloadCertificateConfiguration();
-    InputStream certStream = null;
-    InputStream privateKeyStream = null;
-    SequenceInputStream certAndPrivateKeyStream = null;
-    try {
-      // Read the certificate and private key file paths into separate streams.
-      File certFile = new File(workloadCertConfig.getCertPath());
-      File privateKeyFile = new File(workloadCertConfig.getPrivateKeyPath());
-      certStream = createInputStream(certFile);
-      privateKeyStream = createInputStream(privateKeyFile);
 
-      // Merge the two streams into a single stream.
-      certAndPrivateKeyStream = new SequenceInputStream(certStream, privateKeyStream);
+    // Read the certificate and private key file paths into streams.
+    try (InputStream certStream = createInputStream(new File(workloadCertConfig.getCertPath()));
+        InputStream privateKeyStream =
+            createInputStream(new File(workloadCertConfig.getPrivateKeyPath()));
+        SequenceInputStream certAndPrivateKeyStream =
+            new SequenceInputStream(certStream, privateKeyStream)) {
 
       // Build a key store using the combined stream.
       return SecurityUtils.createMtlsKeyStore(certAndPrivateKeyStream);
@@ -134,18 +131,23 @@ public class X509Provider {
       throw e;
     } catch (Exception e) {
       // Wrap all other exception types to an IOException.
-      throw new IOException(e);
-    } finally {
-      if (certStream != null) {
-        certStream.close();
-      }
-      if (privateKeyStream != null) {
-        privateKeyStream.close();
-      }
-      if (certAndPrivateKeyStream != null) {
-        certAndPrivateKeyStream.close();
-      }
+      throw new IOException("X509Provider: Unexpected IOException:", e);
     }
+  }
+
+  /**
+   * Returns true if the X509 mTLS provider is available.
+   *
+   * @throws IOException if a general I/O error occurs while determining availability.
+   */
+  @Override
+  public boolean isAvailable() throws IOException {
+    try {
+      this.getKeyStore();
+    } catch (CertificateSourceUnavailableException e) {
+      return false;
+    }
+    return true;
   }
 
   private WorkloadCertificateConfiguration getWorkloadCertificateConfiguration()

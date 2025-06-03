@@ -30,44 +30,26 @@
 
 package com.google.auth.mtls;
 
-import java.io.IOException;
+import com.google.api.client.json.GenericJson;
+import com.google.api.client.util.Key;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 
 /**
- * This exception is thrown by certificate providers in the Google auth library when the certificate
- * source is unavailable. This means that the transport layer should move on to the next certificate
- * source provider type.
+ * Data class representing context_aware_metadata.json file. This is meant for internal Google Cloud
+ * usage and behavior may be changed without warning.
+ *
+ * <p>Note: This implementation is duplicated from the existing ContextAwareMetadataJson found in
+ * the Gax library. The Gax library version of ContextAwareMetadataJson will be marked as deprecated
+ * in the future.
  */
-public class CertificateSourceUnavailableException extends IOException {
+public class ContextAwareMetadataJson extends GenericJson {
+  /** Cert provider command */
+  @Key("cert_provider_command")
+  private List<String> commands;
 
-  /**
-   * Constructor with a message and throwable cause.
-   *
-   * @param message The detail message (which is saved for later retrieval by the {@link
-   *     #getMessage()} method)
-   * @param cause The cause (which is saved for later retrieval by the {@link #getCause()} method).
-   *     (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
-   */
-  public CertificateSourceUnavailableException(String message, Throwable cause) {
-    super(message, cause);
-  }
-
-  /**
-   * Constructor with a throwable cause.
-   *
-   * @param cause The cause (which is saved for later retrieval by the {@link #getCause()} method).
-   *     (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
-   */
-  public CertificateSourceUnavailableException(Throwable cause) {
-    super(cause);
-  }
-
-  /**
-   * Constructor with a message.
-   *
-   * @param message The detail message (which is saved for later retrieval by the {@link
-   *     #getMessage()} method)
-   */
-  public CertificateSourceUnavailableException(String message) {
-    super(message);
+  /** Returns the cert provider command. */
+  public final ImmutableList<String> getCommands() {
+    return ImmutableList.copyOf(commands);
   }
 }
