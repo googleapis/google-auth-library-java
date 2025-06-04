@@ -582,7 +582,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   }
 
   /**
-   * Returns a Google ID Token from either the Oauth or IAM Endpoint. For Credentials that are in
+   * Returns a Google ID Token from either the OAuth or IAM Endpoint. For Credentials that are in
    * the Google Default Universe (googleapis.com), the ID Token will be retrieved from the Oauth
    * Endpoint. Otherwise, it will be retrieved from the IAM Endpoint.
    *
@@ -601,7 +601,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   }
 
   /**
-   * Uses the Oauth Endpoint to generate an ID token. Assertions and grant_type are sent in the
+   * Uses the OAuth Endpoint to generate an ID token. Assertions and grant_type are sent in the
    * request body.
    */
   private IdToken getIdTokenOauthEndpoint(String targetAudience) throws IOException {
