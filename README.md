@@ -718,7 +718,7 @@ If a lifetime greater than one hour is required, the service account must be add
 
 Note that configuring a short lifetime (e.g. 10 minutes) will result in the library initiating the entire token exchange flow every 10 minutes, which will call the 3rd party token provider even if the 3rd party token is not expired.
 
-###  Workforce Identity Federation
+### Workforce Identity Federation
 
 [Workforce identity federation](https://cloud.google.com/iam/docs/workforce-identity-federation) lets you use an
 external identity provider (IdP) to authenticate and authorize a workforce—a group of users, such as employees, 
