@@ -140,7 +140,7 @@ public class JwtCredentials extends Credentials implements JwtProvider {
   /**
    * Returns a copy of these credentials with modified claims.
    *
-   * @param newClaims new claims. Any unspecified claim fields default to the the current values.
+   * @param newClaims new claims. Any unspecified claim fields default to the current values.
    * @return new credentials
    */
   @Override
