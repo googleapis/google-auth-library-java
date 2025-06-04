@@ -374,7 +374,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   @Override
   public void getRequestMetadata(
       final URI uri, Executor executor, final RequestMetadataCallback callback) {
-    // It doesn't use network. Only some CPU work on par with TLS handshake. So it's preferrable
+    // It doesn't use network. Only some CPU work on par with TLS handshake. So it's preferable
     // to do it in the current thread, which is likely to be the network thread.
     blockingGetToCallback(uri, callback);
   }
