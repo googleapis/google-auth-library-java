@@ -336,8 +336,7 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
   /**
    * Returns a new JwtCredentials instance with modified claims.
    *
-   * @param newClaims new claims. Any unspecified claim fields will default to the the current
-   *     values.
+   * @param newClaims new claims. Any unspecified claim fields will default to the current values.
    * @return new credentials
    */
   @Override

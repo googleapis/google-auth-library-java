@@ -574,8 +574,8 @@ public class OAuth2Credentials extends Credentials {
   /**
    * Result from {@link com.google.auth.oauth2.OAuth2Credentials#getOrCreateRefreshTask()}.
    *
-   * <p>Contains the the refresh task and a flag indicating if the task is newly created. If the
-   * task is newly created, it is the caller's responsibility to execute it.
+   * <p>Contains the refresh task and a flag indicating if the task is newly created. If the task is
+   * newly created, it is the caller's responsibility to execute it.
    */
   static class AsyncRefreshResult {
     private final RefreshTask task;
