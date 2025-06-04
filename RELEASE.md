@@ -88,7 +88,7 @@ Central](https://repo1.maven.org/maven2/com/google/auth/google-auth-library-pare
     * In our case, `com.google.auth`
   * Click on the repository and check for errors
 * Submit the pull request to bump the version numbers
-* Update Javadoc on Github using `scripts/update_javadoc.sh`.
+* Update Javadoc on GitHub using `scripts/update_javadoc.sh`.
 * Run `releasetool tag` to create the GitHub release.
 * Run `releasetool start` to bump the next snapshot version. Select "snapshot" when prompted for
   the release type. This will bump the artifact versions and create a pull request.
