@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.37.0](https://github.com/googleapis/google-auth-library-java/compare/v1.36.0...v1.37.0) (2025-06-04)
+
+
+### Features
+
+* **mtls:** Introduce DefaultMtlsProviderFactory and SecureConnectProvider ([#1730](https://github.com/googleapis/google-auth-library-java/issues/1730)) ([c9fd1b1](https://github.com/googleapis/google-auth-library-java/commit/c9fd1b1a477329ae336accd151a57795a0c83955))
+
+
+### Bug Fixes
+
+* Correct capitalization of GitHub ([#1761](https://github.com/googleapis/google-auth-library-java/issues/1761)) ([f79a2e4](https://github.com/googleapis/google-auth-library-java/commit/f79a2e406ef1128f9a222155cad2effc1e69a331))
+* Correct extra spaces in README heading ([#1760](https://github.com/googleapis/google-auth-library-java/issues/1760)) ([8d26666](https://github.com/googleapis/google-auth-library-java/commit/8d266669c1fcc007f35948052dc7cb7c53c1a639))
+* Correct misspelling of OAuth in comments ([#1762](https://github.com/googleapis/google-auth-library-java/issues/1762)) ([42b9602](https://github.com/googleapis/google-auth-library-java/commit/42b9602886b00b0090e519c79cfc96d9b876ffeb))
+* Correct typo in ServiceAccountJwtAccessCredentials.java comment ([#1765](https://github.com/googleapis/google-auth-library-java/issues/1765)) ([3058b06](https://github.com/googleapis/google-auth-library-java/commit/3058b069e474fb06d16926c9313ca1f931934a11))
+* Update Javadoc reference in ExternalAccountCredentials ([#1763](https://github.com/googleapis/google-auth-library-java/issues/1763)) ([5eb3659](https://github.com/googleapis/google-auth-library-java/commit/5eb3659c131969e674ea1bb4b84698202befbc9b))
+
+
+### Documentation
+
+* Duplicate "the" in Javadoc comments ([#1764](https://github.com/googleapis/google-auth-library-java/issues/1764)) ([5f7a084](https://github.com/googleapis/google-auth-library-java/commit/5f7a0841b32c5e03ca1bbf49a7e612725062311b))
+
 ## [1.36.0](https://github.com/googleapis/google-auth-library-java/compare/v1.35.0...v1.36.0) (2025-05-28)
 
 
