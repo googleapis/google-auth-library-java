@@ -239,11 +239,11 @@ public final class ITWorkloadIdentityFederationTest {
             ExternalAccountCredentials.fromJson(
                 identityPoolCredentialConfig, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
     long maxExpirationTime = Instant.now().plusSeconds(2800 + 5).toEpochMilli();
-    long minExpirationtime = Instant.now().plusSeconds(2800 - 5).toEpochMilli();
+    long minExpirationTime = Instant.now().plusSeconds(2800 - 5).toEpochMilli();
 
     callGcs(identityPoolCredentials);
     long tokenExpiry = identityPoolCredentials.getAccessToken().getExpirationTimeMillis();
-    assertTrue(minExpirationtime <= tokenExpiry && tokenExpiry <= maxExpirationTime);
+    assertTrue(minExpirationTime <= tokenExpiry && tokenExpiry <= maxExpirationTime);
   }
 
   /**
