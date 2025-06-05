@@ -37,7 +37,7 @@ public class VerifyGoogleIdToken {
     // https://developers.google.com/identity/protocols/oauth2/openid-connect#validatinganidtoken
     //
     // Here, we validate Google's token using Google's OpenID Connect service (jwkUrl).
-    // For more information on jwk,see:
+    // For more information on jwk, see:
     // https://auth0.com/docs/secure/tokens/json-web-tokens/json-web-key-sets
     String jwkUrl = "https://www.googleapis.com/oauth2/v3/certs";
 
