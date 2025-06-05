@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.37.1](https://github.com/googleapis/google-auth-library-java/compare/v1.37.0...v1.37.1) (2025-06-05)
+
+
+### Bug Fixes
+
+* Correct typo in minExpirationTime variable name ([#1769](https://github.com/googleapis/google-auth-library-java/issues/1769)) ([91e6274](https://github.com/googleapis/google-auth-library-java/commit/91e6274828310e614802ad948ccfc240aebc0873))
+
 ## [1.37.0](https://github.com/googleapis/google-auth-library-java/compare/v1.36.0...v1.37.0) (2025-06-04)
 
 
