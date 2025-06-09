@@ -522,6 +522,29 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   @Test()
+  public void refreshAccessToken_reserialized_success() throws IOException, IllegalStateException, ClassNotFoundException {
+    mockTransportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.getTransport().setAccessToken(ACCESS_TOKEN);
+    mockTransportFactory.getTransport().setExpireTime(getDefaultExpireTime());
+    mockTransportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "", true);
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            sourceCredentials,
+            IMPERSONATED_CLIENT_EMAIL,
+            null,
+            IMMUTABLE_SCOPES_LIST,
+            VALID_LIFETIME,
+            mockTransportFactory);
+
+    targetCredentials.refreshAccessToken();
+    targetCredentials.refreshAccessToken();
+    targetCredentials.refreshAccessToken();
+    ImpersonatedCredentials reserializedCredentials = serializeAndDeserialize(targetCredentials);
+    reserializedCredentials.setTransportFactory(mockTransportFactory);
+    reserializedCredentials.refreshAccessToken();
+  }
+
+  @Test()
   public void refreshAccessToken_success_SSJflow() throws IOException, IllegalStateException {
     mockTransportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mockTransportFactory.getTransport().setAccessToken(ACCESS_TOKEN);
