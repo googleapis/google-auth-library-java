@@ -34,10 +34,10 @@ jobs:
         with:
           team: 'multi-approvers'
           token: '${{ secrets.MULTI_APPROVERS_TOKEN }}'
-          user-id-allowlist: '25180681,7163701,7163701,122572305,78513119,27347476,70984784,44816363'
-          # username to ID mapping (https://api.github.com/users{username}):
+          user-id-allowlist: '25180681,55107282,122572305,78513119,27347476,70984784,44816363'
+          # username to ID mapping (https://api.github.com/users/{username}):
           #   renovate-bot: 25180681
-          #   release-please[bot]: 7163701
+          #   release-please[bot]: 55107282
           #   cloud-java-bot: 122572305
           #   gcf-owl-bot[bot]: 78513119
           #   dependabot[bot]: 27347476
