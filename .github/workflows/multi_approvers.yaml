@@ -32,7 +32,7 @@ jobs:
       - name: 'Multi-approvers'
         uses: 'abcxyz/actions/.github/actions/multi-approvers@893209ed79a3d2508eeec375ffaf3d21012f5cd0'
         with:
-          team: 'multi-approvers'
+          team: 'googlers'
           token: '${{ secrets.MULTI_APPROVERS_TOKEN }}'
           user-id-allowlist: '25180681,55107282,122572305,78513119,27347476,70984784,44816363'
           # username to ID mapping (https://api.github.com/users/{username}):
