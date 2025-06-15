@@ -26,6 +26,6 @@ concurrency:
 
 jobs:
   multi-approvers:
-    uses: 'abcxyz/pkg/.github/workflows/multi-approvers.yml@1d1cedf7768d17dde23bb2cda24bc1fb950e9f92'
+    uses: 'abcxyz/pkg/.github/workflows/multi-approvers.yml@49fe9f44ebd76215a145bf0b4e2faf2163b0bfcc'
     with:
       org-members-path: 'googleapis/google-auth-library-java/main/.github/workflows/members.json'
