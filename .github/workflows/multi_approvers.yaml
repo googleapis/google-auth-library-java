@@ -34,7 +34,7 @@ jobs:
         with:
           team: 'googlers'
           token: '${{ secrets.MULTI_APPROVERS_TOKEN }}'
-          user-id-allowlist: '25180681,55107282,122572305,78513119,27347476,70984784,44816363'
+          user-id-allowlist: '25180681,55107282,122572305,78513119,49699333,70984784,44816363'
           # username to ID mapping (https://api.github.com/users/{username}):
           #   renovate-bot: 25180681
           #   release-please[bot]: 55107282
