@@ -692,7 +692,6 @@ public class ComputeEngineCredentials extends GoogleCredentials
     if (serviceAccountEmail == null) {
       try {
         serviceAccountEmail = getDefaultServiceAccount();
-        this.principal = serviceAccountEmail;
       } catch (IOException ex) {
         throw new RuntimeException("Failed to get service account", ex);
       }
@@ -763,7 +762,9 @@ public class ComputeEngineCredentials extends GoogleCredentials
         responseData, LOGGER_PROVIDER, "Received default service account payload");
     Map<String, Object> defaultAccount =
         OAuth2Utils.validateMap(responseData, "default", PARSE_ERROR_ACCOUNT);
-    return OAuth2Utils.validateString(defaultAccount, "email", PARSE_ERROR_ACCOUNT);
+    String email = OAuth2Utils.validateString(defaultAccount, "email", PARSE_ERROR_ACCOUNT);
+    principal = email;
+    return email;
   }
 
   public static class Builder extends GoogleCredentials.Builder {
