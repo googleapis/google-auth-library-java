@@ -272,6 +272,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
         builder.metricsHandler == null
             ? new ExternalAccountMetricsHandler(this)
             : builder.metricsHandler;
+
+    this.type = "External Account Credentials";
   }
 
   ImpersonatedCredentials buildImpersonatedCredentials() {

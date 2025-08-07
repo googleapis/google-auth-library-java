@@ -52,6 +52,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.BaseEncoding;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -94,6 +95,26 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
 
   private MockExternalAccountAuthorizedUserCredentialsTransportFactory transportFactory;
+
+  static InputStream writeExternalAccountUserCredentialStream(
+      String clientId, String clientSecret, String refreshToken, String tokenUrl)
+      throws IOException {
+    GenericJson json = new GenericJson();
+    if (clientId != null) {
+      json.put("client_id", clientId);
+    }
+    if (clientSecret != null) {
+      json.put("client_secret", clientSecret);
+    }
+    if (refreshToken != null) {
+      json.put("refresh_token", refreshToken);
+    }
+    if (tokenUrl != null) {
+      json.put("token_url", tokenUrl);
+    }
+    json.put("type", "external_account_authorized_user");
+    return TestUtils.jsonToInputStream(json);
+  }
 
   static class MockExternalAccountAuthorizedUserCredentialsTransportFactory
       implements HttpTransportFactory {

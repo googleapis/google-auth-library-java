@@ -743,13 +743,13 @@ public class DefaultCredentialsProviderTest {
   }
 
   @Test
-  public void getDefaultCredentials_envVarSet_serviceAccountCredentials_correctCredentialInfo() throws IOException {
-    MockTokenServerTransportFactory transportFactory =
-            new MockTokenServerTransportFactory();
+  public void getDefaultCredentials_envVarSet_serviceAccountCredentials_correctCredentialInfo()
+      throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     InputStream serviceAccountStream =
-            ServiceAccountCredentialsTest.writeServiceAccountStream(
-                    SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
+        ServiceAccountCredentialsTest.writeServiceAccountStream(
+            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     String serviceAccountPath = tempFilePath("service_account.json");
     testProvider.addFile(serviceAccountPath, serviceAccountStream);
@@ -761,25 +761,25 @@ public class DefaultCredentialsProviderTest {
     assertTrue(credentials instanceof ServiceAccountCredentials);
     Map<String, String> credentialInfo = credentials.getCredentialInfo();
     assertEquals(
-            String.format(
-                    "Env Var %s set to %s",
-                    DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, serviceAccountPath),
-            credentialInfo.get("Credential Source"));
+        String.format(
+            "Env Var %s set to %s",
+            DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, serviceAccountPath),
+        credentialInfo.get("Credential Source"));
     assertEquals("Service Account Credentials", credentialInfo.get("Credential Type"));
     assertEquals(SA_CLIENT_EMAIL, credentialInfo.get("Principal"));
   }
 
   @Test
-  public void getDefaultCredentials_envVarSet_userCredential_correctCredentialInfo() throws IOException {
+  public void getDefaultCredentials_envVarSet_userCredential_correctCredentialInfo()
+      throws IOException {
     InputStream userStream =
-            UserCredentialsTest.writeUserStream(
-                    USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
+        UserCredentialsTest.writeUserStream(
+            USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     String userPath = tempFilePath("user.json");
     testProvider.addFile(userPath, userStream);
     testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, userPath);
-    HttpTransportFactory transportFactory =
-            new MockTokenServerTransportFactory();
+    HttpTransportFactory transportFactory = new MockTokenServerTransportFactory();
 
     GoogleCredentials credentials = testProvider.getDefaultCredentials(transportFactory);
 
@@ -787,27 +787,26 @@ public class DefaultCredentialsProviderTest {
     assertTrue(credentials instanceof UserCredentials);
     Map<String, String> credentialInfo = credentials.getCredentialInfo();
     assertEquals(
-            String.format(
-                    "Env Var %s set to %s",
-                    DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, userPath),
-            credentialInfo.get("Credential Source"));
+        String.format(
+            "Env Var %s set to %s", DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, userPath),
+        credentialInfo.get("Credential Source"));
     assertEquals("User Credentials", credentialInfo.get("Credential Type"));
     assertNull(credentialInfo.get("Principal"));
   }
 
   @Test
-  public void getDefaultCredentials_wellKnownFile_userCredential_correctCredentialInfo() throws IOException {
+  public void getDefaultCredentials_wellKnownFile_userCredential_correctCredentialInfo()
+      throws IOException {
     File cloudConfigDir = getTempDirectory();
     InputStream userStream =
-            UserCredentialsTest.writeUserStream(
-                    USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
+        UserCredentialsTest.writeUserStream(
+            USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
     File wellKnownFile =
-            new File(cloudConfigDir, DefaultCredentialsProvider.WELL_KNOWN_CREDENTIALS_FILE);
+        new File(cloudConfigDir, DefaultCredentialsProvider.WELL_KNOWN_CREDENTIALS_FILE);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setEnv("CLOUDSDK_CONFIG", cloudConfigDir.getAbsolutePath());
     testProvider.addFile(wellKnownFile.getAbsolutePath(), userStream);
-    HttpTransportFactory transportFactory =
-            new MockTokenServerTransportFactory();
+    HttpTransportFactory transportFactory = new MockTokenServerTransportFactory();
 
     GoogleCredentials credentials = testProvider.getDefaultCredentials(transportFactory);
 
@@ -815,14 +814,15 @@ public class DefaultCredentialsProviderTest {
     assertTrue(credentials instanceof UserCredentials);
     Map<String, String> credentialInfo = credentials.getCredentialInfo();
     assertEquals(
-            String.format("Well Known File at %s", wellKnownFile.getCanonicalPath()),
-            credentialInfo.get("Credential Source"));
+        String.format("Well Known File at %s", wellKnownFile.getCanonicalPath()),
+        credentialInfo.get("Credential Source"));
     assertEquals("User Credentials", credentialInfo.get("Credential Type"));
     assertNull(credentialInfo.get("Principal"));
   }
 
   @Test
-  public void getDefaultCredentials_computeEngineCredentialscorrectCredentialInfo() throws IOException {
+  public void getDefaultCredentials_computeEngineCredentialscorrectCredentialInfo()
+      throws IOException {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     String gceMetadataHost = "192.0.2.0";
@@ -834,8 +834,8 @@ public class DefaultCredentialsProviderTest {
     assertTrue(credentials instanceof ComputeEngineCredentials);
     Map<String, String> credentialInfo = credentials.getCredentialInfo();
     assertEquals(
-            String.format("Metadata Server URL set to %s", gceMetadataHost),
-            credentials.getCredentialInfo().get("Credential Source"));
+        String.format("Metadata Server URL set to %s", gceMetadataHost),
+        credentials.getCredentialInfo().get("Credential Source"));
     assertEquals("Compute Engine Credentials", credentialInfo.get("Credential Type"));
     assertNull(credentialInfo.get("Principal"));
   }

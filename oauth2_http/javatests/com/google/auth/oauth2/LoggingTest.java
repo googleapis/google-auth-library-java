@@ -1,4 +1,4 @@
-///*
+/// *
 // * Copyright 2025 Google LLC
 // *
 // * Redistribution and use in source and binary forms, with or without
@@ -29,50 +29,51 @@
 // * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // */
 //
-//package com.google.auth.oauth2;
+// package com.google.auth.oauth2;
 //
-//import static com.google.auth.TestUtils.getDefaultExpireTime;
-//import static com.google.auth.oauth2.ImpersonatedCredentialsTest.DEFAULT_IMPERSONATION_URL;
-//import static com.google.auth.oauth2.ImpersonatedCredentialsTest.IMMUTABLE_SCOPES_LIST;
-//import static com.google.auth.oauth2.ImpersonatedCredentialsTest.IMPERSONATED_CLIENT_EMAIL;
-//import static com.google.auth.oauth2.ImpersonatedCredentialsTest.TOKEN_WITH_EMAIL;
-//import static com.google.auth.oauth2.ImpersonatedCredentialsTest.VALID_LIFETIME;
-//import static com.google.auth.oauth2.ServiceAccountCredentialsTest.ACCESS_TOKEN;
-//import static com.google.auth.oauth2.ServiceAccountCredentialsTest.CALL_URI;
-//import static com.google.auth.oauth2.ServiceAccountCredentialsTest.CLIENT_EMAIL;
-//import static com.google.auth.oauth2.ServiceAccountCredentialsTest.DEFAULT_ID_TOKEN;
-//import static com.google.auth.oauth2.ServiceAccountCredentialsTest.SCOPES;
-//import static com.google.auth.oauth2.ServiceAccountCredentialsTest.createDefaultBuilder;
-//import static com.google.auth.oauth2.UserCredentialsTest.CLIENT_ID;
-//import static com.google.auth.oauth2.UserCredentialsTest.CLIENT_SECRET;
-//import static com.google.auth.oauth2.UserCredentialsTest.REFRESH_TOKEN;
-//import static org.junit.Assert.assertArrayEquals;
-//import static org.junit.Assert.assertEquals;
-//import static org.junit.Assert.assertTrue;
+// import static com.google.auth.TestUtils.getDefaultExpireTime;
+// import static com.google.auth.oauth2.ImpersonatedCredentialsTest.DEFAULT_IMPERSONATION_URL;
+// import static com.google.auth.oauth2.ImpersonatedCredentialsTest.IMMUTABLE_SCOPES_LIST;
+// import static com.google.auth.oauth2.ImpersonatedCredentialsTest.IMPERSONATED_CLIENT_EMAIL;
+// import static com.google.auth.oauth2.ImpersonatedCredentialsTest.TOKEN_WITH_EMAIL;
+// import static com.google.auth.oauth2.ImpersonatedCredentialsTest.VALID_LIFETIME;
+// import static com.google.auth.oauth2.ServiceAccountCredentialsTest.ACCESS_TOKEN;
+// import static com.google.auth.oauth2.ServiceAccountCredentialsTest.CALL_URI;
+// import static com.google.auth.oauth2.ServiceAccountCredentialsTest.CLIENT_EMAIL;
+// import static com.google.auth.oauth2.ServiceAccountCredentialsTest.DEFAULT_ID_TOKEN;
+// import static com.google.auth.oauth2.ServiceAccountCredentialsTest.SCOPES;
+// import static com.google.auth.oauth2.ServiceAccountCredentialsTest.createDefaultBuilder;
+// import static com.google.auth.oauth2.UserCredentialsTest.CLIENT_ID;
+// import static com.google.auth.oauth2.UserCredentialsTest.CLIENT_SECRET;
+// import static com.google.auth.oauth2.UserCredentialsTest.REFRESH_TOKEN;
+// import static org.junit.Assert.assertArrayEquals;
+// import static org.junit.Assert.assertEquals;
+// import static org.junit.Assert.assertTrue;
 //
-//import com.google.api.client.http.HttpStatusCodes;
-//import com.google.api.client.json.webtoken.JsonWebToken.Payload;
-//import com.google.api.client.util.ArrayMap;
-//import com.google.auth.TestUtils;
-//import com.google.auth.oauth2.ComputeEngineCredentialsTest.MockMetadataServerTransportFactory;
-//import com.google.gson.JsonParser;
-//import com.google.gson.JsonSyntaxException;
-//import java.io.IOException;
-//import java.util.Arrays;
-//import java.util.List;
-//import java.util.Map;
-//import org.junit.BeforeClass;
-//import org.junit.Test;
-//import org.slf4j.Logger;
-//import org.slf4j.LoggerFactory;
-//import org.slf4j.event.KeyValuePair;
+// import com.google.api.client.http.HttpStatusCodes;
+// import com.google.api.client.json.webtoken.JsonWebToken.Payload;
+// import com.google.api.client.util.ArrayMap;
+// import com.google.auth.TestUtils;
+// import com.google.auth.oauth2.ComputeEngineCredentialsTest.MockMetadataServerTransportFactory;
+// import com.google.gson.JsonParser;
+// import com.google.gson.JsonSyntaxException;
+// import java.io.IOException;
+// import java.util.Arrays;
+// import java.util.List;
+// import java.util.Map;
+// import org.junit.BeforeClass;
+// import org.junit.Test;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
+// import org.slf4j.event.KeyValuePair;
 //
-///**
+/// **
 // * This class contains tests for logging events in each credentials workflow Tests are copied from
-// * credentials test classes with addition of test logging appender setup and test logic for logging.
+// * credentials test classes with addition of test logging appender setup and test logic for
+// logging.
 // * This duplicates tests setups, but centralizes logging test setup in this class.
 // */
-//public class LoggingTest {
+// public class LoggingTest {
 //
 //  private TestAppender setupTestLogger(Class<?> clazz) {
 //    TestAppender testAppender = new TestAppender();
@@ -200,7 +201,8 @@
 //  }
 //
 //  @Test
-//  public void serviceAccountCredentials_idTokenWithAudience_iamFlow_targetAudienceMatchesAudClaim()
+//  public void
+// serviceAccountCredentials_idTokenWithAudience_iamFlow_targetAudienceMatchesAudClaim()
 //      throws IOException {
 //    TestAppender testAppender = setupTestLogger(ServiceAccountCredentials.class);
 //    String nonGDU = "test.com";
@@ -245,7 +247,8 @@
 //        assertTrue(isValidJson((String) kvp.value));
 //      }
 //    }
-//    assertEquals("Received response for ID token request", testAppender.events.get(1).getMessage());
+//    assertEquals("Received response for ID token request",
+// testAppender.events.get(1).getMessage());
 //    assertEquals(3, testAppender.events.get(1).getKeyValuePairs().size());
 //    for (KeyValuePair kvp : testAppender.events.get(1).getKeyValuePairs()) {
 //      assertTrue(
@@ -267,7 +270,8 @@
 //    mockTransportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
 //    mockTransportFactory.getTransport().setAccessToken(ACCESS_TOKEN);
 //    mockTransportFactory.getTransport().setExpireTime(getDefaultExpireTime());
-//    mockTransportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
+//    mockTransportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK,
+// "");
 //    ImpersonatedCredentials targetCredentials =
 //        ImpersonatedCredentials.create(
 //            ImpersonatedCredentialsTest.getSourceCredentials(),
@@ -319,7 +323,8 @@
 //    mockTransportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
 //    mockTransportFactory.getTransport().setAccessToken(ACCESS_TOKEN);
 //    mockTransportFactory.getTransport().setExpireTime(getDefaultExpireTime());
-//    mockTransportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
+//    mockTransportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK,
+// "");
 //
 //    ImpersonatedCredentials targetCredentials =
 //        ImpersonatedCredentials.create(
@@ -358,7 +363,8 @@
 //        assertTrue(isValidJson((String) kvp.value));
 //      }
 //    }
-//    assertEquals("Received response for ID token request", testAppender.events.get(1).getMessage());
+//    assertEquals("Received response for ID token request",
+// testAppender.events.get(1).getMessage());
 //    assertEquals(3, testAppender.events.get(1).getKeyValuePairs().size());
 //    for (KeyValuePair kvp : testAppender.events.get(1).getKeyValuePairs()) {
 //      assertTrue(
@@ -366,7 +372,8 @@
 //              || kvp.key.equals("response.status")
 //              || kvp.key.equals("response.status.message"));
 //    }
-//    assertEquals("Response payload for ID token request", testAppender.events.get(2).getMessage());
+//    assertEquals("Response payload for ID token request",
+// testAppender.events.get(2).getMessage());
 //    assertEquals(1, testAppender.events.get(2).getKeyValuePairs().size());
 //
 //    testAppender.stop();
@@ -380,7 +387,8 @@
 //    mockTransportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
 //    mockTransportFactory.getTransport().setAccessToken(ACCESS_TOKEN);
 //    mockTransportFactory.getTransport().setExpireTime(getDefaultExpireTime());
-//    mockTransportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
+//    mockTransportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK,
+// "");
 //    ImpersonatedCredentials targetCredentials =
 //        ImpersonatedCredentials.create(
 //            ImpersonatedCredentialsTest.getSourceCredentials(),
@@ -432,7 +440,8 @@
 //  @Test
 //  public void getRequestMetadata_hasAccessToken() throws IOException {
 //    TestAppender testAppender = setupTestLogger(ComputeEngineCredentials.class);
-//    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+//    MockMetadataServerTransportFactory transportFactory = new
+// MockMetadataServerTransportFactory();
 //    ComputeEngineCredentials credentials =
 //        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 //    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
@@ -472,7 +481,8 @@
 //  @SuppressWarnings("unchecked")
 //  public void idTokenWithAudience_full() throws IOException {
 //    TestAppender testAppender = setupTestLogger(ComputeEngineCredentials.class);
-//    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+//    MockMetadataServerTransportFactory transportFactory = new
+// MockMetadataServerTransportFactory();
 //    ComputeEngineCredentials credentials =
 //        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 //
@@ -502,7 +512,8 @@
 //        assertTrue(isValidJson((String) kvp.value));
 //      }
 //    }
-//    assertEquals("Received response for ID token request", testAppender.events.get(1).getMessage());
+//    assertEquals("Received response for ID token request",
+// testAppender.events.get(1).getMessage());
 //    assertEquals(3, testAppender.events.get(1).getKeyValuePairs().size());
 //    for (KeyValuePair kvp : testAppender.events.get(1).getKeyValuePairs()) {
 //      assertTrue(
@@ -519,4 +530,4 @@
 //        testAppender.events.get(2).getKeyValuePairs().get(0).value);
 //    testAppender.stop();
 //  }
-//}
+// }

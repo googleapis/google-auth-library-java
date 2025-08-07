@@ -821,4 +821,111 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
       assertTrue(expected.getMessage().contains(expectedMessageContent));
     }
   }
+
+  @Test
+  public void getCredentialInfo_serviceAccountCredentials() throws IOException {
+    InputStream serviceAccountStream =
+        ServiceAccountCredentialsTest.writeServiceAccountStream(
+            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
+    GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccountStream);
+    Map<String, String> credentialInfo = credentials.getCredentialInfo();
+
+    // No need to test the Credential Source as this is fake data
+    // Credential Source is tested in DefaultCredentialsProviderTest
+    assertEquals("Service Account Credentials", credentialInfo.get("Credential Type"));
+    assertEquals(SA_CLIENT_EMAIL, credentialInfo.get("Principal"));
+  }
+
+  @Test
+  public void getCredentialInfo_userCredentials() throws IOException {
+    InputStream userStream =
+        UserCredentialsTest.writeUserStream(
+            USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, null);
+    GoogleCredentials credentials = GoogleCredentials.fromStream(userStream);
+    Map<String, String> credentialInfo = credentials.getCredentialInfo();
+
+    // No need to test the Credential Source as this is fake data
+    // Credential Source is tested in DefaultCredentialsProviderTest
+    assertEquals("User Credentials", credentialInfo.get("Credential Type"));
+    assertNull(credentialInfo.get("Principal"));
+  }
+
+  @Test
+  public void getCredentialInfo_gdchCredentials() throws IOException {
+    InputStream gdchServiceAccountStream =
+        GdchCredentialsTest.writeGdchServiceAccountStream(
+            GDCH_SA_FORMAT_VERSION,
+            GDCH_SA_PROJECT_ID,
+            GDCH_SA_PRIVATE_KEY_ID,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_CA_CERT_PATH,
+            GDCH_SA_TOKEN_SERVER_URI);
+    GoogleCredentials credentials = GoogleCredentials.fromStream(gdchServiceAccountStream);
+    Map<String, String> credentialInfo = credentials.getCredentialInfo();
+
+    // No need to test the Credential Source as this is fake data
+    // Credential Source is tested in DefaultCredentialsProviderTest
+    assertEquals("GDCH Credentials", credentialInfo.get("Credential Type"));
+    assertNull(credentialInfo.get("Principal"));
+  }
+
+  @Test
+  public void getCredentialInfo_externalAccount() throws IOException {
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+    InputStream identityPoolCredentialStream =
+        IdentityPoolCredentialsTest.writeIdentityPoolCredentialsStream(
+            transportFactory.transport.getStsUrl(),
+            transportFactory.transport.getMetadataUrl(),
+            /* serviceAccountImpersonationUrl= */ null,
+            /* serviceAccountImpersonationOptionsMap= */ null);
+
+    GoogleCredentials credentials = GoogleCredentials.fromStream(identityPoolCredentialStream);
+    Map<String, String> credentialInfo = credentials.getCredentialInfo();
+
+    // No need to test the Credential Source as this is fake data
+    // Credential Source is tested in DefaultCredentialsProviderTest
+    assertEquals("External Account Credentials", credentialInfo.get("Credential Type"));
+    assertNull(credentialInfo.get("Principal"));
+  }
+
+  @Test
+  public void getCredentialInfo_externalAccountUserCredentials() throws IOException {
+    InputStream externalAccountUserCredentialStream =
+        ExternalAccountAuthorizedUserCredentialsTest.writeExternalAccountUserCredentialStream(
+            USER_CLIENT_ID,
+            USER_CLIENT_SECRET,
+            REFRESH_TOKEN,
+            "https://sts.googleapis.com/v1/oauthtoken");
+
+    GoogleCredentials credentials =
+        GoogleCredentials.fromStream(externalAccountUserCredentialStream);
+    Map<String, String> credentialInfo = credentials.getCredentialInfo();
+
+    // No need to test the Credential Source as this is fake data
+    // Credential Source is tested in DefaultCredentialsProviderTest
+    assertEquals(
+        "External Account Authorized User Credentials", credentialInfo.get("Credential Type"));
+    assertNull(credentialInfo.get("Principal"));
+  }
+
+  @Test
+  public void getCredentialInfo_impersonatedServiceAccount() throws IOException {
+    InputStream impersonationCredentialsStream =
+        ImpersonatedCredentialsTest.writeImpersonationCredentialsStream(
+            ImpersonatedCredentialsTest.IMPERSONATION_OVERRIDE_URL,
+            ImpersonatedCredentialsTest.DELEGATES,
+            null);
+
+    ImpersonatedCredentials credentials =
+        (ImpersonatedCredentials) GoogleCredentials.fromStream(impersonationCredentialsStream);
+    Map<String, String> credentialInfo = credentials.getCredentialInfo();
+
+    // No need to test the Credential Source as this is fake data
+    // Credential Source is tested in DefaultCredentialsProviderTest
+    assertEquals("Impersonated Credentials", credentialInfo.get("Credential Type"));
+    assertEquals(
+        ImpersonatedCredentialsTest.IMPERSONATED_CLIENT_EMAIL, credentialInfo.get("Principal"));
+  }
 }

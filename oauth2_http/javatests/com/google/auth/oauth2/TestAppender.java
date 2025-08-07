@@ -1,4 +1,4 @@
-///*
+/// *
 // * Copyright 2025 Google LLC
 // *
 // * Redistribution and use in source and binary forms, with or without
@@ -29,15 +29,15 @@
 // * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // */
 //
-//package com.google.auth.oauth2;
+// package com.google.auth.oauth2;
 //
-//import ch.qos.logback.classic.spi.ILoggingEvent;
-//import ch.qos.logback.core.AppenderBase;
-//import java.util.ArrayList;
-//import java.util.List;
+// import ch.qos.logback.classic.spi.ILoggingEvent;
+// import ch.qos.logback.core.AppenderBase;
+// import java.util.ArrayList;
+// import java.util.List;
 //
-///** Logback appender used to set up tests. */
-//public class TestAppender extends AppenderBase<ILoggingEvent> {
+/// ** Logback appender used to set up tests. */
+// public class TestAppender extends AppenderBase<ILoggingEvent> {
 //  public List<ILoggingEvent> events = new ArrayList<>();
 //
 //  @Override
@@ -50,4 +50,4 @@
 //  public void clearEvents() {
 //    events.clear();
 //  }
-//}
+// }

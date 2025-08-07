@@ -1,4 +1,4 @@
-///*
+/// *
 // * Copyright 2025 Google LLC
 // *
 // * Redistribution and use in source and binary forms, with or without
@@ -29,34 +29,34 @@
 // * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // */
 //
-//package com.google.auth.oauth2;
+// package com.google.auth.oauth2;
 //
-//import static org.junit.Assert.assertEquals;
-//import static org.junit.Assert.assertTrue;
-//import static org.mockito.Mockito.mock;
-//import static org.mockito.Mockito.when;
+// import static org.junit.Assert.assertEquals;
+// import static org.junit.Assert.assertTrue;
+// import static org.mockito.Mockito.mock;
+// import static org.mockito.Mockito.when;
 //
-//import ch.qos.logback.classic.spi.ILoggingEvent;
-//import com.google.api.client.http.GenericUrl;
-//import com.google.api.client.http.HttpRequest;
-//import com.google.api.client.http.HttpRequestFactory;
-//import com.google.api.client.http.UrlEncodedContent;
-//import com.google.api.client.util.GenericData;
-//import com.google.gson.JsonParser;
-//import com.google.gson.JsonSyntaxException;
-//import java.io.IOException;
-//import java.util.HashMap;
-//import java.util.List;
-//import java.util.Map;
-//import org.junit.Before;
-//import org.junit.Test;
-//import org.slf4j.Logger;
-//import org.slf4j.LoggerFactory;
-//import org.slf4j.event.KeyValuePair;
-//import org.slf4j.event.Level;
+// import ch.qos.logback.classic.spi.ILoggingEvent;
+// import com.google.api.client.http.GenericUrl;
+// import com.google.api.client.http.HttpRequest;
+// import com.google.api.client.http.HttpRequestFactory;
+// import com.google.api.client.http.UrlEncodedContent;
+// import com.google.api.client.util.GenericData;
+// import com.google.gson.JsonParser;
+// import com.google.gson.JsonSyntaxException;
+// import java.io.IOException;
+// import java.util.HashMap;
+// import java.util.List;
+// import java.util.Map;
+// import org.junit.Before;
+// import org.junit.Test;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
+// import org.slf4j.event.KeyValuePair;
+// import org.slf4j.event.Level;
 //
 //// part of Slf4jUtils test that needs logback dependency
-//public class Slf4jUtilsLogbackTest {
+// public class Slf4jUtilsLogbackTest {
 //
 //  private static final Logger LOGGER = LoggerFactory.getLogger(Slf4jUtilsLogbackTest.class);
 //
@@ -213,4 +213,4 @@
 //    ((ch.qos.logback.classic.Logger) LOGGER).addAppender(testAppender);
 //    return testAppender;
 //  }
-//}
+// }

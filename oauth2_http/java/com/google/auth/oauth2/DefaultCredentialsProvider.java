@@ -222,8 +222,7 @@ class DefaultCredentialsProvider {
       if (credentials != null) {
         credentials =
             credentials.withSource(
-                String.format(
-                    "Metadata Server URL set to %s", getEnv(GCE_METADATA_HOST_ENV_VAR)));
+                String.format("Metadata Server URL set to %s", getEnv(GCE_METADATA_HOST_ENV_VAR)));
       }
     }
 
