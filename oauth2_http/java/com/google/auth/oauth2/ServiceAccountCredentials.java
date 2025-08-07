@@ -150,6 +150,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
     this.lifetime = builder.lifetime;
     this.useJwtAccessWithScope = builder.useJwtAccessWithScope;
     this.defaultRetriesEnabled = builder.defaultRetriesEnabled;
+    this.type = "Service Account Credentials";
+    this.principal = builder.clientEmail;
   }
 
   /**

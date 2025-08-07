@@ -96,6 +96,9 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     this.tokenServerUri =
         (builder.tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : builder.tokenServerUri;
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
+
+    this.type = "User Credentials";
+
     Preconditions.checkState(
         builder.getAccessToken() != null || builder.refreshToken != null,
         "Either accessToken or refreshToken must not be null");

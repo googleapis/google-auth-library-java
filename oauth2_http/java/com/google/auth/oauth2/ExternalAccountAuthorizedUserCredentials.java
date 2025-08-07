@@ -117,6 +117,8 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
     this.clientId = builder.clientId;
     this.clientSecret = builder.clientSecret;
 
+    this.type = "External Account Authorized User Credentials";
+
     Preconditions.checkState(
         getAccessToken() != null || canRefresh(),
         "ExternalAccountAuthorizedUserCredentials must be initialized with "

@@ -40,6 +40,7 @@ import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
@@ -63,6 +64,14 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   static final String USER_FILE_TYPE = "authorized_user";
   static final String SERVICE_ACCOUNT_FILE_TYPE = "service_account";
   static final String GDCH_SERVICE_ACCOUNT_FILE_TYPE = "gdch_service_account";
+
+  /* The following package-private fields provide additional info for errors message */
+  // Source of the credential (e.g. env var value or well know file location)
+  String source;
+  // User-friendly name of actual Credential class
+  String type;
+  // Identity of the credential (not all credentials will have this)
+  String principal;
 
   private final String universeDomain;
   private final boolean isExplicitUniverseDomain;
@@ -359,6 +368,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       this.universeDomain = builder.getUniverseDomain();
       this.isExplicitUniverseDomain = true;
     }
+
+    this.source = builder.source;
   }
 
   /**
@@ -497,9 +508,40 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     return this;
   }
 
+  /**
+   * Internal method meant to help provide information for how certain Credential objects loaded by
+   * ADC were initialized
+   */
+  GoogleCredentials withSource(String source) {
+    return toBuilder().setSource(source).build();
+  }
+
+  /**
+   * Provides additional information regarding credential initialization source - Initialized via
+   * the GOOGLE_APPLICATION_CREDENTIALS env var or well known file type - The type of credential
+   * created principal - Identity used for the credential These fields are populated on a
+   * best-effort basis and may be null or missing
+   *
+   * @return Map of information regarding how the Credential was initialized
+   */
+  public Map<String, String> getCredentialInfo() {
+    Map<String, String> infoMap = new HashMap<>();
+    if (!Strings.isNullOrEmpty(source)) {
+      infoMap.put("Credential Source", source);
+    }
+    if (!Strings.isNullOrEmpty(type)) {
+      infoMap.put("Credential Type", type);
+    }
+    if (!Strings.isNullOrEmpty(principal)) {
+      infoMap.put("Principal", principal);
+    }
+    return infoMap;
+  }
+
   public static class Builder extends OAuth2Credentials.Builder {
     @Nullable protected String quotaProjectId;
     @Nullable protected String universeDomain;
+    String source;
 
     protected Builder() {}
 
@@ -539,6 +581,11 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
 
     public String getUniverseDomain() {
       return this.universeDomain;
+    }
+
+    Builder setSource(String source) {
+      this.source = source;
+      return this;
     }
 
     @Override

@@ -220,6 +220,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
     }
     this.transport = builder.getGoogleAuthTransport();
     this.bindingEnforcement = builder.getBindingEnforcement();
+    this.type = "Compute Engine Credentials";
   }
 
   @Override
@@ -691,6 +692,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
     if (serviceAccountEmail == null) {
       try {
         serviceAccountEmail = getDefaultServiceAccount();
+        this.principal = serviceAccountEmail;
       } catch (IOException ex) {
         throw new RuntimeException("Failed to get service account", ex);
       }

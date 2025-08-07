@@ -214,6 +214,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     }
 
     this.metricsHandler = new ExternalAccountMetricsHandler(this);
+    this.type = "External Account Credentials";
   }
 
   /**

@@ -480,6 +480,9 @@ public class ImpersonatedCredentials extends GoogleCredentials
       throw new IllegalStateException("lifetime must be less than or equal to 43200");
     }
 
+    this.type = "Impersonated Credentials";
+    this.principal = builder.targetPrincipal;
+
     // Do not expect explicit universe domain, throw exception if the explicit universe domain
     // does not match the source credential.
     // Do nothing if it matches the source credential
