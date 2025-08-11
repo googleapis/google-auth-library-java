@@ -62,6 +62,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
 
   static final String QUOTA_PROJECT_ID_HEADER_KEY = "x-goog-user-project";
 
+  /** Enum info mapping for GoogleCredential subclasses */
   enum GoogleCredentialsInfo {
     USER_CREDENTIALS("User Credentials", "authorized_user"),
     SERVICE_ACCOUNT_CREDENTIALS("Service Account Credentials", "service_account"),
