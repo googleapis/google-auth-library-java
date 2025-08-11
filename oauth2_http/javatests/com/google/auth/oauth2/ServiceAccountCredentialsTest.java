@@ -1870,7 +1870,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     if (universeDomain != null) {
       json.put("universe_domain", universeDomain);
     }
-    json.put("type", GoogleCredentials.SERVICE_ACCOUNT_FILE_TYPE);
+    json.put("type", GoogleCredentials.GoogleCredentialsType.SERVICE_ACCOUNT_CREDENTIALS.getFileType());
     return json;
   }
 

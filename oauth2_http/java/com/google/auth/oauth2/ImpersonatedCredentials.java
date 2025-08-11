@@ -399,9 +399,9 @@ public class ImpersonatedCredentials extends GoogleCredentials
     }
 
     GoogleCredentials sourceCredentials;
-    if (GoogleCredentials.USER_FILE_TYPE.equals(sourceCredentialsType)) {
+    if (GoogleCredentialsType.USER_CREDENTIALS.getFileType().equals(sourceCredentialsType)) {
       sourceCredentials = UserCredentials.fromJson(sourceCredentialsJson, transportFactory);
-    } else if (GoogleCredentials.SERVICE_ACCOUNT_FILE_TYPE.equals(sourceCredentialsType)) {
+    } else if (GoogleCredentialsType.SERVICE_ACCOUNT_CREDENTIALS.getFileType().equals(sourceCredentialsType)) {
       sourceCredentials =
           ServiceAccountCredentials.fromJson(sourceCredentialsJson, transportFactory);
     } else {

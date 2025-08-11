@@ -915,7 +915,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     if (tokenServerUri != null) {
       json.put("token_uri", tokenServerUri.toString());
     }
-    json.put("type", GoogleCredentials.GDCH_SERVICE_ACCOUNT_FILE_TYPE);
+    json.put("type", GoogleCredentials.GoogleCredentialsType.GDCH_CREDENTIALS.getFileType());
     return json;
   }
 
