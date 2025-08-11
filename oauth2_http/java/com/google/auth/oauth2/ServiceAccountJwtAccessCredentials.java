@@ -296,14 +296,17 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     if (fileType == null) {
       throw new IOException("Error reading credentials from stream, 'type' field not specified.");
     }
-    if (GoogleCredentials.GoogleCredentialsType.SERVICE_ACCOUNT_CREDENTIALS.getFileType().equals(fileType)) {
+    if (GoogleCredentials.GoogleCredentialsInfo.SERVICE_ACCOUNT_CREDENTIALS
+        .getFileType()
+        .equals(fileType)) {
       return fromJson(fileContents, defaultAudience);
     }
     throw new IOException(
         String.format(
             "Error reading credentials from stream, 'type' value '%s' not recognized."
                 + " Expecting '%s'.",
-            fileType, GoogleCredentials.GoogleCredentialsType.SERVICE_ACCOUNT_CREDENTIALS.getFileType()));
+            fileType,
+            GoogleCredentials.GoogleCredentialsInfo.SERVICE_ACCOUNT_CREDENTIALS.getFileType()));
   }
 
   private LoadingCache<JwtClaims, JwtCredentials> createCache() {

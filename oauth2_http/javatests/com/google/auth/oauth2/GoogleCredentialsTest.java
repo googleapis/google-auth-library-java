@@ -832,7 +832,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     // No need to test the Credential Source as this is fake data
     // Credential Source is tested in DefaultCredentialsProviderTest
-    assertEquals("Service Account Credentials", credentialInfo.get("Credential Type"));
+    assertEquals("Service Account Credentials", credentialInfo.get("Credential Name"));
     assertEquals(SA_CLIENT_EMAIL, credentialInfo.get("Principal"));
   }
 
@@ -846,7 +846,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     // No need to test the Credential Source as this is fake data
     // Credential Source is tested in DefaultCredentialsProviderTest
-    assertEquals("User Credentials", credentialInfo.get("Credential Type"));
+    assertEquals("User Credentials", credentialInfo.get("Credential Name"));
     assertNull(credentialInfo.get("Principal"));
   }
 
@@ -866,7 +866,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     // No need to test the Credential Source as this is fake data
     // Credential Source is tested in DefaultCredentialsProviderTest
-    assertEquals("GDCH Credentials", credentialInfo.get("Credential Type"));
+    assertEquals("GDCH Credentials", credentialInfo.get("Credential Name"));
     assertNull(credentialInfo.get("Principal"));
   }
 
@@ -886,7 +886,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     // No need to test the Credential Source as this is fake data
     // Credential Source is tested in DefaultCredentialsProviderTest
-    assertEquals("External Account Credentials", credentialInfo.get("Credential Type"));
+    assertEquals("External Account Credentials", credentialInfo.get("Credential Name"));
     assertNull(credentialInfo.get("Principal"));
   }
 
@@ -906,7 +906,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     // No need to test the Credential Source as this is fake data
     // Credential Source is tested in DefaultCredentialsProviderTest
     assertEquals(
-        "External Account Authorized User Credentials", credentialInfo.get("Credential Type"));
+        "External Account Authorized User Credentials", credentialInfo.get("Credential Name"));
     assertNull(credentialInfo.get("Principal"));
   }
 
@@ -924,7 +924,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     // No need to test the Credential Source as this is fake data
     // Credential Source is tested in DefaultCredentialsProviderTest
-    assertEquals("Impersonated Credentials", credentialInfo.get("Credential Type"));
+    assertEquals("Impersonated Credentials", credentialInfo.get("Credential Name"));
     assertEquals(
         ImpersonatedCredentialsTest.IMPERSONATED_CLIENT_EMAIL, credentialInfo.get("Principal"));
   }

@@ -926,7 +926,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     if (tokenUrl != null) {
       json.put("token_uri", tokenUrl);
     }
-    json.put("type", GoogleCredentials.GoogleCredentialsType.USER_CREDENTIALS.getFileType());
+    json.put("type", GoogleCredentials.GoogleCredentialsInfo.USER_CREDENTIALS.getFileType());
     return json;
   }
 

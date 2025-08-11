@@ -1346,7 +1346,8 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     json.put("subject_token_type", "subjectTokenType");
     json.put("token_url", stsUrl);
     json.put("token_info_url", "tokenInfoUrl");
-    json.put("type", ExternalAccountCredentials.EXTERNAL_ACCOUNT_FILE_TYPE);
+    json.put(
+        "type", GoogleCredentials.GoogleCredentialsInfo.EXTERNAL_ACCOUNT_CREDENTIALS.getFileType());
 
     GenericJson credentialSource = new GenericJson();
     credentialSource.put("environment_id", "aws1");

@@ -95,8 +95,6 @@ import java.util.Objects;
 public class ImpersonatedCredentials extends GoogleCredentials
     implements ServiceAccountSigner, IdTokenProvider {
 
-  static final String IMPERSONATED_CREDENTIALS_FILE_TYPE = "impersonated_service_account";
-
   private static final long serialVersionUID = -2133257318957488431L;
   private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ssX";
   private static final int TWELVE_HOURS_IN_SECONDS = 43200;
@@ -399,9 +397,11 @@ public class ImpersonatedCredentials extends GoogleCredentials
     }
 
     GoogleCredentials sourceCredentials;
-    if (GoogleCredentialsType.USER_CREDENTIALS.getFileType().equals(sourceCredentialsType)) {
+    if (GoogleCredentialsInfo.USER_CREDENTIALS.getFileType().equals(sourceCredentialsType)) {
       sourceCredentials = UserCredentials.fromJson(sourceCredentialsJson, transportFactory);
-    } else if (GoogleCredentialsType.SERVICE_ACCOUNT_CREDENTIALS.getFileType().equals(sourceCredentialsType)) {
+    } else if (GoogleCredentialsInfo.SERVICE_ACCOUNT_CREDENTIALS
+        .getFileType()
+        .equals(sourceCredentialsType)) {
       sourceCredentials =
           ServiceAccountCredentials.fromJson(sourceCredentialsJson, transportFactory);
     } else {
@@ -480,7 +480,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
       throw new IllegalStateException("lifetime must be less than or equal to 43200");
     }
 
-    this.type = "Impersonated Credentials";
+    this.name = GoogleCredentialsInfo.IMPERSONATED_CREDENTIALS.getCredentialName();
     this.principal = builder.targetPrincipal;
 
     // Do not expect explicit universe domain, throw exception if the explicit universe domain

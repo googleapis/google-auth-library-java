@@ -32,7 +32,6 @@
 package com.google.auth.oauth2;
 
 import static com.google.auth.Credentials.GOOGLE_DEFAULT_UNIVERSE;
-import static com.google.auth.oauth2.ExternalAccountAuthorizedUserCredentials.EXTERNAL_ACCOUNT_AUTHORIZED_USER_FILE_TYPE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -1241,7 +1240,10 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
 
   static GenericJson buildJsonCredentials() {
     GenericJson json = new GenericJson();
-    json.put("type", EXTERNAL_ACCOUNT_AUTHORIZED_USER_FILE_TYPE);
+    json.put(
+        "type",
+        GoogleCredentials.GoogleCredentialsInfo.EXTERNAL_ACCOUNT_AUTHORIZED_USER_CREDENTIALS
+            .getFileType());
     json.put("audience", AUDIENCE);
     json.put("refresh_token", REFRESH_TOKEN);
     json.put("client_id", CLIENT_ID);

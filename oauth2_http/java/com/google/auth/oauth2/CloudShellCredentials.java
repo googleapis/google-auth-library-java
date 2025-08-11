@@ -70,6 +70,7 @@ public class CloudShellCredentials extends GoogleCredentials {
   private CloudShellCredentials(Builder builder) {
     super(builder);
     this.authPort = builder.getAuthPort();
+    this.name = GoogleCredentialsInfo.CLOUD_SHELL_CREDENTIALS.getCredentialName();
   }
 
   protected int getAuthPort() {

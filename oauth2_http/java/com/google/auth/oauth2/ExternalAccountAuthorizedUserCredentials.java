@@ -81,9 +81,6 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
 
   private static final long serialVersionUID = -2181779590486283287L;
 
-  static final String EXTERNAL_ACCOUNT_AUTHORIZED_USER_FILE_TYPE =
-      "external_account_authorized_user";
-
   private final String transportFactoryClassName;
   private final String audience;
   private final String tokenUrl;
@@ -117,7 +114,8 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
     this.clientId = builder.clientId;
     this.clientSecret = builder.clientSecret;
 
-    this.type = "External Account Authorized User Credentials";
+    this.name =
+        GoogleCredentialsInfo.EXTERNAL_ACCOUNT_AUTHORIZED_USER_CREDENTIALS.getCredentialName();
 
     Preconditions.checkState(
         getAccessToken() != null || canRefresh(),

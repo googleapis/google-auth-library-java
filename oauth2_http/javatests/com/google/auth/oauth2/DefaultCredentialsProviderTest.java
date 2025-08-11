@@ -765,7 +765,7 @@ public class DefaultCredentialsProviderTest {
             "Env Var %s set to %s",
             DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, serviceAccountPath),
         credentialInfo.get("Credential Source"));
-    assertEquals("Service Account Credentials", credentialInfo.get("Credential Type"));
+    assertEquals("Service Account Credentials", credentialInfo.get("Credential Name"));
     assertEquals(SA_CLIENT_EMAIL, credentialInfo.get("Principal"));
   }
 
@@ -790,7 +790,7 @@ public class DefaultCredentialsProviderTest {
         String.format(
             "Env Var %s set to %s", DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, userPath),
         credentialInfo.get("Credential Source"));
-    assertEquals("User Credentials", credentialInfo.get("Credential Type"));
+    assertEquals("User Credentials", credentialInfo.get("Credential Name"));
     assertNull(credentialInfo.get("Principal"));
   }
 
@@ -816,7 +816,7 @@ public class DefaultCredentialsProviderTest {
     assertEquals(
         String.format("Well Known File at %s", wellKnownFile.getCanonicalPath()),
         credentialInfo.get("Credential Source"));
-    assertEquals("User Credentials", credentialInfo.get("Credential Type"));
+    assertEquals("User Credentials", credentialInfo.get("Credential Name"));
     assertNull(credentialInfo.get("Principal"));
   }
 
@@ -836,7 +836,7 @@ public class DefaultCredentialsProviderTest {
     assertEquals(
         String.format("Metadata Server URL set to %s", gceMetadataHost),
         credentials.getCredentialInfo().get("Credential Source"));
-    assertEquals("Compute Engine Credentials", credentialInfo.get("Credential Type"));
+    assertEquals("Compute Engine Credentials", credentialInfo.get("Credential Name"));
     assertNull(credentialInfo.get("Principal"));
   }
 

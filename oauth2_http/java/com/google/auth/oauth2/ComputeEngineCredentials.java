@@ -220,7 +220,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
     }
     this.transport = builder.getGoogleAuthTransport();
     this.bindingEnforcement = builder.getBindingEnforcement();
-    this.type = "Compute Engine Credentials";
+    this.name = GoogleCredentialsInfo.COMPUTE_ENGINE_CREDENTIALS.getCredentialName();
   }
 
   @Override

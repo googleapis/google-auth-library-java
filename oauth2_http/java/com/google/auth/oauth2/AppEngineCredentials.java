@@ -125,7 +125,7 @@ class AppEngineCredentials extends GoogleCredentials implements ServiceAccountSi
       this.signForApp = serviceClass.getMethod(SIGN_FOR_APP_METHOD, byte[].class);
       Class<?> signingResultClass = forName(SIGNING_RESULT_CLASS);
       this.getSignature = signingResultClass.getMethod(GET_SIGNATURE_METHOD);
-      this.type = "App Engine Credentials";
+      this.name = GoogleCredentialsInfo.APP_ENGINE_CREDENTIALS.getCredentialName();
     } catch (ClassNotFoundException
         | NoSuchMethodException
         | IllegalAccessException
