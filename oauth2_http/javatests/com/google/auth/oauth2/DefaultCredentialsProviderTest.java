@@ -821,7 +821,7 @@ public class DefaultCredentialsProviderTest {
   }
 
   @Test
-  public void getDefaultCredentials_computeEngineCredentialscorrectCredentialInfo()
+  public void getDefaultCredentials_computeEngineCredentials_correctCredentialInfo()
       throws IOException {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();

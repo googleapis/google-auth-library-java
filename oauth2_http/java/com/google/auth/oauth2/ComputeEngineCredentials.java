@@ -221,6 +221,15 @@ public class ComputeEngineCredentials extends GoogleCredentials
     this.transport = builder.getGoogleAuthTransport();
     this.bindingEnforcement = builder.getBindingEnforcement();
     this.name = GoogleCredentialsInfo.COMPUTE_ENGINE_CREDENTIALS.getCredentialName();
+    try {
+      // Only do a passive check for MDS (do not make an MDS ping check during initialization)
+      if (checkStaticGceDetection(new DefaultCredentialsProvider())) {
+        this.serviceAccountEmail = getDefaultServiceAccount();
+        this.principal = this.serviceAccountEmail;
+      }
+    } catch (IOException e) {
+      // No-op as MDS is not available yet and should not fail initialization
+    }
   }
 
   @Override
@@ -762,9 +771,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
         responseData, LOGGER_PROVIDER, "Received default service account payload");
     Map<String, Object> defaultAccount =
         OAuth2Utils.validateMap(responseData, "default", PARSE_ERROR_ACCOUNT);
-    String email = OAuth2Utils.validateString(defaultAccount, "email", PARSE_ERROR_ACCOUNT);
-    principal = email;
-    return email;
+    return OAuth2Utils.validateString(defaultAccount, "email", PARSE_ERROR_ACCOUNT);
   }
 
   public static class Builder extends GoogleCredentials.Builder {
