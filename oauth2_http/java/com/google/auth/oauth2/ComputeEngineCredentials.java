@@ -354,6 +354,12 @@ public class ComputeEngineCredentials extends GoogleCredentials
   /** Refresh the access token by getting it from the GCE metadata server */
   @Override
   public AccessToken refreshAccessToken() throws IOException {
+    // Retrieve the default service account email if MDS wasn't available during the constructor
+    if (serviceAccountEmail == null) {
+      serviceAccountEmail = getDefaultServiceAccount();
+      principal = serviceAccountEmail;
+    }
+
     HttpResponse response =
         getMetadataResponse(createTokenUrlWithScopes(), RequestType.ACCESS_TOKEN_REQUEST, true);
     int statusCode = response.getStatusCode();
