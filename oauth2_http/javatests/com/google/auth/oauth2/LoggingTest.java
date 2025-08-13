@@ -50,6 +50,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.webtoken.JsonWebToken.Payload;
 import com.google.api.client.util.ArrayMap;
@@ -440,12 +441,17 @@ public class LoggingTest {
 
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
 
-    assertEquals(3, testAppender.events.size());
+    // TODO: Add the other three logging events
 
+    // 3 logging events (sending, received, payload details) for each call
+    // `getRequestMetadata` call calls default service account and token endpoints
+    assertEquals(6, testAppender.events.size());
+
+    ILoggingEvent requestRefreshAccessToken = testAppender.events.get(3);
     assertEquals(
-        "Sending request to refresh access token", testAppender.events.get(0).getMessage());
-    assertEquals(3, testAppender.events.get(0).getKeyValuePairs().size());
-    for (KeyValuePair kvp : testAppender.events.get(0).getKeyValuePairs()) {
+        "Sending request to refresh access token", requestRefreshAccessToken.getMessage());
+    assertEquals(3, requestRefreshAccessToken.getKeyValuePairs().size());
+    for (KeyValuePair kvp : requestRefreshAccessToken.getKeyValuePairs()) {
       assertTrue(
           kvp.key.equals("request.headers")
               || kvp.key.equals("request.method")
@@ -454,17 +460,19 @@ public class LoggingTest {
         assertTrue(isValidJson((String) kvp.value));
       }
     }
+    ILoggingEvent responseRefreshAccessToken = testAppender.events.get(4);
     assertEquals(
-        "Received response for refresh access token", testAppender.events.get(1).getMessage());
-    assertEquals(3, testAppender.events.get(1).getKeyValuePairs().size());
-    for (KeyValuePair kvp : testAppender.events.get(1).getKeyValuePairs()) {
+        "Received response for refresh access token", responseRefreshAccessToken.getMessage());
+    assertEquals(3, responseRefreshAccessToken.getKeyValuePairs().size());
+    for (KeyValuePair kvp : responseRefreshAccessToken.getKeyValuePairs()) {
       assertTrue(
           kvp.key.equals("response.headers")
               || kvp.key.equals("response.status")
               || kvp.key.equals("response.status.message"));
     }
-    assertEquals("Response payload for access token", testAppender.events.get(2).getMessage());
-    assertEquals(3, testAppender.events.get(2).getKeyValuePairs().size());
+    ILoggingEvent payloadRefreshAccessToken = testAppender.events.get(5);
+    assertEquals("Response payload for access token", payloadRefreshAccessToken.getMessage());
+    assertEquals(3, payloadRefreshAccessToken.getKeyValuePairs().size());
 
     testAppender.stop();
   }
