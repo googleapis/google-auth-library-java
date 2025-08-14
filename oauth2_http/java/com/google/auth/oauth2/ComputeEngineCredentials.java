@@ -191,6 +191,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
   private transient HttpTransportFactory transportFactory;
   private transient String serviceAccountEmail;
 
+  private final boolean shouldCheckMDSOnInitialization;
+
   private String universeDomainFromMetadata = null;
 
   /**
@@ -221,14 +223,17 @@ public class ComputeEngineCredentials extends GoogleCredentials
     this.transport = builder.getGoogleAuthTransport();
     this.bindingEnforcement = builder.getBindingEnforcement();
     this.name = GoogleCredentialsInfo.COMPUTE_ENGINE_CREDENTIALS.getCredentialName();
+    this.shouldCheckMDSOnInitialization = builder.shouldCheckMDSOnInitialization;
     try {
-      if (builder.shouldCheckMDSOnInitialization
-          && shouldGetDefaultServiceAccountDuringInitialization()) {
+      if (shouldCheckMDSOnInitialization
+          && !Boolean.parseBoolean(System.getenv(DefaultCredentialsProvider.NO_GCE_CHECK_ENV_VAR))
+          && checkStaticGceDetection(new DefaultCredentialsProvider())) {
         this.serviceAccountEmail = getDefaultServiceAccount();
         this.principal = this.serviceAccountEmail;
       }
     } catch (IOException e) {
-      // No-op as MDS is not available yet and should not fail initialization
+      // This should never happen since we do a passive check for MDS. However, if this does fail,
+      // we mo-op as MDS is not available yet and should not fail initialization
     }
   }
 
@@ -751,17 +756,6 @@ public class ComputeEngineCredentials extends GoogleCredentials
     }
   }
 
-  /** This method is only intended to be called during initialization */
-  private boolean shouldGetDefaultServiceAccountDuringInitialization() throws IOException {
-    // Only check GCE is the user did not request a GCE skip via the Env Var. Otherwise, return
-    // immediately
-    if (!Boolean.parseBoolean(System.getenv(DefaultCredentialsProvider.NO_GCE_CHECK_ENV_VAR))) {
-      // Only do a passive check for MDS (do not make an MDS ping check during initialization)
-      return checkStaticGceDetection(new DefaultCredentialsProvider());
-    }
-    return false;
-  }
-
   private String getDefaultServiceAccount() throws IOException {
     HttpResponse response =
         getMetadataResponse(getServiceAccountsUrl(), RequestType.UNTRACKED, false);
@@ -814,6 +808,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
       super(credentials);
       this.transportFactory = credentials.transportFactory;
       this.scopes = credentials.scopes;
+      this.shouldCheckMDSOnInitialization = credentials.shouldCheckMDSOnInitialization;
     }
 
     @CanIgnoreReturnValue
