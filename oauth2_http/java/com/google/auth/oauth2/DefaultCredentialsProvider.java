@@ -311,10 +311,12 @@ class DefaultCredentialsProvider {
     }
     boolean runningOnComputeEngine = ComputeEngineCredentials.isOnGce(transportFactory, this);
     checkedComputeEngine = true;
+    ComputeEngineCredentials.Builder builder =
+        shouldCheckMDSOnInitialization()
+            ? ComputeEngineCredentials.newBuilder()
+            : ComputeEngineCredentials.newTestBuilder();
     if (runningOnComputeEngine) {
-      return ComputeEngineCredentials.newBuilder()
-          .setHttpTransportFactory(transportFactory)
-          .build();
+      return builder.setHttpTransportFactory(transportFactory).build();
     }
     return null;
   }
@@ -361,6 +363,10 @@ class DefaultCredentialsProvider {
 
   InputStream readStream(File file) throws FileNotFoundException {
     return new FileInputStream(file);
+  }
+
+  boolean shouldCheckMDSOnInitialization() {
+    return true;
   }
 
   /*

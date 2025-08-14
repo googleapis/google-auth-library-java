@@ -977,6 +977,11 @@ public class DefaultCredentialsProviderTest {
     void setFileSandbox(boolean fileSandbox) {
       this.fileSandbox = fileSandbox;
     }
+
+    @Override
+    boolean shouldCheckMDSOnInitialization() {
+      return false;
+    }
   }
 
   static class MockRequestCountingTransportFactory implements HttpTransportFactory {
