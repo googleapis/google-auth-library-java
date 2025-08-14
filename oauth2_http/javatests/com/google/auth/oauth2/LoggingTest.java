@@ -50,6 +50,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.webtoken.JsonWebToken.Payload;
 import com.google.api.client.util.ArrayMap;
@@ -433,18 +434,21 @@ public class LoggingTest {
   public void getRequestMetadata_hasAccessToken() throws IOException {
     TestAppender testAppender = setupTestLogger(ComputeEngineCredentials.class);
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    transportFactory.transport.setServiceAccountEmail("test@google.com");
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
 
-    assertEquals(3, testAppender.events.size());
+    assertEquals(6, testAppender.events.size());
 
+    ILoggingEvent defaultServiceAccountRequest = testAppender.events.get(0);
     assertEquals(
-        "Sending request to refresh access token", testAppender.events.get(0).getMessage());
-    assertEquals(3, testAppender.events.get(0).getKeyValuePairs().size());
-    for (KeyValuePair kvp : testAppender.events.get(0).getKeyValuePairs()) {
+        "Sending request for universe domain/default service account",
+        defaultServiceAccountRequest.getMessage());
+    assertEquals(3, defaultServiceAccountRequest.getKeyValuePairs().size());
+    for (KeyValuePair kvp : defaultServiceAccountRequest.getKeyValuePairs()) {
       assertTrue(
           kvp.key.equals("request.headers")
               || kvp.key.equals("request.method")
@@ -453,17 +457,46 @@ public class LoggingTest {
         assertTrue(isValidJson((String) kvp.value));
       }
     }
+    ILoggingEvent defaultServiceAccountResponse = testAppender.events.get(1);
     assertEquals(
-        "Received response for refresh access token", testAppender.events.get(1).getMessage());
-    assertEquals(3, testAppender.events.get(1).getKeyValuePairs().size());
-    for (KeyValuePair kvp : testAppender.events.get(1).getKeyValuePairs()) {
+        "Received response for universe domain/default service account",
+        defaultServiceAccountResponse.getMessage());
+    assertEquals(3, defaultServiceAccountResponse.getKeyValuePairs().size());
+    for (KeyValuePair kvp : defaultServiceAccountResponse.getKeyValuePairs()) {
       assertTrue(
           kvp.key.equals("response.headers")
               || kvp.key.equals("response.status")
               || kvp.key.equals("response.status.message"));
     }
-    assertEquals("Response payload for access token", testAppender.events.get(2).getMessage());
-    assertEquals(3, testAppender.events.get(2).getKeyValuePairs().size());
+    ILoggingEvent defaultServiceAccountPayload = testAppender.events.get(2);
+    assertEquals(
+        "Received default service account payload", defaultServiceAccountPayload.getMessage());
+    assertEquals(1, defaultServiceAccountPayload.getKeyValuePairs().size());
+
+    ILoggingEvent accessTokenRequest = testAppender.events.get(3);
+    assertEquals("Sending request to refresh access token", accessTokenRequest.getMessage());
+    assertEquals(3, accessTokenRequest.getKeyValuePairs().size());
+    for (KeyValuePair kvp : accessTokenRequest.getKeyValuePairs()) {
+      assertTrue(
+          kvp.key.equals("request.headers")
+              || kvp.key.equals("request.method")
+              || kvp.key.equals("request.url"));
+      if (kvp.key.equals("request.headers")) {
+        assertTrue(isValidJson((String) kvp.value));
+      }
+    }
+    ILoggingEvent accessTokenResponse = testAppender.events.get(4);
+    assertEquals("Received response for refresh access token", accessTokenResponse.getMessage());
+    assertEquals(3, accessTokenResponse.getKeyValuePairs().size());
+    for (KeyValuePair kvp : accessTokenResponse.getKeyValuePairs()) {
+      assertTrue(
+          kvp.key.equals("response.headers")
+              || kvp.key.equals("response.status")
+              || kvp.key.equals("response.status.message"));
+    }
+    ILoggingEvent accessTokenPayload = testAppender.events.get(5);
+    assertEquals("Response payload for access token", accessTokenPayload.getMessage());
+    assertEquals(3, accessTokenPayload.getKeyValuePairs().size());
 
     testAppender.stop();
   }
