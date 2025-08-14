@@ -448,8 +448,7 @@ public class LoggingTest {
     assertEquals(6, testAppender.events.size());
 
     ILoggingEvent requestRefreshAccessToken = testAppender.events.get(3);
-    assertEquals(
-        "Sending request to refresh access token", requestRefreshAccessToken.getMessage());
+    assertEquals("Sending request to refresh access token", requestRefreshAccessToken.getMessage());
     assertEquals(3, requestRefreshAccessToken.getKeyValuePairs().size());
     for (KeyValuePair kvp : requestRefreshAccessToken.getKeyValuePairs()) {
       assertTrue(
