@@ -222,8 +222,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
     this.bindingEnforcement = builder.getBindingEnforcement();
     this.name = GoogleCredentialsInfo.COMPUTE_ENGINE_CREDENTIALS.getCredentialName();
     try {
-      // Only do a passive check for MDS (do not make an MDS ping check during initialization)
-      if (checkStaticGceDetection(new DefaultCredentialsProvider())) {
+      if (builder.shouldCheckMDSOnInitialization
+          && shouldGetDefaultServiceAccountDuringInitialization()) {
         this.serviceAccountEmail = getDefaultServiceAccount();
         this.principal = this.serviceAccountEmail;
       }
@@ -696,6 +696,10 @@ public class ComputeEngineCredentials extends GoogleCredentials
     return new Builder();
   }
 
+  static Builder newTestBuilder() {
+    return newBuilder().setShouldCheckMDSOnInitialization(false);
+  }
+
   /**
    * Returns the email address associated with the GCE default service account.
    *
@@ -747,6 +751,17 @@ public class ComputeEngineCredentials extends GoogleCredentials
     }
   }
 
+  /** This method is only intended to be called during initialization */
+  private boolean shouldGetDefaultServiceAccountDuringInitialization() throws IOException {
+    // Only check GCE is the user did not request a GCE skip via the Env Var. Otherwise, return
+    // immediately
+    if (!Boolean.parseBoolean(System.getenv(DefaultCredentialsProvider.NO_GCE_CHECK_ENV_VAR))) {
+      // Only do a passive check for MDS (do not make an MDS ping check during initialization)
+      return checkStaticGceDetection(new DefaultCredentialsProvider());
+    }
+    return false;
+  }
+
   private String getDefaultServiceAccount() throws IOException {
     HttpResponse response =
         getMetadataResponse(getServiceAccountsUrl(), RequestType.UNTRACKED, false);
@@ -787,6 +802,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
     private GoogleAuthTransport transport;
     private BindingEnforcement bindingEnforcement;
+
+    private boolean shouldCheckMDSOnInitialization = true;
 
     protected Builder() {
       setRefreshMargin(COMPUTE_REFRESH_MARGIN);
@@ -848,6 +865,11 @@ public class ComputeEngineCredentials extends GoogleCredentials
     @CanIgnoreReturnValue
     public Builder setBindingEnforcement(BindingEnforcement bindingEnforcement) {
       this.bindingEnforcement = bindingEnforcement;
+      return this;
+    }
+
+    Builder setShouldCheckMDSOnInitialization(boolean shouldCheckMDSOnInitialization) {
+      this.shouldCheckMDSOnInitialization = shouldCheckMDSOnInitialization;
       return this;
     }
 
