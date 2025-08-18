@@ -111,6 +111,27 @@ public class ComputeEngineCredentials extends GoogleCredentials
   static final int MAX_COMPUTE_PING_TRIES = 3;
   static final int COMPUTE_PING_CONNECTION_TIMEOUT_MS = 500;
 
+  private static final String METADATA_FLAVOR = "Metadata-Flavor";
+  private static final String GOOGLE = "Google";
+  private static final String WINDOWS = "windows";
+  private static final String LINUX = "linux";
+
+  private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
+  private static final String PARSE_ERROR_ACCOUNT = "Error parsing service account response. ";
+  private static final long serialVersionUID = -4113476462526554235L;
+
+  private final String transportFactoryClassName;
+
+  private final Collection<String> scopes;
+
+  private final GoogleAuthTransport transport;
+  private final BindingEnforcement bindingEnforcement;
+
+  private transient HttpTransportFactory transportFactory;
+  private transient String serviceAccountEmail;
+
+  private String universeDomainFromMetadata = null;
+
   /**
    * Experimental Feature.
    *
@@ -172,29 +193,6 @@ public class ComputeEngineCredentials extends GoogleCredentials
     }
   }
 
-  private static final String METADATA_FLAVOR = "Metadata-Flavor";
-  private static final String GOOGLE = "Google";
-  private static final String WINDOWS = "windows";
-  private static final String LINUX = "linux";
-
-  private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
-  private static final String PARSE_ERROR_ACCOUNT = "Error parsing service account response. ";
-  private static final long serialVersionUID = -4113476462526554235L;
-
-  private final String transportFactoryClassName;
-
-  private final Collection<String> scopes;
-
-  private final GoogleAuthTransport transport;
-  private final BindingEnforcement bindingEnforcement;
-
-  private transient HttpTransportFactory transportFactory;
-  private transient String serviceAccountEmail;
-
-  private final boolean shouldCheckMDSOnInitialization;
-
-  private String universeDomainFromMetadata = null;
-
   /**
    * An internal constructor
    *
@@ -223,18 +221,6 @@ public class ComputeEngineCredentials extends GoogleCredentials
     this.transport = builder.getGoogleAuthTransport();
     this.bindingEnforcement = builder.getBindingEnforcement();
     this.name = GoogleCredentialsInfo.COMPUTE_ENGINE_CREDENTIALS.getCredentialName();
-    this.shouldCheckMDSOnInitialization = builder.shouldCheckMDSOnInitialization;
-    try {
-      if (shouldCheckMDSOnInitialization
-          && !Boolean.parseBoolean(System.getenv(DefaultCredentialsProvider.NO_GCE_CHECK_ENV_VAR))
-          && checkStaticGceDetection(new DefaultCredentialsProvider())) {
-        this.serviceAccountEmail = getDefaultServiceAccount();
-        this.principal = this.serviceAccountEmail;
-      }
-    } catch (IOException e) {
-      // This should never happen since we do a passive check for MDS. However, if this does fail,
-      // we mo-op as MDS is not available yet and should not fail initialization
-    }
   }
 
   @Override
@@ -701,10 +687,6 @@ public class ComputeEngineCredentials extends GoogleCredentials
     return new Builder();
   }
 
-  static Builder newTestBuilder() {
-    return newBuilder().setShouldCheckMDSOnInitialization(false);
-  }
-
   /**
    * Returns the email address associated with the GCE default service account.
    *
@@ -797,8 +779,6 @@ public class ComputeEngineCredentials extends GoogleCredentials
     private GoogleAuthTransport transport;
     private BindingEnforcement bindingEnforcement;
 
-    private boolean shouldCheckMDSOnInitialization = true;
-
     protected Builder() {
       setRefreshMargin(COMPUTE_REFRESH_MARGIN);
       setExpirationMargin(COMPUTE_EXPIRATION_MARGIN);
@@ -808,7 +788,6 @@ public class ComputeEngineCredentials extends GoogleCredentials
       super(credentials);
       this.transportFactory = credentials.transportFactory;
       this.scopes = credentials.scopes;
-      this.shouldCheckMDSOnInitialization = credentials.shouldCheckMDSOnInitialization;
     }
 
     @CanIgnoreReturnValue
@@ -860,11 +839,6 @@ public class ComputeEngineCredentials extends GoogleCredentials
     @CanIgnoreReturnValue
     public Builder setBindingEnforcement(BindingEnforcement bindingEnforcement) {
       this.bindingEnforcement = bindingEnforcement;
-      return this;
-    }
-
-    Builder setShouldCheckMDSOnInitialization(boolean shouldCheckMDSOnInitialization) {
-      this.shouldCheckMDSOnInitialization = shouldCheckMDSOnInitialization;
       return this;
     }
 

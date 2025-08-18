@@ -507,7 +507,7 @@ public class LoggingTest {
     TestAppender testAppender = setupTestLogger(ComputeEngineCredentials.class);
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     ComputeEngineCredentials credentials =
-        ComputeEngineCredentials.newTestBuilder().setHttpTransportFactory(transportFactory).build();
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
     String targetAudience = "https://foo.bar";
     IdTokenCredentials tokenCredential =
