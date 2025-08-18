@@ -305,7 +305,7 @@ public class DefaultCredentialsProviderTest {
   @Test
   public void getDefaultCredentials_compute_providesToken() throws IOException {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-    transportFactory.transport.setServiceAccountEmail("test@google.com");
+    transportFactory.transport.setServiceAccountEmail(SA_CLIENT_EMAIL);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
 
     GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory);

@@ -434,7 +434,7 @@ public class LoggingTest {
   public void getRequestMetadata_hasAccessToken() throws IOException {
     TestAppender testAppender = setupTestLogger(ComputeEngineCredentials.class);
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-    transportFactory.transport.setServiceAccountEmail("test@google.com");
+    transportFactory.transport.setServiceAccountEmail("SA_CLIENT_EMAIL");
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
