@@ -62,7 +62,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
 
   static final String QUOTA_PROJECT_ID_HEADER_KEY = "x-goog-user-project";
 
-  /** Enum info mapping for GoogleCredential subclasses */
+  /** Internal Enum info mapping for GoogleCredential subclasses */
   enum GoogleCredentialsInfo {
     USER_CREDENTIALS("User Credentials", "authorized_user"),
     SERVICE_ACCOUNT_CREDENTIALS("Service Account Credentials", "service_account"),
@@ -83,21 +83,21 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       this.fileType = fileType;
     }
 
-    public String getCredentialName() {
+    String getCredentialName() {
       return credentialName;
     }
 
-    public String getFileType() {
+    String getFileType() {
       return fileType;
     }
   }
 
-  /* The following package-private fields provide additional info for errors message */
+  /* The following package-private fields to provide additional info for errors message */
   // Source of the credential (e.g. env var value or well know file location)
   String source;
-  // User-friendly name of actual Credential class
+  // User-friendly name of the Credential class
   String name;
-  // Identity of the credential (not all credentials will have this)
+  // Identity of the credential
   String principal;
 
   private final String universeDomain;
@@ -537,8 +537,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * Internal method meant to help provide information for how certain Credential objects loaded by
-   * ADC were initialized
+   * Internal method meant to help provide information for how certain Credential objects were
+   * initialized by ADC (e.g. The well-known file location or env var)
    */
   GoogleCredentials withSource(String source) {
     return toBuilder().setSource(source).build();
@@ -554,7 +554,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    *   <li>principal - Identity used for the credential
    * </ul>
    *
-   * These fields are populated on a best-effort basis and may be populated missing
+   * Missing fields values are not included in the mapping
    *
    * @return Map of information regarding how the Credential was initialized
    */

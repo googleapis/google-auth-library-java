@@ -345,7 +345,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
   /** Refresh the access token by getting it from the GCE metadata server */
   @Override
   public AccessToken refreshAccessToken() throws IOException {
-    // Retrieve the default service account email if MDS wasn't available during the constructor
+    // Retrieve the default service account email prior to retrieving the access token
     if (serviceAccountEmail == null) {
       serviceAccountEmail = getDefaultServiceAccount();
       principal = serviceAccountEmail;
