@@ -153,6 +153,11 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
     return new Builder(identityPoolCredentials);
   }
 
+  @Override
+  public IdentityPoolCredentials.Builder toBuilder() {
+    return new IdentityPoolCredentials.Builder(this);
+  }
+
   private IdentityPoolSubjectTokenSupplier createCertificateSubjectTokenSupplier(
       Builder builder, IdentityPoolCredentialSource credentialSource) throws IOException {
     // Configure the mTLS transport with the x509 keystore.

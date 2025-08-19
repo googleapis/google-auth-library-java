@@ -233,6 +233,11 @@ public class AwsCredentials extends ExternalAccountCredentials {
     return new AwsCredentials.Builder(awsCredentials);
   }
 
+  @Override
+  public AwsCredentials.Builder toBuilder() {
+    return new AwsCredentials.Builder(this);
+  }
+
   public static class Builder extends ExternalAccountCredentials.Builder {
 
     private AwsSecurityCredentialsSupplier awsSecurityCredentialsSupplier;
