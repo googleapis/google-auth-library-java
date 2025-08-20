@@ -682,12 +682,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     return true;
   }
 
-  @Override
-  public Builder toBuilder() {
-    throw new IllegalStateException(
-        "A derived class of ExternalAccountCredentials should be used to create a Builder");
-  }
-
   /**
    * Encapsulates the service account impersonation options portion of the configuration for
    * ExternalAccountCredentials.
