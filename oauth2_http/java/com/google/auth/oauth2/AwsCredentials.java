@@ -234,8 +234,8 @@ public class AwsCredentials extends ExternalAccountCredentials {
   }
 
   @Override
-  public AwsCredentials.Builder toBuilder() {
-    return new AwsCredentials.Builder(this);
+  public Builder toBuilder() {
+    return new Builder(this);
   }
 
   public static class Builder extends ExternalAccountCredentials.Builder {

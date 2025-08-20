@@ -154,8 +154,8 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
   }
 
   @Override
-  public IdentityPoolCredentials.Builder toBuilder() {
-    return new IdentityPoolCredentials.Builder(this);
+  public Builder toBuilder() {
+    return new Builder(this);
   }
 
   private IdentityPoolSubjectTokenSupplier createCertificateSubjectTokenSupplier(

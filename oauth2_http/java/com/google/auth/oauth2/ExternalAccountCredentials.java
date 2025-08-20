@@ -683,7 +683,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   }
 
   @Override
-  public abstract ExternalAccountCredentials.Builder toBuilder();
+  public abstract Builder toBuilder();
 
   /**
    * Encapsulates the service account impersonation options portion of the configuration for

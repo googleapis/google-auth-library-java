@@ -204,8 +204,8 @@ public class PluggableAuthCredentials extends ExternalAccountCredentials {
   }
 
   @Override
-  public PluggableAuthCredentials.Builder toBuilder() {
-    return new PluggableAuthCredentials.Builder(this);
+  public Builder toBuilder() {
+    return new Builder(this);
   }
 
   @VisibleForTesting
