@@ -203,6 +203,11 @@ public class PluggableAuthCredentials extends ExternalAccountCredentials {
     return new Builder(pluggableAuthCredentials);
   }
 
+  @Override
+  public Builder toBuilder() {
+    return new Builder(this);
+  }
+
   @VisibleForTesting
   @Nullable
   ExecutableHandler getExecutableHandler() {
