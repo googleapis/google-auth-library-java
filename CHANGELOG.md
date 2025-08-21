@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.38.0](https://github.com/googleapis/google-auth-library-java/compare/v1.37.1...v1.38.0) (2025-08-20)
+
+
+### Features
+
+* Next release from main branch is 1.38.0 ([#1786](https://github.com/googleapis/google-auth-library-java/issues/1786)) ([1669dc8](https://github.com/googleapis/google-auth-library-java/commit/1669dc8b7d23fd7085ea7085b2bb5507a6932920))
+
+
+### Bug Fixes
+
+* Override toBuilder() for ExternalAccountCredential and subclasses ([#1793](https://github.com/googleapis/google-auth-library-java/issues/1793)) ([a9c3de6](https://github.com/googleapis/google-auth-library-java/commit/a9c3de60a078fd93f1922b4dbcf7570af20150f0))
+
+
+### Documentation
+
+* Update README with X.509 feature details ([#1790](https://github.com/googleapis/google-auth-library-java/issues/1790)) ([7b51cb3](https://github.com/googleapis/google-auth-library-java/commit/7b51cb3042f278c60ca3d90555f7ebb93e6e8250))
+
 ## [1.37.1](https://github.com/googleapis/google-auth-library-java/compare/v1.37.0...v1.37.1) (2025-06-05)
 
 
