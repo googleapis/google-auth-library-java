@@ -71,7 +71,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   private static final String CLOUD_PLATFORM_SCOPE =
       "https://www.googleapis.com/auth/cloud-platform";
 
-  static final String EXTERNAL_ACCOUNT_FILE_TYPE = "external_account";
   static final String EXECUTABLE_SOURCE_KEY = "executable";
 
   static final String DEFAULT_TOKEN_URL = "https://sts.{UNIVERSE_DOMAIN}/v1/token";
@@ -214,6 +213,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     }
 
     this.metricsHandler = new ExternalAccountMetricsHandler(this);
+    this.name = GoogleCredentialsInfo.EXTERNAL_ACCOUNT_CREDENTIALS.getCredentialName();
   }
 
   /**
@@ -271,6 +271,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
         builder.metricsHandler == null
             ? new ExternalAccountMetricsHandler(this)
             : builder.metricsHandler;
+
+    this.name = GoogleCredentialsInfo.EXTERNAL_ACCOUNT_CREDENTIALS.getCredentialName();
   }
 
   ImpersonatedCredentials buildImpersonatedCredentials() {

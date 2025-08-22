@@ -111,6 +111,27 @@ public class ComputeEngineCredentials extends GoogleCredentials
   static final int MAX_COMPUTE_PING_TRIES = 3;
   static final int COMPUTE_PING_CONNECTION_TIMEOUT_MS = 500;
 
+  private static final String METADATA_FLAVOR = "Metadata-Flavor";
+  private static final String GOOGLE = "Google";
+  private static final String WINDOWS = "windows";
+  private static final String LINUX = "linux";
+
+  private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
+  private static final String PARSE_ERROR_ACCOUNT = "Error parsing service account response. ";
+  private static final long serialVersionUID = -4113476462526554235L;
+
+  private final String transportFactoryClassName;
+
+  private final Collection<String> scopes;
+
+  private final GoogleAuthTransport transport;
+  private final BindingEnforcement bindingEnforcement;
+
+  private transient HttpTransportFactory transportFactory;
+  private transient String serviceAccountEmail;
+
+  private String universeDomainFromMetadata = null;
+
   /**
    * Experimental Feature.
    *
@@ -172,27 +193,6 @@ public class ComputeEngineCredentials extends GoogleCredentials
     }
   }
 
-  private static final String METADATA_FLAVOR = "Metadata-Flavor";
-  private static final String GOOGLE = "Google";
-  private static final String WINDOWS = "windows";
-  private static final String LINUX = "linux";
-
-  private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
-  private static final String PARSE_ERROR_ACCOUNT = "Error parsing service account response. ";
-  private static final long serialVersionUID = -4113476462526554235L;
-
-  private final String transportFactoryClassName;
-
-  private final Collection<String> scopes;
-
-  private final GoogleAuthTransport transport;
-  private final BindingEnforcement bindingEnforcement;
-
-  private transient HttpTransportFactory transportFactory;
-  private transient String serviceAccountEmail;
-
-  private String universeDomainFromMetadata = null;
-
   /**
    * An internal constructor
    *
@@ -220,6 +220,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
     }
     this.transport = builder.getGoogleAuthTransport();
     this.bindingEnforcement = builder.getBindingEnforcement();
+    this.name = GoogleCredentialsInfo.COMPUTE_ENGINE_CREDENTIALS.getCredentialName();
   }
 
   @Override
@@ -344,6 +345,12 @@ public class ComputeEngineCredentials extends GoogleCredentials
   /** Refresh the access token by getting it from the GCE metadata server */
   @Override
   public AccessToken refreshAccessToken() throws IOException {
+    // Retrieve the default service account email prior to retrieving the access token
+    if (serviceAccountEmail == null) {
+      serviceAccountEmail = getDefaultServiceAccount();
+      principal = serviceAccountEmail;
+    }
+
     HttpResponse response =
         getMetadataResponse(createTokenUrlWithScopes(), RequestType.ACCESS_TOKEN_REQUEST, true);
     int statusCode = response.getStatusCode();

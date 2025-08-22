@@ -96,6 +96,9 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     this.tokenServerUri =
         (builder.tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : builder.tokenServerUri;
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
+
+    this.name = GoogleCredentialsInfo.USER_CREDENTIALS.getCredentialName();
+
     Preconditions.checkState(
         builder.getAccessToken() != null || builder.refreshToken != null,
         "Either accessToken or refreshToken must not be null");
@@ -174,14 +177,14 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     if (fileType == null) {
       throw new IOException("Error reading credentials from stream, 'type' field not specified.");
     }
-    if (USER_FILE_TYPE.equals(fileType)) {
+    if (GoogleCredentialsInfo.USER_CREDENTIALS.getFileType().equals(fileType)) {
       return fromJson(fileContents, transportFactory);
     }
     throw new IOException(
         String.format(
             "Error reading credentials from stream, 'type' value '%s' not recognized."
                 + " Expecting '%s'.",
-            fileType, USER_FILE_TYPE));
+            fileType, GoogleCredentialsInfo.USER_CREDENTIALS.getFileType()));
   }
 
   /** Refreshes the OAuth2 access token by getting a new access token from the refresh token */
@@ -309,7 +312,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
    */
   private InputStream getUserCredentialsStream() throws IOException {
     GenericJson json = new GenericJson();
-    json.put("type", GoogleCredentials.USER_FILE_TYPE);
+    json.put("type", GoogleCredentialsInfo.USER_CREDENTIALS.getFileType());
     if (refreshToken != null) {
       json.put("refresh_token", refreshToken);
     }

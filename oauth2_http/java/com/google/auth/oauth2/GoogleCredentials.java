@@ -40,6 +40,7 @@ import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
@@ -60,9 +61,44 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   private static final long serialVersionUID = -1522852442442473691L;
 
   static final String QUOTA_PROJECT_ID_HEADER_KEY = "x-goog-user-project";
-  static final String USER_FILE_TYPE = "authorized_user";
-  static final String SERVICE_ACCOUNT_FILE_TYPE = "service_account";
-  static final String GDCH_SERVICE_ACCOUNT_FILE_TYPE = "gdch_service_account";
+
+  /** Internal Enum info mapping for GoogleCredential subclasses */
+  enum GoogleCredentialsInfo {
+    USER_CREDENTIALS("User Credentials", "authorized_user"),
+    SERVICE_ACCOUNT_CREDENTIALS("Service Account Credentials", "service_account"),
+    GDCH_CREDENTIALS("GDCH Credentials", "gdch_service_account"),
+    EXTERNAL_ACCOUNT_CREDENTIALS("External Account Credentials", "external_account"),
+    EXTERNAL_ACCOUNT_AUTHORIZED_USER_CREDENTIALS(
+        "External Account Authorized User Credentials", "external_account_authorized_user"),
+    IMPERSONATED_CREDENTIALS("Impersonated Credentials", "impersonated_service_account"),
+    APP_ENGINE_CREDENTIALS("App Engine Credentials", null),
+    CLOUD_SHELL_CREDENTIALS("Cloud Shell Credentials", null),
+    COMPUTE_ENGINE_CREDENTIALS("Compute Engine Credentials", null);
+
+    private final String credentialName;
+    private final String fileType;
+
+    GoogleCredentialsInfo(String credentialName, String fileType) {
+      this.credentialName = credentialName;
+      this.fileType = fileType;
+    }
+
+    String getCredentialName() {
+      return credentialName;
+    }
+
+    String getFileType() {
+      return fileType;
+    }
+  }
+
+  /* The following package-private fields to provide additional info for errors message */
+  // Source of the credential (e.g. env var value or well know file location)
+  String source;
+  // User-friendly name of the Credential class
+  String name;
+  // Identity of the credential
+  String principal;
 
   private final String universeDomain;
   private final boolean isExplicitUniverseDomain;
@@ -207,23 +243,24 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       throw new IOException("Error reading credentials from stream, 'type' field not specified.");
     }
 
-    if (USER_FILE_TYPE.equals(fileType)) {
+    if (GoogleCredentialsInfo.USER_CREDENTIALS.getFileType().equals(fileType)) {
       return UserCredentials.fromJson(fileContents, transportFactory);
     }
-    if (SERVICE_ACCOUNT_FILE_TYPE.equals(fileType)) {
+    if (GoogleCredentialsInfo.SERVICE_ACCOUNT_CREDENTIALS.getFileType().equals(fileType)) {
       return ServiceAccountCredentials.fromJson(fileContents, transportFactory);
     }
-    if (GDCH_SERVICE_ACCOUNT_FILE_TYPE.equals(fileType)) {
+    if (GoogleCredentialsInfo.GDCH_CREDENTIALS.getFileType().equals(fileType)) {
       return GdchCredentials.fromJson(fileContents);
     }
-    if (ExternalAccountCredentials.EXTERNAL_ACCOUNT_FILE_TYPE.equals(fileType)) {
+    if (GoogleCredentialsInfo.EXTERNAL_ACCOUNT_CREDENTIALS.getFileType().equals(fileType)) {
       return ExternalAccountCredentials.fromJson(fileContents, transportFactory);
     }
-    if (ExternalAccountAuthorizedUserCredentials.EXTERNAL_ACCOUNT_AUTHORIZED_USER_FILE_TYPE.equals(
-        fileType)) {
+    if (GoogleCredentialsInfo.EXTERNAL_ACCOUNT_AUTHORIZED_USER_CREDENTIALS
+        .getFileType()
+        .equals(fileType)) {
       return ExternalAccountAuthorizedUserCredentials.fromJson(fileContents, transportFactory);
     }
-    if (ImpersonatedCredentials.IMPERSONATED_CREDENTIALS_FILE_TYPE.equals(fileType)) {
+    if (GoogleCredentialsInfo.IMPERSONATED_CREDENTIALS.getFileType().equals(fileType)) {
       return ImpersonatedCredentials.fromJson(fileContents, transportFactory);
     }
     throw new IOException(
@@ -231,12 +268,12 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
             "Error reading credentials from stream, 'type' value '%s' not recognized."
                 + " Valid values are '%s', '%s', '%s', '%s', '%s', '%s'.",
             fileType,
-            USER_FILE_TYPE,
-            SERVICE_ACCOUNT_FILE_TYPE,
-            GDCH_SERVICE_ACCOUNT_FILE_TYPE,
-            ExternalAccountCredentials.EXTERNAL_ACCOUNT_FILE_TYPE,
-            ExternalAccountAuthorizedUserCredentials.EXTERNAL_ACCOUNT_AUTHORIZED_USER_FILE_TYPE,
-            ImpersonatedCredentials.IMPERSONATED_CREDENTIALS_FILE_TYPE));
+            GoogleCredentialsInfo.USER_CREDENTIALS.getFileType(),
+            GoogleCredentialsInfo.SERVICE_ACCOUNT_CREDENTIALS.getFileType(),
+            GoogleCredentialsInfo.GDCH_CREDENTIALS.getFileType(),
+            GoogleCredentialsInfo.EXTERNAL_ACCOUNT_CREDENTIALS.getFileType(),
+            GoogleCredentialsInfo.EXTERNAL_ACCOUNT_AUTHORIZED_USER_CREDENTIALS.getFileType(),
+            GoogleCredentialsInfo.IMPERSONATED_CREDENTIALS.getFileType()));
   }
 
   /**
@@ -359,6 +396,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       this.universeDomain = builder.getUniverseDomain();
       this.isExplicitUniverseDomain = true;
     }
+
+    this.source = builder.source;
   }
 
   /**
@@ -497,9 +536,46 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     return this;
   }
 
+  /**
+   * Internal method meant to help provide information for how certain Credential objects were
+   * initialized by ADC (e.g. The well-known file location or env var)
+   */
+  GoogleCredentials withSource(String source) {
+    return toBuilder().setSource(source).build();
+  }
+
+  /**
+   * Provides additional information regarding credential initialization source
+   *
+   * <ul>
+   *   <li>credential source - Initialized via the GOOGLE_APPLICATION_CREDENTIALS env var or well
+   *       known file type
+   *   <li>credential name - The user-friendly name of the credential created
+   *   <li>principal - Identity used for the credential
+   * </ul>
+   *
+   * Missing fields values are not included in the mapping
+   *
+   * @return Map of information regarding how the Credential was initialized
+   */
+  public Map<String, String> getCredentialInfo() {
+    Map<String, String> infoMap = new HashMap<>();
+    if (!Strings.isNullOrEmpty(source)) {
+      infoMap.put("Credential Source", source);
+    }
+    if (!Strings.isNullOrEmpty(name)) {
+      infoMap.put("Credential Name", name);
+    }
+    if (!Strings.isNullOrEmpty(principal)) {
+      infoMap.put("Principal", principal);
+    }
+    return infoMap;
+  }
+
   public static class Builder extends OAuth2Credentials.Builder {
     @Nullable protected String quotaProjectId;
     @Nullable protected String universeDomain;
+    @Nullable String source;
 
     protected Builder() {}
 
@@ -539,6 +615,11 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
 
     public String getUniverseDomain() {
       return this.universeDomain;
+    }
+
+    Builder setSource(String source) {
+      this.source = source;
+      return this;
     }
 
     @Override

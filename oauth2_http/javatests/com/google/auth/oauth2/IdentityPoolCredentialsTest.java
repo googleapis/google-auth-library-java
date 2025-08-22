@@ -1197,7 +1197,8 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     json.put("subject_token_type", "subjectTokenType");
     json.put("token_url", tokenUrl);
     json.put("token_info_url", "tokenInfoUrl");
-    json.put("type", ExternalAccountCredentials.EXTERNAL_ACCOUNT_FILE_TYPE);
+    json.put(
+        "type", GoogleCredentials.GoogleCredentialsInfo.EXTERNAL_ACCOUNT_CREDENTIALS.getFileType());
 
     if (serviceAccountImpersonationUrl != null) {
       json.put("service_account_impersonation_url", serviceAccountImpersonationUrl);

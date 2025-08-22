@@ -1000,7 +1000,8 @@ public class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTes
     if (universeDomain != null) {
       json.put("universe_domain", universeDomain);
     }
-    json.put("type", GoogleCredentials.SERVICE_ACCOUNT_FILE_TYPE);
+    json.put(
+        "type", GoogleCredentials.GoogleCredentialsInfo.SERVICE_ACCOUNT_CREDENTIALS.getFileType());
     return json;
   }
 }
