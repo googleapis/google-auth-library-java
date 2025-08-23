@@ -82,7 +82,7 @@ import java.util.logging.Logger;
  * <p>These credentials use the IAM API to sign data. See {@link #sign(byte[])} for more details.
  */
 public class ComputeEngineCredentials extends GoogleCredentials
-    implements ServiceAccountSigner, IdTokenProvider {
+    implements ServiceAccountSigner, IdTokenProvider, TrustBoundaryCredentials {
 
   static final String METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE =
       "Empty content from metadata token server request.";
@@ -131,7 +131,9 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
   private String universeDomainFromMetadata = null;
 
-  /**
+  private final boolean trustBoundaryEnabled;
+
+    /**
    * Experimental Feature.
    *
    * <p>{@link GoogleAuthTransport} specifies how to authenticate to Google APIs.
@@ -220,6 +222,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
     this.transport = builder.getGoogleAuthTransport();
     this.bindingEnforcement = builder.getBindingEnforcement();
     this.name = GoogleCredentialsInfo.COMPUTE_ENGINE_CREDENTIALS.getCredentialName();
+    this.trustBoundaryEnabled = builder.isTrustBoundaryEnabled();
   }
 
   @Override
@@ -703,6 +706,16 @@ public class ComputeEngineCredentials extends GoogleCredentials
     return principal;
   }
 
+  @Override
+  public boolean isTrustBoundaryEnabled() {
+    return trustBoundaryEnabled;
+  }
+
+  @Override
+  public HttpTransportFactory getTransportFactory() {
+    return transportFactory;
+  }
+
   /**
    * Signs the provided bytes using the private key associated with the service account.
    *
@@ -786,6 +799,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
       super(credentials);
       this.transportFactory = credentials.transportFactory;
       this.scopes = credentials.scopes;
+      // trustBoundaryEnabled is handled by super(credentials)
     }
 
     @CanIgnoreReturnValue
@@ -803,6 +817,18 @@ public class ComputeEngineCredentials extends GoogleCredentials
     @CanIgnoreReturnValue
     public Builder setDefaultScopes(Collection<String> defaultScopes) {
       this.defaultScopes = defaultScopes;
+      return this;
+    }
+
+    /**
+     * Sets whether trust boundary is enabled. This is an experimental feature.
+     *
+     * @param trustBoundaryEnabled whether trust boundary is enabled
+     * @return this {@code Builder} object
+     */
+    @CanIgnoreReturnValue
+    public Builder setTrustBoundaryEnabled(boolean trustBoundaryEnabled) {
+      super.setTrustBoundaryEnabled(trustBoundaryEnabled);
       return this;
     }
 

@@ -89,7 +89,7 @@ import java.util.concurrent.Executor;
  * <p>By default uses a JSON Web Token (JWT) to fetch access tokens.
  */
 public class ServiceAccountCredentials extends GoogleCredentials
-    implements ServiceAccountSigner, IdTokenProvider, JwtProvider {
+    implements ServiceAccountSigner, IdTokenProvider, JwtProvider, TrustBoundaryCredentials {
 
   private static final long serialVersionUID = 7807543542681217978L;
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
@@ -112,6 +112,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   private final int lifetime;
   private final boolean useJwtAccessWithScope;
   private final boolean defaultRetriesEnabled;
+  private final boolean trustBoundaryEnabled;
 
   private transient HttpTransportFactory transportFactory;
 
@@ -152,6 +153,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     this.defaultRetriesEnabled = builder.defaultRetriesEnabled;
     this.name = GoogleCredentialsInfo.SERVICE_ACCOUNT_CREDENTIALS.getCredentialName();
     this.principal = builder.clientEmail;
+    this.trustBoundaryEnabled = builder.trustBoundaryEnabled;
   }
 
   /**
@@ -819,6 +821,16 @@ public class ServiceAccountCredentials extends GoogleCredentials
     return useJwtAccessWithScope;
   }
 
+  @Override
+  public boolean isTrustBoundaryEnabled() {
+    return trustBoundaryEnabled;
+  }
+
+  @Override
+  public HttpTransportFactory getTransportFactory() {
+    return transportFactory;
+  }
+
   @VisibleForTesting
   JwtCredentials getSelfSignedJwtCredentialsWithScope() {
     return selfSignedJwtCredentialsWithScope;
@@ -873,6 +885,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         lifetime,
         useJwtAccessWithScope,
         defaultRetriesEnabled,
+        trustBoundaryEnabled,
         super.hashCode());
   }
 
@@ -889,7 +902,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
         .add("serviceAccountUser", serviceAccountUser)
         .add("lifetime", lifetime)
         .add("useJwtAccessWithScope", useJwtAccessWithScope)
-        .add("defaultRetriesEnabled", defaultRetriesEnabled);
+        .add("defaultRetriesEnabled", defaultRetriesEnabled)
+        .add("trustBoundaryEnabled", trustBoundaryEnabled);
   }
 
   @Override
@@ -912,7 +926,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
         && Objects.equals(this.defaultScopes, other.defaultScopes)
         && Objects.equals(this.lifetime, other.lifetime)
         && Objects.equals(this.useJwtAccessWithScope, other.useJwtAccessWithScope)
-        && Objects.equals(this.defaultRetriesEnabled, other.defaultRetriesEnabled);
+        && Objects.equals(this.defaultRetriesEnabled, other.defaultRetriesEnabled)
+        && Objects.equals(this.trustBoundaryEnabled, other.trustBoundaryEnabled);
   }
 
   String createAssertion(JsonFactory jsonFactory, long currentTime) throws IOException {
@@ -1144,6 +1159,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     private int lifetime = DEFAULT_LIFETIME_IN_SECONDS;
     private boolean useJwtAccessWithScope = false;
     private boolean defaultRetriesEnabled = true;
+    private boolean trustBoundaryEnabled = false;
 
     protected Builder() {}
 
@@ -1162,6 +1178,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
       this.lifetime = credentials.lifetime;
       this.useJwtAccessWithScope = credentials.useJwtAccessWithScope;
       this.defaultRetriesEnabled = credentials.defaultRetriesEnabled;
+      this.trustBoundaryEnabled = credentials.trustBoundaryEnabled;
     }
 
     @CanIgnoreReturnValue
@@ -1261,6 +1278,18 @@ public class ServiceAccountCredentials extends GoogleCredentials
       return this;
     }
 
+    /**
+     * Sets whether trust boundary is enabled. This is an experimental feature.
+     *
+     * @param trustBoundaryEnabled whether trust boundary is enabled
+     * @return this {@code Builder} object
+     */
+    @CanIgnoreReturnValue
+    public Builder setTrustBoundaryEnabled(boolean trustBoundaryEnabled) {
+      this.trustBoundaryEnabled = trustBoundaryEnabled;
+      return this;
+    }
+
     public Builder setUniverseDomain(String universeDomain) {
       super.universeDomain = universeDomain;
       return this;
@@ -1316,6 +1345,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
     public boolean isDefaultRetriesEnabled() {
       return defaultRetriesEnabled;
+    }
+
+    public boolean isTrustBoundaryEnabled() {
+      return trustBoundaryEnabled;
     }
 
     @Override

@@ -107,6 +107,9 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   private final String universeDomain;
   private final boolean isExplicitUniverseDomain;
 
+  protected final boolean trustBoundaryEnabled;
+  private transient TrustBoundary trustBoundary;
+
   protected final String quotaProjectId;
 
   private static final DefaultCredentialsProvider defaultCredentialsProvider =
@@ -392,6 +395,27 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     return headers;
   }
 
+  @Override
+  protected Map<String, List<String>> refreshAndGetAdditionalHeaders() throws IOException {
+    Map<String, List<String>> headers = super.refreshAndGetAdditionalHeaders();
+    if (this instanceof TrustBoundaryCredentials) {
+      TrustBoundaryCredentials provider = (TrustBoundaryCredentials) this;
+      if (provider.isTrustBoundaryEnabled()) {
+        synchronized (lock) {
+          this.trustBoundary = TrustBoundary.refresh(provider.getTransportFactory());
+        }
+      }
+    }
+
+    if (trustBoundary != null && trustBoundary.isEnabled()) {
+      Map<String, List<String>> newHeaders = new HashMap<>(headers);
+      newHeaders.put(
+          TrustBoundary.TRUST_BOUNDARY_KEY, Collections.singletonList(trustBoundary.getValue()));
+      return Collections.unmodifiableMap(newHeaders);
+    }
+    return headers;
+  }
+
   /** Default constructor. */
   protected GoogleCredentials() {
     this(new Builder());
@@ -433,6 +457,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   protected GoogleCredentials(Builder builder) {
     super(builder.getAccessToken(), builder.getRefreshMargin(), builder.getExpirationMargin());
     this.quotaProjectId = builder.getQuotaProjectId();
+    this.trustBoundaryEnabled = builder.trustBoundaryEnabled;
 
     if (builder.universeDomain == null || builder.universeDomain.trim().isEmpty()) {
       this.universeDomain = Credentials.GOOGLE_DEFAULT_UNIVERSE;
@@ -476,6 +501,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
         .omitNullValues()
         .add("quotaProjectId", this.quotaProjectId)
         .add("universeDomain", this.universeDomain)
+        .add("trustBoundaryEnabled", this.trustBoundaryEnabled)
         .add("isExplicitUniverseDomain", this.isExplicitUniverseDomain);
   }
 
@@ -492,6 +518,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     GoogleCredentials other = (GoogleCredentials) obj;
     return Objects.equals(this.quotaProjectId, other.quotaProjectId)
         && Objects.equals(this.universeDomain, other.universeDomain)
+        && Objects.equals(this.trustBoundaryEnabled, other.trustBoundaryEnabled)
         && Objects.equals(this.isExplicitUniverseDomain, other.isExplicitUniverseDomain);
   }
 
@@ -628,12 +655,14 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     @Nullable protected String quotaProjectId;
     @Nullable protected String universeDomain;
     @Nullable String source;
+    protected boolean trustBoundaryEnabled;
 
     protected Builder() {}
 
     protected Builder(GoogleCredentials credentials) {
       super(credentials);
       this.quotaProjectId = credentials.quotaProjectId;
+      this.trustBoundaryEnabled = credentials.trustBoundaryEnabled;
       if (credentials.isExplicitUniverseDomain) {
         this.universeDomain = credentials.universeDomain;
       }
@@ -643,6 +672,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       setAccessToken(builder.getAccessToken());
       this.quotaProjectId = builder.quotaProjectId;
       this.universeDomain = builder.universeDomain;
+      this.trustBoundaryEnabled = builder.trustBoundaryEnabled;
     }
 
     @Override
@@ -661,6 +691,17 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       return this;
     }
 
+    /**
+     * Sets whether trust boundary is enabled. This is an experimental feature.
+     *
+     * @param trustBoundaryEnabled whether trust boundary is enabled
+     * @return this {@code Builder} object
+     */
+    public Builder setTrustBoundaryEnabled(boolean trustBoundaryEnabled) {
+      this.trustBoundaryEnabled = trustBoundaryEnabled;
+      return this;
+    }
+
     public String getQuotaProjectId() {
       return this.quotaProjectId;
     }
@@ -672,6 +713,10 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     Builder setSource(String source) {
       this.source = source;
       return this;
+    }
+
+    public boolean isTrustBoundaryEnabled() {
+      return this.trustBoundaryEnabled;
     }
 
     @Override
