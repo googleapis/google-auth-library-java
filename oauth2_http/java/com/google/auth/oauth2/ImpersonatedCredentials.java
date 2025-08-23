@@ -92,8 +92,8 @@ import java.util.Objects;
  *     System.out.println(b);
  * </pre>
  */
-public class ImpersonatedCredentials extends GoogleCredentials
-    implements ServiceAccountSigner, IdTokenProvider {
+public class ImpersonatedCredentials extends GoogleCredentials implements ServiceAccountSigner,
+    IdTokenProvider, TrustBoundaryCredentials {
 
   static final String IMPERSONATED_CREDENTIALS_FILE_TYPE = "impersonated_service_account";
 
@@ -108,6 +108,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
   private List<String> delegates;
   private List<String> scopes;
   private int lifetime;
+  private final boolean trustBoundaryEnabled;
   private String iamEndpointOverride;
   private final String transportFactoryClassName;
   private static final LoggerProvider LOGGER_PROVIDER =
@@ -327,6 +328,16 @@ public class ImpersonatedCredentials extends GoogleCredentials
     return sourceCredentials;
   }
 
+  @Override
+  public boolean isTrustBoundaryEnabled() {
+    return trustBoundaryEnabled;
+  }
+
+  @Override
+  public HttpTransportFactory getTransportFactory() {
+    return transportFactory;
+  }
+
   int getLifetime() {
     return this.lifetime;
   }
@@ -467,6 +478,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
         firstNonNull(
             builder.getHttpTransportFactory(),
             getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
+    this.trustBoundaryEnabled = builder.isTrustBoundaryEnabled();
     this.iamEndpointOverride = builder.iamEndpointOverride;
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
     this.calendar = builder.getCalendar();
@@ -620,7 +632,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
         scopes,
         lifetime,
         quotaProjectId,
-        iamEndpointOverride);
+        iamEndpointOverride,
+        trustBoundaryEnabled);
   }
 
   @Override
@@ -633,6 +646,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
         .add("lifetime", lifetime)
         .add("transportFactoryClassName", transportFactoryClassName)
         .add("quotaProjectId", quotaProjectId)
+        .add("trustBoundaryEnabled", trustBoundaryEnabled)
         .add("iamEndpointOverride", iamEndpointOverride)
         .toString();
   }
@@ -653,7 +667,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
         && Objects.equals(this.lifetime, other.lifetime)
         && Objects.equals(this.transportFactoryClassName, other.transportFactoryClassName)
         && Objects.equals(this.quotaProjectId, other.quotaProjectId)
-        && Objects.equals(this.iamEndpointOverride, other.iamEndpointOverride);
+        && Objects.equals(this.iamEndpointOverride, other.iamEndpointOverride)
+        && Objects.equals(this.trustBoundaryEnabled, other.trustBoundaryEnabled);
   }
 
   @Override
@@ -699,6 +714,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
       this.lifetime = credentials.lifetime;
       this.transportFactory = credentials.transportFactory;
       this.iamEndpointOverride = credentials.iamEndpointOverride;
+      // trustBoundaryEnabled is handled by super(credentials)
     }
 
     @CanIgnoreReturnValue
@@ -777,6 +793,18 @@ public class ImpersonatedCredentials extends GoogleCredentials
     @CanIgnoreReturnValue
     public Builder setCalendar(Calendar calendar) {
       this.calendar = calendar;
+      return this;
+    }
+
+    /**
+     * Sets whether trust boundary is enabled. This is an experimental feature.
+     *
+     * @param trustBoundaryEnabled whether trust boundary is enabled
+     * @return this {@code Builder} object
+     */
+    @CanIgnoreReturnValue
+    public Builder setTrustBoundaryEnabled(boolean trustBoundaryEnabled) {
+      super.setTrustBoundaryEnabled(trustBoundaryEnabled);
       return this;
     }
 
