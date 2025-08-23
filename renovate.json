@@ -16,8 +16,8 @@
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": [
-        "^.kokoro/presubmit/graalvm-native.*.cfg$"
+      "managerFilePatterns": [
+        "/^.kokoro/presubmit/graalvm-native.*.cfg$/"
       ],
       "matchStrings": [
         "docker_image: \"us-docker.pkg.dev/java-graalvm-ci-prod/graalvm-integration-testing/graalvm.*:(?<currentValue>.*?)\""
