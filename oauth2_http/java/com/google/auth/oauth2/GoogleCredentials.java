@@ -305,35 +305,66 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     return Collections.unmodifiableMap(newRequestMetadata);
   }
 
-  @Override
+  /**
+   * Provide additional headers to return as request metadata.
+   *
+   * @return additional headers
+   * @deprecated This method is no longer used for refreshing headers. Override {@link
+   *     #refreshAndGetAdditionalHeaders()} instead. This method will be removed in a future major
+   *     version.
+   */
+  @Deprecated
   protected Map<String, List<String>> getAdditionalHeaders() {
-    Map<String, List<String>> headers = super.getAdditionalHeaders();
     String quotaProjectId = this.getQuotaProjectId();
     if (quotaProjectId != null) {
-      return addQuotaProjectIdToRequestMetadata(quotaProjectId, headers);
+      return addQuotaProjectIdToRequestMetadata(quotaProjectId, Collections.emptyMap());
     }
-    return headers;
+    return Collections.emptyMap();
   }
 
   @Override
-  protected Map<String, List<String>> refreshAndGetAdditionalHeaders() throws IOException {
-    Map<String, List<String>> headers = super.refreshAndGetAdditionalHeaders();
-    if (this instanceof TrustBoundaryCredentials) {
-      TrustBoundaryCredentials provider = (TrustBoundaryCredentials) this;
-      if (provider.isTrustBoundaryEnabled()) {
-        synchronized (lock) {
-          this.trustBoundary = TrustBoundary.refresh(provider.getTransportFactory());
+  protected Map<String, List<String>> refreshAndGetAdditionalHeaders(AccessToken newAccessToken)
+      throws IOException {
+    // Call the deprecated method to maintain backward compatibility for subclasses that override it.
+    Map<String, List<String>> headers = new HashMap<>(getAdditionalHeaders());
+
+    if (!this.trustBoundaryEnabled || !isDefaultUniverseDomain()) {
+      return Collections.unmodifiableMap(headers);
+    }
+
+    if (this instanceof TrustBoundaryProvider) {
+      TrustBoundaryProvider provider = (TrustBoundaryProvider) this;
+      synchronized (lock) {
+        // No-op check. If cached value is a no-op, we don't need to call the endpoint.
+        if (this.trustBoundary != null && this.trustBoundary.isNoOp()) {
+          // Fall through to add header.
+        } else {
+          try {
+            this.trustBoundary =
+                TrustBoundary.refresh(
+                    provider.getTransportFactory(),
+                    provider.getTrustBoundaryUrl(),
+                    newAccessToken,
+                    this.trustBoundary);
+          } catch (IOException e) {
+            // If refresh fails, check for cached value.
+            if (this.trustBoundary == null) {
+              // No cached value, so fail hard.
+              throw new IOException(
+                  "Failed to refresh trust boundary and no cached value is available.", e);
+            }
+            // Log the error and continue with the stale cached value.
+          }
         }
       }
     }
 
-    if (trustBoundary != null && trustBoundary.isEnabled()) {
-      Map<String, List<String>> newHeaders = new HashMap<>(headers);
-      newHeaders.put(
-          TrustBoundary.TRUST_BOUNDARY_KEY, Collections.singletonList(trustBoundary.getValue()));
-      return Collections.unmodifiableMap(newHeaders);
+    if (trustBoundary != null) {
+      String headerValue = trustBoundary.isNoOp() ? "" : trustBoundary.getEncodedLocations();
+      headers.put(
+          TrustBoundary.TRUST_BOUNDARY_KEY, Collections.singletonList(headerValue));
     }
-    return headers;
+    return Collections.unmodifiableMap(headers);
   }
 
   /** Default constructor. */
@@ -569,27 +600,12 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       return this;
     }
 
-    /**
-     * Sets whether trust boundary is enabled. This is an experimental feature.
-     *
-     * @param trustBoundaryEnabled whether trust boundary is enabled
-     * @return this {@code Builder} object
-     */
-    public Builder setTrustBoundaryEnabled(boolean trustBoundaryEnabled) {
-      this.trustBoundaryEnabled = trustBoundaryEnabled;
-      return this;
-    }
-
     public String getQuotaProjectId() {
       return this.quotaProjectId;
     }
 
     public String getUniverseDomain() {
       return this.universeDomain;
-    }
-
-    public boolean isTrustBoundaryEnabled() {
-      return this.trustBoundaryEnabled;
     }
 
     @Override

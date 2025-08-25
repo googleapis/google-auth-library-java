@@ -266,7 +266,9 @@ public class OAuth2Credentials extends Credentials {
       final ListenableFutureTask<OAuthValue> task =
           ListenableFutureTask.create(
               () -> {
-                return OAuthValue.create(refreshAccessToken(), refreshAndGetAdditionalHeaders());
+                AccessToken newAccessToken = refreshAccessToken();
+                Map<String, List<String>> newHeaders = refreshAndGetAdditionalHeaders(newAccessToken);
+                return OAuthValue.create(newAccessToken, newHeaders);
               });
 
       refreshTask = new RefreshTask(task, new RefreshTaskListener(task));
@@ -371,16 +373,27 @@ public class OAuth2Credentials extends Credentials {
   /**
    * Provide additional headers to return as request metadata.
    *
-   * @return additional headers
+   * @return additional headers.
+   * @deprecated This method is no longer used for refreshing headers. Override {@link
+   *     #refreshAndGetAdditionalHeaders(AccessToken)} instead. This method will be removed in a
+   *     future major version.
    */
+  @Deprecated
   protected Map<String, List<String>> getAdditionalHeaders() {
     return EMPTY_EXTRA_HEADERS;
   }
 
-  /** Refresh additional headers. By default, it calls {@link #getAdditionalHeaders()}. */
-  protected Map<String, List<String>> refreshAndGetAdditionalHeaders() throws IOException {
+  /**
+   * Refresh additional headers.
+   *
+   * @deprecated This method is no longer used for refreshing headers. Override {@link
+   *     #refreshAndGetAdditionalHeaders(AccessToken)} instead. This method will be removed in a
+   *     future major version.
+   */
+  protected Map<String, List<String>> refreshAndGetAdditionalHeaders(AccessToken newAccessToken) throws IOException {
     return getAdditionalHeaders();
   }
+
 
   /**
    * Adds a listener that is notified when the Credentials data changes.

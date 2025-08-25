@@ -32,13 +32,18 @@
 package com.google.auth.oauth2;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import javax.annotation.Nullable;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
+import com.google.api.client.util.Key;
 import com.google.auth.http.HttpTransportFactory;
 
 /**
@@ -47,33 +52,82 @@ import com.google.auth.http.HttpTransportFactory;
  */
 public final class TrustBoundary {
 
-  static final String TRUST_BOUNDARY_KEY = "x-goog-trust-boundary";
-  private static final String TRUST_BOUNDARY_ENDPOINT = "https://sts.googleapis.com/v1/trustBoundary";
-
-  private final boolean enabled;
-  private final String value;
-
-  private TrustBoundary(boolean enabled, String value) {
-    this.enabled = enabled;
-    this.value = value;
+static final String TRUST_BOUNDARY_KEY = "x-allowed-locations";
+  private static final String NO_OP_VALUE = "0x0";
+  private final String encodedLocations;
+  private final List<String> locations;
+  private TrustBoundary(String encodedLocations, List<String> locations) {
+    this.encodedLocations = encodedLocations;
+    this.locations =
+        locations == null ? Collections.<String>emptyList() : Collections.unmodifiableList(locations);
   }
 
-  public boolean isEnabled() {
-    return enabled;
+    public String getEncodedLocations() {
+    return encodedLocations;
   }
 
-  public String getValue() {
-    return value;
+  public List<String> getLocations() {
+    return locations;
   }
 
-  public static TrustBoundary refresh(HttpTransportFactory transportFactory) throws IOException {
+  public boolean isNoOp() {
+    return NO_OP_VALUE.equals(encodedLocations);
+  }
+
+    /** Represents the JSON response from the trust boundary endpoint. */
+  public static class TrustBoundaryResponse extends GenericJson {
+    @Key("encoded_locations")
+    private String encodedLocations;
+
+    @Key("locations")
+    private List<String> locations;
+
+    public String getEncodedLocations() {
+      return encodedLocations;
+    }
+
+    public List<String> getLocations() {
+      return locations;
+    }
+  }
+
+  static TrustBoundary refresh(
+      HttpTransportFactory transportFactory,
+      String url,
+      AccessToken accessToken,
+      @Nullable TrustBoundary cachedTrustBoundary)
+      throws IOException {
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
-    HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(TRUST_BOUNDARY_ENDPOINT));
+    HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(url));
     request.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
-    HttpResponse response = request.execute();
-    GenericJson json = response.parseAs(GenericJson.class);
-    boolean enabled = (boolean) json.get("enabled");
-    String value = (String) json.get("value");
-    return new TrustBoundary(enabled, value);
+
+    // Add Authorization header.
+    if (accessToken != null) {
+      request.getHeaders().setAuthorization("Bearer " + accessToken.getTokenValue());
+    }
+
+    // Add the cached trust boundary header, if available.
+    if (cachedTrustBoundary != null) {
+      String headerValue =
+          cachedTrustBoundary.isNoOp() ? "" : cachedTrustBoundary.getEncodedLocations();
+      request.getHeaders().set(TRUST_BOUNDARY_KEY, headerValue);
+    }
+        TrustBoundaryResponse json;
+    try {
+      HttpResponse response = request.execute();
+      json = response.parseAs(TrustBoundaryResponse.class);
+    } catch (HttpResponseException e) {
+      throw new IOException(
+          String.format(
+              "Unexpected error response when retrieving trust boundary: %s", e.getMessage()),
+          e);
+    } catch (IOException e) {
+      throw new IOException("Failed to retrieve or parse trust boundary.", e);
+    }
+    String encodedLocations = json.getEncodedLocations();
+    if (encodedLocations == null) {
+      throw new IOException("Trust boundary response is missing 'encoded_locations'.");
+    }
+    return new TrustBoundary(encodedLocations, json.getLocations());
   }
 }
