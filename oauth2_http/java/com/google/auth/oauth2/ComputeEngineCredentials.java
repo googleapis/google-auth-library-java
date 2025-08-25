@@ -82,7 +82,7 @@ import java.util.logging.Logger;
  * <p>These credentials use the IAM API to sign data. See {@link #sign(byte[])} for more details.
  */
 public class ComputeEngineCredentials extends GoogleCredentials
-    implements ServiceAccountSigner, IdTokenProvider, TrustBoundaryCredentials {
+    implements ServiceAccountSigner, IdTokenProvider, TrustBoundaryProvider {
 
   static final String METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE =
       "Empty content from metadata token server request.";
@@ -707,13 +707,18 @@ public class ComputeEngineCredentials extends GoogleCredentials
   }
 
   @Override
-  public boolean isTrustBoundaryEnabled() {
-    return trustBoundaryEnabled;
+  public HttpTransportFactory getTransportFactory() {
+    return transportFactory;
   }
 
   @Override
-  public HttpTransportFactory getTransportFactory() {
-    return transportFactory;
+  public String getTrustBoundaryUrl() throws IOException {
+    if (principal == null) {
+        principal = getDefaultServiceAccount();
+    }
+    return String.format(
+        "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s/allowedLocations",
+        getUniverseDomain(), principal);
   }
 
   /**
@@ -799,7 +804,6 @@ public class ComputeEngineCredentials extends GoogleCredentials
       super(credentials);
       this.transportFactory = credentials.transportFactory;
       this.scopes = credentials.scopes;
-      // trustBoundaryEnabled is handled by super(credentials)
     }
 
     @CanIgnoreReturnValue
@@ -817,18 +821,6 @@ public class ComputeEngineCredentials extends GoogleCredentials
     @CanIgnoreReturnValue
     public Builder setDefaultScopes(Collection<String> defaultScopes) {
       this.defaultScopes = defaultScopes;
-      return this;
-    }
-
-    /**
-     * Sets whether trust boundary is enabled. This is an experimental feature.
-     *
-     * @param trustBoundaryEnabled whether trust boundary is enabled
-     * @return this {@code Builder} object
-     */
-    @CanIgnoreReturnValue
-    public Builder setTrustBoundaryEnabled(boolean trustBoundaryEnabled) {
-      super.setTrustBoundaryEnabled(trustBoundaryEnabled);
       return this;
     }
 

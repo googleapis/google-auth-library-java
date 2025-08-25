@@ -31,16 +31,18 @@
 
 package com.google.auth.oauth2;
 
+import java.io.IOException;
+
 import com.google.auth.http.HttpTransportFactory;
 
 /**
  * An interface for credentials that support trust boundaries. This is an experimental feature.
  */
-public interface TrustBoundaryCredentials {
-
-  /** Returns whether trust boundary is enabled. */
-  boolean isTrustBoundaryEnabled();
+public interface TrustBoundaryProvider {
 
   /** Returns the transport factory. */
   HttpTransportFactory getTransportFactory();
+
+  /** Returns the trust boundary lookup URL. */
+  String getTrustBoundaryUrl() throws IOException;
 }

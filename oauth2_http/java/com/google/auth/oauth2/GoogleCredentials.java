@@ -691,17 +691,6 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       return this;
     }
 
-    /**
-     * Sets whether trust boundary is enabled. This is an experimental feature.
-     *
-     * @param trustBoundaryEnabled whether trust boundary is enabled
-     * @return this {@code Builder} object
-     */
-    public Builder setTrustBoundaryEnabled(boolean trustBoundaryEnabled) {
-      this.trustBoundaryEnabled = trustBoundaryEnabled;
-      return this;
-    }
-
     public String getQuotaProjectId() {
       return this.quotaProjectId;
     }
