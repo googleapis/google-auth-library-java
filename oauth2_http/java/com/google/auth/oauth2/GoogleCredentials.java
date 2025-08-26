@@ -107,10 +107,12 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   private final String universeDomain;
   private final boolean isExplicitUniverseDomain;
 
-  protected final boolean trustBoundaryEnabled;
   private transient TrustBoundary trustBoundary;
 
   protected final String quotaProjectId;
+
+  private static final LoggerProvider LOGGER_PROVIDER =
+      LoggerProvider.forClazz(GoogleCredentials.class);
 
   private static final DefaultCredentialsProvider defaultCredentialsProvider =
       new DefaultCredentialsProvider();
@@ -396,24 +398,49 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   @Override
-  protected Map<String, List<String>> refreshAndGetAdditionalHeaders() throws IOException {
-    Map<String, List<String>> headers = super.refreshAndGetAdditionalHeaders();
-    if (this instanceof TrustBoundaryCredentials) {
-      TrustBoundaryCredentials provider = (TrustBoundaryCredentials) this;
-      if (provider.isTrustBoundaryEnabled()) {
-        synchronized (lock) {
-          this.trustBoundary = TrustBoundary.refresh(provider.getTransportFactory());
+  protected Map<String, List<String>> refreshAndGetAdditionalHeaders(AccessToken newAccessToken)
+      throws IOException {
+    // Call the deprecated method to maintain backward compatibility for subclasses that override it.
+    Map<String, List<String>> headers = new HashMap<>(getAdditionalHeaders());
+
+    if (this instanceof TrustBoundaryProvider) {
+      if (!TrustBoundary.isTrustBoundaryEnabled() || !isDefaultUniverseDomain()) {
+        return Collections.unmodifiableMap(headers);
+      }
+      TrustBoundaryProvider provider = (TrustBoundaryProvider) this;
+      synchronized (lock) {
+        // Refresh trust boundaries only if the cached value is not NO_OP.
+        if (this.trustBoundary == null || !this.trustBoundary.isNoOp()) {
+          try {
+            this.trustBoundary =
+                TrustBoundary.refresh(
+                    provider.getTransportFactory(),
+                    provider.getTrustBoundaryUrl(),
+                    newAccessToken,
+                    this.trustBoundary);
+          } catch (IOException e) {
+            // If refresh fails, check for cached value.
+            if (this.trustBoundary == null) {
+              // No cached value, so fail hard.
+              throw new IOException(
+                  "Failed to refresh trust boundary and no cached value is available.", e);
+            }
+             LoggingUtils.log(
+                LOGGER_PROVIDER,
+                Level.WARNING,
+                Collections.singletonMap("cause", e.toString()),
+                "TrustBoundary: Failure while getting trust boundaries. Using cached value.");
+          }
         }
+      }
+      if (trustBoundary != null) {
+      String headerValue = trustBoundary.isNoOp() ? "" : trustBoundary.getEncodedLocations();
+      headers.put(
+          TrustBoundary.TRUST_BOUNDARY_KEY, Collections.singletonList(headerValue));
       }
     }
 
-    if (trustBoundary != null && trustBoundary.isEnabled()) {
-      Map<String, List<String>> newHeaders = new HashMap<>(headers);
-      newHeaders.put(
-          TrustBoundary.TRUST_BOUNDARY_KEY, Collections.singletonList(trustBoundary.getValue()));
-      return Collections.unmodifiableMap(newHeaders);
-    }
-    return headers;
+    return Collections.unmodifiableMap(headers);
   }
 
   /** Default constructor. */
@@ -457,7 +484,6 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   protected GoogleCredentials(Builder builder) {
     super(builder.getAccessToken(), builder.getRefreshMargin(), builder.getExpirationMargin());
     this.quotaProjectId = builder.getQuotaProjectId();
-    this.trustBoundaryEnabled = builder.trustBoundaryEnabled;
 
     if (builder.universeDomain == null || builder.universeDomain.trim().isEmpty()) {
       this.universeDomain = Credentials.GOOGLE_DEFAULT_UNIVERSE;
@@ -501,7 +527,6 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
         .omitNullValues()
         .add("quotaProjectId", this.quotaProjectId)
         .add("universeDomain", this.universeDomain)
-        .add("trustBoundaryEnabled", this.trustBoundaryEnabled)
         .add("isExplicitUniverseDomain", this.isExplicitUniverseDomain);
   }
 
@@ -518,13 +543,12 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     GoogleCredentials other = (GoogleCredentials) obj;
     return Objects.equals(this.quotaProjectId, other.quotaProjectId)
         && Objects.equals(this.universeDomain, other.universeDomain)
-        && Objects.equals(this.trustBoundaryEnabled, other.trustBoundaryEnabled)
         && Objects.equals(this.isExplicitUniverseDomain, other.isExplicitUniverseDomain);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(this.quotaProjectId, this.universeDomain, this.isExplicitUniverseDomain);
+      return Objects.hash(this.quotaProjectId, this.universeDomain, this.isExplicitUniverseDomain);
   }
 
   public static Builder newBuilder() {
@@ -655,14 +679,12 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     @Nullable protected String quotaProjectId;
     @Nullable protected String universeDomain;
     @Nullable String source;
-    protected boolean trustBoundaryEnabled;
 
     protected Builder() {}
 
     protected Builder(GoogleCredentials credentials) {
       super(credentials);
       this.quotaProjectId = credentials.quotaProjectId;
-      this.trustBoundaryEnabled = credentials.trustBoundaryEnabled;
       if (credentials.isExplicitUniverseDomain) {
         this.universeDomain = credentials.universeDomain;
       }
@@ -672,7 +694,6 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       setAccessToken(builder.getAccessToken());
       this.quotaProjectId = builder.quotaProjectId;
       this.universeDomain = builder.universeDomain;
-      this.trustBoundaryEnabled = builder.trustBoundaryEnabled;
     }
 
     @Override
@@ -702,10 +723,6 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     Builder setSource(String source) {
       this.source = source;
       return this;
-    }
-
-    public boolean isTrustBoundaryEnabled() {
-      return this.trustBoundaryEnabled;
     }
 
     @Override
