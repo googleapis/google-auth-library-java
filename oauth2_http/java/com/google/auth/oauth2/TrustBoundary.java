@@ -33,7 +33,9 @@ package com.google.auth.oauth2;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
+
 import javax.annotation.Nullable;
 
 import com.google.api.client.http.GenericUrl;
@@ -42,9 +44,10 @@ import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.json.GenericJson;
-import com.google.api.client.json.JsonObjectParser;
+import com.google.api.client.json.JsonParser;
 import com.google.api.client.util.Key;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.common.base.MoreObjects;
 
 /**
  * Represents a trust boundary that can be used to restrict access to resources. This is an
@@ -53,14 +56,19 @@ import com.google.auth.http.HttpTransportFactory;
 public final class TrustBoundary {
 
 static final String TRUST_BOUNDARY_KEY = "x-allowed-locations";
+  static final String GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR =
+      "GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED";
   private static final String NO_OP_VALUE = "0x0";
   private final String encodedLocations;
   private final List<String> locations;
+
   private TrustBoundary(String encodedLocations, List<String> locations) {
     this.encodedLocations = encodedLocations;
     this.locations =
         locations == null ? Collections.<String>emptyList() : Collections.unmodifiableList(locations);
   }
+
+  private static EnvironmentProvider environmentProvider = SystemEnvironmentProvider.getInstance();
 
     public String getEncodedLocations() {
     return encodedLocations;
@@ -76,7 +84,7 @@ static final String TRUST_BOUNDARY_KEY = "x-allowed-locations";
 
     /** Represents the JSON response from the trust boundary endpoint. */
   public static class TrustBoundaryResponse extends GenericJson {
-    @Key("encoded_locations")
+    @Key("encodedLocations")
     private String encodedLocations;
 
     @Key("locations")
@@ -89,6 +97,38 @@ static final String TRUST_BOUNDARY_KEY = "x-allowed-locations";
     public List<String> getLocations() {
       return locations;
     }
+
+    @Override
+    public String toString() {
+      return MoreObjects.toStringHelper(this)
+          .add("encodedLocations", encodedLocations)
+          .add("locations", locations)
+          .toString();
+    }
+  }
+
+  // expose this setter only for testing purposes
+  static void setEnvironmentProvider(EnvironmentProvider provider) {
+    environmentProvider = provider;
+  }
+
+  static boolean isTrustBoundaryEnabled() throws IOException {
+    String tbEnabled = environmentProvider.getEnv(GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR);
+    if (tbEnabled == null) {
+      return false;
+    }
+    String lowercasedTbEnabled = tbEnabled.toLowerCase();
+    if ("true".equals(lowercasedTbEnabled) || "1".equals(tbEnabled)) {
+      return true;
+    }
+    if ("false".equals(lowercasedTbEnabled) || "0".equals(tbEnabled)) {
+      return false;
+    }
+    throw new IOException(
+        String.format(
+            "Invalid value for %s environment variable: \"%s\". Supported values are 'true', '1', 'false', or '0'.",
+            GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR,
+            tbEnabled));
   }
 
   static TrustBoundary refresh(
@@ -97,25 +137,33 @@ static final String TRUST_BOUNDARY_KEY = "x-allowed-locations";
       AccessToken accessToken,
       @Nullable TrustBoundary cachedTrustBoundary)
       throws IOException {
+    if (accessToken == null) {
+      throw new IOException("The provided access token is null.");
+    }
+    if (accessToken.getExpirationTime() != null
+        && accessToken.getExpirationTime().before(new Date())) {
+      throw new IOException("The provided access token is expired.");
+    }
+
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(url));
-    request.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
-
-    // Add Authorization header.
-    if (accessToken != null) {
-      request.getHeaders().setAuthorization("Bearer " + accessToken.getTokenValue());
-    }
+    // request.getHeaders().setAuthorization("Bearer " + accessToken.getTokenValue());
 
     // Add the cached trust boundary header, if available.
     if (cachedTrustBoundary != null) {
       String headerValue =
           cachedTrustBoundary.isNoOp() ? "" : cachedTrustBoundary.getEncodedLocations();
-      request.getHeaders().set(TRUST_BOUNDARY_KEY, headerValue);
+      // request.getHeaders().set(TRUST_BOUNDARY_KEY, headerValue);
     }
         TrustBoundaryResponse json;
     try {
       HttpResponse response = request.execute();
-      json = response.parseAs(TrustBoundaryResponse.class);
+      String responseString = response.parseAsString();
+      System.out.println("TrustBoundary lookup endpoint response: " + responseString);
+      JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser(responseString);
+      json = parser.parseAndClose(TrustBoundaryResponse.class);
+      System.out.println("TrustBoundary lookup endpoint json response: " + json.toString());
+
     } catch (HttpResponseException e) {
       throw new IOException(
           String.format(
@@ -126,7 +174,7 @@ static final String TRUST_BOUNDARY_KEY = "x-allowed-locations";
     }
     String encodedLocations = json.getEncodedLocations();
     if (encodedLocations == null) {
-      throw new IOException("Trust boundary response is missing 'encoded_locations'.");
+      throw new IOException("TrustBoundary: Malformed response from lookup endpoint.");
     }
     return new TrustBoundary(encodedLocations, json.getLocations());
   }
