@@ -429,7 +429,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
       this.refreshToken = credentials.refreshToken;
       this.transportFactory = credentials.transportFactory;
       this.tokenServerUri = credentials.tokenServerUri;
-      this.account = credentials.account;
+      this.account = credentials.principal;
     }
 
     @CanIgnoreReturnValue
