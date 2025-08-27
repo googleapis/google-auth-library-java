@@ -267,7 +267,12 @@ public class OAuth2Credentials extends Credentials {
           ListenableFutureTask.create(
               () -> {
                 AccessToken newAccessToken = refreshAccessToken();
-                Map<String, List<String>> newHeaders = refreshAndGetAdditionalHeaders(newAccessToken);
+                Map<String, List<String>> newHeaders;
+                if(this instanceof TrustBoundaryProvider) {
+                  newHeaders = refreshTrustBoundaryAndGetAdditionalHeaders(newAccessToken);
+                } else{
+                  newHeaders = getAdditionalHeaders();
+                }
                 return OAuthValue.create(newAccessToken, newHeaders);
               });
 
@@ -374,24 +379,18 @@ public class OAuth2Credentials extends Credentials {
    * Provide additional headers to return as request metadata.
    *
    * @return additional headers.
-   * @deprecated This method is no longer used for refreshing headers. Override {@link
-   *     #refreshAndGetAdditionalHeaders(AccessToken)} instead. This method will be removed in a
-   *     future major version.
    */
-  @Deprecated
   protected Map<String, List<String>> getAdditionalHeaders() {
     return EMPTY_EXTRA_HEADERS;
   }
 
   /**
-   * Refresh additional headers.
+   * Refresh trust boundary and get additional headers to return as request metadata.
    *
-   * @deprecated This method is no longer used for refreshing headers. Override {@link
-   *     #refreshAndGetAdditionalHeaders(AccessToken)} instead. This method will be removed in a
-   *     future major version.
+   * @return additional headers.
    */
-  protected Map<String, List<String>> refreshAndGetAdditionalHeaders(AccessToken newAccessToken) throws IOException {
-    return getAdditionalHeaders();
+  protected Map<String, List<String>> refreshTrustBoundaryAndGetAdditionalHeaders(AccessToken newAccessToken) throws IOException {
+    return EMPTY_EXTRA_HEADERS;
   }
 
 
