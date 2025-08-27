@@ -388,8 +388,11 @@ public class ComputeEngineCredentials extends GoogleCredentials
     int expiresInSeconds =
         OAuth2Utils.validateInt32(responseData, "expires_in", PARSE_ERROR_PREFIX);
     long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000;
+    AccessToken newAccessToken = new AccessToken(accessToken, new Date(expiresAtMilliseconds));
 
-    return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
+    refreshTrustBoundaries(newAccessToken);
+
+    return newAccessToken;
   }
 
   /**

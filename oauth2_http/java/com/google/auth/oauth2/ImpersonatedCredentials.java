@@ -599,7 +599,11 @@ public class ImpersonatedCredentials extends GoogleCredentials
     format.setCalendar(calendar);
     try {
       Date date = format.parse(expireTime);
-      return new AccessToken(accessToken, date);
+      AccessToken newAccessToken = new AccessToken(accessToken, date);
+
+      refreshTrustBoundaries(newAccessToken);
+
+      return newAccessToken;
     } catch (ParseException pe) {
       throw new IOException("Error parsing expireTime: " + pe.getMessage());
     }
