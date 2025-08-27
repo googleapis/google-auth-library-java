@@ -266,14 +266,7 @@ public class OAuth2Credentials extends Credentials {
       final ListenableFutureTask<OAuthValue> task =
           ListenableFutureTask.create(
               () -> {
-                AccessToken newAccessToken = refreshAccessToken();
-                Map<String, List<String>> newHeaders;
-                if(this instanceof TrustBoundaryProvider) {
-                  newHeaders = refreshTrustBoundaryAndGetAdditionalHeaders(newAccessToken);
-                } else{
-                  newHeaders = getAdditionalHeaders();
-                }
-                return OAuthValue.create(newAccessToken, newHeaders);
+                return OAuthValue.create(refreshAccessToken(), getAdditionalHeaders());
               });
 
       refreshTask = new RefreshTask(task, new RefreshTaskListener(task));
@@ -383,16 +376,6 @@ public class OAuth2Credentials extends Credentials {
   protected Map<String, List<String>> getAdditionalHeaders() {
     return EMPTY_EXTRA_HEADERS;
   }
-
-  /**
-   * Refresh trust boundary and get additional headers to return as request metadata.
-   *
-   * @return additional headers.
-   */
-  protected Map<String, List<String>> refreshTrustBoundaryAndGetAdditionalHeaders(AccessToken newAccessToken) throws IOException {
-    return EMPTY_EXTRA_HEADERS;
-  }
-
 
   /**
    * Adds a listener that is notified when the Credentials data changes.

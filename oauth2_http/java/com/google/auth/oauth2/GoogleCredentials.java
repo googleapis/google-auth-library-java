@@ -425,19 +425,11 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
 
  @Override
   protected Map<String, List<String>> getAdditionalHeaders() {
-    Map<String, List<String>> headers = super.getAdditionalHeaders();
+    Map<String, List<String>> headers = new HashMap<>(super.getAdditionalHeaders());
     String quotaProjectId = this.getQuotaProjectId();
     if (quotaProjectId != null) {
-      return addQuotaProjectIdToRequestMetadata(quotaProjectId, headers);
+      headers.put(QUOTA_PROJECT_ID_HEADER_KEY, Collections.singletonList(quotaProjectId));
     }
-    return headers;
-  }
-
-@Override
-  protected Map<String, List<String>> refreshTrustBoundaryAndGetAdditionalHeaders(AccessToken newAccessToken) throws IOException{
-    Map<String, List<String>> headers = new HashMap<>(getAdditionalHeaders());
-
-    refreshTrustBoundaries(newAccessToken);
 
     if (this.trustBoundary != null) {
       String headerValue = trustBoundary.isNoOp() ? "" : trustBoundary.getEncodedLocations();
