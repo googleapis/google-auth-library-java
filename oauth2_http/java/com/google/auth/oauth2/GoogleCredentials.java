@@ -308,7 +308,10 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     return Collections.unmodifiableMap(newRequestMetadata);
   }
 
-  private void refreshTrustBoundaries(AccessToken newAccessToken) throws IOException {
+  protected void refreshTrustBoundaries(AccessToken newAccessToken) throws IOException {
+    if (!(this instanceof TrustBoundaryProvider)) {
+      return;
+    }
     if (!TrustBoundary.isTrustBoundaryEnabled() || !isDefaultUniverseDomain()) {
       return;
     }
