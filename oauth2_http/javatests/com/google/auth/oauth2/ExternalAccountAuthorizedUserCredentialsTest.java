@@ -47,6 +47,7 @@ import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.oauth2.GoogleCredentials.GoogleCredentialsInfo;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.BaseEncoding;
@@ -1241,9 +1242,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
   static GenericJson buildJsonCredentials() {
     GenericJson json = new GenericJson();
     json.put(
-        "type",
-        GoogleCredentials.GoogleCredentialsInfo.EXTERNAL_ACCOUNT_AUTHORIZED_USER_CREDENTIALS
-            .getFileType());
+        "type", GoogleCredentialsInfo.EXTERNAL_ACCOUNT_AUTHORIZED_USER_CREDENTIALS.getFileType());
     json.put("audience", AUDIENCE);
     json.put("refresh_token", REFRESH_TOKEN);
     json.put("client_id", CLIENT_ID);

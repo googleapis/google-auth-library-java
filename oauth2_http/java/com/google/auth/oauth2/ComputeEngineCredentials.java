@@ -128,7 +128,6 @@ public class ComputeEngineCredentials extends GoogleCredentials
   private final BindingEnforcement bindingEnforcement;
 
   private transient HttpTransportFactory transportFactory;
-  private transient String serviceAccountEmail;
 
   private String universeDomainFromMetadata = null;
 
@@ -346,9 +345,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
   @Override
   public AccessToken refreshAccessToken() throws IOException {
     // Retrieve the default service account email prior to retrieving the access token
-    if (serviceAccountEmail == null) {
-      serviceAccountEmail = getDefaultServiceAccount();
-      principal = serviceAccountEmail;
+    if (principal == null) {
+      principal = getDefaultServiceAccount();
     }
 
     HttpResponse response =
@@ -695,14 +693,14 @@ public class ComputeEngineCredentials extends GoogleCredentials
   @Override
   // todo(#314) getAccount should not throw a RuntimeException
   public String getAccount() {
-    if (serviceAccountEmail == null) {
+    if (principal == null) {
       try {
-        serviceAccountEmail = getDefaultServiceAccount();
+        principal = getDefaultServiceAccount();
       } catch (IOException ex) {
         throw new RuntimeException("Failed to get service account", ex);
       }
     }
-    return serviceAccountEmail;
+    return principal;
   }
 
   /**

@@ -40,6 +40,7 @@ import com.google.api.client.json.GenericJson;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.ExecutableHandler.ExecutableOptions;
+import com.google.auth.oauth2.GoogleCredentials.GoogleCredentialsInfo;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.NotSerializableException;
@@ -628,8 +629,7 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
     json.put("subject_token_type", "subjectTokenType");
     json.put("token_url", tokenUrl);
     json.put("token_info_url", "tokenInfoUrl");
-    json.put(
-        "type", GoogleCredentials.GoogleCredentialsInfo.EXTERNAL_ACCOUNT_CREDENTIALS.getFileType());
+    json.put("type", GoogleCredentialsInfo.EXTERNAL_ACCOUNT_CREDENTIALS.getFileType());
 
     GenericJson credentialSource = new GenericJson();
     GenericJson executable = new GenericJson();

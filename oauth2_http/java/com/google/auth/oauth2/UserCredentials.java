@@ -96,6 +96,9 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     this.tokenServerUri =
         (builder.tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : builder.tokenServerUri;
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
+    if (builder.getAccount() != null) {
+      this.principal = builder.getAccount();
+    }
 
     this.name = GoogleCredentialsInfo.USER_CREDENTIALS.getCredentialName();
 
@@ -132,6 +135,10 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     // currently "token_uri" is not a default field and needs to be added to json file manually
     String tokenUrl = (String) json.get("token_uri");
     URI tokenUri = (tokenUrl == null || tokenUrl.isEmpty()) ? null : URI.create(tokenUrl);
+    String account = null;
+    if (json.containsKey("account")) {
+      account = (String) json.get("account");
+    }
     return UserCredentials.newBuilder()
         .setClientId(clientId)
         .setClientSecret(clientSecret)
@@ -140,6 +147,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
         .setHttpTransportFactory(transportFactory)
         .setTokenServerUri(tokenUri)
         .setQuotaProjectId(quotaProjectId)
+        .setAccount(account)
         .build();
   }
 
@@ -409,6 +417,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     private String clientSecret;
     private String refreshToken;
     private URI tokenServerUri;
+    private String account;
     private HttpTransportFactory transportFactory;
 
     protected Builder() {}
@@ -420,6 +429,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
       this.refreshToken = credentials.refreshToken;
       this.transportFactory = credentials.transportFactory;
       this.tokenServerUri = credentials.tokenServerUri;
+      this.account = credentials.account;
     }
 
     @CanIgnoreReturnValue
@@ -449,6 +459,12 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     @CanIgnoreReturnValue
     public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
       this.transportFactory = transportFactory;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    Builder setAccount(String account) {
+      this.account = account;
       return this;
     }
 
@@ -494,6 +510,10 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
 
     public URI getTokenServerUri() {
       return tokenServerUri;
+    }
+
+    String getAccount() {
+      return account;
     }
 
     public HttpTransportFactory getHttpTransportFactory() {

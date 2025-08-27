@@ -47,6 +47,7 @@ import com.google.api.client.util.Clock;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.TestUtils;
 import com.google.auth.http.AuthHttpConstants;
+import com.google.auth.oauth2.GoogleCredentials.GoogleCredentialsInfo;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.ByteArrayInputStream;
@@ -926,7 +927,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     if (tokenUrl != null) {
       json.put("token_uri", tokenUrl);
     }
-    json.put("type", GoogleCredentials.GoogleCredentialsInfo.USER_CREDENTIALS.getFileType());
+    json.put("type", GoogleCredentialsInfo.USER_CREDENTIALS.getFileType());
     return json;
   }
 

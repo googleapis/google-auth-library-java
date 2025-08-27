@@ -42,6 +42,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.io.InputStream;
@@ -76,7 +77,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     COMPUTE_ENGINE_CREDENTIALS("Compute Engine Credentials", null);
 
     private final String credentialName;
-    private final String fileType;
+    @Nullable private final String fileType;
 
     GoogleCredentialsInfo(String credentialName, String fileType) {
       this.credentialName = credentialName;
@@ -98,7 +99,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   // User-friendly name of the Credential class
   String name;
   // Identity of the credential
-  String principal;
+  // Note: This field is marked transient to prevent it from being serialized
+  transient String principal;
 
   private final String universeDomain;
   private final boolean isExplicitUniverseDomain;
@@ -554,9 +556,11 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    *   <li>principal - Identity used for the credential
    * </ul>
    *
-   * Missing fields values are not included in the mapping
+   * Unknown field values are not included in the mapping (e.g. ComputeCredentials may not know the
+   * principal value until after a call to MDS is made and will be excluded if `getCredentialInfo`
+   * is called prior to retrieving that value)
    *
-   * @return Map of information regarding how the Credential was initialized
+   * @return ImmutableMap of information regarding how the Credential was initialized
    */
   public Map<String, String> getCredentialInfo() {
     Map<String, String> infoMap = new HashMap<>();
@@ -569,7 +573,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     if (!Strings.isNullOrEmpty(principal)) {
       infoMap.put("Principal", principal);
     }
-    return infoMap;
+    return ImmutableMap.copyOf(infoMap);
   }
 
   public static class Builder extends OAuth2Credentials.Builder {
