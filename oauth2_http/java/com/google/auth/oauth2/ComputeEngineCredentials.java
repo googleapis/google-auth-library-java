@@ -82,7 +82,7 @@ import java.util.logging.Logger;
  * <p>These credentials use the IAM API to sign data. See {@link #sign(byte[])} for more details.
  */
 public class ComputeEngineCredentials extends GoogleCredentials
-    implements ServiceAccountSigner, IdTokenProvider {
+    implements ServiceAccountSigner, IdTokenProvider, TrustBoundaryProvider {
 
   static final String METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE =
       "Empty content from metadata token server request.";
@@ -380,8 +380,11 @@ public class ComputeEngineCredentials extends GoogleCredentials
     int expiresInSeconds =
         OAuth2Utils.validateInt32(responseData, "expires_in", PARSE_ERROR_PREFIX);
     long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000;
+    AccessToken newAccessToken = new AccessToken(accessToken, new Date(expiresAtMilliseconds));
 
-    return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
+    refreshTrustBoundaries(newAccessToken);
+
+    return newAccessToken;
   }
 
   /**
@@ -696,6 +699,21 @@ public class ComputeEngineCredentials extends GoogleCredentials
       }
     }
     return serviceAccountEmail;
+  }
+
+  @Override
+  public HttpTransportFactory getTransportFactory() {
+    return transportFactory;
+  }
+
+  @Override
+  public String getTrustBoundaryUrl() throws IOException {
+    if (serviceAccountEmail == null) {
+      serviceAccountEmail = getDefaultServiceAccount();
+    }
+    return String.format(
+        "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s/allowedLocations",
+        getUniverseDomain(), serviceAccountEmail);
   }
 
   /**

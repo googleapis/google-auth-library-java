@@ -115,6 +115,7 @@ class DefaultCredentialsProvider {
    */
   final GoogleCredentials getDefaultCredentials(HttpTransportFactory transportFactory)
       throws IOException {
+    LOGGER.log(Level.FINE, "ajbhdabjh");
     synchronized (this) {
       if (cachedCredentials == null) {
         cachedCredentials = getDefaultCredentialsUnsynchronized(transportFactory);

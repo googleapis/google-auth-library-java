@@ -31,6 +31,20 @@
 
 package com.google.auth.oauth2;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.logging.Level;
+
+import javax.annotation.Nullable;
+
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
@@ -42,17 +56,6 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import javax.annotation.Nullable;
 
 /** Base type for credentials for authorizing calls to Google APIs using OAuth2. */
 public class GoogleCredentials extends OAuth2Credentials implements QuotaProjectIdProvider {
@@ -67,7 +70,12 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   private final String universeDomain;
   private final boolean isExplicitUniverseDomain;
 
+  private transient TrustBoundary trustBoundary;
+
   protected final String quotaProjectId;
+
+  private static final LoggerProvider LOGGER_PROVIDER =
+      LoggerProvider.forClazz(GoogleCredentials.class);
 
   private static final DefaultCredentialsProvider defaultCredentialsProvider =
       new DefaultCredentialsProvider();
@@ -300,14 +308,57 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     return Collections.unmodifiableMap(newRequestMetadata);
   }
 
-  @Override
+  protected void refreshTrustBoundaries(AccessToken newAccessToken) throws IOException {
+    if (!(this instanceof TrustBoundaryProvider)) {
+      return;
+    }
+    if (!TrustBoundary.isTrustBoundaryEnabled() || !isDefaultUniverseDomain()) {
+      return;
+    }
+
+    TrustBoundaryProvider provider = (TrustBoundaryProvider) this;
+    synchronized (lock) {
+      // Refresh trust boundaries only if the cached value is not NO_OP.
+      if (this.trustBoundary == null || !this.trustBoundary.isNoOp()) {
+        try {
+          this.trustBoundary =
+              TrustBoundary.refresh(
+                  provider.getTransportFactory(),
+                  provider.getTrustBoundaryUrl(),
+                  newAccessToken,
+                  this.trustBoundary);
+        } catch (IOException e) {
+          // If refresh fails, check for cached value.
+          if (this.trustBoundary == null) {
+            // No cached value, so fail hard.
+            throw new IOException(
+                "Failed to refresh trust boundary and no cached value is available.", e);
+          }
+          LoggingUtils.log(
+              LOGGER_PROVIDER,
+              Level.WARNING,
+              Collections.singletonMap("cause", e.toString()),
+              "TrustBoundary: Failure while getting trust boundaries. Using cached value.");
+        }
+      }
+    }
+  }
+
+ @Override
   protected Map<String, List<String>> getAdditionalHeaders() {
-    Map<String, List<String>> headers = super.getAdditionalHeaders();
+    Map<String, List<String>> headers = new HashMap<>(super.getAdditionalHeaders());
     String quotaProjectId = this.getQuotaProjectId();
     if (quotaProjectId != null) {
-      return addQuotaProjectIdToRequestMetadata(quotaProjectId, headers);
+      headers.put(QUOTA_PROJECT_ID_HEADER_KEY, Collections.singletonList(quotaProjectId));
     }
-    return headers;
+
+    if (this.trustBoundary != null) {
+      String headerValue = trustBoundary.isNoOp() ? "" : trustBoundary.getEncodedLocations();
+      headers.put(
+          TrustBoundary.TRUST_BOUNDARY_KEY, Collections.singletonList(headerValue));
+    }
+
+    return Collections.unmodifiableMap(headers);
   }
 
   /** Default constructor. */
@@ -413,7 +464,10 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
 
   @Override
   public int hashCode() {
-    return Objects.hash(this.quotaProjectId, this.universeDomain, this.isExplicitUniverseDomain);
+    return Objects.hash(
+        this.quotaProjectId,
+        this.universeDomain,
+        this.isExplicitUniverseDomain);
   }
 
   public static Builder newBuilder() {

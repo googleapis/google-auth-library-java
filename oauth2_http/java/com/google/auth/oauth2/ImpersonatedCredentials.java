@@ -31,8 +31,19 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.common.base.MoreObjects.firstNonNull;
-import static com.google.common.base.Preconditions.checkNotNull;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
@@ -50,21 +61,10 @@ import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.MetricsUtils.RequestType;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
+import static com.google.common.base.MoreObjects.firstNonNull;
+import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.ImmutableMap;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 /**
  * ImpersonatedCredentials allowing credentials issued to a user or service account to impersonate
@@ -93,7 +93,7 @@ import java.util.Objects;
  * </pre>
  */
 public class ImpersonatedCredentials extends GoogleCredentials
-    implements ServiceAccountSigner, IdTokenProvider {
+    implements ServiceAccountSigner, IdTokenProvider, TrustBoundaryProvider {
 
   static final String IMPERSONATED_CREDENTIALS_FILE_TYPE = "impersonated_service_account";
 
@@ -325,6 +325,18 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
   public GoogleCredentials getSourceCredentials() {
     return sourceCredentials;
+  }
+
+  @Override
+  public HttpTransportFactory getTransportFactory() {
+    return transportFactory;
+  }
+
+  @Override
+  public String getTrustBoundaryUrl() throws IOException {
+    return String.format(
+        "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s/allowedLocations",
+        getUniverseDomain(), getAccount());
   }
 
   int getLifetime() {
@@ -577,7 +589,11 @@ public class ImpersonatedCredentials extends GoogleCredentials
     format.setCalendar(calendar);
     try {
       Date date = format.parse(expireTime);
-      return new AccessToken(accessToken, date);
+      AccessToken newAccessToken = new AccessToken(accessToken, date);
+
+      refreshTrustBoundaries(newAccessToken);
+
+      return newAccessToken;
     } catch (ParseException pe) {
       throw new IOException("Error parsing expireTime: " + pe.getMessage());
     }
