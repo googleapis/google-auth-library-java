@@ -387,7 +387,40 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     return Collections.unmodifiableMap(newRequestMetadata);
   }
 
-  @Override
+  private void refreshTrustBoundaries(AccessToken newAccessToken) throws IOException {
+    if (!TrustBoundary.isTrustBoundaryEnabled() || !isDefaultUniverseDomain()) {
+      return;
+    }
+
+    TrustBoundaryProvider provider = (TrustBoundaryProvider) this;
+    synchronized (lock) {
+      // Refresh trust boundaries only if the cached value is not NO_OP.
+      if (this.trustBoundary == null || !this.trustBoundary.isNoOp()) {
+        try {
+          this.trustBoundary =
+              TrustBoundary.refresh(
+                  provider.getTransportFactory(),
+                  provider.getTrustBoundaryUrl(),
+                  newAccessToken,
+                  this.trustBoundary);
+        } catch (IOException e) {
+          // If refresh fails, check for cached value.
+          if (this.trustBoundary == null) {
+            // No cached value, so fail hard.
+            throw new IOException(
+                "Failed to refresh trust boundary and no cached value is available.", e);
+          }
+          LoggingUtils.log(
+              LOGGER_PROVIDER,
+              Level.WARNING,
+              Collections.singletonMap("cause", e.toString()),
+              "TrustBoundary: Failure while getting trust boundaries. Using cached value.");
+        }
+      }
+    }
+  }
+
+ @Override
   protected Map<String, List<String>> getAdditionalHeaders() {
     Map<String, List<String>> headers = super.getAdditionalHeaders();
     String quotaProjectId = this.getQuotaProjectId();
@@ -397,47 +430,16 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     return headers;
   }
 
-  @Override
-  protected Map<String, List<String>> refreshAndGetAdditionalHeaders(AccessToken newAccessToken)
-      throws IOException {
-    // Call the deprecated method to maintain backward compatibility for subclasses that override it.
+@Override
+  protected Map<String, List<String>> refreshTrustBoundaryAndGetAdditionalHeaders(AccessToken newAccessToken) throws IOException{
     Map<String, List<String>> headers = new HashMap<>(getAdditionalHeaders());
 
-    if (this instanceof TrustBoundaryProvider) {
-      if (!TrustBoundary.isTrustBoundaryEnabled() || !isDefaultUniverseDomain()) {
-        return Collections.unmodifiableMap(headers);
-      }
-      TrustBoundaryProvider provider = (TrustBoundaryProvider) this;
-      synchronized (lock) {
-        // Refresh trust boundaries only if the cached value is not NO_OP.
-        if (this.trustBoundary == null || !this.trustBoundary.isNoOp()) {
-          try {
-            this.trustBoundary =
-                TrustBoundary.refresh(
-                    provider.getTransportFactory(),
-                    provider.getTrustBoundaryUrl(),
-                    newAccessToken,
-                    this.trustBoundary);
-          } catch (IOException e) {
-            // If refresh fails, check for cached value.
-            if (this.trustBoundary == null) {
-              // No cached value, so fail hard.
-              throw new IOException(
-                  "Failed to refresh trust boundary and no cached value is available.", e);
-            }
-             LoggingUtils.log(
-                LOGGER_PROVIDER,
-                Level.WARNING,
-                Collections.singletonMap("cause", e.toString()),
-                "TrustBoundary: Failure while getting trust boundaries. Using cached value.");
-          }
-        }
-      }
-      if (trustBoundary != null) {
+    refreshTrustBoundaries(newAccessToken);
+
+    if (this.trustBoundary != null) {
       String headerValue = trustBoundary.isNoOp() ? "" : trustBoundary.getEncodedLocations();
       headers.put(
           TrustBoundary.TRUST_BOUNDARY_KEY, Collections.singletonList(headerValue));
-      }
     }
 
     return Collections.unmodifiableMap(headers);

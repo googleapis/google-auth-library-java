@@ -147,22 +147,20 @@ static final String TRUST_BOUNDARY_KEY = "x-allowed-locations";
 
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(url));
-    // request.getHeaders().setAuthorization("Bearer " + accessToken.getTokenValue());
+    request.getHeaders().setAuthorization("Bearer " + accessToken.getTokenValue());
 
     // Add the cached trust boundary header, if available.
     if (cachedTrustBoundary != null) {
       String headerValue =
           cachedTrustBoundary.isNoOp() ? "" : cachedTrustBoundary.getEncodedLocations();
-      // request.getHeaders().set(TRUST_BOUNDARY_KEY, headerValue);
+      request.getHeaders().set(TRUST_BOUNDARY_KEY, headerValue);
     }
         TrustBoundaryResponse json;
     try {
       HttpResponse response = request.execute();
       String responseString = response.parseAsString();
-      System.out.println("TrustBoundary lookup endpoint response: " + responseString);
       JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser(responseString);
       json = parser.parseAndClose(TrustBoundaryResponse.class);
-      System.out.println("TrustBoundary lookup endpoint json response: " + json.toString());
 
     } catch (HttpResponseException e) {
       throw new IOException(
