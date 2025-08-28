@@ -88,18 +88,19 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       return credentialName;
     }
 
+    @Nullable
     String getFileType() {
       return fileType;
     }
   }
 
-  /* The following package-private fields to provide additional info for errors message */
+  // The following package-private fields to provide additional info for errors message
   // Source of the credential (e.g. env var value or well know file location)
   String source;
   // User-friendly name of the Credential class
   String name;
   // Identity of the credential
-  // Note: This field is marked transient to prevent it from being serialized
+  // Note: This field may contain data such as serviceAccountEmail which should not be serialized
   transient String principal;
 
   private final String universeDomain;
@@ -245,24 +246,23 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       throw new IOException("Error reading credentials from stream, 'type' field not specified.");
     }
 
-    if (GoogleCredentialsInfo.USER_CREDENTIALS.getFileType().equals(fileType)) {
+    if (fileType.equals(GoogleCredentialsInfo.USER_CREDENTIALS.getFileType())) {
       return UserCredentials.fromJson(fileContents, transportFactory);
     }
-    if (GoogleCredentialsInfo.SERVICE_ACCOUNT_CREDENTIALS.getFileType().equals(fileType)) {
+    if (fileType.equals(GoogleCredentialsInfo.SERVICE_ACCOUNT_CREDENTIALS.getFileType())) {
       return ServiceAccountCredentials.fromJson(fileContents, transportFactory);
     }
-    if (GoogleCredentialsInfo.GDCH_CREDENTIALS.getFileType().equals(fileType)) {
+    if (fileType.equals(GoogleCredentialsInfo.GDCH_CREDENTIALS.getFileType())) {
       return GdchCredentials.fromJson(fileContents);
     }
-    if (GoogleCredentialsInfo.EXTERNAL_ACCOUNT_CREDENTIALS.getFileType().equals(fileType)) {
+    if (fileType.equals(GoogleCredentialsInfo.EXTERNAL_ACCOUNT_CREDENTIALS.getFileType())) {
       return ExternalAccountCredentials.fromJson(fileContents, transportFactory);
     }
-    if (GoogleCredentialsInfo.EXTERNAL_ACCOUNT_AUTHORIZED_USER_CREDENTIALS
-        .getFileType()
-        .equals(fileType)) {
+    if (fileType.equals(
+        GoogleCredentialsInfo.EXTERNAL_ACCOUNT_AUTHORIZED_USER_CREDENTIALS.getFileType())) {
       return ExternalAccountAuthorizedUserCredentials.fromJson(fileContents, transportFactory);
     }
-    if (GoogleCredentialsInfo.IMPERSONATED_CREDENTIALS.getFileType().equals(fileType)) {
+    if (fileType.equals(GoogleCredentialsInfo.IMPERSONATED_CREDENTIALS.getFileType())) {
       return ImpersonatedCredentials.fromJson(fileContents, transportFactory);
     }
     throw new IOException(
@@ -556,9 +556,14 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    *   <li>principal - Identity used for the credential
    * </ul>
    *
-   * Unknown field values are not included in the mapping (e.g. ComputeCredentials may not know the
-   * principal value until after a call to MDS is made and will be excluded if `getCredentialInfo`
-   * is called prior to retrieving that value)
+   * Unknown field values (i.e. null) are not included in the mapping (e.g. ComputeCredentials may
+   * not know the principal value until after a call to MDS is made and the field will be excluded
+   * if `getCredentialInfo` is called prior to retrieving that value). A new map of the fields is
+   * created on every time this method is called as fields may be updated throughout the Credential
+   * lifecycle. This mapping is intended to provide information about the Credential that is created
+   * via ADC. Some fields may not be known if a Credential is directly created (e.g.
+   * `ServiceAccountCredential.fromStream(InputStream)` may not know the source of the file stream).
+   * These fields are populated on a best effort basis.
    *
    * @return ImmutableMap of information regarding how the Credential was initialized
    */

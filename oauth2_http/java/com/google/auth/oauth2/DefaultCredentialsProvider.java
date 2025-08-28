@@ -218,11 +218,13 @@ class DefaultCredentialsProvider {
       LOGGER.log(Level.FINE, "Attempting to load credentials from GCE");
       credentials = tryGetComputeCredentials(transportFactory);
       // tryGetComputeCredentials can return a null value. This check won't set the source
-      // if the ComputeEngineCredentials fails (prevents a NPE)
+      // if the ComputeEngineCredentials is unable to be created
       if (credentials != null) {
         credentials =
             credentials.withSource(
-                String.format("Metadata Server URL set to %s", getEnv(GCE_METADATA_HOST_ENV_VAR)));
+                String.format(
+                    "Metadata Server URL set to %s",
+                    ComputeEngineCredentials.getMetadataServerUrl(this)));
       }
     }
 

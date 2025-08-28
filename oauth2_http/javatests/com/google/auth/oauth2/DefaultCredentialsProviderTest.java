@@ -792,6 +792,7 @@ public class DefaultCredentialsProviderTest {
             "Env Var %s set to %s", DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, userPath),
         credentialInfo.get("Credential Source"));
     assertEquals("User Credentials", credentialInfo.get("Credential Name"));
+    // No `account` field
     assertNull(credentialInfo.get("Principal"));
   }
 
@@ -818,15 +819,36 @@ public class DefaultCredentialsProviderTest {
         String.format("Well Known File at %s", wellKnownFile.getCanonicalPath()),
         credentialInfo.get("Credential Source"));
     assertEquals("User Credentials", credentialInfo.get("Credential Name"));
+    // No `account` field
     assertNull(credentialInfo.get("Principal"));
   }
 
   @Test
-  public void getDefaultCredentials_computeEngineCredentials_correctCredentialInfo()
+  public void getDefaultCredentials_computeEngineCredentials_defaultMDSUrl_correctCredentialInfo()
       throws IOException {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
-    String gceMetadataHost = "192.0.2.0";
+
+    GoogleCredentials credentials = testProvider.getDefaultCredentials(transportFactory);
+
+    assertNotNull(credentials);
+    assertTrue(credentials instanceof ComputeEngineCredentials);
+    Map<String, String> credentialInfo = credentials.getCredentialInfo();
+    assertEquals(
+        String.format(
+            "Metadata Server URL set to %s", ComputeEngineCredentials.DEFAULT_METADATA_SERVER_URL),
+        credentials.getCredentialInfo().get("Credential Source"));
+    assertEquals("Compute Engine Credentials", credentialInfo.get("Credential Name"));
+    // Principal is null until the first MDS call
+    assertNull(credentialInfo.get("Principal"));
+  }
+
+  @Test
+  public void getDefaultCredentials_computeEngineCredentials_customMDSUrl_correctCredentialInfo()
+      throws IOException {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
+    String gceMetadataHost = "8.8.8.8";
     testProvider.setEnv(DefaultCredentialsProvider.GCE_METADATA_HOST_ENV_VAR, gceMetadataHost);
 
     GoogleCredentials credentials = testProvider.getDefaultCredentials(transportFactory);
@@ -835,9 +857,10 @@ public class DefaultCredentialsProviderTest {
     assertTrue(credentials instanceof ComputeEngineCredentials);
     Map<String, String> credentialInfo = credentials.getCredentialInfo();
     assertEquals(
-        String.format("Metadata Server URL set to %s", gceMetadataHost),
+        String.format("Metadata Server URL set to http://%s", gceMetadataHost),
         credentials.getCredentialInfo().get("Credential Source"));
     assertEquals("Compute Engine Credentials", credentialInfo.get("Credential Name"));
+    // Principal is null until the first MDS call
     assertNull(credentialInfo.get("Principal"));
   }
 
