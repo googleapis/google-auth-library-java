@@ -59,6 +59,7 @@ import com.google.auth.RequestMetadataCallback;
 import com.google.auth.TestUtils;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.oauth2.GoogleCredentials.GoogleCredentialsInfo;
 import com.google.common.collect.ImmutableSet;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -1870,7 +1871,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     if (universeDomain != null) {
       json.put("universe_domain", universeDomain);
     }
-    json.put("type", GoogleCredentials.SERVICE_ACCOUNT_FILE_TYPE);
+    json.put("type", GoogleCredentialsInfo.SERVICE_ACCOUNT_CREDENTIALS.getFileType());
     return json;
   }
 

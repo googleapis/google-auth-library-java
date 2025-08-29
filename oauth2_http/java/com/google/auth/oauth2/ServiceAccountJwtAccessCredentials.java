@@ -31,7 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.auth.oauth2.GoogleCredentials.SERVICE_ACCOUNT_FILE_TYPE;
 import static com.google.auth.oauth2.GoogleCredentials.addQuotaProjectIdToRequestMetadata;
 
 import com.google.api.client.json.GenericJson;
@@ -42,6 +41,7 @@ import com.google.api.client.util.Preconditions;
 import com.google.auth.Credentials;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.ServiceAccountSigner;
+import com.google.auth.oauth2.GoogleCredentials.GoogleCredentialsInfo;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
@@ -297,14 +297,14 @@ public class ServiceAccountJwtAccessCredentials extends Credentials
     if (fileType == null) {
       throw new IOException("Error reading credentials from stream, 'type' field not specified.");
     }
-    if (SERVICE_ACCOUNT_FILE_TYPE.equals(fileType)) {
+    if (GoogleCredentialsInfo.SERVICE_ACCOUNT_CREDENTIALS.getFileType().equals(fileType)) {
       return fromJson(fileContents, defaultAudience);
     }
     throw new IOException(
         String.format(
             "Error reading credentials from stream, 'type' value '%s' not recognized."
                 + " Expecting '%s'.",
-            fileType, SERVICE_ACCOUNT_FILE_TYPE));
+            fileType, GoogleCredentialsInfo.SERVICE_ACCOUNT_CREDENTIALS.getFileType()));
   }
 
   private LoadingCache<JwtClaims, JwtCredentials> createCache() {

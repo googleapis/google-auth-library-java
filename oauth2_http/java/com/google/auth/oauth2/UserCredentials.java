@@ -96,6 +96,12 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     this.tokenServerUri =
         (builder.tokenServerUri == null) ? OAuth2Utils.TOKEN_SERVER_URI : builder.tokenServerUri;
     this.transportFactoryClassName = this.transportFactory.getClass().getName();
+    if (builder.getAccount() != null) {
+      this.principal = builder.getAccount();
+    }
+
+    this.name = GoogleCredentialsInfo.USER_CREDENTIALS.getCredentialName();
+
     Preconditions.checkState(
         builder.getAccessToken() != null || builder.refreshToken != null,
         "Either accessToken or refreshToken must not be null");
@@ -129,6 +135,10 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     // currently "token_uri" is not a default field and needs to be added to json file manually
     String tokenUrl = (String) json.get("token_uri");
     URI tokenUri = (tokenUrl == null || tokenUrl.isEmpty()) ? null : URI.create(tokenUrl);
+    String account = null;
+    if (json.containsKey("account")) {
+      account = (String) json.get("account");
+    }
     return UserCredentials.newBuilder()
         .setClientId(clientId)
         .setClientSecret(clientSecret)
@@ -137,6 +147,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
         .setHttpTransportFactory(transportFactory)
         .setTokenServerUri(tokenUri)
         .setQuotaProjectId(quotaProjectId)
+        .setAccount(account)
         .build();
   }
 
@@ -174,14 +185,14 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     if (fileType == null) {
       throw new IOException("Error reading credentials from stream, 'type' field not specified.");
     }
-    if (USER_FILE_TYPE.equals(fileType)) {
+    if (GoogleCredentialsInfo.USER_CREDENTIALS.getFileType().equals(fileType)) {
       return fromJson(fileContents, transportFactory);
     }
     throw new IOException(
         String.format(
             "Error reading credentials from stream, 'type' value '%s' not recognized."
                 + " Expecting '%s'.",
-            fileType, USER_FILE_TYPE));
+            fileType, GoogleCredentialsInfo.USER_CREDENTIALS.getFileType()));
   }
 
   /** Refreshes the OAuth2 access token by getting a new access token from the refresh token */
@@ -309,7 +320,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
    */
   private InputStream getUserCredentialsStream() throws IOException {
     GenericJson json = new GenericJson();
-    json.put("type", GoogleCredentials.USER_FILE_TYPE);
+    json.put("type", GoogleCredentialsInfo.USER_CREDENTIALS.getFileType());
     if (refreshToken != null) {
       json.put("refresh_token", refreshToken);
     }
@@ -406,6 +417,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     private String clientSecret;
     private String refreshToken;
     private URI tokenServerUri;
+    private String account;
     private HttpTransportFactory transportFactory;
 
     protected Builder() {}
@@ -417,6 +429,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
       this.refreshToken = credentials.refreshToken;
       this.transportFactory = credentials.transportFactory;
       this.tokenServerUri = credentials.tokenServerUri;
+      this.account = credentials.principal;
     }
 
     @CanIgnoreReturnValue
@@ -446,6 +459,12 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     @CanIgnoreReturnValue
     public Builder setHttpTransportFactory(HttpTransportFactory transportFactory) {
       this.transportFactory = transportFactory;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    Builder setAccount(String account) {
+      this.account = account;
       return this;
     }
 
@@ -491,6 +510,10 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
 
     public URI getTokenServerUri() {
       return tokenServerUri;
+    }
+
+    String getAccount() {
+      return account;
     }
 
     public HttpTransportFactory getHttpTransportFactory() {

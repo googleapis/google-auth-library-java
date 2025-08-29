@@ -32,7 +32,6 @@
 package com.google.auth.oauth2;
 
 import static com.google.auth.Credentials.GOOGLE_DEFAULT_UNIVERSE;
-import static com.google.auth.oauth2.ExternalAccountAuthorizedUserCredentials.EXTERNAL_ACCOUNT_AUTHORIZED_USER_FILE_TYPE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -48,10 +47,12 @@ import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.auth.oauth2.GoogleCredentials.GoogleCredentialsInfo;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.BaseEncoding;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -94,6 +95,26 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
 
   private MockExternalAccountAuthorizedUserCredentialsTransportFactory transportFactory;
+
+  static InputStream writeExternalAccountUserCredentialStream(
+      String clientId, String clientSecret, String refreshToken, String tokenUrl)
+      throws IOException {
+    GenericJson json = new GenericJson();
+    if (clientId != null) {
+      json.put("client_id", clientId);
+    }
+    if (clientSecret != null) {
+      json.put("client_secret", clientSecret);
+    }
+    if (refreshToken != null) {
+      json.put("refresh_token", refreshToken);
+    }
+    if (tokenUrl != null) {
+      json.put("token_url", tokenUrl);
+    }
+    json.put("type", "external_account_authorized_user");
+    return TestUtils.jsonToInputStream(json);
+  }
 
   static class MockExternalAccountAuthorizedUserCredentialsTransportFactory
       implements HttpTransportFactory {
@@ -1220,7 +1241,8 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
 
   static GenericJson buildJsonCredentials() {
     GenericJson json = new GenericJson();
-    json.put("type", EXTERNAL_ACCOUNT_AUTHORIZED_USER_FILE_TYPE);
+    json.put(
+        "type", GoogleCredentialsInfo.EXTERNAL_ACCOUNT_AUTHORIZED_USER_CREDENTIALS.getFileType());
     json.put("audience", AUDIENCE);
     json.put("refresh_token", REFRESH_TOKEN);
     json.put("client_id", CLIENT_ID);

@@ -145,7 +145,10 @@ class DefaultCredentialsProvider {
           throw new IOException("File does not exist.");
         }
         credentialsStream = readStream(credentialsFile);
-        credentials = GoogleCredentials.fromStream(credentialsStream, transportFactory);
+        credentials =
+            GoogleCredentials.fromStream(credentialsStream, transportFactory)
+                .withSource(
+                    String.format("Env Var %s set to %s", CREDENTIAL_ENV_VAR, credentialsPath));
       } catch (IOException e) {
         // Although it is also the cause, the message of the caught exception can have very
         // important information for diagnosing errors, so include its message in the
@@ -176,7 +179,11 @@ class DefaultCredentialsProvider {
                   "Attempting to load credentials from well known file: %s",
                   wellKnownFileLocation.getCanonicalPath()));
           credentialsStream = readStream(wellKnownFileLocation);
-          credentials = GoogleCredentials.fromStream(credentialsStream, transportFactory);
+          credentials =
+              GoogleCredentials.fromStream(credentialsStream, transportFactory)
+                  .withSource(
+                      String.format(
+                          "Well Known File at %s", wellKnownFileLocation.getCanonicalPath()));
         }
       } catch (IOException e) {
         throw new IOException(
@@ -210,6 +217,15 @@ class DefaultCredentialsProvider {
     if (credentials == null) {
       LOGGER.log(Level.FINE, "Attempting to load credentials from GCE");
       credentials = tryGetComputeCredentials(transportFactory);
+      // tryGetComputeCredentials can return a null value. This check won't set the source
+      // if the ComputeEngineCredentials is unable to be created
+      if (credentials != null) {
+        credentials =
+            credentials.withSource(
+                String.format(
+                    "Metadata Server URL set to %s",
+                    ComputeEngineCredentials.getMetadataServerUrl(this)));
+      }
     }
 
     if (credentials != null) {

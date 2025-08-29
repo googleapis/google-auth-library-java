@@ -46,6 +46,7 @@ import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.client.testing.http.FixedClock;
 import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
+import com.google.auth.oauth2.GoogleCredentials.GoogleCredentialsInfo;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -915,7 +916,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     if (tokenServerUri != null) {
       json.put("token_uri", tokenServerUri.toString());
     }
-    json.put("type", GoogleCredentials.GDCH_SERVICE_ACCOUNT_FILE_TYPE);
+    json.put("type", GoogleCredentialsInfo.GDCH_CREDENTIALS.getFileType());
     return json;
   }
 
