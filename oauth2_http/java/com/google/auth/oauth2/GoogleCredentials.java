@@ -209,7 +209,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    * @return the credential defined by the credentialsStream.
    * @throws IOException if the credential cannot be created from the stream.
    */
-  @ObsoleteApi("This method is obsolete because of a potential security risk. Use the credential specific load method instead")
+  @ObsoleteApi(
+      "This method is obsolete because of a potential security risk. Use the credential specific load method instead")
   public static GoogleCredentials fromStream(InputStream credentialsStream) throws IOException {
     return fromStream(credentialsStream, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
   }
@@ -233,7 +234,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    * @return the credential defined by the credentialsStream.
    * @throws IOException if the credential cannot be created from the stream.
    */
-  @ObsoleteApi("This method is obsolete because of a potential security risk. Use the credential specific load method instead")
+  @ObsoleteApi(
+      "This method is obsolete because of a potential security risk. Use the credential specific load method instead")
   public static GoogleCredentials fromStream(
       InputStream credentialsStream, HttpTransportFactory transportFactory) throws IOException {
     Preconditions.checkNotNull(credentialsStream);
