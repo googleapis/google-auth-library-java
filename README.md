@@ -1521,6 +1521,14 @@ To run the tests you will need:
 $ mvn test
 ```
 
+## Versioning
+
+This library follows [Semantic Versioning](http://semver.org/), but with some
+additional qualifications:
+
+1. Components marked with `@ObsoleteApi` are stable for usage in the current major version,
+   but will be marked with `@Deprecated` in a future major version.
+
 ## License
 
 BSD 3-Clause - See [LICENSE](LICENSE) for more information.
