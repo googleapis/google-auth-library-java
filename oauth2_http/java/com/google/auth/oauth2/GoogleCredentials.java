@@ -35,6 +35,7 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.Preconditions;
+import com.google.api.core.ObsoleteApi;
 import com.google.auth.Credentials;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
@@ -208,6 +209,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    * @return the credential defined by the credentialsStream.
    * @throws IOException if the credential cannot be created from the stream.
    */
+  @ObsoleteApi(
+      "This method is obsolete because of a potential security risk. Use the credential specific load method instead")
   public static GoogleCredentials fromStream(InputStream credentialsStream) throws IOException {
     return fromStream(credentialsStream, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
   }
@@ -231,6 +234,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    * @return the credential defined by the credentialsStream.
    * @throws IOException if the credential cannot be created from the stream.
    */
+  @ObsoleteApi(
+      "This method is obsolete because of a potential security risk. Use the credential specific load method instead")
   public static GoogleCredentials fromStream(
       InputStream credentialsStream, HttpTransportFactory transportFactory) throws IOException {
     Preconditions.checkNotNull(credentialsStream);
