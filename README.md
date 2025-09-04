@@ -1547,7 +1547,7 @@ additional qualifications:
 1. Components marked with `@ObsoleteApi` are stable for usage in the current major version,
    but will be marked with `@Deprecated` in a future major version.
    **NOTE**: We reserve the right to mark anything as `@Deprecated` and introduce breaking
-   changes in a minor version for anythign that we deem to be ***critical bugs and
+   changes in a minor version to fix any ***critical bugs and
    vulnerabilities***.
 
 ## License
