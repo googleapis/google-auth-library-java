@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.39.0](https://github.com/googleapis/google-auth-library-java/compare/v1.38.0...v1.39.0) (2025-09-04)
+
+
+### Features
+
+* Add Credential Information to GoogleCredential classes ([#1791](https://github.com/googleapis/google-auth-library-java/issues/1791)) ([5511913](https://github.com/googleapis/google-auth-library-java/commit/551191340c97497db991ff65994cbb0086490d2a))
+
+
+### Bug Fixes
+
+* Indicate non-validated external credentials in generic methods ([e7d4380](https://github.com/googleapis/google-auth-library-java/commit/e7d4380ce94bbdd5a879591e0652945262e896aa))
+
+
+### Dependencies
+
+* Add `com.google.api:api-commons` dependency ([e7d4380](https://github.com/googleapis/google-auth-library-java/commit/e7d4380ce94bbdd5a879591e0652945262e896aa))
+* Update `com.google.errorprone:error_prone_annotations` dependency to 2.38.0 ([e7d4380](https://github.com/googleapis/google-auth-library-java/commit/e7d4380ce94bbdd5a879591e0652945262e896aa))
+
 ## [1.38.0](https://github.com/googleapis/google-auth-library-java/compare/v1.37.1...v1.38.0) (2025-08-20)
 
 
