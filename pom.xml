@@ -202,6 +202,10 @@
         <version>${project.api-common.version}</version>
         <exclusions>
           <exclusion>
+            <!-- We exclude guava due to incompabilities between x.x.x-android (auth) and
+            x.x.x-jre (api-common).
+            TODO: Remove this once https://github.com/googleapis/google-auth-library-java/issues/1799
+            has been solved. -->
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
           </exclusion>
