@@ -76,11 +76,11 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.google.http.version>1.47.0</project.google.http.version>
     <project.junit.version>4.13.2</project.junit.version>
-    <project.guava.version>33.4.0-android</project.guava.version>
+    <project.guava.version>33.4.0-jre</project.guava.version>
     <project.appengine.version>2.0.33</project.appengine.version>
     <project.findbugs.version>3.0.2</project.findbugs.version>
     <deploy.autorelease>false</deploy.autorelease>
-    <project.error-prone.version>2.37.0</project.error-prone.version>
+    <project.error-prone.version>2.38.0</project.error-prone.version>
     <project.protobuf.version>3.25.5</project.protobuf.version>
     <project.cel.version>0.9.0-proto3</project.cel.version>
     <project.tink.version>1.15.0</project.tink.version>
@@ -200,16 +200,6 @@
         <groupId>com.google.api</groupId>
         <artifactId>api-common</artifactId>
         <version>${project.api-common.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.google.errorprone</groupId>
-            <artifactId>error_prone_annotations</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
     </dependencies>
   </dependencyManagement>
