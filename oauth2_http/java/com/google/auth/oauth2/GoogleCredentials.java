@@ -193,11 +193,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * Returns credentials defined by a JSON file stream. This method is obsolete because of a
-   * potential security risk. Use the credential specific load method instead.
-   *
-   * <p>The stream can contain a Service Account key file in JSON format from the Google Developers
-   * Console or a stored user credential using the format supported by the Cloud SDK.
+   * This method is obsolete because of a potential security risk. Use the credential specific load
+   * method instead
    *
    * <p>Important: This method does not validate the credential configuration. A security risk holds
    * when a credential configuration is accepted from a source that is not under your control and
@@ -222,6 +219,11 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    * <p>See the {@link <a
    * href="https://cloud.google.com/docs/authentication/external/externally-sourced-credentials">documentation</a>}
    * for more details.
+   *
+   * <p>Returns credentials defined by a JSON file stream.
+   *
+   * <p>The stream can contain a Service Account key file in JSON format from the Google Developers
+   * Console or a stored user credential using the format supported by the Cloud SDK.
    *
    * @param credentialsStream the stream with the credential definition.
    * @return the credential defined by the credentialsStream.
@@ -234,13 +236,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * Returns credentials defined by a JSON file stream. This method is obsolete because of a
-   * potential security risk. Use the credential specific load method instead.
-   *
-   * <p>Returns credentials defined by a JSON file stream.
-   *
-   * <p>The stream can contain a Service Account key file in JSON format from the Google Developers
-   * Console or a stored user credential using the format supported by the Cloud SDK.
+   * This method is obsolete because of a potential security risk. Use the credential specific load
+   * method instead
    *
    * <p>Important: This method does not validate the credential configuration. A security risk holds
    * when a credential configuration is accepted from a source that is not under your control and
@@ -266,9 +263,12 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    * href="https://cloud.google.com/docs/authentication/external/externally-sourced-credentials">documentation</a>}
    * for more details.
    *
+   * <p>Returns credentials defined by a JSON file stream.
+   *
+   * <p>The stream can contain a Service Account key file in JSON format from the Google Developers
+   * Console or a stored user credential using the format supported by the Cloud SDK.
+   *
    * @param credentialsStream the stream with the credential definition.
-   * @param transportFactory HTTP transport factory, creates the transport used to get access
-   *     tokens.
    * @return the credential defined by the credentialsStream.
    * @throws IOException if the credential cannot be created from the stream.
    */
