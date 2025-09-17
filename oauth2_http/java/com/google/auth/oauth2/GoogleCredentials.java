@@ -193,17 +193,37 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * Returns credentials defined by a JSON file stream.
+   * This method is obsolete because of a potential security risk. Use the credential specific load
+   * method instead
+   *
+   * <p>Returns credentials defined by a JSON file stream.
    *
    * <p>The stream can contain a Service Account key file in JSON format from the Google Developers
    * Console or a stored user credential using the format supported by the Cloud SDK.
    *
-   * <p>Important: If you accept a credential configuration (credential JSON/File/Stream) from an
-   * external source for authentication to Google Cloud Platform, you must validate it before
-   * providing it to any Google API or library. Providing an unvalidated credential configuration to
-   * Google APIs can compromise the security of your systems and data. For more information, refer
-   * to {@link <a
-   * href="https://cloud.google.com/docs/authentication/external/externally-sourced-credentials">documentation</a>}.
+   * <p>Important: This method does not validate the credential configuration. A security risk holds
+   * when a credential configuration is accepted from a source that is not under your control and
+   * used without validation on your side.
+   *
+   * <p>If you know that you will be loading credential configurations of a specific type, it is
+   * recommended to use a credential-type-specific `load()` method. This will ensure that an
+   * unexpected credential type with potential for malicious intent is not loaded unintentionally.
+   * You might still have to do validation for certain credential types. Please follow the
+   * recommendation for that method. For example, if you want to load only service accounts, you can
+   * use: <code>
+   *  GoogleCredentials credentials = ServiceAccountCredentials.fromStream(json);
+   * </code>. See {@link ServiceAccountCredentials#fromStream(InputStream, HttpTransportFactory)}.
+   *
+   * <p>If you are loading your credential configuration from an untrusted source and have not
+   * mitigated the risks (e.g. by validating the configuration yourself), make these changes as soon
+   * as possible to prevent security risks to your environment.
+   *
+   * <p>Regardless of the method used, it is always your responsibility to validate configurations
+   * received from external sources.
+   *
+   * <p>See the {@link <a
+   * href="https://cloud.google.com/docs/authentication/external/externally-sourced-credentials">documentation</a>}
+   * for more details.
    *
    * @param credentialsStream the stream with the credential definition.
    * @return the credential defined by the credentialsStream.
@@ -216,17 +236,37 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * Returns credentials defined by a JSON file stream.
+   * This method is obsolete because of a potential security risk. Use the credential specific load
+   * method instead
+   *
+   * <p>Returns credentials defined by a JSON file stream.
    *
    * <p>The stream can contain a Service Account key file in JSON format from the Google Developers
    * Console or a stored user credential using the format supported by the Cloud SDK.
    *
-   * <p>Important: If you accept a credential configuration (credential JSON/File/Stream) from an
-   * external source for authentication to Google Cloud Platform, you must validate it before
-   * providing it to any Google API or library. Providing an unvalidated credential configuration to
-   * Google APIs can compromise the security of your systems and data. For more information, refer
-   * to {@link <a
-   * href="https://cloud.google.com/docs/authentication/external/externally-sourced-credentials">documentation</a>}.
+   * <p>Important: This method does not validate the credential configuration. A security risk holds
+   * when a credential configuration is accepted from a source that is not under your control and
+   * used without validation on your side.
+   *
+   * <p>If you know that you will be loading credential configurations of a specific type, it is
+   * recommended to use a credential-type-specific `load()` method. This will ensure that an
+   * unexpected credential type with potential for malicious intent is not loaded unintentionally.
+   * You might still have to do validation for certain credential types. Please follow the
+   * recommendation for that method. For example, if you want to load only service accounts, you can
+   * use: <code>
+   *  GoogleCredentials credentials = ServiceAccountCredentials.fromStream(json);
+   * </code>. See {@link ServiceAccountCredentials#fromStream(InputStream, HttpTransportFactory)}.
+   *
+   * <p>If you are loading your credential configuration from an untrusted source and have not
+   * mitigated the risks (e.g. by validating the configuration yourself), make these changes as soon
+   * as possible to prevent security risks to your environment.
+   *
+   * <p>Regardless of the method used, it is always your responsibility to validate configurations
+   * received from external sources.
+   *
+   * <p>See the {@link <a
+   * href="https://cloud.google.com/docs/authentication/external/externally-sourced-credentials">documentation</a>}
+   * for more details.
    *
    * @param credentialsStream the stream with the credential definition.
    * @param transportFactory HTTP transport factory, creates the transport used to get access
