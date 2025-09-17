@@ -206,7 +206,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    * used without validation on your side.
    *
    * <p>If you know that you will be loading credential configurations of a specific type, it is
-   * recommended to use a credential-type-specific `load()` method. This will ensure that an
+   * recommended to use a credential-type-specific `fromStream()` method. This will ensure that an
    * unexpected credential type with potential for malicious intent is not loaded unintentionally.
    * You might still have to do validation for certain credential types. Please follow the
    * recommendation for that method. For example, if you want to load only service accounts, you can
