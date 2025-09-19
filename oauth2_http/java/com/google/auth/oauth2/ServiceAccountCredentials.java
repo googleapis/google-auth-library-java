@@ -31,7 +31,24 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.common.base.MoreObjects.firstNonNull;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.Executor;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpBackOffIOExceptionHandler;
@@ -60,28 +77,11 @@ import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.MetricsUtils.RequestType;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects.ToStringHelper;
+import static com.google.common.base.MoreObjects.firstNonNull;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.GeneralSecurityException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.Signature;
-import java.security.SignatureException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.Executor;
 
 /**
  * OAuth2 credentials representing a Service Account for calling Google APIs.
@@ -89,7 +89,7 @@ import java.util.concurrent.Executor;
  * <p>By default uses a JSON Web Token (JWT) to fetch access tokens.
  */
 public class ServiceAccountCredentials extends GoogleCredentials
-    implements ServiceAccountSigner, IdTokenProvider, JwtProvider {
+    implements ServiceAccountSigner, IdTokenProvider, JwtProvider, TrustBoundaryProvider {
 
   private static final long serialVersionUID = 7807543542681217978L;
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
@@ -580,7 +580,11 @@ public class ServiceAccountCredentials extends GoogleCredentials
     int expiresInSeconds =
         OAuth2Utils.validateInt32(responseData, "expires_in", PARSE_ERROR_PREFIX);
     long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000L;
-    return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
+    AccessToken newAccessToken = new AccessToken(accessToken, new Date(expiresAtMilliseconds));
+
+    refreshTrustBoundaries(newAccessToken);
+
+    return newAccessToken;
   }
 
   /**
@@ -817,6 +821,18 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   public boolean getUseJwtAccessWithScope() {
     return useJwtAccessWithScope;
+  }
+
+  @Override
+  public HttpTransportFactory getTransportFactory() {
+    return transportFactory;
+  }
+
+  @Override
+  public String getTrustBoundaryUrl() throws IOException {
+    return String.format(
+        "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s/allowedLocations",
+        getUniverseDomain(), getClientEmail());
   }
 
   @VisibleForTesting
