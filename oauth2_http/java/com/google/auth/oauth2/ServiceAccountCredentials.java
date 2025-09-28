@@ -1158,6 +1158,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     private int lifetime = DEFAULT_LIFETIME_IN_SECONDS;
     private boolean useJwtAccessWithScope = false;
     private boolean defaultRetriesEnabled = true;
+    private TrustBoundary trustBoundary;
 
     protected Builder() {}
 
@@ -1176,6 +1177,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
       this.lifetime = credentials.lifetime;
       this.useJwtAccessWithScope = credentials.useJwtAccessWithScope;
       this.defaultRetriesEnabled = credentials.defaultRetriesEnabled;
+      this.trustBoundary = credentials.getTrustBoundary();
     }
 
     @CanIgnoreReturnValue

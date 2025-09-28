@@ -38,13 +38,10 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpRequestFactory;
-import com.google.api.client.http.HttpResponse;
-import com.google.api.client.http.HttpResponseException;
+import com.google.api.client.http.*;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonParser;
+import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.client.util.Key;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
@@ -55,22 +52,20 @@ import com.google.common.base.MoreObjects;
  */
 public final class TrustBoundary {
 
-static final String TRUST_BOUNDARY_KEY = "x-allowed-locations";
-  static final String GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR =
-      "GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED";
+  static final String TRUST_BOUNDARY_KEY = "x-allowed-locations";
+  static final String GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR = "GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT";
   private static final String NO_OP_VALUE = "0x0";
   private final String encodedLocations;
   private final List<String> locations;
 
-  private TrustBoundary(String encodedLocations, List<String> locations) {
+  public TrustBoundary(String encodedLocations, List<String> locations) {
     this.encodedLocations = encodedLocations;
-    this.locations =
-        locations == null ? Collections.<String>emptyList() : Collections.unmodifiableList(locations);
+    this.locations = locations == null ? Collections.<String>emptyList() : Collections.unmodifiableList(locations);
   }
 
   private static EnvironmentProvider environmentProvider = SystemEnvironmentProvider.getInstance();
 
-    public String getEncodedLocations() {
+  public String getEncodedLocations() {
     return encodedLocations;
   }
 
@@ -82,9 +77,9 @@ static final String TRUST_BOUNDARY_KEY = "x-allowed-locations";
     return NO_OP_VALUE.equals(encodedLocations);
   }
 
-    /** Represents the JSON response from the trust boundary endpoint. */
+  /** Represents the JSON response from the trust boundary endpoint. */
   public static class TrustBoundaryResponse extends GenericJson {
-    @Key("encodedLocations")
+    @Key("encoded_locations")
     private String encodedLocations;
 
     @Key("locations")
@@ -101,15 +96,15 @@ static final String TRUST_BOUNDARY_KEY = "x-allowed-locations";
     @Override
     public String toString() {
       return MoreObjects.toStringHelper(this)
-          .add("encodedLocations", encodedLocations)
+          .add("encoded_locations", encodedLocations)
           .add("locations", locations)
           .toString();
     }
   }
 
   // expose this setter only for testing purposes
-  static void setEnvironmentProvider(EnvironmentProvider provider) {
-    environmentProvider = provider;
+  public static void setEnvironmentProviderForTest(@Nullable EnvironmentProvider provider) {
+    environmentProvider = provider == null ? SystemEnvironmentProvider.getInstance() : provider;
   }
 
   static boolean isTrustBoundaryEnabled() throws IOException {
@@ -151,24 +146,32 @@ static final String TRUST_BOUNDARY_KEY = "x-allowed-locations";
 
     // Add the cached trust boundary header, if available.
     if (cachedTrustBoundary != null) {
-      String headerValue =
-          cachedTrustBoundary.isNoOp() ? "" : cachedTrustBoundary.getEncodedLocations();
-      request.getHeaders().set(TRUST_BOUNDARY_KEY, headerValue);
+      String headerValue = cachedTrustBoundary.isNoOp() ? "" : cachedTrustBoundary.getEncodedLocations();
+      // request.getHeaders().set(TRUST_BOUNDARY_KEY, headerValue);
     }
-        TrustBoundaryResponse json;
+
+    // Add retry logic
+    ExponentialBackOff backoff = new ExponentialBackOff.Builder()
+              .setInitialIntervalMillis(OAuth2Utils.INITIAL_RETRY_INTERVAL_MILLIS)
+              .setRandomizationFactor(OAuth2Utils.RETRY_RANDOMIZATION_FACTOR)
+              .setMultiplier(OAuth2Utils.RETRY_MULTIPLIER)
+              .build();
+
+    HttpUnsuccessfulResponseHandler unsuccessfulResponseHandler =
+        new HttpBackOffUnsuccessfulResponseHandler(backoff);
+    request.setUnsuccessfulResponseHandler(unsuccessfulResponseHandler);
+
+    HttpIOExceptionHandler ioExceptionHandler = new HttpBackOffIOExceptionHandler(backoff);
+    request.setIOExceptionHandler(ioExceptionHandler);
+
+    TrustBoundaryResponse json;
     try {
       HttpResponse response = request.execute();
       String responseString = response.parseAsString();
       JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser(responseString);
       json = parser.parseAndClose(TrustBoundaryResponse.class);
-
-    } catch (HttpResponseException e) {
-      throw new IOException(
-          String.format(
-              "Unexpected error response when retrieving trust boundary: %s", e.getMessage()),
-          e);
     } catch (IOException e) {
-      throw new IOException("Failed to retrieve or parse trust boundary.", e);
+      throw new IOException("TrustBoundary: Failure while getting trust boundaries:", e);
     }
     String encodedLocations = json.getEncodedLocations();
     if (encodedLocations == null) {

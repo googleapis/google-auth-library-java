@@ -52,6 +52,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -820,5 +821,370 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     } catch (IOException expected) {
       assertTrue(expected.getMessage().contains(expectedMessageContent));
     }
+  }
+
+  @After
+  public void tearDown() {
+    TrustBoundary.setEnvironmentProviderForTest(null);
+  }
+
+  @Test
+  public void trustBoundary_shouldNotCallLookupEndpointWhenDisabled() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "false");
+
+    MockTokenServerTransport transport = new MockTokenServerTransport();
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setHttpTransportFactory(() -> transport)
+            .setScopes(SCOPES)
+            .build();
+
+    credentials.getRequestMetadata();
+    assertEquals(credentials.getTrustBoundary(), null);
+  }
+
+  @Test
+  public void trustBoundary_shouldFetchAndReturnTrustBoundaryDataSuccessfully() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
+
+    MockTokenServerTransport transport = new MockTokenServerTransport();
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    TrustBoundary trustBoundary = new TrustBoundary("0x80000", Collections.singletonList("us-central1"));
+    transport.setTrustBoundary(trustBoundary);
+
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setHttpTransportFactory(() -> transport)
+            .setScopes(SCOPES)
+            .build();
+
+    Map<String, List<String>> headers = credentials.getRequestMetadata();
+    assertEquals(headers.get("x-allowed-locations"), Arrays.asList("0x80000"));
+  }
+
+  @Test
+  public void trustBoundary_shouldRetryTrustBoundaryLookupOnFailure() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
+
+    // This transport will be used for the trust boundary lookup.
+    // We will configure it to fail on the first attempt.
+    MockTokenServerTransport trustBoundaryTransport = new MockTokenServerTransport();
+    trustBoundaryTransport.addResponseErrorSequence(new IOException("Service Unavailable"));
+    TrustBoundary trustBoundary = new TrustBoundary("0x80000", Collections.singletonList("us-central1"));
+    trustBoundaryTransport.setTrustBoundary(trustBoundary);
+
+    // This transport will be used for the access token refresh.
+    // It will succeed.
+    MockTokenServerTransport accessTokenTransport = new MockTokenServerTransport();
+    accessTokenTransport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            // Use a custom transport factory that returns the correct transport for each endpoint.
+            .setHttpTransportFactory(
+                () ->
+                    new com.google.api.client.testing.http.MockHttpTransport() {
+                      @Override
+                      public com.google.api.client.http.LowLevelHttpRequest buildRequest(String method, String url)
+                          throws IOException {
+                        if (url.endsWith("/allowedLocations")) {
+                          return trustBoundaryTransport.buildRequest(method, url);
+                        }
+                        return accessTokenTransport.buildRequest(method, url);
+                      }
+                    })
+            .setScopes(SCOPES)
+            .build();
+
+    Map<String, List<String>> headers = credentials.getRequestMetadata();
+    assertEquals(headers.get("x-allowed-locations"), Arrays.asList("0x80000"));
+  }
+
+  @Test
+  public void trustBoundary_refreshShouldReturnNullWhenDefaultDomainIsNotGoogleApis() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
+
+    MockTokenServerTransport transport = new MockTokenServerTransport();
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setHttpTransportFactory(() -> transport)
+            .setScopes(SCOPES)
+            .setUniverseDomain("other.universe")
+            .build();
+
+    credentials.refreshAccessToken();
+    assertNull(credentials.getTrustBoundary());
+  }
+
+  @Test
+  public void trustBoundary_refreshShouldThrowWhenNoValidAccessTokenIsPassed() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
+
+    MockTokenServerTransport transport = new MockTokenServerTransport();
+    // Return an expired access token.
+    transport.addServiceAccount(SA_CLIENT_EMAIL, "expired-token");
+    transport.setExpiresInSeconds(-1);
+
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setHttpTransportFactory(() -> transport)
+            .setScopes(SCOPES)
+            .build();
+
+    try {
+      credentials.getRequestMetadata();
+      fail("Should have thrown an IOException.");
+    } catch (IOException e) {
+      assertEquals("Failed to refresh trust boundary and no cached value is available.", e.getMessage());
+    }
+  }
+
+  @Test
+  public void trustBoundary_refreshShouldReturnNoOpIfResponseFromLookupIsNoOp() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
+
+    MockTokenServerTransport transport = new MockTokenServerTransport();
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    transport.setTrustBoundary(new TrustBoundary("0x0", Collections.emptyList()));
+
+    ServiceAccountCredentials credentials =
+            ServiceAccountCredentials.newBuilder()
+                    .setClientEmail(SA_CLIENT_EMAIL)
+                    .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
+                    .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+                    .setHttpTransportFactory(() -> transport)
+                    .setScopes(SCOPES)
+                    .build();
+
+    credentials.refresh();
+
+    assertTrue(credentials.getTrustBoundary().isNoOp());
+    }
+
+  @Test
+  public void trustBoundary_refreshShouldReturnNoOpAndNotCallLookupEndpointWhenCachedIsNoOp()
+      throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
+
+    MockTokenServerTransport transport = new MockTokenServerTransport();
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    transport.setTrustBoundary(new TrustBoundary("0x0", Collections.emptyList()));
+
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setHttpTransportFactory(() -> transport)
+            .setScopes(SCOPES)
+            .build();
+
+    // First refresh to cache the no-op trust boundary.
+    credentials.refresh();
+
+    // Set trust boundary to a valid non No-Op value.
+      transport.setTrustBoundary(new TrustBoundary("0x80000", Collections.singletonList("us-central1")));
+
+    //Refresh trust boundaries
+    credentials.refresh();
+
+    // Check whether the trust boundaries are still no_op.
+    assertTrue(credentials.getTrustBoundary().isNoOp());
+  }
+
+  @Test
+  public void trustBoundary_refreshShouldReturnCachedTbIfCallToLookupFails() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
+
+    MockTokenServerTransport transport = new MockTokenServerTransport();
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    TrustBoundary trustBoundary = new TrustBoundary("0x80000", Collections.singletonList("us-central1"));
+    transport.setTrustBoundary(trustBoundary);
+
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setHttpTransportFactory(() -> transport)
+            .setScopes(SCOPES)
+            .build();
+
+    // First refresh to cache the trust boundary.
+    credentials.refresh();
+
+    // Set the trust boundary to be returned to null so we get an exception.
+    transport.setTrustBoundary(null);
+
+
+    credentials.refresh();
+
+    assertEquals(trustBoundary.getEncodedLocations(), credentials.getTrustBoundary().getEncodedLocations());
+  }
+
+  @Test
+  public void trustBoundary_refreshShouldThrowIfCallToLookupFailsAndNoCachedTb() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
+
+    MockTokenServerTransport transport = new MockTokenServerTransport();
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    transport.addResponseErrorSequence(new IOException("Service Unavailable"));
+
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setHttpTransportFactory(() -> transport)
+            .setScopes(SCOPES)
+            .build();
+
+    try {
+      credentials.refresh();
+      fail("Should have thrown an IOException.");
+    } catch (IOException e) {
+      assertTrue(
+          e.getMessage().contains("Failed to refresh trust boundary and no cached value is available."));
+    }
+  }
+
+  @Test
+  public void trustBoundary_refreshShouldThrowInCaseOfMalformedResponse() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
+
+    MockTokenServerTransport transport = new MockTokenServerTransport();
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    // The transport will return a response with no encoded_locations field.
+    transport.setTrustBoundary(new TrustBoundary(null, Collections.emptyList()));
+
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setHttpTransportFactory(() -> transport)
+            .setScopes(SCOPES)
+            .build();
+
+    try {
+      credentials.refresh();
+      fail("Should have thrown an IOException.");
+    } catch (IOException e) {
+      assertTrue(e.getMessage().contains("Failed to refresh trust boundary and no cached value is available."));
+    }
+  }
+
+  @Test
+  public void trustBoundary_getRequestHeadersShouldAttachTrustBoundaryHeader() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
+
+    MockTokenServerTransport transport = new MockTokenServerTransport();
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    TrustBoundary trustBoundary = new TrustBoundary("0x80000", Collections.singletonList("us-central1"));
+    transport.setTrustBoundary(trustBoundary);
+
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setHttpTransportFactory(() -> transport)
+            .setScopes(SCOPES)
+            .build();
+
+    Map<String, List<String>> headers = credentials.getRequestMetadata();
+
+    assertEquals(Arrays.asList("0x80000"), headers.get("x-allowed-locations"));
+  }
+
+  @Test
+  public void trustBoundary_getRequestHeadersShouldAttachEmptyStringTbHeaderInCaseOfNoOp()
+      throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
+
+    MockTokenServerTransport transport = new MockTokenServerTransport();
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    transport.setTrustBoundary(new TrustBoundary("0x0", Collections.emptyList()));
+
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setHttpTransportFactory(() -> transport)
+            .setScopes(SCOPES)
+            .build();
+
+    Map<String, List<String>> headers = credentials.getRequestMetadata();
+
+    assertEquals(Arrays.asList(""), headers.get("x-allowed-locations"));
+  }
+
+  @Test
+  public void trustBoundary_getRequestHeadersShouldNotAttachTbHeaderInCaseOfNonGduUniverse()
+      throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
+
+    MockTokenServerTransport transport = new MockTokenServerTransport();
+    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setHttpTransportFactory(() -> transport)
+            .setScopes(SCOPES)
+            .setUniverseDomain("other.universe")
+            .build();
+
+    Map<String, List<String>> headers = credentials.getRequestMetadata();
+
+    assertNull(headers.get("x-allowed-locations"));
   }
 }

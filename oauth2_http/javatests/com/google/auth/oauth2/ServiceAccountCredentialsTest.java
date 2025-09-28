@@ -31,35 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import com.google.api.client.http.HttpResponseException;
-import com.google.api.client.http.HttpStatusCodes;
-import com.google.api.client.json.GenericJson;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.client.json.webtoken.JsonWebSignature;
-import com.google.api.client.json.webtoken.JsonWebToken;
-import com.google.api.client.testing.http.FixedClock;
-import com.google.api.client.testing.http.MockLowLevelHttpResponse;
-import com.google.api.client.util.Clock;
-import com.google.api.client.util.Joiner;
-import com.google.auth.CredentialTypeForMetrics;
-import com.google.auth.Credentials;
-import com.google.auth.RequestMetadataCallback;
-import com.google.auth.TestUtils;
-import com.google.auth.http.AuthHttpConstants;
-import com.google.auth.http.HttpTransportFactory;
-import com.google.common.collect.ImmutableSet;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -79,13 +50,46 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import com.google.api.client.http.HttpResponseException;
+import com.google.api.client.http.HttpStatusCodes;
+import com.google.api.client.json.GenericJson;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.client.json.webtoken.JsonWebSignature;
+import com.google.api.client.json.webtoken.JsonWebToken;
+import com.google.api.client.testing.http.FixedClock;
+import com.google.api.client.testing.http.MockLowLevelHttpResponse;
+import com.google.api.client.util.Clock;
+import com.google.api.client.util.Joiner;
+import com.google.auth.CredentialTypeForMetrics;
+import com.google.auth.Credentials;
+import com.google.auth.RequestMetadataCallback;
+import com.google.auth.TestUtils;
+import com.google.auth.http.AuthHttpConstants;
+import com.google.auth.http.HttpTransportFactory;
+import com.google.common.collect.ImmutableSet;
+
 /** Test case for {@link ServiceAccountCredentials}. */
 @RunWith(JUnit4.class)
 public class ServiceAccountCredentialsTest extends BaseSerializationTest {
+
+
 
   static final String CLIENT_EMAIL =
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr@developer.gserviceaccount.com";
@@ -157,6 +161,11 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   static ServiceAccountCredentials.Builder createDefaultBuilder() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     return createDefaultBuilderWithKey(privateKey);
+  }
+
+  @After
+  public void tearDown() {
+    TrustBoundary.setEnvironmentProviderForTest(null);
   }
 
   @Test
@@ -1800,6 +1809,58 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     AccessToken newAccessToken = credentials.getAccessToken();
     assertNull(newAccessToken);
   }
+
+    @Test
+    public void refresh_trustBoundarySuccess() throws IOException {
+        TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+        TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+        environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
+
+        // Mock trust boundary response
+        TrustBoundary trustBoundary =
+                new TrustBoundary("0x80000", Collections.singletonList("us-central1"));
+
+        MockTokenServerTransport transport = new MockTokenServerTransport();
+        transport.addServiceAccount("test-client-email@example.com", "test-access-token");
+        transport.setTrustBoundary(trustBoundary);
+
+        ServiceAccountCredentials credentials = ServiceAccountCredentials.newBuilder()
+                .setClientEmail("test-client-email@example.com")
+                .setPrivateKey(
+                        OAuth2Utils.privateKeyFromPkcs8(ServiceAccountCredentialsTest.PRIVATE_KEY_PKCS8))
+                .setPrivateKeyId("test-key-id")
+                .setHttpTransportFactory(() -> transport)
+                .setScopes(SCOPES)
+                .build();
+
+        Map<String, List<String>> headers = credentials.getRequestMetadata();
+        assertEquals(headers.get("x-allowed-locations"), Arrays.asList("0x80000"));
+    }
+
+    @Test
+    public void refresh_trustBoundaryFails_throwsIOException() throws IOException {
+        TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+        TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+        environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
+
+        MockTokenServerTransport transport = new MockTokenServerTransport();
+        transport.addServiceAccount("test-client-email@example.com", "test-access-token");
+
+        ServiceAccountCredentials credentials = ServiceAccountCredentials.newBuilder()
+                .setClientEmail("test-client-email@example.com")
+                .setPrivateKey(
+                        OAuth2Utils.privateKeyFromPkcs8(ServiceAccountCredentialsTest.PRIVATE_KEY_PKCS8))
+                .setPrivateKeyId("test-key-id")
+                .setHttpTransportFactory(() -> transport)
+                .setScopes(SCOPES)
+                .build();
+        try {
+            credentials.refresh();
+        } catch (IOException e) {
+            assertTrue("The exception message should explain why the refresh failed.",
+                    e.getMessage().contains("Failed to refresh trust boundary and no cached value is available."));
+        }
+    }
 
   private void verifyJwtAccess(Map<String, List<String>> metadata, String expectedScopeClaim)
       throws IOException {

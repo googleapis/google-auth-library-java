@@ -41,7 +41,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.logging.Level;
 
 import javax.annotation.Nullable;
 
@@ -257,6 +256,10 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     return this.toBuilder().setQuotaProjectId(quotaProject).build();
   }
 
+  public TrustBoundary getTrustBoundary() {
+    return trustBoundary;
+  }
+
   /**
    * Gets the universe domain for the credential.
    *
@@ -321,12 +324,11 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       // Refresh trust boundaries only if the cached value is not NO_OP.
       if (this.trustBoundary == null || !this.trustBoundary.isNoOp()) {
         try {
-          this.trustBoundary =
-              TrustBoundary.refresh(
-                  provider.getTransportFactory(),
-                  provider.getTrustBoundaryUrl(),
-                  newAccessToken,
-                  this.trustBoundary);
+          this.trustBoundary = TrustBoundary.refresh(
+              provider.getTransportFactory(),
+              provider.getTrustBoundaryUrl(),
+              newAccessToken,
+              this.trustBoundary);
         } catch (IOException e) {
           // If refresh fails, check for cached value.
           if (this.trustBoundary == null) {
@@ -334,11 +336,6 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
             throw new IOException(
                 "Failed to refresh trust boundary and no cached value is available.", e);
           }
-          LoggingUtils.log(
-              LOGGER_PROVIDER,
-              Level.WARNING,
-              Collections.singletonMap("cause", e.toString()),
-              "TrustBoundary: Failure while getting trust boundaries. Using cached value.");
         }
       }
     }
