@@ -73,6 +73,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
   private boolean emptyContent;
   private MockLowLevelHttpRequest request;
 
+  private TrustBoundary trustBoundary;
+
   public MockMetadataServerTransport() {}
 
   public MockMetadataServerTransport(String accessToken) {
@@ -120,6 +122,10 @@ public class MockMetadataServerTransport extends MockHttpTransport {
     this.emptyContent = emptyContent;
   }
 
+  public void setTrustBoundary(TrustBoundary trustBoundary) {
+    this.trustBoundary = trustBoundary;
+  }
+
   public MockLowLevelHttpRequest getRequest() {
     return request;
   }
@@ -140,6 +146,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
       return this.request;
     } else if (isMtlsConfigRequestUrl(url)) {
       return getMockRequestForMtlsConfig(url);
+    } else if (isIamLookupUrl(url)) {
+      return getMockRequestForTrustBoundaryLookup(url);
     }
     this.request =
         new MockLowLevelHttpRequest(url) {
@@ -224,7 +232,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
           refreshContents.put(
               "access_token", scopesToAccessToken.get("[" + urlParsed.get(1) + "]"));
         }
-        refreshContents.put("expires_in", 3600000);
+        refreshContents.put("expires_in", 3600);
         refreshContents.put("token_type", "Bearer");
         String refreshText = refreshContents.toPrettyString();
 
@@ -360,5 +368,28 @@ public class MockMetadataServerTransport extends MockHttpTransport {
     return url.equals(
         ComputeEngineCredentials.getMetadataServerUrl()
             + SecureSessionAgent.S2A_CONFIG_ENDPOINT_POSTFIX);
+  }
+
+  private MockLowLevelHttpRequest getMockRequestForTrustBoundaryLookup(String url) {
+    return new MockLowLevelHttpRequest(url) {
+      @Override
+      public LowLevelHttpResponse execute() throws IOException {
+        if (trustBoundary == null) {
+          return new MockLowLevelHttpResponse().setStatusCode(404);
+        }
+        GenericJson responseJson = new GenericJson();
+        responseJson.setFactory(OAuth2Utils.JSON_FACTORY);
+        responseJson.put("encoded_locations", trustBoundary.getEncodedLocations());
+        responseJson.put("locations", trustBoundary.getLocations());
+        String content = responseJson.toPrettyString();
+        return new MockLowLevelHttpResponse()
+            .setContentType(Json.MEDIA_TYPE)
+            .setContent(content);
+      }
+    };
+  }
+
+  protected boolean isIamLookupUrl(String url) {
+    return url.endsWith("/allowedLocations");
   }
 }

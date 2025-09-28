@@ -83,6 +83,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.junit.After;
 
 /** Test case for {@link ServiceAccountCredentials}. */
 @RunWith(JUnit4.class)
@@ -158,6 +159,11 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   static ServiceAccountCredentials.Builder createDefaultBuilder() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     return createDefaultBuilderWithKey(privateKey);
+  }
+
+  @After
+  public void tearDown() {
+    TrustBoundary.setEnvironmentProviderForTest(null);
   }
 
   @Test
@@ -1801,6 +1807,58 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     AccessToken newAccessToken = credentials.getAccessToken();
     assertNull(newAccessToken);
   }
+
+    @Test
+    public void refresh_trustBoundarySuccess() throws IOException {
+        TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+        TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+        environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
+
+        // Mock trust boundary response
+        TrustBoundary trustBoundary =
+                new TrustBoundary("0x80000", Collections.singletonList("us-central1"));
+
+        MockTokenServerTransport transport = new MockTokenServerTransport();
+        transport.addServiceAccount("test-client-email@example.com", "test-access-token");
+        transport.setTrustBoundary(trustBoundary);
+
+        ServiceAccountCredentials credentials = ServiceAccountCredentials.newBuilder()
+                .setClientEmail("test-client-email@example.com")
+                .setPrivateKey(
+                        OAuth2Utils.privateKeyFromPkcs8(ServiceAccountCredentialsTest.PRIVATE_KEY_PKCS8))
+                .setPrivateKeyId("test-key-id")
+                .setHttpTransportFactory(() -> transport)
+                .setScopes(SCOPES)
+                .build();
+
+        Map<String, List<String>> headers = credentials.getRequestMetadata();
+        assertEquals(headers.get("x-allowed-locations"), Arrays.asList("0x80000"));
+    }
+
+    @Test
+    public void refresh_trustBoundaryFails_throwsIOException() throws IOException {
+        TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+        TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+        environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
+
+        MockTokenServerTransport transport = new MockTokenServerTransport();
+        transport.addServiceAccount("test-client-email@example.com", "test-access-token");
+
+        ServiceAccountCredentials credentials = ServiceAccountCredentials.newBuilder()
+                .setClientEmail("test-client-email@example.com")
+                .setPrivateKey(
+                        OAuth2Utils.privateKeyFromPkcs8(ServiceAccountCredentialsTest.PRIVATE_KEY_PKCS8))
+                .setPrivateKeyId("test-key-id")
+                .setHttpTransportFactory(() -> transport)
+                .setScopes(SCOPES)
+                .build();
+        try {
+            credentials.refresh();
+        } catch (IOException e) {
+            assertTrue("The exception message should explain why the refresh failed.",
+                    e.getMessage().contains("Failed to refresh trust boundary and no cached value is available."));
+        }
+    }
 
   private void verifyJwtAccess(Map<String, List<String>> metadata, String expectedScopeClaim)
       throws IOException {
