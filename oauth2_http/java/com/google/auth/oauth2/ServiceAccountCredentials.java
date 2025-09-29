@@ -60,7 +60,6 @@ import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.MetricsUtils.RequestType;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects.ToStringHelper;
-import static com.google.common.base.MoreObjects.firstNonNull;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

@@ -965,7 +965,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     MockTokenServerTransport transport = new MockTokenServerTransport();
     transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
-    TrustBoundary trustBoundary = new TrustBoundary("0x80000", Collections.singletonList("us-central1"));
+    TrustBoundary trustBoundary =
+        new TrustBoundary("0x80000", Collections.singletonList("us-central1"));
     transport.setTrustBoundary(trustBoundary);
 
     ServiceAccountCredentials credentials =
@@ -991,7 +992,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     // We will configure it to fail on the first attempt.
     MockTokenServerTransport trustBoundaryTransport = new MockTokenServerTransport();
     trustBoundaryTransport.addResponseErrorSequence(new IOException("Service Unavailable"));
-    TrustBoundary trustBoundary = new TrustBoundary("0x80000", Collections.singletonList("us-central1"));
+    TrustBoundary trustBoundary =
+        new TrustBoundary("0x80000", Collections.singletonList("us-central1"));
     trustBoundaryTransport.setTrustBoundary(trustBoundary);
 
     // This transport will be used for the access token refresh.
@@ -1009,8 +1011,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
                 () ->
                     new com.google.api.client.testing.http.MockHttpTransport() {
                       @Override
-                      public com.google.api.client.http.LowLevelHttpRequest buildRequest(String method, String url)
-                          throws IOException {
+                      public com.google.api.client.http.LowLevelHttpRequest buildRequest(
+                          String method, String url) throws IOException {
                         if (url.endsWith("/allowedLocations")) {
                           return trustBoundaryTransport.buildRequest(method, url);
                         }
@@ -1025,7 +1027,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void trustBoundary_refreshShouldReturnNullWhenDefaultDomainIsNotGoogleApis() throws IOException {
+  public void trustBoundary_refreshShouldReturnNullWhenDefaultDomainIsNotGoogleApis()
+      throws IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
     environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
@@ -1071,7 +1074,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
       credentials.getRequestMetadata();
       fail("Should have thrown an IOException.");
     } catch (IOException e) {
-      assertEquals("Failed to refresh trust boundary and no cached value is available.", e.getMessage());
+      assertEquals(
+          "Failed to refresh trust boundary and no cached value is available.", e.getMessage());
     }
   }
 
@@ -1086,18 +1090,18 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     transport.setTrustBoundary(new TrustBoundary("0x0", Collections.emptyList()));
 
     ServiceAccountCredentials credentials =
-            ServiceAccountCredentials.newBuilder()
-                    .setClientEmail(SA_CLIENT_EMAIL)
-                    .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
-                    .setPrivateKeyId(SA_PRIVATE_KEY_ID)
-                    .setHttpTransportFactory(() -> transport)
-                    .setScopes(SCOPES)
-                    .build();
+        ServiceAccountCredentials.newBuilder()
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setHttpTransportFactory(() -> transport)
+            .setScopes(SCOPES)
+            .build();
 
     credentials.refresh();
 
     assertTrue(credentials.getTrustBoundary().isNoOp());
-    }
+  }
 
   @Test
   public void trustBoundary_refreshShouldReturnNoOpAndNotCallLookupEndpointWhenCachedIsNoOp()
@@ -1123,9 +1127,10 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     credentials.refresh();
 
     // Set trust boundary to a valid non No-Op value.
-      transport.setTrustBoundary(new TrustBoundary("0x80000", Collections.singletonList("us-central1")));
+    transport.setTrustBoundary(
+        new TrustBoundary("0x80000", Collections.singletonList("us-central1")));
 
-    //Refresh trust boundaries
+    // Refresh trust boundaries
     credentials.refresh();
 
     // Check whether the trust boundaries are still no_op.
@@ -1140,7 +1145,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     MockTokenServerTransport transport = new MockTokenServerTransport();
     transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
-    TrustBoundary trustBoundary = new TrustBoundary("0x80000", Collections.singletonList("us-central1"));
+    TrustBoundary trustBoundary =
+        new TrustBoundary("0x80000", Collections.singletonList("us-central1"));
     transport.setTrustBoundary(trustBoundary);
 
     ServiceAccountCredentials credentials =
@@ -1158,14 +1164,15 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     // Set the trust boundary to be returned to null so we get an exception.
     transport.setTrustBoundary(null);
 
-
     credentials.refresh();
 
-    assertEquals(trustBoundary.getEncodedLocations(), credentials.getTrustBoundary().getEncodedLocations());
+    assertEquals(
+        trustBoundary.getEncodedLocations(), credentials.getTrustBoundary().getEncodedLocations());
   }
 
   @Test
-  public void trustBoundary_refreshShouldThrowIfCallToLookupFailsAndNoCachedTb() throws IOException {
+  public void trustBoundary_refreshShouldThrowIfCallToLookupFailsAndNoCachedTb()
+      throws IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
     environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
@@ -1188,7 +1195,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
       fail("Should have thrown an IOException.");
     } catch (IOException e) {
       assertTrue(
-          e.getMessage().contains("Failed to refresh trust boundary and no cached value is available."));
+          e.getMessage()
+              .contains("Failed to refresh trust boundary and no cached value is available."));
     }
   }
 
@@ -1216,7 +1224,9 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
       credentials.refresh();
       fail("Should have thrown an IOException.");
     } catch (IOException e) {
-      assertTrue(e.getMessage().contains("Failed to refresh trust boundary and no cached value is available."));
+      assertTrue(
+          e.getMessage()
+              .contains("Failed to refresh trust boundary and no cached value is available."));
     }
   }
 
@@ -1228,7 +1238,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     MockTokenServerTransport transport = new MockTokenServerTransport();
     transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
-    TrustBoundary trustBoundary = new TrustBoundary("0x80000", Collections.singletonList("us-central1"));
+    TrustBoundary trustBoundary =
+        new TrustBoundary("0x80000", Collections.singletonList("us-central1"));
     transport.setTrustBoundary(trustBoundary);
 
     ServiceAccountCredentials credentials =

@@ -1152,42 +1152,45 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
         GoogleAuthException.class, () -> credentials.idTokenWithAudience("Audience", null));
   }
 
-    @Test
-    public void refresh_trustBoundarySuccess() throws IOException {
-       TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-        TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-        environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
-        String defaultAccountEmail = "default@email.com";
-        MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-        TrustBoundary trustBoundary = new TrustBoundary("0x80000", Collections.singletonList("us-central1"));
-        transportFactory.transport.setTrustBoundary(trustBoundary);
-        transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);
+  @Test
+  public void refresh_trustBoundarySuccess() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
+    String defaultAccountEmail = "default@email.com";
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    TrustBoundary trustBoundary =
+        new TrustBoundary("0x80000", Collections.singletonList("us-central1"));
+    transportFactory.transport.setTrustBoundary(trustBoundary);
+    transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);
 
-        ComputeEngineCredentials credentials =
-                ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
-        Map<String, List<String>> headers = credentials.getRequestMetadata();
-        assertEquals(headers.get("x-allowed-locations"), Arrays.asList("0x80000"));
+    Map<String, List<String>> headers = credentials.getRequestMetadata();
+    assertEquals(headers.get("x-allowed-locations"), Arrays.asList("0x80000"));
+  }
+
+  @Test
+  public void refresh_trustBoundaryFails_throwsIOException() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
+
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+    try {
+      credentials.refresh();
+    } catch (IOException e) {
+      assertTrue(
+          "The exception message should explain why the refresh failed.",
+          e.getMessage()
+              .contains("Failed to refresh trust boundary and no cached value is available."));
     }
-
-    @Test
-    public void refresh_trustBoundaryFails_throwsIOException() throws IOException {
-        TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-        TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-        environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
-
-        MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-
-        ComputeEngineCredentials credentials =
-                ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
-
-        try {
-            credentials.refresh();
-        } catch (IOException e) {
-            assertTrue("The exception message should explain why the refresh failed.",
-                    e.getMessage().contains("Failed to refresh trust boundary and no cached value is available."));
-        }
-    }
+  }
 
   static class MockMetadataServerTransportFactory implements HttpTransportFactory {
 

@@ -31,13 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-
-import javax.annotation.Nullable;
-
 import com.google.api.client.http.*;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonParser;
@@ -45,6 +38,11 @@ import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.client.util.Key;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * Represents a trust boundary that can be used to restrict access to resources. This is an
@@ -53,14 +51,18 @@ import com.google.common.base.MoreObjects;
 public final class TrustBoundary {
 
   static final String TRUST_BOUNDARY_KEY = "x-allowed-locations";
-  static final String GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR = "GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT";
+  static final String GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR =
+      "GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT";
   private static final String NO_OP_VALUE = "0x0";
   private final String encodedLocations;
   private final List<String> locations;
 
   public TrustBoundary(String encodedLocations, List<String> locations) {
     this.encodedLocations = encodedLocations;
-    this.locations = locations == null ? Collections.<String>emptyList() : Collections.unmodifiableList(locations);
+    this.locations =
+        locations == null
+            ? Collections.<String>emptyList()
+            : Collections.unmodifiableList(locations);
   }
 
   private static EnvironmentProvider environmentProvider = SystemEnvironmentProvider.getInstance();
@@ -122,8 +124,7 @@ public final class TrustBoundary {
     throw new IOException(
         String.format(
             "Invalid value for %s environment variable: \"%s\". Supported values are 'true', '1', 'false', or '0'.",
-            GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR,
-            tbEnabled));
+            GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, tbEnabled));
   }
 
   static TrustBoundary refresh(
@@ -146,16 +147,18 @@ public final class TrustBoundary {
 
     // Add the cached trust boundary header, if available.
     if (cachedTrustBoundary != null) {
-      String headerValue = cachedTrustBoundary.isNoOp() ? "" : cachedTrustBoundary.getEncodedLocations();
+      String headerValue =
+          cachedTrustBoundary.isNoOp() ? "" : cachedTrustBoundary.getEncodedLocations();
       // request.getHeaders().set(TRUST_BOUNDARY_KEY, headerValue);
     }
 
     // Add retry logic
-    ExponentialBackOff backoff = new ExponentialBackOff.Builder()
-              .setInitialIntervalMillis(OAuth2Utils.INITIAL_RETRY_INTERVAL_MILLIS)
-              .setRandomizationFactor(OAuth2Utils.RETRY_RANDOMIZATION_FACTOR)
-              .setMultiplier(OAuth2Utils.RETRY_MULTIPLIER)
-              .build();
+    ExponentialBackOff backoff =
+        new ExponentialBackOff.Builder()
+            .setInitialIntervalMillis(OAuth2Utils.INITIAL_RETRY_INTERVAL_MILLIS)
+            .setRandomizationFactor(OAuth2Utils.RETRY_RANDOMIZATION_FACTOR)
+            .setMultiplier(OAuth2Utils.RETRY_MULTIPLIER)
+            .build();
 
     HttpUnsuccessfulResponseHandler unsuccessfulResponseHandler =
         new HttpBackOffUnsuccessfulResponseHandler(backoff);

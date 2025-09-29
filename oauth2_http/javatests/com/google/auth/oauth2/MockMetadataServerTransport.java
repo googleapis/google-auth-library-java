@@ -382,9 +382,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
         responseJson.put("encoded_locations", trustBoundary.getEncodedLocations());
         responseJson.put("locations", trustBoundary.getLocations());
         String content = responseJson.toPrettyString();
-        return new MockLowLevelHttpResponse()
-            .setContentType(Json.MEDIA_TYPE)
-            .setContent(content);
+        return new MockLowLevelHttpResponse().setContentType(Json.MEDIA_TYPE).setContent(content);
       }
     };
   }

@@ -405,11 +405,12 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       // Refresh trust boundaries only if the cached value is not NO_OP.
       if (this.trustBoundary == null || !this.trustBoundary.isNoOp()) {
         try {
-          this.trustBoundary = TrustBoundary.refresh(
-              provider.getTransportFactory(),
-              provider.getTrustBoundaryUrl(),
-              newAccessToken,
-              this.trustBoundary);
+          this.trustBoundary =
+              TrustBoundary.refresh(
+                  provider.getTransportFactory(),
+                  provider.getTrustBoundaryUrl(),
+                  newAccessToken,
+                  this.trustBoundary);
         } catch (IOException e) {
           // If refresh fails, check for cached value.
           if (this.trustBoundary == null) {
@@ -432,8 +433,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
 
     if (this.trustBoundary != null) {
       String headerValue = trustBoundary.isNoOp() ? "" : trustBoundary.getEncodedLocations();
-      headers.put(
-          TrustBoundary.TRUST_BOUNDARY_KEY, Collections.singletonList(headerValue));
+      headers.put(TrustBoundary.TRUST_BOUNDARY_KEY, Collections.singletonList(headerValue));
     }
 
     return Collections.unmodifiableMap(headers);
@@ -544,7 +544,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
 
   @Override
   public int hashCode() {
-      return Objects.hash(this.quotaProjectId, this.universeDomain, this.isExplicitUniverseDomain);
+    return Objects.hash(this.quotaProjectId, this.universeDomain, this.isExplicitUniverseDomain);
   }
 
   public static Builder newBuilder() {

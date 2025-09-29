@@ -31,13 +31,10 @@
 
 package com.google.auth.oauth2;
 
+import com.google.auth.http.HttpTransportFactory;
 import java.io.IOException;
 
-import com.google.auth.http.HttpTransportFactory;
-
-/**
- * An interface for credentials that support trust boundaries. This is an experimental feature.
- */
+/** An interface for credentials that support trust boundaries. This is an experimental feature. */
 public interface TrustBoundaryProvider {
 
   /** Returns the transport factory. */

@@ -31,22 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.Serializable;
-import java.net.URI;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.ServiceLoader;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
-
-import javax.annotation.Nullable;
-
 import com.google.api.client.util.Clock;
 import com.google.auth.Credentials;
 import com.google.auth.RequestMetadataCallback;
@@ -64,6 +48,20 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
+import java.net.URI;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.ServiceLoader;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import javax.annotation.Nullable;
 
 /** Base type for Credentials using OAuth2. */
 public class OAuth2Credentials extends Credentials {
