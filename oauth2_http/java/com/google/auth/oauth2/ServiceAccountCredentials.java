@@ -152,7 +152,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
     this.defaultRetriesEnabled = builder.defaultRetriesEnabled;
     this.name = GoogleCredentialsInfo.SERVICE_ACCOUNT_CREDENTIALS.getCredentialName();
     this.principal = builder.clientEmail;
-    this.trustBoundaryEnabled = builder.trustBoundaryEnabled;
   }
 
   /**

@@ -55,7 +55,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
 import javax.annotation.Nullable;
 
 /** Base type for credentials for authorizing calls to Google APIs using OAuth2. */
@@ -423,7 +422,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     }
   }
 
- @Override
+  @Override
   protected Map<String, List<String>> getAdditionalHeaders() {
     Map<String, List<String>> headers = new HashMap<>(super.getAdditionalHeaders());
     String quotaProjectId = this.getQuotaProjectId();

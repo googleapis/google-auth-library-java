@@ -80,10 +80,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.junit.After;
 
 /** Test case for {@link ServiceAccountCredentials}. */
 @RunWith(JUnit4.class)
@@ -1822,14 +1822,15 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     transport.addServiceAccount("test-client-email@example.com", "test-access-token");
     transport.setTrustBoundary(trustBoundary);
 
-        ServiceAccountCredentials credentials = ServiceAccountCredentials.newBuilder()
-                .setClientEmail("test-client-email@example.com")
-                .setPrivateKey(
-                        OAuth2Utils.privateKeyFromPkcs8(ServiceAccountCredentialsTest.PRIVATE_KEY_PKCS8))
-                .setPrivateKeyId("test-key-id")
-                .setHttpTransportFactory(() -> transport)
-                .setScopes(SCOPES)
-                .build();
+    ServiceAccountCredentials credentials =
+        ServiceAccountCredentials.newBuilder()
+            .setClientEmail("test-client-email@example.com")
+            .setPrivateKey(
+                OAuth2Utils.privateKeyFromPkcs8(ServiceAccountCredentialsTest.PRIVATE_KEY_PKCS8))
+            .setPrivateKeyId("test-key-id")
+            .setHttpTransportFactory(() -> transport)
+            .setScopes(SCOPES)
+            .build();
 
     Map<String, List<String>> headers = credentials.getRequestMetadata();
     assertEquals(headers.get("x-allowed-locations"), Arrays.asList("0x80000"));

@@ -131,9 +131,9 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
   private String universeDomainFromMetadata = null;
 
-  private final boolean trustBoundaryEnabled;
+//  private final boolean trustBoundaryEnabled;
 
-    /**
+  /**
    * Experimental Feature.
    *
    * <p>{@link GoogleAuthTransport} specifies how to authenticate to Google APIs.
@@ -222,7 +222,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
     this.transport = builder.getGoogleAuthTransport();
     this.bindingEnforcement = builder.getBindingEnforcement();
     this.name = GoogleCredentialsInfo.COMPUTE_ENGINE_CREDENTIALS.getCredentialName();
-    this.trustBoundaryEnabled = builder.isTrustBoundaryEnabled();
+//    this.trustBoundaryEnabled = builder.isTrustBoundaryEnabled();
   }
 
   @Override
@@ -717,7 +717,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
   @Override
   public String getTrustBoundaryUrl() throws IOException {
     if (principal == null) {
-        principal = getDefaultServiceAccount();
+      principal = getDefaultServiceAccount();
     }
     return String.format(
         "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s/allowedLocations",
