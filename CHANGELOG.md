@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.39.1](https://github.com/googleapis/google-auth-library-java/compare/v1.39.0...v1.39.1) (2025-09-17)
+
+
+### Documentation
+
+* Additional information for deprecated fromStream() methods. ([#1802](https://github.com/googleapis/google-auth-library-java/issues/1802)) ([a0d873d](https://github.com/googleapis/google-auth-library-java/commit/a0d873db6bf192aad710e17da6127195f253c7e7))
+
 ## [1.39.0](https://github.com/googleapis/google-auth-library-java/compare/v1.38.0...v1.39.0) (2025-09-04)
 
 
