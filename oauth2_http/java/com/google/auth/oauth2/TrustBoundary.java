@@ -105,7 +105,7 @@ public final class TrustBoundary {
     @Override
     public String toString() {
       return MoreObjects.toStringHelper(this)
-          .add("encoded_locations", encodedLocations)
+          .add("encodedLocations", encodedLocations)
           .add("locations", locations)
           .toString();
     }
