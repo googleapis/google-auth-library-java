@@ -31,7 +31,14 @@
 
 package com.google.auth.oauth2;
 
-import com.google.api.client.http.*;
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpBackOffIOExceptionHandler;
+import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler;
+import com.google.api.client.http.HttpIOExceptionHandler;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestFactory;
+import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.HttpUnsuccessfulResponseHandler;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonParser;
 import com.google.api.client.util.ExponentialBackOff;
@@ -81,7 +88,7 @@ public final class TrustBoundary {
 
   /** Represents the JSON response from the trust boundary endpoint. */
   public static class TrustBoundaryResponse extends GenericJson {
-    @Key("encoded_locations")
+    @Key("encodedLocations")
     private String encodedLocations;
 
     @Key("locations")
@@ -149,7 +156,7 @@ public final class TrustBoundary {
     if (cachedTrustBoundary != null) {
       String headerValue =
           cachedTrustBoundary.isNoOp() ? "" : cachedTrustBoundary.getEncodedLocations();
-      // request.getHeaders().set(TRUST_BOUNDARY_KEY, headerValue);
+      request.getHeaders().set(TRUST_BOUNDARY_KEY, headerValue);
     }
 
     // Add retry logic

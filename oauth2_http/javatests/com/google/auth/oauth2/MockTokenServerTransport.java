@@ -336,7 +336,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
               }
               GenericJson responseJson = new GenericJson();
               responseJson.setFactory(JSON_FACTORY);
-              responseJson.put("encoded_locations", trustBoundary.getEncodedLocations());
+              responseJson.put("encodedLocations", trustBoundary.getEncodedLocations());
               responseJson.put("locations", trustBoundary.getLocations());
               String content = responseJson.toPrettyString();
               return new MockLowLevelHttpResponse()

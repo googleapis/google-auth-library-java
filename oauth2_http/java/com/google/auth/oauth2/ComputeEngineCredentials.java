@@ -131,8 +131,6 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
   private String universeDomainFromMetadata = null;
 
-//  private final boolean trustBoundaryEnabled;
-
   /**
    * Experimental Feature.
    *
@@ -222,7 +220,6 @@ public class ComputeEngineCredentials extends GoogleCredentials
     this.transport = builder.getGoogleAuthTransport();
     this.bindingEnforcement = builder.getBindingEnforcement();
     this.name = GoogleCredentialsInfo.COMPUTE_ENGINE_CREDENTIALS.getCredentialName();
-//    this.trustBoundaryEnabled = builder.isTrustBoundaryEnabled();
   }
 
   @Override
