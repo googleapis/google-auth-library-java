@@ -55,6 +55,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -75,11 +77,18 @@ import javax.annotation.Nullable;
  * }
  * </pre>
  */
-public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials {
+public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials
+    implements TrustBoundaryProvider {
 
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
 
   private static final long serialVersionUID = -2181779590486283287L;
+
+  private static final String WORKFORCE_POOL_URL_FORMAT =
+      "https://iamcredentials.googleapis.com/v1/locations/global/workforcePools/%s/allowedLocations";
+  private static final Pattern WORKFORCE_PATTERN =
+      Pattern.compile(
+          "^//iam.googleapis.com/locations/(?<location>[^/]+)/workforcePools/(?<pool>[^/]+)/providers/(?<provider>[^/]+)$");
 
   private final String transportFactoryClassName;
   private final String audience;
@@ -210,10 +219,30 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
       this.refreshToken = refreshToken;
     }
 
-    return AccessToken.newBuilder()
-        .setExpirationTime(expiresAtMilliseconds)
-        .setTokenValue(accessToken)
-        .build();
+    AccessToken newAccessToken =
+        AccessToken.newBuilder()
+            .setExpirationTime(expiresAtMilliseconds)
+            .setTokenValue(accessToken)
+            .build();
+
+    refreshTrustBoundaries(newAccessToken);
+    return newAccessToken;
+  }
+
+  @Override
+  public String getTrustBoundaryUrl() throws IOException {
+    Matcher matcher = WORKFORCE_PATTERN.matcher(getAudience());
+    if (!matcher.matches()) {
+      throw new IOException(
+          "The provided audience is not in the correct format for a workforce pool.");
+    }
+    String poolId = matcher.group("pool");
+    return String.format(WORKFORCE_POOL_URL_FORMAT, poolId);
+  }
+
+  @Override
+  public HttpTransportFactory getTransportFactory() {
+    return transportFactory;
   }
 
   @Nullable

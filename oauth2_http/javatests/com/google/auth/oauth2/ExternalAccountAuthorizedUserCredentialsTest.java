@@ -32,17 +32,14 @@
 package com.google.auth.oauth2;
 
 import static com.google.auth.Credentials.GOOGLE_DEFAULT_UNIVERSE;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
+import com.google.api.client.json.Json;
+import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
+import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
 import com.google.auth.http.AuthHttpConstants;
@@ -62,6 +59,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -130,6 +128,11 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
   @Before
   public void setup() {
     transportFactory = new MockExternalAccountAuthorizedUserCredentialsTransportFactory();
+  }
+
+  @After
+  public void tearDown() {
+    TrustBoundary.setEnvironmentProviderForTest(null);
   }
 
   @Test
@@ -1214,6 +1217,85 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
             QUOTA_PROJECT);
 
     assertEquals(expectedToString, credentials.toString());
+  }
+
+  @Test
+  public void testRefresh_trustBoundarySuccess() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
+
+    MockHttpTransport mockHttpTransport =
+        new MockHttpTransport.Builder()
+            .setLowLevelHttpResponse(
+                new MockLowLevelHttpResponse()
+                    .setContentType(Json.MEDIA_TYPE)
+                    .setContent(
+                        String.format(
+                            "{\"access_token\": \"%s\", \"expires_in\": %s, \"token_type\": \"Bearer\"}",
+                            "sts_access_token", 3600)))
+            .setLowLevelHttpResponse(
+                new MockLowLevelHttpResponse()
+                    .setContentType(Json.MEDIA_TYPE)
+                    .setContent(
+                        "{\"locations\": [\"us-central1\"], \"encodedLocations\": \"0x1\"}"))
+            .build();
+
+    ExternalAccountAuthorizedUserCredentials credentials =
+        ExternalAccountAuthorizedUserCredentials.newBuilder()
+            .setHttpTransportFactory(() -> mockHttpTransport)
+            .setAudience(AUDIENCE)
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setTokenUrl(TOKEN_URL)
+            .build();
+
+    credentials.refresh();
+
+    TrustBoundary trustBoundary = credentials.getTrustBoundary();
+    assertNotNull(trustBoundary);
+    assertEquals("0x1", trustBoundary.getEncodedLocations());
+  }
+
+  @Test
+  public void testRefresh_trustBoundaryFails() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
+
+    MockHttpTransport mockHttpTransport =
+        new MockHttpTransport.Builder()
+            .setLowLevelHttpResponse(
+                new MockLowLevelHttpResponse()
+                    .setContentType(Json.MEDIA_TYPE)
+                    .setContent(
+                        String.format(
+                            "{\"access_token\": \"%s\", \"expires_in\": %s, \"token_type\": \"Bearer\"}",
+                            "sts_access_token", 3600)))
+            .setLowLevelHttpResponse(
+                new MockLowLevelHttpResponse()
+                    .setStatusCode(404)
+                    .setContent("{\"error\": \"not found\"}"))
+            .build();
+
+    ExternalAccountAuthorizedUserCredentials credentials =
+        ExternalAccountAuthorizedUserCredentials.newBuilder()
+            .setHttpTransportFactory(() -> mockHttpTransport)
+            .setAudience(AUDIENCE)
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setTokenUrl(TOKEN_URL)
+            .build();
+
+    try {
+      credentials.refresh();
+      fail("Expected IOException to be thrown.");
+    } catch (IOException e) {
+      assertEquals(
+          "Failed to refresh trust boundary and no cached value is available.", e.getMessage());
+    }
   }
 
   @Test

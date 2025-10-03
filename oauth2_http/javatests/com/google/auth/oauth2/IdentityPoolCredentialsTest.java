@@ -1304,4 +1304,91 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
       this.shouldThrowOnGetCertificatePath = shouldThrow;
     }
   }
+
+  //  @Test
+  //  public void testRefresh_trustBoundarySuccess() throws IOException {
+  //      TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+  //      TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+  //      environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
+  //
+  //    MockHttpTransport mockHttpTransport =
+  //        new MockHttpTransport.Builder()
+  //            .setLowLevelHttpResponse(
+  //                new MockLowLevelHttpResponse()
+  //                    .setContentType(Json.MEDIA_TYPE)
+  //                    .setContent(
+  //                        String.format(
+  //                            "{\"access_token\": \"%s\", \"expires_in\": %s, \"token_type\":
+  // \"Bearer\"}",
+  //                            "sts_access_token", 3600)))
+  //            .setLowLevelHttpResponse(
+  //                new MockLowLevelHttpResponse()
+  //                    .setContentType(Json.MEDIA_TYPE)
+  //                    .setContent(
+  //                        "{\"locations\": [\"us-central1\"], \"encodedLocations\": \"0x1\"}"))
+  //            .build();
+  //
+  //    HttpTransportFactory testingHttpTransportFactory = () -> mockHttpTransport;
+  //
+  //    IdentityPoolCredentials credentials =
+  //        IdentityPoolCredentials.newBuilder()
+  //            .setHttpTransportFactory(testingHttpTransportFactory)
+  //            .setAudience(
+  //
+  // "//iam.googleapis.com/projects/12345/locations/global/workloadIdentityPools/pool/providers/provider")
+  //            .setSubjectTokenType("subjectTokenType")
+  //            .setTokenUrl(STS_URL)
+  //            .setCredentialSource(createFileCredentialSource())
+  //            .build();
+  //
+  //    credentials.refresh();
+  //
+  //    TrustBoundary trustBoundary = credentials.getTrustBoundary();
+  //    assertNotNull(trustBoundary);
+  //    assertEquals("0x1", trustBoundary.getEncodedLocations());
+  //  }
+  //
+  //  @Test
+  //  public void testRefresh_trustBoundaryFails() throws IOException {
+  //      TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+  //      TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+  //      environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
+  //
+  //    MockHttpTransport mockHttpTransport =
+  //        new MockHttpTransport.Builder()
+  //            .setLowLevelHttpResponse(
+  //                new MockLowLevelHttpResponse()
+  //                    .setContentType(Json.MEDIA_TYPE)
+  //                    .setContent(
+  //                        String.format(
+  //                            "{\"access_token\": \"%s\", \"expires_in\": %s, \"token_type\":
+  // \"Bearer\"}",
+  //                            "sts_access_token", 3600)))
+  //            .setLowLevelHttpResponse(
+  //                new MockLowLevelHttpResponse()
+  //                    .setStatusCode(404)
+  //                    .setContent("{\"error\": \"not found\"}"))
+  //            .build();
+  //
+  //    HttpTransportFactory testingHttpTransportFactory = () -> mockHttpTransport;
+  //
+  //    IdentityPoolCredentials credentials =
+  //        IdentityPoolCredentials.newBuilder()
+  //            .setHttpTransportFactory(testingHttpTransportFactory)
+  //            .setAudience(
+  //
+  // "//iam.googleapis.com/projects/12345/locations/global/workloadIdentityPools/pool/providers/provider")
+  //            .setSubjectTokenType("subjectTokenType")
+  //            .setTokenUrl(STS_URL)
+  //            .setCredentialSource(createFileCredentialSource())
+  //            .build();
+  //
+  //    try {
+  //      credentials.refresh();
+  //      fail("Expected IOException to be thrown.");
+  //    } catch (IOException e) {
+  //      assertEquals(
+  //          "Failed to refresh trust boundary and no cached value is available.", e.getMessage());
+  //    }
+  //  }
 }

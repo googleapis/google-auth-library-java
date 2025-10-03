@@ -55,6 +55,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Executor;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
@@ -64,7 +65,8 @@ import javax.annotation.Nullable;
  * <p>Handles initializing external credentials, calls to the Security Token Service, and service
  * account impersonation.
  */
-public abstract class ExternalAccountCredentials extends GoogleCredentials {
+public abstract class ExternalAccountCredentials extends GoogleCredentials
+    implements TrustBoundaryProvider {
 
   private static final long serialVersionUID = 8049126194174465023L;
 
@@ -97,6 +99,18 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   @Nullable protected ImpersonatedCredentials impersonatedCredentials;
 
   private EnvironmentProvider environmentProvider;
+
+  private static final String WORKFORCE_POOL_URL_FORMAT =
+      "https://iamcredentials.googleapis.com/v1/locations/global/workforcePools/%s/allowedLocations";
+  private static final String WORKLOAD_POOL_URL_FORMAT =
+      "https://iamcredentials.googleapis.com/v1/projects/%s/locations/global/workloadIdentityPools/%s/allowedLocations";
+
+  private static final Pattern WORKFORCE_PATTERN =
+      Pattern.compile(
+          "^//iam.googleapis.com/locations/(?<location>[^/]+)/workforcePools/(?<pool>[^/]+)/providers/(?<provider>[^/]+)$");
+  private static final Pattern WORKLOAD_PATTERN =
+      Pattern.compile(
+          "^//iam.googleapis.com/projects/(?<project>[^/]+)/locations/(?<location>[^/]+)/workloadIdentityPools/(?<pool>[^/]+)/providers/(?<provider>[^/]+)$");
 
   /**
    * Constructor with minimum identifying information and custom HTTP transport. Does not support
@@ -527,7 +541,11 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       this.impersonatedCredentials = this.buildImpersonatedCredentials();
     }
     if (this.impersonatedCredentials != null) {
-      return this.impersonatedCredentials.refreshAccessToken();
+      AccessToken accessToken = this.impersonatedCredentials.refreshAccessToken();
+      // After the impersonated credential refreshes, its trust boundary is
+      // also refreshed. We need to get the refreshed trust boundary.
+      setTrustBoundary(this.impersonatedCredentials.getTrustBoundary());
+      return accessToken;
     }
 
     StsRequestHandler.Builder requestHandler =
@@ -556,7 +574,9 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     }
 
     StsTokenExchangeResponse response = requestHandler.build().exchangeToken();
-    return response.getAccessToken();
+    AccessToken accessToken = response.getAccessToken();
+    refreshTrustBoundaries(accessToken);
+    return accessToken;
   }
 
   /**
@@ -611,6 +631,34 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       return null;
     }
     return ImpersonatedCredentials.extractTargetPrincipal(serviceAccountImpersonationUrl);
+  }
+
+  // todo Add doc comment.
+  @Override
+  public String getTrustBoundaryUrl() throws IOException {
+    if (isWorkforcePoolConfiguration()) {
+      Matcher matcher = WORKFORCE_PATTERN.matcher(getAudience());
+      if (!matcher.matches()) {
+        throw new IOException(
+            "The provided audience is not in the correct format for a workforce pool.");
+      }
+      String poolId = matcher.group("pool");
+      return String.format(WORKFORCE_POOL_URL_FORMAT, poolId);
+    } else {
+      Matcher matcher = WORKLOAD_PATTERN.matcher(getAudience());
+      if (!matcher.matches()) {
+        throw new IOException(
+            "The provided audience is not in the correct format for a workload identity pool.");
+      }
+      String projectNumber = matcher.group("project");
+      String poolId = matcher.group("pool");
+      return String.format(WORKLOAD_POOL_URL_FORMAT, projectNumber, poolId);
+    }
+  }
+
+  @Override
+  public HttpTransportFactory getTransportFactory() {
+    return transportFactory;
   }
 
   @Nullable
