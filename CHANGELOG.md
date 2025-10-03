@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.39.2](https://github.com/googleapis/google-auth-library-java/compare/v1.39.1...v1.39.2) (2025-10-03)
+
+
+### Documentation
+
+* Migrate documentation from README to the offical doc site ([#1810](https://github.com/googleapis/google-auth-library-java/issues/1810)) ([e6f2b09](https://github.com/googleapis/google-auth-library-java/commit/e6f2b09ebb2189bbadedc3938e74fa75e6a8ca6b))
+
 ## [1.39.1](https://github.com/googleapis/google-auth-library-java/compare/v1.39.0...v1.39.1) (2025-09-17)
 
 
