@@ -5,12 +5,13 @@ Open source authentication client library for Java.
 [![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges)
 [![Maven](https://img.shields.io/maven-central/v/com.google.auth/google-auth-library-credentials.svg)](https://img.shields.io/maven-central/v/com.google.auth/google-auth-library-credentials.svg)
 
--  [API Documentation](https://cloud.google.com/java/docs/reference/google-auth-library/latest/overview.html)
-
 ## Documentation
 
-See the [official guide](https://cloud.google.com/java/getting-started/getting-started-with-google-auth-library) to
-authenticate to Google Cloud and for more information about the Java Auth Library.
+See the [official guide](https://cloud.google.com/java/getting-started/getting-started-with-google-auth-library) for ways
+to authenticate to Google Cloud and for more information about the Google Auth Library.
+
+See the [API Documentation](https://cloud.google.com/java/docs/reference/google-auth-library/latest/overview.html) to see
+the Javadocs for Google Auth Library.
 
 ## Versioning
 
