@@ -51,6 +51,16 @@ See [CONTRIBUTING](CONTRIBUTING.md) documentation for more information on how to
 Please note that this project is released with a Contributor Code of Conduct. By participating in
 this project you agree to abide by its terms. See [Code of Conduct](CODE_OF_CONDUCT.md) for more
 information.
+
+## Running the Tests
+
+To run the tests you will need:
+
+* Maven 3+
+
+```bash
+$ mvn test
+```
    
 ## License
 
