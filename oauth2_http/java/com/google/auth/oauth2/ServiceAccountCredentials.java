@@ -89,7 +89,7 @@ import java.util.concurrent.Executor;
  * <p>By default uses a JSON Web Token (JWT) to fetch access tokens.
  */
 public class ServiceAccountCredentials extends GoogleCredentials
-    implements ServiceAccountSigner, IdTokenProvider, JwtProvider {
+    implements ServiceAccountSigner, IdTokenProvider, JwtProvider, TrustBoundaryProvider {
 
   private static final long serialVersionUID = 7807543542681217978L;
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
@@ -580,7 +580,11 @@ public class ServiceAccountCredentials extends GoogleCredentials
     int expiresInSeconds =
         OAuth2Utils.validateInt32(responseData, "expires_in", PARSE_ERROR_PREFIX);
     long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000L;
-    return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
+    AccessToken newAccessToken = new AccessToken(accessToken, new Date(expiresAtMilliseconds));
+
+    refreshTrustBoundaries(newAccessToken);
+
+    return newAccessToken;
   }
 
   /**
@@ -817,6 +821,18 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   public boolean getUseJwtAccessWithScope() {
     return useJwtAccessWithScope;
+  }
+
+  @Override
+  public HttpTransportFactory getTransportFactory() {
+    return transportFactory;
+  }
+
+  @Override
+  public String getTrustBoundaryUrl() throws IOException {
+    return String.format(
+        "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s/allowedLocations",
+        getUniverseDomain(), getClientEmail());
   }
 
   @VisibleForTesting
@@ -1144,6 +1160,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     private int lifetime = DEFAULT_LIFETIME_IN_SECONDS;
     private boolean useJwtAccessWithScope = false;
     private boolean defaultRetriesEnabled = true;
+    private TrustBoundary trustBoundary;
 
     protected Builder() {}
 
@@ -1162,6 +1179,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
       this.lifetime = credentials.lifetime;
       this.useJwtAccessWithScope = credentials.useJwtAccessWithScope;
       this.defaultRetriesEnabled = credentials.defaultRetriesEnabled;
+      this.trustBoundary = credentials.getTrustBoundary();
     }
 
     @CanIgnoreReturnValue

@@ -107,7 +107,12 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   private final String universeDomain;
   private final boolean isExplicitUniverseDomain;
 
+  private transient TrustBoundary trustBoundary;
+
   protected final String quotaProjectId;
+
+  private static final LoggerProvider LOGGER_PROVIDER =
+      LoggerProvider.forClazz(GoogleCredentials.class);
 
   private static final DefaultCredentialsProvider defaultCredentialsProvider =
       new DefaultCredentialsProvider();
@@ -331,6 +336,10 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     return this.toBuilder().setQuotaProjectId(quotaProject).build();
   }
 
+  public TrustBoundary getTrustBoundary() {
+    return trustBoundary;
+  }
+
   /**
    * Gets the universe domain for the credential.
    *
@@ -382,14 +391,51 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     return Collections.unmodifiableMap(newRequestMetadata);
   }
 
+  protected void refreshTrustBoundaries(AccessToken newAccessToken) throws IOException {
+    if (!(this instanceof TrustBoundaryProvider)) {
+      return;
+    }
+    if (!TrustBoundary.isTrustBoundaryEnabled() || !isDefaultUniverseDomain()) {
+      return;
+    }
+
+    TrustBoundaryProvider provider = (TrustBoundaryProvider) this;
+    synchronized (lock) {
+      // Refresh trust boundaries only if the cached value is not NO_OP.
+      if (this.trustBoundary == null || !this.trustBoundary.isNoOp()) {
+        try {
+          this.trustBoundary =
+              TrustBoundary.refresh(
+                  provider.getTransportFactory(),
+                  provider.getTrustBoundaryUrl(),
+                  newAccessToken,
+                  this.trustBoundary);
+        } catch (IOException e) {
+          // If refresh fails, check for cached value.
+          if (this.trustBoundary == null) {
+            // No cached value, so fail hard.
+            throw new IOException(
+                "Failed to refresh trust boundary and no cached value is available.", e);
+          }
+        }
+      }
+    }
+  }
+
   @Override
   protected Map<String, List<String>> getAdditionalHeaders() {
-    Map<String, List<String>> headers = super.getAdditionalHeaders();
+    Map<String, List<String>> headers = new HashMap<>(super.getAdditionalHeaders());
     String quotaProjectId = this.getQuotaProjectId();
     if (quotaProjectId != null) {
-      return addQuotaProjectIdToRequestMetadata(quotaProjectId, headers);
+      headers.put(QUOTA_PROJECT_ID_HEADER_KEY, Collections.singletonList(quotaProjectId));
     }
-    return headers;
+
+    if (this.trustBoundary != null) {
+      String headerValue = trustBoundary.isNoOp() ? "" : trustBoundary.getEncodedLocations();
+      headers.put(TrustBoundary.TRUST_BOUNDARY_KEY, Collections.singletonList(headerValue));
+    }
+
+    return Collections.unmodifiableMap(headers);
   }
 
   /** Default constructor. */
