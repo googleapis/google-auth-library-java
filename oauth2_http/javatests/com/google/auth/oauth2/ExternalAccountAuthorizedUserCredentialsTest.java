@@ -1225,25 +1225,9 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
     environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
 
-    MockHttpTransport mockHttpTransport =
-        new MockHttpTransport.Builder()
-            .setLowLevelHttpResponse(
-                new MockLowLevelHttpResponse()
-                    .setContentType(Json.MEDIA_TYPE)
-                    .setContent(
-                        String.format(
-                            "{\"access_token\": \"%s\", \"expires_in\": %s, \"token_type\": \"Bearer\"}",
-                            "sts_access_token", 3600)))
-            .setLowLevelHttpResponse(
-                new MockLowLevelHttpResponse()
-                    .setContentType(Json.MEDIA_TYPE)
-                    .setContent(
-                        "{\"locations\": [\"us-central1\"], \"encodedLocations\": \"0x1\"}"))
-            .build();
-
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
-            .setHttpTransportFactory(() -> mockHttpTransport)
+            .setHttpTransportFactory(transportFactory)
             .setAudience(AUDIENCE)
             .setClientId(CLIENT_ID)
             .setClientSecret(CLIENT_SECRET)
@@ -1259,35 +1243,20 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
   }
 
   @Test
-  public void testRefresh_trustBoundaryFails() throws IOException {
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
+  public void testRefresh_trustBoundaryFails_incorrectAudience() throws IOException {
+      TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+      TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+      environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
 
-    MockHttpTransport mockHttpTransport =
-        new MockHttpTransport.Builder()
-            .setLowLevelHttpResponse(
-                new MockLowLevelHttpResponse()
-                    .setContentType(Json.MEDIA_TYPE)
-                    .setContent(
-                        String.format(
-                            "{\"access_token\": \"%s\", \"expires_in\": %s, \"token_type\": \"Bearer\"}",
-                            "sts_access_token", 3600)))
-            .setLowLevelHttpResponse(
-                new MockLowLevelHttpResponse()
-                    .setStatusCode(404)
-                    .setContent("{\"error\": \"not found\"}"))
-            .build();
-
-    ExternalAccountAuthorizedUserCredentials credentials =
-        ExternalAccountAuthorizedUserCredentials.newBuilder()
-            .setHttpTransportFactory(() -> mockHttpTransport)
-            .setAudience(AUDIENCE)
-            .setClientId(CLIENT_ID)
-            .setClientSecret(CLIENT_SECRET)
-            .setRefreshToken(REFRESH_TOKEN)
-            .setTokenUrl(TOKEN_URL)
-            .build();
+      ExternalAccountAuthorizedUserCredentials credentials =
+              ExternalAccountAuthorizedUserCredentials.newBuilder()
+                      .setHttpTransportFactory(transportFactory)
+                      .setAudience("audience")
+                      .setClientId(CLIENT_ID)
+                      .setClientSecret(CLIENT_SECRET)
+                      .setRefreshToken(REFRESH_TOKEN)
+                      .setTokenUrl(TOKEN_URL)
+                      .build();
 
     try {
       credentials.refresh();

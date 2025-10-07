@@ -603,90 +603,61 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
     assertThrows(NotSerializableException.class, () -> serializeAndDeserialize(testCredentials));
   }
 
-  //  @Test
-  //  public void testRefresh_trustBoundarySuccess() throws IOException {
-  //      TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-  //      TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-  //      environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
-  //
-  //    MockHttpTransport mockHttpTransport =
-  //        new MockHttpTransport.Builder()
-  //            .setLowLevelHttpResponse(
-  //                new MockLowLevelHttpResponse()
-  //                    .setContentType(Json.MEDIA_TYPE)
-  //                    .setContent(
-  //                        String.format(
-  //                            "{\"access_token\": \"%s\", \"expires_in\": %s, \"token_type\":
-  // \"Bearer\"}",
-  //                            "sts_access_token", 3600)))
-  //            .setLowLevelHttpResponse(
-  //                new MockLowLevelHttpResponse()
-  //                    .setContentType(Json.MEDIA_TYPE)
-  //                    .setContent(
-  //                        "{\"locations\": [\"us-central1\"], \"encodedLocations\": \"0x1\"}"))
-  //            .build();
-  //
-  //    PluggableAuthCredentials credentials =
-  //        PluggableAuthCredentials.newBuilder()
-  //            .setHttpTransportFactory(() -> mockHttpTransport)
-  //            .setAudience(
-  //
-  // "//iam.googleapis.com/projects/12345/locations/global/workloadIdentityPools/pool/providers/provider")
-  //            .setSubjectTokenType("subjectTokenType")
-  //            .setTokenUrl(STS_URL)
-  //            .setCredentialSource(buildCredentialSource())
-  //            .setExecutableHandler(options -> "pluggableAuthToken")
-  //            .build();
-  //
-  //    credentials.refresh();
-  //
-  //    TrustBoundary trustBoundary = credentials.getTrustBoundary();
-  //    assertNotNull(trustBoundary);
-  //    assertEquals("0x1", trustBoundary.getEncodedLocations());
-  //  }
-  //
-  //  @Test
-  //  public void testRefresh_trustBoundaryFails() throws IOException {
-  //      TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-  //      TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-  //      environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
-  //
-  //    MockHttpTransport mockHttpTransport =
-  //        new MockHttpTransport.Builder()
-  //            .setLowLevelHttpResponse(
-  //                new MockLowLevelHttpResponse()
-  //                    .setContentType(Json.MEDIA_TYPE)
-  //                    .setContent(
-  //                        String.format(
-  //                            "{\"access_token\": \"%s\", \"expires_in\": %s, \"token_type\":
-  // \"Bearer\"}",
-  //                            "sts_access_token", 3600)))
-  //            .setLowLevelHttpResponse(
-  //                new MockLowLevelHttpResponse()
-  //                    .setStatusCode(404)
-  //                    .setContent("{\"error\": \"not found\"}"))
-  //            .build();
-  //
-  //    PluggableAuthCredentials credentials =
-  //        PluggableAuthCredentials.newBuilder()
-  //            .setHttpTransportFactory(() -> mockHttpTransport)
-  //            .setAudience(
-  //
-  // "//iam.googleapis.com/projects/12345/locations/global/workloadIdentityPools/pool/providers/provider")
-  //            .setSubjectTokenType("subjectTokenType")
-  //            .setTokenUrl(STS_URL)
-  //            .setCredentialSource(buildCredentialSource())
-  //            .setExecutableHandler(options -> "pluggableAuthToken")
-  //            .build();
-  //
-  //    try {
-  //      credentials.refresh();
-  //      fail("Expected IOException to be thrown.");
-  //    } catch (IOException e) {
-  //      assertEquals(
-  //          "Failed to refresh trust boundary and no cached value is available.", e.getMessage());
-  //    }
-  //  }
+      @Test
+
+      public void testRefresh_trustBoundarySuccess() throws IOException {
+
+        TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+
+        TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+
+        environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
+
+    
+
+        MockExternalAccountCredentialsTransportFactory transportFactory =
+
+            new MockExternalAccountCredentialsTransportFactory();
+
+    
+
+        transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
+
+    
+
+        PluggableAuthCredentials credentials =
+
+            PluggableAuthCredentials.newBuilder()
+
+                .setHttpTransportFactory(transportFactory)
+
+                .setAudience(
+
+                    "//iam.googleapis.com/projects/12345/locations/global/workloadIdentityPools/pool/providers/provider")
+
+                .setSubjectTokenType("subjectTokenType")
+
+                .setTokenUrl(transportFactory.transport.getStsUrl())
+
+                .setCredentialSource(buildCredentialSource())
+
+                .setExecutableHandler(options -> "pluggableAuthToken")
+
+                .build();
+
+    
+
+        credentials.refresh();
+
+    
+
+        TrustBoundary trustBoundary = credentials.getTrustBoundary();
+
+        assertNotNull(trustBoundary);
+
+        assertEquals("0x800000", trustBoundary.getEncodedLocations());
+
+      }
 
   private static PluggableAuthCredentialSource buildCredentialSource() {
     return buildCredentialSource("command", null, null);

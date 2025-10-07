@@ -47,12 +47,7 @@ import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.auth.TestUtils;
 import com.google.common.base.Joiner;
 import java.io.IOException;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 
 /**
  * Mock transport that handles the necessary steps to exchange an external credential for a GCP
@@ -68,6 +63,7 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
   private static final String AWS_IMDSV2_SESSION_TOKEN_URL = "https://169.254.169.254/imdsv2";
   private static final String METADATA_SERVER_URL = "https://www.metadata.google.com";
   private static final String STS_URL = "https://sts.googleapis.com/v1/token";
+  private static final String TRUST_BOUNDARY_URL_END = "/allowedLocations";
 
   private static final String SUBJECT_TOKEN = "subjectToken";
   private static final String TOKEN_TYPE = "Bearer";
@@ -92,6 +88,7 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
   private String expireTime;
   private String metadataServerContentType;
   private String stsContent;
+  private String impersonationTrustBoundary;
 
   public void addResponseErrorSequence(IOException... errors) {
     Collections.addAll(responseErrorSequence, errors);
@@ -196,6 +193,19 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
             }
 
             if (url.contains(IAM_ENDPOINT)) {
+
+              if (url.endsWith(TRUST_BOUNDARY_URL_END)) {
+                GenericJson responseJson = new GenericJson();
+                responseJson.setFactory(OAuth2Utils.JSON_FACTORY);
+                String encodedLocations = "0x800000";
+                responseJson.put("encodedLocations", encodedLocations);
+                responseJson.put("locations", Arrays.asList("us-east-1", "us-east-2"));
+                String content = responseJson.toPrettyString();
+                return new MockLowLevelHttpResponse()
+                    .setContentType(Json.MEDIA_TYPE)
+                    .setContent(content);
+              }
+
               GenericJson query =
                   OAuth2Utils.JSON_FACTORY
                       .createJsonParser(getContentAsString())
@@ -298,5 +308,9 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
 
   public void setMetadataServerContentType(String contentType) {
     this.metadataServerContentType = contentType;
+  }
+
+  public void setImpersonationTrustBoundary(String trustBoundary) {
+    this.impersonationTrustBoundary = trustBoundary;
   }
 }
