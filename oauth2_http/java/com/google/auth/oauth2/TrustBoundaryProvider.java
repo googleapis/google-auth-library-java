@@ -1,5 +1,5 @@
 /*
- * Copyright 2024, Google LLC
+ * Copyright 2025, Google LLC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -31,10 +31,12 @@
 
 package com.google.auth.oauth2;
 
+import com.google.api.core.BetaApi;
 import com.google.auth.http.HttpTransportFactory;
 import java.io.IOException;
 
 /** An interface for credentials that support trust boundaries. This is an experimental feature. */
+@BetaApi
 public interface TrustBoundaryProvider {
 
   /** Returns the transport factory. */

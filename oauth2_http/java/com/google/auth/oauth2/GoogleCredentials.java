@@ -107,7 +107,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   private final String universeDomain;
   private final boolean isExplicitUniverseDomain;
 
-  private transient TrustBoundary trustBoundary;
+  private TrustBoundary trustBoundary;
 
   protected final String quotaProjectId;
 
@@ -336,6 +336,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     return this.toBuilder().setQuotaProjectId(quotaProject).build();
   }
 
+  @VisibleForTesting
   public TrustBoundary getTrustBoundary() {
     return trustBoundary;
   }
@@ -400,25 +401,38 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     }
 
     TrustBoundaryProvider provider = (TrustBoundaryProvider) this;
+    TrustBoundary cachedTrustBoundary;
+
     synchronized (lock) {
-      // Refresh trust boundaries only if the cached value is not NO_OP.
-      if (this.trustBoundary == null || !this.trustBoundary.isNoOp()) {
-        try {
-          this.trustBoundary =
-              TrustBoundary.refresh(
-                  provider.getTransportFactory(),
-                  provider.getTrustBoundaryUrl(),
-                  newAccessToken,
-                  this.trustBoundary);
-        } catch (IOException e) {
-          // If refresh fails, check for cached value.
-          if (this.trustBoundary == null) {
-            // No cached value, so fail hard.
-            throw new IOException(
-                "Failed to refresh trust boundary and no cached value is available.", e);
-          }
-        }
+      // Do not refresh if the cached value is already NO_OP.
+      if (this.trustBoundary != null && this.trustBoundary.isNoOp()) {
+        return;
       }
+      cachedTrustBoundary = this.trustBoundary;
+    }
+
+    TrustBoundary newTrustBoundary;
+    try {
+      newTrustBoundary =
+          TrustBoundary.refresh(
+              provider.getTransportFactory(),
+              provider.getTrustBoundaryUrl(),
+              newAccessToken,
+              cachedTrustBoundary);
+    } catch (IOException e) {
+      // If refresh fails, check for a cached value.
+      if (cachedTrustBoundary == null) {
+        // No cached value, so fail hard.
+        throw new IOException(
+            "Failed to refresh trust boundary and no cached value is available.", e);
+      }
+
+      return;
+    }
+
+    // A lock is required to safely update the shared field.
+    synchronized (lock) {
+      this.trustBoundary = newTrustBoundary;
     }
   }
 

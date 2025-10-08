@@ -713,12 +713,10 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
   @Override
   public String getTrustBoundaryUrl() throws IOException {
-    if (principal == null) {
-      principal = getDefaultServiceAccount();
-    }
     return String.format(
-        "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s/allowedLocations",
-        getUniverseDomain(), principal);
+        OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT,
+        getUniverseDomain(),
+        getAccount());
   }
 
   /**

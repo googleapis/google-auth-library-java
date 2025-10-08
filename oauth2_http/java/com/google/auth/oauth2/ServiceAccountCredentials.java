@@ -831,8 +831,9 @@ public class ServiceAccountCredentials extends GoogleCredentials
   @Override
   public String getTrustBoundaryUrl() throws IOException {
     return String.format(
-        "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s/allowedLocations",
-        getUniverseDomain(), getClientEmail());
+        OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT,
+        getUniverseDomain(),
+        getAccount());
   }
 
   @VisibleForTesting
@@ -1160,7 +1161,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
     private int lifetime = DEFAULT_LIFETIME_IN_SECONDS;
     private boolean useJwtAccessWithScope = false;
     private boolean defaultRetriesEnabled = true;
-    private TrustBoundary trustBoundary;
 
     protected Builder() {}
 
@@ -1179,7 +1179,6 @@ public class ServiceAccountCredentials extends GoogleCredentials
       this.lifetime = credentials.lifetime;
       this.useJwtAccessWithScope = credentials.useJwtAccessWithScope;
       this.defaultRetriesEnabled = credentials.defaultRetriesEnabled;
-      this.trustBoundary = credentials.getTrustBoundary();
     }
 
     @CanIgnoreReturnValue

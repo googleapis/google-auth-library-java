@@ -1,5 +1,5 @@
 /*
- * Copyright 2024, Google LLC
+ * Copyright 2025, Google LLC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -44,6 +44,7 @@ import com.google.api.client.json.JsonParser;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.client.util.Key;
 import com.google.auth.http.HttpTransportFactory;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import java.io.IOException;
 import java.util.Collections;
@@ -55,7 +56,7 @@ import javax.annotation.Nullable;
  * Represents a trust boundary that can be used to restrict access to resources. This is an
  * experimental feature.
  */
-public final class TrustBoundary {
+final class TrustBoundary {
 
   static final String TRUST_BOUNDARY_KEY = "x-allowed-locations";
   static final String GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR =
@@ -111,27 +112,19 @@ public final class TrustBoundary {
     }
   }
 
-  // expose this setter only for testing purposes
-  public static void setEnvironmentProviderForTest(@Nullable EnvironmentProvider provider) {
+  @VisibleForTesting
+  static void setEnvironmentProviderForTest(@Nullable EnvironmentProvider provider) {
     environmentProvider = provider == null ? SystemEnvironmentProvider.getInstance() : provider;
   }
 
-  static boolean isTrustBoundaryEnabled() throws IOException {
-    String tbEnabled = environmentProvider.getEnv(GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR);
-    if (tbEnabled == null) {
+  static boolean isTrustBoundaryEnabled() {
+    String trustBoundaryEnabled =
+        environmentProvider.getEnv(GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR);
+    if (trustBoundaryEnabled == null) {
       return false;
     }
-    String lowercasedTbEnabled = tbEnabled.toLowerCase();
-    if ("true".equals(lowercasedTbEnabled) || "1".equals(tbEnabled)) {
-      return true;
-    }
-    if ("false".equals(lowercasedTbEnabled) || "0".equals(tbEnabled)) {
-      return false;
-    }
-    throw new IOException(
-        String.format(
-            "Invalid value for %s environment variable: \"%s\". Supported values are 'true', '1', 'false', or '0'.",
-            GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, tbEnabled));
+    String lowercasedTrustBoundaryEnabled = trustBoundaryEnabled.toLowerCase();
+    return "true".equals(lowercasedTrustBoundaryEnabled) || "1".equals(trustBoundaryEnabled);
   }
 
   static TrustBoundary refresh(
@@ -141,11 +134,11 @@ public final class TrustBoundary {
       @Nullable TrustBoundary cachedTrustBoundary)
       throws IOException {
     if (accessToken == null) {
-      throw new IOException("The provided access token is null.");
+      throw new IllegalArgumentException("The provided access token is null.");
     }
     if (accessToken.getExpirationTime() != null
         && accessToken.getExpirationTime().before(new Date())) {
-      throw new IOException("The provided access token is expired.");
+      throw new IllegalArgumentException("The provided access token is expired.");
     }
 
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
