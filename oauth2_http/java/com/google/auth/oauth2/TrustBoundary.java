@@ -65,6 +65,12 @@ final class TrustBoundary {
   private final String encodedLocations;
   private final List<String> locations;
 
+  /**
+   * Creates a new TrustBoundary instance.
+   *
+   * @param encodedLocations The encoded string representation of the allowed locations.
+   * @param locations A list of human-readable location strings.
+   */
   public TrustBoundary(String encodedLocations, List<String> locations) {
     this.encodedLocations = encodedLocations;
     this.locations =
@@ -75,14 +81,21 @@ final class TrustBoundary {
 
   private static EnvironmentProvider environmentProvider = SystemEnvironmentProvider.getInstance();
 
+  /** Returns the encoded string representation of the allowed locations. */
   public String getEncodedLocations() {
     return encodedLocations;
   }
 
+  /** Returns a list of human-readable location strings. */
   public List<String> getLocations() {
     return locations;
   }
 
+  /**
+   * Checks if this TrustBoundary represents a "no-op" (no restrictions).
+   *
+   * @return True if the encoded locations indicate no restrictions, false otherwise.
+   */
   public boolean isNoOp() {
     return NO_OP_VALUE.equals(encodedLocations);
   }
@@ -95,15 +108,18 @@ final class TrustBoundary {
     @Key("locations")
     private List<String> locations;
 
+    /** Returns the encoded string representation of the allowed locations from the API response. */
     public String getEncodedLocations() {
       return encodedLocations;
     }
 
+    /** Returns a list of human-readable location strings from the API response. */
     public List<String> getLocations() {
       return locations;
     }
 
     @Override
+    /** Returns a string representation of the TrustBoundaryResponse. */
     public String toString() {
       return MoreObjects.toStringHelper(this)
           .add("encodedLocations", encodedLocations)
@@ -117,6 +133,13 @@ final class TrustBoundary {
     environmentProvider = provider == null ? SystemEnvironmentProvider.getInstance() : provider;
   }
 
+  /**
+   * Checks if the trust boundary feature is enabled based on an environment variable. The feature
+   * is enabled if the environment variable is set to "true" or "1" (case-insensitive). Any other
+   * value, or if the variable is unset, will result in the feature being disabled.
+   *
+   * @return True if the trust boundary feature is enabled, false otherwise.
+   */
   static boolean isTrustBoundaryEnabled() {
     String trustBoundaryEnabled =
         environmentProvider.getEnv(GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR);
@@ -127,6 +150,18 @@ final class TrustBoundary {
     return "true".equals(lowercasedTrustBoundaryEnabled) || "1".equals(trustBoundaryEnabled);
   }
 
+  /**
+   * Refreshes the trust boundary by making a network call to the trust boundary endpoint.
+   *
+   * @param transportFactory The HTTP transport factory to use for the network request.
+   * @param url The URL of the trust boundary endpoint.
+   * @param accessToken The access token to authenticate the request.
+   * @param cachedTrustBoundary An optional previously cached trust boundary, which may be used in
+   *     the request headers.
+   * @return A new TrustBoundary object containing the refreshed information.
+   * @throws IllegalArgumentException If the provided access token is null or expired.
+   * @throws IOException If a network error occurs or the response is malformed.
+   */
   static TrustBoundary refresh(
       HttpTransportFactory transportFactory,
       String url,

@@ -392,6 +392,13 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     return Collections.unmodifiableMap(newRequestMetadata);
   }
 
+  /**
+   * Refreshes the trust boundary associated with these credentials.
+   *
+   * @param newAccessToken The newly refreshed access token to use for the trust boundary request.
+   * @throws IOException If the refresh fails and no cached trust boundary is available.
+   * @throws IllegalArgumentException If the provided access token is null or expired.
+   */
   protected void refreshTrustBoundaries(AccessToken newAccessToken) throws IOException {
     if (!(this instanceof TrustBoundaryProvider)) {
       return;
