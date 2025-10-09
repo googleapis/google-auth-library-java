@@ -276,6 +276,10 @@ public class GdchCredentials extends GoogleCredentials {
     return String.format("system:serviceaccount:%s:%s", projectId, serviceIdentityName);
   }
 
+  /**
+   * @return the projectId set in the GDCH SA Key file or the user set projectId
+   */
+  @Override
   public final String getProjectId() {
     return projectId;
   }

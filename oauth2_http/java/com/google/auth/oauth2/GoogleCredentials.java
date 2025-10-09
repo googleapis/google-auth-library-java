@@ -515,6 +515,17 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
+   * The projectId value for a Credential type. Since not all GoogleCredentials subclass have a
+   * projectId associated, the projectId may be null. A subset of GoogleCredentials subclasses will
+   * override to return their projectId.
+   *
+   * @return the project id for a Credential type
+   */
+  public String getProjectId() {
+    return null;
+  }
+
+  /**
    * Indicates whether the credentials require scopes to be specified via a call to {@link
    * GoogleCredentials#createScoped} before use.
    *
