@@ -131,7 +131,7 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
    * external source for authentication to Google Cloud Platform, you must validate it before
    * providing it to any Google API or library. Providing an unvalidated credential configuration to
    * Google APIs can compromise the security of your systems and data. For more information, refer
-   * to {@link <a
+   * to {@see <a
    * href="https://cloud.google.com/docs/authentication/external/externally-sourced-credentials">documentation</a>}.
    *
    * @param credentialsStream the stream with the credential definition
@@ -151,7 +151,7 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
    * external source for authentication to Google Cloud Platform, you must validate it before
    * providing it to any Google API or library. Providing an unvalidated credential configuration to
    * Google APIs can compromise the security of your systems and data. For more information, refer
-   * to {@link <a
+   * to {@see <a
    * href="https://cloud.google.com/docs/authentication/external/externally-sourced-credentials">documentation</a>}.
    *
    * @param credentialsStream the stream with the credential definition
