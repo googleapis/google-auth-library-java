@@ -798,6 +798,9 @@ public class ServiceAccountCredentials extends GoogleCredentials
     return serviceAccountUser;
   }
 
+  /**
+   * @return the projectId set in the SA Key file or the user set projectId
+   */
   @Override
   public final String getProjectId() {
     return projectId;
