@@ -798,6 +798,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     return serviceAccountUser;
   }
 
+  @Override
   public final String getProjectId() {
     return projectId;
   }

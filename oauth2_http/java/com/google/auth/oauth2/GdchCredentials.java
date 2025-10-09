@@ -276,6 +276,7 @@ public class GdchCredentials extends GoogleCredentials {
     return String.format("system:serviceaccount:%s:%s", projectId, serviceIdentityName);
   }
 
+  @Override
   public final String getProjectId() {
     return projectId;
   }
