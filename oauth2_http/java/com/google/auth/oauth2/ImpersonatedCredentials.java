@@ -101,14 +101,12 @@ public class ImpersonatedCredentials extends GoogleCredentials
   private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ssX";
   private static final int TWELVE_HOURS_IN_SECONDS = 43200;
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
-  private static final String CLOUD_PLATFORM_SCOPE =
-      "https://www.googleapis.com/auth/cloud-platform";
   private GoogleCredentials sourceCredentials;
-  private String targetPrincipal;
+  private final String targetPrincipal;
   private List<String> delegates;
   private final List<String> scopes;
-  private int lifetime;
-  private String iamEndpointOverride;
+  private final int lifetime;
+  private final String iamEndpointOverride;
   private final String transportFactoryClassName;
   private static final LoggerProvider LOGGER_PROVIDER =
       LoggerProvider.forClazz(ImpersonatedCredentials.class);
@@ -395,7 +393,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     // This applies to the scopes applied for the impersonated token and not the
     // underlying source credential. Default to empty list to keep the existing
     // behavior (when json file did not populate a scopes field).
-    List<String> scopes = new ArrayList<>();
+    List<String> scopes = ImmutableList.of();
     try {
       serviceAccountImpersonationUrl = (String) json.get("service_account_impersonation_url");
       if (json.containsKey("delegates")) {
@@ -406,7 +404,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
       quotaProjectId = (String) json.get("quota_project_id");
       targetPrincipal = extractTargetPrincipal(serviceAccountImpersonationUrl);
       if (json.containsKey("scopes")) {
-        scopes = (List<String>) json.get("scopes");
+        scopes = ImmutableList.copyOf((List<String>) json.get("scopes"));
       }
     } catch (ClassCastException | NullPointerException | IllegalArgumentException e) {
       throw new CredentialFormatException("An invalid input stream was provided.", e);
@@ -415,7 +413,9 @@ public class ImpersonatedCredentials extends GoogleCredentials
     GoogleCredentials sourceCredentials;
     if (GoogleCredentialsInfo.USER_CREDENTIALS.getFileType().equals(sourceCredentialsType)) {
       sourceCredentials = UserCredentials.fromJson(sourceCredentialsJson, transportFactory);
-    } else if (GoogleCredentialsInfo.SERVICE_ACCOUNT_CREDENTIALS.getFileType().equals(sourceCredentialsType)) {
+    } else if (GoogleCredentialsInfo.SERVICE_ACCOUNT_CREDENTIALS
+        .getFileType()
+        .equals(sourceCredentialsType)) {
       sourceCredentials =
           ServiceAccountCredentials.fromJson(sourceCredentialsJson, transportFactory);
     } else {
@@ -443,7 +443,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
   @Override
   public GoogleCredentials createScoped(Collection<String> scopes) {
-    return toBuilder().setScopes(new ArrayList<>(scopes)).setAccessToken(null).build();
+    return toBuilder().setScopes(ImmutableList.copyOf(scopes)).setAccessToken(null).build();
   }
 
   @Override
@@ -520,8 +520,10 @@ public class ImpersonatedCredentials extends GoogleCredentials
   @Override
   public AccessToken refreshAccessToken() throws IOException {
     if (this.sourceCredentials.getAccessToken() == null) {
+      // Apply the `CLOUD_PLATFORM_SCOPE` to access the iamcredentials endpoint
       this.sourceCredentials =
-          this.sourceCredentials.createScoped(Collections.singletonList(CLOUD_PLATFORM_SCOPE));
+          this.sourceCredentials.createScoped(
+              Collections.singletonList(OAuth2Utils.CLOUD_PLATFORM_SCOPE));
     }
 
     // skip for SA with SSJ flow because it uses self-signed JWT
@@ -555,7 +557,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     GenericUrl url = new GenericUrl(endpointUrl);
 
     Map<String, Object> body =
-        ImmutableMap.<String, Object>of(
+        ImmutableMap.of(
             "delegates", this.delegates, "scope", this.scopes, "lifetime", this.lifetime + "s");
 
     HttpContent requestContent = new JsonHttpContent(parser.getJsonFactory(), body);

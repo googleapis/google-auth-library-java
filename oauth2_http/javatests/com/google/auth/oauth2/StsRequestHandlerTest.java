@@ -56,8 +56,7 @@ public final class StsRequestHandlerTest {
 
   private static final String TOKEN_EXCHANGE_GRANT_TYPE =
       "urn:ietf:params:oauth:grant-type:token-exchange";
-  private static final String CLOUD_PLATFORM_SCOPE =
-      "https://www.googleapis.com/auth/cloud-platform";
+  private static final String CLOUD_PLATFORM_SCOPE = OAuth2Utils.CLOUD_PLATFORM_SCOPE;
   private static final String DEFAULT_REQUESTED_TOKEN_TYPE =
       "urn:ietf:params:oauth:token-type:access_token";
   private static final String TOKEN_URL = "https://sts.googleapis.com/v1/token";
