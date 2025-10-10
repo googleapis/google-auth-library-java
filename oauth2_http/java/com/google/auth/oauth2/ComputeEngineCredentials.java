@@ -385,8 +385,11 @@ public class ComputeEngineCredentials extends GoogleCredentials
     int expiresInSeconds =
         OAuth2Utils.validateInt32(responseData, "expires_in", PARSE_ERROR_PREFIX);
     long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000;
+    AccessToken newAccessToken = new AccessToken(accessToken, new Date(expiresAtMilliseconds));
 
-    return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
+    refreshTrustBoundary(newAccessToken, getTrustBoundaryUrl(), transportFactory);
+
+    return newAccessToken;
   }
 
   /**
@@ -701,6 +704,18 @@ public class ComputeEngineCredentials extends GoogleCredentials
       }
     }
     return principal;
+  }
+
+  @Override
+  Boolean supportsTrustBoundary() {
+    return true;
+  }
+
+  String getTrustBoundaryUrl() throws IOException {
+    return String.format(
+        OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT,
+        getUniverseDomain(),
+        getAccount());
   }
 
   /**

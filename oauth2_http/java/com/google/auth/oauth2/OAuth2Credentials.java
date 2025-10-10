@@ -59,7 +59,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.ServiceLoader;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import javax.annotation.Nullable;
@@ -264,11 +263,8 @@ public class OAuth2Credentials extends Credentials {
 
       final ListenableFutureTask<OAuthValue> task =
           ListenableFutureTask.create(
-              new Callable<OAuthValue>() {
-                @Override
-                public OAuthValue call() throws Exception {
-                  return OAuthValue.create(refreshAccessToken(), getAdditionalHeaders());
-                }
+              () -> {
+                return OAuthValue.create(refreshAccessToken(), getAdditionalHeaders());
               });
 
       refreshTask = new RefreshTask(task, new RefreshTaskListener(task));
@@ -373,7 +369,7 @@ public class OAuth2Credentials extends Credentials {
   /**
    * Provide additional headers to return as request metadata.
    *
-   * @return additional headers
+   * @return additional headers.
    */
   protected Map<String, List<String>> getAdditionalHeaders() {
     return EMPTY_EXTRA_HEADERS;

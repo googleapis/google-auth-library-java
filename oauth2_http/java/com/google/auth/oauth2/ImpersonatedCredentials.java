@@ -325,6 +325,18 @@ public class ImpersonatedCredentials extends GoogleCredentials
     return sourceCredentials;
   }
 
+  @Override
+  Boolean supportsTrustBoundary() {
+    return true;
+  }
+
+  String getTrustBoundaryUrl() throws IOException {
+    return String.format(
+        OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT,
+        getUniverseDomain(),
+        getAccount());
+  }
+
   int getLifetime() {
     return this.lifetime;
   }
@@ -587,7 +599,11 @@ public class ImpersonatedCredentials extends GoogleCredentials
     format.setCalendar(calendar);
     try {
       Date date = format.parse(expireTime);
-      return new AccessToken(accessToken, date);
+      AccessToken newAccessToken = new AccessToken(accessToken, date);
+
+      refreshTrustBoundary(newAccessToken, getTrustBoundaryUrl(), transportFactory);
+
+      return newAccessToken;
     } catch (ParseException pe) {
       throw new IOException("Error parsing expireTime: " + pe.getMessage());
     }
