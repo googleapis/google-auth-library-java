@@ -410,7 +410,7 @@ public class DefaultCredentialsProviderTest {
 
     assertNotNull(defaultCredentials);
     assertTrue(defaultCredentials instanceof GdchCredentials);
-    assertEquals(GDCH_SA_PROJECT_ID, ((GdchCredentials) defaultCredentials).getProjectId());
+    assertEquals(GDCH_SA_PROJECT_ID, defaultCredentials.getProjectId());
     assertEquals(
         GDCH_SA_SERVICE_IDENTITY_NAME,
         ((GdchCredentials) defaultCredentials).getServiceIdentityName());
@@ -423,7 +423,7 @@ public class DefaultCredentialsProviderTest {
         ((GdchCredentials) defaultCredentials).createWithGdchAudience(GDCH_SA_API_AUDIENCE);
     assertNotNull(defaultCredentials);
     assertTrue(defaultCredentials instanceof GdchCredentials);
-    assertEquals(GDCH_SA_PROJECT_ID, ((GdchCredentials) defaultCredentials).getProjectId());
+    assertEquals(GDCH_SA_PROJECT_ID, defaultCredentials.getProjectId());
     assertEquals(
         GDCH_SA_SERVICE_IDENTITY_NAME,
         ((GdchCredentials) defaultCredentials).getServiceIdentityName());
