@@ -413,13 +413,11 @@ public class ImpersonatedCredentials extends GoogleCredentials
     }
 
     GoogleCredentials sourceCredentials;
-    if (sourceCredentialsType.equals(GoogleCredentialsInfo.USER_CREDENTIALS.getFileType())) {
+    if (GoogleCredentialsInfo.USER_CREDENTIALS.getFileType().equals(sourceCredentialsType)) {
       sourceCredentials = UserCredentials.fromJson(sourceCredentialsJson, transportFactory);
-    } else if (sourceCredentialsType.equals(
-        GoogleCredentialsInfo.SERVICE_ACCOUNT_CREDENTIALS.getFileType())) {
+    } else if (GoogleCredentialsInfo.SERVICE_ACCOUNT_CREDENTIALS.getFileType().equals(sourceCredentialsType)) {
       sourceCredentials =
           ServiceAccountCredentials.fromJson(sourceCredentialsJson, transportFactory);
-
     } else {
       throw new IOException(
           String.format(
@@ -477,8 +475,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
     this.sourceCredentials = builder.getSourceCredentials();
     this.targetPrincipal = builder.getTargetPrincipal();
     this.delegates = builder.getDelegates();
-
-    // Precedence for scopes: 1. User configured scopes 2. Scopes set in the JSON
     this.scopes = ImmutableList.copyOf(builder.getScopes());
     this.lifetime = builder.getLifetime();
     this.transportFactory =
