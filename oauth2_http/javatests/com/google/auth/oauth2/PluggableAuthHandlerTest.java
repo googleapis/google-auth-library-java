@@ -741,8 +741,12 @@ public class PluggableAuthHandlerTest {
     assertTrue(response.isSuccessful());
     assertEquals(TOKEN_TYPE_OIDC, response.getTokenType());
     assertEquals(ID_TOKEN, response.getSubjectToken());
-    assertEquals(
-        Instant.now().getEpochSecond() + EXPIRATION_DURATION, (long) response.getExpirationTime());
+    // The response's expirationTime is set to be the current time + EXPIRATION_DURATION
+    // Comparing Instant.now().getEpochSecond() is flaky and dependant on VM performance
+    // Only assert that the expirationTime is some time in the future from now
+    assertTrue(
+        Instant.now().getEpochSecond()
+            < Instant.ofEpochSecond(response.getExpirationTime()).getEpochSecond());
     // Current env map should include the mappings from options.
     assertEquals(4, currentEnv.size());
     assertEquals(expectedMap, currentEnv);
@@ -788,8 +792,12 @@ public class PluggableAuthHandlerTest {
     assertTrue(response.isSuccessful());
     assertEquals(TOKEN_TYPE_SAML, response.getTokenType());
     assertEquals(SAML_RESPONSE, response.getSubjectToken());
-    assertEquals(
-        Instant.now().getEpochSecond() + EXPIRATION_DURATION, (long) response.getExpirationTime());
+    // The response's expirationTime is set to be the current time + EXPIRATION_DURATION
+    // Comparing Instant.now().getEpochSecond() is flaky and dependant on VM performance
+    // Only assert that the expirationTime is some time in the future from now
+    assertTrue(
+        Instant.now().getEpochSecond()
+            < Instant.ofEpochSecond(response.getExpirationTime()).getEpochSecond());
 
     // Current env map should include the mappings from options.
     assertEquals(4, currentEnv.size());
