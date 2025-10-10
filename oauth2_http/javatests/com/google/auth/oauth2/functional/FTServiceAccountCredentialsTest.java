@@ -49,13 +49,12 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.IdToken;
 import com.google.auth.oauth2.IdTokenCredentials;
 import com.google.auth.oauth2.IdTokenProvider;
+import com.google.auth.oauth2.OAuth2Utils;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import org.junit.Test;
 
 public final class FTServiceAccountCredentialsTest {
-  private final String cloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform";
-
   private final String cloudTasksUrl =
       "https://cloudtasks.googleapis.com/v2/projects/gcloud-devel/locations";
   private final String storageUrl =
@@ -108,27 +107,30 @@ public final class FTServiceAccountCredentialsTest {
 
   @Test
   public void ScopeSetNoAudienceStorageTest() throws Exception {
-    HttpResponse response = executeRequestWithCredentialsWithScope(storageUrl, cloudPlatformScope);
+    HttpResponse response =
+        executeRequestWithCredentialsWithScope(storageUrl, OAuth2Utils.CLOUD_PLATFORM_SCOPE);
     assertEquals(200, response.getStatusCode());
   }
 
   @Test
   public void ScopeSetNoAudienceComputeTest() throws Exception {
 
-    HttpResponse response = executeRequestWithCredentialsWithScope(computeUrl, cloudPlatformScope);
+    HttpResponse response =
+        executeRequestWithCredentialsWithScope(computeUrl, OAuth2Utils.CLOUD_PLATFORM_SCOPE);
     assertEquals(200, response.getStatusCode());
   }
 
   @Test
   public void ScopeSetNoAudienceBigQueryTest() throws Exception {
-    HttpResponse response = executeRequestWithCredentialsWithScope(bigQueryUrl, cloudPlatformScope);
+    HttpResponse response =
+        executeRequestWithCredentialsWithScope(bigQueryUrl, OAuth2Utils.CLOUD_PLATFORM_SCOPE);
     assertEquals(200, response.getStatusCode());
   }
 
   @Test
   public void ScopeSetNoAudienceOnePlatformTest() throws Exception {
     HttpResponse response =
-        executeRequestWithCredentialsWithScope(cloudTasksUrl, cloudPlatformScope);
+        executeRequestWithCredentialsWithScope(cloudTasksUrl, OAuth2Utils.CLOUD_PLATFORM_SCOPE);
     assertEquals(200, response.getStatusCode());
   }
 

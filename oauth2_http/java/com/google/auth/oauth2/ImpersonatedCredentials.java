@@ -50,6 +50,8 @@ import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.MetricsUtils.RequestType;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
@@ -58,9 +60,9 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -99,14 +101,12 @@ public class ImpersonatedCredentials extends GoogleCredentials
   private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ssX";
   private static final int TWELVE_HOURS_IN_SECONDS = 43200;
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
-  private static final String CLOUD_PLATFORM_SCOPE =
-      "https://www.googleapis.com/auth/cloud-platform";
   private GoogleCredentials sourceCredentials;
-  private String targetPrincipal;
+  private final String targetPrincipal;
   private List<String> delegates;
-  private List<String> scopes;
-  private int lifetime;
-  private String iamEndpointOverride;
+  private final List<String> scopes;
+  private final int lifetime;
+  private final String iamEndpointOverride;
   private final String transportFactoryClassName;
   private static final LoggerProvider LOGGER_PROVIDER =
       LoggerProvider.forClazz(ImpersonatedCredentials.class);
@@ -390,6 +390,10 @@ public class ImpersonatedCredentials extends GoogleCredentials
     String quotaProjectId;
     String targetPrincipal;
     String serviceAccountImpersonationUrl;
+    // This applies to the scopes applied for the impersonated token and not the
+    // underlying source credential. Default to empty list to keep the existing
+    // behavior (when json file did not populate a scopes field).
+    List<String> scopes = ImmutableList.of();
     try {
       serviceAccountImpersonationUrl = (String) json.get("service_account_impersonation_url");
       if (json.containsKey("delegates")) {
@@ -399,6 +403,9 @@ public class ImpersonatedCredentials extends GoogleCredentials
       sourceCredentialsType = (String) sourceCredentialsJson.get("type");
       quotaProjectId = (String) json.get("quota_project_id");
       targetPrincipal = extractTargetPrincipal(serviceAccountImpersonationUrl);
+      if (json.containsKey("scopes")) {
+        scopes = ImmutableList.copyOf((List<String>) json.get("scopes"));
+      }
     } catch (ClassCastException | NullPointerException | IllegalArgumentException e) {
       throw new CredentialFormatException("An invalid input stream was provided.", e);
     }
@@ -421,7 +428,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
         .setSourceCredentials(sourceCredentials)
         .setTargetPrincipal(targetPrincipal)
         .setDelegates(delegates)
-        .setScopes(new ArrayList<>())
+        .setScopes(scopes)
         .setLifetime(DEFAULT_LIFETIME_IN_SECONDS)
         .setHttpTransportFactory(transportFactory)
         .setQuotaProjectId(quotaProjectId)
@@ -436,7 +443,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
   @Override
   public GoogleCredentials createScoped(Collection<String> scopes) {
-    return toBuilder().setScopes(new ArrayList<>(scopes)).setAccessToken(null).build();
+    return toBuilder().setScopes(ImmutableList.copyOf(scopes)).setAccessToken(null).build();
   }
 
   @Override
@@ -468,7 +475,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     this.sourceCredentials = builder.getSourceCredentials();
     this.targetPrincipal = builder.getTargetPrincipal();
     this.delegates = builder.getDelegates();
-    this.scopes = builder.getScopes();
+    this.scopes = ImmutableList.copyOf(builder.getScopes());
     this.lifetime = builder.getLifetime();
     this.transportFactory =
         firstNonNull(
@@ -479,9 +486,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
     this.calendar = builder.getCalendar();
     if (this.delegates == null) {
       this.delegates = new ArrayList<>();
-    }
-    if (this.scopes == null) {
-      throw new IllegalStateException("Scopes cannot be null");
     }
     if (this.lifetime > TWELVE_HOURS_IN_SECONDS) {
       throw new IllegalStateException("lifetime must be less than or equal to 43200");
@@ -516,8 +520,10 @@ public class ImpersonatedCredentials extends GoogleCredentials
   @Override
   public AccessToken refreshAccessToken() throws IOException {
     if (this.sourceCredentials.getAccessToken() == null) {
+      // Apply the `CLOUD_PLATFORM_SCOPE` to access the iamcredentials endpoint
       this.sourceCredentials =
-          this.sourceCredentials.createScoped(Arrays.asList(CLOUD_PLATFORM_SCOPE));
+          this.sourceCredentials.createScoped(
+              Collections.singletonList(OAuth2Utils.CLOUD_PLATFORM_SCOPE));
     }
 
     // skip for SA with SSJ flow because it uses self-signed JWT
@@ -551,7 +557,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
     GenericUrl url = new GenericUrl(endpointUrl);
 
     Map<String, Object> body =
-        ImmutableMap.<String, Object>of(
+        ImmutableMap.of(
             "delegates", this.delegates, "scope", this.scopes, "lifetime", this.lifetime + "s");
 
     HttpContent requestContent = new JsonHttpContent(parser.getJsonFactory(), body);
@@ -741,12 +747,22 @@ public class ImpersonatedCredentials extends GoogleCredentials
       return this.delegates;
     }
 
+    /**
+     * Set the scopes to be applied on the impersonated token and not on the source credential. This
+     * user configuration has precedence over the scopes listed in the source credential json file.
+     *
+     * @param scopes List of scopes to apply to the impersonated token
+     */
     @CanIgnoreReturnValue
     public Builder setScopes(List<String> scopes) {
+      Preconditions.checkNotNull(scopes, "Scopes cannot be null");
       this.scopes = scopes;
       return this;
     }
 
+    /**
+     * @return List of scopes to be applied to the impersonated token.
+     */
     public List<String> getScopes() {
       return this.scopes;
     }

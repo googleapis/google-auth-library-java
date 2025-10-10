@@ -313,7 +313,7 @@ public class UserAuthorizerTest {
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
-            .setScopes(Collections.singletonList("https://www.googleapis.com/auth/cloud-platform"))
+            .setScopes(Collections.singletonList(OAuth2Utils.CLOUD_PLATFORM_SCOPE))
             .setTokenServerUri(WORKFORCE_IDENTITY_FEDERATION_TOKEN_SERVER_URI)
             .setUserAuthUri(WORKFORCE_IDENTITY_FEDERATION_AUTH_URI)
             .setClientAuthenticationType(ClientAuthenticationType.CLIENT_SECRET_BASIC)
@@ -354,7 +354,7 @@ public class UserAuthorizerTest {
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
-            .setScopes(Collections.singletonList("https://www.googleapis.com/auth/cloud-platform"))
+            .setScopes(Collections.singletonList(OAuth2Utils.CLOUD_PLATFORM_SCOPE))
             .setTokenServerUri(WORKFORCE_IDENTITY_FEDERATION_TOKEN_SERVER_URI)
             .setUserAuthUri(WORKFORCE_IDENTITY_FEDERATION_AUTH_URI)
             .setClientAuthenticationType(ClientAuthenticationType.NONE)

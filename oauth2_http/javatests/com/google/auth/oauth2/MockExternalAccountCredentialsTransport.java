@@ -62,8 +62,6 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
 
   private static final String EXPECTED_GRANT_TYPE =
       "urn:ietf:params:oauth:grant-type:token-exchange";
-  private static final String CLOUD_PLATFORM_SCOPE =
-      "https://www.googleapis.com/auth/cloud-platform";
   private static final String ISSUED_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:access_token";
   private static final String AWS_CREDENTIALS_URL = "https://169.254.169.254";
   private static final String AWS_REGION_URL = "https://169.254.169.254/region";
@@ -202,7 +200,9 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
                   OAuth2Utils.JSON_FACTORY
                       .createJsonParser(getContentAsString())
                       .parseAndClose(GenericJson.class);
-              assertEquals(CLOUD_PLATFORM_SCOPE, ((ArrayList<String>) query.get("scope")).get(0));
+              assertEquals(
+                  OAuth2Utils.CLOUD_PLATFORM_SCOPE,
+                  ((ArrayList<String>) query.get("scope")).get(0));
               assertEquals(1, getHeaders().get("authorization").size());
               assertTrue(getHeaders().containsKey("authorization"));
               assertNotNull(getHeaders().get("authorization").get(0));

@@ -236,7 +236,7 @@ public class DownscopedCredentialsTest {
             .build();
 
     GoogleCredentials scopedSourceCredentials =
-        sourceCredentials.createScoped("https://www.googleapis.com/auth/cloud-platform");
+        sourceCredentials.createScoped(OAuth2Utils.CLOUD_PLATFORM_SCOPE);
     assertEquals(scopedSourceCredentials, credentials.getSourceCredentials());
     assertEquals(CREDENTIAL_ACCESS_BOUNDARY, credentials.getCredentialAccessBoundary());
     assertEquals(OAuth2Utils.HTTP_TRANSPORT_FACTORY, credentials.getTransportFactory());
@@ -254,7 +254,7 @@ public class DownscopedCredentialsTest {
             .build();
 
     GoogleCredentials scopedSourceCredentials =
-        sourceCredentials.createScoped("https://www.googleapis.com/auth/cloud-platform");
+        sourceCredentials.createScoped(OAuth2Utils.CLOUD_PLATFORM_SCOPE);
     assertEquals(OAuth2Utils.HTTP_TRANSPORT_FACTORY, credentials.getTransportFactory());
     assertEquals(scopedSourceCredentials, credentials.getSourceCredentials());
     assertEquals(CREDENTIAL_ACCESS_BOUNDARY, credentials.getCredentialAccessBoundary());
@@ -320,7 +320,7 @@ public class DownscopedCredentialsTest {
       transportFactory.transport.setError(new IOException());
     }
 
-    return sourceCredentials.createScoped("https://www.googleapis.com/auth/cloud-platform");
+    return sourceCredentials.createScoped(OAuth2Utils.CLOUD_PLATFORM_SCOPE);
   }
 
   private static GoogleCredentials getUserSourceCredentials() {

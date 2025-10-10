@@ -619,7 +619,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
         ImpersonatedCredentialsTest.writeImpersonationCredentialsStream(
             ImpersonatedCredentialsTest.IMPERSONATION_OVERRIDE_URL,
             ImpersonatedCredentialsTest.DELEGATES,
-            ImpersonatedCredentialsTest.QUOTA_PROJECT_ID);
+            ImpersonatedCredentialsTest.QUOTA_PROJECT_ID,
+            ImpersonatedCredentialsTest.IMMUTABLE_SCOPES_LIST);
 
     ImpersonatedCredentials credentials =
         (ImpersonatedCredentials)
@@ -649,7 +650,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
         ImpersonatedCredentialsTest.writeImpersonationCredentialsStream(
             ImpersonatedCredentialsTest.IMPERSONATION_OVERRIDE_URL,
             ImpersonatedCredentialsTest.DELEGATES,
-            ImpersonatedCredentialsTest.QUOTA_PROJECT_ID);
+            ImpersonatedCredentialsTest.QUOTA_PROJECT_ID,
+            ImpersonatedCredentialsTest.IMMUTABLE_SCOPES_LIST);
 
     ImpersonatedCredentials credentials =
         (ImpersonatedCredentials)
@@ -684,7 +686,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
         ImpersonatedCredentialsTest.writeImpersonationCredentialsStream(
             ImpersonatedCredentialsTest.IMPERSONATION_OVERRIDE_URL,
             ImpersonatedCredentialsTest.DELEGATES,
-            null);
+            null,
+            ImpersonatedCredentialsTest.IMMUTABLE_SCOPES_LIST);
 
     ImpersonatedCredentials credentials =
         (ImpersonatedCredentials)
@@ -916,7 +919,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
         ImpersonatedCredentialsTest.writeImpersonationCredentialsStream(
             ImpersonatedCredentialsTest.IMPERSONATION_OVERRIDE_URL,
             ImpersonatedCredentialsTest.DELEGATES,
-            null);
+            null,
+            ImpersonatedCredentialsTest.IMMUTABLE_SCOPES_LIST);
 
     ImpersonatedCredentials credentials =
         (ImpersonatedCredentials) GoogleCredentials.fromStream(impersonationCredentialsStream);

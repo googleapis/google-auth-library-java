@@ -102,7 +102,7 @@ public final class ITDownscopingTest {
             ServiceAccountCredentials credentials =
                 (ServiceAccountCredentials)
                     GoogleCredentials.getApplicationDefault()
-                        .createScoped("https://www.googleapis.com/auth/cloud-platform");
+                        .createScoped(OAuth2Utils.CLOUD_PLATFORM_SCOPE);
 
             DownscopedCredentials downscopedCredentials =
                 DownscopedCredentials.newBuilder()

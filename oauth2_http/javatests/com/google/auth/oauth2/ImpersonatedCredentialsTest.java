@@ -123,11 +123,10 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   static final List<String> IMMUTABLE_SCOPES_LIST = ImmutableList.of("scope1", "scope2");
   static final int VALID_LIFETIME = 300;
   private static final int INVALID_LIFETIME = 43210;
-  private static JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
+  private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
   private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ssX";
 
-  private static final String DEFAULT_UNIVERSE_DOMAIN = "googleapis.com";
   private static final String TEST_UNIVERSE_DOMAIN = "test.xyz";
   private static final String OLD_IMPERSONATION_URL =
       "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/"
@@ -136,7 +135,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   public static final String DEFAULT_IMPERSONATION_URL =
       String.format(
           IamUtils.IAM_ACCESS_TOKEN_ENDPOINT_FORMAT,
-          DEFAULT_UNIVERSE_DOMAIN,
+          GoogleCredentials.GOOGLE_DEFAULT_UNIVERSE,
           IMPERSONATED_CLIENT_EMAIL);
   private static final String NONGDU_IMPERSONATION_URL =
       String.format(
@@ -190,14 +189,15 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             QUOTA_PROJECT_ID,
             USER_ACCOUNT_CLIENT_ID,
             USER_ACCOUNT_CLIENT_SECRET,
-            REFRESH_TOKEN);
+            REFRESH_TOKEN,
+            IMMUTABLE_SCOPES_LIST);
     ImpersonatedCredentials credentials =
         ImpersonatedCredentials.fromJson(json, mockTransportFactory);
     assertEquals(IMPERSONATED_CLIENT_EMAIL, credentials.getAccount());
     assertEquals(IMPERSONATION_OVERRIDE_URL, credentials.getIamEndpointOverride());
     assertEquals(QUOTA_PROJECT_ID, credentials.getQuotaProjectId());
     assertEquals(DELEGATES, credentials.getDelegates());
-    assertEquals(new ArrayList<String>(), credentials.getScopes());
+    assertEquals(IMMUTABLE_SCOPES_LIST, credentials.getScopes());
     assertEquals(3600, credentials.getLifetime());
     GoogleCredentials sourceCredentials = credentials.getSourceCredentials();
     assertTrue(sourceCredentials instanceof UserCredentials);
@@ -212,14 +212,15 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             null,
             USER_ACCOUNT_CLIENT_ID,
             USER_ACCOUNT_CLIENT_SECRET,
-            REFRESH_TOKEN);
+            REFRESH_TOKEN,
+            IMMUTABLE_SCOPES_LIST);
     ImpersonatedCredentials credentials =
         ImpersonatedCredentials.fromJson(json, mockTransportFactory);
     assertEquals(IMPERSONATED_CLIENT_EMAIL, credentials.getAccount());
     assertEquals(IMPERSONATION_OVERRIDE_URL, credentials.getIamEndpointOverride());
     assertNull(credentials.getQuotaProjectId());
     assertEquals(DELEGATES, credentials.getDelegates());
-    assertEquals(new ArrayList<String>(), credentials.getScopes());
+    assertEquals(IMMUTABLE_SCOPES_LIST, credentials.getScopes());
     assertEquals(3600, credentials.getLifetime());
     GoogleCredentials sourceCredentials = credentials.getSourceCredentials();
     assertTrue(sourceCredentials instanceof UserCredentials);
@@ -234,7 +235,8 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             null,
             USER_ACCOUNT_CLIENT_ID,
             USER_ACCOUNT_CLIENT_SECRET,
-            REFRESH_TOKEN);
+            REFRESH_TOKEN,
+            IMMUTABLE_SCOPES_LIST);
     json.remove("delegates");
     ImpersonatedCredentials credentials =
         ImpersonatedCredentials.fromJson(json, mockTransportFactory);
@@ -242,7 +244,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     assertEquals(IMPERSONATION_OVERRIDE_URL, credentials.getIamEndpointOverride());
     assertNull(credentials.getQuotaProjectId());
     assertEquals(new ArrayList<String>(), credentials.getDelegates());
-    assertEquals(new ArrayList<String>(), credentials.getScopes());
+    assertEquals(IMMUTABLE_SCOPES_LIST, credentials.getScopes());
     assertEquals(3600, credentials.getLifetime());
     GoogleCredentials sourceCredentials = credentials.getSourceCredentials();
     assertTrue(sourceCredentials instanceof UserCredentials);
@@ -251,14 +253,15 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   @Test()
   public void fromJson_ServiceAccountAsSource() throws IOException {
     GenericJson json =
-        buildImpersonationCredentialsJson(IMPERSONATION_OVERRIDE_URL, DELEGATES, QUOTA_PROJECT_ID);
+        buildImpersonationCredentialsJson(
+            IMPERSONATION_OVERRIDE_URL, DELEGATES, QUOTA_PROJECT_ID, IMMUTABLE_SCOPES_LIST);
     ImpersonatedCredentials credentials =
         ImpersonatedCredentials.fromJson(json, mockTransportFactory);
     assertEquals(IMPERSONATED_CLIENT_EMAIL, credentials.getAccount());
     assertEquals(IMPERSONATION_OVERRIDE_URL, credentials.getIamEndpointOverride());
     assertEquals(QUOTA_PROJECT_ID, credentials.getQuotaProjectId());
     assertEquals(DELEGATES, credentials.getDelegates());
-    assertEquals(new ArrayList<String>(), credentials.getScopes());
+    assertEquals(IMMUTABLE_SCOPES_LIST, credentials.getScopes());
     assertEquals(3600, credentials.getLifetime());
     GoogleCredentials sourceCredentials = credentials.getSourceCredentials();
     assertTrue(sourceCredentials instanceof ServiceAccountCredentials);
@@ -481,18 +484,11 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
   @Test()
   public void credential_with_invalid_scope() throws IOException, IllegalStateException {
-
-    try {
-      ImpersonatedCredentials targetCredentials =
-          ImpersonatedCredentials.create(
-              sourceCredentials, IMPERSONATED_CLIENT_EMAIL, null, null, VALID_LIFETIME);
-      targetCredentials.refreshAccessToken().getTokenValue();
-      fail(
-          String.format(
-              "Should throw exception with message containing '%s'", "Scopes cannot be null"));
-    } catch (IllegalStateException expected) {
-      assertTrue(expected.getMessage().contains("Scopes cannot be null"));
-    }
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            ImpersonatedCredentials.create(
+                sourceCredentials, IMPERSONATED_CLIENT_EMAIL, null, null, VALID_LIFETIME));
   }
 
   @Test()
@@ -1222,6 +1218,42 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void scopes_userConfigured() {
+    ImpersonatedCredentials impersonatedCredentials =
+        ImpersonatedCredentials.newBuilder().setScopes(IMMUTABLE_SCOPES_LIST).build();
+    assertArrayEquals(
+        IMMUTABLE_SCOPES_LIST.toArray(), impersonatedCredentials.getScopes().toArray());
+  }
+
+  @Test
+  public void scopes_fromJson() throws IOException {
+    ImpersonatedCredentials impersonatedCredentials =
+        ImpersonatedCredentials.fromJson(
+            buildImpersonationCredentialsJson(
+                DEFAULT_IMPERSONATION_URL, DELEGATES, null, IMMUTABLE_SCOPES_LIST),
+            mockTransportFactory);
+    assertArrayEquals(
+        IMMUTABLE_SCOPES_LIST.toArray(), impersonatedCredentials.getScopes().toArray());
+  }
+
+  // Tests that user configured scopes has precedence over the one in the json.
+  // From the ADC flow, the json is parsed and the credential is returned back
+  // to the user
+  @Test
+  public void scopes_userConfiguredAndFromJson() throws IOException {
+    List<String> userConfiguredScopes = ImmutableList.of("nonsense-scopes");
+    ImpersonatedCredentials impersonatedCredentials =
+        ImpersonatedCredentials.fromJson(
+            buildImpersonationCredentialsJson(
+                DEFAULT_IMPERSONATION_URL, DELEGATES, null, IMMUTABLE_SCOPES_LIST),
+            mockTransportFactory);
+    ImpersonatedCredentials newImpersonatedCredentials =
+        impersonatedCredentials.toBuilder().setScopes(userConfiguredScopes).build();
+    assertArrayEquals(
+        userConfiguredScopes.toArray(), newImpersonatedCredentials.getScopes().toArray());
+  }
+
+  @Test
   public void hashCode_equals() throws IOException {
     mockTransportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mockTransportFactory.getTransport().setAccessToken(ACCESS_TOKEN);
@@ -1333,7 +1365,8 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
       String quotaProjectId,
       String sourceClientId,
       String sourceClientSecret,
-      String sourceRefreshToken) {
+      String sourceRefreshToken,
+      List<String> scopes) {
     GenericJson sourceJson = new GenericJson();
 
     sourceJson.put("client_id", sourceClientId);
@@ -1348,12 +1381,13 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
       json.put("quota_project_id", quotaProjectId);
     }
     json.put("source_credentials", sourceJson);
+    json.put("scopes", scopes);
     json.put("type", "impersonated_service_account");
     return json;
   }
 
   static GenericJson buildImpersonationCredentialsJson(
-      String impersonationUrl, List<String> delegates, String quotaProjectId) {
+      String impersonationUrl, List<String> delegates, String quotaProjectId, List<String> scopes) {
     GenericJson sourceJson = new GenericJson();
     sourceJson.put("type", "service_account");
     sourceJson.put("project_id", PROJECT_ID);
@@ -1375,6 +1409,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     if (quotaProjectId != null) {
       json.put("quota_project_id", quotaProjectId);
     }
+    json.put("scopes", scopes);
     json.put("type", "impersonated_service_account");
     return json;
   }
@@ -1386,9 +1421,10 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   static InputStream writeImpersonationCredentialsStream(
-      String impersonationUrl, List<String> delegates, String quotaProjectId) throws IOException {
+      String impersonationUrl, List<String> delegates, String quotaProjectId, List<String> scopes)
+      throws IOException {
     GenericJson json =
-        buildImpersonationCredentialsJson(impersonationUrl, delegates, quotaProjectId);
+        buildImpersonationCredentialsJson(impersonationUrl, delegates, quotaProjectId, scopes);
     return TestUtils.jsonToInputStream(json);
   }
 }

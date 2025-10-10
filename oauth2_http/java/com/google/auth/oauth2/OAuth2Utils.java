@@ -95,6 +95,9 @@ public class OAuth2Utils {
   static final URI TOKEN_REVOKE_URI = URI.create("https://oauth2.googleapis.com/revoke");
   static final URI USER_AUTH_URI = URI.create("https://accounts.google.com/o/oauth2/auth");
 
+  public static final String CLOUD_PLATFORM_SCOPE =
+      "https://www.googleapis.com/auth/cloud-platform";
+
   static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 
   public static final HttpTransportFactory HTTP_TRANSPORT_FACTORY =
