@@ -325,10 +325,10 @@ public class ImpersonatedCredentials extends GoogleCredentials
     return sourceCredentials;
   }
 
-    @Override
-    Boolean supportsTrustBoundary() {
-        return true;
-    }
+  @Override
+  Boolean supportsTrustBoundary() {
+    return true;
+  }
 
   String getTrustBoundaryUrl() throws IOException {
     return String.format(
@@ -340,7 +340,6 @@ public class ImpersonatedCredentials extends GoogleCredentials
   int getLifetime() {
     return this.lifetime;
   }
-
 
   public void setTransportFactory(HttpTransportFactory httpTransportFactory) {
     this.transportFactory = httpTransportFactory;

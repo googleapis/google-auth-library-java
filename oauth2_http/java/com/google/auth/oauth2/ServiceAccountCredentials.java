@@ -823,10 +823,10 @@ public class ServiceAccountCredentials extends GoogleCredentials
     return useJwtAccessWithScope;
   }
 
-    @Override
-    Boolean supportsTrustBoundary() {
-        return true;
-    }
+  @Override
+  Boolean supportsTrustBoundary() {
+    return true;
+  }
 
   String getTrustBoundaryUrl() throws IOException {
     return String.format(

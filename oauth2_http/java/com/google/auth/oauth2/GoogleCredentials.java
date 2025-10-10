@@ -35,6 +35,7 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.Preconditions;
+import com.google.api.core.InternalApi;
 import com.google.api.core.ObsoleteApi;
 import com.google.auth.Credentials;
 import com.google.auth.http.HttpTransportFactory;
@@ -110,9 +111,6 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   private TrustBoundary trustBoundary;
 
   protected final String quotaProjectId;
-
-  private static final LoggerProvider LOGGER_PROVIDER =
-      LoggerProvider.forClazz(GoogleCredentials.class);
 
   private static final DefaultCredentialsProvider defaultCredentialsProvider =
       new DefaultCredentialsProvider();
@@ -337,50 +335,71 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   @VisibleForTesting
-  public TrustBoundary getTrustBoundary() {
+  TrustBoundary getTrustBoundary() {
     return trustBoundary;
   }
 
+  /**
+   * Returns whether the credentials support trust boundary.
+   *
+   * @return {@code true} if the credentials support trust boundary, {@code false} otherwise.
+   */
   Boolean supportsTrustBoundary() {
     return false;
   }
 
-  void refreshTrustBoundary(AccessToken newAccessToken, String trustBoundaryUrl, HttpTransportFactory transportFactory)
+  /**
+   * Refreshes the trust boundary by making a call to the trust boundary URL.
+   *
+   * <p>This method is for internal use only and should not be called by users directly. It is used
+   * to enforce security policies by ensuring that the credentials used to access Google Cloud APIs
+   * are not used outside a trusted environment.
+   *
+   * @param newAccessToken The new access token to be used for the refresh.
+   * @param trustBoundaryUrl The URL of the trust boundary service.
+   * @param transportFactory The HTTP transport factory to be used for the refresh.
+   * @throws IOException If the refresh fails and no cached value is available.
+   */
+  @InternalApi
+  void refreshTrustBoundary(
+      AccessToken newAccessToken, String trustBoundaryUrl, HttpTransportFactory transportFactory)
       throws IOException {
 
-      if (!supportsTrustBoundary() || !TrustBoundary.isTrustBoundaryEnabled() || !isDefaultUniverseDomain()) {
+    if (!supportsTrustBoundary()
+        || !TrustBoundary.isTrustBoundaryEnabled()
+        || !isDefaultUniverseDomain()) {
+      return;
+    }
+
+    TrustBoundary cachedTrustBoundary;
+
+    synchronized (lock) {
+      // Do not refresh if the cached value is already NO_OP.
+      if (trustBoundary != null && trustBoundary.isNoOp()) {
         return;
       }
+      cachedTrustBoundary = trustBoundary;
+    }
 
-      TrustBoundary cachedTrustBoundary;
-
-      synchronized (lock) {
-        // Do not refresh if the cached value is already NO_OP.
-        if (trustBoundary != null && trustBoundary.isNoOp()) {
-          return;
-        }
-        cachedTrustBoundary = trustBoundary;
+    TrustBoundary newTrustBoundary;
+    try {
+      newTrustBoundary =
+          TrustBoundary.refresh(
+              transportFactory, trustBoundaryUrl, newAccessToken, cachedTrustBoundary);
+    } catch (IOException e) {
+      // If refresh fails, check for a cached value.
+      if (cachedTrustBoundary == null) {
+        // No cached value, so fail hard.
+        throw new IOException(
+            "Failed to refresh trust boundary and no cached value is available.", e);
       }
+      return;
+    }
 
-      TrustBoundary newTrustBoundary;
-      try {
-        newTrustBoundary =
-            TrustBoundary.refresh(
-                transportFactory, trustBoundaryUrl, newAccessToken, cachedTrustBoundary);
-      } catch (IOException e) {
-        // If refresh fails, check for a cached value.
-        if (cachedTrustBoundary == null) {
-          // No cached value, so fail hard.
-          throw new IOException(
-              "Failed to refresh trust boundary and no cached value is available.", e);
-        }
-        return;
-      }
-
-      // A lock is required to safely update the shared field.
-      synchronized (lock) {
-        trustBoundary = newTrustBoundary;
-      }
+    // A lock is required to safely update the shared field.
+    synchronized (lock) {
+      trustBoundary = newTrustBoundary;
+    }
   }
 
   /**

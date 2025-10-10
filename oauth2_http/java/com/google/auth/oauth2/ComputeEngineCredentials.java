@@ -708,7 +708,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
   @Override
   Boolean supportsTrustBoundary() {
-      return true;
+    return true;
   }
 
   String getTrustBoundaryUrl() throws IOException {
