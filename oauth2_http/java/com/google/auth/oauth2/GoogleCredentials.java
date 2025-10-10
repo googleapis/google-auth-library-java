@@ -216,7 +216,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    * <p>Regardless of the method used, it is always your responsibility to validate configurations
    * received from external sources.
    *
-   * <p>See the {@link <a
+   * <p>See the {@see <a
    * href="https://cloud.google.com/docs/authentication/external/externally-sourced-credentials">documentation</a>}
    * for more details.
    *
@@ -259,7 +259,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    * <p>Regardless of the method used, it is always your responsibility to validate configurations
    * received from external sources.
    *
-   * <p>See the {@link <a
+   * <p>See the {@see <a
    * href="https://cloud.google.com/docs/authentication/external/externally-sourced-credentials">documentation</a>}
    * for more details.
    *
