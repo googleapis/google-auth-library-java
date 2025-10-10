@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.40.0](https://github.com/googleapis/google-auth-library-java/compare/v1.39.1...v1.40.0) (2025-10-10)
+
+
+### Features
+
+* Add projectId getter to GoogleCredentials ([#1813](https://github.com/googleapis/google-auth-library-java/issues/1813)) ([c3d9ee0](https://github.com/googleapis/google-auth-library-java/commit/c3d9ee09df30a26586b0e834cfda7763fd7854f5))
+
 ## [1.39.1](https://github.com/googleapis/google-auth-library-java/compare/v1.39.0...v1.39.1) (2025-09-17)
 
 
