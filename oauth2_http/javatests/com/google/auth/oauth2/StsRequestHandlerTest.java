@@ -42,6 +42,7 @@ import com.google.auth.TestUtils;
 import com.google.common.base.Joiner;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.junit.Before;
@@ -56,7 +57,6 @@ public final class StsRequestHandlerTest {
 
   private static final String TOKEN_EXCHANGE_GRANT_TYPE =
       "urn:ietf:params:oauth:grant-type:token-exchange";
-  private static final String CLOUD_PLATFORM_SCOPE = OAuth2Utils.CLOUD_PLATFORM_SCOPE;
   private static final String DEFAULT_REQUESTED_TOKEN_TYPE =
       "urn:ietf:params:oauth:token-type:access_token";
   private static final String TOKEN_URL = "https://sts.googleapis.com/v1/token";
@@ -72,7 +72,7 @@ public final class StsRequestHandlerTest {
   public void exchangeToken() throws IOException {
     StsTokenExchangeRequest stsTokenExchangeRequest =
         StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType")
-            .setScopes(Arrays.asList(CLOUD_PLATFORM_SCOPE))
+            .setScopes(Collections.singletonList(OAuth2Utils.CLOUD_PLATFORM_SCOPE))
             .build();
 
     StsRequestHandler requestHandler =
@@ -92,7 +92,7 @@ public final class StsRequestHandlerTest {
     GenericData expectedRequestContent =
         new GenericData()
             .set("grant_type", TOKEN_EXCHANGE_GRANT_TYPE)
-            .set("scope", CLOUD_PLATFORM_SCOPE)
+            .set("scope", OAuth2Utils.CLOUD_PLATFORM_SCOPE)
             .set("requested_token_type", DEFAULT_REQUESTED_TOKEN_TYPE)
             .set("subject_token_type", stsTokenExchangeRequest.getSubjectTokenType())
             .set("subject_token", stsTokenExchangeRequest.getSubjectToken());
@@ -256,7 +256,7 @@ public final class StsRequestHandlerTest {
 
     StsTokenExchangeRequest stsTokenExchangeRequest =
         StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType")
-            .setScopes(Arrays.asList(CLOUD_PLATFORM_SCOPE))
+            .setScopes(Collections.singletonList(OAuth2Utils.CLOUD_PLATFORM_SCOPE))
             .build();
 
     StsRequestHandler requestHandler =
