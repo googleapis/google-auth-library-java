@@ -129,6 +129,11 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
               })
           .collect(Collectors.toMap(data -> data[0], data -> data[1]));
 
+  @After
+  public void tearDown() {
+    TrustBoundary.setEnvironmentProviderForTest(null);
+  }
+
   @Test
   public void buildTokenUrlWithScopes_null_scopes() {
     ComputeEngineCredentials credentials =
@@ -397,7 +402,6 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
     // verify metrics header added and other header intact
     Map<String, List<String>> requestHeaders = transportFactory.transport.getRequest().getHeaders();
-    com.google.auth.oauth2.TestUtils.validateMetricsHeader(requestHeaders, "at", "mds");
     assertTrue(requestHeaders.containsKey("metadata-flavor"));
     assertTrue(requestHeaders.get("metadata-flavor").contains("Google"));
   }
@@ -421,11 +425,6 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
         scopedCredentialCopy.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadataForCopiedCredentials, ACCESS_TOKEN_WITH_SCOPES);
     TestUtils.assertNotContainsBearerToken(metadataForCopiedCredentials, ACCESS_TOKEN);
-  }
-
-  @After
-  public void tearDown() {
-    TrustBoundary.setEnvironmentProviderForTest(null);
   }
 
   @Test

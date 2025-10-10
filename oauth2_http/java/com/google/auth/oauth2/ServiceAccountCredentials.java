@@ -89,7 +89,7 @@ import java.util.concurrent.Executor;
  * <p>By default uses a JSON Web Token (JWT) to fetch access tokens.
  */
 public class ServiceAccountCredentials extends GoogleCredentials
-    implements ServiceAccountSigner, IdTokenProvider, JwtProvider, TrustBoundaryProvider {
+    implements ServiceAccountSigner, IdTokenProvider, JwtProvider {
 
   private static final long serialVersionUID = 7807543542681217978L;
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
@@ -582,7 +582,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000L;
     AccessToken newAccessToken = new AccessToken(accessToken, new Date(expiresAtMilliseconds));
 
-    refreshTrustBoundaries(newAccessToken);
+    refreshTrustBoundary(newAccessToken, getTrustBoundaryUrl(), transportFactory);
 
     return newAccessToken;
   }
@@ -823,13 +823,12 @@ public class ServiceAccountCredentials extends GoogleCredentials
     return useJwtAccessWithScope;
   }
 
-  @Override
-  public HttpTransportFactory getTransportFactory() {
-    return transportFactory;
-  }
+    @Override
+    Boolean supportsTrustBoundary() {
+        return true;
+    }
 
-  @Override
-  public String getTrustBoundaryUrl() throws IOException {
+  String getTrustBoundaryUrl() throws IOException {
     return String.format(
         OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT,
         getUniverseDomain(),

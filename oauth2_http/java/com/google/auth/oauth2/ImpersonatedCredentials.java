@@ -93,7 +93,7 @@ import java.util.Objects;
  * </pre>
  */
 public class ImpersonatedCredentials extends GoogleCredentials
-    implements ServiceAccountSigner, IdTokenProvider, TrustBoundaryProvider {
+    implements ServiceAccountSigner, IdTokenProvider {
 
   private static final long serialVersionUID = -2133257318957488431L;
   private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ssX";
@@ -325,13 +325,12 @@ public class ImpersonatedCredentials extends GoogleCredentials
     return sourceCredentials;
   }
 
-  @Override
-  public HttpTransportFactory getTransportFactory() {
-    return transportFactory;
-  }
+    @Override
+    Boolean supportsTrustBoundary() {
+        return true;
+    }
 
-  @Override
-  public String getTrustBoundaryUrl() throws IOException {
+  String getTrustBoundaryUrl() throws IOException {
     return String.format(
         OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT,
         getUniverseDomain(),
@@ -341,6 +340,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
   int getLifetime() {
     return this.lifetime;
   }
+
 
   public void setTransportFactory(HttpTransportFactory httpTransportFactory) {
     this.transportFactory = httpTransportFactory;
@@ -602,7 +602,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
       Date date = format.parse(expireTime);
       AccessToken newAccessToken = new AccessToken(accessToken, date);
 
-      refreshTrustBoundaries(newAccessToken);
+      refreshTrustBoundary(newAccessToken, getTrustBoundaryUrl(), transportFactory);
 
       return newAccessToken;
     } catch (ParseException pe) {

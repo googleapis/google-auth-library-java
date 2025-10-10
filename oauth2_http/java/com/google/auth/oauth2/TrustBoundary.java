@@ -46,6 +46,7 @@ import com.google.api.client.util.Key;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Date;
@@ -168,9 +169,7 @@ final class TrustBoundary {
       AccessToken accessToken,
       @Nullable TrustBoundary cachedTrustBoundary)
       throws IOException {
-    if (accessToken == null) {
-      throw new IllegalArgumentException("The provided access token is null.");
-    }
+    Preconditions.checkNotNull(accessToken, "The provided access token is null.");
     if (accessToken.getExpirationTime() != null
         && accessToken.getExpirationTime().before(new Date())) {
       throw new IllegalArgumentException("The provided access token is expired.");
@@ -213,7 +212,8 @@ final class TrustBoundary {
     }
     String encodedLocations = json.getEncodedLocations();
     if (encodedLocations == null) {
-      throw new IOException("TrustBoundary: Malformed response from lookup endpoint.");
+      throw new IOException(
+          "TrustBoundary: Malformed response from lookup endpoint - `encodedLocations` was null.");
     }
     return new TrustBoundary(encodedLocations, json.getLocations());
   }

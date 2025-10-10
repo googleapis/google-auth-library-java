@@ -341,6 +341,48 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     return trustBoundary;
   }
 
+  Boolean supportsTrustBoundary() {
+    return false;
+  }
+
+  void refreshTrustBoundary(AccessToken newAccessToken, String trustBoundaryUrl, HttpTransportFactory transportFactory)
+      throws IOException {
+
+      if (!supportsTrustBoundary() || !TrustBoundary.isTrustBoundaryEnabled() || !isDefaultUniverseDomain()) {
+        return;
+      }
+
+      TrustBoundary cachedTrustBoundary;
+
+      synchronized (lock) {
+        // Do not refresh if the cached value is already NO_OP.
+        if (trustBoundary != null && trustBoundary.isNoOp()) {
+          return;
+        }
+        cachedTrustBoundary = trustBoundary;
+      }
+
+      TrustBoundary newTrustBoundary;
+      try {
+        newTrustBoundary =
+            TrustBoundary.refresh(
+                transportFactory, trustBoundaryUrl, newAccessToken, cachedTrustBoundary);
+      } catch (IOException e) {
+        // If refresh fails, check for a cached value.
+        if (cachedTrustBoundary == null) {
+          // No cached value, so fail hard.
+          throw new IOException(
+              "Failed to refresh trust boundary and no cached value is available.", e);
+        }
+        return;
+      }
+
+      // A lock is required to safely update the shared field.
+      synchronized (lock) {
+        trustBoundary = newTrustBoundary;
+      }
+  }
+
   /**
    * Gets the universe domain for the credential.
    *
@@ -372,7 +414,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    * @return true if universe domain equals to {@link Credentials#GOOGLE_DEFAULT_UNIVERSE}, false
    *     otherwise
    */
-  boolean isDefaultUniverseDomain() throws IOException {
+  public boolean isDefaultUniverseDomain() throws IOException {
     return getUniverseDomain().equals(Credentials.GOOGLE_DEFAULT_UNIVERSE);
   }
 
@@ -390,57 +432,6 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
           QUOTA_PROJECT_ID_HEADER_KEY, Collections.singletonList(quotaProjectId));
     }
     return Collections.unmodifiableMap(newRequestMetadata);
-  }
-
-  /**
-   * Refreshes the trust boundary associated with these credentials.
-   *
-   * @param newAccessToken The newly refreshed access token to use for the trust boundary request.
-   * @throws IOException If the refresh fails and no cached trust boundary is available.
-   * @throws IllegalArgumentException If the provided access token is null or expired.
-   */
-  protected void refreshTrustBoundaries(AccessToken newAccessToken) throws IOException {
-    if (!(this instanceof TrustBoundaryProvider)) {
-      return;
-    }
-    if (!TrustBoundary.isTrustBoundaryEnabled() || !isDefaultUniverseDomain()) {
-      return;
-    }
-
-    TrustBoundaryProvider provider = (TrustBoundaryProvider) this;
-    TrustBoundary cachedTrustBoundary;
-
-    synchronized (lock) {
-      // Do not refresh if the cached value is already NO_OP.
-      if (this.trustBoundary != null && this.trustBoundary.isNoOp()) {
-        return;
-      }
-      cachedTrustBoundary = this.trustBoundary;
-    }
-
-    TrustBoundary newTrustBoundary;
-    try {
-      newTrustBoundary =
-          TrustBoundary.refresh(
-              provider.getTransportFactory(),
-              provider.getTrustBoundaryUrl(),
-              newAccessToken,
-              cachedTrustBoundary);
-    } catch (IOException e) {
-      // If refresh fails, check for a cached value.
-      if (cachedTrustBoundary == null) {
-        // No cached value, so fail hard.
-        throw new IOException(
-            "Failed to refresh trust boundary and no cached value is available.", e);
-      }
-
-      return;
-    }
-
-    // A lock is required to safely update the shared field.
-    synchronized (lock) {
-      this.trustBoundary = newTrustBoundary;
-    }
   }
 
   @Override

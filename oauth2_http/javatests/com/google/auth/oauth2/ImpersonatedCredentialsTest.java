@@ -167,6 +167,11 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     mockTransportFactory = new MockIAMCredentialsServiceTransportFactory();
   }
 
+  @After
+  public void tearDown() {
+    TrustBoundary.setEnvironmentProviderForTest(null);
+  }
+
   static GoogleCredentials getSourceCredentials() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
@@ -1272,11 +1277,6 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     assertEquals(targetCredentials.hashCode(), deserializedCredentials.hashCode());
     assertEquals(targetCredentials.toString(), deserializedCredentials.toString());
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
-  }
-
-  @After
-  public void tearDown() {
-    TrustBoundary.setEnvironmentProviderForTest(null);
   }
 
   @Test

@@ -102,6 +102,11 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   private static final String GOOGLE_DEFAULT_UNIVERSE = "googleapis.com";
   private static final String TPC_UNIVERSE = "foo.bar";
 
+  @After
+  public void tearDown() {
+    TrustBoundary.setEnvironmentProviderForTest(null);
+  }
+
   @Test
   public void getApplicationDefault_nullTransport_throws() throws IOException {
     try {
@@ -936,11 +941,6 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
         ImpersonatedCredentialsTest.IMPERSONATED_CLIENT_EMAIL, credentialInfo.get("Principal"));
   }
 
-  @After
-  public void tearDown() {
-    TrustBoundary.setEnvironmentProviderForTest(null);
-  }
-
   @Test
   public void trustBoundary_shouldNotCallLookupEndpointWhenDisabled() throws IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
@@ -1079,9 +1079,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     try {
       credentials.getRequestMetadata();
       fail("Should have thrown an IOException.");
-    } catch (IOException e) {
-      assertEquals(
-          "Failed to refresh trust boundary and no cached value is available.", e.getMessage());
+    } catch (IllegalArgumentException e) {
+      assertEquals("The provided access token is expired.", e.getMessage());
     }
   }
 
