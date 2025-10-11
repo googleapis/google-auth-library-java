@@ -63,6 +63,25 @@
       <artifactId>google-cloud-storage</artifactId>
     </dependency>
 
+    <!-- AWS SDK for Java V2 -->
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>auth</artifactId>
+      <version>2.20.27</version>
+    </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>regions</artifactId>
+      <version>2.20.27</version>
+    </dependency>
+
+    <!-- Gson -->
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>2.10.1</version>
+    </dependency>
+
 <!--    Test dependencies-->
     <dependency>
       <groupId>junit</groupId>
