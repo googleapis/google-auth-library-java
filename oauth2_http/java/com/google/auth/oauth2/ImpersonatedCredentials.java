@@ -326,7 +326,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
   }
 
   @Override
-  Boolean supportsTrustBoundary() {
+  boolean supportsTrustBoundary() {
     return true;
   }
 

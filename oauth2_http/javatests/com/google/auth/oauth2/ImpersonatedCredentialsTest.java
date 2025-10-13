@@ -1334,14 +1334,12 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             VALID_LIFETIME,
             mockTransportFactory);
 
-    try {
-      targetCredentials.refresh();
-    } catch (IOException e) {
-      assertTrue(
-          "The exception message should explain why the refresh failed.",
-          e.getMessage()
-              .contains("Failed to refresh trust boundary and no cached value is available."));
-    }
+    IOException exception = assertThrows(IOException.class, () -> targetCredentials.refresh());
+    assertTrue(
+        "The exception message should explain why the refresh failed.",
+        exception
+            .getMessage()
+            .contains("Failed to refresh trust boundary and no cached value is available."));
   }
 
   public static String getDefaultExpireTime() {

@@ -1854,14 +1854,12 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             .setHttpTransportFactory(() -> transport)
             .setScopes(SCOPES)
             .build();
-    try {
-      credentials.refresh();
-    } catch (IOException e) {
-      assertTrue(
-          "The exception message should explain why the refresh failed.",
-          e.getMessage()
-              .contains("Failed to refresh trust boundary and no cached value is available."));
-    }
+    IOException exception = assertThrows(IOException.class, () -> credentials.refresh());
+    assertTrue(
+        "The exception message should explain why the refresh failed.",
+        exception
+            .getMessage()
+            .contains("Failed to refresh trust boundary and no cached value is available."));
   }
 
   private void verifyJwtAccess(Map<String, List<String>> metadata, String expectedScopeClaim)

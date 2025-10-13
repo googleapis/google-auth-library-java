@@ -1183,14 +1183,12 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
-    try {
-      credentials.refresh();
-    } catch (IOException e) {
-      assertTrue(
-          "The exception message should explain why the refresh failed.",
-          e.getMessage()
-              .contains("Failed to refresh trust boundary and no cached value is available."));
-    }
+    IOException exception = assertThrows(IOException.class, () -> credentials.refresh());
+    assertTrue(
+        "The exception message should explain why the refresh failed.",
+        exception
+            .getMessage()
+            .contains("Failed to refresh trust boundary and no cached value is available."));
   }
 
   static class MockMetadataServerTransportFactory implements HttpTransportFactory {

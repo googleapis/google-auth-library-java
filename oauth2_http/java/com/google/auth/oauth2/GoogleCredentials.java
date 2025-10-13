@@ -344,7 +344,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    *
    * @return {@code true} if the credentials support trust boundary, {@code false} otherwise.
    */
-  Boolean supportsTrustBoundary() {
+  boolean supportsTrustBoundary() {
     return false;
   }
 
@@ -433,7 +433,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    * @return true if universe domain equals to {@link Credentials#GOOGLE_DEFAULT_UNIVERSE}, false
    *     otherwise
    */
-  public boolean isDefaultUniverseDomain() throws IOException {
+  boolean isDefaultUniverseDomain() throws IOException {
     return getUniverseDomain().equals(Credentials.GOOGLE_DEFAULT_UNIVERSE);
   }
 

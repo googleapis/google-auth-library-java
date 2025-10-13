@@ -94,7 +94,7 @@ public class OAuth2Utils {
 
   static final URI TOKEN_REVOKE_URI = URI.create("https://oauth2.googleapis.com/revoke");
 
-  public static final String IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT =
+  static final String IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT =
       "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s/allowedLocations";
   static final URI USER_AUTH_URI = URI.create("https://accounts.google.com/o/oauth2/auth");
 

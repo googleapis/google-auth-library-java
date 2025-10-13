@@ -824,7 +824,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
   }
 
   @Override
-  Boolean supportsTrustBoundary() {
+  boolean supportsTrustBoundary() {
     return true;
   }
 

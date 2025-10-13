@@ -707,7 +707,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
   }
 
   @Override
-  Boolean supportsTrustBoundary() {
+  boolean supportsTrustBoundary() {
     return true;
   }
 

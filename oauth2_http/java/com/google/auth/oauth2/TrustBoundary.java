@@ -211,6 +211,10 @@ final class TrustBoundary {
       throw new IOException("TrustBoundary: Failure while getting trust boundaries:", e);
     }
     String encodedLocations = json.getEncodedLocations();
+    // The encodedLocations is the value attached to the x-allowed-locations header and
+    // it should always have a value. In case of NO_OP the lookup endpoint returns
+    // encodedLocations as '0x0' and locations as null. That is why we only check for
+    // encodedLocations.
     if (encodedLocations == null) {
       throw new IOException(
           "TrustBoundary: Malformed response from lookup endpoint - `encodedLocations` was null.");

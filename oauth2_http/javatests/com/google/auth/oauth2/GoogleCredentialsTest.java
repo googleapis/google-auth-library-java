@@ -36,6 +36,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -960,7 +961,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
             .build();
 
     credentials.getRequestMetadata();
-    assertEquals(credentials.getTrustBoundary(), null);
+    assertNull(credentials.getTrustBoundary());
   }
 
   @Test
@@ -1076,12 +1077,9 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
             .setScopes(SCOPES)
             .build();
 
-    try {
-      credentials.getRequestMetadata();
-      fail("Should have thrown an IOException.");
-    } catch (IllegalArgumentException e) {
-      assertEquals("The provided access token is expired.", e.getMessage());
-    }
+    IllegalArgumentException exception =
+        assertThrows(IllegalArgumentException.class, () -> credentials.getRequestMetadata());
+    assertEquals("The provided access token is expired.", exception.getMessage());
   }
 
   @Test
@@ -1194,15 +1192,11 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
             .setHttpTransportFactory(() -> transport)
             .setScopes(SCOPES)
             .build();
-
-    try {
-      credentials.refresh();
-      fail("Should have thrown an IOException.");
-    } catch (IOException e) {
-      assertTrue(
-          e.getMessage()
-              .contains("Failed to refresh trust boundary and no cached value is available."));
-    }
+    IOException exception = assertThrows(IOException.class, () -> credentials.refresh());
+    assertTrue(
+        exception
+            .getMessage()
+            .contains("Failed to refresh trust boundary and no cached value is available."));
   }
 
   @Test
@@ -1225,14 +1219,11 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
             .setScopes(SCOPES)
             .build();
 
-    try {
-      credentials.refresh();
-      fail("Should have thrown an IOException.");
-    } catch (IOException e) {
-      assertTrue(
-          e.getMessage()
-              .contains("Failed to refresh trust boundary and no cached value is available."));
-    }
+    IOException exception = assertThrows(IOException.class, () -> credentials.refresh());
+    assertTrue(
+        exception
+            .getMessage()
+            .contains("Failed to refresh trust boundary and no cached value is available."));
   }
 
   @Test
