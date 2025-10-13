@@ -74,7 +74,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.google.http.version>1.47.0</project.google.http.version>
+    <project.google.http.version>2.0.2</project.google.http.version>
     <project.junit.version>4.13.2</project.junit.version>
     <project.guava.version>33.4.0-android</project.guava.version>
     <project.appengine.version>2.0.33</project.appengine.version>
