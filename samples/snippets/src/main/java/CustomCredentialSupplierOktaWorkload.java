@@ -38,7 +38,7 @@ import java.util.Base64;
  */
 public class CustomCredentialSupplierOktaWorkload {
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) {
     // TODO(Developer): Replace these variables with your actual values.
     String gcpWorkloadAudience = System.getenv("GCP_WORKLOAD_AUDIENCE");
     String serviceAccountImpersonationUrl =
@@ -76,8 +76,7 @@ public class CustomCredentialSupplierOktaWorkload {
       String gcsBucketName,
       String oktaDomain,
       String oktaClientId,
-      String oktaClientSecret)
-      throws IOException {
+      String oktaClientSecret) {
     // 1. Instantiate our custom supplier with Okta credentials.
     OktaClientCredentialsSupplier oktaSupplier =
         new OktaClientCredentialsSupplier(oktaDomain, oktaClientId, oktaClientSecret);
@@ -143,8 +142,19 @@ public class CustomCredentialSupplierOktaWorkload {
     }
 
     /**
-     * Performs the Client Credentials grant flow by making a POST request to Okta's token
-     * endpoint.
+     * Performs the Client Credentials grant flow by making a POST request to Okta's token endpoint.
+     *
+     * <p>To set up the Okta application for this flow:
+     *
+     * <ol>
+     *   <li>In your Okta developer console, create a new Application of type "Machine-to-Machine
+     *       (M2M)".
+     *   <li>Under the "General" tab, ensure that "Client Credentials" is an allowed grant type.
+     *   <li>Note the "Client ID" and "Client Secret" for your application.
+     *   <li>Navigate to "Security" > "API" and select your authorization server (e.g., "default").
+     *   <li>Under the "Scopes" tab, add a custom scope (e.g., "gcp.test.read").
+     *   <li>Ensure your M2M application is granted this scope.
+     * </ol>
      */
     private void fetchOktaAccessToken() throws IOException {
       URL url = new URL(this.oktaTokenUrl);
@@ -152,12 +162,18 @@ public class CustomCredentialSupplierOktaWorkload {
       conn.setRequestMethod("POST");
       conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
+      // The client_id and client_secret are sent in a Basic Auth header, as required by the
+      // OAuth 2.0 Client Credentials grant specification. The credentials are Base64 encoded.
       String auth = this.clientId + ":" + this.clientSecret;
       String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
       conn.setRequestProperty("Authorization", "Basic " + encodedAuth);
 
       conn.setDoOutput(true);
       try (DataOutputStream out = new DataOutputStream(conn.getOutputStream())) {
+        // For the Client Credentials grant, scopes are optional and define the permissions
+        // the access token will have. Replace "gcp.test.read" with the scopes defined in your
+        // Okta authorization server. Multiple scopes can be requested by space-separating them
+        // (e.g., "scope1 scope2").
         String params = "grant_type=client_credentials&scope=gcp.test.read";
         out.writeBytes(params);
         out.flush();

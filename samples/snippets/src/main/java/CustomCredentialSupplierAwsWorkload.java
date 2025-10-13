@@ -21,7 +21,6 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
-import java.io.IOException;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
@@ -34,7 +33,7 @@ import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
  */
 public class CustomCredentialSupplierAwsWorkload {
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) {
     // TODO(Developer): Replace these variables with your actual values.
     String gcpWorkloadAudience = System.getenv("GCP_WORKLOAD_AUDIENCE");
     String saImpersonationUrl = System.getenv("GCP_SERVICE_ACCOUNT_IMPERSONATION_URL");
@@ -53,8 +52,7 @@ public class CustomCredentialSupplierAwsWorkload {
   }
 
   public static void customCredentialSupplierAwsWorkload(
-      String gcpWorkloadAudience, String saImpersonationUrl, String gcsBucketName)
-      throws IOException {
+      String gcpWorkloadAudience, String saImpersonationUrl, String gcsBucketName) {
     // 1. Instantiate the custom supplier.
     CustomAwsSupplier customSupplier = new CustomAwsSupplier();
 
