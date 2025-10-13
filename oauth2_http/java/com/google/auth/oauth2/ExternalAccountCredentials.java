@@ -48,8 +48,8 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -67,9 +67,6 @@ import javax.annotation.Nullable;
 public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
   private static final long serialVersionUID = 8049126194174465023L;
-
-  private static final String CLOUD_PLATFORM_SCOPE =
-      "https://www.googleapis.com/auth/cloud-platform";
 
   static final String EXECUTABLE_SOURCE_KEY = "executable";
 
@@ -200,7 +197,9 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     this.clientId = clientId;
     this.clientSecret = clientSecret;
     this.scopes =
-        (scopes == null || scopes.isEmpty()) ? Arrays.asList(CLOUD_PLATFORM_SCOPE) : scopes;
+        (scopes == null || scopes.isEmpty())
+            ? Collections.singletonList(OAuth2Utils.CLOUD_PLATFORM_SCOPE)
+            : scopes;
     this.environmentProvider =
         environmentProvider == null ? SystemEnvironmentProvider.getInstance() : environmentProvider;
     this.workforcePoolUserProject = null;
@@ -245,7 +244,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
     this.scopes =
         (builder.scopes == null || builder.scopes.isEmpty())
-            ? Arrays.asList(CLOUD_PLATFORM_SCOPE)
+            ? Collections.singletonList(OAuth2Utils.CLOUD_PLATFORM_SCOPE)
             : builder.scopes;
     this.environmentProvider =
         builder.environmentProvider == null

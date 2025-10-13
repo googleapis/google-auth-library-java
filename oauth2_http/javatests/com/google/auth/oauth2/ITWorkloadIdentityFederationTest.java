@@ -408,8 +408,7 @@ public final class ITWorkloadIdentityFederationTest {
    */
   private String generateGoogleIdToken(String audience) throws IOException {
     GoogleCredentials googleCredentials =
-        GoogleCredentials.getApplicationDefault()
-            .createScoped("https://www.googleapis.com/auth/cloud-platform");
+        GoogleCredentials.getApplicationDefault().createScoped(OAuth2Utils.CLOUD_PLATFORM_SCOPE);
 
     HttpCredentialsAdapter credentialsAdapter = new HttpCredentialsAdapter(googleCredentials);
     HttpRequestFactory requestFactory =

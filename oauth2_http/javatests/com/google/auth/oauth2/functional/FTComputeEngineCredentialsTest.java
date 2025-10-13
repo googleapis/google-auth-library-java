@@ -44,12 +44,12 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.IdToken;
 import com.google.auth.oauth2.IdTokenCredentials;
 import com.google.auth.oauth2.IdTokenProvider;
+import com.google.auth.oauth2.OAuth2Utils;
 import org.junit.Test;
 
 public final class FTComputeEngineCredentialsTest {
   private final String computeUrl =
       "https://compute.googleapis.com/compute/v1/projects/gcloud-devel/zones/us-central1-a/instances";
-  private final String cloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform";
 
   @Test
   public void RefreshCredentials() throws Exception {
@@ -64,7 +64,7 @@ public final class FTComputeEngineCredentialsTest {
   @Test
   public void DefaultCredentials() throws Exception {
     final GoogleCredentials defaultCredential =
-        GoogleCredentials.getApplicationDefault().createScoped(cloudPlatformScope);
+        GoogleCredentials.getApplicationDefault().createScoped(OAuth2Utils.CLOUD_PLATFORM_SCOPE);
 
     AccessToken accessToken = defaultCredential.refreshAccessToken();
     assertNotNull(accessToken);
