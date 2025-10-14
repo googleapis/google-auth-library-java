@@ -101,7 +101,7 @@ public class GdchCredentials extends GoogleCredentials {
   }
 
   /**
-   * Returns credentials defined by a GDCHCredential key file in JSON format from the Google
+   * Returns credentials defined by a GdchCredentials key file in JSON format from the Google
    * Developers Console.
    *
    * <p>Important: If you accept a credential configuration (credential JSON/File/Stream) from an
@@ -120,7 +120,7 @@ public class GdchCredentials extends GoogleCredentials {
   }
 
   /**
-   * Returns credentials defined by a GDCHCredential key file in JSON format from the Google
+   * Returns credentials defined by a GdchCredentials key file in JSON format from the Google
    * Developers Console.
    *
    * <p>Important: If you accept a credential configuration (credential JSON/File/Stream) from an
@@ -138,7 +138,8 @@ public class GdchCredentials extends GoogleCredentials {
    */
   public static GdchCredentials fromStream(
       InputStream credentialsStream, HttpTransportFactory transportFactory) throws IOException {
-    GenericJson fileContents = parseJsonInputStream(credentialsStream, transportFactory);
+    Preconditions.checkNotNull(transportFactory);
+    GenericJson fileContents = parseJsonInputStream(credentialsStream);
     String fileType = (String) fileContents.get("type");
     if (fileType == null) {
       throw new IOException("Error reading credentials from stream, 'type' field not specified.");

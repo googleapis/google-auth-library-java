@@ -172,7 +172,8 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
    */
   public static UserCredentials fromStream(
       InputStream credentialsStream, HttpTransportFactory transportFactory) throws IOException {
-    GenericJson fileContents = parseJsonInputStream(credentialsStream, transportFactory);
+    Preconditions.checkNotNull(transportFactory);
+    GenericJson fileContents = parseJsonInputStream(credentialsStream);
     String fileType = (String) fileContents.get("type");
     if (fileType == null) {
       throw new IOException("Error reading credentials from stream, 'type' field not specified.");

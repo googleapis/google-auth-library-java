@@ -39,6 +39,7 @@ import com.google.api.client.util.Data;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.io.InputStream;
@@ -385,7 +386,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
    */
   public static ExternalAccountCredentials fromStream(
       InputStream credentialsStream, HttpTransportFactory transportFactory) throws IOException {
-    GenericJson fileContents = parseJsonInputStream(credentialsStream, transportFactory);
+    Preconditions.checkNotNull(transportFactory);
+    GenericJson fileContents = parseJsonInputStream(credentialsStream);
     String fileType = (String) fileContents.get("type");
     if (fileType == null) {
       throw new IOException("Error reading credentials from stream, 'type' field not specified.");

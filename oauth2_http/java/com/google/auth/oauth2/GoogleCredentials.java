@@ -32,7 +32,6 @@
 package com.google.auth.oauth2;
 
 import com.google.api.client.json.GenericJson;
-import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.Preconditions;
 import com.google.api.core.ObsoleteApi;
@@ -235,13 +234,13 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     return fromStream(credentialsStream, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
   }
 
-  static GenericJson parseJsonInputStream(
-      InputStream credentialsStream, HttpTransportFactory transportFactory) throws IOException {
+  /**
+   * Parses the Credential InputStream into JSON for each credential subclass to consume. The
+   * Credential InputStream must be non-null and valid.
+   */
+  static GenericJson parseJsonInputStream(InputStream credentialsStream) throws IOException {
     Preconditions.checkNotNull(credentialsStream);
-    Preconditions.checkNotNull(transportFactory);
-
-    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
-    JsonObjectParser parser = new JsonObjectParser(jsonFactory);
+    JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     return parser.parseAndClose(credentialsStream, StandardCharsets.UTF_8, GenericJson.class);
   }
 
@@ -286,7 +285,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       "This method is obsolete because of a potential security risk. Use the credential specific load method instead")
   public static GoogleCredentials fromStream(
       InputStream credentialsStream, HttpTransportFactory transportFactory) throws IOException {
-    GenericJson fileContents = parseJsonInputStream(credentialsStream, transportFactory);
+    Preconditions.checkNotNull(transportFactory);
+    GenericJson fileContents = parseJsonInputStream(credentialsStream);
     String fileType = (String) fileContents.get("type");
     if (fileType == null) {
       throw new IOException("Error reading credentials from stream, 'type' field not specified.");
