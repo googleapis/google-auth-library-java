@@ -388,10 +388,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       InputStream credentialsStream, HttpTransportFactory transportFactory) throws IOException {
     Preconditions.checkNotNull(transportFactory);
     GenericJson fileContents = parseJsonInputStream(credentialsStream);
-    String fileType = (String) fileContents.get("type");
-    if (fileType == null) {
-      throw new IOException("Error reading credentials from stream, 'type' field not specified.");
-    }
+    String fileType = extractFromJson(fileContents, "type");
     if (fileType.equals(GoogleCredentialsInfo.EXTERNAL_ACCOUNT_CREDENTIALS.getFileType())) {
       try {
         return fromJson(fileContents, transportFactory);

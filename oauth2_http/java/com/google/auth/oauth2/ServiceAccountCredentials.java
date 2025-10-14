@@ -488,10 +488,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
       InputStream credentialsStream, HttpTransportFactory transportFactory) throws IOException {
     Preconditions.checkNotNull(transportFactory);
     GenericJson fileContents = parseJsonInputStream(credentialsStream);
-    String fileType = (String) fileContents.get("type");
-    if (fileType == null) {
-      throw new IOException("Error reading credentials from stream, 'type' field not specified.");
-    }
+    String fileType = extractFromJson(fileContents, "type");
     if (fileType.equals(GoogleCredentialsInfo.SERVICE_ACCOUNT_CREDENTIALS.getFileType())) {
       return fromJson(fileContents, transportFactory);
     }

@@ -245,6 +245,19 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
+   * Internal helper method to try and extract a field from the json stream and throw an exception
+   * if it doesn't exist.
+   */
+  static String extractFromJson(Map<String, Object> json, String field) throws IOException {
+    String fileType = (String) json.get(field);
+    if (fileType == null) {
+      throw new IOException(
+          "Error reading credentials from stream, '" + field + "' field not specified.");
+    }
+    return fileType;
+  }
+
+  /**
    * This method is obsolete because of a potential security risk. Use the credential specific load
    * method instead
    *
