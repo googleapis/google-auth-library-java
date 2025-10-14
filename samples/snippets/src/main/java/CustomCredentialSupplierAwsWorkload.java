@@ -29,7 +29,7 @@ import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
 
 /**
  * This sample demonstrates how to use a custom AWS security credentials supplier to authenticate
- * with Google Cloud.
+ * to Google Cloud Storage.
  */
 public class CustomCredentialSupplierAwsWorkload {
 

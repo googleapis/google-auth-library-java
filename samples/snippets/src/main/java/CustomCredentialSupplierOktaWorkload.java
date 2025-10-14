@@ -33,8 +33,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 /**
- * This sample demonstrates how to use a custom subject token supplier to authenticate with Google
- * Cloud, using Okta as the identity provider.
+ * This sample demonstrates how to use a custom subject token supplier to authenticate to Google
+ * Cloud Storage, using Okta as the identity provider.
  */
 public class CustomCredentialSupplierOktaWorkload {
 
