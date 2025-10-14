@@ -542,6 +542,8 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
   @Test
   public void fromStream_minimumRequiredFieldsForRefresh() throws IOException {
     GenericJson json = new GenericJson();
+    json.put(
+        "type", GoogleCredentialsInfo.EXTERNAL_ACCOUNT_AUTHORIZED_USER_CREDENTIALS.getFileType());
     json.put("client_id", CLIENT_ID);
     json.put("client_secret", CLIENT_SECRET);
     json.put("refresh_token", REFRESH_TOKEN);
@@ -565,6 +567,8 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
   public void fromStream_accessTokenOnly_notSupported() throws IOException {
     GenericJson json = new GenericJson();
     json.put("access_token", ACCESS_TOKEN);
+    json.put(
+        "type", GoogleCredentialsInfo.EXTERNAL_ACCOUNT_AUTHORIZED_USER_CREDENTIALS.getFileType());
     try {
       ExternalAccountAuthorizedUserCredentials.fromStream(TestUtils.jsonToInputStream(json));
       fail("Should not be able to continue without exception.");

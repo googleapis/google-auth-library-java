@@ -235,6 +235,16 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     return fromStream(credentialsStream, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
   }
 
+  static GenericJson parseJsonInputStream(
+      InputStream credentialsStream, HttpTransportFactory transportFactory) throws IOException {
+    Preconditions.checkNotNull(credentialsStream);
+    Preconditions.checkNotNull(transportFactory);
+
+    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
+    JsonObjectParser parser = new JsonObjectParser(jsonFactory);
+    return parser.parseAndClose(credentialsStream, StandardCharsets.UTF_8, GenericJson.class);
+  }
+
   /**
    * This method is obsolete because of a potential security risk. Use the credential specific load
    * method instead
@@ -276,14 +286,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       "This method is obsolete because of a potential security risk. Use the credential specific load method instead")
   public static GoogleCredentials fromStream(
       InputStream credentialsStream, HttpTransportFactory transportFactory) throws IOException {
-    Preconditions.checkNotNull(credentialsStream);
-    Preconditions.checkNotNull(transportFactory);
-
-    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
-    JsonObjectParser parser = new JsonObjectParser(jsonFactory);
-    GenericJson fileContents =
-        parser.parseAndClose(credentialsStream, StandardCharsets.UTF_8, GenericJson.class);
-
+    GenericJson fileContents = parseJsonInputStream(credentialsStream, transportFactory);
     String fileType = (String) fileContents.get("type");
     if (fileType == null) {
       throw new IOException("Error reading credentials from stream, 'type' field not specified.");

@@ -35,7 +35,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.json.GenericJson;
-import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.Data;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.http.HttpTransportFactory;
@@ -46,7 +45,6 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.math.BigDecimal;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -387,17 +385,24 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
    */
   public static ExternalAccountCredentials fromStream(
       InputStream credentialsStream, HttpTransportFactory transportFactory) throws IOException {
-    checkNotNull(credentialsStream);
-    checkNotNull(transportFactory);
-
-    JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
-    GenericJson fileContents =
-        parser.parseAndClose(credentialsStream, StandardCharsets.UTF_8, GenericJson.class);
-    try {
-      return fromJson(fileContents, transportFactory);
-    } catch (ClassCastException | IllegalArgumentException e) {
-      throw new CredentialFormatException("An invalid input stream was provided.", e);
+    GenericJson fileContents = parseJsonInputStream(credentialsStream, transportFactory);
+    String fileType = (String) fileContents.get("type");
+    if (fileType == null) {
+      throw new IOException("Error reading credentials from stream, 'type' field not specified.");
     }
+    if (fileType.equals(GoogleCredentialsInfo.EXTERNAL_ACCOUNT_CREDENTIALS.getFileType())) {
+      try {
+        return fromJson(fileContents, transportFactory);
+      } catch (ClassCastException | IllegalArgumentException e) {
+        throw new CredentialFormatException("An invalid input stream was provided.", e);
+      }
+    }
+
+    throw new IOException(
+        String.format(
+            "Error reading credentials from stream, 'type' value '%s' not recognized."
+                + " Expecting '%s'.",
+            fileType, GoogleCredentialsInfo.EXTERNAL_ACCOUNT_CREDENTIALS.getFileType()));
   }
 
   /**
@@ -417,9 +422,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   @SuppressWarnings("unchecked")
   static ExternalAccountCredentials fromJson(
       Map<String, Object> json, HttpTransportFactory transportFactory) {
-    checkNotNull(json);
-    checkNotNull(transportFactory);
-
     String audience = (String) json.get("audience");
     String subjectTokenType = (String) json.get("subject_token_type");
     String tokenUrl = (String) json.get("token_url");

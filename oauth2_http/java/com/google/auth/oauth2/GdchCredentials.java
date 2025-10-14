@@ -39,6 +39,7 @@ import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.UrlEncodedContent;
 import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.webtoken.JsonWebSignature;
@@ -97,6 +98,60 @@ public class GdchCredentials extends GoogleCredentials {
     this.apiAudience = builder.apiAudience;
     this.lifetime = builder.lifetime;
     this.name = GoogleCredentialsInfo.GDCH_CREDENTIALS.getCredentialName();
+  }
+
+  /**
+   * Returns credentials defined by a GDCHCredential key file in JSON format from the Google
+   * Developers Console.
+   *
+   * <p>Important: If you accept a credential configuration (credential JSON/File/Stream) from an
+   * external source for authentication to Google Cloud Platform, you must validate it before
+   * providing it to any Google API or library. Providing an unvalidated credential configuration to
+   * Google APIs can compromise the security of your systems and data. For more information, refer
+   * to {@see <a
+   * href="https://cloud.google.com/docs/authentication/external/externally-sourced-credentials">documentation</a>}.
+   *
+   * @param credentialsStream the stream with the credential definition.
+   * @return the credential defined by the credentialsStream.
+   * @throws IOException if the credential cannot be created from the stream.
+   */
+  public static GdchCredentials fromStream(InputStream credentialsStream) throws IOException {
+    return fromStream(credentialsStream, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+  }
+
+  /**
+   * Returns credentials defined by a GDCHCredential key file in JSON format from the Google
+   * Developers Console.
+   *
+   * <p>Important: If you accept a credential configuration (credential JSON/File/Stream) from an
+   * external source for authentication to Google Cloud Platform, you must validate it before
+   * providing it to any Google API or library. Providing an unvalidated credential configuration to
+   * Google APIs can compromise the security of your systems and data. For more information, refer
+   * to {@see <a
+   * href="https://cloud.google.com/docs/authentication/external/externally-sourced-credentials">documentation</a>}.
+   *
+   * @param credentialsStream the stream with the credential definition.
+   * @param transportFactory HTTP transport factory, creates the transport used to get access
+   *     tokens.
+   * @return the credential defined by the credentialsStream.
+   * @throws IOException if the credential cannot be created from the stream.
+   */
+  public static GdchCredentials fromStream(
+      InputStream credentialsStream, HttpTransportFactory transportFactory) throws IOException {
+    GenericJson fileContents = parseJsonInputStream(credentialsStream, transportFactory);
+    String fileType = (String) fileContents.get("type");
+    if (fileType == null) {
+      throw new IOException("Error reading credentials from stream, 'type' field not specified.");
+    }
+    if (fileType.equals(GoogleCredentialsInfo.GDCH_CREDENTIALS.getFileType())) {
+      return fromJson(fileContents, transportFactory);
+    }
+
+    throw new IOException(
+        String.format(
+            "Error reading credentials from stream, 'type' value '%s' not recognized."
+                + " Expecting '%s'.",
+            fileType, GoogleCredentialsInfo.GDCH_CREDENTIALS.getFileType()));
   }
 
   /**

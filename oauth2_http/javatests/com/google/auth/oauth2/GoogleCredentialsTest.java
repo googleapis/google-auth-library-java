@@ -153,14 +153,11 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_nullStream_throws() throws IOException {
+  public void fromStream_nullStream_throws() {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
-    try {
-      GoogleCredentials.fromStream(null, transportFactory);
-      fail("Should throw if InputStream is null");
-    } catch (NullPointerException expected) {
-      // Expected
-    }
+    assertThrows(
+        NullPointerException.class,
+        () -> GoogleCredentials.parseJsonInputStream(null, transportFactory));
   }
 
   @Test
