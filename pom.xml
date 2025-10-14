@@ -158,6 +158,12 @@
         <artifactId>error_prone_annotations</artifactId>
         <version>${project.error-prone.version}</version>
         <scope>compile</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>com.google.protobuf</groupId>
