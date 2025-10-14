@@ -32,7 +32,6 @@
 package com.google.auth.oauth2;
 
 import com.google.api.client.json.GenericJson;
-import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.Preconditions;
 import com.google.api.core.ObsoleteApi;
@@ -236,6 +235,29 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
+   * Parses the Credential InputStream into JSON for each credential subclass to consume. The
+   * Credential InputStream must be non-null and valid.
+   */
+  static GenericJson parseJsonInputStream(InputStream credentialsStream) throws IOException {
+    Preconditions.checkNotNull(credentialsStream);
+    JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
+    return parser.parseAndClose(credentialsStream, StandardCharsets.UTF_8, GenericJson.class);
+  }
+
+  /**
+   * Internal helper method to try and extract a field from the json stream and throw an exception
+   * if it doesn't exist.
+   */
+  static String extractFromJson(Map<String, Object> json, String field) throws IOException {
+    String fileType = (String) json.get(field);
+    if (fileType == null) {
+      throw new IOException(
+          "Error reading credentials from stream, '" + field + "' field not specified.");
+    }
+    return fileType;
+  }
+
+  /**
    * This method is obsolete because of a potential security risk. Use the credential specific load
    * method instead
    *
@@ -276,14 +298,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       "This method is obsolete because of a potential security risk. Use the credential specific load method instead")
   public static GoogleCredentials fromStream(
       InputStream credentialsStream, HttpTransportFactory transportFactory) throws IOException {
-    Preconditions.checkNotNull(credentialsStream);
     Preconditions.checkNotNull(transportFactory);
-
-    JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
-    JsonObjectParser parser = new JsonObjectParser(jsonFactory);
-    GenericJson fileContents =
-        parser.parseAndClose(credentialsStream, StandardCharsets.UTF_8, GenericJson.class);
-
+    GenericJson fileContents = parseJsonInputStream(credentialsStream);
     String fileType = (String) fileContents.get("type");
     if (fileType == null) {
       throw new IOException("Error reading credentials from stream, 'type' field not specified.");
