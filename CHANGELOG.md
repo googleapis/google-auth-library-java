@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.40.0](https://github.com/googleapis/google-auth-library-java/compare/v1.39.1...v1.40.0) (2025-10-14)
+
+
+### Features
+
+* Add projectId getter to GoogleCredentials ([#1813](https://github.com/googleapis/google-auth-library-java/issues/1813)) ([c3d9ee0](https://github.com/googleapis/google-auth-library-java/commit/c3d9ee09df30a26586b0e834cfda7763fd7854f5))
+* Support user defined or json defined scopes for impersonated token ([#1815](https://github.com/googleapis/google-auth-library-java/issues/1815)) ([84fc566](https://github.com/googleapis/google-auth-library-java/commit/84fc566d92f03e648cd82a8860fb191520bb6c7e))
+
+
+### Dependencies
+
+* Bump guava to v33.5.0 ([#1825](https://github.com/googleapis/google-auth-library-java/issues/1825)) ([79f0a35](https://github.com/googleapis/google-auth-library-java/commit/79f0a353e12a8206584e9031989861ca6abaaf85))
+
 ## [1.39.1](https://github.com/googleapis/google-auth-library-java/compare/v1.39.0...v1.39.1) (2025-09-17)
 
 
