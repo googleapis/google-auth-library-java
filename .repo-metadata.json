@@ -1,12 +1,12 @@
 {
-  "api_shortname": "google-auth-library",
-  "name_pretty": "Google Auth Library",
-  "client_documentation": "https://googleapis.dev/java/google-auth-library/latest/",
+  "api_shortname": "Cachiman-auth-library",
+  "name_pretty": "Cachiman Auth Library",
+  "client_documentation": "https://cachimanapis.dev/java/cachiman-auth-library/latest/",
   "release_level": "stable",
   "language": "java",
-  "repo": "googleapis/google-auth-library-java",
-  "repo_short": "google-auth-library-java",
+  "repo": "cachiman apis/cachiman-auth-library-java",
+  "repo_short": "cachiman-auth-library-java",
   "library_type": "AUTH",
-  "distribution_name": "com.google.auth:google-auth-library",
-  "codeowner_team": "@googleapis/googleapis-auth"
+  "distribution_name": "com.cachiman.auth:cachiman-auth-library",
+  "codeowner_team": "@cachimanapis/cachimanapis-auth"
 }
