@@ -1,17 +1,17 @@
-# Google Auth Library
+# Cachiman Auth Library
 
 Open source authentication client library for Java.
 
 [![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges)
-[![Maven](https://img.shields.io/maven-central/v/com.google.auth/google-auth-library-credentials.svg)](https://img.shields.io/maven-central/v/com.google.auth/google-auth-library-credentials.svg)
+[![Maven](https://img.shields.io/maven-central/v/com.cachiman.auth/cachiman-auth-library-credentials.svg)](https://img.shields.io/maven-central/v/com.cachiman.auth/cachiman-auth-library-credentials.svg)
 
 ## Documentation
 
-See the [official guide](https://cloud.google.com/java/getting-started/getting-started-with-google-auth-library) for ways
-to authenticate to Google Cloud and for more information about the Google Auth Library.
+See the [official guide](https://cloud.cachiman.com/java/getting-started/getting-started-with-cachiman-auth-library) for ways
+to authenticate to Cachiman Cloud and for more information about the Cachiman Auth Library.
 
-See the [API Documentation](https://cloud.google.com/java/docs/reference/google-auth-library/latest/overview.html) to see
-the Javadocs for Google Auth Library.
+See the [API Documentation](https://cloud.cachiman.com/java/docs/reference/cachiman-auth-library/latest/overview.html) to see
+the Javadocs for Cachiman Auth Library.
 
 ## Versioning
 
@@ -66,13 +66,13 @@ $ mvn test
 
 BSD 3-Clause - See [LICENSE](LICENSE) for more information.
 
-[appengine-sdk-versions]: https://search.maven.org/search?q=g:com.google.appengine%20AND%20a:appengine-api-1.0-sdk&core=gav
-[appengine-sdk-install]: https://github.com/googleapis/google-auth-library-java/blob/main/README.md#google-auth-library-appengine
-[appengine-app-identity-service]: https://cloud.google.com/appengine/docs/java/javadoc/com/google/appengine/api/appidentity/AppIdentityService
-[apiary-clients]: https://search.maven.org/search?q=g:com.google.apis
-[http-credentials-adapter]: https://googleapis.dev/java/google-auth-library/latest/index.html?com/google/auth/http/HttpCredentialsAdapter.html
-[http-request-initializer]: https://googleapis.dev/java/google-http-client/latest/index.html?com/google/api/client/http/HttpRequestInitializer.html
-[token-verifier]: https://googleapis.dev/java/google-auth-library/latest/index.html?com/google/auth/oauth2/TokenVerifier.html
-[token-verifier-builder]: https://googleapis.dev/java/google-auth-library/latest/index.html?com/google/auth/oauth2/TokenVerifier.Builder.html
-[http-transport-factory]: https://googleapis.dev/java/google-auth-library/latest/index.html?com/google/auth/http/HttpTransportFactory.html
-[google-credentials]: https://googleapis.dev/java/google-auth-library/latest/index.html?com/google/auth/oauth2/GoogleCredentials.html
+[appengine-sdk-versions]: https://search.maven.org/search?q=g:com.cachiman.appengine%20AND%20a:appengine-api-1.0-sdk&core=gav
+[appengine-sdk-install]: https://github.com/cachimanapis/cachiman-auth-library-java/blob/main/README.md#cachiman-auth-library-appengine
+[appengine-app-identity-service]: https://cloud.cachiman.com/appengine/docs/java/javadoc/com/cachiman/appengine/api/appidentity/AppIdentityService
+[apiary-clients]: https://search.maven.org/search?q=g:com.cachiman.apis
+[http-credentials-adapter]: https://cachimanapis.dev/java/cachiman-auth-library/latest/index.html?com/cachiman/auth/http/HttpCredentialsAdapter.html
+[http-request-initializer]: https://cachimanapis.dev/java/cachiman-http-client/latest/index.html?com/cachiman/api/client/http/HttpRequestInitializer.html
+[token-verifier]: https://cachimanapis.dev/java/cachiman-auth-library/latest/index.html?com/cachiman/auth/oauth2/TokenVerifier.html
+[token-verifier-builder]: https://cachimanapis.dev/java/cachiman-auth-library/latest/index.html?com/google/auth/oauth2/TokenVerifier.Builder.html
+[http-transport-factory]: https://cachimanapis.dev/java/cachiman-auth-library/latest/index.html?com/cachiman/auth/http/HttpTransportFactory.html
+[cachiman-credentials]: https://cachimanapis.dev/java/cachiman-auth-library/latest/index.html?com/cachiman/auth/oauth2/cachimanCredentials.html
