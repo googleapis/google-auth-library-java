@@ -344,17 +344,17 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
   /**
    * Retrieves the Google Cloud project ID from the Compute Engine (GCE) metadata server.
-   * <p>
-   * On its first successful execution, it fetches the project ID and caches it for the lifetime
+   *
+   * <p>On its first successful execution, it fetches the project ID and caches it for the lifetime
    * of the object. Subsequent calls will return the cached value without making additional network
    * requests.
-   * <p>
-   * If the request to the metadata server fails (e.g., due to network issues, or if the VM lacks
+   *
+   * <p>If the request to the metadata server fails (e.g., due to network issues, or if the VM lacks
    * the required service account permissions), the method will attempt to fall back to a default
    * project ID provider which could be {@code null}.
    *
-   * @return the GCP project ID string, or {@code null} if the metadata server is
-   * inaccessible and no fallback project ID can be determined.
+   * @return the GCP project ID string, or {@code null} if the metadata server is inaccessible and
+   *     no fallback project ID can be determined.
    */
   @Override
   public String getProjectId() {
@@ -376,11 +376,15 @@ public class ComputeEngineCredentials extends GoogleCredentials
       HttpResponse response = getMetadataResponse(getProjectIdUrl(), RequestType.UNTRACKED, false);
       int statusCode = response.getStatusCode();
       if (statusCode == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
-        LoggingUtils.log(LOGGER_PROVIDER, Level.WARNING, Collections.emptyMap(), String.format(
-            "Error code %s trying to get project ID from"
-                + " Compute Engine metadata. This may be because the virtual machine instance"
-                + " does not have permission scopes specified.",
-            statusCode));
+        LoggingUtils.log(
+            LOGGER_PROVIDER,
+            Level.WARNING,
+            Collections.emptyMap(),
+            String.format(
+                "Error code %s trying to get project ID from"
+                    + " Compute Engine metadata. This may be because the virtual machine instance"
+                    + " does not have permission scopes specified.",
+                statusCode));
         return super.getProjectId();
       }
       if (statusCode != HttpStatusCodes.STATUS_CODE_OK) {
@@ -403,7 +407,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
           String.format(
               "Unexpected Error: %s trying to get project ID"
                   + " from Compute Engine metadata server. Reason: %s",
-               e.getMessage(), e.getCause().toString()));
+              e.getMessage(), e.getCause().toString()));
       return super.getProjectId();
     }
   }
