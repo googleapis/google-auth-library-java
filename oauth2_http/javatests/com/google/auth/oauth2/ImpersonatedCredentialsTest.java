@@ -71,6 +71,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -153,6 +154,8 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   private static final String REFRESH_TOKEN = "dasdfasdffa4ffdfadgyjirasdfadsft";
   public static final List<String> DELEGATES =
       Arrays.asList("sa1@developer.gserviceaccount.com", "sa2@developer.gserviceaccount.com");
+  public static final TrustBoundary TRUST_BOUNDARY =
+      new TrustBoundary("0x80000", Arrays.asList("us-central1"));
 
   private GoogleCredentials sourceCredentials;
   private MockIAMCredentialsServiceTransportFactory mockTransportFactory;
@@ -161,6 +164,11 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   public void setup() throws IOException {
     sourceCredentials = getSourceCredentials();
     mockTransportFactory = new MockIAMCredentialsServiceTransportFactory();
+  }
+
+  @After
+  public void tearDown() {
+    TrustBoundary.setEnvironmentProviderForTest(null);
   }
 
   static GoogleCredentials getSourceCredentials() throws IOException {
@@ -176,6 +184,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             .setHttpTransportFactory(transportFactory)
             .build();
     transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    transportFactory.transport.setTrustBoundary(TRUST_BOUNDARY);
 
     return sourceCredentials;
   }
@@ -1300,6 +1309,69 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     assertEquals(targetCredentials.hashCode(), deserializedCredentials.hashCode());
     assertEquals(targetCredentials.toString(), deserializedCredentials.toString());
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
+  }
+
+  @Test
+  public void refresh_trustBoundarySuccess() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
+
+    // Mock trust boundary response
+    TrustBoundary trustBoundary = TRUST_BOUNDARY;
+
+    mockTransportFactory.getTransport().setTrustBoundary(trustBoundary);
+    mockTransportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.getTransport().setAccessToken(ACCESS_TOKEN);
+    mockTransportFactory.getTransport().setExpireTime(getDefaultExpireTime());
+    mockTransportFactory
+        .getTransport()
+        .addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "", true);
+
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            sourceCredentials,
+            IMPERSONATED_CLIENT_EMAIL,
+            null,
+            IMMUTABLE_SCOPES_LIST,
+            VALID_LIFETIME,
+            mockTransportFactory);
+
+    Map<String, List<String>> headers = targetCredentials.getRequestMetadata();
+    assertEquals(headers.get("x-allowed-locations"), Arrays.asList("0x80000"));
+  }
+
+  @Test
+  public void refresh_trustBoundaryFails_throwsIOException() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
+
+    // Mock trust boundary response
+    TrustBoundary trustBoundary = TRUST_BOUNDARY;
+
+    mockTransportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.getTransport().setAccessToken(ACCESS_TOKEN);
+    mockTransportFactory.getTransport().setExpireTime(getDefaultExpireTime());
+    mockTransportFactory
+        .getTransport()
+        .addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "", true);
+
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            sourceCredentials,
+            IMPERSONATED_CLIENT_EMAIL,
+            null,
+            IMMUTABLE_SCOPES_LIST,
+            VALID_LIFETIME,
+            mockTransportFactory);
+
+    IOException exception = assertThrows(IOException.class, () -> targetCredentials.refresh());
+    assertTrue(
+        "The exception message should explain why the refresh failed.",
+        exception
+            .getMessage()
+            .contains("Failed to refresh trust boundary and no cached value is available."));
   }
 
   public static String getDefaultExpireTime() {

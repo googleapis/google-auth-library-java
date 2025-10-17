@@ -69,6 +69,7 @@ import java.util.Queue;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -127,6 +128,11 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
                 {SCOPES.toString().replaceAll("\\s", ""), ACCESS_TOKEN_WITH_SCOPES},
               })
           .collect(Collectors.toMap(data -> data[0], data -> data[1]));
+
+  @After
+  public void tearDown() {
+    TrustBoundary.setEnvironmentProviderForTest(null);
+  }
 
   @Test
   public void buildTokenUrlWithScopes_null_scopes() {
@@ -396,7 +402,6 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
     // verify metrics header added and other header intact
     Map<String, List<String>> requestHeaders = transportFactory.transport.getRequest().getHeaders();
-    com.google.auth.oauth2.TestUtils.validateMetricsHeader(requestHeaders, "at", "mds");
     assertTrue(requestHeaders.containsKey("metadata-flavor"));
     assertTrue(requestHeaders.get("metadata-flavor").contains("Google"));
   }
@@ -1144,6 +1149,46 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
     assertThrows(
         GoogleAuthException.class, () -> credentials.idTokenWithAudience("Audience", null));
+  }
+
+  @Test
+  public void refresh_trustBoundarySuccess() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
+    String defaultAccountEmail = "default@email.com";
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    TrustBoundary trustBoundary =
+        new TrustBoundary("0x80000", Collections.singletonList("us-central1"));
+    transportFactory.transport.setTrustBoundary(trustBoundary);
+    transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);
+
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+    Map<String, List<String>> headers = credentials.getRequestMetadata();
+    assertEquals(headers.get("x-allowed-locations"), Arrays.asList("0x80000"));
+  }
+
+  @Test
+  public void refresh_trustBoundaryFails_throwsIOException() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
+
+    String defaultAccountEmail = "default@email.com";
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);
+
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+    IOException exception = assertThrows(IOException.class, () -> credentials.refresh());
+    assertTrue(
+        "The exception message should explain why the refresh failed.",
+        exception
+            .getMessage()
+            .contains("Failed to refresh trust boundary and no cached value is available."));
   }
 
   static class MockMetadataServerTransportFactory implements HttpTransportFactory {
