@@ -340,20 +340,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * Returns whether the credentials support trust boundary.
-   *
-   * @return {@code true} if the credentials support trust boundary, {@code false} otherwise.
-   */
-  boolean supportsTrustBoundary() {
-    return false;
-  }
-
-  /**
    * Refreshes the trust boundary by making a call to the trust boundary URL.
-   *
-   * <p>This method is for internal use only and should not be called by users directly. It is used
-   * to enforce security policies by ensuring that the credentials used to access Google Cloud APIs
-   * are not used outside a trusted environment.
    *
    * @param newAccessToken The new access token to be used for the refresh.
    * @param trustBoundaryUrl The URL of the trust boundary service.
@@ -365,7 +352,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       AccessToken newAccessToken, String trustBoundaryUrl, HttpTransportFactory transportFactory)
       throws IOException {
 
-    if (!supportsTrustBoundary()
+    if (!(this instanceof TrustBoundaryProvider)
         || !TrustBoundary.isTrustBoundaryEnabled()
         || !isDefaultUniverseDomain()) {
       return;
@@ -456,17 +443,14 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   @Override
   protected Map<String, List<String>> getAdditionalHeaders() {
     Map<String, List<String>> headers = new HashMap<>(super.getAdditionalHeaders());
-    String quotaProjectId = this.getQuotaProjectId();
-    if (quotaProjectId != null) {
-      headers.put(QUOTA_PROJECT_ID_HEADER_KEY, Collections.singletonList(quotaProjectId));
-    }
 
     if (this.trustBoundary != null) {
       String headerValue = trustBoundary.isNoOp() ? "" : trustBoundary.getEncodedLocations();
       headers.put(TrustBoundary.TRUST_BOUNDARY_KEY, Collections.singletonList(headerValue));
     }
 
-    return Collections.unmodifiableMap(headers);
+    String quotaProjectId = this.getQuotaProjectId();
+    return addQuotaProjectIdToRequestMetadata(quotaProjectId, headers);
   }
 
   /** Default constructor. */

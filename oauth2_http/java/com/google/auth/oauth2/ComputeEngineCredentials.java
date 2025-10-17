@@ -41,6 +41,7 @@ import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
+import com.google.api.core.InternalApi;
 import com.google.auth.CredentialTypeForMetrics;
 import com.google.auth.Credentials;
 import com.google.auth.Retryable;
@@ -82,7 +83,7 @@ import java.util.logging.Logger;
  * <p>These credentials use the IAM API to sign data. See {@link #sign(byte[])} for more details.
  */
 public class ComputeEngineCredentials extends GoogleCredentials
-    implements ServiceAccountSigner, IdTokenProvider {
+    implements ServiceAccountSigner, IdTokenProvider, TrustBoundaryProvider {
 
   static final String METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE =
       "Empty content from metadata token server request.";
@@ -706,12 +707,9 @@ public class ComputeEngineCredentials extends GoogleCredentials
     return principal;
   }
 
+  @InternalApi
   @Override
-  boolean supportsTrustBoundary() {
-    return true;
-  }
-
-  String getTrustBoundaryUrl() throws IOException {
+  public String getTrustBoundaryUrl() throws IOException {
     return String.format(
         OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT,
         getUniverseDomain(),

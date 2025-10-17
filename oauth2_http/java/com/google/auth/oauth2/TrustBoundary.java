@@ -54,8 +54,11 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 /**
- * Represents a trust boundary that can be used to restrict access to resources. This is an
- * experimental feature.
+ * Represents the trust boundary configuration for a credential. This class holds the information
+ * retrieved from the IAM `allowedLocations` endpoint. This data is then used to populate the
+ * `x-allowed-locations` header in outgoing API requests, which in turn allows Google's
+ * infrastructure to enforce regional security restrictions. This class does not perform any
+ * client-side validation or enforcement.
  */
 final class TrustBoundary {
 
@@ -72,7 +75,7 @@ final class TrustBoundary {
    * @param encodedLocations The encoded string representation of the allowed locations.
    * @param locations A list of human-readable location strings.
    */
-  public TrustBoundary(String encodedLocations, List<String> locations) {
+  TrustBoundary(String encodedLocations, List<String> locations) {
     this.encodedLocations = encodedLocations;
     this.locations =
         locations == null
@@ -177,13 +180,13 @@ final class TrustBoundary {
 
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(url));
-    request.getHeaders().setAuthorization("Bearer " + accessToken.getTokenValue());
+    //    request.getHeaders().setAuthorization("Bearer " + accessToken.getTokenValue());
 
     // Add the cached trust boundary header, if available.
     if (cachedTrustBoundary != null) {
       String headerValue =
           cachedTrustBoundary.isNoOp() ? "" : cachedTrustBoundary.getEncodedLocations();
-      request.getHeaders().set(TRUST_BOUNDARY_KEY, headerValue);
+      //      request.getHeaders().set(TRUST_BOUNDARY_KEY, headerValue);
     }
 
     // Add retry logic
