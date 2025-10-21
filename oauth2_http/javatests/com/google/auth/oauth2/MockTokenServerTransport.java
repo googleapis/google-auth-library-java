@@ -327,8 +327,8 @@ public class MockTokenServerTransport extends MockHttpTransport {
           };
       return request;
     } else if (urlWithoutQuery.endsWith("/allowedLocations")) {
-        // This is for mocking the call to IAM lookup when we attempt to refresh trust boundaries
-        // after refreshing the access token.
+      // This is for mocking the call to IAM lookup when we attempt to refresh trust boundaries
+      // after refreshing the access token.
       request =
           new MockLowLevelHttpRequest(url) {
             @Override
