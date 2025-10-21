@@ -388,7 +388,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
     long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000;
     AccessToken newAccessToken = new AccessToken(accessToken, new Date(expiresAtMilliseconds));
 
-    refreshTrustBoundary(newAccessToken, getTrustBoundaryUrl(), transportFactory);
+    refreshTrustBoundary(newAccessToken, transportFactory);
 
     return newAccessToken;
   }

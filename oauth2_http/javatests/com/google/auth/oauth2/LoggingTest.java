@@ -441,7 +441,7 @@ public class LoggingTest {
 
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
 
-    assertEquals(8, testAppender.events.size());
+    assertEquals(6, testAppender.events.size());
 
     ILoggingEvent defaultServiceAccountRequest = testAppender.events.get(0);
     assertEquals(

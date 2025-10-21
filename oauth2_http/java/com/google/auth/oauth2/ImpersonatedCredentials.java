@@ -599,7 +599,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
       Date date = format.parse(expireTime);
       AccessToken newAccessToken = new AccessToken(accessToken, date);
 
-      refreshTrustBoundary(newAccessToken, getTrustBoundaryUrl(), transportFactory);
+      refreshTrustBoundary(newAccessToken, transportFactory);
 
       return newAccessToken;
     } catch (ParseException pe) {

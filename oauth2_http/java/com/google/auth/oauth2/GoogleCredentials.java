@@ -343,13 +343,11 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    * Refreshes the trust boundary by making a call to the trust boundary URL.
    *
    * @param newAccessToken The new access token to be used for the refresh.
-   * @param trustBoundaryUrl The URL of the trust boundary service.
    * @param transportFactory The HTTP transport factory to be used for the refresh.
    * @throws IOException If the refresh fails and no cached value is available.
    */
   @InternalApi
-  void refreshTrustBoundary(
-      AccessToken newAccessToken, String trustBoundaryUrl, HttpTransportFactory transportFactory)
+  void refreshTrustBoundary(AccessToken newAccessToken, HttpTransportFactory transportFactory)
       throws IOException {
 
     if (!(this instanceof TrustBoundaryProvider)
@@ -358,6 +356,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       return;
     }
 
+    String trustBoundaryUrl = ((TrustBoundaryProvider) this).getTrustBoundaryUrl();
     TrustBoundary cachedTrustBoundary;
 
     synchronized (lock) {

@@ -583,7 +583,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000L;
     AccessToken newAccessToken = new AccessToken(accessToken, new Date(expiresAtMilliseconds));
 
-    refreshTrustBoundary(newAccessToken, getTrustBoundaryUrl(), transportFactory);
+    refreshTrustBoundary(newAccessToken, transportFactory);
 
     return newAccessToken;
   }

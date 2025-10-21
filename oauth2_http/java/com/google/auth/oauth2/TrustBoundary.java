@@ -180,13 +180,13 @@ final class TrustBoundary {
 
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(url));
-    //    request.getHeaders().setAuthorization("Bearer " + accessToken.getTokenValue());
+    request.getHeaders().setAuthorization("Bearer " + accessToken.getTokenValue());
 
     // Add the cached trust boundary header, if available.
     if (cachedTrustBoundary != null) {
       String headerValue =
           cachedTrustBoundary.isNoOp() ? "" : cachedTrustBoundary.getEncodedLocations();
-      //      request.getHeaders().set(TRUST_BOUNDARY_KEY, headerValue);
+      request.getHeaders().set(TRUST_BOUNDARY_KEY, headerValue);
     }
 
     // Add retry logic

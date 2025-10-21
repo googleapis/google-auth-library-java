@@ -388,6 +388,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
   }
 
   protected boolean isIamLookupUrl(String url) {
+    // This is for mocking the call to IAM lookup when we attempt to refresh trust boundaries
+    // after refreshing the access token.
     return url.endsWith("/allowedLocations");
   }
 }
