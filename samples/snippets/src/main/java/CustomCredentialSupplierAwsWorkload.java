@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-import com.google.auth.oauth2.AwsCredentials;
-import com.google.auth.oauth2.AwsSecurityCredentialsSupplier;
-import com.google.auth.oauth2.ExternalAccountSupplierContext;
-import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.oauth2.*;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
@@ -34,7 +31,7 @@ import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
 public class CustomCredentialSupplierAwsWorkload {
 
   public static void main(String[] args) {
-    // TODO(Developer): Replace these variables with your actual values.
+    // TODO(Developer): Set these environment variable values.
     String gcpWorkloadAudience = System.getenv("GCP_WORKLOAD_AUDIENCE");
     String saImpersonationUrl = System.getenv("GCP_SERVICE_ACCOUNT_IMPERSONATION_URL");
     String gcsBucketName = System.getenv("GCS_BUCKET_NAME");
@@ -115,7 +112,7 @@ public class CustomCredentialSupplierAwsWorkload {
 
     /** Retrieves AWS security credentials using the AWS SDK's default provider chain. */
     @Override
-    public com.google.auth.oauth2.AwsSecurityCredentials getCredentials(
+    public AwsSecurityCredentials getCredentials(
         ExternalAccountSupplierContext context) {
       software.amazon.awssdk.auth.credentials.AwsCredentials credentials =
           this.awsCredentialsProvider.resolveCredentials();

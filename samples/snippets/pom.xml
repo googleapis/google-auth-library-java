@@ -75,12 +75,6 @@
       <version>2.20.27</version>
     </dependency>
 
-    <!-- Gson -->
-    <dependency>
-      <groupId>com.google.code.gson</groupId>
-      <artifactId>gson</artifactId>
-      <version>2.10.1</version>
-    </dependency>
 
 <!--    Test dependencies-->
     <dependency>

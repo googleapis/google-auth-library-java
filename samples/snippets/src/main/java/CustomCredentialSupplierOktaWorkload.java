@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import com.google.api.client.json.GenericJson;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.auth.oauth2.ExternalAccountSupplierContext;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.IdentityPoolCredentials;
@@ -21,8 +23,6 @@ import com.google.auth.oauth2.IdentityPoolSubjectTokenSupplier;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -188,13 +188,16 @@ public class CustomCredentialSupplierOktaWorkload {
             response.append(line);
           }
 
-          Gson gson = new Gson();
-          JsonObject jsonObject = gson.fromJson(response.toString(), JsonObject.class);
+          GenericJson jsonObject =
+              GsonFactory.getDefaultInstance()
+                  .createJsonParser(response.toString())
+                  .parse(GenericJson.class);
 
-          if (jsonObject.has("access_token") && jsonObject.has("expires_in")) {
-            this.accessToken = jsonObject.get("access_token").getAsString();
-            int expiresIn = jsonObject.get("expires_in").getAsInt();
-            this.expiryTime = System.currentTimeMillis() + expiresIn * 1000;
+          if (jsonObject.containsKey("access_token") && jsonObject.containsKey("expires_in")) {
+            this.accessToken = (String) jsonObject.get("access_token");
+            Number expiresInNumber = (Number) jsonObject.get("expires_in");
+            int expiresIn = expiresInNumber.intValue();
+            this.expiryTime = System.currentTimeMillis() + expiresIn * 1000L;
             System.out.println(
                 "[Supplier] Successfully received Access Token from Okta. Expires in "
                     + expiresIn
