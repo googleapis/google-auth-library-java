@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-import com.google.auth.oauth2.*;
+import com.google.auth.oauth2.AwsCredentials;
+import com.google.auth.oauth2.AwsSecurityCredentials;
+import com.google.auth.oauth2.AwsSecurityCredentialsSupplier;
+import com.google.auth.oauth2.ExternalAccountSupplierContext;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
@@ -32,8 +36,26 @@ public class CustomCredentialSupplierAwsWorkload {
 
   public static void main(String[] args) {
     // TODO(Developer): Set these environment variable values.
+
+    // 1. AWS Credentials:
+    // If running on a local system, the user must set AWS_REGION, AWS_ACCESS_KEY_ID, and
+    // AWS_SECRET_ACCESS_KEY as environment variables. If running in an AWS environment (e.g.,
+    // ECS, EKS), these variables will be auto-detected.
+
+    // 2. GCP_WORKLOAD_AUDIENCE:
+    // The audience for the workload identity federation. This is the full resource name of the
+    // Workload Identity Pool Provider, in the following format:
+    // //iam.googleapis.com/projects/<project-number>/locations/global/workloadIdentityPools/<pool-id>/providers/<provider-id>
     String gcpWorkloadAudience = System.getenv("GCP_WORKLOAD_AUDIENCE");
+
+    // 3. GCP_SERVICE_ACCOUNT_IMPERSONATION_URL:
+    // The service account impersonation URL. This is the URL for impersonating a service account,
+    // in the following format:
+    // https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/<service-account-email>:generateAccessToken
     String saImpersonationUrl = System.getenv("GCP_SERVICE_ACCOUNT_IMPERSONATION_URL");
+
+    // 4. GCS_BUCKET_NAME:
+    // The name of the bucket that you wish to fetch data for.
     String gcsBucketName = System.getenv("GCS_BUCKET_NAME");
 
     if (gcpWorkloadAudience == null
@@ -57,6 +79,8 @@ public class CustomCredentialSupplierAwsWorkload {
     GoogleCredentials credentials =
         AwsCredentials.newBuilder()
             .setAudience(gcpWorkloadAudience)
+            // This token type indicates that the subject token is an AWS Signature Version 4 signed
+            // request. This is required for AWS Workload Identity Federation.
             .setSubjectTokenType("urn:ietf:params:aws:token-type:aws4_request")
             .setServiceAccountImpersonationUrl(saImpersonationUrl)
             .setAwsSecurityCredentialsSupplier(customSupplier)
@@ -65,7 +89,7 @@ public class CustomCredentialSupplierAwsWorkload {
     // 3. Use the credentials to make an authenticated request.
     Storage storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
 
-    System.out.println("[Test] Getting metadata for bucket: " + gcsBucketName + "...");
+    System.out.println("Getting metadata for bucket: " + gcsBucketName + "...");
     Bucket bucket = storage.get(gcsBucketName);
     System.out.println(" --- SUCCESS! ---");
     System.out.println("Successfully authenticated and retrieved bucket data:");
