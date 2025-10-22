@@ -32,7 +32,6 @@
 package com.google.auth.oauth2;
 
 import static com.google.auth.oauth2.OAuth2Utils.JSON_FACTORY;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpHeaders;
@@ -140,7 +139,6 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
    */
   public static ExternalAccountAuthorizedUserCredentials fromStream(InputStream credentialsStream)
       throws IOException {
-    checkNotNull(credentialsStream);
     return fromStream(credentialsStream, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
   }
 
@@ -162,17 +160,24 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
    */
   public static ExternalAccountAuthorizedUserCredentials fromStream(
       InputStream credentialsStream, HttpTransportFactory transportFactory) throws IOException {
-    checkNotNull(credentialsStream);
-    checkNotNull(transportFactory);
-
-    JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
-    GenericJson fileContents =
-        parser.parseAndClose(credentialsStream, StandardCharsets.UTF_8, GenericJson.class);
-    try {
-      return fromJson(fileContents, transportFactory);
-    } catch (ClassCastException | IllegalArgumentException e) {
-      throw new CredentialFormatException("Invalid input stream provided.", e);
+    Preconditions.checkNotNull(transportFactory);
+    GenericJson fileContents = parseJsonInputStream(credentialsStream);
+    String fileType = extractFromJson(fileContents, "type");
+    if (fileType.equals(
+        GoogleCredentialsInfo.EXTERNAL_ACCOUNT_AUTHORIZED_USER_CREDENTIALS.getFileType())) {
+      try {
+        return fromJson(fileContents, transportFactory);
+      } catch (ClassCastException | IllegalArgumentException e) {
+        throw new CredentialFormatException("Invalid input stream provided.", e);
+      }
     }
+
+    throw new IOException(
+        String.format(
+            "Error reading credentials from stream, 'type' value '%s' not recognized."
+                + " Expecting '%s'.",
+            fileType,
+            GoogleCredentialsInfo.EXTERNAL_ACCOUNT_AUTHORIZED_USER_CREDENTIALS.getFileType()));
   }
 
   @Override

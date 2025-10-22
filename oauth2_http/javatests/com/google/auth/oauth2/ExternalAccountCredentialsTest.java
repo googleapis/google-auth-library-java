@@ -154,6 +154,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
         ExternalAccountCredentials.fromStream(
             new ByteArrayInputStream(
                 ("{"
+                        + "\"type\": \"external_account\","
                         + "\"service_account_impersonation_url\": null,"
                         +
                         // required
@@ -1251,6 +1252,8 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   private GenericJson buildJsonIdentityPoolCredential() {
     GenericJson json = new GenericJson();
     json.put(
+        "type", GoogleCredentials.GoogleCredentialsInfo.EXTERNAL_ACCOUNT_CREDENTIALS.getFileType());
+    json.put(
         "audience",
         "//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider");
     json.put("subject_token_type", "subjectTokenType");
@@ -1273,6 +1276,8 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
   private GenericJson buildJsonAwsCredential() {
     GenericJson json = new GenericJson();
+    json.put(
+        "type", GoogleCredentials.GoogleCredentialsInfo.EXTERNAL_ACCOUNT_CREDENTIALS.getFileType());
     json.put("audience", "audience");
     json.put("subject_token_type", "subjectTokenType");
     json.put("token_url", STS_URL);
@@ -1290,6 +1295,8 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
   private GenericJson buildJsonPluggableAuthCredential() {
     GenericJson json = new GenericJson();
+    json.put(
+        "type", GoogleCredentials.GoogleCredentialsInfo.EXTERNAL_ACCOUNT_CREDENTIALS.getFileType());
     json.put("audience", "audience");
     json.put("subject_token_type", "subjectTokenType");
     json.put("token_url", STS_URL);
@@ -1308,6 +1315,8 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
   private GenericJson buildJsonPluggableAuthWorkforceCredential() {
     GenericJson json = buildJsonPluggableAuthCredential();
+    json.put(
+        "type", GoogleCredentials.GoogleCredentialsInfo.EXTERNAL_ACCOUNT_CREDENTIALS.getFileType());
     json.put(
         "audience", "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider");
     json.put("workforce_pool_user_project", "userProject");
