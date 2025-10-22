@@ -51,6 +51,7 @@ import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Joiner;
 import com.google.api.client.util.Preconditions;
+import com.google.api.core.InternalApi;
 import com.google.auth.CredentialTypeForMetrics;
 import com.google.auth.Credentials;
 import com.google.auth.RequestMetadataCallback;
@@ -89,7 +90,7 @@ import java.util.concurrent.Executor;
  * <p>By default uses a JSON Web Token (JWT) to fetch access tokens.
  */
 public class ServiceAccountCredentials extends GoogleCredentials
-    implements ServiceAccountSigner, IdTokenProvider, JwtProvider {
+    implements ServiceAccountSigner, IdTokenProvider, JwtProvider, TrustBoundaryProvider {
 
   private static final long serialVersionUID = 7807543542681217978L;
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
@@ -580,7 +581,11 @@ public class ServiceAccountCredentials extends GoogleCredentials
     int expiresInSeconds =
         OAuth2Utils.validateInt32(responseData, "expires_in", PARSE_ERROR_PREFIX);
     long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000L;
-    return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
+    AccessToken newAccessToken = new AccessToken(accessToken, new Date(expiresAtMilliseconds));
+
+    refreshTrustBoundary(newAccessToken, transportFactory);
+
+    return newAccessToken;
   }
 
   /**
@@ -821,6 +826,15 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   public boolean getUseJwtAccessWithScope() {
     return useJwtAccessWithScope;
+  }
+
+  @InternalApi
+  @Override
+  public String getTrustBoundaryUrl() throws IOException {
+    return String.format(
+        OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT,
+        getUniverseDomain(),
+        getAccount());
   }
 
   @VisibleForTesting

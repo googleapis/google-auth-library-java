@@ -80,6 +80,8 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
 
   private String universeDomain;
 
+  private TrustBoundary trustBoundary;
+
   private MockLowLevelHttpRequest request;
 
   MockIAMCredentialsServiceTransport(String universeDomain) {
@@ -130,6 +132,10 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
 
   public void setAccessTokenEndpoint(String accessTokenEndpoint) {
     this.iamAccessTokenEndpoint = accessTokenEndpoint;
+  }
+
+  public void setTrustBoundary(TrustBoundary trustBoundary) {
+    this.trustBoundary = trustBoundary;
   }
 
   public MockLowLevelHttpRequest getRequest() {
@@ -221,6 +227,25 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
                   .setContent(tokenContent);
             }
           };
+    } else if (url.endsWith("/allowedLocations")) {
+      request =
+          new MockLowLevelHttpRequest(url) {
+            @Override
+            public LowLevelHttpResponse execute() throws IOException {
+              if (trustBoundary == null) {
+                return new MockLowLevelHttpResponse().setStatusCode(404);
+              }
+              GenericJson responseJson = new GenericJson();
+              responseJson.setFactory(OAuth2Utils.JSON_FACTORY);
+              responseJson.put("encodedLocations", trustBoundary.getEncodedLocations());
+              responseJson.put("locations", trustBoundary.getLocations());
+              String content = responseJson.toPrettyString();
+              return new MockLowLevelHttpResponse()
+                  .setContentType(Json.MEDIA_TYPE)
+                  .setContent(content);
+            }
+          };
+      return request;
     } else {
       return super.buildRequest(method, url);
     }

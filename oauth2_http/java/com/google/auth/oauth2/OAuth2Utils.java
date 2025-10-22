@@ -93,6 +93,9 @@ public class OAuth2Utils {
   static final URI TOKEN_SERVER_URI = URI.create("https://oauth2.googleapis.com/token");
 
   static final URI TOKEN_REVOKE_URI = URI.create("https://oauth2.googleapis.com/revoke");
+
+  static final String IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT =
+      "https://iamcredentials.%s/v1/projects/-/serviceAccounts/%s/allowedLocations";
   static final URI USER_AUTH_URI = URI.create("https://accounts.google.com/o/oauth2/auth");
 
   public static final String CLOUD_PLATFORM_SCOPE =

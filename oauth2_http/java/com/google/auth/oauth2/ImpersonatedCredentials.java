@@ -43,6 +43,7 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
+import com.google.api.core.InternalApi;
 import com.google.auth.CredentialTypeForMetrics;
 import com.google.auth.ServiceAccountSigner;
 import com.google.auth.http.HttpCredentialsAdapter;
@@ -95,7 +96,7 @@ import java.util.Objects;
  * </pre>
  */
 public class ImpersonatedCredentials extends GoogleCredentials
-    implements ServiceAccountSigner, IdTokenProvider {
+    implements ServiceAccountSigner, IdTokenProvider, TrustBoundaryProvider {
 
   private static final long serialVersionUID = -2133257318957488431L;
   private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ssX";
@@ -323,6 +324,15 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
   public GoogleCredentials getSourceCredentials() {
     return sourceCredentials;
+  }
+
+  @InternalApi
+  @Override
+  public String getTrustBoundaryUrl() throws IOException {
+    return String.format(
+        OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT,
+        getUniverseDomain(),
+        getAccount());
   }
 
   int getLifetime() {
@@ -593,7 +603,11 @@ public class ImpersonatedCredentials extends GoogleCredentials
     format.setCalendar(calendar);
     try {
       Date date = format.parse(expireTime);
-      return new AccessToken(accessToken, date);
+      AccessToken newAccessToken = new AccessToken(accessToken, date);
+
+      refreshTrustBoundary(newAccessToken, transportFactory);
+
+      return newAccessToken;
     } catch (ParseException pe) {
       throw new IOException("Error parsing expireTime: " + pe.getMessage());
     }

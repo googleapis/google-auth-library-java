@@ -77,6 +77,11 @@ public class MockTokenServerTransport extends MockHttpTransport {
   private MockLowLevelHttpRequest request;
   private ClientAuthenticationType clientAuthenticationType;
   private PKCEProvider pkceProvider;
+  private TrustBoundary trustBoundary;
+
+  public void setTrustBoundary(TrustBoundary trustBoundary) {
+    this.trustBoundary = trustBoundary;
+  }
 
   public MockTokenServerTransport() {}
 
@@ -318,6 +323,27 @@ public class MockTokenServerTransport extends MockHttpTransport {
               return new MockLowLevelHttpResponse()
                   .setContentType(Json.MEDIA_TYPE)
                   .setContent(refreshText);
+            }
+          };
+      return request;
+    } else if (urlWithoutQuery.endsWith("/allowedLocations")) {
+      // This is for mocking the call to IAM lookup when we attempt to refresh trust boundaries
+      // after refreshing the access token.
+      request =
+          new MockLowLevelHttpRequest(url) {
+            @Override
+            public LowLevelHttpResponse execute() throws IOException {
+              if (trustBoundary == null) {
+                return new MockLowLevelHttpResponse().setStatusCode(404);
+              }
+              GenericJson responseJson = new GenericJson();
+              responseJson.setFactory(JSON_FACTORY);
+              responseJson.put("encodedLocations", trustBoundary.getEncodedLocations());
+              responseJson.put("locations", trustBoundary.getLocations());
+              String content = responseJson.toPrettyString();
+              return new MockLowLevelHttpResponse()
+                  .setContentType(Json.MEDIA_TYPE)
+                  .setContent(content);
             }
           };
       return request;
