@@ -40,12 +40,38 @@ public class CustomCredentialSupplierOktaWorkload {
 
   public static void main(String[] args) {
     // TODO(Developer): Replace these variables with your actual values.
+
+    // 1. GCP_WORKLOAD_AUDIENCE:
+    // The audience for the workload identity federation. This is the full resource name of the
+    // Workload Identity Pool Provider, in the following format:
+    // //iam.googleapis.com/projects/<project-number>/locations/global/workloadIdentityPools/<pool-id>/providers/<provider-id>
     String gcpWorkloadAudience = System.getenv("GCP_WORKLOAD_AUDIENCE");
-    String serviceAccountImpersonationUrl =
-        System.getenv("GCP_SERVICE_ACCOUNT_IMPERSONATION_URL");
+
+    // 2. GCP_SERVICE_ACCOUNT_IMPERSONATION_URL:
+    // The service account impersonation URL. This is the URL for impersonating a service account,
+    // in the following format:
+    // https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/<service-account-email>:generateAccessToken
+    String serviceAccountImpersonationUrl = System.getenv("GCP_SERVICE_ACCOUNT_IMPERSONATION_URL");
+
+    // 3. GCS_BUCKET_NAME:
+    // The name of the bucket that you wish to fetch data for.
     String gcsBucketName = System.getenv("GCS_BUCKET_NAME");
+
+    // 4. Okta Configuration:
+    // To set up the Okta application for this flow:
+    //   a. In your Okta developer console, create a new Application of type "Machine-to-Machine
+    // (M2M)".
+    //   b. Under the "General" tab, ensure that "Client Credentials" is an allowed grant type.
+    //   c. Note the "Client ID" and "Client Secret" for your application.
+    //   d. Navigate to "Security" > "API" and select your authorization server (e.g., "default").
+    //   e. Under the "Scopes" tab, add a custom scope (e.g., "gcp.test.read").
+    //   f. Ensure your M2M application is granted this scope.
+    //
+    // OKTA_DOMAIN: Your Okta organization URL (e.g., https://{yourOktaDomain}.okta.com)
     String oktaDomain = System.getenv("OKTA_DOMAIN");
+    // OKTA_CLIENT_ID: The Client ID of your Okta M2M application.
     String oktaClientId = System.getenv("OKTA_CLIENT_ID");
+    // OKTA_CLIENT_SECRET: The Client Secret of your Okta M2M application.
     String oktaClientSecret = System.getenv("OKTA_CLIENT_SECRET");
 
     if (gcpWorkloadAudience == null
@@ -127,7 +153,8 @@ public class CustomCredentialSupplierOktaWorkload {
     @Override
     public String getSubjectToken(ExternalAccountSupplierContext context) throws IOException {
       // Check if the current token is still valid (with a 60-second buffer).
-      boolean isTokenValid = this.accessToken != null && System.currentTimeMillis() < this.expiryTime - 60 * 1000;
+      boolean isTokenValid =
+          this.accessToken != null && System.currentTimeMillis() < this.expiryTime - 60 * 1000;
 
       if (isTokenValid) {
         System.out.println("[Supplier] Returning cached Okta Access token.");
@@ -143,18 +170,6 @@ public class CustomCredentialSupplierOktaWorkload {
 
     /**
      * Performs the Client Credentials grant flow by making a POST request to Okta's token endpoint.
-     *
-     * <p>To set up the Okta application for this flow:
-     *
-     * <ol>
-     *   <li>In your Okta developer console, create a new Application of type "Machine-to-Machine
-     *       (M2M)".
-     *   <li>Under the "General" tab, ensure that "Client Credentials" is an allowed grant type.
-     *   <li>Note the "Client ID" and "Client Secret" for your application.
-     *   <li>Navigate to "Security" > "API" and select your authorization server (e.g., "default").
-     *   <li>Under the "Scopes" tab, add a custom scope (e.g., "gcp.test.read").
-     *   <li>Ensure your M2M application is granted this scope.
-     * </ol>
      */
     private void fetchOktaAccessToken() throws IOException {
       URL url = new URL(this.oktaTokenUrl);
@@ -165,7 +180,8 @@ public class CustomCredentialSupplierOktaWorkload {
       // The client_id and client_secret are sent in a Basic Auth header, as required by the
       // OAuth 2.0 Client Credentials grant specification. The credentials are Base64 encoded.
       String auth = this.clientId + ":" + this.clientSecret;
-      String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
+      String encodedAuth =
+          Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
       conn.setRequestProperty("Authorization", "Basic " + encodedAuth);
 
       conn.setDoOutput(true);

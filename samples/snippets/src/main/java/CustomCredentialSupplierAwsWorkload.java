@@ -29,8 +29,8 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
 
 /**
- * This sample demonstrates how to use a custom AWS security credentials supplier to authenticate
- * to Google Cloud Storage.
+ * This sample demonstrates how to use a custom AWS security credentials supplier to authenticate to
+ * Google Cloud Storage.
  */
 public class CustomCredentialSupplierAwsWorkload {
 
@@ -58,9 +58,7 @@ public class CustomCredentialSupplierAwsWorkload {
     // The name of the bucket that you wish to fetch data for.
     String gcsBucketName = System.getenv("GCS_BUCKET_NAME");
 
-    if (gcpWorkloadAudience == null
-        || saImpersonationUrl == null
-        || gcsBucketName == null) {
+    if (gcpWorkloadAudience == null || saImpersonationUrl == null || gcsBucketName == null) {
       System.out.println(
           "Missing required environment variables. Please check your environment settings. "
               + "Required: GCP_WORKLOAD_AUDIENCE, GCP_SERVICE_ACCOUNT_IMPERSONATION_URL, GCS_BUCKET_NAME");
@@ -136,8 +134,7 @@ public class CustomCredentialSupplierAwsWorkload {
 
     /** Retrieves AWS security credentials using the AWS SDK's default provider chain. */
     @Override
-    public AwsSecurityCredentials getCredentials(
-        ExternalAccountSupplierContext context) {
+    public AwsSecurityCredentials getCredentials(ExternalAccountSupplierContext context) {
       software.amazon.awssdk.auth.credentials.AwsCredentials credentials =
           this.awsCredentialsProvider.resolveCredentials();
       if (credentials == null
