@@ -47,10 +47,10 @@ public class CustomCredentialSupplierOktaWorkload {
     // //iam.googleapis.com/projects/<project-number>/locations/global/workloadIdentityPools/<pool-id>/providers/<provider-id>
     String gcpWorkloadAudience = System.getenv("GCP_WORKLOAD_AUDIENCE");
 
-    // 2. GCP_SERVICE_ACCOUNT_IMPERSONATION_URL:
-    // The service account impersonation URL. This is the URL for impersonating a service account,
-    // in the following format:
+    // 2. GCP_SERVICE_ACCOUNT_IMPERSONATION_URL (optional):
+    // The service account impersonation URL.  In the following format:
     // https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/<service-account-email>:generateAccessToken
+    // If not provided, you should grant access to the GCP bucket to the principal directly.
     String serviceAccountImpersonationUrl = System.getenv("GCP_SERVICE_ACCOUNT_IMPERSONATION_URL");
 
     // 3. GCS_BUCKET_NAME:
@@ -75,14 +75,13 @@ public class CustomCredentialSupplierOktaWorkload {
     String oktaClientSecret = System.getenv("OKTA_CLIENT_SECRET");
 
     if (gcpWorkloadAudience == null
-        || serviceAccountImpersonationUrl == null
         || gcsBucketName == null
         || oktaDomain == null
         || oktaClientId == null
         || oktaClientSecret == null) {
       System.out.println(
           "Missing required environment variables. Please check your environment settings. "
-              + "Required: GCP_WORKLOAD_AUDIENCE, GCP_SERVICE_ACCOUNT_IMPERSONATION_URL, "
+              + "Required: GCP_WORKLOAD_AUDIENCE, "
               + "GCS_BUCKET_NAME, OKTA_DOMAIN, OKTA_CLIENT_ID, OKTA_CLIENT_SECRET");
       return;
     }
@@ -108,14 +107,20 @@ public class CustomCredentialSupplierOktaWorkload {
         new OktaClientCredentialsSupplier(oktaDomain, oktaClientId, oktaClientSecret);
 
     // 2. Instantiate an IdentityPoolCredentials with the required configuration.
-    GoogleCredentials credentials =
+    IdentityPoolCredentials.Builder credentialsBuilder =
         IdentityPoolCredentials.newBuilder()
             .setAudience(gcpWorkloadAudience)
+            // This token type indicates that the subject token is a JSON Web Token (JWT).
+            // This is required for Workload Identity Federation with an OIDC provider like Okta.
             .setSubjectTokenType("urn:ietf:params:oauth:token-type:jwt")
             .setTokenUrl("https://sts.googleapis.com/v1/token")
-            .setSubjectTokenSupplier(oktaSupplier)
-            .setServiceAccountImpersonationUrl(serviceAccountImpersonationUrl)
-            .build();
+            .setSubjectTokenSupplier(oktaSupplier);
+
+    if (serviceAccountImpersonationUrl != null) {
+      credentialsBuilder.setServiceAccountImpersonationUrl(serviceAccountImpersonationUrl);
+    }
+
+    GoogleCredentials credentials = credentialsBuilder.build();
 
     // 3. Use the credentials to make an authenticated request.
     Storage storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
