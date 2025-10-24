@@ -45,7 +45,7 @@ public class CustomCredentialSupplierAwsWorkload {
     // 2. GCP_WORKLOAD_AUDIENCE:
     // The audience for the workload identity federation. This is the full resource name of the
     // Workload Identity Pool Provider, in the following format:
-    // //iam.googleapis.com/projects/<project-number>/locations/global/workloadIdentityPools/<pool-id>/providers/<provider-id>
+    // `//iam.googleapis.com/projects/<project-number>/locations/global/workloadIdentityPools/<pool-id>/providers/<provider-id>`
     String gcpWorkloadAudience = System.getenv("GCP_WORKLOAD_AUDIENCE");
 
     // 3. GCP_SERVICE_ACCOUNT_IMPERSONATION_URL (optional):

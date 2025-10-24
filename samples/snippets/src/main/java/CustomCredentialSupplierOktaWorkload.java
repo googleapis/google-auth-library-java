@@ -23,6 +23,7 @@ import com.google.auth.oauth2.IdentityPoolSubjectTokenSupplier;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
+import java.time.Instant;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -44,7 +45,7 @@ public class CustomCredentialSupplierOktaWorkload {
     // 1. GCP_WORKLOAD_AUDIENCE:
     // The audience for the workload identity federation. This is the full resource name of the
     // Workload Identity Pool Provider, in the following format:
-    // //iam.googleapis.com/projects/<project-number>/locations/global/workloadIdentityPools/<pool-id>/providers/<provider-id>
+    // `//iam.googleapis.com/projects/<project-number>/locations/global/workloadIdentityPools/<pool-id>/providers/<provider-id>`
     String gcpWorkloadAudience = System.getenv("GCP_WORKLOAD_AUDIENCE");
 
     // 2. GCP_SERVICE_ACCOUNT_IMPERSONATION_URL (optional):
@@ -58,7 +59,11 @@ public class CustomCredentialSupplierOktaWorkload {
     String gcsBucketName = System.getenv("GCS_BUCKET_NAME");
 
     // 4. Okta Configuration:
-    // To set up the Okta application for this flow:
+    // To set up the Okta application for this flow, refer:
+    // https://developer.okta.com/docs/guides/implement-grant-type/clientcreds/main/
+    // https://developer.okta.com/docs/guides/customize-authz-server/main/
+    //
+    // Steps:
     //   a. In your Okta developer console, create a new Application of type "Machine-to-Machine
     // (M2M)".
     //   b. Under the "General" tab, ensure that "Client Credentials" is an allowed grant type.
@@ -138,11 +143,13 @@ public class CustomCredentialSupplierOktaWorkload {
    */
   private static class OktaClientCredentialsSupplier implements IdentityPoolSubjectTokenSupplier {
 
+    private static final long TOKEN_REFRESH_BUFFER_SECONDS = 60;
+
     private final String oktaTokenUrl;
     private final String clientId;
     private final String clientSecret;
     private String accessToken;
-    private long expiryTime;
+    private Instant expiryTime;
 
     public OktaClientCredentialsSupplier(String domain, String clientId, String clientSecret) {
       this.oktaTokenUrl = domain + "/oauth2/default/v1/token";
@@ -159,7 +166,8 @@ public class CustomCredentialSupplierOktaWorkload {
     public String getSubjectToken(ExternalAccountSupplierContext context) throws IOException {
       // Check if the current token is still valid (with a 60-second buffer).
       boolean isTokenValid =
-          this.accessToken != null && System.currentTimeMillis() < this.expiryTime - 60 * 1000;
+          this.accessToken != null
+              && Instant.now().isBefore(this.expiryTime.minusSeconds(TOKEN_REFRESH_BUFFER_SECONDS));
 
       if (isTokenValid) {
         System.out.println("[Supplier] Returning cached Okta Access token.");
@@ -178,59 +186,67 @@ public class CustomCredentialSupplierOktaWorkload {
      */
     private void fetchOktaAccessToken() throws IOException {
       URL url = new URL(this.oktaTokenUrl);
-      HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-      conn.setRequestMethod("POST");
-      conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+      HttpURLConnection conn = null;
+      try {
+        conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
-      // The client_id and client_secret are sent in a Basic Auth header, as required by the
-      // OAuth 2.0 Client Credentials grant specification. The credentials are Base64 encoded.
-      String auth = this.clientId + ":" + this.clientSecret;
-      String encodedAuth =
-          Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
-      conn.setRequestProperty("Authorization", "Basic " + encodedAuth);
+        // The client_id and client_secret are sent in a Basic Auth header, as required by the
+        // OAuth 2.0 Client Credentials grant specification. The credentials are Base64 encoded.
+        String auth = this.clientId + ":" + this.clientSecret;
+        String encodedAuth =
+            Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
+        conn.setRequestProperty("Authorization", "Basic " + encodedAuth);
 
-      conn.setDoOutput(true);
-      try (DataOutputStream out = new DataOutputStream(conn.getOutputStream())) {
-        // For the Client Credentials grant, scopes are optional and define the permissions
-        // the access token will have. Replace "gcp.test.read" with the scopes defined in your
-        // Okta authorization server. Multiple scopes can be requested by space-separating them
-        // (e.g., "scope1 scope2").
-        String params = "grant_type=client_credentials&scope=gcp.test.read";
-        out.writeBytes(params);
-        out.flush();
-      }
-
-      int responseCode = conn.getResponseCode();
-      if (responseCode == HttpURLConnection.HTTP_OK) {
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
-          StringBuilder response = new StringBuilder();
-          String line;
-          while ((line = in.readLine()) != null) {
-            response.append(line);
-          }
-
-          GenericJson jsonObject =
-              GsonFactory.getDefaultInstance()
-                  .createJsonParser(response.toString())
-                  .parse(GenericJson.class);
-
-          if (jsonObject.containsKey("access_token") && jsonObject.containsKey("expires_in")) {
-            this.accessToken = (String) jsonObject.get("access_token");
-            Number expiresInNumber = (Number) jsonObject.get("expires_in");
-            int expiresIn = expiresInNumber.intValue();
-            this.expiryTime = System.currentTimeMillis() + expiresIn * 1000L;
-            System.out.println(
-                "[Supplier] Successfully received Access Token from Okta. Expires in "
-                    + expiresIn
-                    + " seconds.");
-          } else {
-            throw new IOException("Access token or expires_in not found in Okta response.");
-          }
+        conn.setDoOutput(true);
+        try (DataOutputStream out = new DataOutputStream(conn.getOutputStream())) {
+          // For the Client Credentials grant, scopes are optional and define the permissions
+          // the access token will have. Replace "gcp.test.read" with the scopes defined in your
+          // Okta authorization server. Multiple scopes can be requested by space-separating them.
+          // In application/x-www-form-urlencoded, a space is represented by '+' or '%20'.
+          // e.g., "scope1%20scope2" or "scope1+scope2".
+          String params = "grant_type=client_credentials&scope=gcp.test.read%20gcp.bucket.read";
+          out.writeBytes(params);
+          out.flush();
         }
-      } else {
-        throw new IOException(
-            "Failed to authenticate with Okta using Client Credentials grant. Response code: "
-                + responseCode);
+
+        int responseCode = conn.getResponseCode();
+        if (responseCode == HttpURLConnection.HTTP_OK) {
+          try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = in.readLine()) != null) {
+              response.append(line);
+            }
+
+            GenericJson jsonObject =
+                GsonFactory.getDefaultInstance()
+                    .createJsonParser(response.toString())
+                    .parse(GenericJson.class);
+
+            if (jsonObject.containsKey("access_token") && jsonObject.containsKey("expires_in")) {
+              this.accessToken = (String) jsonObject.get("access_token");
+              Number expiresInNumber = (Number) jsonObject.get("expires_in");
+              int expiresIn = expiresInNumber.intValue();
+              this.expiryTime = Instant.now().plusSeconds(expiresIn);
+              System.out.println(
+                  "[Supplier] Successfully received Access Token from Okta. Expires in "
+                      + expiresIn
+                      + " seconds.");
+            } else {
+              throw new IOException("Access token or expires_in not found in Okta response.");
+            }
+          }
+        } else {
+          throw new IOException(
+              "Failed to authenticate with Okta using Client Credentials grant. Response code: "
+                  + responseCode);
+        }
+      } finally {
+        if (conn != null) {
+          conn.disconnect();
+        }
       }
     }
   }
