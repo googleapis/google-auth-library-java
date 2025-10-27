@@ -638,10 +638,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   public String getTrustBoundaryUrl() throws IOException {
     if (isWorkforcePoolConfiguration()) {
       Matcher matcher = WORKFORCE_PATTERN.matcher(getAudience());
-      if (!matcher.matches()) {
-        throw new IOException(
-            "The provided audience is not in the correct format for a workforce pool.");
-      }
       String poolId = matcher.group("pool");
       return String.format(WORKFORCE_POOL_URL_FORMAT, poolId);
     } else {

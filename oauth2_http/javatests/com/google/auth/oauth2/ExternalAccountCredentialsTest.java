@@ -32,7 +32,12 @@
 package com.google.auth.oauth2;
 
 import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
@@ -1228,7 +1233,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
             "https://",
             "http://iamcredentials.googleapis.com",
             "https:/iamcredentials.googleapis.com",
-            "https://us-eas\\t-1.iamcredentials.googleapis.com",
+            "https://us-eas\t-1.iamcredentials.googleapis.com",
             "testhttps://us-east-1.iamcredentials.googleapis.com",
             "hhttps://us-east-1.iamcredentials.googleapis.com",
             "https://us- -1.iamcredentials.googleapis.com");
@@ -1241,6 +1246,198 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
         assertEquals("The provided service account impersonation URL is invalid.", e.getMessage());
       }
     }
+  }
+
+  @Test
+  public void getTrustBoundaryUrl_workload() throws IOException {
+    String audience =
+        "//iam.googleapis.com/projects/12345/locations/global/workloadIdentityPools/my-pool/providers/my-provider";
+    ExternalAccountCredentials credentials =
+        TestExternalAccountCredentials.newBuilder()
+            .setAudience(audience)
+            .setSubjectTokenType("subject_token_type")
+            .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+            .build();
+
+    String expectedUrl =
+        "https://iamcredentials.googleapis.com/v1/projects/12345/locations/global/workloadIdentityPools/my-pool/allowedLocations";
+    assertEquals(expectedUrl, credentials.getTrustBoundaryUrl());
+  }
+
+  @Test
+  public void getTrustBoundaryUrl_workforce() throws IOException {
+    String audience =
+        "//iam.googleapis.com/locations/global/workforcePools/my-pool/providers/my-provider";
+    ExternalAccountCredentials credentials =
+        TestExternalAccountCredentials.newBuilder()
+            .setAudience(audience)
+            .setWorkforcePoolUserProject("12345")
+            .setSubjectTokenType("subject_token_type")
+            .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+            .build();
+
+    String expectedUrl =
+        "https://iamcredentials.googleapis.com/v1/locations/global/workforcePools/my-pool/allowedLocations";
+    assertEquals(expectedUrl, credentials.getTrustBoundaryUrl());
+  }
+
+  @Test(expected = IOException.class)
+  public void getTrustBoundaryUrl_invalidAudience_throws() throws IOException {
+    ExternalAccountCredentials credentials =
+        TestExternalAccountCredentials.newBuilder()
+            .setAudience("invalid-audience")
+            .setSubjectTokenType("subject_token_type")
+            .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+            .build();
+    credentials.getTrustBoundaryUrl();
+  }
+
+  @Test
+  public void refresh_workload_trustBoundarySuccess() throws IOException {
+    // 1. Scenario Setup
+    String audience =
+        "//iam.googleapis.com/projects/12345/locations/global/workloadIdentityPools/my-pool/providers/my-provider";
+
+    // Enable the trust boundary feature via a mock environment provider.
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
+
+    ExternalAccountCredentials credentials =
+        new IdentityPoolCredentials(
+            IdentityPoolCredentials.newBuilder()
+                .setHttpTransportFactory(transportFactory)
+                .setAudience(audience)
+                .setSubjectTokenType("subject_token_type")
+                .setTokenUrl(STS_URL)
+                .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+                .setEnvironmentProvider(environmentProvider)) {
+          @Override
+          public String retrieveSubjectToken() throws IOException {
+            // This override isolates the test from the filesystem.
+            return "dummy-subject-token";
+          }
+        };
+
+    // 2. Action: Refresh the credentials.
+    credentials.refresh();
+
+    // 3. Assertion: Verify the trust boundary was set from the mock's hardcoded response.
+    TrustBoundary trustBoundary = credentials.getTrustBoundary();
+    assertNotNull(trustBoundary);
+    assertEquals(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, trustBoundary.getEncodedLocations());
+
+    // Cleanup
+    TrustBoundary.setEnvironmentProviderForTest(null);
+  }
+
+  @Test
+  public void refresh_workforce_trustBoundarySuccess() throws IOException {
+    String audience =
+        "//iam.googleapis.com/locations/global/workforcePools/my-pool/providers/my-provider";
+
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
+
+    ExternalAccountCredentials credentials =
+        new IdentityPoolCredentials(
+            IdentityPoolCredentials.newBuilder()
+                .setHttpTransportFactory(transportFactory)
+                .setAudience(audience)
+                .setWorkforcePoolUserProject("12345")
+                .setSubjectTokenType("subject_token_type")
+                .setTokenUrl(STS_URL)
+                .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+                .setEnvironmentProvider(environmentProvider)) {
+          @Override
+          public String retrieveSubjectToken() throws IOException {
+            return "dummy-subject-token";
+          }
+        };
+
+    credentials.refresh();
+
+    TrustBoundary trustBoundary = credentials.getTrustBoundary();
+    assertNotNull(trustBoundary);
+    assertEquals(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, trustBoundary.getEncodedLocations());
+
+    TrustBoundary.setEnvironmentProviderForTest(null);
+  }
+
+  @Test
+  public void refresh_impersonated_workload_trustBoundarySuccess() throws IOException {
+    String audience =
+        "//iam.googleapis.com/projects/12345/locations/global/workloadIdentityPools/my-pool/providers/my-provider";
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
+
+    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
+
+    // Use a URL-based source that the mock transport can handle, to avoid file IO.
+    Map<String, Object> urlCredentialSourceMap = new HashMap<>();
+    urlCredentialSourceMap.put("url", "https://www.metadata.google.com");
+    Map<String, String> headers = new HashMap<>();
+    headers.put("Metadata-Flavor", "Google");
+    urlCredentialSourceMap.put("headers", headers);
+
+    ExternalAccountCredentials credentials =
+        IdentityPoolCredentials.newBuilder()
+            .setHttpTransportFactory(transportFactory)
+            .setAudience(audience)
+            .setSubjectTokenType("subject_token_type")
+            .setTokenUrl(STS_URL)
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .setCredentialSource(new IdentityPoolCredentialSource(urlCredentialSourceMap))
+            .setEnvironmentProvider(environmentProvider)
+            .build();
+
+    credentials.refresh();
+
+    TrustBoundary trustBoundary = credentials.getTrustBoundary();
+    assertNotNull(trustBoundary);
+    assertEquals(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, trustBoundary.getEncodedLocations());
+
+    TrustBoundary.setEnvironmentProviderForTest(null);
+  }
+
+  @Test
+  public void refresh_impersonated_workforce_trustBoundarySuccess() throws IOException {
+    String audience =
+        "//iam.googleapis.com/locations/global/workforcePools/my-pool/providers/my-provider";
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
+
+    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
+
+    // Use a URL-based source that the mock transport can handle, to avoid file IO.
+    Map<String, Object> urlCredentialSourceMap = new HashMap<>();
+    urlCredentialSourceMap.put("url", "https://www.metadata.google.com");
+    Map<String, String> headers = new HashMap<>();
+    headers.put("Metadata-Flavor", "Google");
+    urlCredentialSourceMap.put("headers", headers);
+
+    ExternalAccountCredentials credentials =
+        IdentityPoolCredentials.newBuilder()
+            .setHttpTransportFactory(transportFactory)
+            .setAudience(audience)
+            .setWorkforcePoolUserProject("12345")
+            .setSubjectTokenType("subject_token_type")
+            .setTokenUrl(STS_URL)
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .setCredentialSource(new IdentityPoolCredentialSource(urlCredentialSourceMap))
+            .setEnvironmentProvider(environmentProvider)
+            .build();
+
+    credentials.refresh();
+
+    TrustBoundary trustBoundary = credentials.getTrustBoundary();
+    assertNotNull(trustBoundary);
+    assertEquals(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, trustBoundary.getEncodedLocations());
+
+    TrustBoundary.setEnvironmentProviderForTest(null);
   }
 
   private GenericJson buildJsonIdentityPoolCredential() {
@@ -1379,243 +1576,5 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     public String retrieveSubjectToken() {
       return "subjectToken";
     }
-  }
-
-  @Test
-  public void refresh_workload_trustBoundarySuccess() throws IOException {
-    // 1. Scenario Setup
-    String audience =
-        "//iam.googleapis.com/projects/12345/locations/global/workloadIdentityPools/my-pool/providers/my-provider";
-
-    // Enable the trust boundary feature via a mock environment provider.
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
-
-    // Create the credentials, overriding retrieveSubjectToken() to isolate from the filesystem.
-    // No extra mock setup is needed, as MockExternalAccountCredentialsTransport handles the rest.
-    ExternalAccountCredentials credentials =
-        new IdentityPoolCredentials(
-            IdentityPoolCredentials.newBuilder()
-                .setHttpTransportFactory(transportFactory)
-                .setAudience(audience)
-                .setSubjectTokenType("subject_token_type")
-                .setTokenUrl(STS_URL)
-                .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
-                .setEnvironmentProvider(environmentProvider)) {
-          @Override
-          public String retrieveSubjectToken() throws IOException {
-            // This override isolates the test from the filesystem.
-            return "dummy-subject-token";
-          }
-        };
-
-    // 2. Action: Refresh the credentials.
-    credentials.refresh();
-
-    // 3. Assertion: Verify the trust boundary was set from the mock's hardcoded response.
-    TrustBoundary trustBoundary = credentials.getTrustBoundary();
-    assertNotNull(trustBoundary);
-    assertEquals("0x800000", trustBoundary.getEncodedLocations());
-
-    // Cleanup
-    TrustBoundary.setEnvironmentProviderForTest(null);
-  }
-
-  @Test
-  public void getTrustBoundaryUrl_workload() throws IOException {
-    String audience =
-        "//iam.googleapis.com/projects/12345/locations/global/workloadIdentityPools/my-pool/providers/my-provider";
-    ExternalAccountCredentials credentials =
-        TestExternalAccountCredentials.newBuilder()
-            .setAudience(audience)
-            .setSubjectTokenType("subject_token_type")
-            .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
-            .build();
-
-    String expectedUrl =
-        "https://iamcredentials.googleapis.com/v1/projects/12345/locations/global/workloadIdentityPools/my-pool/allowedLocations";
-    assertEquals(expectedUrl, credentials.getTrustBoundaryUrl());
-  }
-
-  @Test
-  public void getTrustBoundaryUrl_workforce() throws IOException {
-    String audience =
-        "//iam.googleapis.com/locations/global/workforcePools/my-pool/providers/my-provider";
-    ExternalAccountCredentials credentials =
-        TestExternalAccountCredentials.newBuilder()
-            .setAudience(audience)
-            .setWorkforcePoolUserProject("12345")
-            .setSubjectTokenType("subject_token_type")
-            .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
-            .build();
-
-    String expectedUrl =
-        "https://iamcredentials.googleapis.com/v1/locations/global/workforcePools/my-pool/allowedLocations";
-    assertEquals(expectedUrl, credentials.getTrustBoundaryUrl());
-  }
-
-  @Test(expected = IOException.class)
-  public void getTrustBoundaryUrl_invalidAudience_throws() throws IOException {
-    ExternalAccountCredentials credentials =
-        TestExternalAccountCredentials.newBuilder()
-            .setAudience("invalid-audience")
-            .setSubjectTokenType("subject_token_type")
-            .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
-            .build();
-    credentials.getTrustBoundaryUrl();
-  }
-
-  @Test
-  public void refresh_workforce_trustBoundarySuccess() throws IOException {
-    String audience =
-        "//iam.googleapis.com/locations/global/workforcePools/my-pool/providers/my-provider";
-
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
-
-    ExternalAccountCredentials credentials =
-        new IdentityPoolCredentials(
-            IdentityPoolCredentials.newBuilder()
-                .setHttpTransportFactory(transportFactory)
-                .setAudience(audience)
-                .setWorkforcePoolUserProject("12345")
-                .setSubjectTokenType("subject_token_type")
-                .setTokenUrl(STS_URL)
-                .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
-                .setEnvironmentProvider(environmentProvider)) {
-          @Override
-          public String retrieveSubjectToken() throws IOException {
-            return "dummy-subject-token";
-          }
-        };
-
-    credentials.refresh();
-
-    TrustBoundary trustBoundary = credentials.getTrustBoundary();
-    assertNotNull(trustBoundary);
-    assertEquals("0x800000", trustBoundary.getEncodedLocations());
-
-    TrustBoundary.setEnvironmentProviderForTest(null);
-  }
-
-  @Test
-  public void refresh_impersonated_workload_trustBoundarySuccess() throws IOException {
-
-    String audience =
-        "//iam.googleapis.com/projects/12345/locations/global/workloadIdentityPools/my-pool/providers/my-provider";
-
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-
-    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
-
-    // Set an expire time on the mock transport for the impersonation call.
-
-    // Manually create a future timestamp in RFC3339 format.
-
-    long distantFutureMillis = System.currentTimeMillis() + 3600 * 1000;
-
-    java.text.SimpleDateFormat rfc3339 = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-
-    rfc3339.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
-
-    String expireTime = rfc3339.format(new java.util.Date(distantFutureMillis));
-
-    transportFactory.transport.setExpireTime(expireTime);
-
-    // Use a URL-based source that the mock transport can handle, to avoid file IO.
-
-    Map<String, Object> urlCredentialSourceMap = new HashMap<>();
-
-    urlCredentialSourceMap.put("url", "https://www.metadata.google.com");
-
-    Map<String, String> headers = new HashMap<>();
-
-    headers.put("Metadata-Flavor", "Google");
-
-    urlCredentialSourceMap.put("headers", headers);
-
-    ExternalAccountCredentials credentials =
-        IdentityPoolCredentials.newBuilder()
-            .setHttpTransportFactory(transportFactory)
-            .setAudience(audience)
-            .setSubjectTokenType("subject_token_type")
-            .setTokenUrl(STS_URL)
-            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-            .setCredentialSource(new IdentityPoolCredentialSource(urlCredentialSourceMap))
-            .setEnvironmentProvider(environmentProvider)
-            .build();
-
-    credentials.refresh();
-
-    TrustBoundary trustBoundary = credentials.getTrustBoundary();
-
-    assertNotNull(trustBoundary);
-
-    assertEquals("0x800000", trustBoundary.getEncodedLocations());
-
-    TrustBoundary.setEnvironmentProviderForTest(null);
-  }
-
-  @Test
-  public void refresh_impersonated_workforce_trustBoundarySuccess() throws IOException {
-
-    String audience =
-        "//iam.googleapis.com/locations/global/workforcePools/my-pool/providers/my-provider";
-
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-
-    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
-
-    // Set an expire time on the mock transport for the impersonation call.
-
-    long distantFutureMillis = System.currentTimeMillis() + 3600 * 1000;
-
-    java.text.SimpleDateFormat rfc3339 = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-
-    rfc3339.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
-
-    String expireTime = rfc3339.format(new java.util.Date(distantFutureMillis));
-
-    transportFactory.transport.setExpireTime(expireTime);
-
-    // Use a URL-based source that the mock transport can handle, to avoid file IO.
-
-    Map<String, Object> urlCredentialSourceMap = new HashMap<>();
-
-    urlCredentialSourceMap.put("url", "https://www.metadata.google.com");
-
-    Map<String, String> headers = new HashMap<>();
-
-    headers.put("Metadata-Flavor", "Google");
-
-    urlCredentialSourceMap.put("headers", headers);
-
-    ExternalAccountCredentials credentials =
-        IdentityPoolCredentials.newBuilder()
-            .setHttpTransportFactory(transportFactory)
-            .setAudience(audience)
-            .setWorkforcePoolUserProject("12345")
-            .setSubjectTokenType("subject_token_type")
-            .setTokenUrl(STS_URL)
-            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-            .setCredentialSource(new IdentityPoolCredentialSource(urlCredentialSourceMap))
-            .setEnvironmentProvider(environmentProvider)
-            .build();
-
-    credentials.refresh();
-
-    TrustBoundary trustBoundary = credentials.getTrustBoundary();
-
-    assertNotNull(trustBoundary);
-
-    assertEquals("0x800000", trustBoundary.getEncodedLocations());
-
-    TrustBoundary.setEnvironmentProviderForTest(null);
   }
 }

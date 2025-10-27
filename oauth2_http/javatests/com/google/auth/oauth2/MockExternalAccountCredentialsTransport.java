@@ -47,7 +47,12 @@ import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.auth.TestUtils;
 import com.google.common.base.Joiner;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 
 /**
  * Mock transport that handles the necessary steps to exchange an external credential for a GCP
