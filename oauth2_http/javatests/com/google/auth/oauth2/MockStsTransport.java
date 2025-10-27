@@ -60,7 +60,8 @@ public final class MockStsTransport extends MockHttpTransport {
   private static final String EXPECTED_GRANT_TYPE =
       "urn:ietf:params:oauth:grant-type:token-exchange";
   private static final String ISSUED_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:access_token";
-  private static final String VALID_STS_PATTERN = "https:\\/\\/sts.[a-z-_\\.]+\\/v1\\/(token|oauthtoken)";
+  private static final String VALID_STS_PATTERN =
+      "https:\\/\\/sts.[a-z-_\\.]+\\/v1\\/(token|oauthtoken)";
   private static final String VALID_TRUST_BOUNDARY_PATTERN =
       "https:\\/\\/iam.[a-z-_\\.]+\\/v1\\/.*\\/allowedLocations";
   private static final String ACCESS_TOKEN = "accessToken";
@@ -100,7 +101,8 @@ public final class MockStsTransport extends MockHttpTransport {
         new MockLowLevelHttpRequest(url) {
           @Override
           public LowLevelHttpResponse execute() throws IOException {
-            Matcher trustBoundaryMatcher = Pattern.compile(VALID_TRUST_BOUNDARY_PATTERN).matcher(url);
+            Matcher trustBoundaryMatcher =
+                Pattern.compile(VALID_TRUST_BOUNDARY_PATTERN).matcher(url);
             if (trustBoundaryMatcher.matches()) {
               GenericJson response = new GenericJson();
               response.setFactory(new GsonFactory());

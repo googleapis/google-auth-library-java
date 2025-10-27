@@ -40,11 +40,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.api.client.json.GenericJson;
-import com.google.api.client.json.Json;
 import com.google.api.client.json.JsonParser;
-import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
-import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
 import com.google.auth.oauth2.ExternalAccountCredentialsTest.MockExternalAccountCredentialsTransportFactory;
@@ -1403,8 +1400,8 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     }
   }
 
-    @Test
-    public void testRefresh_trustBoundarySuccess() throws IOException {
+  @Test
+  public void testRefresh_trustBoundarySuccess() throws IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
     environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");

@@ -195,11 +195,13 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
             if (url.contains(IAM_ENDPOINT)) {
 
               if (url.endsWith(TRUST_BOUNDARY_URL_END)) {
+                // Mocking call to refresh trust boundaries.
+                // The lookup endpoint is located in the IAM server which is different from the
+                // token server.
                 GenericJson responseJson = new GenericJson();
                 responseJson.setFactory(OAuth2Utils.JSON_FACTORY);
-                String encodedLocations = "0x800000";
-                responseJson.put("encodedLocations", encodedLocations);
-                responseJson.put("locations", Arrays.asList("us-east-1", "us-east-2"));
+                responseJson.put("encodedLocations", TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION);
+                responseJson.put("locations", TestUtils.TRUST_BOUNDARY_LOCATIONS);
                 String content = responseJson.toPrettyString();
                 return new MockLowLevelHttpResponse()
                     .setContentType(Json.MEDIA_TYPE)

@@ -33,6 +33,7 @@ package com.google.auth.oauth2;
 
 import static com.google.auth.oauth2.ComputeEngineCredentials.METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE;
 import static com.google.auth.oauth2.ImpersonatedCredentialsTest.SA_CLIENT_EMAIL;
+import static com.google.auth.oauth2.TrustBoundary.TRUST_BOUNDARY_KEY;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -1159,7 +1160,8 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     String defaultAccountEmail = "default@email.com";
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     TrustBoundary trustBoundary =
-        new TrustBoundary("0x80000", Collections.singletonList("us-central1"));
+        new TrustBoundary(
+            TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, TestUtils.TRUST_BOUNDARY_LOCATIONS);
     transportFactory.transport.setTrustBoundary(trustBoundary);
     transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);
 
@@ -1167,7 +1169,8 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
     Map<String, List<String>> headers = credentials.getRequestMetadata();
-    assertEquals(headers.get("x-allowed-locations"), Arrays.asList("0x80000"));
+    assertEquals(
+        headers.get(TRUST_BOUNDARY_KEY), Arrays.asList(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION));
   }
 
   @Test

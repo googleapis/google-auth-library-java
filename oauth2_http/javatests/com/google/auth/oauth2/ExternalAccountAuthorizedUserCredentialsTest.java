@@ -36,10 +36,7 @@ import static org.junit.Assert.*;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
-import com.google.api.client.json.Json;
-import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
-import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
 import com.google.auth.http.AuthHttpConstants;
@@ -1244,26 +1241,27 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
 
   @Test
   public void testRefresh_trustBoundaryFails_incorrectAudience() throws IOException {
-      TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-      TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-      environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
 
-      ExternalAccountAuthorizedUserCredentials credentials =
-              ExternalAccountAuthorizedUserCredentials.newBuilder()
-                      .setHttpTransportFactory(transportFactory)
-                      .setAudience("audience")
-                      .setClientId(CLIENT_ID)
-                      .setClientSecret(CLIENT_SECRET)
-                      .setRefreshToken(REFRESH_TOKEN)
-                      .setTokenUrl(TOKEN_URL)
-                      .build();
+    ExternalAccountAuthorizedUserCredentials credentials =
+        ExternalAccountAuthorizedUserCredentials.newBuilder()
+            .setHttpTransportFactory(transportFactory)
+            .setAudience("audience")
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setRefreshToken(REFRESH_TOKEN)
+            .setTokenUrl(TOKEN_URL)
+            .build();
 
     try {
       credentials.refresh();
       fail("Expected IOException to be thrown.");
     } catch (IOException e) {
       assertEquals(
-          "Failed to refresh trust boundary and no cached value is available.", e.getMessage());
+          "The provided audience is not in the correct format for a workforce pool.",
+          e.getMessage());
     }
   }
 

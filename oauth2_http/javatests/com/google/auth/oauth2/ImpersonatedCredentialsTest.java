@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.oauth2.TrustBoundary.TRUST_BOUNDARY_KEY;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -64,13 +65,7 @@ import java.security.PrivateKey;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
+import java.util.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -155,7 +150,8 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   public static final List<String> DELEGATES =
       Arrays.asList("sa1@developer.gserviceaccount.com", "sa2@developer.gserviceaccount.com");
   public static final TrustBoundary TRUST_BOUNDARY =
-      new TrustBoundary("0x80000", Arrays.asList("us-central1"));
+      new TrustBoundary(
+          TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, TestUtils.TRUST_BOUNDARY_LOCATIONS);
 
   private GoogleCredentials sourceCredentials;
   private MockIAMCredentialsServiceTransportFactory mockTransportFactory;
@@ -1338,7 +1334,9 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             mockTransportFactory);
 
     Map<String, List<String>> headers = targetCredentials.getRequestMetadata();
-    assertEquals(headers.get("x-allowed-locations"), Arrays.asList("0x80000"));
+    assertEquals(
+        headers.get(TRUST_BOUNDARY_KEY),
+        Collections.singletonList(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION));
   }
 
   @Test
@@ -1346,9 +1344,6 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
     environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
-
-    // Mock trust boundary response
-    TrustBoundary trustBoundary = TRUST_BOUNDARY;
 
     mockTransportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mockTransportFactory.getTransport().setAccessToken(ACCESS_TOKEN);

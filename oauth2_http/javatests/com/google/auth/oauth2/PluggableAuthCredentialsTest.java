@@ -603,61 +603,39 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
     assertThrows(NotSerializableException.class, () -> serializeAndDeserialize(testCredentials));
   }
 
-      @Test
+  @Test
+  public void testRefresh_trustBoundarySuccess() throws IOException {
 
-      public void testRefresh_trustBoundarySuccess() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
 
-        TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
 
-        TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
 
-        environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
 
-    
+    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
 
-        MockExternalAccountCredentialsTransportFactory transportFactory =
+    PluggableAuthCredentials credentials =
+        PluggableAuthCredentials.newBuilder()
+            .setHttpTransportFactory(transportFactory)
+            .setAudience(
+                "//iam.googleapis.com/projects/12345/locations/global/workloadIdentityPools/pool/providers/provider")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(transportFactory.transport.getStsUrl())
+            .setCredentialSource(buildCredentialSource())
+            .setExecutableHandler(options -> "pluggableAuthToken")
+            .build();
 
-            new MockExternalAccountCredentialsTransportFactory();
+    credentials.refresh();
 
-    
+    TrustBoundary trustBoundary = credentials.getTrustBoundary();
 
-        transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
+    assertNotNull(trustBoundary);
 
-    
-
-        PluggableAuthCredentials credentials =
-
-            PluggableAuthCredentials.newBuilder()
-
-                .setHttpTransportFactory(transportFactory)
-
-                .setAudience(
-
-                    "//iam.googleapis.com/projects/12345/locations/global/workloadIdentityPools/pool/providers/provider")
-
-                .setSubjectTokenType("subjectTokenType")
-
-                .setTokenUrl(transportFactory.transport.getStsUrl())
-
-                .setCredentialSource(buildCredentialSource())
-
-                .setExecutableHandler(options -> "pluggableAuthToken")
-
-                .build();
-
-    
-
-        credentials.refresh();
-
-    
-
-        TrustBoundary trustBoundary = credentials.getTrustBoundary();
-
-        assertNotNull(trustBoundary);
-
-        assertEquals("0x800000", trustBoundary.getEncodedLocations());
-
-      }
+    assertEquals("0x800000", trustBoundary.getEncodedLocations());
+  }
 
   private static PluggableAuthCredentialSource buildCredentialSource() {
     return buildCredentialSource("command", null, null);

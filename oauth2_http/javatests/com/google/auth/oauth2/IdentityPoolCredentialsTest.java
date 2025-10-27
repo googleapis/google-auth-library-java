@@ -1305,32 +1305,30 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     }
   }
 
-    @Test
-    public void testRefresh_trustBoundarySuccess() throws IOException {
-        TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-        TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-        environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
+  @Test
+  public void testRefresh_trustBoundarySuccess() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
 
-      MockExternalAccountCredentialsTransportFactory transportFactory =
-          new MockExternalAccountCredentialsTransportFactory();
-      HttpTransportFactory testingHttpTransportFactory = transportFactory;
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+    HttpTransportFactory testingHttpTransportFactory = transportFactory;
 
-      IdentityPoolCredentials credentials =
-          IdentityPoolCredentials.newBuilder()
-                  .setSubjectTokenSupplier(testProvider)
-              .setHttpTransportFactory(testingHttpTransportFactory)
-              .setAudience(
-   "//iam.googleapis.com/projects/12345/locations/global/workloadIdentityPools/pool/providers/provider")
-              .setSubjectTokenType("subjectTokenType")
-              .setTokenUrl(STS_URL)
-              .build();
+    IdentityPoolCredentials credentials =
+        IdentityPoolCredentials.newBuilder()
+            .setSubjectTokenSupplier(testProvider)
+            .setHttpTransportFactory(testingHttpTransportFactory)
+            .setAudience(
+                "//iam.googleapis.com/projects/12345/locations/global/workloadIdentityPools/pool/providers/provider")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .build();
 
-      credentials.refresh();
+    credentials.refresh();
 
-      TrustBoundary trustBoundary = credentials.getTrustBoundary();
-      assertNotNull(trustBoundary);
-      assertEquals(
-              "0x800000",
-          trustBoundary.getEncodedLocations());
-    }
+    TrustBoundary trustBoundary = credentials.getTrustBoundary();
+    assertNotNull(trustBoundary);
+    assertEquals("0x800000", trustBoundary.getEncodedLocations());
+  }
 }

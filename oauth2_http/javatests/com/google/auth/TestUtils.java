@@ -42,6 +42,7 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -64,6 +65,9 @@ public class TestUtils {
       URI.create("https://auth.cloud.google/authorize");
   public static final URI WORKFORCE_IDENTITY_FEDERATION_TOKEN_SERVER_URI =
       URI.create("https://sts.googleapis.com/v1/oauthtoken");
+  public static final String TRUST_BOUNDARY_ENCODED_LOCATION = "0x800000";
+  public static final List<String> TRUST_BOUNDARY_LOCATIONS =
+      ImmutableList.of("us-central1", "us-central2");
 
   private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 

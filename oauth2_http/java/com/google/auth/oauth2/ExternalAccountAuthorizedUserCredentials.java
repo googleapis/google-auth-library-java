@@ -225,7 +225,7 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials
             .setTokenValue(accessToken)
             .build();
 
-    refreshTrustBoundaries(newAccessToken);
+    refreshTrustBoundary(newAccessToken, transportFactory);
     return newAccessToken;
   }
 
@@ -238,11 +238,6 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials
     }
     String poolId = matcher.group("pool");
     return String.format(WORKFORCE_POOL_URL_FORMAT, poolId);
-  }
-
-  @Override
-  public HttpTransportFactory getTransportFactory() {
-    return transportFactory;
   }
 
   @Nullable

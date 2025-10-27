@@ -543,7 +543,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     if (this.impersonatedCredentials != null) {
       AccessToken accessToken = this.impersonatedCredentials.refreshAccessToken();
       // After the impersonated credential refreshes, its trust boundary is
-      // also refreshed. We need to get the refreshed trust boundary.
+      // also refreshed. That is the trust boundary we will use.
       setTrustBoundary(this.impersonatedCredentials.getTrustBoundary());
       return accessToken;
     }
@@ -575,7 +575,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
 
     StsTokenExchangeResponse response = requestHandler.build().exchangeToken();
     AccessToken accessToken = response.getAccessToken();
-    refreshTrustBoundaries(accessToken);
+    refreshTrustBoundary(accessToken, transportFactory);
     return accessToken;
   }
 
@@ -654,11 +654,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       String poolId = matcher.group("pool");
       return String.format(WORKLOAD_POOL_URL_FORMAT, projectNumber, poolId);
     }
-  }
-
-  @Override
-  public HttpTransportFactory getTransportFactory() {
-    return transportFactory;
   }
 
   @Nullable
