@@ -34,6 +34,13 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+      <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>bom</artifactId>
+        <version>2.20.27</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -62,21 +69,14 @@
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-storage</artifactId>
     </dependency>
-
-<!--    Test dependencies-->
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.13.2</version>
-      <scope>test</scope>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>auth</artifactId>
     </dependency>
     <dependency>
-      <artifactId>truth</artifactId>
-      <groupId>com.google.truth</groupId>
-      <scope>test</scope>
-      <version>1.4.4</version>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>regions</artifactId>
     </dependency>
-
   </dependencies>
 
 </project>
