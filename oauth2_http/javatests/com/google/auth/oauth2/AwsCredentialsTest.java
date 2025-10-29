@@ -1426,6 +1426,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
     TrustBoundary trustBoundary = awsCredential.getTrustBoundary();
     assertNotNull(trustBoundary);
-    assertEquals("0x800000", trustBoundary.getEncodedLocations());
+    assertEquals(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, trustBoundary.getEncodedLocations());
+    TrustBoundary.setEnvironmentProviderForTest(null);
   }
 }

@@ -150,7 +150,7 @@ public class TestUtils {
   public static String getDefaultExpireTime() {
     Calendar calendar = Calendar.getInstance();
     calendar.setTime(new Date());
-    calendar.add(Calendar.SECOND, 300);
+    calendar.add(Calendar.SECOND, 30000);
     return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(calendar.getTime());
   }
 

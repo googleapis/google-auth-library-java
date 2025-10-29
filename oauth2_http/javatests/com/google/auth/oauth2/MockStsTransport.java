@@ -101,16 +101,17 @@ public final class MockStsTransport extends MockHttpTransport {
         new MockLowLevelHttpRequest(url) {
           @Override
           public LowLevelHttpResponse execute() throws IOException {
+            // Mocking call to refresh trust boundaries.
+            // The lookup endpoint is located in the IAM server.
             Matcher trustBoundaryMatcher =
                 Pattern.compile(VALID_TRUST_BOUNDARY_PATTERN).matcher(url);
             if (trustBoundaryMatcher.matches()) {
               GenericJson response = new GenericJson();
-              response.setFactory(new GsonFactory());
-              response.put("locations", Collections.singletonList("us-central1"));
-              response.put("encodedLocations", "0x1");
+              response.put("locations", TestUtils.TRUST_BOUNDARY_LOCATIONS);
+              response.put("encodedLocations", TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION);
               return new MockLowLevelHttpResponse()
                   .setContentType(Json.MEDIA_TYPE)
-                  .setContent(response.toPrettyString());
+                  .setContent(OAuth2Utils.JSON_FACTORY.toString(response));
             }
 
             // Environment version is prefixed by "aws". e.g. "aws1".

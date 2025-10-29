@@ -56,6 +56,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -91,6 +92,11 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   @Before
   public void setup() {
     transportFactory = new MockExternalAccountCredentialsTransportFactory();
+  }
+
+  @After
+  public void tearDown() {
+    TrustBoundary.setEnvironmentProviderForTest(null);
   }
 
   @Test
@@ -1294,11 +1300,9 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void refresh_workload_trustBoundarySuccess() throws IOException {
-    // 1. Scenario Setup
     String audience =
         "//iam.googleapis.com/projects/12345/locations/global/workloadIdentityPools/my-pool/providers/my-provider";
 
-    // Enable the trust boundary feature via a mock environment provider.
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
     environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
@@ -1318,17 +1322,11 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
             return "dummy-subject-token";
           }
         };
-
-    // 2. Action: Refresh the credentials.
     credentials.refresh();
 
-    // 3. Assertion: Verify the trust boundary was set from the mock's hardcoded response.
     TrustBoundary trustBoundary = credentials.getTrustBoundary();
     assertNotNull(trustBoundary);
     assertEquals(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, trustBoundary.getEncodedLocations());
-
-    // Cleanup
-    TrustBoundary.setEnvironmentProviderForTest(null);
   }
 
   @Test
@@ -1361,8 +1359,6 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     TrustBoundary trustBoundary = credentials.getTrustBoundary();
     assertNotNull(trustBoundary);
     assertEquals(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, trustBoundary.getEncodedLocations());
-
-    TrustBoundary.setEnvironmentProviderForTest(null);
   }
 
   @Test
@@ -1398,8 +1394,6 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     TrustBoundary trustBoundary = credentials.getTrustBoundary();
     assertNotNull(trustBoundary);
     assertEquals(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, trustBoundary.getEncodedLocations());
-
-    TrustBoundary.setEnvironmentProviderForTest(null);
   }
 
   @Test
@@ -1436,8 +1430,6 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     TrustBoundary trustBoundary = credentials.getTrustBoundary();
     assertNotNull(trustBoundary);
     assertEquals(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, trustBoundary.getEncodedLocations());
-
-    TrustBoundary.setEnvironmentProviderForTest(null);
   }
 
   private GenericJson buildJsonIdentityPoolCredential() {

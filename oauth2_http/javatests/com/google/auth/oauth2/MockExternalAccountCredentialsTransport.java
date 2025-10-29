@@ -93,7 +93,6 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
   private String expireTime;
   private String metadataServerContentType;
   private String stsContent;
-  private String impersonationTrustBoundary;
 
   public void addResponseErrorSequence(IOException... errors) {
     Collections.addAll(responseErrorSequence, errors);
@@ -315,9 +314,5 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
 
   public void setMetadataServerContentType(String contentType) {
     this.metadataServerContentType = contentType;
-  }
-
-  public void setImpersonationTrustBoundary(String trustBoundary) {
-    this.impersonationTrustBoundary = trustBoundary;
   }
 }

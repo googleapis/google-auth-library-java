@@ -1240,10 +1240,10 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
             .build();
 
     credentials.refresh();
-
     TrustBoundary trustBoundary = credentials.getTrustBoundary();
     assertNotNull(trustBoundary);
-    assertEquals("0x1", trustBoundary.getEncodedLocations());
+    assertEquals(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, trustBoundary.getEncodedLocations());
+    TrustBoundary.setEnvironmentProviderForTest(null);
   }
 
   @Test
@@ -1270,6 +1270,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
           "The provided audience is not in the correct format for a workforce pool.",
           e.getMessage());
     }
+    TrustBoundary.setEnvironmentProviderForTest(null);
   }
 
   @Test

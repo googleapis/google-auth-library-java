@@ -605,16 +605,12 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void testRefresh_trustBoundarySuccess() throws IOException {
-
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-
     TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-
     environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
 
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
-
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
 
     PluggableAuthCredentials credentials =
@@ -629,12 +625,10 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
             .build();
 
     credentials.refresh();
-
     TrustBoundary trustBoundary = credentials.getTrustBoundary();
-
     assertNotNull(trustBoundary);
-
-    assertEquals("0x800000", trustBoundary.getEncodedLocations());
+    assertEquals(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, trustBoundary.getEncodedLocations());
+    TrustBoundary.setEnvironmentProviderForTest(null);
   }
 
   private static PluggableAuthCredentialSource buildCredentialSource() {
