@@ -100,10 +100,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
 
   private EnvironmentProvider environmentProvider;
 
-  private static final String WORKFORCE_POOL_URL_FORMAT =
-      "https://iamcredentials.googleapis.com/v1/locations/global/workforcePools/%s/allowedLocations";
-  private static final String WORKLOAD_POOL_URL_FORMAT =
-      "https://iamcredentials.googleapis.com/v1/projects/%s/locations/global/workloadIdentityPools/%s/allowedLocations";
 
   private static final Pattern WORKFORCE_PATTERN =
       Pattern.compile(
@@ -633,26 +629,28 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     return ImpersonatedCredentials.extractTargetPrincipal(serviceAccountImpersonationUrl);
   }
 
-  // todo Add doc comment.
   @Override
   public String getTrustBoundaryUrl() throws IOException {
-    if (isWorkforcePoolConfiguration()) {
-      Matcher matcher = WORKFORCE_PATTERN.matcher(getAudience());
-      if (!matcher.matches()) {
-        throw new IOException(
-            "The provided audience is not in the correct format for a workforce pool.");
-      }
-      String poolId = matcher.group("pool");
-      return String.format(WORKFORCE_POOL_URL_FORMAT, poolId);
+    Matcher workforceMatcher = WORKFORCE_PATTERN.matcher(getAudience());
+    Matcher workloadMatcher = WORKLOAD_PATTERN.matcher(getAudience());
+
+    if (workforceMatcher.matches()) {
+      String poolId = workforceMatcher.group("pool");
+      return String.format(
+          OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKFORCE_POOL,
+          getUniverseDomain(),
+          poolId);
+    } else if (workloadMatcher.matches()) {
+      String projectNumber = workloadMatcher.group("project");
+      String poolId = workloadMatcher.group("pool");
+      return String.format(
+          OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKLOAD_POOL,
+          getUniverseDomain(),
+          projectNumber,
+          poolId);
     } else {
-      Matcher matcher = WORKLOAD_PATTERN.matcher(getAudience());
-      if (!matcher.matches()) {
-        throw new IOException(
-            "The provided audience is not in the correct format for a workload identity pool.");
-      }
-      String projectNumber = matcher.group("project");
-      String poolId = matcher.group("pool");
-      return String.format(WORKLOAD_POOL_URL_FORMAT, projectNumber, poolId);
+      throw new IOException(
+          "The provided audience is not in a valid format for either a workload identity pool or a workforce pool.");
     }
   }
 
