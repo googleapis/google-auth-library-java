@@ -100,7 +100,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
 
   private EnvironmentProvider environmentProvider;
 
-
   private static final Pattern WORKFORCE_PATTERN =
       Pattern.compile(
           "^//iam.googleapis.com/locations/(?<location>[^/]+)/workforcePools/(?<pool>[^/]+)/providers/(?<provider>[^/]+)$");
