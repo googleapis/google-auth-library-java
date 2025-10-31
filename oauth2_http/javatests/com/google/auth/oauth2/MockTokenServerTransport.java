@@ -327,9 +327,10 @@ public class MockTokenServerTransport extends MockHttpTransport {
           };
       return request;
     } else if (urlWithoutQuery.endsWith("/allowedLocations")) {
-      // Mocking call to refresh trust boundaries.
-      // The lookup endpoint is located in the IAM server which is different from the
-      // token server.
+      // Mocking call to the /allowedLocations endpoint for trust boundary refresh.
+      // For testing convenience, this mock transport handles
+      // the /allowedLocations endpoint. The actual server for this endpoint
+      // will be the IAM Credentials API.
       request =
           new MockLowLevelHttpRequest(url) {
             @Override

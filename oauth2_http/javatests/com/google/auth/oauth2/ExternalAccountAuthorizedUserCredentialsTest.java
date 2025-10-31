@@ -1247,7 +1247,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
   }
 
   @Test
-  public void testRefresh_trustBoundaryFails_incorrectAudience() throws IOException {
+  public void testRefresh_trustBoundaryFails_incorrectAudience() {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
     environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
@@ -1262,9 +1262,9 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
             .setTokenUrl(TOKEN_URL)
             .build();
 
-    IOException exception =
+    IllegalStateException exception =
         assertThrows(
-            IOException.class,
+            IllegalStateException.class,
             () -> {
               credentials.refresh();
             });

@@ -106,6 +106,9 @@ public final class MockStsTransport extends MockHttpTransport {
             Matcher trustBoundaryMatcher =
                 Pattern.compile(VALID_TRUST_BOUNDARY_PATTERN).matcher(url);
             if (trustBoundaryMatcher.matches()) {
+              // Mocking call to the /allowedLocations endpoint for trust boundary refresh.
+              // For testing convenience, this mock transport handles
+              // the /allowedLocations endpoint.
               GenericJson response = new GenericJson();
               response.put("locations", TestUtils.TRUST_BOUNDARY_LOCATIONS);
               response.put("encodedLocations", TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION);

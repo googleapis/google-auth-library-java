@@ -31,7 +31,7 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.auth.oauth2.OAuth2Utils.JSON_FACTORY;
+import static com.google.auth.oauth2.OAuth2Utils.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.api.client.http.GenericUrl;
@@ -56,7 +56,6 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -83,13 +82,6 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
 
   private static final long serialVersionUID = -2181779590486283287L;
-
-  private static final String WORKFORCE_POOL_URL_FORMAT =
-      "https://iamcredentials.googleapis.com/v1/locations/global/workforcePools/%s/allowedLocations";
-  private static final Pattern WORKFORCE_PATTERN =
-      Pattern.compile(
-          "^//iam.googleapis.com/locations/(?<location>[^/]+)/workforcePools/(?<pool>[^/]+)/providers/(?<provider>[^/]+)$");
-
   private final String transportFactoryClassName;
   private final String audience;
   private final String tokenUrl;
@@ -231,13 +223,14 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials
 
   @Override
   public String getTrustBoundaryUrl() throws IOException {
-    Matcher matcher = WORKFORCE_PATTERN.matcher(getAudience());
+    Matcher matcher = WORKFORCE_AUDIENCE_PATTERN.matcher(getAudience());
     if (!matcher.matches()) {
-      throw new IOException(
+      throw new IllegalStateException(
           "The provided audience is not in the correct format for a workforce pool.");
     }
     String poolId = matcher.group("pool");
-    return String.format(WORKFORCE_POOL_URL_FORMAT, poolId);
+    return String.format(
+        IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKFORCE_POOL, getUniverseDomain(), poolId);
   }
 
   @Nullable

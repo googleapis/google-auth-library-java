@@ -1297,9 +1297,9 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
             .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
             .build();
 
-    IOException exception =
+    IllegalStateException exception =
         assertThrows(
-            IOException.class,
+            IllegalStateException.class,
             () -> {
               credentials.getTrustBoundaryUrl();
             });

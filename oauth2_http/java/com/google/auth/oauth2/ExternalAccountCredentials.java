@@ -31,12 +31,15 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.oauth2.OAuth2Utils.WORKFORCE_AUDIENCE_PATTERN;
+import static com.google.auth.oauth2.OAuth2Utils.WORKLOAD_AUDIENCE_PATTERN;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.Data;
+import com.google.api.core.InternalApi;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
@@ -99,13 +102,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
   @Nullable protected ImpersonatedCredentials impersonatedCredentials;
 
   private EnvironmentProvider environmentProvider;
-
-  private static final Pattern WORKFORCE_PATTERN =
-      Pattern.compile(
-          "^//iam.googleapis.com/locations/(?<location>[^/]+)/workforcePools/(?<pool>[^/]+)/providers/(?<provider>[^/]+)$");
-  private static final Pattern WORKLOAD_PATTERN =
-      Pattern.compile(
-          "^//iam.googleapis.com/projects/(?<project>[^/]+)/locations/(?<location>[^/]+)/workloadIdentityPools/(?<pool>[^/]+)/providers/(?<provider>[^/]+)$");
 
   /**
    * Constructor with minimum identifying information and custom HTTP transport. Does not support
@@ -537,8 +533,9 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     }
     if (this.impersonatedCredentials != null) {
       AccessToken accessToken = this.impersonatedCredentials.refreshAccessToken();
-      // After the impersonated credential refreshes, its trust boundary is
-      // also refreshed. That is the trust boundary we will use.
+      // We use the impersonated account's credential as the trust boundary
+      // since the regional restriction is bounded by the access that the
+      // impersonated account has.
       setTrustBoundary(this.impersonatedCredentials.getTrustBoundary());
       return accessToken;
     }
@@ -628,18 +625,20 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     return ImpersonatedCredentials.extractTargetPrincipal(serviceAccountImpersonationUrl);
   }
 
+  @InternalApi
   @Override
-  public String getTrustBoundaryUrl() throws IOException {
-    Matcher workforceMatcher = WORKFORCE_PATTERN.matcher(getAudience());
-    Matcher workloadMatcher = WORKLOAD_PATTERN.matcher(getAudience());
-
+  public String getTrustBoundaryUrl() {
+    Matcher workforceMatcher = WORKFORCE_AUDIENCE_PATTERN.matcher(getAudience());
     if (workforceMatcher.matches()) {
       String poolId = workforceMatcher.group("pool");
       return String.format(
           OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKFORCE_POOL,
           getUniverseDomain(),
           poolId);
-    } else if (workloadMatcher.matches()) {
+    }
+
+    Matcher workloadMatcher = WORKLOAD_AUDIENCE_PATTERN.matcher(getAudience());
+    if (workloadMatcher.matches()) {
       String projectNumber = workloadMatcher.group("project");
       String poolId = workloadMatcher.group("pool");
       return String.format(
@@ -647,10 +646,10 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
           getUniverseDomain(),
           projectNumber,
           poolId);
-    } else {
-      throw new IOException(
-          "The provided audience is not in a valid format for either a workload identity pool or a workforce pool.");
     }
+
+    throw new IllegalStateException(
+        "The provided audience is not in a valid format for either a workload identity pool or a workforce pool.");
   }
 
   @Nullable
