@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.oauth2.TrustBoundary.TRUST_BOUNDARY_KEY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -977,7 +978,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     MockTokenServerTransport transport = new MockTokenServerTransport();
     transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     TrustBoundary trustBoundary =
-        new TrustBoundary("0x80000", Collections.singletonList("us-central1"));
+        new TrustBoundary(
+            TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, Collections.singletonList("us-central1"));
     transport.setTrustBoundary(trustBoundary);
 
     ServiceAccountCredentials credentials =
@@ -990,7 +992,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
             .build();
 
     Map<String, List<String>> headers = credentials.getRequestMetadata();
-    assertEquals(headers.get("x-allowed-locations"), Arrays.asList("0x80000"));
+    assertEquals(
+        headers.get(TRUST_BOUNDARY_KEY), Arrays.asList(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION));
   }
 
   @Test
@@ -1004,7 +1007,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     MockTokenServerTransport trustBoundaryTransport = new MockTokenServerTransport();
     trustBoundaryTransport.addResponseErrorSequence(new IOException("Service Unavailable"));
     TrustBoundary trustBoundary =
-        new TrustBoundary("0x80000", Collections.singletonList("us-central1"));
+        new TrustBoundary(
+            TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, TestUtils.TRUST_BOUNDARY_LOCATIONS);
     trustBoundaryTransport.setTrustBoundary(trustBoundary);
 
     // This transport will be used for the access token refresh.
@@ -1034,7 +1038,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
             .build();
 
     Map<String, List<String>> headers = credentials.getRequestMetadata();
-    assertEquals(headers.get("x-allowed-locations"), Arrays.asList("0x80000"));
+    assertEquals(
+        Arrays.asList(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION), headers.get(TRUST_BOUNDARY_KEY));
   }
 
   @Test
@@ -1135,7 +1140,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     // Set trust boundary to a valid non No-Op value.
     transport.setTrustBoundary(
-        new TrustBoundary("0x80000", Collections.singletonList("us-central1")));
+        new TrustBoundary(
+            TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, TestUtils.TRUST_BOUNDARY_LOCATIONS));
 
     // Refresh trust boundaries
     credentials.refresh();
@@ -1153,7 +1159,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     MockTokenServerTransport transport = new MockTokenServerTransport();
     transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     TrustBoundary trustBoundary =
-        new TrustBoundary("0x80000", Collections.singletonList("us-central1"));
+        new TrustBoundary(
+            TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, TestUtils.TRUST_BOUNDARY_LOCATIONS);
     transport.setTrustBoundary(trustBoundary);
 
     ServiceAccountCredentials credentials =
@@ -1174,7 +1181,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     credentials.refresh();
 
     assertEquals(
-        trustBoundary.getEncodedLocations(), credentials.getTrustBoundary().getEncodedLocations());
+        TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION,
+        credentials.getTrustBoundary().getEncodedLocations());
   }
 
   @Test
@@ -1239,7 +1247,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     MockTokenServerTransport transport = new MockTokenServerTransport();
     transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     TrustBoundary trustBoundary =
-        new TrustBoundary("0x80000", Collections.singletonList("us-central1"));
+        new TrustBoundary(
+            TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, Collections.singletonList("us-central1"));
     transport.setTrustBoundary(trustBoundary);
 
     ServiceAccountCredentials credentials =
@@ -1253,7 +1262,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     Map<String, List<String>> headers = credentials.getRequestMetadata();
 
-    assertEquals(Arrays.asList("0x80000"), headers.get("x-allowed-locations"));
+    assertEquals(
+        Arrays.asList(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION), headers.get(TRUST_BOUNDARY_KEY));
   }
 
   @Test
@@ -1278,7 +1288,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     Map<String, List<String>> headers = credentials.getRequestMetadata();
 
-    assertEquals(Arrays.asList(""), headers.get("x-allowed-locations"));
+    assertEquals(Arrays.asList(""), headers.get(TRUST_BOUNDARY_KEY));
   }
 
   @Test
@@ -1303,6 +1313,6 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     Map<String, List<String>> headers = credentials.getRequestMetadata();
 
-    assertNull(headers.get("x-allowed-locations"));
+    assertNull(headers.get(TRUST_BOUNDARY_KEY));
   }
 }

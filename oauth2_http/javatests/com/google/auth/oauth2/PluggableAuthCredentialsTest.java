@@ -603,6 +603,34 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
     assertThrows(NotSerializableException.class, () -> serializeAndDeserialize(testCredentials));
   }
 
+  @Test
+  public void testRefresh_trustBoundarySuccess() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
+
+    MockExternalAccountCredentialsTransportFactory transportFactory =
+        new MockExternalAccountCredentialsTransportFactory();
+    transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
+
+    PluggableAuthCredentials credentials =
+        PluggableAuthCredentials.newBuilder()
+            .setHttpTransportFactory(transportFactory)
+            .setAudience(
+                "//iam.googleapis.com/projects/12345/locations/global/workloadIdentityPools/pool/providers/provider")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(transportFactory.transport.getStsUrl())
+            .setCredentialSource(buildCredentialSource())
+            .setExecutableHandler(options -> "pluggableAuthToken")
+            .build();
+
+    credentials.refresh();
+    TrustBoundary trustBoundary = credentials.getTrustBoundary();
+    assertNotNull(trustBoundary);
+    assertEquals(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, trustBoundary.getEncodedLocations());
+    TrustBoundary.setEnvironmentProviderForTest(null);
+  }
+
   private static PluggableAuthCredentialSource buildCredentialSource() {
     return buildCredentialSource("command", null, null);
   }

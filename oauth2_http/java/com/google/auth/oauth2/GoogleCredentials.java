@@ -339,6 +339,10 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     return trustBoundary;
   }
 
+  protected void setTrustBoundary(TrustBoundary trustBoundary) {
+    this.trustBoundary = trustBoundary;
+  }
+
   /**
    * Refreshes the trust boundary by making a call to the trust boundary URL.
    *

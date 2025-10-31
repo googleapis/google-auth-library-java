@@ -184,9 +184,7 @@ final class TrustBoundary {
 
     // Add the cached trust boundary header, if available.
     if (cachedTrustBoundary != null) {
-      String headerValue =
-          cachedTrustBoundary.isNoOp() ? "" : cachedTrustBoundary.getEncodedLocations();
-      request.getHeaders().set(TRUST_BOUNDARY_KEY, headerValue);
+      request.getHeaders().set(TRUST_BOUNDARY_KEY, cachedTrustBoundary.getEncodedLocations());
     }
 
     // Add retry logic

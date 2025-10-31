@@ -68,6 +68,7 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
   private static final String AWS_IMDSV2_SESSION_TOKEN_URL = "https://169.254.169.254/imdsv2";
   private static final String METADATA_SERVER_URL = "https://www.metadata.google.com";
   private static final String STS_URL = "https://sts.googleapis.com/v1/token";
+  private static final String TRUST_BOUNDARY_URL_END = "/allowedLocations";
 
   private static final String SUBJECT_TOKEN = "subjectToken";
   private static final String TOKEN_TYPE = "Bearer";
@@ -196,6 +197,18 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
             }
 
             if (url.contains(IAM_ENDPOINT)) {
+
+              if (url.endsWith(TRUST_BOUNDARY_URL_END)) {
+                GenericJson responseJson = new GenericJson();
+                responseJson.setFactory(OAuth2Utils.JSON_FACTORY);
+                responseJson.put("encodedLocations", TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION);
+                responseJson.put("locations", TestUtils.TRUST_BOUNDARY_LOCATIONS);
+                String content = responseJson.toPrettyString();
+                return new MockLowLevelHttpResponse()
+                    .setContentType(Json.MEDIA_TYPE)
+                    .setContent(content);
+              }
+
               GenericJson query =
                   OAuth2Utils.JSON_FACTORY
                       .createJsonParser(getContentAsString())

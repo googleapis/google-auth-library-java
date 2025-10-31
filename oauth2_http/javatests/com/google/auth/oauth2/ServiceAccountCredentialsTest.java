@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.oauth2.TrustBoundary.TRUST_BOUNDARY_KEY;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -1816,15 +1817,16 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
     // Mock trust boundary response
     TrustBoundary trustBoundary =
-        new TrustBoundary("0x80000", Collections.singletonList("us-central1"));
+        new TrustBoundary(
+            TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, TestUtils.TRUST_BOUNDARY_LOCATIONS);
 
     MockTokenServerTransport transport = new MockTokenServerTransport();
-    transport.addServiceAccount("test-client-email@example.com", "test-access-token");
+    transport.addServiceAccount(CLIENT_EMAIL, "test-access-token");
     transport.setTrustBoundary(trustBoundary);
 
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.newBuilder()
-            .setClientEmail("test-client-email@example.com")
+            .setClientEmail(CLIENT_EMAIL)
             .setPrivateKey(
                 OAuth2Utils.privateKeyFromPkcs8(ServiceAccountCredentialsTest.PRIVATE_KEY_PKCS8))
             .setPrivateKeyId("test-key-id")
@@ -1833,7 +1835,8 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             .build();
 
     Map<String, List<String>> headers = credentials.getRequestMetadata();
-    assertEquals(headers.get("x-allowed-locations"), Arrays.asList("0x80000"));
+    assertEquals(
+        headers.get(TRUST_BOUNDARY_KEY), Arrays.asList(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION));
   }
 
   @Test
@@ -1843,11 +1846,11 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
 
     MockTokenServerTransport transport = new MockTokenServerTransport();
-    transport.addServiceAccount("test-client-email@example.com", "test-access-token");
+    transport.addServiceAccount(CLIENT_EMAIL, "test-access-token");
 
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.newBuilder()
-            .setClientEmail("test-client-email@example.com")
+            .setClientEmail(CLIENT_EMAIL)
             .setPrivateKey(
                 OAuth2Utils.privateKeyFromPkcs8(ServiceAccountCredentialsTest.PRIVATE_KEY_PKCS8))
             .setPrivateKeyId("test-key-id")
