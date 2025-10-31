@@ -41,7 +41,6 @@ import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.UrlEncodedContent;
 import com.google.api.client.json.GenericJson;
-import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Preconditions;
@@ -173,19 +172,10 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
    */
   public static UserCredentials fromStream(
       InputStream credentialsStream, HttpTransportFactory transportFactory) throws IOException {
-    Preconditions.checkNotNull(credentialsStream);
     Preconditions.checkNotNull(transportFactory);
-
-    JsonFactory jsonFactory = JSON_FACTORY;
-    JsonObjectParser parser = new JsonObjectParser(jsonFactory);
-    GenericJson fileContents =
-        parser.parseAndClose(credentialsStream, StandardCharsets.UTF_8, GenericJson.class);
-
-    String fileType = (String) fileContents.get("type");
-    if (fileType == null) {
-      throw new IOException("Error reading credentials from stream, 'type' field not specified.");
-    }
-    if (GoogleCredentialsInfo.USER_CREDENTIALS.getFileType().equals(fileType)) {
+    GenericJson fileContents = parseJsonInputStream(credentialsStream);
+    String fileType = extractFromJson(fileContents, "type");
+    if (fileType.equals(GoogleCredentialsInfo.USER_CREDENTIALS.getFileType())) {
       return fromJson(fileContents, transportFactory);
     }
     throw new IOException(

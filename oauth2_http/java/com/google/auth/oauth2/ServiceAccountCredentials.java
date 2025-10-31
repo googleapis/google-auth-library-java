@@ -43,6 +43,7 @@ import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.UrlEncodedContent;
+import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.webtoken.JsonWebSignature;
@@ -485,14 +486,18 @@ public class ServiceAccountCredentials extends GoogleCredentials
    */
   public static ServiceAccountCredentials fromStream(
       InputStream credentialsStream, HttpTransportFactory transportFactory) throws IOException {
-    ServiceAccountCredentials credential =
-        (ServiceAccountCredentials)
-            GoogleCredentials.fromStream(credentialsStream, transportFactory);
-    if (credential == null) {
-      throw new IOException(
-          "Error reading credentials from stream, ServiceAccountCredentials type is not recognized.");
+    Preconditions.checkNotNull(transportFactory);
+    GenericJson fileContents = parseJsonInputStream(credentialsStream);
+    String fileType = extractFromJson(fileContents, "type");
+    if (fileType.equals(GoogleCredentialsInfo.SERVICE_ACCOUNT_CREDENTIALS.getFileType())) {
+      return fromJson(fileContents, transportFactory);
     }
-    return credential;
+
+    throw new IOException(
+        String.format(
+            "Error reading credentials from stream, 'type' value '%s' not recognized."
+                + " Expecting '%s'.",
+            fileType, GoogleCredentialsInfo.SERVICE_ACCOUNT_CREDENTIALS.getFileType()));
   }
 
   /** Returns whether the scopes are empty, meaning createScoped must be called before use. */
