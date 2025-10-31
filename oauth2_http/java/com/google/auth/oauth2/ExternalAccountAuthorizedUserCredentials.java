@@ -44,6 +44,7 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Preconditions;
+import com.google.api.core.InternalApi;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
 import com.google.common.io.BaseEncoding;
@@ -221,6 +222,7 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials
     return newAccessToken;
   }
 
+  @InternalApi
   @Override
   public String getTrustBoundaryUrl() throws IOException {
     Matcher matcher = WORKFORCE_AUDIENCE_PATTERN.matcher(getAudience());
