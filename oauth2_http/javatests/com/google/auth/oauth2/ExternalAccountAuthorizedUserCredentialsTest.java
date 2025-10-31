@@ -38,6 +38,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -1243,7 +1244,6 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     TrustBoundary trustBoundary = credentials.getTrustBoundary();
     assertNotNull(trustBoundary);
     assertEquals(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, trustBoundary.getEncodedLocations());
-    TrustBoundary.setEnvironmentProviderForTest(null);
   }
 
   @Test
@@ -1262,15 +1262,15 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
             .setTokenUrl(TOKEN_URL)
             .build();
 
-    try {
-      credentials.refresh();
-      fail("Expected IOException to be thrown.");
-    } catch (IOException e) {
-      assertEquals(
-          "The provided audience is not in the correct format for a workforce pool.",
-          e.getMessage());
-    }
-    TrustBoundary.setEnvironmentProviderForTest(null);
+    IOException exception =
+        assertThrows(
+            IOException.class,
+            () -> {
+              credentials.refresh();
+            });
+    assertEquals(
+        "The provided audience is not in the correct format for a workforce pool.",
+        exception.getMessage());
   }
 
   @Test

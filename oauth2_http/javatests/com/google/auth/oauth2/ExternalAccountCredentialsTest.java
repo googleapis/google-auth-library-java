@@ -36,6 +36,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -1287,15 +1288,25 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(expectedUrl, credentials.getTrustBoundaryUrl());
   }
 
-  @Test(expected = IOException.class)
-  public void getTrustBoundaryUrl_invalidAudience_throws() throws IOException {
+  @Test
+  public void getTrustBoundaryUrl_invalidAudience_throws() {
     ExternalAccountCredentials credentials =
         TestExternalAccountCredentials.newBuilder()
             .setAudience("invalid-audience")
             .setSubjectTokenType("subject_token_type")
             .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
             .build();
-    credentials.getTrustBoundaryUrl();
+
+    IOException exception =
+        assertThrows(
+            IOException.class,
+            () -> {
+              credentials.getTrustBoundaryUrl();
+            });
+
+    assertEquals(
+        "The provided audience is not in a valid format for either a workload identity pool or a workforce pool.",
+        exception.getMessage());
   }
 
   @Test

@@ -56,6 +56,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import javax.annotation.Nullable;
 
 /** Utilities for test code under com.google.auth. */
@@ -150,8 +151,10 @@ public class TestUtils {
   public static String getDefaultExpireTime() {
     Calendar calendar = Calendar.getInstance();
     calendar.setTime(new Date());
-    calendar.add(Calendar.SECOND, 3000);
-    return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(calendar.getTime());
+    calendar.add(Calendar.SECOND, 300);
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+    return dateFormat.format(calendar.getTime());
   }
 
   private TestUtils() {}
