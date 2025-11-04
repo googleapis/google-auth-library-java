@@ -533,10 +533,9 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     }
     if (this.impersonatedCredentials != null) {
       AccessToken accessToken = this.impersonatedCredentials.refreshAccessToken();
-      // We use the impersonated account's credential as the trust boundary
-      // since the regional restriction is bounded by the access that the
-      // impersonated account has.
-      setTrustBoundary(this.impersonatedCredentials.getTrustBoundary());
+      // After the impersonated credential refreshes, its trust boundary is
+      // also refreshed. That is the trust boundary we will use.
+      this.trustBoundary = this.impersonatedCredentials.getTrustBoundary();
       return accessToken;
     }
 

@@ -108,7 +108,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   private final String universeDomain;
   private final boolean isExplicitUniverseDomain;
 
-  private TrustBoundary trustBoundary;
+  TrustBoundary trustBoundary;
 
   protected final String quotaProjectId;
 

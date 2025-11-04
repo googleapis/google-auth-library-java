@@ -31,7 +31,9 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.auth.oauth2.OAuth2Utils.*;
+import static com.google.auth.oauth2.OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKFORCE_POOL;
+import static com.google.auth.oauth2.OAuth2Utils.JSON_FACTORY;
+import static com.google.auth.oauth2.OAuth2Utils.WORKFORCE_AUDIENCE_PATTERN;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.api.client.http.GenericUrl;
