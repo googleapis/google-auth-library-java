@@ -62,6 +62,7 @@ import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -344,8 +345,26 @@ public class ComputeEngineCredentials extends GoogleCredentials
   /** Refresh the access token by getting it from the GCE metadata server */
   @Override
   public AccessToken refreshAccessToken() throws IOException {
-    HttpResponse response =
-        getMetadataResponse(createTokenUrlWithScopes(), RequestType.ACCESS_TOKEN_REQUEST, true);
+    String tokenUrl = createTokenUrlWithScopes();
+
+    try {
+      X509Certificate cert =
+          AgentIdentityUtils.getAgentIdentityCertificate();
+      if (cert != null && AgentIdentityUtils.shouldRequestBoundToken(cert)) {
+        String fingerprint = AgentIdentityUtils.calculateCertificateFingerprint(cert);
+        GenericUrl url = new GenericUrl(tokenUrl);
+        url.set("bindCertificateFingerprint", fingerprint);
+        tokenUrl = url.build();
+      }
+    } catch (IOException e) {
+      LOGGER.log(
+          Level.WARNING,
+          "Failed to process Agent Identity certificate for bound token request.",
+          e);
+      throw e;
+    }
+
+    HttpResponse response = getMetadataResponse(tokenUrl, RequestType.ACCESS_TOKEN_REQUEST, true);
     int statusCode = response.getStatusCode();
     if (statusCode == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
       throw new IOException(
