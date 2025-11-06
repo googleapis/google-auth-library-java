@@ -348,8 +348,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
     String tokenUrl = createTokenUrlWithScopes();
 
     try {
-      X509Certificate cert =
-          AgentIdentityUtils.getAgentIdentityCertificate();
+      X509Certificate cert = AgentIdentityUtils.getAgentIdentityCertificate();
       if (cert != null && AgentIdentityUtils.shouldRequestBoundToken(cert)) {
         String fingerprint = AgentIdentityUtils.calculateCertificateFingerprint(cert);
         GenericUrl url = new GenericUrl(tokenUrl);
