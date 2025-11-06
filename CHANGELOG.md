@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.41.0](https://github.com/googleapis/google-auth-library-java/compare/v1.40.0...v1.41.0) (2025-11-06)
+
+
+### Features
+
+* Introduce per-credential specific load methods ([#1827](https://github.com/googleapis/google-auth-library-java/issues/1827)) ([39fdc64](https://github.com/googleapis/google-auth-library-java/commit/39fdc647c2e14d8006a758fa81dbaeff63fed74e))
+
+
+### Bug Fixes
+
+* Do not retrieve the default SA principal when getting an access token ([#1839](https://github.com/googleapis/google-auth-library-java/issues/1839)) ([a65c22d](https://github.com/googleapis/google-auth-library-java/commit/a65c22da2c93bdf33dcd98ece47ee6668d1ed32c))
+
 ## [1.40.0](https://github.com/googleapis/google-auth-library-java/compare/v1.39.1...v1.40.0) (2025-10-14)
 
 
