@@ -1254,73 +1254,48 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     assertFalse(requestUrl.contains("bindCertificateFingerprint"));
   }
 
-          @Test
+  @Test
+  public void refreshAccessToken_agentConfigMissingFile_throws() throws IOException {
 
-          public void refreshAccessToken_agentConfigMissingFile_throws() throws IOException {
+    // Point config to a non-existent file.
 
-            // Point config to a non-existent file.
+    envProvider.setEnv(
+        AgentIdentityUtils.GOOGLE_API_CERTIFICATE_CONFIG,
+        tempDir.resolve("missing_config.json").toAbsolutePath().toString());
 
-            envProvider.setEnv(
+    // Use a mock TimeService to avoid actual sleeping and control time flow.
 
-                AgentIdentityUtils.GOOGLE_API_CERTIFICATE_CONFIG,
+    final AtomicLong currentTime = new AtomicLong(0);
 
-                tempDir.resolve("missing_config.json").toAbsolutePath().toString());
+    AgentIdentityUtils.setTimeService(
+        new AgentIdentityUtils.TimeService() {
 
-      
+          @Override
+          public long currentTimeMillis() {
 
-            // Use a mock TimeService to avoid actual sleeping and control time flow.
-
-            final AtomicLong currentTime = new AtomicLong(0);
-
-            AgentIdentityUtils.setTimeService(
-
-                new AgentIdentityUtils.TimeService() {
-
-                  @Override
-
-                  public long currentTimeMillis() {
-
-                    return currentTime.get();
-
-                  }
-
-      
-
-                  @Override
-
-                  public void sleep(long millis) {
-
-                    currentTime.addAndGet(millis);
-
-                  }
-
-                });
-
-      
-
-            MockMetadataServerTransportFactory transportFactory =
-
-                new MockMetadataServerTransportFactory();
-
-            transportFactory.transport.setServiceAccountEmail(SA_CLIENT_EMAIL);
-
-      
-
-            ComputeEngineCredentials credentials =
-
-                ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
-
-      
-
-            IOException e = assertThrows(IOException.class, credentials::refreshAccessToken);
-
-            assertTrue(
-
-                e.getMessage()
-
-                    .contains("Certificate config or certificate file not found after multiple retries"));
-
+            return currentTime.get();
           }
+
+          @Override
+          public void sleep(long millis) {
+
+            currentTime.addAndGet(millis);
+          }
+        });
+
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+
+    transportFactory.transport.setServiceAccountEmail(SA_CLIENT_EMAIL);
+
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+    IOException e = assertThrows(IOException.class, credentials::refreshAccessToken);
+
+    assertTrue(
+        e.getMessage()
+            .contains("Certificate config or certificate file not found after multiple retries"));
+  }
 
   private void setupCertConfig(String certResourceName) throws IOException {
     // Copy cert resource to temp file
