@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,49 +40,20 @@ public class AgentIdentityUtilsTest {
   private static final String INVALID_SPIFFE_FORMAT =
       "spiffe://agents.global.org-INVALID.system.id.goog/path";
 
-  // A minimal, valid self-signed X.509 certificate (PEM format) for testing loading.
-  // Generated for testing purposes.
-  private static final String TEST_CERT_PEM =
-      "-----BEGIN CERTIFICATE-----\n"
-          + "MIIDWTCCAkGgAwIBAgIUX5/1aT1uuxgj1+F7Q/r+5Q9y4JQwDQYJKoZIhvcNAQEL\n"
-          + "BQAwHTEbMBkGA1UEAwwSdGVzdC5leGFtcGxlLmNvbTAeFw0yNDAxMDEwMDAwMDBa\n"
-          + "Fw0zNDAxMDEwMDAwMDBaMB0xGzAZBgNVBAMMEnRlc3QuZXhhbXBsZS5jb20wggEi\n"
-          + "MA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDV/8Q/5+8+X9Y+5+6+7+8+9+0+\n"
-          + "A/B/C/D/E/F/G/H/I/J/K/L/M/N/O/P/Q/R/S/T/U/V/W/X/Y/Z/a/b/c/d/e/f/\n"
-          + "g/h/i/j/k/l/m/n/o/p/q/r/s/t/u/v/w/x/y/z/0/1/2/3/4/5/6/7/8/9/+A/B\n"
-          + "/C/D/E/F/G/H/I/J/K/L/M/N/O/P/Q/R/S/T/U/V/W/X/Y/Z/a/b/c/d/e/f/g/h\n"
-          + "/i/j/k/l/m/n/o/p/q/r/s/t/u/v/w/x/y/z/0/1/2/3/4/5/6/7/8/9/+A/B/C/\n"
-          + "D/E/F/G/H/I/J/K/L/M/N/O/P/Q/R/S/T/U/V/W/X/Y/Z/a/b/c/d/e/f/g/h/i/\n"
-          + "j/k/l/m/n/o/p/q/r/s/t/u/v/w/x/y/z/0/1/2/3/4/5/6/7/8/9/+A/B/C/D/E\n"
-          + "AgMBAAGjUzBRMB0GA1UdDgQWBBS/1/2/3/4/5/6/7/8/9/+A/B/C/DAfBgNVHSME\n"
-          + "GDAWgBS/1/2/3/4/5/6/7/8/9/+A/B/C/DAPBgNVHRMBAf8EBTADAQH/MA0GCSqG\n"
-          + "SIb3DQEBCwUAA4IBAQDV/8Q/5+8+X9Y+5+6+7+8+9+0+A/B/C/D/E/F/G/H/I/J/\n"
-          + "K/L/M/N/O/P/Q/R/S/T/U/V/W/X/Y/Z/a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/\n"
-          + "q/r/s/t/u/v/w/x/y/z/0/1/2/3/4/5/6/7/8/9/+A/B/C/D/E/F/G/H/I/J/K/L\n"
-          + "/M/N/O/P/Q/R/S/T/U/V/W/X/Y/Z/a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r\n"
-          + "/s/t/u/v/w/x/y/z/0/1/2/3/4/5/6/7/8/9/+A/B/C/D/E/F/G/H/I/J/K/L/M/\n"
-          + "N/O/P/Q/R/S/T/U/V/W/X/Y/Z/a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r/s/\n"
-          + "t/u/v/w/x/y/z/0/1/2/3/4/5/6/7/8/9/+A/B/C/D/E\n"
-          + "-----END CERTIFICATE-----";
-
   private TestEnvironmentProvider envProvider;
   private Path tempDir;
 
   @Before
   public void setUp() throws IOException {
     envProvider = new TestEnvironmentProvider();
-    // Inject our test environment reader
     AgentIdentityUtils.setEnvReader(envProvider::getEnv);
     tempDir = Files.createTempDirectory("agent_identity_test");
   }
 
   @After
   public void tearDown() throws IOException {
-    // Reset polling constants to defaults after each test to avoid side effects
-    AgentIdentityUtils.TOTAL_TIMEOUT_MS = 30000;
-    AgentIdentityUtils.FAST_POLL_INTERVAL_MS = 100;
-    AgentIdentityUtils.FAST_POLL_DURATION_MS = 5000;
-    AgentIdentityUtils.SLOW_POLL_INTERVAL_MS = 500;
+    // Reset the time service to default after each test
+    AgentIdentityUtils.resetTimeService();
 
     // Clean up temp files
     if (tempDir != null) {
@@ -176,8 +148,8 @@ public class AgentIdentityUtilsTest {
   @Test
   public void getAgentIdentityCertificate_happyPath_loadsCertificate() throws IOException {
     // Setup: Get the absolute path of the test resource.
-    URL certUrl = getClass().getClassLoader().getResource("agent_cert.pem");
-    assertNotNull("Test resource agent_cert.pem not found", certUrl);
+    URL certUrl = getClass().getClassLoader().getResource("x509_leaf_certificate.pem");
+    assertNotNull("Test resource x509_leaf_certificate.pem not found", certUrl);
     String certPath = new File(certUrl.getFile()).getAbsolutePath();
 
     // Create config file pointing to the cert.
@@ -206,7 +178,7 @@ public class AgentIdentityUtilsTest {
 
     // Verify
     assertNotNull(cert);
-    // Basic verification that it loaded OUR cert (checking issuer from agent_cert.pem)
+    // Basic verification that it loaded OUR cert
     assertTrue(cert.getIssuerDN().getName().contains("unit-tests"));
   }
 
@@ -217,11 +189,9 @@ public class AgentIdentityUtilsTest {
         "GOOGLE_API_CERTIFICATE_CONFIG",
         tempDir.resolve("missing.json").toAbsolutePath().toString());
 
-    // Reduce timeout to make test fast (e.g., 100ms total)
-    AgentIdentityUtils.TOTAL_TIMEOUT_MS = 100;
-    AgentIdentityUtils.FAST_POLL_INTERVAL_MS = 10;
-    AgentIdentityUtils.SLOW_POLL_INTERVAL_MS = 10;
-    AgentIdentityUtils.FAST_POLL_DURATION_MS = 50;
+    // Use a fake time service that advances time rapidly when sleep is called.
+    // This allows the 30s timeout loop to complete instantly in test execution time.
+    AgentIdentityUtils.setTimeService(new FakeTimeService());
 
     // Execute & Verify
     IOException e =
@@ -229,6 +199,22 @@ public class AgentIdentityUtilsTest {
     assertTrue(
         e.getMessage()
             .contains("Certificate config or certificate file not found after multiple retries"));
+  }
+
+  // Fake time service that advances time when sleep is requested.
+  private static class FakeTimeService implements AgentIdentityUtils.TimeService {
+    private final AtomicLong currentTime = new AtomicLong(0);
+
+    @Override
+    public long currentTimeMillis() {
+      return currentTime.get();
+    }
+
+    @Override
+    public void sleep(long millis) throws InterruptedException {
+      // Instead of actually sleeping, just advance the fake clock.
+      currentTime.addAndGet(millis);
+    }
   }
 
   // A helper class to mock System.getenv for testing purposes within this file.

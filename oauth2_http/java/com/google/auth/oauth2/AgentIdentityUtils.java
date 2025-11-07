@@ -69,10 +69,10 @@ final class AgentIdentityUtils {
           Pattern.compile("^agents\\.global\\.proj-\\d+\\.system\\.id\\.goog$"));
 
   // Polling configuration
-  static long TOTAL_TIMEOUT_MS = 30000; // 30 seconds
-  static long FAST_POLL_DURATION_MS = 5000; // 5 seconds
-  static long FAST_POLL_INTERVAL_MS = 100; // 0.1 seconds
-  static long SLOW_POLL_INTERVAL_MS = 500; // 0.5 seconds
+  private static final long TOTAL_TIMEOUT_MS = 30000; // 30 seconds
+  private static final long FAST_POLL_DURATION_MS = 5000; // 5 seconds
+  private static final long FAST_POLL_INTERVAL_MS = 100; // 0.1 seconds
+  private static final long SLOW_POLL_INTERVAL_MS = 500; // 0.5 seconds
 
   private static final int SAN_URI_TYPE = 6;
   private static final String SPIFFE_SCHEME_PREFIX = "spiffe://";
@@ -83,6 +83,30 @@ final class AgentIdentityUtils {
   }
 
   private static EnvReader envReader = System::getenv;
+
+  /**
+   * Internal interface to allow mocking time and sleep for tests. This is used to prevent tests
+   * from running for long periods of time when polling is involved.
+   */
+  @VisibleForTesting
+  interface TimeService {
+    long currentTimeMillis();
+
+    void sleep(long millis) throws InterruptedException;
+  }
+
+  private static TimeService timeService =
+      new TimeService() {
+        @Override
+        public long currentTimeMillis() {
+          return System.currentTimeMillis();
+        }
+
+        @Override
+        public void sleep(long millis) throws InterruptedException {
+          Thread.sleep(millis);
+        }
+      };
 
   private AgentIdentityUtils() {}
 
@@ -114,7 +138,7 @@ final class AgentIdentityUtils {
 
   /** Polls for the certificate config file and the certificate file it references. */
   private static String getCertificatePathWithRetry(String certConfigPath) throws IOException {
-    long startTime = System.currentTimeMillis();
+    long startTime = timeService.currentTimeMillis();
     boolean warned = false;
 
     while (true) {
@@ -127,10 +151,10 @@ final class AgentIdentityUtils {
         }
       } catch (Exception e) {
         // Ignore exceptions during polling and retry
-        LOGGER.log(Level.FINE, "Error while polling for certificate files", e);
+        LOGGER.log(Level.FINE, "Error while polling for certificate files");
       }
 
-      long elapsedTime = System.currentTimeMillis() - startTime;
+      long elapsedTime = timeService.currentTimeMillis() - startTime;
       if (elapsedTime >= TOTAL_TIMEOUT_MS) {
         throw new IOException(
             "Certificate config or certificate file not found after multiple retries. "
@@ -151,7 +175,7 @@ final class AgentIdentityUtils {
       try {
         long sleepTime =
             elapsedTime < FAST_POLL_DURATION_MS ? FAST_POLL_INTERVAL_MS : SLOW_POLL_INTERVAL_MS;
-        Thread.sleep(sleepTime);
+        timeService.sleep(sleepTime);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
         throw new IOException("Interrupted while waiting for certificate files", e);
@@ -238,5 +262,26 @@ final class AgentIdentityUtils {
   @VisibleForTesting
   static void setEnvReader(EnvReader reader) {
     envReader = reader;
+  }
+
+  @VisibleForTesting
+  static void setTimeService(TimeService service) {
+    timeService = service;
+  }
+
+  @VisibleForTesting
+  static void resetTimeService() {
+    timeService =
+        new TimeService() {
+          @Override
+          public long currentTimeMillis() {
+            return System.currentTimeMillis();
+          }
+
+          @Override
+          public void sleep(long millis) throws InterruptedException {
+            Thread.sleep(millis);
+          }
+        };
   }
 }

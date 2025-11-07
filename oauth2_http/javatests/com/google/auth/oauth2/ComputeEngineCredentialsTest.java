@@ -57,7 +57,6 @@ import com.google.auth.ServiceAccountSigner.SigningException;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.DefaultCredentialsProviderTest.MockRequestCountingTransportFactory;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -72,6 +71,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -148,19 +148,10 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @After
-  public void tearDown() throws IOException {
-    // Reset polling constants to defaults after each test
-    AgentIdentityUtils.TOTAL_TIMEOUT_MS = 30000;
-    AgentIdentityUtils.FAST_POLL_INTERVAL_MS = 100;
-    AgentIdentityUtils.FAST_POLL_DURATION_MS = 5000;
-    AgentIdentityUtils.SLOW_POLL_INTERVAL_MS = 500;
-
-    if (tempDir != null) {
-      Files.walk(tempDir)
-          .sorted(java.util.Comparator.reverseOrder())
-          .map(Path::toFile)
-          .forEach(File::delete);
-    }
+  public void tearDown() {
+    // Reset the mocks
+    AgentIdentityUtils.resetTimeService();
+    AgentIdentityUtils.setEnvReader(System::getenv);
   }
 
   @Test
@@ -1181,8 +1172,6 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
         GoogleAuthException.class, () -> credentials.idTokenWithAudience("Audience", null));
   }
 
-  // --- Agent Identity Tests ---
-
   @Test
   public void refreshAccessToken_noAgentConfig_requestsNormalToken() throws IOException {
     // No Agent Identity config in environment
@@ -1206,7 +1195,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void refreshAccessToken_withStandardCert_requestsNormalToken() throws IOException {
-    setupCertConfig("agent_cert.pem"); // Standard cert, no SPIFFE
+    setupCertConfig("x509_leaf_certificate.pem"); // Standard cert, no SPIFFE
 
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setServiceAccountEmail(SA_CLIENT_EMAIL);
@@ -1224,27 +1213,25 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     assertFalse(requestUrl.contains("bindCertificateFingerprint"));
   }
 
-  //    @Test
-  //    public void refreshAccessToken_withAgentCert_requestsBoundToken() throws IOException {
-  //        setupCertConfig("agent_spiffe_cert.pem"); // Valid Agent Identity cert
-  //
-  //        MockMetadataServerTransportFactory transportFactory = new
-  // MockMetadataServerTransportFactory();
-  //        transportFactory.transport.setServiceAccountEmail(SA_CLIENT_EMAIL);
-  //        transportFactory.transport.setAccessToken("default", ACCESS_TOKEN);
-  //
-  //        ComputeEngineCredentials credentials =
-  //
-  // ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
-  //
-  //        AccessToken token = credentials.refreshAccessToken();
-  //        assertNotNull(token);
-  //        assertEquals(ACCESS_TOKEN, token.getTokenValue());
-  //
-  //        // Verify fingerprint WAS sent
-  //        String requestUrl = transportFactory.transport.getRequest().getUrl().toString();
-  //        assertTrue(requestUrl.contains("bindCertificateFingerprint"));
-  //    }
+  @Test
+  public void refreshAccessToken_withAgentCert_requestsBoundToken() throws IOException {
+    setupCertConfig("agent_spiffe_cert.pem"); // Valid Agent Identity cert
+
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    transportFactory.transport.setServiceAccountEmail(SA_CLIENT_EMAIL);
+    transportFactory.transport.setAccessToken("default", ACCESS_TOKEN);
+
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+    AccessToken token = credentials.refreshAccessToken();
+    assertNotNull(token);
+    assertEquals(ACCESS_TOKEN, token.getTokenValue());
+
+    // Verify fingerprint WAS sent
+    String requestUrl = transportFactory.transport.getRequest().getUrl().toString();
+    assertTrue(requestUrl.contains("bindCertificateFingerprint"));
+  }
 
   @Test
   public void refreshAccessToken_withAgentCert_optedOut_requestsNormalToken() throws IOException {
@@ -1267,28 +1254,73 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     assertFalse(requestUrl.contains("bindCertificateFingerprint"));
   }
 
-  @Test
-  public void refreshAccessToken_agentConfigMissingFile_throws() throws IOException {
-    // Point config to a non-existent file and shorten timeout for test
-    envProvider.setEnv(
-        "GOOGLE_API_CERTIFICATE_CONFIG",
-        tempDir.resolve("missing_config.json").toAbsolutePath().toString());
-    AgentIdentityUtils.TOTAL_TIMEOUT_MS = 100;
-    AgentIdentityUtils.FAST_POLL_INTERVAL_MS = 10;
-    AgentIdentityUtils.FAST_POLL_DURATION_MS = 50;
-    AgentIdentityUtils.SLOW_POLL_INTERVAL_MS = 10;
+          @Test
 
-    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-    transportFactory.transport.setServiceAccountEmail(SA_CLIENT_EMAIL);
+          public void refreshAccessToken_agentConfigMissingFile_throws() throws IOException {
 
-    ComputeEngineCredentials credentials =
-        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+            // Point config to a non-existent file.
 
-    IOException e = assertThrows(IOException.class, credentials::refreshAccessToken);
-    assertTrue(
-        e.getMessage()
-            .contains("Certificate config or certificate file not found after multiple retries"));
-  }
+            envProvider.setEnv(
+
+                AgentIdentityUtils.GOOGLE_API_CERTIFICATE_CONFIG,
+
+                tempDir.resolve("missing_config.json").toAbsolutePath().toString());
+
+      
+
+            // Use a mock TimeService to avoid actual sleeping and control time flow.
+
+            final AtomicLong currentTime = new AtomicLong(0);
+
+            AgentIdentityUtils.setTimeService(
+
+                new AgentIdentityUtils.TimeService() {
+
+                  @Override
+
+                  public long currentTimeMillis() {
+
+                    return currentTime.get();
+
+                  }
+
+      
+
+                  @Override
+
+                  public void sleep(long millis) {
+
+                    currentTime.addAndGet(millis);
+
+                  }
+
+                });
+
+      
+
+            MockMetadataServerTransportFactory transportFactory =
+
+                new MockMetadataServerTransportFactory();
+
+            transportFactory.transport.setServiceAccountEmail(SA_CLIENT_EMAIL);
+
+      
+
+            ComputeEngineCredentials credentials =
+
+                ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+
+      
+
+            IOException e = assertThrows(IOException.class, credentials::refreshAccessToken);
+
+            assertTrue(
+
+                e.getMessage()
+
+                    .contains("Certificate config or certificate file not found after multiple retries"));
+
+          }
 
   private void setupCertConfig(String certResourceName) throws IOException {
     // Copy cert resource to temp file
