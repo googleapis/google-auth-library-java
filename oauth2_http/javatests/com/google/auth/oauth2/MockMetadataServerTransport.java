@@ -129,8 +129,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
     if (url.startsWith(ComputeEngineCredentials.getTokenServerEncodedUrl())) {
       this.request = getMockRequestForTokenEndpoint(url);
       return this.request;
-    } else if (isGetServiceAccountsUrl(url)) {
-      this.request = getMockRequestForServiceAccount(url);
+    } else if (isGetDefaultServiceAccountsUrl(url)) {
+      this.request = getMockRequestForDefaultServiceAccount(url);
       return this.request;
     } else if (isSignRequestUrl(url)) {
       this.request = getMockRequestForSign(url);
@@ -176,22 +176,13 @@ public class MockMetadataServerTransport extends MockHttpTransport {
     };
   }
 
-  private MockLowLevelHttpRequest getMockRequestForServiceAccount(String url) {
+  private MockLowLevelHttpRequest getMockRequestForDefaultServiceAccount(String url) {
     return new MockLowLevelHttpRequest(url) {
       @Override
-      public LowLevelHttpResponse execute() throws IOException {
-        // Create the JSON response
-        GenericJson serviceAccountsContents = new GenericJson();
-        serviceAccountsContents.setFactory(OAuth2Utils.JSON_FACTORY);
-        GenericJson defaultAccount = new GenericJson();
-        defaultAccount.put("email", serviceAccountEmail);
-        serviceAccountsContents.put("default", defaultAccount);
-
-        String serviceAccounts = serviceAccountsContents.toPrettyString();
-
+      public LowLevelHttpResponse execute() {
         return new MockLowLevelHttpResponse()
             .setContentType(Json.MEDIA_TYPE)
-            .setContent(serviceAccounts);
+            .setContent(serviceAccountEmail);
       }
     };
   }
@@ -341,8 +332,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
     };
   }
 
-  protected boolean isGetServiceAccountsUrl(String url) {
-    return url.equals(ComputeEngineCredentials.getServiceAccountsUrl());
+  protected boolean isGetDefaultServiceAccountsUrl(String url) {
+    return url.equals(ComputeEngineCredentials.getDefaultServiceAccountUrl());
   }
 
   protected boolean isSignRequestUrl(String url) {
