@@ -1422,7 +1422,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
             .setSubjectTokenType("subjectTokenType")
             .build();
 
-    awsCredential.refreshAccessToken();
+    awsCredential.refresh();
 
     TrustBoundary trustBoundary = awsCredential.getTrustBoundary();
     assertNotNull(trustBoundary);

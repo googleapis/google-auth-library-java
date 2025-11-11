@@ -1305,7 +1305,8 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
             });
 
     assertEquals(
-        "The provided audience is not in a valid format for either a workload identity pool or a workforce pool.",
+        "The provided audience is not in a valid format for either a workload identity pool or a workforce pool. "
+            + "Refer: https://docs.cloud.google.com/iam/docs/principal-identifiers",
         exception.getMessage());
   }
 

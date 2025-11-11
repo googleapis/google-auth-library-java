@@ -230,7 +230,8 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials
     Matcher matcher = WORKFORCE_AUDIENCE_PATTERN.matcher(getAudience());
     if (!matcher.matches()) {
       throw new IllegalStateException(
-          "The provided audience is not in the correct format for a workforce pool.");
+          "The provided audience is not in the correct format for a workforce pool. "
+              + "Refer: https://docs.cloud.google.com/iam/docs/principal-identifiers");
     }
     String poolId = matcher.group("pool");
     return String.format(

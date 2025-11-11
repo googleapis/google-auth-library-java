@@ -648,7 +648,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     }
 
     throw new IllegalStateException(
-        "The provided audience is not in a valid format for either a workload identity pool or a workforce pool.");
+        "The provided audience is not in a valid format for either a workload identity pool or a workforce pool."
+            + " Refer: https://docs.cloud.google.com/iam/docs/principal-identifiers");
   }
 
   @Nullable

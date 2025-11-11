@@ -1269,7 +1269,8 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
               credentials.refresh();
             });
     assertEquals(
-        "The provided audience is not in the correct format for a workforce pool.",
+        "The provided audience is not in the correct format for a workforce pool. "
+            + "Refer: https://docs.cloud.google.com/iam/docs/principal-identifiers",
         exception.getMessage());
   }
 
