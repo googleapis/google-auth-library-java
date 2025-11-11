@@ -31,7 +31,9 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.oauth2.OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKFORCE_POOL;
 import static com.google.auth.oauth2.OAuth2Utils.JSON_FACTORY;
+import static com.google.auth.oauth2.OAuth2Utils.WORKFORCE_AUDIENCE_PATTERN;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.api.client.http.GenericUrl;
@@ -44,6 +46,7 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.Preconditions;
+import com.google.api.core.InternalApi;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
 import com.google.common.io.BaseEncoding;
@@ -55,6 +58,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Matcher;
 import javax.annotation.Nullable;
 
 /**
@@ -75,12 +79,12 @@ import javax.annotation.Nullable;
  * }
  * </pre>
  */
-public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials {
+public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials
+    implements TrustBoundaryProvider {
 
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
 
   private static final long serialVersionUID = -2181779590486283287L;
-
   private final String transportFactoryClassName;
   private final String audience;
   private final String tokenUrl;
@@ -210,10 +214,28 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
       this.refreshToken = refreshToken;
     }
 
-    return AccessToken.newBuilder()
-        .setExpirationTime(expiresAtMilliseconds)
-        .setTokenValue(accessToken)
-        .build();
+    AccessToken newAccessToken =
+        AccessToken.newBuilder()
+            .setExpirationTime(expiresAtMilliseconds)
+            .setTokenValue(accessToken)
+            .build();
+
+    refreshTrustBoundary(newAccessToken, transportFactory);
+    return newAccessToken;
+  }
+
+  @InternalApi
+  @Override
+  public String getTrustBoundaryUrl() throws IOException {
+    Matcher matcher = WORKFORCE_AUDIENCE_PATTERN.matcher(getAudience());
+    if (!matcher.matches()) {
+      throw new IllegalStateException(
+          "The provided audience is not in the correct format for a workforce pool. "
+              + "Refer: https://docs.cloud.google.com/iam/docs/principal-identifiers");
+    }
+    String poolId = matcher.group("pool");
+    return String.format(
+        IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKFORCE_POOL, getUniverseDomain(), poolId);
   }
 
   @Nullable
