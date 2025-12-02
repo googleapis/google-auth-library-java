@@ -42,6 +42,7 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.JsonParser;
 import com.google.api.client.util.GenericData;
+import com.google.api.core.InternalApi;
 import com.google.common.base.Joiner;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
@@ -73,26 +74,22 @@ public final class StsRequestHandler {
   @Nullable private final HttpHeaders headers;
   @Nullable private final String internalOptions;
 
+  private int connectTimeout;
+  private int readTimeout;
+
   /**
    * Internal constructor.
    *
-   * @param tokenExchangeEndpoint the token exchange endpoint
-   * @param request the token exchange request
-   * @param headers optional additional headers to pass along the request
-   * @param internalOptions optional GCP specific STS options
    * @return an StsTokenExchangeResponse instance if the request was successful
    */
-  private StsRequestHandler(
-      String tokenExchangeEndpoint,
-      StsTokenExchangeRequest request,
-      HttpRequestFactory httpRequestFactory,
-      @Nullable HttpHeaders headers,
-      @Nullable String internalOptions) {
-    this.tokenExchangeEndpoint = tokenExchangeEndpoint;
-    this.request = request;
-    this.httpRequestFactory = httpRequestFactory;
-    this.headers = headers;
-    this.internalOptions = internalOptions;
+  private StsRequestHandler(Builder builder) {
+    this.tokenExchangeEndpoint = builder.tokenExchangeEndpoint;
+    this.request = builder.request;
+    this.httpRequestFactory = builder.httpRequestFactory;
+    this.headers = builder.headers;
+    this.internalOptions = builder.internalOptions;
+    this.connectTimeout = builder.connectTimeout;
+    this.readTimeout = builder.readTimeout;
   }
 
   /**
@@ -120,6 +117,8 @@ public final class StsRequestHandler {
     if (headers != null) {
       httpRequest.setHeaders(headers);
     }
+    httpRequest.setConnectTimeout(connectTimeout);
+    httpRequest.setReadTimeout(readTimeout);
 
     try {
       HttpResponse response = httpRequest.execute();
@@ -214,6 +213,9 @@ public final class StsRequestHandler {
     @Nullable private HttpHeaders headers;
     @Nullable private String internalOptions;
 
+    private int connectTimeout = 20000; // Default to 20000ms = 20s
+    private int readTimeout = 20000; // Default to 20000ms = 20s
+
     private Builder(
         String tokenExchangeEndpoint,
         StsTokenExchangeRequest stsTokenExchangeRequest,
@@ -235,9 +237,26 @@ public final class StsRequestHandler {
       return this;
     }
 
+    /**
+     * Warning: Not for public use and can be removed at any time.
+     */
+    @InternalApi
+    public StsRequestHandler.Builder setConnectTimeout(int connectTimeout) {
+      this.connectTimeout = connectTimeout;
+      return this;
+    }
+
+    /**
+     * Warning: Not for public use and can be removed at any time.
+     */
+    @InternalApi
+    public StsRequestHandler.Builder setReadTimeout(int readTimeout) {
+      this.readTimeout = readTimeout;
+      return this;
+    }
+
     public StsRequestHandler build() {
-      return new StsRequestHandler(
-          tokenExchangeEndpoint, request, httpRequestFactory, headers, internalOptions);
+      return new StsRequestHandler(this);
     }
   }
 }

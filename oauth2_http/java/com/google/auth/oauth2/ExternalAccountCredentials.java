@@ -36,6 +36,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.util.Data;
+import com.google.api.core.InternalApi;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.MoreObjects;
@@ -96,6 +97,9 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
   @Nullable protected ImpersonatedCredentials impersonatedCredentials;
 
   private EnvironmentProvider environmentProvider;
+
+  private int connectTimeout;
+  private int readTimeout;
 
   /**
    * Constructor with minimum identifying information and custom HTTP transport. Does not support
@@ -271,6 +275,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
             : builder.metricsHandler;
 
     this.name = GoogleCredentialsInfo.EXTERNAL_ACCOUNT_CREDENTIALS.getCredentialName();
+    this.connectTimeout = builder.connectTimeout;
+    this.readTimeout = builder.readTimeout;
   }
 
   ImpersonatedCredentials buildImpersonatedCredentials() {
@@ -534,6 +540,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     StsRequestHandler.Builder requestHandler =
         StsRequestHandler.newBuilder(
             tokenUrl, stsTokenExchangeRequest, transportFactory.create().createRequestFactory());
+    requestHandler.setConnectTimeout(connectTimeout);
+    requestHandler.setReadTimeout(readTimeout);
 
     // If this credential was initialized with a Workforce configuration then the
     // workforcePoolUserProject must be passed to the Security Token Service via the internal
@@ -771,6 +779,9 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     @Nullable protected String workforcePoolUserProject;
     @Nullable protected ServiceAccountImpersonationOptions serviceAccountImpersonationOptions;
 
+    private int connectTimeout = 20000; // Default to 20000ms = 20s
+    private int readTimeout = 20000; // Default to 20000ms = 20s
+
     /* The field is not being used and value not set. Superseded by the same field in the
     {@link GoogleCredentials.Builder}.
     */
@@ -796,6 +807,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       this.workforcePoolUserProject = credentials.workforcePoolUserProject;
       this.serviceAccountImpersonationOptions = credentials.serviceAccountImpersonationOptions;
       this.metricsHandler = credentials.metricsHandler;
+      this.connectTimeout = credentials.connectTimeout;
+      this.readTimeout = credentials.readTimeout;
     }
 
     /**
@@ -985,6 +998,24 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     @Override
     public Builder setUniverseDomain(String universeDomain) {
       super.setUniverseDomain(universeDomain);
+      return this;
+    }
+
+    /**
+     * Warning: Not for public use and can be removed at any time.
+     */
+    @InternalApi
+    public Builder setConnectTimeout(int connectTimeout) {
+      this.connectTimeout = connectTimeout;
+      return this;
+    }
+
+    /**
+     * Warning: Not for public use and can be removed at any time.
+     */
+    @InternalApi
+    public Builder setReadTimeout(int readTimeout) {
+      this.readTimeout = readTimeout;
       return this;
     }
 
