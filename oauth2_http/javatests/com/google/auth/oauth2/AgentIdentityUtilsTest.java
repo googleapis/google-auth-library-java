@@ -198,7 +198,8 @@ public class AgentIdentityUtilsTest {
         assertThrows(IOException.class, AgentIdentityUtils::getAgentIdentityCertificate);
     assertTrue(
         e.getMessage()
-            .contains("Certificate config or certificate file not found after multiple retries"));
+            .contains(
+                "Unable to find Agent Identity certificate config or file for bound token request after multiple retries."));
   }
 
   // Fake time service that advances time when sleep is requested.
