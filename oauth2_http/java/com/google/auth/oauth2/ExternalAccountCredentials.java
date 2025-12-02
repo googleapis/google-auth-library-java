@@ -1001,18 +1001,14 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
       return this;
     }
 
-    /**
-     * Warning: Not for public use and can be removed at any time.
-     */
+    /** Warning: Not for public use and can be removed at any time. */
     @InternalApi
     public Builder setConnectTimeout(int connectTimeout) {
       this.connectTimeout = connectTimeout;
       return this;
     }
 
-    /**
-     * Warning: Not for public use and can be removed at any time.
-     */
+    /** Warning: Not for public use and can be removed at any time. */
     @InternalApi
     public Builder setReadTimeout(int readTimeout) {
       this.readTimeout = readTimeout;
