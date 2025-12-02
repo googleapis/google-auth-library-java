@@ -347,20 +347,13 @@ public class ComputeEngineCredentials extends GoogleCredentials
   public AccessToken refreshAccessToken() throws IOException {
     String tokenUrl = createTokenUrlWithScopes();
 
-    try {
-      X509Certificate cert = AgentIdentityUtils.getAgentIdentityCertificate();
-      if (cert != null && AgentIdentityUtils.shouldRequestBoundToken(cert)) {
-        String fingerprint = AgentIdentityUtils.calculateCertificateFingerprint(cert);
-        GenericUrl url = new GenericUrl(tokenUrl);
-        url.set("bindCertificateFingerprint", fingerprint);
-        tokenUrl = url.build();
-      }
-    } catch (IOException e) {
-      LOGGER.log(
-          Level.WARNING,
-          "Failed to process Agent Identity certificate for bound token request.",
-          e);
-      throw e;
+    // Checks whether access token has to be bound to certificate for agent identity.
+    X509Certificate cert = AgentIdentityUtils.getAgentIdentityCertificate();
+    if (cert != null && AgentIdentityUtils.shouldRequestBoundToken(cert)) {
+      String fingerprint = AgentIdentityUtils.calculateCertificateFingerprint(cert);
+      GenericUrl url = new GenericUrl(tokenUrl);
+      url.set("bindCertificateFingerprint", fingerprint);
+      tokenUrl = url.build();
     }
 
     HttpResponse response = getMetadataResponse(tokenUrl, RequestType.ACCESS_TOKEN_REQUEST, true);

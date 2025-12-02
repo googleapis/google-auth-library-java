@@ -1258,13 +1258,11 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
   public void refreshAccessToken_agentConfigMissingFile_throws() throws IOException {
 
     // Point config to a non-existent file.
-
     envProvider.setEnv(
         AgentIdentityUtils.GOOGLE_API_CERTIFICATE_CONFIG,
         tempDir.resolve("missing_config.json").toAbsolutePath().toString());
 
     // Use a mock TimeService to avoid actual sleeping and control time flow.
-
     final AtomicLong currentTime = new AtomicLong(0);
 
     AgentIdentityUtils.setTimeService(
@@ -1284,9 +1282,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
         });
 
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
-
     transportFactory.transport.setServiceAccountEmail(SA_CLIENT_EMAIL);
-
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
@@ -1294,7 +1290,8 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
     assertTrue(
         e.getMessage()
-            .contains("Certificate config or certificate file not found after multiple retries"));
+            .contains(
+                "Unable to find Agent Identity certificate config or file for bound token request after multiple retries."));
   }
 
   private void setupCertConfig(String certResourceName) throws IOException {

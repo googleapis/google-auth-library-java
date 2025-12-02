@@ -48,9 +48,7 @@ import java.security.MessageDigest;
 import java.security.cert.CertificateFactory;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -67,15 +65,34 @@ final class AgentIdentityUtils {
       ImmutableList.of(
           Pattern.compile("^agents\\.global\\.org-\\d+\\.system\\.id\\.goog$"),
           Pattern.compile("^agents\\.global\\.proj-\\d+\\.system\\.id\\.goog$"));
-
-  // Polling configuration
-  private static final long TOTAL_TIMEOUT_MS = 30000; // 30 seconds
-  private static final long FAST_POLL_DURATION_MS = 5000; // 5 seconds
-  private static final long FAST_POLL_INTERVAL_MS = 100; // 0.1 seconds
-  private static final long SLOW_POLL_INTERVAL_MS = 500; // 0.5 seconds
-
   private static final int SAN_URI_TYPE = 6;
   private static final String SPIFFE_SCHEME_PREFIX = "spiffe://";
+
+  // Polling configuration
+  private static final int FAST_POLL_CYCLES = 50;
+  private static final long FAST_POLL_INTERVAL_MS = 100; // 0.1 seconds
+  private static final long SLOW_POLL_INTERVAL_MS = 500; // 0.5 seconds
+  private static final long TOTAL_TIMEOUT_MS = 30000; // 30 seconds
+  private static final List<Long> POLLING_INTERVALS;
+
+  // Pre-calculates the sequence of polling intervals
+  static {
+    List<Long> intervals = new ArrayList<>();
+
+    for (int i = 0; i < FAST_POLL_CYCLES; i++) {
+      intervals.add(FAST_POLL_INTERVAL_MS);
+    }
+
+    long remainingTime = TOTAL_TIMEOUT_MS - (FAST_POLL_CYCLES * FAST_POLL_INTERVAL_MS);
+    // Integer division is sufficient here as we want full cycles
+    int slowPollCycles = (int) (remainingTime / SLOW_POLL_INTERVAL_MS);
+
+    for (int i = 0; i < slowPollCycles; i++) {
+      intervals.add(SLOW_POLL_INTERVAL_MS);
+    }
+
+    POLLING_INTERVALS = Collections.unmodifiableList(intervals);
+  }
 
   // Interface to allow mocking System.getenv for tests without exposing it publicly.
   interface EnvReader {
@@ -111,7 +128,8 @@ final class AgentIdentityUtils {
   private AgentIdentityUtils() {}
 
   /**
-   * Gets the Agent Identity certificate if available and enabled.
+   * Gets the Agent Identity certificate if certificate is available and agent token sharing is not
+   * disabled.
    *
    * @return The X509Certificate if found and Agent Identities are enabled, null otherwise.
    * @throws IOException If there is an error reading the certificate file after retries.
@@ -130,18 +148,33 @@ final class AgentIdentityUtils {
     return parseCertificate(certPath);
   }
 
-  /** Checks if the user has opted out of Agent Token sharing. */
+  /**
+   * Checks if Agent Identity token sharing is disabled via an environment variable.
+   *
+   * @return {@code true} if the {@link #GOOGLE_API_PREVENT_AGENT_TOKEN_SHARING_FOR_GCP_SERVICES}
+   *     variable is set to {@code "false"}, otherwise returns {@code false}.
+   */
   private static boolean isOptedOut() {
     String optOut = envReader.getEnv(GOOGLE_API_PREVENT_AGENT_TOKEN_SHARING_FOR_GCP_SERVICES);
     return optOut != null && "false".equalsIgnoreCase(optOut);
   }
 
-  /** Polls for the certificate config file and the certificate file it references. */
+  /**
+   * Polls for the certificate config file and the certificate file it references, and returns the
+   * certificate's path.
+   *
+   * <p>This method will retry for a total of {@link #TOTAL_TIMEOUT_MS} milliseconds before failing.
+   *
+   * @param certConfigPath The path to the certificate configuration JSON file.
+   * @return The path to the certificate file extracted from the config.
+   * @throws IOException If the files cannot be found after the timeout, or if the thread is
+   *     interrupted while waiting.
+   */
   private static String getCertificatePathWithRetry(String certConfigPath) throws IOException {
-    long startTime = timeService.currentTimeMillis();
     boolean warned = false;
 
-    while (true) {
+    // Deterministic polling loop based on pre-calculated intervals.
+    for (long sleepInterval : POLLING_INTERVALS) {
       try {
         if (Files.exists(Paths.get(certConfigPath))) {
           String certPath = extractCertPathFromConfig(certConfigPath);
@@ -149,20 +182,12 @@ final class AgentIdentityUtils {
             return certPath;
           }
         }
-      } catch (Exception e) {
-        // Ignore exceptions during polling and retry
-        LOGGER.log(Level.FINE, "Error while polling for certificate files");
+      } catch (IOException e) {
+        // Do not log here to prevent noise in the logs per iteration.
+        // Fall through to the sleep logic to retry.
       }
 
-      long elapsedTime = timeService.currentTimeMillis() - startTime;
-      if (elapsedTime >= TOTAL_TIMEOUT_MS) {
-        throw new IOException(
-            "Certificate config or certificate file not found after multiple retries. "
-                + "Token binding protection is failing. You can turn off this protection by setting "
-                + GOOGLE_API_PREVENT_AGENT_TOKEN_SHARING_FOR_GCP_SERVICES
-                + " to false to fall back to unbound tokens.");
-      }
-
+      // If we are here, we failed to find the certificate, log a warning only once.
       if (!warned) {
         LOGGER.warning(
             String.format(
@@ -172,17 +197,32 @@ final class AgentIdentityUtils {
         warned = true;
       }
 
+      // Sleep before the next attempt.
       try {
-        long sleepTime =
-            elapsedTime < FAST_POLL_DURATION_MS ? FAST_POLL_INTERVAL_MS : SLOW_POLL_INTERVAL_MS;
-        timeService.sleep(sleepTime);
+        timeService.sleep(sleepInterval);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
-        throw new IOException("Interrupted while waiting for certificate files", e);
+        throw new IOException(
+            "Interrupted while waiting for Agent Identity certificate files for bound token request.",
+            e);
       }
     }
+
+    // If the loop completes without returning, we have timed out.
+    throw new IOException(
+        "Unable to find Agent Identity certificate config or file for bound token request after multiple retries. "
+            + "Token binding protection is failing. You can turn off this protection by setting "
+            + GOOGLE_API_PREVENT_AGENT_TOKEN_SHARING_FOR_GCP_SERVICES
+            + " to false to fall back to unbound tokens.");
   }
 
+  /**
+   * Parses the certificate configuration JSON file and extracts the path to the certificate.
+   *
+   * @param certConfigPath The path to the certificate configuration JSON file.
+   * @return The certificate file path, or {@code null} if not found in the config.
+   * @throws IOException If the configuration file cannot be read.
+   */
   @SuppressWarnings("unchecked")
   private static String extractCertPathFromConfig(String certConfigPath) throws IOException {
     try (InputStream stream = new FileInputStream(certConfigPath)) {
@@ -199,12 +239,20 @@ final class AgentIdentityUtils {
     return null;
   }
 
+  /**
+   * Parses an X.509 certificate from the given file path.
+   *
+   * @param certPath The path to the certificate file.
+   * @return The parsed {@link X509Certificate}.
+   * @throws IOException If the certificate file cannot be read or parsed.
+   */
   private static X509Certificate parseCertificate(String certPath) throws IOException {
     try (InputStream stream = new FileInputStream(certPath)) {
       CertificateFactory cf = CertificateFactory.getInstance("X.509");
       return (X509Certificate) cf.generateCertificate(stream);
     } catch (GeneralSecurityException e) {
-      throw new IOException("Failed to parse certificate", e);
+      throw new IOException(
+          "Failed to parse Agent Identity certificate for bound token request.", e);
     }
   }
 
@@ -255,7 +303,7 @@ final class AgentIdentityUtils {
       byte[] digest = md.digest();
       return BaseEncoding.base64Url().omitPadding().encode(digest);
     } catch (GeneralSecurityException e) {
-      throw new IOException("Failed to calculate certificate fingerprint", e);
+      throw new IOException("Failed to calculate fingerprint for Agent Identity certificate.", e);
     }
   }
 
