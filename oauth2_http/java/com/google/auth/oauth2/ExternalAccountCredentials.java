@@ -311,6 +311,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
         .setScopes(new ArrayList<>(scopes))
         .setLifetime(this.serviceAccountImpersonationOptions.lifetime)
         .setIamEndpointOverride(serviceAccountImpersonationUrl)
+        .setConnectTimeout(connectTimeout)
+        .setReadTimeout(readTimeout)
         .build();
   }
 
@@ -539,9 +541,9 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
 
     StsRequestHandler.Builder requestHandler =
         StsRequestHandler.newBuilder(
-            tokenUrl, stsTokenExchangeRequest, transportFactory.create().createRequestFactory());
-    requestHandler.setConnectTimeout(connectTimeout);
-    requestHandler.setReadTimeout(readTimeout);
+                tokenUrl, stsTokenExchangeRequest, transportFactory.create().createRequestFactory())
+            .setConnectTimeout(connectTimeout)
+            .setReadTimeout(readTimeout);
 
     // If this credential was initialized with a Workforce configuration then the
     // workforcePoolUserProject must be passed to the Security Token Service via the internal
@@ -779,8 +781,8 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials {
     @Nullable protected String workforcePoolUserProject;
     @Nullable protected ServiceAccountImpersonationOptions serviceAccountImpersonationOptions;
 
-    private int connectTimeout = 20000; // Default to 20000ms = 20s
-    private int readTimeout = 20000; // Default to 20000ms = 20s
+    protected int connectTimeout = 20000; // Default to 20000ms = 20s
+    protected int readTimeout = 20000; // Default to 20000ms = 20s
 
     /* The field is not being used and value not set. Superseded by the same field in the
     {@link GoogleCredentials.Builder}.

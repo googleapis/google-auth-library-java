@@ -74,8 +74,8 @@ public final class StsRequestHandler {
   @Nullable private final HttpHeaders headers;
   @Nullable private final String internalOptions;
 
-  private int connectTimeout;
-  private int readTimeout;
+  private final int connectTimeout;
+  private final int readTimeout;
 
   /**
    * Internal constructor.
