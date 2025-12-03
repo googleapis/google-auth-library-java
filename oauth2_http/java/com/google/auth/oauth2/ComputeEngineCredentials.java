@@ -69,7 +69,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -632,6 +631,12 @@ public class ComputeEngineCredentials extends GoogleCredentials
         + "/computeMetadata/v1/instance/service-accounts/?recursive=true";
   }
 
+  /** Url to retrieve the default service account entry from the Metadata Server. */
+  static String getDefaultServiceAccountUrl() {
+    return getMetadataServerUrl(DefaultCredentialsProvider.DEFAULT)
+        + "/computeMetadata/v1/instance/service-accounts/default/email";
+  }
+
   public static String getIdentityDocumentUrl() {
     return getMetadataServerUrl(DefaultCredentialsProvider.DEFAULT)
         + "/computeMetadata/v1/instance/service-accounts/default/identity";
@@ -733,7 +738,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
   private String getDefaultServiceAccount() throws IOException {
     HttpResponse response =
-        getMetadataResponse(getServiceAccountsUrl(), RequestType.UNTRACKED, false);
+        getMetadataResponse(getDefaultServiceAccountUrl(), RequestType.UNTRACKED, false);
     int statusCode = response.getStatusCode();
     if (statusCode == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
       throw new IOException(
@@ -756,12 +761,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
       // Mock transports will have success code with empty content by default.
       throw new IOException(METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE);
     }
-    GenericData responseData = response.parseAs(GenericData.class);
-    LoggingUtils.logResponsePayload(
-        responseData, LOGGER_PROVIDER, "Received default service account payload");
-    Map<String, Object> defaultAccount =
-        OAuth2Utils.validateMap(responseData, "default", PARSE_ERROR_ACCOUNT);
-    return OAuth2Utils.validateString(defaultAccount, "email", PARSE_ERROR_ACCOUNT);
+    return response.parseAsString();
   }
 
   public static class Builder extends GoogleCredentials.Builder {
