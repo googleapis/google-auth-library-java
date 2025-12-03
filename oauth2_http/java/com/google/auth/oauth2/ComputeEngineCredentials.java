@@ -41,7 +41,6 @@ import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.util.GenericData;
-import com.google.api.core.ObsoleteApi;
 import com.google.auth.CredentialTypeForMetrics;
 import com.google.auth.Credentials;
 import com.google.auth.Retryable;
@@ -627,18 +626,13 @@ public class ComputeEngineCredentials extends GoogleCredentials
         + "/computeMetadata/v1/universe/universe-domain";
   }
 
-  /**
-   * This method is marked as Obsolete. Prefer to use {@link #getDefaultServiceAccount()} to
-   * retrieve the default service account.
-   */
-  @ObsoleteApi("Prefer getDefaultServiceAccountUrl() to retrieve the default service account")
   public static String getServiceAccountsUrl() {
     return getMetadataServerUrl(DefaultCredentialsProvider.DEFAULT)
         + "/computeMetadata/v1/instance/service-accounts/?recursive=true";
   }
 
   /** Url to retrieve the default service account entry from the Metadata Server. */
-  public static String getDefaultServiceAccountUrl() {
+  static String getDefaultServiceAccountUrl() {
     return getMetadataServerUrl(DefaultCredentialsProvider.DEFAULT)
         + "/computeMetadata/v1/instance/service-accounts/default/email";
   }
