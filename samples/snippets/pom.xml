@@ -57,7 +57,7 @@
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-iam-admin</artifactId>
-      <version>3.55.0</version>
+      <version>3.75.0</version>
     </dependency>
 
 <!--    GCloud dependency-->
