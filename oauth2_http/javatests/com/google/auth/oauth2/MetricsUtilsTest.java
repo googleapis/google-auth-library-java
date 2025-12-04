@@ -43,7 +43,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class MetricsUtilsTest {
   static final String VERSION_PATTERN =
-      "gl-java/[\\d\\._-]+ auth/\\d+\\.\\d+\\.\\d+(-sp\\.\\d+)?(-SNAPSHOT)?";
+      "gl-java/[\\d\\._-]+ auth/\\d+\\.\\d+\\.\\d+(-sp\\.\\d+)?(-rc\\d+)?(-SNAPSHOT)?";
   static final String AUTH_REQUEST_TYPE_PATTERN =
       String.format(" %s/[\\w]+", MetricsUtils.AUTH_REQUEST_TYPE);
   static final String CRED_TYPE_PATTERN = String.format(" %s/[\\w]+", MetricsUtils.CRED_TYPE);
