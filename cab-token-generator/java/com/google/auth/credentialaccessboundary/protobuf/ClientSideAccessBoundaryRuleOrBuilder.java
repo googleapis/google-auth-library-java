@@ -6,11 +6,14 @@
 package com.google.auth.credentialaccessboundary.protobuf;
 
 @com.google.protobuf.Generated
-public interface ClientSideAccessBoundaryRuleOrBuilder extends
+public interface ClientSideAccessBoundaryRuleOrBuilder
+    extends
     // @@protoc_insertion_point(interface_extends:cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule)
     com.google.protobuf.MessageOrBuilder {
 
   /**
+   *
+   *
    * <pre>
    * The full resource name of a Google Cloud resource entity.
    * The format definition is at
@@ -20,10 +23,14 @@ public interface ClientSideAccessBoundaryRuleOrBuilder extends
    * </pre>
    *
    * <code>string available_resource = 1 [features = { ... }</code>
+   *
    * @return The availableResource.
    */
   java.lang.String getAvailableResource();
+
   /**
+   *
+   *
    * <pre>
    * The full resource name of a Google Cloud resource entity.
    * The format definition is at
@@ -33,12 +40,14 @@ public interface ClientSideAccessBoundaryRuleOrBuilder extends
    * </pre>
    *
    * <code>string available_resource = 1 [features = { ... }</code>
+   *
    * @return The bytes for availableResource.
    */
-  com.google.protobuf.ByteString
-      getAvailableResourceBytes();
+  com.google.protobuf.ByteString getAvailableResourceBytes();
 
   /**
+   *
+   *
    * <pre>
    * A list of permissions that may be allowed for use on the specified
    * resource.
@@ -52,11 +61,14 @@ public interface ClientSideAccessBoundaryRuleOrBuilder extends
    * </pre>
    *
    * <code>repeated string available_permissions = 2;</code>
+   *
    * @return A list containing the availablePermissions.
    */
-  java.util.List<java.lang.String>
-      getAvailablePermissionsList();
+  java.util.List<java.lang.String> getAvailablePermissionsList();
+
   /**
+   *
+   *
    * <pre>
    * A list of permissions that may be allowed for use on the specified
    * resource.
@@ -70,10 +82,14 @@ public interface ClientSideAccessBoundaryRuleOrBuilder extends
    * </pre>
    *
    * <code>repeated string available_permissions = 2;</code>
+   *
    * @return The count of availablePermissions.
    */
   int getAvailablePermissionsCount();
+
   /**
+   *
+   *
    * <pre>
    * A list of permissions that may be allowed for use on the specified
    * resource.
@@ -87,11 +103,15 @@ public interface ClientSideAccessBoundaryRuleOrBuilder extends
    * </pre>
    *
    * <code>repeated string available_permissions = 2;</code>
+   *
    * @param index The index of the element to return.
    * @return The availablePermissions at the given index.
    */
   java.lang.String getAvailablePermissions(int index);
+
   /**
+   *
+   *
    * <pre>
    * A list of permissions that may be allowed for use on the specified
    * resource.
@@ -105,13 +125,15 @@ public interface ClientSideAccessBoundaryRuleOrBuilder extends
    * </pre>
    *
    * <code>repeated string available_permissions = 2;</code>
+   *
    * @param index The index of the value to return.
    * @return The bytes of the availablePermissions at the given index.
    */
-  com.google.protobuf.ByteString
-      getAvailablePermissionsBytes(int index);
+  com.google.protobuf.ByteString getAvailablePermissionsBytes(int index);
 
   /**
+   *
+   *
    * <pre>
    * The compiled version of the
    * availability_condition in the STS API AccessBoundaryRule
@@ -120,10 +142,14 @@ public interface ClientSideAccessBoundaryRuleOrBuilder extends
    * </pre>
    *
    * <code>.google.api.expr.Expr compiled_availability_condition = 4;</code>
+   *
    * @return Whether the compiledAvailabilityCondition field is set.
    */
   boolean hasCompiledAvailabilityCondition();
+
   /**
+   *
+   *
    * <pre>
    * The compiled version of the
    * availability_condition in the STS API AccessBoundaryRule
@@ -132,10 +158,14 @@ public interface ClientSideAccessBoundaryRuleOrBuilder extends
    * </pre>
    *
    * <code>.google.api.expr.Expr compiled_availability_condition = 4;</code>
+   *
    * @return The compiledAvailabilityCondition.
    */
   dev.cel.expr.Expr getCompiledAvailabilityCondition();
+
   /**
+   *
+   *
    * <pre>
    * The compiled version of the
    * availability_condition in the STS API AccessBoundaryRule

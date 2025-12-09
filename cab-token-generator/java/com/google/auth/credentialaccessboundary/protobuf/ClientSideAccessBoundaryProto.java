@@ -8,73 +8,75 @@ package com.google.auth.credentialaccessboundary.protobuf;
 @com.google.protobuf.Generated
 public final class ClientSideAccessBoundaryProto extends com.google.protobuf.GeneratedFile {
   private ClientSideAccessBoundaryProto() {}
+
   static {
     com.google.protobuf.RuntimeVersion.validateProtobufGencodeVersion(
-      com.google.protobuf.RuntimeVersion.RuntimeDomain.PUBLIC,
-      /* major= */ 4,
-      /* minor= */ 33,
-      /* patch= */ 0,
-      /* suffix= */ "",
-      "ClientSideAccessBoundaryProto");
-  }
-  public static void registerAllExtensions(
-      com.google.protobuf.ExtensionRegistryLite registry) {
+        com.google.protobuf.RuntimeVersion.RuntimeDomain.PUBLIC,
+        /* major= */ 4,
+        /* minor= */ 33,
+        /* patch= */ 0,
+        /* suffix= */ "",
+        "ClientSideAccessBoundaryProto");
   }
 
-  public static void registerAllExtensions(
-      com.google.protobuf.ExtensionRegistry registry) {
-    registerAllExtensions(
-        (com.google.protobuf.ExtensionRegistryLite) registry);
+  public static void registerAllExtensions(com.google.protobuf.ExtensionRegistryLite registry) {}
+
+  public static void registerAllExtensions(com.google.protobuf.ExtensionRegistry registry) {
+    registerAllExtensions((com.google.protobuf.ExtensionRegistryLite) registry);
   }
+
   static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundaryRule_descriptor;
-  static final 
-    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundaryRule_descriptor;
+  static final com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundaryRule_fieldAccessorTable;
   static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundary_descriptor;
-  static final 
-    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundary_descriptor;
+  static final com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundary_fieldAccessorTable;
 
-  public static com.google.protobuf.Descriptors.FileDescriptor
-      getDescriptor() {
+  public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
     return descriptor;
   }
-  private static  com.google.protobuf.Descriptors.FileDescriptor
-      descriptor;
+
+  private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
+
   static {
     java.lang.String[] descriptorData = {
-      "\n!client_side_access_boundary.proto\022 clo" +
-      "ud.identity.unifiedauth.proto\032\034google/ap" +
-      "i/expr/syntax.proto\"\240\001\n\034ClientSideAccess" +
-      "BoundaryRule\022!\n\022available_resource\030\001 \001(\t" +
-      "B\005\252\001\002\010\002\022\035\n\025available_permissions\030\002 \003(\t\022>" +
-      "\n\037compiled_availability_condition\030\004 \001(\0132" +
-      "\025.google.api.expr.Expr\"y\n\030ClientSideAcce" +
-      "ssBoundary\022]\n\025access_boundary_rules\030\001 \003(" +
-      "\0132>.cloud.identity.unifiedauth.proto.Cli" +
-      "entSideAccessBoundaryRuleB-\n+com.google." +
-      "cloud.identity.unifiedauth.protob\010editio" +
-      "nsp\351\007"
+      "\n!client_side_access_boundary.proto\022 clo"
+          + "ud.identity.unifiedauth.proto\032\034google/ap"
+          + "i/expr/syntax.proto\"\240\001\n\034ClientSideAccess"
+          + "BoundaryRule\022!\n\022available_resource\030\001 \001(\t"
+          + "B\005\252\001\002\010\002\022\035\n\025available_permissions\030\002 \003(\t\022>"
+          + "\n\037compiled_availability_condition\030\004 \001(\0132"
+          + "\025.google.api.expr.Expr\"y\n\030ClientSideAcce"
+          + "ssBoundary\022]\n\025access_boundary_rules\030\001 \003("
+          + "\0132>.cloud.identity.unifiedauth.proto.Cli"
+          + "entSideAccessBoundaryRuleB-\n+com.google."
+          + "cloud.identity.unifiedauth.protob\010editio"
+          + "nsp\351\007"
     };
-    descriptor = com.google.protobuf.Descriptors.FileDescriptor
-      .internalBuildGeneratedFileFrom(descriptorData,
-        new com.google.protobuf.Descriptors.FileDescriptor[] {
-          dev.cel.expr.SyntaxProto.getDescriptor(),
-        });
+    descriptor =
+        com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
+            descriptorData,
+            new com.google.protobuf.Descriptors.FileDescriptor[] {
+              dev.cel.expr.SyntaxProto.getDescriptor(),
+            });
     internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundaryRule_descriptor =
-      getDescriptor().getMessageType(0);
-    internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundaryRule_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundaryRule_descriptor,
-        new java.lang.String[] { "AvailableResource", "AvailablePermissions", "CompiledAvailabilityCondition", });
+        getDescriptor().getMessageType(0);
+    internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundaryRule_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundaryRule_descriptor,
+            new java.lang.String[] {
+              "AvailableResource", "AvailablePermissions", "CompiledAvailabilityCondition",
+            });
     internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundary_descriptor =
-      getDescriptor().getMessageType(1);
-    internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundary_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundary_descriptor,
-        new java.lang.String[] { "AccessBoundaryRules", });
+        getDescriptor().getMessageType(1);
+    internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundary_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundary_descriptor,
+            new java.lang.String[] {
+              "AccessBoundaryRules",
+            });
     descriptor.resolveAllFeaturesImmutable();
     dev.cel.expr.SyntaxProto.getDescriptor();
   }
