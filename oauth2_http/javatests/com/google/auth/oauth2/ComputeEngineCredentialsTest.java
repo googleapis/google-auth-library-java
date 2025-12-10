@@ -590,7 +590,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
         new MockMetadataServerTransport() {
           @Override
           public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
-            if (isGetServiceAccountsUrl(url)) {
+            if (isGetDefaultServiceAccountsUrl(url)) {
               return new MockLowLevelHttpRequest(url) {
                 @Override
                 public LowLevelHttpResponse execute() throws IOException {
@@ -626,7 +626,7 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
         new MockMetadataServerTransport() {
           @Override
           public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
-            if (isGetServiceAccountsUrl(url)) {
+            if (isGetDefaultServiceAccountsUrl(url)) {
               return new MockLowLevelHttpRequest(url) {
                 @Override
                 public LowLevelHttpResponse execute() throws IOException {
