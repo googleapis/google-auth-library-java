@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.41.0-rc1](https://github.com/googleapis/google-auth-library-java/compare/v1.40.0...v1.41.0-rc1) (2025-12-09)
+
+
+### Features
+
+* configure rc releases to be on prerelease mode ([a385211](https://github.com/googleapis/google-auth-library-java/commit/a3852119620bb2bb2a0177607f0facfdaea6a0cb))
+* Introduce per-credential specific load methods ([#1827](https://github.com/googleapis/google-auth-library-java/issues/1827)) ([39fdc64](https://github.com/googleapis/google-auth-library-java/commit/39fdc647c2e14d8006a758fa81dbaeff63fed74e))
+* update protobuf version to 4.33.0 and http-client to 2.1.0-rc1 ([#1853](https://github.com/googleapis/google-auth-library-java/issues/1853)) ([4fcb1fc](https://github.com/googleapis/google-auth-library-java/commit/4fcb1fc727fcd224b1051fb995bc017d5999a1f4))
+
+
+### Bug Fixes
+
+* allow -rc releases in MetricsUtilsTest ([d19b976](https://github.com/googleapis/google-auth-library-java/commit/d19b976af36e986bf79f37e5f7750bc544017b41))
+* Do not retrieve the default SA principal when getting an access token ([#1839](https://github.com/googleapis/google-auth-library-java/issues/1839)) ([a65c22d](https://github.com/googleapis/google-auth-library-java/commit/a65c22da2c93bdf33dcd98ece47ee6668d1ed32c))
+* next release candidate ([6e3911f](https://github.com/googleapis/google-auth-library-java/commit/6e3911f79ed9b3057d16f370b29aa3232e3509f9))
+
 ## [1.40.0](https://github.com/googleapis/google-auth-library-java/compare/v1.39.1...v1.40.0) (2025-10-14)
 
 
