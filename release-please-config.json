@@ -2,6 +2,7 @@
   "release-type": "java-yoshi-mono-repo",
   "prerelease-type": "rc1",
   "versioning": "prerelease",
+  "prerelease": true,
   "separate-pull-requests": false,
   "include-component-in-tag": false,
   "group-pull-request-title-pattern": "chore(${branch}): release ${version}",
