@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.auth</groupId>
   <artifactId>google-auth-library-bom</artifactId>
-  <version>1.41.0-rc3</version><!-- {x-version-update:google-auth-library-bom:current} -->
+  <version>1.42.0-rc1</version><!-- {x-version-update:google-auth-library-bom:current} -->
   <packaging>pom</packaging>
   <name>Google Auth Library for Java BOM</name>
   <description>

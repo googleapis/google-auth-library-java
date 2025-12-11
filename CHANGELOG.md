@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.41.0-rc3](https://github.com/googleapis/google-auth-library-java/compare/v1.41.0-rc2...v1.41.0-rc3) (2025-12-11)
+## [1.42.0-rc1](https://github.com/googleapis/google-auth-library-java/compare/v1.42.0-rc1...v1.42.0-rc1) (2025-12-11)
 
 
 ### Features
