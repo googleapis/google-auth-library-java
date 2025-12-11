@@ -12,7 +12,7 @@ To use it in Maven, add the following to your `pom.xml`:
     <dependency>
       <groupId>com.google.auth</groupId>
       <artifactId>google-auth-library-bom</artifactId>
-      <version>1.41.0-rc2</version>
+      <version>1.41.0-rc3</version>
       <type>pom</type>
       <scope>import</scope>
     </dependency>
