@@ -10,10 +10,6 @@
     ".": {
       "changelog-path": "CHANGELOG.md",
       "release-type": "java-yoshi",
-      "bump-minor-pre-major": false,
-      "bump-patch-for-minor-pre-major": false,
-      "draft": false,
-      "prerelease": false,
       "extra-files": [
         "README.md",
         "bom/README.md"
@@ -21,6 +17,4 @@
     }
   },
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
-,
-  "prerelease": true
 }
