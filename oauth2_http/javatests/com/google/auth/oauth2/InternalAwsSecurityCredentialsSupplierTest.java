@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.oauth2.AwsCredentialsTest.buildAwsImdsv2CredentialSource;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static com.google.auth.oauth2.AwsCredentialsTest.buildAwsImdsv2CredentialSource;

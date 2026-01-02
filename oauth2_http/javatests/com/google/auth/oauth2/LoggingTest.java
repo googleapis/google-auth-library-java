@@ -31,9 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static com.google.auth.TestUtils.getDefaultExpireTime;
 import static com.google.auth.oauth2.ImpersonatedCredentialsTest.DEFAULT_IMPERSONATION_URL;
 import static com.google.auth.oauth2.ImpersonatedCredentialsTest.IMMUTABLE_SCOPES_LIST;

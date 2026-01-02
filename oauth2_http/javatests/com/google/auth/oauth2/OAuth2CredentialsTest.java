@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import static java.util.concurrent.TimeUnit.HOURS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

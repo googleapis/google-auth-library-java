@@ -31,8 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 import static com.google.auth.oauth2.OAuth2Credentials.DEFAULT_EXPIRATION_MARGIN;
 import static com.google.auth.oauth2.OAuth2Credentials.DEFAULT_REFRESH_MARGIN;
 import static org.junit.jupiter.api.Assertions.assertEquals;

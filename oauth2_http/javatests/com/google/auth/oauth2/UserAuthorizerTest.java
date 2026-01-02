@@ -31,6 +31,8 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.TestUtils.WORKFORCE_IDENTITY_FEDERATION_AUTH_URI;
+import static com.google.auth.TestUtils.WORKFORCE_IDENTITY_FEDERATION_TOKEN_SERVER_URI;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

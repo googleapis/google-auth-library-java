@@ -42,7 +42,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.mockito.Mockito;
 import com.google.api.client.json.GenericJson;
 import com.google.auth.oauth2.ExecutableHandler.ExecutableOptions;
 import com.google.auth.oauth2.PluggableAuthHandler.InternalProcessBuilder;
