@@ -82,7 +82,8 @@ class UserAuthorizerTest {
   private static final URI BASE_URI = URI.create("http://example.com/foo");
   private static final PKCEProvider pkce = new DefaultPKCEProvider();
 
-  @Test void constructorMinimum() {
+  @Test
+  void constructorMinimum() {
     TokenStore store = new MemoryTokensStorage();
 
     UserAuthorizer authorizer =
@@ -101,7 +102,8 @@ class UserAuthorizerTest {
         authorizer.getClientAuthenticationType());
   }
 
-  @Test void constructorCommon() {
+  @Test
+  void constructorCommon() {
     TokenStore store = new MemoryTokensStorage();
 
     UserAuthorizer authorizer =
@@ -123,7 +125,8 @@ class UserAuthorizerTest {
         authorizer.getClientAuthenticationType());
   }
 
-  @Test void constructorWithClientAuthenticationTypeNone() {
+  @Test
+  void constructorWithClientAuthenticationTypeNone() {
     TokenStore store = new MemoryTokensStorage();
 
     UserAuthorizer authorizer =
@@ -156,7 +159,8 @@ class UserAuthorizerTest {
         NullPointerException.class, () -> UserAuthorizer.newBuilder().setClientId(CLIENT_ID).build());
   }
 
-  @Test void getCallbackUri_relativeToBase() {
+  @Test
+  void getCallbackUri_relativeToBase() {
     final URI callbackURI = URI.create("/bar");
     final URI expectedCallbackURI = URI.create("http://example.com/bar");
     UserAuthorizer authorizer =
@@ -171,7 +175,8 @@ class UserAuthorizerTest {
     assertEquals(expectedCallbackURI, absoluteCallbackURI);
   }
 
-  @Test void getAuthorizationUrl() throws IOException {
+  @Test
+  void getAuthorizationUrl() throws IOException {
     final String CUSTOM_STATE = "custom_state";
     final String PROTOCOL = "https";
     final String HOST = "accounts.test.com";
@@ -206,7 +211,8 @@ class UserAuthorizerTest {
     assertEquals("consent", parameters.get("prompt"));
   }
 
-  @Test void getAuthorizationUrl_additionalParameters() throws IOException {
+  @Test
+  void getAuthorizationUrl_additionalParameters() throws IOException {
     final String CUSTOM_STATE = "custom_state";
     final String PROTOCOL = "https";
     final String HOST = "accounts.test.com";
@@ -249,7 +255,8 @@ class UserAuthorizerTest {
     assertFalse(parameters.containsKey("param2"));
   }
 
-  @Test void getCredentials_noCredentials_returnsNull() throws IOException {
+  @Test
+  void getCredentials_noCredentials_returnsNull() throws IOException {
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
@@ -262,7 +269,8 @@ class UserAuthorizerTest {
     assertNull(credentials);
   }
 
-  @Test void testGetTokenResponseFromAuthCodeExchange_convertsCodeToTokens() throws IOException {
+  @Test
+  void testGetTokenResponseFromAuthCodeExchange_convertsCodeToTokens() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
     transportFactory.transport.addAuthorizationCode(
@@ -289,7 +297,8 @@ class UserAuthorizerTest {
     assertEquals(GRANTED_SCOPES, response.getAccessToken().getScopes());
   }
 
-  @Test void testGetTokenResponseFromAuthCodeExchange_workforceIdentityFederationClientAuthBasic()
+  @Test
+  void testGetTokenResponseFromAuthCodeExchange_workforceIdentityFederationClientAuthBasic()
       throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
@@ -330,7 +339,8 @@ class UserAuthorizerTest {
     assertEquals(1, authHeader.size());
   }
 
-  @Test void testGetTokenResponseFromAuthCodeExchange_workforceIdentityFederationNoClientAuth()
+  @Test
+  void testGetTokenResponseFromAuthCodeExchange_workforceIdentityFederationNoClientAuth()
       throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
@@ -364,7 +374,8 @@ class UserAuthorizerTest {
     assertNull(headers.get("authorization"));
   }
 
-  @Test void testGetTokenResponseFromAuthCodeExchange_missingAuthCode_throws() {
+  @Test
+  void testGetTokenResponseFromAuthCodeExchange_missingAuthCode_throws() {
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder().setClientId(CLIENT_ID).setScopes(DUMMY_SCOPES).build();
 
@@ -376,7 +387,8 @@ class UserAuthorizerTest {
         });
   }
 
-  @Test void testGetTokenResponseFromAuthCodeExchange_missingAccessToken_throws()
+  @Test
+  void testGetTokenResponseFromAuthCodeExchange_missingAccessToken_throws()
       throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
@@ -408,7 +420,8 @@ class UserAuthorizerTest {
             .contains("Error reading result of Token API:Expected value access_token not found."));
   }
 
-  @Test void getCredentials_storedCredentials_returnsStored() throws IOException {
+  @Test
+  void getCredentials_storedCredentials_returnsStored() throws IOException {
     TokenStore tokenStore = new MemoryTokensStorage();
 
     UserCredentials initialCredentials =
@@ -448,7 +461,8 @@ class UserAuthorizerTest {
     assertThrows(NullPointerException.class, () -> authorizer.getCredentials(null));
   }
 
-  @Test void getCredentials_refreshedToken_stored() throws IOException {
+  @Test
+  void getCredentials_refreshedToken_stored() throws IOException {
     final String accessTokenValue1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessTokenValue2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     AccessToken accessToken1 =
@@ -502,7 +516,8 @@ class UserAuthorizerTest {
     assertEquals(GRANTED_SCOPES, credentials2.getAccessToken().getScopes());
   }
 
-  @Test void getCredentials_refreshedToken_different_granted_scopes() throws IOException {
+  @Test
+  void getCredentials_refreshedToken_different_granted_scopes() throws IOException {
     final String accessTokenValue1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessTokenValue2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     final List<String> grantedRefreshScopes = Arrays.asList("scope3");
@@ -556,7 +571,8 @@ class UserAuthorizerTest {
     assertEquals(grantedRefreshScopes, credentials2.getAccessToken().getScopes());
   }
 
-  @Test void getCredentialsFromCode_convertsCodeToTokens() throws IOException {
+  @Test
+  void getCredentialsFromCode_convertsCodeToTokens() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
     transportFactory.transport.addAuthorizationCode(
@@ -577,7 +593,8 @@ class UserAuthorizerTest {
     assertEquals(GRANTED_SCOPES, credentials.getAccessToken().getScopes());
   }
 
-  @Test void getCredentialsFromCode_additionalParameters() throws IOException {
+  @Test
+  void getCredentialsFromCode_additionalParameters() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
 
@@ -634,7 +651,8 @@ class UserAuthorizerTest {
     assertThrows(NullPointerException.class, () -> authorizer.getCredentialsFromCode(null, BASE_URI));
   }
 
-  @Test void getAndStoreCredentialsFromCode_getAndStoresCredentials() throws IOException {
+  @Test
+  void getAndStoreCredentialsFromCode_getAndStoresCredentials() throws IOException {
     final String accessTokenValue1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessTokenValue2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -700,7 +718,8 @@ class UserAuthorizerTest {
         () -> authorizer.getAndStoreCredentialsFromCode(null, CODE, BASE_URI));
   }
 
-  @Test void revokeAuthorization_revokesAndClears() throws IOException {
+  @Test
+  void revokeAuthorization_revokesAndClears() throws IOException {
     TokenStore tokenStore = new MemoryTokensStorage();
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
@@ -836,7 +855,8 @@ class UserAuthorizerTest {
                 .build());
   }
 
-  @Test void testTokenResponseWithConfig() {
+  @Test
+  void testTokenResponseWithConfig() {
     String clientId = "testClientId";
     String clientSecret = "testClientSecret";
     String refreshToken = "testRefreshToken";
@@ -862,7 +882,8 @@ class UserAuthorizerTest {
     assertEquals(httpTransportFactory, tokenResponse.getHttpTransportFactory());
   }
 
-  @Test void testTokenResponseWithConfig_noRefreshToken() {
+  @Test
+  void testTokenResponseWithConfig_noRefreshToken() {
     String clientId = "testClientId";
     String clientSecret = "testClientSecret";
     AccessToken accessToken = new AccessToken("token", new Date());

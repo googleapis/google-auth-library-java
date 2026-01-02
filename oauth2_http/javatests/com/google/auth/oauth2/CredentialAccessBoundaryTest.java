@@ -45,7 +45,8 @@ import org.junit.jupiter.api.Test;
 
 class CredentialAccessBoundaryTest {
 
-  @Test void credentialAccessBoundary() {
+  @Test
+  void credentialAccessBoundary() {
     AvailabilityCondition availabilityCondition =
         AvailabilityCondition.newBuilder().setExpression("expression").build();
 
@@ -87,7 +88,8 @@ class CredentialAccessBoundaryTest {
     assertNull(second.getAvailabilityCondition());
   }
 
-  @Test void credentialAccessBoundary_nullRules_throws() {
+  @Test
+  void credentialAccessBoundary_nullRules_throws() {
     try {
       CredentialAccessBoundary.newBuilder().build();
       fail("Should fail.");
@@ -96,7 +98,8 @@ class CredentialAccessBoundaryTest {
     }
   }
 
-  @Test void credentialAccessBoundary_withoutRules_throws() {
+  @Test
+  void credentialAccessBoundary_withoutRules_throws() {
     try {
       CredentialAccessBoundary.newBuilder().setRules(new ArrayList<AccessBoundaryRule>()).build();
       fail("Should fail.");
@@ -105,7 +108,8 @@ class CredentialAccessBoundaryTest {
     }
   }
 
-  @Test void credentialAccessBoundary_ruleCountExceeded_throws() {
+  @Test
+  void credentialAccessBoundary_ruleCountExceeded_throws() {
     AccessBoundaryRule rule =
         AccessBoundaryRule.newBuilder()
             .setAvailableResource("resource")
@@ -125,7 +129,8 @@ class CredentialAccessBoundaryTest {
     }
   }
 
-  @Test void credentialAccessBoundary_toJson() {
+  @Test
+  void credentialAccessBoundary_toJson() {
     AvailabilityCondition availabilityCondition =
         AvailabilityCondition.newBuilder()
             .setExpression("expression")
@@ -163,7 +168,8 @@ class CredentialAccessBoundaryTest {
     assertEquals(expectedJson, credentialAccessBoundary.toJson());
   }
 
-  @Test void accessBoundaryRule_allFields() {
+  @Test
+  void accessBoundaryRule_allFields() {
     AvailabilityCondition availabilityCondition =
         AvailabilityCondition.newBuilder().setExpression("expression").build();
 
@@ -182,7 +188,8 @@ class CredentialAccessBoundaryTest {
     assertEquals(availabilityCondition, rule.getAvailabilityCondition());
   }
 
-  @Test void accessBoundaryRule_requiredFields() {
+  @Test
+  void accessBoundaryRule_requiredFields() {
     AccessBoundaryRule rule =
         AccessBoundaryRule.newBuilder()
             .setAvailableResource("resource")
@@ -195,7 +202,8 @@ class CredentialAccessBoundaryTest {
     assertNull(rule.getAvailabilityCondition());
   }
 
-  @Test void accessBoundaryRule_withEmptyAvailableResource_throws() {
+  @Test
+  void accessBoundaryRule_withEmptyAvailableResource_throws() {
     try {
       AccessBoundaryRule.newBuilder()
           .setAvailableResource("")
@@ -207,7 +215,8 @@ class CredentialAccessBoundaryTest {
     }
   }
 
-  @Test void accessBoundaryRule_withoutAvailableResource_throws() {
+  @Test
+  void accessBoundaryRule_withoutAvailableResource_throws() {
     try {
       AccessBoundaryRule.newBuilder().addAvailablePermission("permission").build();
       fail("Should fail.");
@@ -216,7 +225,8 @@ class CredentialAccessBoundaryTest {
     }
   }
 
-  @Test void accessBoundaryRule_withoutAvailablePermissions_throws() {
+  @Test
+  void accessBoundaryRule_withoutAvailablePermissions_throws() {
     try {
       AccessBoundaryRule.newBuilder().setAvailableResource("resource").build();
       fail("Should fail.");
@@ -225,7 +235,8 @@ class CredentialAccessBoundaryTest {
     }
   }
 
-  @Test void accessBoundaryRule_withEmptyAvailablePermissions_throws() {
+  @Test
+  void accessBoundaryRule_withEmptyAvailablePermissions_throws() {
     try {
       AccessBoundaryRule.newBuilder()
           .setAvailableResource("resource")
@@ -237,7 +248,8 @@ class CredentialAccessBoundaryTest {
     }
   }
 
-  @Test void accessBoundaryRule_withNullAvailablePermissions_throws() {
+  @Test
+  void accessBoundaryRule_withNullAvailablePermissions_throws() {
     try {
       AccessBoundaryRule.newBuilder()
           .setAvailableResource("resource")
@@ -249,7 +261,8 @@ class CredentialAccessBoundaryTest {
     }
   }
 
-  @Test void accessBoundaryRule_withEmptyAvailablePermission_throws() {
+  @Test
+  void accessBoundaryRule_withEmptyAvailablePermission_throws() {
     try {
       AccessBoundaryRule.newBuilder()
           .setAvailableResource("resource")
@@ -261,7 +274,8 @@ class CredentialAccessBoundaryTest {
     }
   }
 
-  @Test void availabilityCondition_allFields() {
+  @Test
+  void availabilityCondition_allFields() {
     AvailabilityCondition availabilityCondition =
         AvailabilityCondition.newBuilder()
             .setExpression("expression")
@@ -274,7 +288,8 @@ class CredentialAccessBoundaryTest {
     assertEquals("description", availabilityCondition.getDescription());
   }
 
-  @Test void availabilityCondition_expressionOnly() {
+  @Test
+  void availabilityCondition_expressionOnly() {
     AvailabilityCondition availabilityCondition =
         AvailabilityCondition.newBuilder().setExpression("expression").build();
 
@@ -283,7 +298,8 @@ class CredentialAccessBoundaryTest {
     assertNull(availabilityCondition.getDescription());
   }
 
-  @Test void availabilityCondition_nullExpression_throws() {
+  @Test
+  void availabilityCondition_nullExpression_throws() {
     try {
       AvailabilityCondition.newBuilder().setExpression(null).build();
       fail("Should fail.");
@@ -292,7 +308,8 @@ class CredentialAccessBoundaryTest {
     }
   }
 
-  @Test void availabilityCondition_emptyExpression_throws() {
+  @Test
+  void availabilityCondition_emptyExpression_throws() {
     try {
       AvailabilityCondition.newBuilder().setExpression("").build();
       fail("Should fail.");

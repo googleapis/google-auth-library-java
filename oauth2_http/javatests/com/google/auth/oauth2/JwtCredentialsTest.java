@@ -75,7 +75,8 @@ class JwtCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test void serialize() throws IOException, ClassNotFoundException {
+  @Test
+  void serialize() throws IOException, ClassNotFoundException {
     JwtClaims claims =
         JwtClaims.newBuilder()
             .setAudience("some-audience")
@@ -96,7 +97,8 @@ class JwtCredentialsTest extends BaseSerializationTest {
     assertSame(deserializedCredentials.getClock(), Clock.SYSTEM);
   }
 
-  @Test void builder_requiresPrivateKey() {
+  @Test
+  void builder_requiresPrivateKey() {
     try {
       JwtClaims claims =
           JwtClaims.newBuilder()
@@ -111,7 +113,8 @@ class JwtCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test void builder_requiresClaims() {
+  @Test
+  void builder_requiresClaims() {
     try {
       JwtCredentials.newBuilder()
           .setPrivateKeyId(PRIVATE_KEY_ID)
@@ -123,7 +126,8 @@ class JwtCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test void builder_requiresCompleteClaims() {
+  @Test
+  void builder_requiresCompleteClaims() {
     try {
       JwtClaims claims = JwtClaims.newBuilder().build();
       JwtCredentials.newBuilder()
@@ -137,7 +141,8 @@ class JwtCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test void jwtWithClaims_overwritesClaims() throws IOException {
+  @Test
+  void jwtWithClaims_overwritesClaims() throws IOException {
     JwtClaims claims =
         JwtClaims.newBuilder()
             .setAudience("some-audience")
@@ -161,7 +166,8 @@ class JwtCredentialsTest extends BaseSerializationTest {
     verifyJwtAccess(metadata, "some-audience2", "some-issuer2", "some-subject2", PRIVATE_KEY_ID);
   }
 
-  @Test void jwtWithClaims_defaultsClaims() throws IOException {
+  @Test
+  void jwtWithClaims_defaultsClaims() throws IOException {
     JwtClaims claims =
         JwtClaims.newBuilder()
             .setAudience("some-audience")
@@ -180,7 +186,8 @@ class JwtCredentialsTest extends BaseSerializationTest {
     verifyJwtAccess(metadata, "some-audience", "some-issuer", "some-subject", PRIVATE_KEY_ID);
   }
 
-  @Test void getRequestMetadata_hasJwtAccess() throws IOException {
+  @Test
+  void getRequestMetadata_hasJwtAccess() throws IOException {
     JwtClaims claims =
         JwtClaims.newBuilder()
             .setAudience("some-audience")
@@ -198,7 +205,8 @@ class JwtCredentialsTest extends BaseSerializationTest {
     verifyJwtAccess(metadata, "some-audience", "some-issuer", "some-subject", PRIVATE_KEY_ID);
   }
 
-  @Test void getRequestMetadata_withAdditionalClaims_hasJwtAccess() throws IOException {
+  @Test
+  void getRequestMetadata_withAdditionalClaims_hasJwtAccess() throws IOException {
     JwtClaims claims =
         JwtClaims.newBuilder()
             .setAudience("some-audience")
@@ -223,7 +231,8 @@ class JwtCredentialsTest extends BaseSerializationTest {
         Collections.singletonMap("foo", "bar"));
   }
 
-  @Test void privateKeyIdNull() throws IOException {
+  @Test
+  void privateKeyIdNull() throws IOException {
     JwtClaims claims =
         JwtClaims.newBuilder()
             .setAudience("some-audience")
@@ -241,7 +250,8 @@ class JwtCredentialsTest extends BaseSerializationTest {
     verifyJwtAccess(metadata, "some-audience", "some-issuer", "some-subject", null);
   }
 
-  @Test void privateKeyIdNotSpecified() throws IOException {
+  @Test
+  void privateKeyIdNotSpecified() throws IOException {
     JwtClaims claims =
         JwtClaims.newBuilder()
             .setAudience("some-audience")

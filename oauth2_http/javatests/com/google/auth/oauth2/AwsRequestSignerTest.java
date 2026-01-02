@@ -70,7 +70,8 @@ class AwsRequestSignerTest {
 
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/get-vanilla.req
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/get-vanilla.sreq
-  @Test void sign_getHost() {
+  @Test
+  void sign_getHost() {
     String url = "https://host.foo.com";
 
     Map<String, String> headers = new HashMap<>();
@@ -100,7 +101,8 @@ class AwsRequestSignerTest {
 
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/get-relative-relative.req
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/get-relative-relative.sreq
-  @Test void sign_getHostRelativePath() {
+  @Test
+  void sign_getHostRelativePath() {
     String url = "https://host.foo.com/foo/bar/../..";
 
     Map<String, String> headers = new HashMap<>();
@@ -130,7 +132,8 @@ class AwsRequestSignerTest {
 
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/get-slash-dot-slash.req
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/get-slash-dot-slash.sreq
-  @Test void sign_getHostInvalidPath() {
+  @Test
+  void sign_getHostInvalidPath() {
     String url = "https://host.foo.com/./";
 
     Map<String, String> headers = new HashMap<>();
@@ -160,7 +163,8 @@ class AwsRequestSignerTest {
 
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/get-slash-pointless-dot.req
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/get-slash-pointless-dot.sreq
-  @Test void sign_getHostDotPath() {
+  @Test
+  void sign_getHostDotPath() {
     String url = "https://host.foo.com/./foo";
 
     Map<String, String> headers = new HashMap<>();
@@ -190,7 +194,8 @@ class AwsRequestSignerTest {
 
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/get-utf8.req
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/get-utf8.sreq
-  @Test void sign_getHostUtf8Path() {
+  @Test
+  void sign_getHostUtf8Path() {
     String url = "https://host.foo.com/%E1%88%B4";
 
     Map<String, String> headers = new HashMap<>();
@@ -220,7 +225,8 @@ class AwsRequestSignerTest {
 
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/get-vanilla-query-order-key-case.req
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/get-vanilla-query-order-key-case.sreq
-  @Test void sign_getHostDuplicateQueryParam() {
+  @Test
+  void sign_getHostDuplicateQueryParam() {
     String url = "https://host.foo.com/?foo=Zoo&foo=aha";
 
     Map<String, String> headers = new HashMap<>();
@@ -250,7 +256,8 @@ class AwsRequestSignerTest {
 
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/post-header-key-sort.req
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/post-header-key-sort.sreq
-  @Test void sign_postWithUpperCaseHeaderKey() {
+  @Test
+  void sign_postWithUpperCaseHeaderKey() {
     String url = "https://host.foo.com/";
     String headerKey = "ZOO";
     String headerValue = "zoobar";
@@ -284,7 +291,8 @@ class AwsRequestSignerTest {
 
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/post-header-value-case.req
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/post-header-value-case.sreq
-  @Test void sign_postWithUpperCaseHeaderValue() {
+  @Test
+  void sign_postWithUpperCaseHeaderValue() {
     String url = "https://host.foo.com/";
     String headerKey = "zoo";
     String headerValue = "ZOOBAR";
@@ -318,7 +326,8 @@ class AwsRequestSignerTest {
 
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/get-header-value-trim.req
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/get-header-value-trim.sreq
-  @Test void sign_postWithHeader() {
+  @Test
+  void sign_postWithHeader() {
     String url = "https://host.foo.com/";
     String headerKey = "p";
     String headerValue = "phfft";
@@ -352,7 +361,8 @@ class AwsRequestSignerTest {
 
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/post-x-www-form-urlencoded.req
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/post-x-www-form-urlencoded.sreq
-  @Test void sign_postWithBodyNoCustomHeaders() {
+  @Test
+  void sign_postWithBodyNoCustomHeaders() {
     String url = "https://host.foo.com/";
     String headerKey = "Content-Type";
     String headerValue = "application/x-www-form-urlencoded";
@@ -387,7 +397,8 @@ class AwsRequestSignerTest {
 
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/post-vanilla-query.req
   // https://github.com/boto/botocore/blob/879f8440a4e9ace5d3cf145ce8b3d5e5ffb892ef/tests/unit/auth/aws4_testsuite/post-vanilla-query.sreq
-  @Test void sign_postWithQueryString() {
+  @Test
+  void sign_postWithQueryString() {
     String url = "https://host.foo.com/?foo=bar";
 
     Map<String, String> headers = new HashMap<>();
@@ -415,7 +426,8 @@ class AwsRequestSignerTest {
     assertEquals(URI.create(url).normalize().toString(), signature.getUrl());
   }
 
-  @Test void sign_getDescribeRegions() {
+  @Test
+  void sign_getDescribeRegions() {
     String url = "https://ec2.us-east-2.amazonaws.com?Action=DescribeRegions&Version=2013-10-15";
 
     Map<String, String> additionalHeaders = new HashMap<>();
@@ -445,7 +457,8 @@ class AwsRequestSignerTest {
     assertEquals(URI.create(url).normalize().toString(), signature.getUrl());
   }
 
-  @Test void sign_postGetCallerIdentity() {
+  @Test
+  void sign_postGetCallerIdentity() {
     String url = "https://sts.us-east-2.amazonaws.com?Action=GetCallerIdentity&Version=2011-06-15";
 
     Map<String, String> additionalHeaders = new HashMap<>();
@@ -475,7 +488,8 @@ class AwsRequestSignerTest {
     assertEquals(URI.create(url).normalize().toString(), signature.getUrl());
   }
 
-  @Test void sign_postGetCallerIdentityNoToken() {
+  @Test
+  void sign_postGetCallerIdentityNoToken() {
     String url = "https://sts.us-east-2.amazonaws.com?Action=GetCallerIdentity&Version=2011-06-15";
 
     AwsSecurityCredentials awsSecurityCredentialsWithoutToken =

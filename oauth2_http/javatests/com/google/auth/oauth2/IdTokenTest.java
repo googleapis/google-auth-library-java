@@ -50,27 +50,31 @@ class IdTokenTest extends BaseSerializationTest {
       "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2NjAxNjMxNjAsImV4cCI6MTY5MTY5OTE2MCwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsIkdpdmVuTmFtZSI6ImFibTHag3M0x20ifQ.foo";
   private static final Date EXPIRATION_DATE = new Date((long) 1565391138 * 1000);
 
-  @Test void constructor() throws IOException {
+  @Test
+  void constructor() throws IOException {
     IdToken idToken = IdToken.create(TOKEN_1);
     assertEquals(TOKEN_1, idToken.getTokenValue());
     assertEquals(EXPIRATION_DATE, idToken.getExpirationTime());
   }
 
-  @Test void equals_true() throws IOException {
+  @Test
+  void equals_true() throws IOException {
     IdToken accessToken = IdToken.create(TOKEN_1);
     IdToken otherAccessToken = IdToken.create(TOKEN_1);
     assertTrue(accessToken.equals(otherAccessToken));
     assertTrue(otherAccessToken.equals(accessToken));
   }
 
-  @Test void equals_false_token() throws IOException {
+  @Test
+  void equals_false_token() throws IOException {
     IdToken accessToken = IdToken.create(TOKEN_1);
     IdToken otherAccessToken = IdToken.create(TOKEN_2);
     assertFalse(accessToken.equals(otherAccessToken));
     assertFalse(otherAccessToken.equals(accessToken));
   }
 
-  @Test void toString_test() throws IOException {
+  @Test
+  void toString_test() throws IOException {
     IdToken accessToken = IdToken.create(TOKEN_1);
     String expectedToString =
         String.format(
@@ -79,13 +83,15 @@ class IdTokenTest extends BaseSerializationTest {
     assertEquals(expectedToString, accessToken.toString());
   }
 
-  @Test void hashCode_equals() throws IOException {
+  @Test
+  void hashCode_equals() throws IOException {
     IdToken accessToken = IdToken.create(TOKEN_1);
     IdToken otherAccessToken = IdToken.create(TOKEN_1);
     assertEquals(accessToken.hashCode(), otherAccessToken.hashCode());
   }
 
-  @Test void serialize() throws IOException, ClassNotFoundException {
+  @Test
+  void serialize() throws IOException, ClassNotFoundException {
     IdToken accessToken = IdToken.create(TOKEN_1);
     IdToken deserializedAccessToken = serializeAndDeserialize(accessToken);
     assertEquals(accessToken, deserializedAccessToken);
@@ -93,7 +99,8 @@ class IdTokenTest extends BaseSerializationTest {
     assertEquals(accessToken.toString(), deserializedAccessToken.toString());
   }
 
-  @Test void token_with_0x20() throws IOException {
+  @Test
+  void token_with_0x20() throws IOException {
     IdToken accessToken = IdToken.create(TOKEN_WITH_0x20);
     assertEquals(TOKEN_WITH_0x20, accessToken.getTokenValue());
   }

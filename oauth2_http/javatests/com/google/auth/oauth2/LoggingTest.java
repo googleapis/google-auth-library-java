@@ -90,7 +90,8 @@ class LoggingTest {
     LoggingUtils.setEnvironmentProvider(testEnvironmentProvider);
   }
 
-  @Test void userCredentials_getRequestMetadata_fromRefreshToken_hasAccessToken()
+  @Test
+  void userCredentials_getRequestMetadata_fromRefreshToken_hasAccessToken()
       throws IOException {
     TestAppender testAppender = setupTestLogger(UserCredentials.class);
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -152,7 +153,8 @@ class LoggingTest {
     }
   }
 
-  @Test void serviceAccountCredentials_getRequestMetadata_hasAccessToken() throws IOException {
+  @Test
+  void serviceAccountCredentials_getRequestMetadata_hasAccessToken() throws IOException {
     TestAppender testAppender = setupTestLogger(ServiceAccountCredentials.class);
     GoogleCredentials credentials =
         ServiceAccountCredentialsTest.createDefaultBuilderWithToken(ACCESS_TOKEN)
@@ -197,7 +199,8 @@ class LoggingTest {
     testAppender.stop();
   }
 
-  @Test void serviceAccountCredentials_idTokenWithAudience_iamFlow_targetAudienceMatchesAudClaim()
+  @Test
+  void serviceAccountCredentials_idTokenWithAudience_iamFlow_targetAudienceMatchesAudClaim()
       throws IOException {
     TestAppender testAppender = setupTestLogger(ServiceAccountCredentials.class);
     String nonGDU = "test.com";
@@ -307,7 +310,8 @@ class LoggingTest {
     testAppender.stop();
   }
 
-  @Test void idTokenWithAudience_withEmail() throws IOException {
+  @Test
+  void idTokenWithAudience_withEmail() throws IOException {
     TestAppender testAppender = setupTestLogger(IamUtils.class);
     MockIAMCredentialsServiceTransportFactory mockTransportFactory =
         new MockIAMCredentialsServiceTransportFactory();
@@ -367,7 +371,8 @@ class LoggingTest {
     testAppender.stop();
   }
 
-  @Test void sign_sameAs() throws IOException {
+  @Test
+  void sign_sameAs() throws IOException {
     TestAppender testAppender = setupTestLogger(IamUtils.class);
     MockIAMCredentialsServiceTransportFactory mockTransportFactory =
         new MockIAMCredentialsServiceTransportFactory();
@@ -423,7 +428,8 @@ class LoggingTest {
     testAppender.stop();
   }
 
-  @Test void getRequestMetadata_hasAccessToken() throws IOException {
+  @Test
+  void getRequestMetadata_hasAccessToken() throws IOException {
     TestAppender testAppender = setupTestLogger(ComputeEngineCredentials.class);
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setServiceAccountEmail("SA_CLIENT_EMAIL");

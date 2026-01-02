@@ -40,7 +40,8 @@ class PluggableAuthExceptionTest {
 
   private static final String MESSAGE_FORMAT = "Error code %s: %s";
 
-  @Test void constructor() {
+  @Test
+  void constructor() {
     PluggableAuthException e = new PluggableAuthException("errorCode", "errorDescription");
     assertEquals("errorCode", e.getErrorCode());
     assertEquals("errorDescription", e.getErrorDescription());
@@ -60,7 +61,8 @@ class PluggableAuthExceptionTest {
         () -> new PluggableAuthException("errorCode", /* errorDescription= */ null));
   }
 
-  @Test void getMessage() {
+  @Test
+  void getMessage() {
     PluggableAuthException e = new PluggableAuthException("errorCode", "errorDescription");
     String expectedMessage = String.format("Error code %s: %s", "errorCode", "errorDescription");
     assertEquals(expectedMessage, e.getMessage());

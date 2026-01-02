@@ -53,7 +53,8 @@ class ExecutableResponseTest {
   private static final int EXECUTABLE_SUPPORTED_MAX_VERSION = 1;
   private static final int EXPIRATION_DURATION = 3600;
 
-  @Test void constructor_successOidcResponse() throws IOException {
+  @Test
+  void constructor_successOidcResponse() throws IOException {
     ExecutableResponse response = new ExecutableResponse(buildOidcResponse());
 
     assertTrue(response.isSuccessful());
@@ -65,7 +66,8 @@ class ExecutableResponseTest {
         Instant.now().getEpochSecond() + EXPIRATION_DURATION, (long) response.getExpirationTime());
   }
 
-  @Test void constructor_successOidcResponseMissingExpirationTimeField_notExpired()
+  @Test
+  void constructor_successOidcResponseMissingExpirationTimeField_notExpired()
       throws IOException {
     GenericJson jsonResponse = buildOidcResponse();
     jsonResponse.remove("expiration_time");
@@ -81,7 +83,8 @@ class ExecutableResponseTest {
     assertNull(response.getExpirationTime());
   }
 
-  @Test void constructor_successSamlResponse() throws IOException {
+  @Test
+  void constructor_successSamlResponse() throws IOException {
     ExecutableResponse response = new ExecutableResponse(buildSamlResponse());
 
     assertTrue(response.isSuccessful());
@@ -93,7 +96,8 @@ class ExecutableResponseTest {
         Instant.now().getEpochSecond() + EXPIRATION_DURATION, (long) response.getExpirationTime());
   }
 
-  @Test void constructor_successSamlResponseMissingExpirationTimeField_notExpired()
+  @Test
+  void constructor_successSamlResponseMissingExpirationTimeField_notExpired()
       throws IOException {
     GenericJson jsonResponse = buildSamlResponse();
     jsonResponse.remove("expiration_time");
@@ -109,7 +113,8 @@ class ExecutableResponseTest {
     assertNull(response.getExpirationTime());
   }
 
-  @Test void constructor_validErrorResponse() throws IOException {
+  @Test
+  void constructor_validErrorResponse() throws IOException {
     ExecutableResponse response = new ExecutableResponse(buildErrorResponse());
 
     assertFalse(response.isSuccessful());
@@ -123,7 +128,8 @@ class ExecutableResponseTest {
     assertEquals("Caller not authorized.", response.getErrorMessage());
   }
 
-  @Test void constructor_errorResponseMissingCode_throws() throws IOException {
+  @Test
+  void constructor_errorResponseMissingCode_throws() throws IOException {
     GenericJson jsonResponse = buildErrorResponse();
 
     Object[] values = new Object[] {null, ""};
@@ -141,7 +147,8 @@ class ExecutableResponseTest {
     }
   }
 
-  @Test void constructor_errorResponseMissingMessage_throws() throws IOException {
+  @Test
+  void constructor_errorResponseMissingMessage_throws() throws IOException {
     GenericJson jsonResponse = buildErrorResponse();
 
     Object[] values = new Object[] {null, ""};
@@ -160,7 +167,8 @@ class ExecutableResponseTest {
     }
   }
 
-  @Test void constructor_successResponseMissingVersionField_throws() throws IOException {
+  @Test
+  void constructor_successResponseMissingVersionField_throws() throws IOException {
     GenericJson jsonResponse = buildOidcResponse();
     jsonResponse.remove("version");
 
@@ -175,7 +183,8 @@ class ExecutableResponseTest {
     }
   }
 
-  @Test void constructor_successResponseMissingSuccessField_throws() throws Exception {
+  @Test
+  void constructor_successResponseMissingSuccessField_throws() throws Exception {
     GenericJson jsonResponse = buildOidcResponse();
     jsonResponse.remove("success");
 
@@ -190,7 +199,8 @@ class ExecutableResponseTest {
     }
   }
 
-  @Test void constructor_successResponseMissingTokenTypeField_throws() throws IOException {
+  @Test
+  void constructor_successResponseMissingTokenTypeField_throws() throws IOException {
     GenericJson jsonResponse = buildOidcResponse();
     jsonResponse.remove("token_type");
 
@@ -205,7 +215,8 @@ class ExecutableResponseTest {
     }
   }
 
-  @Test void constructor_samlResponseMissingSubjectToken_throws() throws IOException {
+  @Test
+  void constructor_samlResponseMissingSubjectToken_throws() throws IOException {
     GenericJson jsonResponse = buildSamlResponse();
 
     Object[] values = new Object[] {null, ""};
@@ -224,7 +235,8 @@ class ExecutableResponseTest {
     }
   }
 
-  @Test void constructor_oidcResponseMissingSubjectToken_throws() throws IOException {
+  @Test
+  void constructor_oidcResponseMissingSubjectToken_throws() throws IOException {
     GenericJson jsonResponse = buildOidcResponse();
 
     Object[] values = new Object[] {null, ""};
@@ -243,7 +255,8 @@ class ExecutableResponseTest {
     }
   }
 
-  @Test void isExpired() throws IOException {
+  @Test
+  void isExpired() throws IOException {
     GenericJson jsonResponse = buildOidcResponse();
 
     BigDecimal[] values =

@@ -40,7 +40,8 @@ import org.junit.jupiter.api.Test;
 /** Tests for {@link OAuth2Utils}. */
 class OAuth2UtilsTest {
 
-  @Test void testValidCredentials() {
+  @Test
+  void testValidCredentials() {
     String username = "testUser";
     String password = "testPassword";
     String expectedHeader = "Basic dGVzdFVzZXI6dGVzdFBhc3N3b3Jk";
@@ -50,7 +51,8 @@ class OAuth2UtilsTest {
     assertEquals(expectedHeader, actualHeader);
   }
 
-  @Test void testEmptyUsername_throws() {
+  @Test
+  void testEmptyUsername_throws() {
     String username = "";
     String password = "testPassword";
 
@@ -61,7 +63,8 @@ class OAuth2UtilsTest {
         });
   }
 
-  @Test void testEmptyPassword_throws() {
+  @Test
+  void testEmptyPassword_throws() {
     String username = "testUser";
     String password = "";
 
@@ -72,7 +75,8 @@ class OAuth2UtilsTest {
         });
   }
 
-  @Test void testNullUsername_throws() {
+  @Test
+  void testNullUsername_throws() {
     String username = null;
     String password = "testPassword";
 
@@ -83,7 +87,8 @@ class OAuth2UtilsTest {
         });
   }
 
-  @Test void testNullPassword_throws() {
+  @Test
+  void testNullPassword_throws() {
     String username = "testUser";
     String password = null;
 

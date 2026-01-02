@@ -40,7 +40,8 @@ class SecureSessionAgentConfigTest {
   private static final String S2A_PLAINTEXT_ADDRESS = "plaintext";
   private static final String S2A_MTLS_ADDRESS = "mtls";
 
-  @Test void createS2AConfig_success() {
+  @Test
+  void createS2AConfig_success() {
     SecureSessionAgentConfig config =
         SecureSessionAgentConfig.createBuilder()
             .setPlaintextAddress(S2A_PLAINTEXT_ADDRESS)
@@ -50,7 +51,8 @@ class SecureSessionAgentConfigTest {
     assertEquals(S2A_MTLS_ADDRESS, config.getMtlsAddress());
   }
 
-  @Test void createEmptyS2AConfig_success() {
+  @Test
+  void createEmptyS2AConfig_success() {
     SecureSessionAgentConfig config = SecureSessionAgentConfig.createBuilder().build();
     assertTrue(config.getPlaintextAddress().isEmpty());
     assertTrue(config.getMtlsAddress().isEmpty());

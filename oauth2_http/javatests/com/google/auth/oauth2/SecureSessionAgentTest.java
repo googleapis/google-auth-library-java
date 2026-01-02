@@ -45,7 +45,8 @@ class SecureSessionAgentTest {
   private static final String S2A_PLAINTEXT_ADDRESS = "plaintext";
   private static final String S2A_MTLS_ADDRESS = "mtls";
 
-  @Test void getS2AAddress_validAddress() {
+  @Test
+  void getS2AAddress_validAddress() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setS2AContentMap(
         ImmutableMap.of(
@@ -64,7 +65,8 @@ class SecureSessionAgentTest {
     assertEquals(S2A_MTLS_ADDRESS, mtlsS2AAddress);
   }
 
-  @Test void getS2AAddress_queryEndpointResponseErrorCode_emptyAddress() {
+  @Test
+  void getS2AAddress_queryEndpointResponseErrorCode_emptyAddress() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setS2AContentMap(
         ImmutableMap.of(
@@ -83,7 +85,8 @@ class SecureSessionAgentTest {
     assertTrue(mtlsS2AAddress.isEmpty());
   }
 
-  @Test void getS2AAddress_queryEndpointResponseEmpty_emptyAddress() {
+  @Test
+  void getS2AAddress_queryEndpointResponseEmpty_emptyAddress() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setS2AContentMap(
         ImmutableMap.of(
@@ -103,7 +106,8 @@ class SecureSessionAgentTest {
     assertTrue(mtlsS2AAddress.isEmpty());
   }
 
-  @Test void getS2AAddress_queryEndpointResponseInvalidPlaintextJsonKey_plaintextEmptyAddress() {
+  @Test
+  void getS2AAddress_queryEndpointResponseInvalidPlaintextJsonKey_plaintextEmptyAddress() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setS2AContentMap(
         ImmutableMap.of(
@@ -122,7 +126,8 @@ class SecureSessionAgentTest {
     assertEquals(S2A_MTLS_ADDRESS, mtlsS2AAddress);
   }
 
-  @Test void getS2AAddress_queryEndpointResponseInvalidMtlsJsonKey_mtlsEmptyAddress() {
+  @Test
+  void getS2AAddress_queryEndpointResponseInvalidMtlsJsonKey_mtlsEmptyAddress() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setS2AContentMap(
         ImmutableMap.of(

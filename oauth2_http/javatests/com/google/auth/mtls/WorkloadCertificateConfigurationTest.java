@@ -43,7 +43,8 @@ import org.junit.jupiter.api.Test;
 
 class WorkloadCertificateConfigurationTest {
 
-  @Test void workloadCertificateConfig_fromStream_Succeeds() throws IOException {
+  @Test
+  void workloadCertificateConfig_fromStream_Succeeds() throws IOException {
     String certPath = "cert.crt";
     String privateKeyPath = "key.crt";
     InputStream configStream = writeWorkloadCertificateConfigStream(certPath, privateKeyPath);
@@ -53,7 +54,8 @@ class WorkloadCertificateConfigurationTest {
     assertNotNull(config);
   }
 
-  @Test void workloadCertificateConfig_fromStreamMissingCertPath_Fails() throws IOException {
+  @Test
+  void workloadCertificateConfig_fromStreamMissingCertPath_Fails() throws IOException {
     String certPath = "";
     String privateKeyPath = "key.crt";
     InputStream configStream = writeWorkloadCertificateConfigStream(certPath, privateKeyPath);
@@ -70,7 +72,8 @@ class WorkloadCertificateConfigurationTest {
                 "The cert_path field must be provided in the workload certificate configuration."));
   }
 
-  @Test void workloadCertificateConfig_fromStreamMissingPrivateKeyPath_Fails() throws IOException {
+  @Test
+  void workloadCertificateConfig_fromStreamMissingPrivateKeyPath_Fails() throws IOException {
     String certPath = "cert.crt";
     String privateKeyPath = "";
     InputStream configStream = writeWorkloadCertificateConfigStream(certPath, privateKeyPath);
@@ -87,7 +90,8 @@ class WorkloadCertificateConfigurationTest {
                 "The key_path field must be provided in the workload certificate configuration."));
   }
 
-  @Test void workloadCertificateConfig_fromStreamMissingWorkload_Fails() throws IOException {
+  @Test
+  void workloadCertificateConfig_fromStreamMissingWorkload_Fails() throws IOException {
     GenericJson json = new GenericJson();
     json.put("cert_configs", new GenericJson());
     InputStream configStream = TestUtils.jsonToInputStream(json);
@@ -104,7 +108,8 @@ class WorkloadCertificateConfigurationTest {
                 "A workload certificate configuration must be provided in the cert_configs object."));
   }
 
-  @Test void workloadCertificateConfig_fromStreamMissingCertConfig_Fails() throws IOException {
+  @Test
+  void workloadCertificateConfig_fromStreamMissingCertConfig_Fails() throws IOException {
     GenericJson json = new GenericJson();
     InputStream configStream = TestUtils.jsonToInputStream(json);
 

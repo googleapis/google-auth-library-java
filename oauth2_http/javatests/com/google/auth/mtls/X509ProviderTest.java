@@ -86,7 +86,8 @@ class X509ProviderTest {
           + "VUV6b25kqrcu\n"
           + "-----END PRIVATE KEY-----";
 
-  @Test void x509Provider_fileDoesntExist_throws() {
+  @Test
+  void x509Provider_fileDoesntExist_throws() {
     String certConfigPath = "badfile.txt";
     X509Provider testProvider = new TestX509Provider(certConfigPath);
     String expectedErrorMessage = "File does not exist.";
@@ -96,7 +97,8 @@ class X509ProviderTest {
     assertTrue(exception.getMessage().contains(expectedErrorMessage));
   }
 
-  @Test void x509Provider_emptyFile_throws() {
+  @Test
+  void x509Provider_emptyFile_throws() {
     String certConfigPath = "certConfig.txt";
     InputStream certConfigStream = new ByteArrayInputStream("".getBytes());
     TestX509Provider testProvider = new TestX509Provider(certConfigPath);
@@ -108,7 +110,8 @@ class X509ProviderTest {
     assertTrue(exception.getMessage().contains(expectedErrorMessage));
   }
 
-  @Test void x509Provider_succeeds() throws IOException, KeyStoreException, CertificateException {
+  @Test
+  void x509Provider_succeeds() throws IOException, KeyStoreException, CertificateException {
     String certConfigPath = "certConfig.txt";
     String certPath = "cert.crt";
     String keyPath = "key.crt";
@@ -131,7 +134,8 @@ class X509ProviderTest {
     assertNotNull(store.getCertificateAlias(expectedCert));
   }
 
-  @Test void x509Provider_succeeds_withEnvVariable()
+  @Test
+  void x509Provider_succeeds_withEnvVariable()
       throws IOException, KeyStoreException, CertificateException {
     String certConfigPath = "certConfig.txt";
     String certPath = "cert.crt";
@@ -156,7 +160,8 @@ class X509ProviderTest {
     assertNotNull(store.getCertificateAlias(expectedCert));
   }
 
-  @Test void x509Provider_succeeds_withWellKnownPath()
+  @Test
+  void x509Provider_succeeds_withWellKnownPath()
       throws IOException, KeyStoreException, CertificateException {
     String certConfigPath = "certConfig.txt";
     String certPath = "cert.crt";

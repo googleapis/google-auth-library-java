@@ -37,7 +37,8 @@ import org.junit.jupiter.api.Test;
 
 class ExternalAccountSupplierContextTest {
 
-  @Test void constructor_builder() {
+  @Test
+  void constructor_builder() {
     String expectedAudience =
         "//iam.googleapis.com/locations/global/workloadPools/pool/providers/provider";
     String expectedTokenType = SubjectTokenTypes.JWT.value;
@@ -51,7 +52,8 @@ class ExternalAccountSupplierContextTest {
     assertEquals(expectedTokenType, context.getSubjectTokenType());
   }
 
-  @Test void constructor_builder_subjectTokenEnum() {
+  @Test
+  void constructor_builder_subjectTokenEnum() {
     String expectedAudience =
         "//iam.googleapis.com/locations/global/workloadPools/pool/providers/provider";
     SubjectTokenTypes expectedTokenType = SubjectTokenTypes.JWT;

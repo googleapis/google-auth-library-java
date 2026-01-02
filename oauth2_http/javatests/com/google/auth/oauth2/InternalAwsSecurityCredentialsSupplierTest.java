@@ -43,7 +43,8 @@ import org.junit.jupiter.api.Test;
 /** Tests for {@link InternalAwsSecurityCredentialsSupplier}. */
 
 class InternalAwsSecurityCredentialsSupplierTest {
-  @Test void shouldUseMetadataServer_withRequiredEnvironmentVariables() {
+  @Test
+  void shouldUseMetadataServer_withRequiredEnvironmentVariables() {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -65,7 +66,8 @@ class InternalAwsSecurityCredentialsSupplierTest {
     }
   }
 
-  @Test void shouldUseMetadataServer_missingRegion() {
+  @Test
+  void shouldUseMetadataServer_missingRegion() {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -81,7 +83,8 @@ class InternalAwsSecurityCredentialsSupplierTest {
     assertTrue(supplier.shouldUseMetadataServer());
   }
 
-  @Test void shouldUseMetadataServer_missingAwsAccessKeyId() {
+  @Test
+  void shouldUseMetadataServer_missingAwsAccessKeyId() {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -102,7 +105,8 @@ class InternalAwsSecurityCredentialsSupplierTest {
     }
   }
 
-  @Test void shouldUseMetadataServer_missingAwsSecretAccessKey() {
+  @Test
+  void shouldUseMetadataServer_missingAwsSecretAccessKey() {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -123,7 +127,8 @@ class InternalAwsSecurityCredentialsSupplierTest {
     }
   }
 
-  @Test void shouldUseMetadataServer_missingAwsSecurityCreds() {
+  @Test
+  void shouldUseMetadataServer_missingAwsSecurityCreds() {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -143,7 +148,8 @@ class InternalAwsSecurityCredentialsSupplierTest {
     }
   }
 
-  @Test void shouldUseMetadataServer_noEnvironmentVars() {
+  @Test
+  void shouldUseMetadataServer_noEnvironmentVars() {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();

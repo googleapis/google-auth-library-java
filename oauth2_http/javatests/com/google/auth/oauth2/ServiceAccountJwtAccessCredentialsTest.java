@@ -95,7 +95,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
   private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
   private static final String QUOTA_PROJECT = "sample-quota-project-id";
 
-  @Test void constructor_allParameters_constructs() throws IOException {
+  @Test
+  void constructor_allParameters_constructs() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()
@@ -114,7 +115,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
-  @Test void constructor_noClientId_constructs() throws IOException {
+  @Test
+  void constructor_noClientId_constructs() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials.newBuilder()
         .setClientEmail(SA_CLIENT_EMAIL)
@@ -123,7 +125,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
         .build();
   }
 
-  @Test void constructor_noPrivateKeyId_constructs() throws IOException {
+  @Test
+  void constructor_noPrivateKeyId_constructs() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials.newBuilder()
         .setClientId(SA_CLIENT_ID)
@@ -132,7 +135,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
         .build();
   }
 
-  @Test void constructor_noEmail_throws() throws IOException {
+  @Test
+  void constructor_noEmail_throws() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     try {
       ServiceAccountJwtAccessCredentials.newBuilder()
@@ -146,7 +150,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test void constructor_noPrivateKey_throws() {
+  @Test
+  void constructor_noPrivateKey_throws() {
     try {
       ServiceAccountJwtAccessCredentials.newBuilder()
           .setClientId(SA_CLIENT_ID)
@@ -159,28 +164,32 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test void getAuthenticationType_returnsJwtAccess() throws IOException {
+  @Test
+  void getAuthenticationType_returnsJwtAccess() throws IOException {
     Credentials credentials =
         ServiceAccountJwtAccessCredentials.fromPkcs8(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
     assertEquals(credentials.getAuthenticationType(), "JWTAccess");
   }
 
-  @Test void hasRequestMetadata_returnsTrue() throws IOException {
+  @Test
+  void hasRequestMetadata_returnsTrue() throws IOException {
     Credentials credentials =
         ServiceAccountJwtAccessCredentials.fromPkcs8(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
     assertTrue(credentials.hasRequestMetadata());
   }
 
-  @Test void hasRequestMetadataOnly_returnsTrue() throws IOException {
+  @Test
+  void hasRequestMetadataOnly_returnsTrue() throws IOException {
     Credentials credentials =
         ServiceAccountJwtAccessCredentials.fromPkcs8(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
     assertTrue(credentials.hasRequestMetadataOnly());
   }
 
-  @Test void getRequestMetadata_blocking_hasJwtAccess() throws IOException {
+  @Test
+  void getRequestMetadata_blocking_hasJwtAccess() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()
@@ -195,7 +204,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     verifyJwtAccess(metadata, SA_CLIENT_EMAIL, CALL_URI, SA_PRIVATE_KEY_ID);
   }
 
-  @Test void getRequestMetadata_blocking_defaultURI_hasJwtAccess() throws IOException {
+  @Test
+  void getRequestMetadata_blocking_defaultURI_hasJwtAccess() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     Credentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()
@@ -211,7 +221,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     verifyJwtAccess(metadata, SA_CLIENT_EMAIL, CALL_URI, SA_PRIVATE_KEY_ID);
   }
 
-  @Test void getRequestMetadata_blocking_noURI_throws() throws IOException {
+  @Test
+  void getRequestMetadata_blocking_noURI_throws() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()
@@ -229,7 +240,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test void getRequestMetadata_blocking_cached() throws IOException {
+  @Test
+  void getRequestMetadata_blocking_cached() throws IOException {
     TestClock testClock = new TestClock();
 
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
@@ -253,7 +265,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     assertEquals(metadata1, metadata2);
   }
 
-  @Test void getRequestMetadata_blocking_cache_expired() throws IOException {
+  @Test
+  void getRequestMetadata_blocking_cache_expired() throws IOException {
     TestClock testClock = new TestClock();
 
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
@@ -277,7 +290,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     assertNotEquals(metadata1, metadata2);
   }
 
-  @Test void getRequestMetadata_async_hasJwtAccess() throws IOException {
+  @Test
+  void getRequestMetadata_async_hasJwtAccess() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()
@@ -295,7 +309,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     verifyJwtAccess(callback.metadata, SA_CLIENT_EMAIL, CALL_URI, SA_PRIVATE_KEY_ID);
   }
 
-  @Test void getRequestMetadata_async_defaultURI_hasJwtAccess() throws IOException {
+  @Test
+  void getRequestMetadata_async_defaultURI_hasJwtAccess() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     Credentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()
@@ -314,7 +329,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     verifyJwtAccess(callback.metadata, SA_CLIENT_EMAIL, CALL_URI, SA_PRIVATE_KEY_ID);
   }
 
-  @Test void getRequestMetadata_async_noURI_exception() throws IOException {
+  @Test
+  void getRequestMetadata_async_noURI_exception() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()
@@ -331,7 +347,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     assertNotNull(callback.exception);
   }
 
-  @Test void getRequestMetadata_async_cache_expired() throws IOException {
+  @Test
+  void getRequestMetadata_async_cache_expired() throws IOException {
     TestClock testClock = new TestClock();
 
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
@@ -358,7 +375,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     assertNotEquals(callback1.metadata, callback2.metadata);
   }
 
-  @Test void getRequestMetadata_async_cached() throws IOException {
+  @Test
+  void getRequestMetadata_async_cached() throws IOException {
     TestClock testClock = new TestClock();
 
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
@@ -385,7 +403,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     assertEquals(callback1.metadata, callback2.metadata);
   }
 
-  @Test void getRequestMetadata_contains_quotaProjectId() throws IOException {
+  @Test
+  void getRequestMetadata_contains_quotaProjectId() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     Credentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()
@@ -404,7 +423,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
         Collections.singletonList(QUOTA_PROJECT));
   }
 
-  @Test void getAccount_sameAs() throws IOException {
+  @Test
+  void getAccount_sameAs() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()
@@ -416,7 +436,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     assertEquals(SA_CLIENT_EMAIL, credentials.getAccount());
   }
 
-  @Test void sign_sameAs()
+  @Test
+  void sign_sameAs()
       throws IOException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     byte[] toSign = {0xD, 0xE, 0xA, 0xD};
@@ -434,7 +455,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     assertArrayEquals(signature.sign(), signedBytes);
   }
 
-  @Test void equals_true() throws IOException {
+  @Test
+  void equals_true() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()
@@ -456,7 +478,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     assertTrue(otherCredentials.equals(credentials));
   }
 
-  @Test void equals_false_clientId() throws IOException {
+  @Test
+  void equals_false_clientId() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()
@@ -478,7 +501,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     assertFalse(otherCredentials.equals(credentials));
   }
 
-  @Test void equals_false_email() throws IOException {
+  @Test
+  void equals_false_email() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()
@@ -500,7 +524,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     assertFalse(otherCredentials.equals(credentials));
   }
 
-  @Test void equals_false_keyId() throws IOException {
+  @Test
+  void equals_false_keyId() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()
@@ -522,7 +547,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     assertFalse(otherCredentials.equals(credentials));
   }
 
-  @Test void equals_false_callUri() throws IOException {
+  @Test
+  void equals_false_callUri() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     final URI otherCallUri = URI.create("https://foo.com/bar");
     ServiceAccountJwtAccessCredentials credentials =
@@ -545,7 +571,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     assertFalse(otherCredentials.equals(credentials));
   }
 
-  @Test void toString_containsFields() throws IOException {
+  @Test
+  void toString_containsFields() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()
@@ -564,7 +591,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     assertEquals(expectedToString, credentials.toString());
   }
 
-  @Test void hashCode_equals() throws IOException {
+  @Test
+  void hashCode_equals() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()
@@ -585,7 +613,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     assertEquals(credentials.hashCode(), otherCredentials.hashCode());
   }
 
-  @Test void serialize() throws IOException, ClassNotFoundException {
+  @Test
+  void serialize() throws IOException, ClassNotFoundException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()
@@ -605,7 +634,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
   }
 
-  @Test void fromStream_nullStream_throws() throws IOException {
+  @Test
+  void fromStream_nullStream_throws() throws IOException {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     try {
       ServiceAccountCredentials.fromStream(null, transportFactory);
@@ -615,7 +645,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test void fromStream_hasJwtAccess() throws IOException {
+  @Test
+  void fromStream_hasJwtAccess() throws IOException {
     InputStream serviceAccountStream =
         ServiceAccountCredentialsTest.writeServiceAccountStream(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
@@ -627,7 +658,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     verifyJwtAccess(metadata, SA_CLIENT_EMAIL, CALL_URI, SA_PRIVATE_KEY_ID);
   }
 
-  @Test void fromStream_defaultURI_hasJwtAccess() throws IOException {
+  @Test
+  void fromStream_defaultURI_hasJwtAccess() throws IOException {
     InputStream serviceAccountStream =
         ServiceAccountCredentialsTest.writeServiceAccountStream(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
@@ -640,7 +672,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     verifyJwtAccess(metadata, SA_CLIENT_EMAIL, CALL_URI, SA_PRIVATE_KEY_ID);
   }
 
-  @Test void fromStream_noClientId_throws() throws IOException {
+  @Test
+  void fromStream_noClientId_throws() throws IOException {
     InputStream serviceAccountStream =
         ServiceAccountCredentialsTest.writeServiceAccountStream(
             null, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
@@ -648,7 +681,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     testFromStreamException(serviceAccountStream, "client_id");
   }
 
-  @Test void fromStream_noClientEmail_throws() throws IOException {
+  @Test
+  void fromStream_noClientEmail_throws() throws IOException {
     InputStream serviceAccountStream =
         ServiceAccountCredentialsTest.writeServiceAccountStream(
             SA_CLIENT_ID, null, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
@@ -656,7 +690,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     testFromStreamException(serviceAccountStream, "client_email");
   }
 
-  @Test void fromStream_noPrivateKey_throws() throws IOException {
+  @Test
+  void fromStream_noPrivateKey_throws() throws IOException {
     InputStream serviceAccountStream =
         ServiceAccountCredentialsTest.writeServiceAccountStream(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, null, SA_PRIVATE_KEY_ID);
@@ -664,7 +699,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     testFromStreamException(serviceAccountStream, "private_key");
   }
 
-  @Test void fromStream_noPrivateKeyId_throws() throws IOException {
+  @Test
+  void fromStream_noPrivateKeyId_throws() throws IOException {
     InputStream serviceAccountStream =
         ServiceAccountCredentialsTest.writeServiceAccountStream(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, null);
@@ -672,7 +708,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     testFromStreamException(serviceAccountStream, "private_key_id");
   }
 
-  @Test void jwtWithClaims_overrideAudience() throws IOException {
+  @Test
+  void jwtWithClaims_overrideAudience() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()
@@ -689,7 +726,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     verifyJwtAccess(metadata, SA_CLIENT_EMAIL, URI.create("new-audience"), SA_PRIVATE_KEY_ID);
   }
 
-  @Test void jwtWithClaims_noAudience() throws IOException {
+  @Test
+  void jwtWithClaims_noAudience() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()
@@ -706,7 +744,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test void jwtWithClaims_defaultAudience() throws IOException {
+  @Test
+  void jwtWithClaims_defaultAudience() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()
@@ -722,7 +761,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     verifyJwtAccess(metadata, SA_CLIENT_EMAIL, URI.create("default-audience"), SA_PRIVATE_KEY_ID);
   }
 
-  @Test void getRequestMetadataSetsQuotaProjectId() throws IOException {
+  @Test
+  void getRequestMetadataSetsQuotaProjectId() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()
@@ -741,7 +781,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     assertEquals("my-quota-project-id", headerValues.get(0));
   }
 
-  @Test void getRequestMetadataNoQuotaProjectId() throws IOException {
+  @Test
+  void getRequestMetadataNoQuotaProjectId() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()
@@ -756,7 +797,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     assertFalse(metadata.containsKey("x-goog-user-project"));
   }
 
-  @Test void getRequestMetadataWithCallback() throws IOException {
+  @Test
+  void getRequestMetadataWithCallback() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()
@@ -789,7 +831,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     assertTrue(success.get(), "Should have run onSuccess() callback");
   }
 
-  @Test void fromJSON_noUniverseDomain() throws IOException {
+  @Test
+  void fromJSON_noUniverseDomain() throws IOException {
     GenericJson json =
         writeServiceAccountJson(
             SA_CLIENT_ID,
@@ -809,7 +852,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
-  @Test void fromJSON_UniverseDomainSet() throws IOException {
+  @Test
+  void fromJSON_UniverseDomainSet() throws IOException {
     GenericJson json =
         writeServiceAccountJson(
             SA_CLIENT_ID,
@@ -829,7 +873,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     assertEquals("example.com", credentials.getUniverseDomain());
   }
 
-  @Test void fromPkcs8_NoUniverseDomain() throws IOException {
+  @Test
+  void fromPkcs8_NoUniverseDomain() throws IOException {
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.fromPkcs8(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
@@ -841,7 +886,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
-  @Test void fromPkcs8_CustomUniverseDomain() throws IOException {
+  @Test
+  void fromPkcs8_CustomUniverseDomain() throws IOException {
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.fromPkcs8(
             SA_CLIENT_ID,
@@ -859,7 +905,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     assertEquals("example.com", credentials.getUniverseDomain());
   }
 
-  @Test void builder_defaultUniverseDomain() throws IOException {
+  @Test
+  void builder_defaultUniverseDomain() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()
@@ -872,7 +919,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
-  @Test void builder_customUniverseDomain() throws IOException {
+  @Test
+  void builder_customUniverseDomain() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.newBuilder()

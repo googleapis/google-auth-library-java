@@ -57,7 +57,8 @@ class HttpCredentialsAdapterTest {
   private static final String CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
   private static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
 
-  @Test void initialize_populatesOAuth2Credentials() throws IOException {
+  @Test
+  void initialize_populatesOAuth2Credentials() throws IOException {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String expectedAuthorization = InternalAuthHttpConstants.BEARER_PREFIX + accessToken;
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -83,7 +84,8 @@ class HttpCredentialsAdapterTest {
     assertEquals(authorizationHeader, expectedAuthorization);
   }
 
-  @Test void initialize_populatesOAuth2Credentials_handle401() throws IOException {
+  @Test
+  void initialize_populatesOAuth2Credentials_handle401() throws IOException {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
 
@@ -120,7 +122,8 @@ class HttpCredentialsAdapterTest {
     assertEquals(MockTokenCheckingTransport.SUCCESS_CONTENT, response.parseAsString());
   }
 
-  @Test void initialize_noURI() throws IOException {
+  @Test
+  void initialize_noURI() throws IOException {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String expectedAuthorization = InternalAuthHttpConstants.BEARER_PREFIX + accessToken;
     MockTokenServerTransportFactory tokenServerTransportFactory =
@@ -148,7 +151,8 @@ class HttpCredentialsAdapterTest {
     assertEquals(authorizationHeader, expectedAuthorization);
   }
 
-  @Test void getCredentials() {
+  @Test
+  void getCredentials() {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory tokenServerTransportFactory =
         new MockTokenServerTransportFactory();

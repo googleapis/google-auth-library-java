@@ -38,7 +38,8 @@ import org.junit.jupiter.api.Test;
 
 class GoogleAuthUtilsTest {
 
-  @Test void getWellKnownCredentialsPath_correct() {
+  @Test
+  void getWellKnownCredentialsPath_correct() {
     DefaultCredentialsProvider provider =
         new DefaultCredentialsProviderTest.TestDefaultCredentialsProvider();
     // since the TestDefaultCredentialsProvider properties and envs are not set,

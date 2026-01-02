@@ -63,24 +63,28 @@ final class FTServiceAccountCredentialsTest {
   private final String computeUrl =
       "https://compute.googleapis.com/compute/v1/projects/gcloud-devel/zones/us-central1-a/instances";
 
-  @Test void NoScopeNoAudienceComputeTest() throws Exception {
+  @Test
+  void NoScopeNoAudienceComputeTest() throws Exception {
     HttpResponse response = executeRequestWithCredentialsWithoutScope(computeUrl);
     assertEquals(200, response.getStatusCode());
   }
 
-  @Test void NoScopeNoAudienceBigQueryTest() throws Exception {
+  @Test
+  void NoScopeNoAudienceBigQueryTest() throws Exception {
     HttpResponse response = executeRequestWithCredentialsWithoutScope(bigQueryUrl);
     assertEquals(200, response.getStatusCode());
   }
 
-  @Test void NoScopeNoAudienceOnePlatformTest() throws Exception {
+  @Test
+  void NoScopeNoAudienceOnePlatformTest() throws Exception {
     HttpResponse response = executeRequestWithCredentialsWithoutScope(cloudTasksUrl);
     assertEquals(200, response.getStatusCode());
   }
 
   // TODO: add Storage case
 
-  @Test void AudienceSetNoScopeTest() throws Exception {
+  @Test
+  void AudienceSetNoScopeTest() throws Exception {
     final GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
 
     IdTokenCredentials tokenCredential =
@@ -100,44 +104,52 @@ final class FTServiceAccountCredentialsTest {
     assertEquals("https://accounts.google.com", jws.getPayload().get("iss"));
   }
 
-  @Test void ScopeSetNoAudienceStorageTest() throws Exception {
+  @Test
+  void ScopeSetNoAudienceStorageTest() throws Exception {
     HttpResponse response =
         executeRequestWithCredentialsWithScope(storageUrl, OAuth2Utils.CLOUD_PLATFORM_SCOPE);
     assertEquals(200, response.getStatusCode());
   }
 
-  @Test void ScopeSetNoAudienceComputeTest() throws Exception {
+  @Test
+  void ScopeSetNoAudienceComputeTest() throws Exception {
 
     HttpResponse response =
         executeRequestWithCredentialsWithScope(computeUrl, OAuth2Utils.CLOUD_PLATFORM_SCOPE);
     assertEquals(200, response.getStatusCode());
   }
 
-  @Test void ScopeSetNoAudienceBigQueryTest() throws Exception {
+  @Test
+  void ScopeSetNoAudienceBigQueryTest() throws Exception {
     HttpResponse response =
         executeRequestWithCredentialsWithScope(bigQueryUrl, OAuth2Utils.CLOUD_PLATFORM_SCOPE);
     assertEquals(200, response.getStatusCode());
   }
 
-  @Test void ScopeSetNoAudienceOnePlatformTest() throws Exception {
+  @Test
+  void ScopeSetNoAudienceOnePlatformTest() throws Exception {
     HttpResponse response =
         executeRequestWithCredentialsWithScope(cloudTasksUrl, OAuth2Utils.CLOUD_PLATFORM_SCOPE);
     assertEquals(200, response.getStatusCode());
   }
 
-  @Test void WrongScopeComputeTest() throws Exception {
+  @Test
+  void WrongScopeComputeTest() throws Exception {
     executeRequestWrongScope(computeUrl);
   }
 
-  @Test void WrongScopeStorageTest() throws Exception {
+  @Test
+  void WrongScopeStorageTest() throws Exception {
     executeRequestWrongScope(storageUrl);
   }
 
-  @Test void WrongScopeBigQueryTest() throws Exception {
+  @Test
+  void WrongScopeBigQueryTest() throws Exception {
     executeRequestWrongScope(bigQueryUrl);
   }
 
-  @Test void WrongScopeOnePlatformTest() throws Exception {
+  @Test
+  void WrongScopeOnePlatformTest() throws Exception {
     executeRequestWrongScope(cloudTasksUrl);
   }
 

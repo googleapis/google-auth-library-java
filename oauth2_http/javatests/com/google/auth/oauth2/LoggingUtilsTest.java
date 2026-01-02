@@ -44,7 +44,8 @@ class LoggingUtilsTest {
     testEnvironmentProvider = new TestEnvironmentProvider();
   }
 
-  @Test void testIsLoggingEnabled_true() {
+  @Test
+  void testIsLoggingEnabled_true() {
     testEnvironmentProvider.setEnv(LoggingUtils.GOOGLE_SDK_JAVA_LOGGING, "true");
     LoggingUtils.setEnvironmentProvider(testEnvironmentProvider);
     assertTrue(LoggingUtils.isLoggingEnabled());
@@ -56,7 +57,8 @@ class LoggingUtilsTest {
     assertTrue(LoggingUtils.isLoggingEnabled());
   }
 
-  @Test void testIsLoggingEnabled_defaultToFalse() {
+  @Test
+  void testIsLoggingEnabled_defaultToFalse() {
     LoggingUtils.setEnvironmentProvider(testEnvironmentProvider);
     assertFalse(LoggingUtils.isLoggingEnabled());
   }

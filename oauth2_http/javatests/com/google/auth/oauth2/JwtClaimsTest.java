@@ -41,7 +41,8 @@ import org.junit.jupiter.api.Test;
 
 class JwtClaimsTest {
 
-  @Test void testMergeOverwritesFields() {
+  @Test
+  void testMergeOverwritesFields() {
     JwtClaims claims1 =
         JwtClaims.newBuilder()
             .setAudience("audience-1")
@@ -61,7 +62,8 @@ class JwtClaimsTest {
     assertEquals("subject-2", merged.getSubject());
   }
 
-  @Test void testMergeDefaultValues() {
+  @Test
+  void testMergeDefaultValues() {
     JwtClaims claims1 =
         JwtClaims.newBuilder()
             .setAudience("audience-1")
@@ -76,7 +78,8 @@ class JwtClaimsTest {
     assertEquals("subject-1", merged.getSubject());
   }
 
-  @Test void testMergeNull() {
+  @Test
+  void testMergeNull() {
     JwtClaims claims1 = JwtClaims.newBuilder().build();
     JwtClaims claims2 = JwtClaims.newBuilder().build();
     JwtClaims merged = claims1.merge(claims2);
@@ -88,7 +91,8 @@ class JwtClaimsTest {
     assertTrue(merged.getAdditionalClaims().isEmpty());
   }
 
-  @Test void testEquals() {
+  @Test
+  void testEquals() {
     JwtClaims claims1 =
         JwtClaims.newBuilder()
             .setAudience("audience-1")
@@ -105,13 +109,15 @@ class JwtClaimsTest {
     assertEquals(claims1, claims2);
   }
 
-  @Test void testAdditionalClaimsDefaults() {
+  @Test
+  void testAdditionalClaimsDefaults() {
     JwtClaims claims = JwtClaims.newBuilder().build();
     assertNotNull(claims.getAdditionalClaims());
     assertTrue(claims.getAdditionalClaims().isEmpty());
   }
 
-  @Test void testMergeAdditionalClaims() {
+  @Test
+  void testMergeAdditionalClaims() {
     JwtClaims claims1 =
         JwtClaims.newBuilder().setAdditionalClaims(Collections.singletonMap("foo", "bar")).build();
     JwtClaims claims2 =
@@ -130,7 +136,8 @@ class JwtClaimsTest {
     assertEquals("qwer", mergedAdditionalClaims.get("asdf"));
   }
 
-  @Test void testIsComplete() {
+  @Test
+  void testIsComplete() {
     // Test JwtClaim is complete if audience is not set but scope is provided.
     JwtClaims claims =
         JwtClaims.newBuilder()

@@ -91,7 +91,8 @@ final class ITDownscopingTest {
    * downscoped token. 2. Validating that we do not have permission to retrieve a different object
    * in the same bucket.
    */
-  @Test void downscoping_serviceAccountSourceWithRefresh() throws IOException {
+  @Test
+  void downscoping_serviceAccountSourceWithRefresh() throws IOException {
     OAuth2CredentialsWithRefresh.OAuth2RefreshHandler refreshHandler =
         new OAuth2CredentialsWithRefresh.OAuth2RefreshHandler() {
           @Override

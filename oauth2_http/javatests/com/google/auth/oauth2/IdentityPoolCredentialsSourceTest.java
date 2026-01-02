@@ -45,7 +45,8 @@ import org.junit.jupiter.api.Test;
 
 class IdentityPoolCredentialsSourceTest {
 
-  @Test void constructor_certificateConfig() {
+  @Test
+  void constructor_certificateConfig() {
     Map<String, Object> certificateMap = new HashMap<>();
     certificateMap.put("certificate_config_location", "/path/to/certificate");
 
@@ -63,7 +64,8 @@ class IdentityPoolCredentialsSourceTest {
         credentialSource.getCertificateConfig().getCertificateConfigLocation());
   }
 
-  @Test void constructor_certificateConfig_useDefault() {
+  @Test
+  void constructor_certificateConfig_useDefault() {
     Map<String, Object> certificateMap = new HashMap<>();
     certificateMap.put("use_default_certificate_config", true);
 
@@ -78,7 +80,8 @@ class IdentityPoolCredentialsSourceTest {
     assertTrue(credentialSource.getCertificateConfig().useDefaultCertificateConfig());
   }
 
-  @Test void constructor_certificateConfig_missingRequiredFields_throws() {
+  @Test
+  void constructor_certificateConfig_missingRequiredFields_throws() {
     Map<String, Object> certificateMap = new HashMap<>();
     // Missing both use_default_certificate_config and certificate_config_location.
     certificateMap.put("trust_chain_path", "path/to/trust/chain");
@@ -95,7 +98,8 @@ class IdentityPoolCredentialsSourceTest {
         exception.getMessage());
   }
 
-  @Test void constructor_certificateConfig_bothFieldsSet_throws() {
+  @Test
+  void constructor_certificateConfig_bothFieldsSet_throws() {
     Map<String, Object> certificateMap = new HashMap<>();
     certificateMap.put("use_default_certificate_config", true);
     certificateMap.put("certificate_config_location", "/path/to/certificate");
@@ -113,7 +117,8 @@ class IdentityPoolCredentialsSourceTest {
         exception.getMessage());
   }
 
-  @Test void constructor_certificateConfig_trustChainPath() {
+  @Test
+  void constructor_certificateConfig_trustChainPath() {
     Map<String, Object> certificateMap = new HashMap<>();
     certificateMap.put("use_default_certificate_config", true);
     certificateMap.put("trust_chain_path", "path/to/trust/chain");
@@ -130,7 +135,8 @@ class IdentityPoolCredentialsSourceTest {
         "path/to/trust/chain", credentialSource.getCertificateConfig().getTrustChainPath());
   }
 
-  @Test void constructor_certificateConfig_invalidType_throws() {
+  @Test
+  void constructor_certificateConfig_invalidType_throws() {
     Map<String, Object> certificateMap = new HashMap<>();
     certificateMap.put("use_default_certificate_config", "invalid-type");
 

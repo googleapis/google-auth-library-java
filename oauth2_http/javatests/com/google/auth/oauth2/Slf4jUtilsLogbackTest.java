@@ -66,7 +66,8 @@ class Slf4jUtilsLogbackTest {
     testEnvironmentProvider = new TestEnvironmentProvider();
   }
 
-  @Test void testLogWithMDC_slf4jLogger() {
+  @Test
+  void testLogWithMDC_slf4jLogger() {
 
     TestAppender testAppender = setupTestLogger();
 
@@ -88,7 +89,8 @@ class Slf4jUtilsLogbackTest {
     testAppender.stop();
   }
 
-  @Test void testLogWithMDC_INFO() {
+  @Test
+  void testLogWithMDC_INFO() {
     TestAppender testAppender = setupTestLogger();
     Slf4jUtils.logWithMDC(LOGGER, Level.INFO, new HashMap<>(), "test message");
 
@@ -97,7 +99,8 @@ class Slf4jUtilsLogbackTest {
     testAppender.stop();
   }
 
-  @Test void testLogWithMDC_TRACE_notEnabled() {
+  @Test
+  void testLogWithMDC_TRACE_notEnabled() {
     TestAppender testAppender = setupTestLogger();
     Slf4jUtils.logWithMDC(LOGGER, Level.TRACE, new HashMap<>(), "test message");
 
@@ -105,7 +108,8 @@ class Slf4jUtilsLogbackTest {
     testAppender.stop();
   }
 
-  @Test void testLogWithMDC_WARN() {
+  @Test
+  void testLogWithMDC_WARN() {
     TestAppender testAppender = setupTestLogger();
     Slf4jUtils.logWithMDC(LOGGER, Level.WARN, new HashMap<>(), "test message");
 
@@ -114,7 +118,8 @@ class Slf4jUtilsLogbackTest {
     testAppender.stop();
   }
 
-  @Test void testLogWithMDC_ERROR() {
+  @Test
+  void testLogWithMDC_ERROR() {
     TestAppender testAppender = setupTestLogger();
     Slf4jUtils.logWithMDC(LOGGER, Level.ERROR, new HashMap<>(), "test message");
 
@@ -123,7 +128,8 @@ class Slf4jUtilsLogbackTest {
     testAppender.stop();
   }
 
-  @Test void testLogGenericData() {
+  @Test
+  void testLogGenericData() {
     // mimic GOOGLE_SDK_JAVA_LOGGING = true
     testEnvironmentProvider.setEnv(LoggingUtils.GOOGLE_SDK_JAVA_LOGGING, "true");
     LoggingUtils.setEnvironmentProvider(testEnvironmentProvider);
@@ -149,7 +155,8 @@ class Slf4jUtilsLogbackTest {
     testAppender.stop();
   }
 
-  @Test void testLogRequest() throws IOException {
+  @Test
+  void testLogRequest() throws IOException {
     // mimic GOOGLE_SDK_JAVA_LOGGING = true
     testEnvironmentProvider.setEnv(LoggingUtils.GOOGLE_SDK_JAVA_LOGGING, "true");
     LoggingUtils.setEnvironmentProvider(testEnvironmentProvider);

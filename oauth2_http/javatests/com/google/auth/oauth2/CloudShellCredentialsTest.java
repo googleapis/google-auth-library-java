@@ -48,7 +48,8 @@ import org.junit.jupiter.api.Test;
 
 class CloudShellCredentialsTest extends BaseSerializationTest {
 
-  @Test void refreshAccessToken() throws IOException {
+  @Test
+  void refreshAccessToken() throws IOException {
     final ServerSocket authSocket = new ServerSocket(0);
     try {
       Runnable serverTask =
@@ -81,33 +82,38 @@ class CloudShellCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test void equals_true() throws IOException {
+  @Test
+  void equals_true() throws IOException {
     GoogleCredentials credentials = CloudShellCredentials.newBuilder().setAuthPort(42).build();
     GoogleCredentials otherCredentials = CloudShellCredentials.newBuilder().setAuthPort(42).build();
     assertTrue(credentials.equals(otherCredentials));
     assertTrue(otherCredentials.equals(credentials));
   }
 
-  @Test void equals_false_authPort() throws IOException {
+  @Test
+  void equals_false_authPort() throws IOException {
     GoogleCredentials credentials = CloudShellCredentials.newBuilder().setAuthPort(42).build();
     GoogleCredentials otherCredentials = CloudShellCredentials.newBuilder().setAuthPort(43).build();
     assertFalse(credentials.equals(otherCredentials));
     assertFalse(otherCredentials.equals(credentials));
   }
 
-  @Test void toString_containsFields() throws IOException {
+  @Test
+  void toString_containsFields() throws IOException {
     String expectedToString = String.format("CloudShellCredentials{authPort=%d}", 42);
     GoogleCredentials credentials = CloudShellCredentials.newBuilder().setAuthPort(42).build();
     assertEquals(expectedToString, credentials.toString());
   }
 
-  @Test void hashCode_equals() throws IOException {
+  @Test
+  void hashCode_equals() throws IOException {
     GoogleCredentials credentials = CloudShellCredentials.newBuilder().setAuthPort(42).build();
     GoogleCredentials otherCredentials = CloudShellCredentials.newBuilder().setAuthPort(42).build();
     assertEquals(credentials.hashCode(), otherCredentials.hashCode());
   }
 
-  @Test void serialize() throws IOException, ClassNotFoundException {
+  @Test
+  void serialize() throws IOException, ClassNotFoundException {
     GoogleCredentials credentials = CloudShellCredentials.newBuilder().setAuthPort(42).build();
     GoogleCredentials deserializedCredentials = serializeAndDeserialize(credentials);
     assertEquals(credentials, deserializedCredentials);
@@ -116,7 +122,8 @@ class CloudShellCredentialsTest extends BaseSerializationTest {
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
   }
 
-  @Test void toBuilder() {
+  @Test
+  void toBuilder() {
     CloudShellCredentials credentials =
         CloudShellCredentials.newBuilder()
             .setAuthPort(42)

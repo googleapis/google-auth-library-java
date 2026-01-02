@@ -157,7 +157,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     return createDefaultBuilderWithKey(privateKey);
   }
 
-  @Test void setLifetime() throws IOException {
+  @Test
+  void setLifetime() throws IOException {
     ServiceAccountCredentials.Builder builder = createDefaultBuilder();
     assertEquals(DEFAULT_LIFETIME_IN_SECONDS, builder.getLifetime());
     assertEquals(DEFAULT_LIFETIME_IN_SECONDS, builder.build().getLifetime());
@@ -170,7 +171,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(DEFAULT_LIFETIME_IN_SECONDS, builder.build().getLifetime());
   }
 
-  @Test void setLifetime_invalid_lifetime() throws IOException, IllegalStateException {
+  @Test
+  void setLifetime_invalid_lifetime() throws IOException, IllegalStateException {
     try {
       createDefaultBuilder().setLifetime(INVALID_LIFETIME).build();
       fail(
@@ -182,13 +184,15 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test void createWithCustomLifetime() throws IOException {
+  @Test
+  void createWithCustomLifetime() throws IOException {
     ServiceAccountCredentials credentials = createDefaultBuilder().build();
     credentials = credentials.createWithCustomLifetime(4000);
     assertEquals(4000, credentials.getLifetime());
   }
 
-  @Test void createdScoped_clones() throws IOException {
+  @Test
+  void createdScoped_clones() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     ServiceAccountCredentials credentials =
         createDefaultBuilderWithKey(privateKey)
@@ -213,7 +217,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
         SCOPES.toArray(), ((ServiceAccountCredentials) credentials).getScopes().toArray());
   }
 
-  @Test void createdDelegated_clones() throws IOException {
+  @Test
+  void createdDelegated_clones() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     ServiceAccountCredentials credentials =
         createDefaultBuilderWithKey(privateKey)
@@ -237,7 +242,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(USER, ((ServiceAccountCredentials) credentials).getServiceAccountUser());
   }
 
-  @Test void createAssertion_correct() throws IOException {
+  @Test
+  void createAssertion_correct() throws IOException {
     List<String> scopes = Arrays.asList("scope1", "scope2");
     ServiceAccountCredentials.Builder builder = createDefaultBuilderWithScopes(scopes);
     ServiceAccountCredentials credentials = builder.setServiceAccountUser(USER).build();
@@ -256,7 +262,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(Joiner.on(' ').join(scopes), payload.get("scope"));
   }
 
-  @Test void createAssertion_defaultScopes_correct() throws IOException {
+  @Test
+  void createAssertion_defaultScopes_correct() throws IOException {
     List<String> defaultScopes = Arrays.asList("scope1", "scope2");
     ServiceAccountCredentials.Builder builder = createDefaultBuilder();
     builder.setScopes(null, defaultScopes).setServiceAccountUser(USER);
@@ -278,7 +285,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(Joiner.on(' ').join(defaultScopes), payload.get("scope"));
   }
 
-  @Test void createAssertion_custom_lifetime() throws IOException {
+  @Test
+  void createAssertion_custom_lifetime() throws IOException {
     ServiceAccountCredentials credentials = createDefaultBuilder().setLifetime(4000).build();
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
@@ -290,7 +298,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(currentTimeMillis / 1000 + 4000, (long) payload.getExpirationTimeSeconds());
   }
 
-  @Test void createAssertionForIdToken_correct() throws IOException {
+  @Test
+  void createAssertionForIdToken_correct() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     ServiceAccountCredentials credentials =
         createDefaultBuilder()
@@ -313,7 +322,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(USER, payload.getSubject());
   }
 
-  @Test void createAssertionForIdToken_custom_lifetime() throws IOException {
+  @Test
+  void createAssertionForIdToken_custom_lifetime() throws IOException {
     ServiceAccountCredentials credentials = createDefaultBuilder().setLifetime(4000).build();
 
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
@@ -326,7 +336,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(currentTimeMillis / 1000 + 4000, (long) payload.getExpirationTimeSeconds());
   }
 
-  @Test void createAssertionForIdToken_incorrect() throws IOException {
+  @Test
+  void createAssertionForIdToken_incorrect() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.newBuilder()
@@ -353,7 +364,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(USER, payload.getSubject());
   }
 
-  @Test void createdScoped_withAud_noUniverse_jwtWithScopesDisabled_accessToken()
+  @Test
+  void createdScoped_withAud_noUniverse_jwtWithScopesDisabled_accessToken()
       throws IOException {
     GoogleCredentials credentials = createDefaultBuilderWithToken(ACCESS_TOKEN).build();
 
@@ -374,7 +386,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
-  @Test void createdScoped_withUniverse_selfSignedJwt() throws IOException {
+  @Test
+  void createdScoped_withUniverse_selfSignedJwt() throws IOException {
     ServiceAccountCredentials credentials =
         createDefaultBuilder().setUniverseDomain("foo.bar").build();
 
@@ -413,7 +426,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     verifyJwtAccess(metadata, "dummy.default.scope2");
   }
 
-  @Test void noScopes_withUniverse_selfSignedJwt() throws IOException {
+  @Test
+  void noScopes_withUniverse_selfSignedJwt() throws IOException {
     GoogleCredentials credentials = createDefaultBuilder().setUniverseDomain("foo.bar").build();
 
     try {
@@ -430,7 +444,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     verifyJwtAccess(metadata, null);
   }
 
-  @Test void createdScoped_defaultScopes() throws IOException {
+  @Test
+  void createdScoped_defaultScopes() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
 
     ServiceAccountCredentials credentials =
@@ -467,7 +482,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals("dummy.default.scope", credentials.getDefaultScopes().toArray()[0]);
   }
 
-  @Test void createScopedRequired_emptyScopes() throws IOException {
+  @Test
+  void createScopedRequired_emptyScopes() throws IOException {
     GoogleCredentials credentials =
         ServiceAccountCredentials.fromPkcs8(
             CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, EMPTY_SCOPES);
@@ -475,7 +491,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertTrue(credentials.createScopedRequired());
   }
 
-  @Test void createScopedRequired_nonEmptyScopes() throws IOException {
+  @Test
+  void createScopedRequired_nonEmptyScopes() throws IOException {
     GoogleCredentials credentials =
         ServiceAccountCredentials.fromPkcs8(
             CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, SCOPES);
@@ -483,7 +500,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertFalse(credentials.createScopedRequired());
   }
 
-  @Test void createScopedRequired_nonEmptyDefaultScopes() throws IOException {
+  @Test
+  void createScopedRequired_nonEmptyDefaultScopes() throws IOException {
     GoogleCredentials credentials =
         ServiceAccountCredentials.fromPkcs8(
             CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID, null, SCOPES);
@@ -491,7 +509,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertFalse(credentials.createScopedRequired());
   }
 
-  @Test void fromJSON_getProjectId() throws IOException {
+  @Test
+  void fromJSON_getProjectId() throws IOException {
     GenericJson json = writeServiceAccountJson(PROJECT_ID, null, null);
 
     ServiceAccountCredentials credentials =
@@ -500,7 +519,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
-  @Test void fromJSON_Universe_getUniverseDomain() throws IOException {
+  @Test
+  void fromJSON_Universe_getUniverseDomain() throws IOException {
     GenericJson json = writeServiceAccountJson(PROJECT_ID, null, "foo.bar");
 
     ServiceAccountCredentials credentials =
@@ -508,7 +528,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals("foo.bar", credentials.getUniverseDomain());
   }
 
-  @Test void fromJSON_getProjectIdNull() throws IOException {
+  @Test
+  void fromJSON_getProjectIdNull() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
     GenericJson json = writeServiceAccountJson(null, null, null);
@@ -518,7 +539,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertNull(credentials.getProjectId());
   }
 
-  @Test void fromJSON_hasAccessToken() throws IOException {
+  @Test
+  void fromJSON_hasAccessToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
     GenericJson json = writeServiceAccountJson(PROJECT_ID, null, null);
@@ -530,7 +552,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
-  @Test void fromJSON_withUniverse_selfSignedJwt() throws IOException {
+  @Test
+  void fromJSON_withUniverse_selfSignedJwt() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
     GenericJson json = writeServiceAccountJson(PROJECT_ID, null, "foo.bar");
@@ -542,7 +565,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     verifyJwtAccess(metadata, "dummy.scope");
   }
 
-  @Test void fromJSON_tokenServerUri() throws IOException {
+  @Test
+  void fromJSON_tokenServerUri() throws IOException {
     final String tokenServerUri = "https://foo.com/bar";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
@@ -553,7 +577,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(URI.create(tokenServerUri), credentials.getTokenServerUri());
   }
 
-  @Test void fromJson_hasQuotaProjectId() throws IOException {
+  @Test
+  void fromJson_hasQuotaProjectId() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
     GenericJson json = writeServiceAccountJson(PROJECT_ID, QUOTA_PROJECT, null);
@@ -568,14 +593,16 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
         Collections.singletonList(QUOTA_PROJECT));
   }
 
-  @Test void getRequestMetadata_hasAccessToken() throws IOException {
+  @Test
+  void getRequestMetadata_hasAccessToken() throws IOException {
     GoogleCredentials credentials =
         createDefaultBuilderWithToken(ACCESS_TOKEN).setScopes(SCOPES).build();
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
-  @Test void getRequestMetadata_customTokenServer_hasAccessToken() throws IOException {
+  @Test
+  void getRequestMetadata_customTokenServer_hasAccessToken() throws IOException {
     final URI TOKEN_SERVER = URI.create("https://foo.com/bar");
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
@@ -596,12 +623,14 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     com.google.auth.oauth2.TestUtils.validateMetricsHeader(accessTokenRequestHeader, "at", "sa");
   }
 
-  @Test void getUniverseDomain_defaultUniverse() throws IOException {
+  @Test
+  void getUniverseDomain_defaultUniverse() throws IOException {
     ServiceAccountCredentials credentials = createDefaultBuilder().build();
     assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
-  @Test void refreshAccessToken_refreshesToken() throws IOException {
+  @Test
+  void refreshAccessToken_refreshesToken() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -616,7 +645,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken2);
   }
 
-  @Test void refreshAccessToken_tokenExpiry() throws IOException {
+  @Test
+  void refreshAccessToken_tokenExpiry() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
     transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
@@ -635,7 +665,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(3600 * 1000 * 1000L, accessToken.getExpirationTimeMillis().longValue());
   }
 
-  @Test void refreshAccessToken_IOException_Retry() throws IOException {
+  @Test
+  void refreshAccessToken_IOException_Retry() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -653,7 +684,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken2);
   }
 
-  @Test void refreshAccessToken_retriesServerErrors() throws IOException {
+  @Test
+  void refreshAccessToken_retriesServerErrors() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -672,7 +704,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken2);
   }
 
-  @Test void refreshAccessToken_retriesTimeoutAndThrottled() throws IOException {
+  @Test
+  void refreshAccessToken_retriesTimeoutAndThrottled() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -691,7 +724,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken2);
   }
 
-  @Test void refreshAccessToken_defaultRetriesDisabled() throws IOException {
+  @Test
+  void refreshAccessToken_defaultRetriesDisabled() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -721,7 +755,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test void refreshAccessToken_maxRetries_maxDelay() throws IOException {
+  @Test
+  void refreshAccessToken_maxRetries_maxDelay() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
     ServiceAccountCredentials credentials =
@@ -753,7 +788,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test void refreshAccessToken_RequestFailure_retried() throws IOException {
+  @Test
+  void refreshAccessToken_RequestFailure_retried() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
     ServiceAccountCredentials credentials =
@@ -786,7 +822,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test void refreshAccessToken_4xx_5xx_NonRetryableFails() throws IOException {
+  @Test
+  void refreshAccessToken_4xx_5xx_NonRetryableFails() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -815,7 +852,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test void idTokenWithAudience_oauthFlow_targetAudienceMatchesAudClaim() throws IOException {
+  @Test
+  void idTokenWithAudience_oauthFlow_targetAudienceMatchesAudClaim() throws IOException {
     String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
@@ -851,7 +889,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     com.google.auth.oauth2.TestUtils.validateMetricsHeader(idTokenRequestHeader, "it", "sa");
   }
 
-  @Test void idTokenWithAudience_oauthFlow_targetAudienceDoesNotMatchAudClaim()
+  @Test
+  void idTokenWithAudience_oauthFlow_targetAudienceDoesNotMatchAudClaim()
       throws IOException {
     String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -876,7 +915,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
         tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
   }
 
-  @Test void idTokenWithAudience_iamFlow_targetAudienceMatchesAudClaim() throws IOException {
+  @Test
+  void idTokenWithAudience_iamFlow_targetAudienceMatchesAudClaim() throws IOException {
     String nonGDU = "test.com";
     MockIAMCredentialsServiceTransportFactory transportFactory =
         new MockIAMCredentialsServiceTransportFactory(nonGDU);
@@ -906,7 +946,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
         tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
   }
 
-  @Test void idTokenWithAudience_iamFlow_targetAudienceDoesNotMatchAudClaim() throws IOException {
+  @Test
+  void idTokenWithAudience_iamFlow_targetAudienceDoesNotMatchAudClaim() throws IOException {
     String nonGDU = "test.com";
     MockIAMCredentialsServiceTransportFactory transportFactory =
         new MockIAMCredentialsServiceTransportFactory(nonGDU);
@@ -934,7 +975,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
         tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
   }
 
-  @Test void idTokenWithAudience_oauthEndpoint_non2XXStatusCode() throws IOException {
+  @Test
+  void idTokenWithAudience_oauthEndpoint_non2XXStatusCode() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.setError(new IOException("404 Not Found"));
     ServiceAccountCredentials credentials =
@@ -951,7 +993,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertThrows(IOException.class, tokenCredential::refresh);
   }
 
-  @Test void idTokenWithAudience_iamEndpoint_non2XXStatusCode() throws IOException {
+  @Test
+  void idTokenWithAudience_iamEndpoint_non2XXStatusCode() throws IOException {
     String universeDomain = "test.com";
     MockIAMCredentialsServiceTransportFactory transportFactory =
         new MockIAMCredentialsServiceTransportFactory(universeDomain);
@@ -979,7 +1022,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertThrows(IOException.class, tokenCredential::refresh);
   }
 
-  @Test void getScopes_nullReturnsEmpty() throws IOException {
+  @Test
+  void getScopes_nullReturnsEmpty() throws IOException {
     ServiceAccountCredentials credentials = createDefaultBuilder().build();
     Collection<String> scopes = credentials.getScopes();
 
@@ -987,12 +1031,14 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertTrue(scopes.isEmpty());
   }
 
-  @Test void getAccount_sameAs() throws IOException {
+  @Test
+  void getAccount_sameAs() throws IOException {
     ServiceAccountCredentials credentials = createDefaultBuilder().build();
     assertEquals(CLIENT_EMAIL, credentials.getAccount());
   }
 
-  @Test void sign_sameAs()
+  @Test
+  void sign_sameAs()
       throws IOException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
     byte[] toSign = {0xD, 0xE, 0xA, 0xD};
     ServiceAccountCredentials credentials = createDefaultBuilder().build();
@@ -1005,7 +1051,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertArrayEquals(signature.sign(), signedBytes);
   }
 
-  @Test void equals_true() throws IOException {
+  @Test
+  void equals_true() throws IOException {
     final URI tokenServer = URI.create("https://foo.com/bar");
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     OAuth2Credentials credentials =
@@ -1030,7 +1077,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertTrue(otherCredentials.equals(credentials));
   }
 
-  @Test void equals_false_clientId() throws IOException {
+  @Test
+  void equals_false_clientId() throws IOException {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
     MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
     OAuth2Credentials credentials =
@@ -1055,7 +1103,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertFalse(otherCredentials.equals(credentials));
   }
 
-  @Test void equals_false_email() throws IOException {
+  @Test
+  void equals_false_email() throws IOException {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
     MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
     OAuth2Credentials credentials =
@@ -1080,7 +1129,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertFalse(otherCredentials.equals(credentials));
   }
 
-  @Test void equals_false_super() throws IOException {
+  @Test
+  void equals_false_super() throws IOException {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
     MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
     OAuth2Credentials credentials =
@@ -1108,7 +1158,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertFalse(otherCredentials.equals(credentials));
   }
 
-  @Test void equals_false_keyId() throws IOException {
+  @Test
+  void equals_false_keyId() throws IOException {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
     MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
     OAuth2Credentials credentials =
@@ -1133,7 +1184,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertFalse(otherCredentials.equals(credentials));
   }
 
-  @Test void equals_false_scopes() throws IOException {
+  @Test
+  void equals_false_scopes() throws IOException {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
     MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
     OAuth2Credentials credentials =
@@ -1158,7 +1210,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertFalse(otherCredentials.equals(credentials));
   }
 
-  @Test void equals_false_transportFactory() throws IOException {
+  @Test
+  void equals_false_transportFactory() throws IOException {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
     MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
     MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
@@ -1184,7 +1237,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertFalse(otherCredentials.equals(credentials));
   }
 
-  @Test void equals_false_tokenServer() throws IOException {
+  @Test
+  void equals_false_tokenServer() throws IOException {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
     final URI tokenServer2 = URI.create("https://foo2.com/bar");
     MockTokenServerTransportFactory serverTransportFactory = new MockTokenServerTransportFactory();
@@ -1210,7 +1264,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertFalse(otherCredentials.equals(credentials));
   }
 
-  @Test void toString_containsFields() throws IOException {
+  @Test
+  void toString_containsFields() throws IOException {
     final URI tokenServer = URI.create("https://foo.com/bar");
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
 
@@ -1244,7 +1299,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(expectedToString, credentials.toString());
   }
 
-  @Test void hashCode_equals() throws IOException {
+  @Test
+  void hashCode_equals() throws IOException {
     final URI tokenServer = URI.create("https://foo.com/bar");
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     OAuth2Credentials credentials =
@@ -1276,7 +1332,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(credentials.hashCode(), otherCredentials.hashCode());
   }
 
-  @Test void hashCode_not_equals_quota() throws IOException {
+  @Test
+  void hashCode_not_equals_quota() throws IOException {
     final URI tokenServer = URI.create("https://foo.com/bar");
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     OAuth2Credentials credentials =
@@ -1301,7 +1358,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertNotEquals(credentials.hashCode(), otherCredentials.hashCode());
   }
 
-  @Test void serialize() throws IOException, ClassNotFoundException {
+  @Test
+  void serialize() throws IOException, ClassNotFoundException {
     final URI tokenServer = URI.create("https://foo.com/bar");
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     ServiceAccountCredentials credentials =
@@ -1329,7 +1387,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
         deserializedCredentials.toBuilder().getHttpTransportFactory().getClass());
   }
 
-  @Test void fromStream_nullTransport_throws() throws IOException {
+  @Test
+  void fromStream_nullTransport_throws() throws IOException {
     InputStream stream = new ByteArrayInputStream("foo".getBytes());
     try {
       ServiceAccountCredentials.fromStream(stream, null);
@@ -1339,7 +1398,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test void fromStream_nullStream_throws() throws IOException {
+  @Test
+  void fromStream_nullStream_throws() throws IOException {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     try {
       ServiceAccountCredentials.fromStream(null, transportFactory);
@@ -1349,7 +1409,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test void fromStream_providesToken() throws IOException {
+  @Test
+  void fromStream_providesToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
     InputStream serviceAccountStream =
@@ -1364,21 +1425,24 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
-  @Test void fromStream_noClientId_throws() throws IOException {
+  @Test
+  void fromStream_noClientId_throws() throws IOException {
     InputStream serviceAccountStream =
         writeServiceAccountStream(null, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID);
 
     testFromStreamException(serviceAccountStream, "client_id");
   }
 
-  @Test void fromStream_noClientEmail_throws() throws IOException {
+  @Test
+  void fromStream_noClientEmail_throws() throws IOException {
     InputStream serviceAccountStream =
         writeServiceAccountStream(CLIENT_ID, null, PRIVATE_KEY_PKCS8, PRIVATE_KEY_ID);
 
     testFromStreamException(serviceAccountStream, "client_email");
   }
 
-  @Test void getIdTokenWithAudience_badEmailError_issClaimTraced() throws IOException {
+  @Test
+  void getIdTokenWithAudience_badEmailError_issClaimTraced() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;
     transport.setError(new IOException("Invalid grant: Account not found"));
@@ -1402,21 +1466,24 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test void fromStream_noPrivateKey_throws() throws IOException {
+  @Test
+  void fromStream_noPrivateKey_throws() throws IOException {
     InputStream serviceAccountStream =
         writeServiceAccountStream(CLIENT_ID, CLIENT_EMAIL, null, PRIVATE_KEY_ID);
 
     testFromStreamException(serviceAccountStream, "private_key");
   }
 
-  @Test void fromStream_noPrivateKeyId_throws() throws IOException {
+  @Test
+  void fromStream_noPrivateKeyId_throws() throws IOException {
     InputStream serviceAccountStream =
         writeServiceAccountStream(CLIENT_ID, CLIENT_EMAIL, PRIVATE_KEY_PKCS8, null);
 
     testFromStreamException(serviceAccountStream, "private_key_id");
   }
 
-  @Test void getUriForSelfSignedJWT() {
+  @Test
+  void getUriForSelfSignedJWT() {
     assertNull(ServiceAccountCredentials.getUriForSelfSignedJWT(null));
 
     URI uri = URI.create("https://compute.googleapis.com/compute/v1/projects/");
@@ -1424,19 +1491,22 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals(expected, ServiceAccountCredentials.getUriForSelfSignedJWT(uri));
   }
 
-  @Test void getUriForSelfSignedJWT_noHost() {
+  @Test
+  void getUriForSelfSignedJWT_noHost() {
     URI uri = URI.create("file:foo");
     URI expected = URI.create("file:foo");
     assertEquals(expected, ServiceAccountCredentials.getUriForSelfSignedJWT(uri));
   }
 
-  @Test void getUriForSelfSignedJWT_forStaticAudience_returnsURI() {
+  @Test
+  void getUriForSelfSignedJWT_forStaticAudience_returnsURI() {
     URI uri = URI.create("compute.googleapis.com");
     URI expected = URI.create("compute.googleapis.com");
     assertEquals(expected, ServiceAccountCredentials.getUriForSelfSignedJWT(uri));
   }
 
-  @Test void getRequestMetadata_setsQuotaProjectId() throws IOException {
+  @Test
+  void getRequestMetadata_setsQuotaProjectId() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, "unused-client-secret");
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
@@ -1462,7 +1532,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertEquals("my-quota-project-id", headerValues.get(0));
   }
 
-  @Test void getRequestMetadata_noQuotaProjectId() throws IOException {
+  @Test
+  void getRequestMetadata_noQuotaProjectId() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, "unused-client-secret");
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
@@ -1484,7 +1555,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertFalse(metadata.containsKey("x-goog-user-project"));
   }
 
-  @Test void getRequestMetadata_withCallback() throws IOException {
+  @Test
+  void getRequestMetadata_withCallback() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, "unused-client-secret");
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
@@ -1523,7 +1595,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertTrue(success.get(), "Should have run onSuccess() callback");
   }
 
-  @Test void getRequestMetadata_withScopes_withUniverseDomain_SelfSignedJwt() throws IOException {
+  @Test
+  void getRequestMetadata_withScopes_withUniverseDomain_SelfSignedJwt() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, "unused-client-secret");
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);
@@ -1562,7 +1635,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertTrue(success.get(), "Should have run onSuccess() callback");
   }
 
-  @Test void getRequestMetadata_withScopes_selfSignedJWT() throws IOException {
+  @Test
+  void getRequestMetadata_withScopes_selfSignedJWT() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials =
         ServiceAccountCredentials.newBuilder()
@@ -1587,7 +1661,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
         credentials.getMetricsCredentialType());
   }
 
-  @Test void refreshAccessToken_withDomainDelegation_selfSignedJWT_disabled() throws IOException {
+  @Test
+  void refreshAccessToken_withDomainDelegation_selfSignedJWT_disabled() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -1622,7 +1697,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     TestUtils.assertContainsBearerToken(credentials.getRequestMetadata(CALL_URI), accessToken2);
   }
 
-  @Test void getRequestMetadata_withAudience_selfSignedJWT() throws IOException {
+  @Test
+  void getRequestMetadata_withAudience_selfSignedJWT() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials =
         ServiceAccountCredentials.newBuilder()
@@ -1639,7 +1715,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     verifyJwtAccess(metadata, null);
   }
 
-  @Test void getRequestMetadata_withDefaultScopes_selfSignedJWT() throws IOException {
+  @Test
+  void getRequestMetadata_withDefaultScopes_selfSignedJWT() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials =
         ServiceAccountCredentials.newBuilder()
@@ -1657,7 +1734,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     verifyJwtAccess(metadata, "dummy.scope");
   }
 
-  @Test void getRequestMetadataWithCallback_selfSignedJWT() throws IOException {
+  @Test
+  void getRequestMetadataWithCallback_selfSignedJWT() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     GoogleCredentials credentials =
         ServiceAccountCredentials.newBuilder()
@@ -1696,7 +1774,8 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     assertTrue(success.get(), "Should have run onSuccess() callback");
   }
 
-  @Test void createScopes_existingAccessTokenInvalidated() throws IOException {
+  @Test
+  void createScopes_existingAccessTokenInvalidated() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8);
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(CLIENT_EMAIL, ACCESS_TOKEN);

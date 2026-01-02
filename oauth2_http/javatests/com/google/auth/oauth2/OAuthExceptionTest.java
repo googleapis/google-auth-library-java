@@ -45,7 +45,8 @@ final class OAuthExceptionTest {
   private static final String ERROR_DESCRIPTION_FORMAT = "Error code %s: %s";
   private static final String BASE_MESSAGE_FORMAT = "Error code %s";
 
-  @Test void getMessage_fullFormat() {
+  @Test
+  void getMessage_fullFormat() {
     OAuthException e = new OAuthException("errorCode", "errorDescription", "errorUri");
 
     assertEquals("errorCode", e.getErrorCode());
@@ -57,7 +58,8 @@ final class OAuthExceptionTest {
     assertEquals(expectedMessage, e.getMessage());
   }
 
-  @Test void getMessage_descriptionFormat() {
+  @Test
+  void getMessage_descriptionFormat() {
     OAuthException e = new OAuthException("errorCode", "errorDescription", /* errorUri= */ null);
 
     assertEquals("errorCode", e.getErrorCode());
@@ -69,7 +71,8 @@ final class OAuthExceptionTest {
     assertEquals(expectedMessage, e.getMessage());
   }
 
-  @Test void getMessage_baseFormat() {
+  @Test
+  void getMessage_baseFormat() {
     OAuthException e =
         new OAuthException("errorCode", /* errorDescription= */ null, /* errorUri= */ null);
 
@@ -81,7 +84,8 @@ final class OAuthExceptionTest {
     assertEquals(expectedMessage, e.getMessage());
   }
 
-  @Test void createFromHttpResponseException() throws IOException {
+  @Test
+  void createFromHttpResponseException() throws IOException {
     OAuthException e =
         OAuthException.createFromHttpResponseException(
             TestUtils.buildHttpResponseException("errorCode", "errorDescription", "errorUri"));
@@ -95,7 +99,8 @@ final class OAuthExceptionTest {
     assertEquals(expectedMessage, e.getMessage());
   }
 
-  @Test void createFromHttpResponseException_descriptionFormat() throws IOException {
+  @Test
+  void createFromHttpResponseException_descriptionFormat() throws IOException {
     OAuthException e =
         OAuthException.createFromHttpResponseException(
             TestUtils.buildHttpResponseException(
@@ -110,7 +115,8 @@ final class OAuthExceptionTest {
     assertEquals(expectedMessage, e.getMessage());
   }
 
-  @Test void createFromHttpResponseException_baseFormat() throws IOException {
+  @Test
+  void createFromHttpResponseException_baseFormat() throws IOException {
     OAuthException e =
         OAuthException.createFromHttpResponseException(
             TestUtils.buildHttpResponseException(

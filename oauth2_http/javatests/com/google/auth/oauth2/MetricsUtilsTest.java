@@ -55,12 +55,14 @@ class MetricsUtilsTest {
     assertTrue(pattern.matcher(contentToTest).matches());
   }
 
-  @Test void getLanguageAndAuthLibraryVersionsTest() {
+  @Test
+  void getLanguageAndAuthLibraryVersionsTest() {
     String version = MetricsUtils.getLanguageAndAuthLibraryVersions();
     assertPatterns(version, VERSION_PATTERN);
   }
 
-  @Test void getGoogleCredentialsMetricsHeaderTest() {
+  @Test
+  void getGoogleCredentialsMetricsHeaderTest() {
     String metricsStringNoRequestType =
         MetricsUtils.getGoogleCredentialsMetricsHeader(
             RequestType.UNTRACKED, CredentialTypeForMetrics.USER_CREDENTIALS);

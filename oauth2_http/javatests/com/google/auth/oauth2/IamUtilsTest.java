@@ -60,7 +60,8 @@ class IamUtilsTest {
     Mockito.when(credentials.getUniverseDomain()).thenReturn("googleapis.com");
   }
 
-  @Test void sign_success_noRetry() {
+  @Test
+  void sign_success_noRetry() {
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
     MockIAMCredentialsServiceTransportFactory transportFactory =
@@ -85,7 +86,8 @@ class IamUtilsTest {
   // The SignBlob RPC will retry up to three times before it gives up. This test will return two
   // 5xx status codes before returning a success. This test covers the cases where the number of
   // retry attempts is below the configured retry attempt count bounds (3 attempts).
-  @Test void sign_retryTwoTimes_success() {
+  @Test
+  void sign_retryTwoTimes_success() {
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
     MockIAMCredentialsServiceTransportFactory transportFactory =
@@ -118,7 +120,8 @@ class IamUtilsTest {
   // The rpc will retry up to three times before it gives up. This test will enqueue three failed
   // status codes + messages before returning a success. After the third retry attempt, the request
   // will try one last time and the result will be reported back to the user.
-  @Test void sign_retryThreeTimes_success() {
+  @Test
+  void sign_retryThreeTimes_success() {
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
     MockIAMCredentialsServiceTransportFactory transportFactory =
@@ -154,7 +157,8 @@ class IamUtilsTest {
   // The rpc will retry up to three times before it gives up. This test will enqueue four failed
   // status codes + messages before returning a success. After the third retry attempt, the request
   // will try one last time and the result will be reported back to the user.
-  @Test void sign_retryThreeTimes_exception() {
+  @Test
+  void sign_retryThreeTimes_exception() {
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
     MockIAMCredentialsServiceTransportFactory transportFactory =
@@ -198,7 +202,8 @@ class IamUtilsTest {
     assertEquals(4, transportFactory.getTransport().getNumRequests());
   }
 
-  @Test void sign_4xxError_noRetry_exception() {
+  @Test
+  void sign_4xxError_noRetry_exception() {
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
     MockIAMCredentialsServiceTransportFactory transportFactory =

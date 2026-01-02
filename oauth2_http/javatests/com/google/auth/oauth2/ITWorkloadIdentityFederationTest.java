@@ -90,7 +90,8 @@ final class ITWorkloadIdentityFederationTest {
    * exchanged for a GCP access token via GCP STS endpoint and then to impersonate the original
    * service account key. Retrieves the OIDC token from a file.
    */
-  @Test void identityPoolCredentials() throws IOException {
+  @Test
+  void identityPoolCredentials() throws IOException {
     IdentityPoolCredentials identityPoolCredentials =
         (IdentityPoolCredentials)
             ExternalAccountCredentials.fromJson(
@@ -108,7 +109,8 @@ final class ITWorkloadIdentityFederationTest {
    * exchanged for a GCP access token via GCP STS endpoint and then to impersonate the original
    * service account key.
    */
-  @Test void awsCredentials() throws Exception {
+  @Test
+  void awsCredentials() throws Exception {
     String idToken = generateGoogleIdToken(AWS_AUDIENCE);
 
     String url =
@@ -158,7 +160,8 @@ final class ITWorkloadIdentityFederationTest {
    * the external subject token to be exchanged for a GCP access token via GCP STS endpoint and then
    * to impersonate the original service account key.
    */
-  @Test void awsCredentials_withProgrammaticAuth() throws Exception {
+  @Test
+  void awsCredentials_withProgrammaticAuth() throws Exception {
     String idToken = generateGoogleIdToken(AWS_AUDIENCE);
 
     String url =
@@ -208,7 +211,8 @@ final class ITWorkloadIdentityFederationTest {
    * exchanged for a GCP access token via GCP STS endpoint and then to impersonate the original
    * service account key. Runs an executable to get the OIDC token.
    */
-  @Test void pluggableAuthCredentials() throws IOException {
+  @Test
+  void pluggableAuthCredentials() throws IOException {
     PluggableAuthCredentials pluggableAuthCredentials =
         (PluggableAuthCredentials)
             ExternalAccountCredentials.fromJson(
@@ -221,7 +225,8 @@ final class ITWorkloadIdentityFederationTest {
    * Sets the service account impersonation object in configuration JSON with a non-default value
    * for token_lifetime_seconds and validates that the lifetime is used for the access token.
    */
-  @Test void identityPoolCredentials_withServiceAccountImpersonationOptions() throws IOException {
+  @Test
+  void identityPoolCredentials_withServiceAccountImpersonationOptions() throws IOException {
     GenericJson identityPoolCredentialConfig = buildIdentityPoolCredentialConfig();
     Map<String, Object> map = new HashMap<String, Object>();
     map.put("token_lifetime_seconds", 2800);
@@ -247,7 +252,8 @@ final class ITWorkloadIdentityFederationTest {
    * service account key. Retrieves the OIDC token from a Supplier that returns the subject token
    * when get() is called.
    */
-  @Test void identityPoolCredentials_withProgrammaticAuth() throws IOException {
+  @Test
+  void identityPoolCredentials_withProgrammaticAuth() throws IOException {
 
     IdentityPoolSubjectTokenSupplier tokenSupplier =
         (ExternalAccountSupplierContext context) -> {

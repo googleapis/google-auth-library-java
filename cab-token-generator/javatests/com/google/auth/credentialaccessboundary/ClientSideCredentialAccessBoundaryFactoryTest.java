@@ -114,7 +114,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
         "service-account@google.com", "accessToken");
   }
 
-  @Test void fetchIntermediateCredentials() throws Exception {
+  @Test
+  void fetchIntermediateCredentials() throws Exception {
     GoogleCredentials sourceCredentials =
         getServiceAccountSourceCredentials(mockTokenServerTransportFactory);
 
@@ -142,7 +143,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
         intermediateCredentials.getIntermediateAccessToken().getTokenValue());
   }
 
-  @Test void fetchIntermediateCredentials_withCustomUniverseDomain() throws IOException {
+  @Test
+  void fetchIntermediateCredentials_withCustomUniverseDomain() throws IOException {
     String universeDomain = "foobar";
     GoogleCredentials sourceCredentials =
         getServiceAccountSourceCredentials(mockTokenServerTransportFactory).toBuilder()
@@ -163,7 +165,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
     assertEquals(url, String.format(TOKEN_EXCHANGE_URL_FORMAT, universeDomain));
   }
 
-  @Test void fetchIntermediateCredentials_sourceCredentialCannotRefresh_throwsIOException()
+  @Test
+  void fetchIntermediateCredentials_sourceCredentialCannotRefresh_throwsIOException()
       throws Exception {
     // Simulate error when refreshing the source credential.
     mockTokenServerTransportFactory.transport.setError(new IOException());
@@ -181,7 +184,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
     assertEquals("Unable to refresh the provided source credential.", thrown.getMessage());
   }
 
-  @Test void fetchIntermediateCredentials_noExpiresInReturned_copiesSourceExpiration()
+  @Test
+  void fetchIntermediateCredentials_noExpiresInReturned_copiesSourceExpiration()
       throws Exception {
     // Simulate STS not returning expires_in.
     mockStsTransportFactory.transport.setReturnExpiresIn(false);
@@ -209,7 +213,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
         sourceAccessToken.getExpirationTime(), intermediateAccessToken.getExpirationTime());
   }
 
-  @Test void refreshCredentialsIfRequired_firstCallWillFetchIntermediateCredentials()
+  @Test
+  void refreshCredentialsIfRequired_firstCallWillFetchIntermediateCredentials()
       throws IOException {
     GoogleCredentials sourceCredentials =
         getServiceAccountSourceCredentials(mockTokenServerTransportFactory);
@@ -228,7 +233,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
     assertEquals(1, mockStsTransportFactory.transport.getRequestCount());
   }
 
-  @Test void refreshCredentialsIfRequired_noRefreshNeeded() throws IOException {
+  @Test
+  void refreshCredentialsIfRequired_noRefreshNeeded() throws IOException {
     final ClientSideCredentialAccessBoundaryFactory factory =
         getClientSideCredentialAccessBoundaryFactory(RefreshType.NONE);
 
@@ -243,7 +249,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
     assertEquals(1, mockStsTransportFactory.transport.getRequestCount());
   }
 
-  @Test void refreshCredentialsIfRequired_blockingSingleThread() throws IOException {
+  @Test
+  void refreshCredentialsIfRequired_blockingSingleThread() throws IOException {
     final ClientSideCredentialAccessBoundaryFactory factory =
         getClientSideCredentialAccessBoundaryFactory(RefreshType.BLOCKING);
 
@@ -264,7 +271,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
     assertEquals(1 + numRefresh, mockStsTransportFactory.transport.getRequestCount());
   }
 
-  @Test void refreshCredentialsIfRequired_asyncSingleThread() throws IOException {
+  @Test
+  void refreshCredentialsIfRequired_asyncSingleThread() throws IOException {
     final ClientSideCredentialAccessBoundaryFactory factory =
         getClientSideCredentialAccessBoundaryFactory(RefreshType.ASYNC);
 
@@ -298,7 +306,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
     assertEquals(2, mockStsTransportFactory.transport.getRequestCount());
   }
 
-  @Test void refreshCredentialsIfRequired_blockingMultiThread()
+  @Test
+  void refreshCredentialsIfRequired_blockingMultiThread()
       throws IOException, InterruptedException {
     final ClientSideCredentialAccessBoundaryFactory factory =
         getClientSideCredentialAccessBoundaryFactory(RefreshType.BLOCKING);
@@ -318,7 +327,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
     assertEquals(2, mockStsTransportFactory.transport.getRequestCount());
   }
 
-  @Test void refreshCredentialsIfRequired_asyncMultiThread()
+  @Test
+  void refreshCredentialsIfRequired_asyncMultiThread()
       throws IOException, InterruptedException {
     final ClientSideCredentialAccessBoundaryFactory factory =
         getClientSideCredentialAccessBoundaryFactory(RefreshType.ASYNC);
@@ -345,7 +355,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
     assertEquals(2, mockStsTransportFactory.transport.getRequestCount());
   }
 
-  @Test void refreshCredentialsIfRequired_sourceCredentialCannotRefresh_throwsIOException()
+  @Test
+  void refreshCredentialsIfRequired_sourceCredentialCannotRefresh_throwsIOException()
       throws Exception {
     // Simulate error when refreshing the source credential.
     mockTokenServerTransportFactory.transport.setError(new IOException());
@@ -364,7 +375,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
   }
 
   // Tests related to the builder methods.
-  @Test void builder_noSourceCredential_throws() {
+  @Test
+  void builder_noSourceCredential_throws() {
     NullPointerException exception =
         assertThrows(
             NullPointerException.class,
@@ -375,7 +387,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
     assertEquals("Source credential must not be null.", exception.getMessage());
   }
 
-  @Test void builder_minimumTokenLifetime_negative_throws() throws IOException {
+  @Test
+  void builder_minimumTokenLifetime_negative_throws() throws IOException {
     GoogleCredentials sourceCredentials =
         getServiceAccountSourceCredentials(mockTokenServerTransportFactory);
     IllegalArgumentException exception =
@@ -389,7 +402,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
     assertEquals("Minimum token lifetime must be greater than zero.", exception.getMessage());
   }
 
-  @Test void builder_minimumTokenLifetime_zero_throws() throws IOException {
+  @Test
+  void builder_minimumTokenLifetime_zero_throws() throws IOException {
     GoogleCredentials sourceCredentials =
         getServiceAccountSourceCredentials(mockTokenServerTransportFactory);
     IllegalArgumentException exception =
@@ -403,7 +417,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
     assertEquals("Minimum token lifetime must be greater than zero.", exception.getMessage());
   }
 
-  @Test void builder_refreshMargin_negative_throws() throws IOException {
+  @Test
+  void builder_refreshMargin_negative_throws() throws IOException {
     GoogleCredentials sourceCredentials =
         getServiceAccountSourceCredentials(mockTokenServerTransportFactory);
     IllegalArgumentException exception =
@@ -417,7 +432,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
     assertEquals("Refresh margin must be greater than zero.", exception.getMessage());
   }
 
-  @Test void builder_refreshMargin_zero_throws() throws IOException {
+  @Test
+  void builder_refreshMargin_zero_throws() throws IOException {
     GoogleCredentials sourceCredentials =
         getServiceAccountSourceCredentials(mockTokenServerTransportFactory);
     IllegalArgumentException exception =
@@ -431,7 +447,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
     assertEquals("Refresh margin must be greater than zero.", exception.getMessage());
   }
 
-  @Test void builder_setsCorrectDefaultValues() throws IOException {
+  @Test
+  void builder_setsCorrectDefaultValues() throws IOException {
     GoogleCredentials sourceCredentials =
         getServiceAccountSourceCredentials(mockTokenServerTransportFactory);
     ClientSideCredentialAccessBoundaryFactory factory =
@@ -445,7 +462,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
         factory.getTokenExchangeEndpoint());
   }
 
-  @Test void builder_universeDomainMismatch_throws() throws IOException {
+  @Test
+  void builder_universeDomainMismatch_throws() throws IOException {
     GoogleCredentials sourceCredentials =
         getServiceAccountSourceCredentials(mockTokenServerTransportFactory);
 
@@ -462,7 +480,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
         exception.getMessage());
   }
 
-  @Test void builder_invalidRefreshMarginAndMinimumTokenLifetime_throws() throws IOException {
+  @Test
+  void builder_invalidRefreshMarginAndMinimumTokenLifetime_throws() throws IOException {
     GoogleCredentials sourceCredentials =
         getServiceAccountSourceCredentials(mockTokenServerTransportFactory);
 
@@ -481,7 +500,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
         exception.getMessage());
   }
 
-  @Test void builder_invalidRefreshMargin_throws() throws IOException {
+  @Test
+  void builder_invalidRefreshMargin_throws() throws IOException {
     GoogleCredentials sourceCredentials =
         getServiceAccountSourceCredentials(mockTokenServerTransportFactory);
 
@@ -499,7 +519,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
         exception.getMessage());
   }
 
-  @Test void builder_invalidMinimumTokenLifetime_throws() throws IOException {
+  @Test
+  void builder_invalidMinimumTokenLifetime_throws() throws IOException {
     GoogleCredentials sourceCredentials =
         getServiceAccountSourceCredentials(mockTokenServerTransportFactory);
 
@@ -517,7 +538,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
         exception.getMessage());
   }
 
-  @Test void builder_minimumTokenLifetimeNotSet_usesDefault() throws IOException {
+  @Test
+  void builder_minimumTokenLifetimeNotSet_usesDefault() throws IOException {
     GoogleCredentials sourceCredentials =
         getServiceAccountSourceCredentials(mockTokenServerTransportFactory);
 
@@ -532,7 +554,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
         factory.getMinimumTokenLifetime());
   }
 
-  @Test void builder_refreshMarginNotSet_usesDefault() throws IOException {
+  @Test
+  void builder_refreshMarginNotSet_usesDefault() throws IOException {
     GoogleCredentials sourceCredentials =
         getServiceAccountSourceCredentials(mockTokenServerTransportFactory);
 
@@ -684,7 +707,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
     return ClientSideAccessBoundary.parseFrom(rawRestrictions);
   }
 
-  @Test void generateToken_withAvailablityCondition_success() throws Exception {
+  @Test
+  void generateToken_withAvailablityCondition_success() throws Exception {
     MockStsTransportFactory transportFactory = new MockStsTransportFactory();
     transportFactory.transport.setReturnAccessBoundarySessionKey(true);
 
@@ -743,7 +767,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
     assertEquals("b", expr.getCallExpr().getArgs(1).getIdentExpr().getName());
   }
 
-  @Test void generateToken_withoutAvailabilityCondition_success() throws Exception {
+  @Test
+  void generateToken_withoutAvailabilityCondition_success() throws Exception {
     MockStsTransportFactory transportFactory = new MockStsTransportFactory();
     transportFactory.transport.setReturnAccessBoundarySessionKey(true);
 
@@ -794,7 +819,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
     assertFalse(rule.hasCompiledAvailabilityCondition());
   }
 
-  @Test void generateToken_withMultipleRules_success() throws Exception {
+  @Test
+  void generateToken_withMultipleRules_success() throws Exception {
     MockStsTransportFactory transportFactory = new MockStsTransportFactory();
     transportFactory.transport.setReturnAccessBoundarySessionKey(true);
 
@@ -857,7 +883,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
     assertFalse(rule2.hasCompiledAvailabilityCondition());
   }
 
-  @Test void generateToken_withInvalidAvailabilityCondition_failure() throws Exception {
+  @Test
+  void generateToken_withInvalidAvailabilityCondition_failure() throws Exception {
     MockStsTransportFactory transportFactory = new MockStsTransportFactory();
     transportFactory.transport.setReturnAccessBoundarySessionKey(true);
 
@@ -893,7 +920,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
     assertThrows(CelValidationException.class, () -> factory.generateToken(accessBoundary));
   }
 
-  @Test void generateToken_withSessionKeyNotBase64Encoded_failure() throws Exception {
+  @Test
+  void generateToken_withSessionKeyNotBase64Encoded_failure() throws Exception {
     MockStsTransportFactory transportFactory = new MockStsTransportFactory();
     transportFactory.transport.setReturnAccessBoundarySessionKey(true);
     transportFactory.transport.setAccessBoundarySessionKey("invalid_key");
@@ -929,7 +957,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
     assertThrows(IllegalStateException.class, () -> factory.generateToken(accessBoundary));
   }
 
-  @Test void generateToken_withMalformSessionKey_failure() throws Exception {
+  @Test
+  void generateToken_withMalformSessionKey_failure() throws Exception {
     MockStsTransportFactory transportFactory = new MockStsTransportFactory();
     transportFactory.transport.setReturnAccessBoundarySessionKey(true);
     transportFactory.transport.setAccessBoundarySessionKey("aW52YWxpZF9rZXk=");

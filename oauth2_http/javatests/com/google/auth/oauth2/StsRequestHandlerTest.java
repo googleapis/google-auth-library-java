@@ -64,7 +64,8 @@ final class StsRequestHandlerTest {
     transport = new MockStsTransport();
   }
 
-  @Test void exchangeToken() throws IOException {
+  @Test
+  void exchangeToken() throws IOException {
     StsTokenExchangeRequest stsTokenExchangeRequest =
         StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType")
             .setScopes(Collections.singletonList(OAuth2Utils.CLOUD_PLATFORM_SCOPE))
@@ -97,7 +98,8 @@ final class StsRequestHandlerTest {
     assertEquals(expectedRequestContent.getUnknownKeys(), actualRequestContent);
   }
 
-  @Test void exchangeToken_withOptionalParams() throws IOException {
+  @Test
+  void exchangeToken_withOptionalParams() throws IOException {
     // Return optional params scope and the refresh_token.
     transport.addScopeSequence(Arrays.asList("scope1", "scope2", "scope3"));
     transport.addRefreshTokenSequence("refreshToken");
@@ -160,7 +162,8 @@ final class StsRequestHandlerTest {
     assertEquals(expectedRequestContent.getUnknownKeys(), actualRequestContent);
   }
 
-  @Test void exchangeToken_throwsException() throws IOException {
+  @Test
+  void exchangeToken_throwsException() throws IOException {
     StsTokenExchangeRequest stsTokenExchangeRequest =
         StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
 
@@ -183,7 +186,8 @@ final class StsRequestHandlerTest {
     assertNull(e.getErrorUri());
   }
 
-  @Test void exchangeToken_withOptionalParams_throwsException() throws IOException {
+  @Test
+  void exchangeToken_withOptionalParams_throwsException() throws IOException {
     StsTokenExchangeRequest stsTokenExchangeRequest =
         StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
 
@@ -205,7 +209,8 @@ final class StsRequestHandlerTest {
     assertEquals("errorUri", e.getErrorUri());
   }
 
-  @Test void exchangeToken_ioException() {
+  @Test
+  void exchangeToken_ioException() {
     StsTokenExchangeRequest stsTokenExchangeRequest =
         StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
 
@@ -224,7 +229,8 @@ final class StsRequestHandlerTest {
     assertEquals(e, thrownException);
   }
 
-  @Test void exchangeToken_noExpiresInReturned() throws IOException {
+  @Test
+  void exchangeToken_noExpiresInReturned() throws IOException {
     // Don't return expires in. This happens in the CAB flow when the subject token does not belong
     // to a service account.
     transport.setReturnExpiresIn(/* returnExpiresIn= */ false);
@@ -250,7 +256,8 @@ final class StsRequestHandlerTest {
     assertNull(response.getExpiresInSeconds());
   }
 
-  @Test void exchangeToken_withAccessBoundarySessionKey() throws IOException {
+  @Test
+  void exchangeToken_withAccessBoundarySessionKey() throws IOException {
     transport.setReturnAccessBoundarySessionKey(/* returnAccessBoundarySessionKey= */ true);
 
     StsTokenExchangeRequest stsTokenExchangeRequest =

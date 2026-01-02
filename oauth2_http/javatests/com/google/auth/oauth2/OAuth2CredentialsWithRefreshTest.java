@@ -51,7 +51,8 @@ import org.junit.jupiter.api.Test;
 class OAuth2CredentialsWithRefreshTest {
   private static final AccessToken ACCESS_TOKEN = new AccessToken("accessToken", new Date());
 
-  @Test void builder() {
+  @Test
+  void builder() {
     OAuth2CredentialsWithRefresh.OAuth2RefreshHandler refreshHandler =
         new OAuth2CredentialsWithRefresh.OAuth2RefreshHandler() {
           @Override
@@ -69,7 +70,8 @@ class OAuth2CredentialsWithRefreshTest {
     assertEquals(refreshHandler, credential.getRefreshHandler());
   }
 
-  @Test void builder_withRefreshAndExpirationMargins() {
+  @Test
+  void builder_withRefreshAndExpirationMargins() {
     OAuth2CredentialsWithRefresh.OAuth2RefreshHandler refreshHandler =
         new OAuth2CredentialsWithRefresh.OAuth2RefreshHandler() {
           @Override
@@ -96,7 +98,8 @@ class OAuth2CredentialsWithRefreshTest {
     assertEquals(refreshHandler, credential.getRefreshHandler());
   }
 
-  @Test void builder_onlyRefreshMarginSet() {
+  @Test
+  void builder_onlyRefreshMarginSet() {
     OAuth2CredentialsWithRefresh.OAuth2RefreshHandler refreshHandler =
         new OAuth2CredentialsWithRefresh.OAuth2RefreshHandler() {
           @Override
@@ -121,7 +124,8 @@ class OAuth2CredentialsWithRefreshTest {
     assertEquals(refreshHandler, credential.getRefreshHandler());
   }
 
-  @Test void builder_onlyExpirationMarginSet() {
+  @Test
+  void builder_onlyExpirationMarginSet() {
     OAuth2CredentialsWithRefresh.OAuth2RefreshHandler refreshHandler =
         new OAuth2CredentialsWithRefresh.OAuth2RefreshHandler() {
           @Override
@@ -145,7 +149,8 @@ class OAuth2CredentialsWithRefreshTest {
     assertEquals(refreshHandler, credential.getRefreshHandler());
   }
 
-  @Test void builder_noAccessToken() {
+  @Test
+  void builder_noAccessToken() {
     OAuth2CredentialsWithRefresh.newBuilder()
         .setRefreshHandler(
             new OAuth2CredentialsWithRefresh.OAuth2RefreshHandler() {
@@ -157,7 +162,8 @@ class OAuth2CredentialsWithRefreshTest {
         .build();
   }
 
-  @Test void builder_noRefreshHandler_throws() {
+  @Test
+  void builder_noRefreshHandler_throws() {
     try {
       OAuth2CredentialsWithRefresh.newBuilder().setAccessToken(ACCESS_TOKEN).build();
       fail("Should fail as a refresh handler must be provided.");
@@ -166,7 +172,8 @@ class OAuth2CredentialsWithRefreshTest {
     }
   }
 
-  @Test void builder_noExpirationTimeInAccessToken_throws() {
+  @Test
+  void builder_noExpirationTimeInAccessToken_throws() {
     try {
       OAuth2CredentialsWithRefresh.newBuilder()
           .setAccessToken(new AccessToken("accessToken", null))
@@ -177,7 +184,8 @@ class OAuth2CredentialsWithRefreshTest {
     }
   }
 
-  @Test void refreshAccessToken_delegateToRefreshHandler() throws IOException {
+  @Test
+  void refreshAccessToken_delegateToRefreshHandler() throws IOException {
     final AccessToken refreshedToken = new AccessToken("refreshedAccessToken", new Date());
     OAuth2CredentialsWithRefresh credentials =
         OAuth2CredentialsWithRefresh.newBuilder()
@@ -196,7 +204,8 @@ class OAuth2CredentialsWithRefreshTest {
     assertEquals(refreshedToken, accessToken);
   }
 
-  @Test void getRequestMetadata() throws IOException {
+  @Test
+  void getRequestMetadata() throws IOException {
     URI uri = URI.create("http://googleapis.com/testapi/v1/foo");
     final AccessToken refreshedToken = new AccessToken("refreshedAccessToken", new Date());
     OAuth2CredentialsWithRefresh credentials =

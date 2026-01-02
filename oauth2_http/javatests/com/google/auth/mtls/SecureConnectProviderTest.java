@@ -99,7 +99,8 @@ class SecureConnectProviderTest {
     }
   }
 
-  @Test void testGetKeyStoreNonZeroExitCode()
+  @Test
+  void testGetKeyStoreNonZeroExitCode()
       throws IOException, InterruptedException, GeneralSecurityException {
     InputStream metadata =
         this.getClass()
@@ -116,7 +117,8 @@ class SecureConnectProviderTest {
         "expected to fail with nonzero exit code");
   }
 
-  @Test void testExtractCertificateProviderCommand() throws IOException {
+  @Test
+  void testExtractCertificateProviderCommand() throws IOException {
     InputStream inputStream =
         this.getClass().getClassLoader().getResourceAsStream("mtls_context_aware_metadata.json");
     List<String> command = SecureConnectProvider.extractCertificateProviderCommand(inputStream);
@@ -125,13 +127,15 @@ class SecureConnectProviderTest {
     assertEquals("some_argument", command.get(1));
   }
 
-  @Test void testRunCertificateProviderCommandSuccess() throws IOException, InterruptedException {
+  @Test
+  void testRunCertificateProviderCommandSuccess() throws IOException, InterruptedException {
     Process certCommandProcess = new TestCertProviderCommandProcess(0, false);
     int exitValue = SecureConnectProvider.runCertificateProviderCommand(certCommandProcess, 100);
     assertEquals(0, exitValue);
   }
 
-  @Test void testRunCertificateProviderCommandTimeout() throws InterruptedException {
+  @Test
+  void testRunCertificateProviderCommandTimeout() throws InterruptedException {
     Process certCommandProcess = new TestCertProviderCommandProcess(0, true);
     IOException actual =
         assertThrows(
@@ -140,7 +144,8 @@ class SecureConnectProviderTest {
     assertTrue(actual.getMessage().contains("SecureConnect: Cert provider command timed out"), "expected to fail with timeout");
   }
 
-  @Test void testGetKeyStore_FileNotFoundException()
+  @Test
+  void testGetKeyStore_FileNotFoundException()
       throws IOException, GeneralSecurityException, InterruptedException {
     SecureConnectProvider provider =
         new SecureConnectProvider(new TestProcessProvider(0), "/invalid/metadata/path.json");

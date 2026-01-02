@@ -39,7 +39,8 @@ import org.junit.jupiter.api.Test;
 
 class IdTokenCredentialsTest extends BaseSerializationTest {
 
-  @Test void hashCode_equals() throws IOException {
+  @Test
+  void hashCode_equals() throws IOException {
     ComputeEngineCredentialsTest.MockMetadataServerTransportFactory transportFactory =
         new ComputeEngineCredentialsTest.MockMetadataServerTransportFactory();
     transportFactory.transport.setIdToken(ComputeEngineCredentialsTest.STANDARD_ID_TOKEN);
@@ -64,7 +65,8 @@ class IdTokenCredentialsTest extends BaseSerializationTest {
     assertEquals(tokenCredential.hashCode(), otherCredential.hashCode());
   }
 
-  @Test void toString_equals() throws IOException {
+  @Test
+  void toString_equals() throws IOException {
     ComputeEngineCredentialsTest.MockMetadataServerTransportFactory transportFactory =
         new ComputeEngineCredentialsTest.MockMetadataServerTransportFactory();
     transportFactory.transport.setIdToken(ComputeEngineCredentialsTest.STANDARD_ID_TOKEN);
@@ -89,7 +91,8 @@ class IdTokenCredentialsTest extends BaseSerializationTest {
     assertEquals(tokenCredential.toString(), otherCredential.toString());
   }
 
-  @Test void serialize() throws IOException, ClassNotFoundException {
+  @Test
+  void serialize() throws IOException, ClassNotFoundException {
 
     ComputeEngineCredentialsTest.MockMetadataServerTransportFactory transportFactory =
         new ComputeEngineCredentialsTest.MockMetadataServerTransportFactory();

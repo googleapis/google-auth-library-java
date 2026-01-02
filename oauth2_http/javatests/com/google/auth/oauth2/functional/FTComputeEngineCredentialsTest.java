@@ -50,7 +50,8 @@ final class FTComputeEngineCredentialsTest {
   private final String computeUrl =
       "https://compute.googleapis.com/compute/v1/projects/gcloud-devel/zones/us-central1-a/instances";
 
-  @Test void RefreshCredentials() throws Exception {
+  @Test
+  void RefreshCredentials() throws Exception {
     final ComputeEngineCredentials credentials = ComputeEngineCredentials.create();
 
     AccessToken accessToken = credentials.refreshAccessToken();
@@ -59,7 +60,8 @@ final class FTComputeEngineCredentialsTest {
     assertTrue(accessToken.getExpirationTime().getTime() > System.currentTimeMillis());
   }
 
-  @Test void DefaultCredentials() throws Exception {
+  @Test
+  void DefaultCredentials() throws Exception {
     final GoogleCredentials defaultCredential =
         GoogleCredentials.getApplicationDefault().createScoped(OAuth2Utils.CLOUD_PLATFORM_SCOPE);
 
@@ -68,7 +70,8 @@ final class FTComputeEngineCredentialsTest {
     assertTrue(accessToken.getExpirationTime().getTime() > System.currentTimeMillis());
   }
 
-  @Test void IdTokenFromMetadata() throws Exception {
+  @Test
+  void IdTokenFromMetadata() throws Exception {
     final ComputeEngineCredentials credentials = ComputeEngineCredentials.create();
     IdToken idToken = credentials.idTokenWithAudience(computeUrl, null);
     assertNotNull(idToken);
@@ -79,7 +82,8 @@ final class FTComputeEngineCredentialsTest {
     assertEquals("https://accounts.google.com", jws.getPayload().get("iss"));
   }
 
-  @Test void FetchIdToken() throws Exception {
+  @Test
+  void FetchIdToken() throws Exception {
     final ComputeEngineCredentials credentials = ComputeEngineCredentials.create();
     IdTokenCredentials idTokenCredential =
         IdTokenCredentials.newBuilder()

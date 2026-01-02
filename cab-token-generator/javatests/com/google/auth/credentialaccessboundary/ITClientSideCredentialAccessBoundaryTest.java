@@ -96,7 +96,8 @@ final class ITClientSideCredentialAccessBoundaryTest {
    * downscoped token. 2. Validating that we do not have permission to retrieve a different object
    * in the same bucket.
    */
-  @Test void clientSideCredentialAccessBoundary_serviceAccountSource() throws IOException {
+  @Test
+  void clientSideCredentialAccessBoundary_serviceAccountSource() throws IOException {
     OAuth2CredentialsWithRefresh.OAuth2RefreshHandler refreshHandler =
         () -> {
           ServiceAccountCredentials sourceCredentials =

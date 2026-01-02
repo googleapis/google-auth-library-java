@@ -79,7 +79,8 @@ class TokenVerifierTest {
         }
       };
 
-  @Test void verifyExpiredToken() {
+  @Test
+  void verifyExpiredToken() {
     for (String token : ALL_TOKENS) {
       TokenVerifier tokenVerifier = TokenVerifier.newBuilder().build();
       try {
@@ -91,7 +92,8 @@ class TokenVerifierTest {
     }
   }
 
-  @Test void verifyExpectedAudience() {
+  @Test
+  void verifyExpectedAudience() {
     TokenVerifier tokenVerifier =
         TokenVerifier.newBuilder().setAudience("expected audience").build();
     for (String token : ALL_TOKENS) {
@@ -104,7 +106,8 @@ class TokenVerifierTest {
     }
   }
 
-  @Test void verifyExpectedIssuer() {
+  @Test
+  void verifyExpectedIssuer() {
     TokenVerifier tokenVerifier = TokenVerifier.newBuilder().setIssuer("expected issuer").build();
     for (String token : ALL_TOKENS) {
       try {
@@ -116,7 +119,8 @@ class TokenVerifierTest {
     }
   }
 
-  @Test void verifyEs256Token404CertificateUrl() {
+  @Test
+  void verifyEs256Token404CertificateUrl() {
     // Mock HTTP requests
     HttpTransportFactory httpTransportFactory =
         new HttpTransportFactory() {
@@ -155,7 +159,8 @@ class TokenVerifierTest {
     }
   }
 
-  @Test void verifyEs256TokenPublicKeyMismatch() {
+  @Test
+  void verifyEs256TokenPublicKeyMismatch() {
     // Mock HTTP requests
     HttpTransportFactory httpTransportFactory =
         new HttpTransportFactory() {
@@ -191,7 +196,8 @@ class TokenVerifierTest {
     }
   }
 
-  @Test void verifyPublicKeyStoreIntermittentError() throws VerificationException, IOException {
+  @Test
+  void verifyPublicKeyStoreIntermittentError() throws VerificationException, IOException {
     // mock responses
     MockLowLevelHttpResponse response404 =
         new MockLowLevelHttpResponse()
@@ -240,7 +246,8 @@ class TokenVerifierTest {
     assertNotNull(tokenVerifier.verify(ES256_TOKEN));
   }
 
-  @Test void verifyEs256Token() throws VerificationException, IOException {
+  @Test
+  void verifyEs256Token() throws VerificationException, IOException {
     HttpTransportFactory httpTransportFactory =
         mockTransport(
             "https://www.gstatic.com/iap/verify/public_key-jwk",
@@ -253,7 +260,8 @@ class TokenVerifierTest {
     assertNotNull(tokenVerifier.verify(ES256_TOKEN));
   }
 
-  @Test void verifyRs256Token() throws VerificationException, IOException {
+  @Test
+  void verifyRs256Token() throws VerificationException, IOException {
     HttpTransportFactory httpTransportFactory =
         mockTransport(
             "https://www.googleapis.com/oauth2/v3/certs",
@@ -266,7 +274,8 @@ class TokenVerifierTest {
     assertNotNull(tokenVerifier.verify(FEDERATED_SIGNON_RS256_TOKEN));
   }
 
-  @Test void verifyRs256TokenWithLegacyCertificateUrlFormat()
+  @Test
+  void verifyRs256TokenWithLegacyCertificateUrlFormat()
       throws TokenVerifier.VerificationException, IOException {
     HttpTransportFactory httpTransportFactory =
         mockTransport(

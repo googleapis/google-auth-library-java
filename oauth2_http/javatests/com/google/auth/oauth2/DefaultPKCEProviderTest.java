@@ -39,7 +39,8 @@ import java.util.Base64;
 import org.junit.jupiter.api.Test;
 
 final class DefaultPKCEProviderTest {
-  @Test void testPkceExpected() throws NoSuchAlgorithmException {
+  @Test
+  void testPkceExpected() throws NoSuchAlgorithmException {
     PKCEProvider pkce = new DefaultPKCEProvider();
 
     byte[] bytes = pkce.getCodeVerifier().getBytes();
@@ -55,7 +56,8 @@ final class DefaultPKCEProviderTest {
     assertEquals(pkce.getCodeChallengeMethod(), expectedCodeChallengeMethod);
   }
 
-  @Test void testNoBase64Padding() throws NoSuchAlgorithmException {
+  @Test
+  void testNoBase64Padding() throws NoSuchAlgorithmException {
     PKCEProvider pkce = new DefaultPKCEProvider();
     assertFalse(pkce.getCodeChallenge().endsWith("="));
     assertFalse(pkce.getCodeChallenge().contains("="));
