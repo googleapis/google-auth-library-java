@@ -46,7 +46,8 @@ class SnippetsIT {
         .isNotEmpty();
   }
 
-  @BeforeAll static void setup() throws IOException {
+  @BeforeAll
+  static void setup() throws IOException {
     final PrintStream out = System.out;
     ByteArrayOutputStream stdOut = new ByteArrayOutputStream();
     System.setOut(new PrintStream(stdOut));
@@ -57,14 +58,17 @@ class SnippetsIT {
     System.setOut(out);
   }
 
-  @AfterAll static void cleanup() {}
+  @AfterAll
+  static void cleanup() {}
 
-  @BeforeEach void beforeEach() {
+  @BeforeEach
+  void beforeEach() {
     stdOut = new ByteArrayOutputStream();
     System.setOut(new PrintStream(stdOut));
   }
 
-  @AfterEach void afterEach() {
+  @AfterEach
+  void afterEach() {
     stdOut = null;
     System.setOut(null);
   }
