@@ -31,14 +31,13 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
@@ -54,13 +53,11 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
 /** Test case for {@link GdchCredentials}. */
-@RunWith(JUnit4.class)
-public class GdchCredentialsTest extends BaseSerializationTest {
+
+class GdchCredentialsTest extends BaseSerializationTest {
   private static final String FORMAT_VERSION = GdchCredentials.SUPPORTED_FORMAT_VERSION;
   private static final String PRIVATE_KEY_ID = "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
   static final String PRIVATE_KEY_PKCS8 =
@@ -87,8 +84,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
   private static final URI API_AUDIENCE = URI.create("https://gdch-api-audience");
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
 
-  @Test
-  public void fromJSON_getProjectId() throws IOException {
+  @Test void fromJSON_getProjectId() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -103,8 +99,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     assertEquals(PROJECT_ID, credentials.getProjectId());
   }
 
-  @Test
-  public void fromJSON_getServiceIdentityName() throws IOException {
+  @Test void fromJSON_getServiceIdentityName() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -119,8 +114,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     assertEquals(SERVICE_IDENTITY_NAME, credentials.getServiceIdentityName());
   }
 
-  @Test
-  public void fromJSON_getCaCertPath() throws IOException {
+  @Test void fromJSON_getCaCertPath() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -135,8 +129,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     assertEquals(CA_CERT_PATH, credentials.getCaCertPath());
   }
 
-  @Test
-  public void fromJSON_getTokenServerUri() throws IOException {
+  @Test void fromJSON_getTokenServerUri() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -151,8 +144,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     assertEquals(TOKEN_SERVER_URI, credentials.getTokenServerUri());
   }
 
-  @Test
-  public void fromJSON_nullFormatVersion() throws IOException {
+  @Test void fromJSON_nullFormatVersion() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             null,
@@ -177,8 +169,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test
-  public void fromJSON_nullProjectId() throws IOException {
+  @Test void fromJSON_nullProjectId() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -203,8 +194,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test
-  public void fromJSON_nullPrivateKeyId() throws IOException {
+  @Test void fromJSON_nullPrivateKeyId() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -229,8 +219,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test
-  public void fromJSON_nullPrivateKey() throws IOException {
+  @Test void fromJSON_nullPrivateKey() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -255,8 +244,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test
-  public void fromJSON_nullServiceIdentityName() throws IOException {
+  @Test void fromJSON_nullServiceIdentityName() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -281,8 +269,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test
-  public void fromJSON_nullCaCertPath() throws IOException {
+  @Test void fromJSON_nullCaCertPath() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -296,8 +283,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     assertNull(credentials.getCaCertPath());
   }
 
-  @Test
-  public void fromJSON_nullTokenServerUri() throws IOException {
+  @Test void fromJSON_nullTokenServerUri() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -322,8 +308,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test
-  public void fromJSON_invalidFormatVersion() throws IOException {
+  @Test void fromJSON_invalidFormatVersion() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             "100",
@@ -344,8 +329,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test
-  public void fromJSON_invalidCaCertPath() throws IOException {
+  @Test void fromJSON_invalidCaCertPath() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -364,8 +348,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test
-  public void fromJSON_emptyCaCertPath() throws IOException {
+  @Test void fromJSON_emptyCaCertPath() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -379,8 +362,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     assertEquals("", credentials.getCaCertPath());
   }
 
-  @Test
-  public void fromJSON_transportFactoryForGdch() throws IOException {
+  @Test void fromJSON_transportFactoryForGdch() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -396,8 +378,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
         credentials.getTransportFactory().getClass());
   }
 
-  @Test
-  public void fromJSON_hasAccessToken() throws IOException {
+  @Test void fromJSON_hasAccessToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     GenericJson json =
         writeGdchServiceAccountJson(
@@ -417,8 +398,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
-  @Test
-  public void createWithGdchAudience_correct() throws IOException {
+  @Test void createWithGdchAudience_correct() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -445,8 +425,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     assertEquals(API_AUDIENCE, gdchWithAudience.getApiAudience());
   }
 
-  @Test
-  public void createWithGdchAudience_nullApiAudience() throws IOException {
+  @Test void createWithGdchAudience_nullApiAudience() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -466,8 +445,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test
-  public void createAssertion_correct() throws IOException {
+  @Test void createAssertion_correct() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -494,8 +472,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     assertEquals(currentTimeMillis / 1000 + 3600, (long) payload.getExpirationTimeSeconds());
   }
 
-  @Test
-  public void refreshAccessToken_correct() throws IOException {
+  @Test void refreshAccessToken_correct() throws IOException {
     final String tokenString = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     GenericJson json =
@@ -531,8 +508,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     assertEquals(3600 * 1000 * 1000L, accessToken.getExpirationTimeMillis().longValue());
   }
 
-  @Test
-  public void refreshAccessToken_nullApiAudience() throws IOException {
+  @Test void refreshAccessToken_nullApiAudience() throws IOException {
     final String tokenString = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     GenericJson json =
@@ -563,8 +539,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test
-  public void getIssuerSubjectValue_correct() throws IOException {
+  @Test void getIssuerSubjectValue_correct() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -582,8 +557,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
         GdchCredentials.getIssuerSubjectValue(PROJECT_ID, SERVICE_IDENTITY_NAME));
   }
 
-  @Test
-  public void equals_same() throws IOException {
+  @Test void equals_same() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -613,8 +587,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     assertTrue(otherCredentials.equals(credentials));
   }
 
-  @Test
-  public void equals_false_projectId() throws IOException {
+  @Test void equals_false_projectId() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -644,8 +617,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     assertFalse(otherCredentials.equals(credentials));
   }
 
-  @Test
-  public void equals_false_keyId() throws IOException {
+  @Test void equals_false_keyId() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -675,8 +647,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     assertFalse(otherCredentials.equals(credentials));
   }
 
-  @Test
-  public void equals_false_serviceIdentityName() throws IOException {
+  @Test void equals_false_serviceIdentityName() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -706,8 +677,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     assertFalse(otherCredentials.equals(credentials));
   }
 
-  @Test
-  public void equals_false_caCertPath() throws IOException {
+  @Test void equals_false_caCertPath() throws IOException {
     File tmpDirectory = Files.createTempDirectory("tmpDirectory").toFile();
     File testCaCertFile = File.createTempFile("testCert", ".pem", tmpDirectory);
     GenericJson json =
@@ -741,8 +711,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     testCaCertFile.delete();
   }
 
-  @Test
-  public void equals_false_tokenServer() throws IOException {
+  @Test void equals_false_tokenServer() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -772,8 +741,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     assertFalse(otherCredentials.equals(credentials));
   }
 
-  @Test
-  public void equals_false_apiAudience() throws IOException {
+  @Test void equals_false_apiAudience() throws IOException {
     URI otherApiAudience = URI.create("https://foo1.com/bar");
 
     GenericJson json =
@@ -804,8 +772,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     assertFalse(otherCredentials.equals(credentials));
   }
 
-  @Test
-  public void toString_containsFields() throws IOException {
+  @Test void toString_containsFields() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -831,8 +798,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     assertEquals(expectedToString, credentials.toString());
   }
 
-  @Test
-  public void hashCode_equals() throws IOException {
+  @Test void hashCode_equals() throws IOException {
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -860,8 +826,7 @@ public class GdchCredentialsTest extends BaseSerializationTest {
     assertEquals(credentials.hashCode(), otherCredentials.hashCode());
   }
 
-  @Test
-  public void serialize_correct() throws IOException, ClassNotFoundException {
+  @Test void serialize_correct() throws IOException, ClassNotFoundException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     GenericJson json =
         writeGdchServiceAccountJson(

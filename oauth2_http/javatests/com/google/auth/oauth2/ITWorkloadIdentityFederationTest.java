@@ -31,9 +31,8 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
@@ -55,8 +54,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Integration tests for Workload Identity Federation.
@@ -66,7 +65,7 @@ import org.junit.Test;
  * (workloadidentityfederation-setup). These tests call GCS to get bucket information. The bucket
  * name must be provided through the GCS_BUCKET environment variable.
  */
-public final class ITWorkloadIdentityFederationTest {
+final class ITWorkloadIdentityFederationTest {
 
   // Copy output from workloadidentityfederation-setup.
   private static final String AUDIENCE_PREFIX =
@@ -79,8 +78,7 @@ public final class ITWorkloadIdentityFederationTest {
 
   private String clientEmail;
 
-  @Before
-  public void setup() throws IOException {
+  @BeforeEach void setup() throws IOException {
     GenericJson keys = getServiceAccountKeyFileAsJson();
     clientEmail = (String) keys.get("client_email");
   }
@@ -92,8 +90,7 @@ public final class ITWorkloadIdentityFederationTest {
    * exchanged for a GCP access token via GCP STS endpoint and then to impersonate the original
    * service account key. Retrieves the OIDC token from a file.
    */
-  @Test
-  public void identityPoolCredentials() throws IOException {
+  @Test void identityPoolCredentials() throws IOException {
     IdentityPoolCredentials identityPoolCredentials =
         (IdentityPoolCredentials)
             ExternalAccountCredentials.fromJson(
@@ -111,8 +108,7 @@ public final class ITWorkloadIdentityFederationTest {
    * exchanged for a GCP access token via GCP STS endpoint and then to impersonate the original
    * service account key.
    */
-  @Test
-  public void awsCredentials() throws Exception {
+  @Test void awsCredentials() throws Exception {
     String idToken = generateGoogleIdToken(AWS_AUDIENCE);
 
     String url =
@@ -162,8 +158,7 @@ public final class ITWorkloadIdentityFederationTest {
    * the external subject token to be exchanged for a GCP access token via GCP STS endpoint and then
    * to impersonate the original service account key.
    */
-  @Test
-  public void awsCredentials_withProgrammaticAuth() throws Exception {
+  @Test void awsCredentials_withProgrammaticAuth() throws Exception {
     String idToken = generateGoogleIdToken(AWS_AUDIENCE);
 
     String url =
@@ -213,8 +208,7 @@ public final class ITWorkloadIdentityFederationTest {
    * exchanged for a GCP access token via GCP STS endpoint and then to impersonate the original
    * service account key. Runs an executable to get the OIDC token.
    */
-  @Test
-  public void pluggableAuthCredentials() throws IOException {
+  @Test void pluggableAuthCredentials() throws IOException {
     PluggableAuthCredentials pluggableAuthCredentials =
         (PluggableAuthCredentials)
             ExternalAccountCredentials.fromJson(
@@ -227,8 +221,7 @@ public final class ITWorkloadIdentityFederationTest {
    * Sets the service account impersonation object in configuration JSON with a non-default value
    * for token_lifetime_seconds and validates that the lifetime is used for the access token.
    */
-  @Test
-  public void identityPoolCredentials_withServiceAccountImpersonationOptions() throws IOException {
+  @Test void identityPoolCredentials_withServiceAccountImpersonationOptions() throws IOException {
     GenericJson identityPoolCredentialConfig = buildIdentityPoolCredentialConfig();
     Map<String, Object> map = new HashMap<String, Object>();
     map.put("token_lifetime_seconds", 2800);
@@ -254,8 +247,7 @@ public final class ITWorkloadIdentityFederationTest {
    * service account key. Retrieves the OIDC token from a Supplier that returns the subject token
    * when get() is called.
    */
-  @Test
-  public void identityPoolCredentials_withProgrammaticAuth() throws IOException {
+  @Test void identityPoolCredentials_withProgrammaticAuth() throws IOException {
 
     IdentityPoolSubjectTokenSupplier tokenSupplier =
         (ExternalAccountSupplierContext context) -> {

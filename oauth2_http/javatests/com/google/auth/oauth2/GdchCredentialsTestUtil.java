@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 
-public class GdchCredentialsTestUtil {
+class GdchCredentialsTestUtil {
   public static void registerGdchCredentialWithMockTransport(
       GdchCredentials credentials,
       MockTokenServerTransport transport,

@@ -31,34 +31,36 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
-
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.Test;
 
 /** Tests for {@link PluggableAuthException}. */
-public class PluggableAuthExceptionTest {
+class PluggableAuthExceptionTest {
 
   private static final String MESSAGE_FORMAT = "Error code %s: %s";
 
-  @Test
-  public void constructor() {
+  @Test void constructor() {
     PluggableAuthException e = new PluggableAuthException("errorCode", "errorDescription");
     assertEquals("errorCode", e.getErrorCode());
     assertEquals("errorDescription", e.getErrorDescription());
   }
 
-  @Test(expected = NullPointerException.class)
-  public void constructor_nullErrorCode_throws() {
-    new PluggableAuthException(/* errorCode= */ null, "errorDescription");
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void constructor_nullErrorDescription_throws() {
-    new PluggableAuthException("errorCode", /* errorDescription= */ null);
+  @Test
+  void constructor_nullErrorCode_throws() {
+    assertThrows(
+        NullPointerException.class,
+        () -> new PluggableAuthException(/* errorCode= */ null, "errorDescription"));
   }
 
   @Test
-  public void getMessage() {
+  void constructor_nullErrorDescription_throws() {
+    assertThrows(
+        NullPointerException.class,
+        () -> new PluggableAuthException("errorCode", /* errorDescription= */ null));
+  }
+
+  @Test void getMessage() {
     PluggableAuthException e = new PluggableAuthException("errorCode", "errorDescription");
     String expectedMessage = String.format("Error code %s: %s", "errorCode", "errorDescription");
     assertEquals(expectedMessage, e.getMessage());

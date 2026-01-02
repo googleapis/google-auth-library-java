@@ -30,33 +30,30 @@
  */
 package com.google.auth;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
 /** Test case for {@link ApiKeyCredentials}. */
-@RunWith(JUnit4.class)
-public class ApiKeyCredentialsTest {
+class ApiKeyCredentialsTest {
 
   private static final String TEST_API_KEY = "testApiKey";
 
   @Test
-  public void testGetAuthenticationType() {
+  void testGetAuthenticationType() {
     ApiKeyCredentials credentials = ApiKeyCredentials.create(TEST_API_KEY);
     assertEquals("API-Key", credentials.getAuthenticationType());
   }
 
   @Test
-  public void testGetRequestMetadata() throws IOException, URISyntaxException {
+  void testGetRequestMetadata() throws IOException, URISyntaxException {
     ApiKeyCredentials credentials = ApiKeyCredentials.create(TEST_API_KEY);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(new URI("http://test.com"));
     assertEquals(1, metadata.size());
@@ -66,24 +63,24 @@ public class ApiKeyCredentialsTest {
   }
 
   @Test
-  public void testHasRequestMetadata() {
+  void testHasRequestMetadata() {
     ApiKeyCredentials credentials = ApiKeyCredentials.create(TEST_API_KEY);
     assertTrue(credentials.hasRequestMetadata());
   }
 
   @Test
-  public void testHasRequestMetadataOnly() {
+  void testHasRequestMetadataOnly() {
     ApiKeyCredentials credentials = ApiKeyCredentials.create(TEST_API_KEY);
     assertTrue(credentials.hasRequestMetadataOnly());
   }
 
   @Test
-  public void testNullApiKey_ThrowsException() {
+  void testNullApiKey_ThrowsException() {
     assertThrows(IllegalArgumentException.class, () -> ApiKeyCredentials.create(null));
   }
 
   @Test
-  public void testBlankApiKey_ThrowsException() {
+  void testBlankApiKey_ThrowsException() {
     assertThrows(IllegalArgumentException.class, () -> ApiKeyCredentials.create(""));
   }
 }

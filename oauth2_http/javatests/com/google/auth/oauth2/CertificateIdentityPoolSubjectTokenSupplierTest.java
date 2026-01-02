@@ -31,10 +31,11 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import com.google.auth.oauth2.IdentityPoolCredentialSource.CertificateConfig;
@@ -53,20 +54,16 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.List;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 /** Tests for {@link CertificateIdentityPoolSubjectTokenSupplier}. */
-@RunWith(JUnit4.class)
-public class CertificateIdentityPoolSubjectTokenSupplierTest {
-
-  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
+@ExtendWith(MockitoExtension.class)
+class CertificateIdentityPoolSubjectTokenSupplierTest {
 
   @Mock private IdentityPoolCredentialSource mockCredentialSource;
   @Mock private CertificateConfig mockCertificateConfig;
@@ -86,37 +83,34 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
   private byte[] testCertBytesFromFile;
   private byte[] intermediateCertBytesFromFile;
 
-  @Before
-  public void setUp() throws IOException, URISyntaxException {
+  @BeforeEach void setUp() throws IOException, URISyntaxException {
     ClassLoader classLoader = getClass().getClassLoader();
     URL leafCertUrl = classLoader.getResource("x509_leaf_certificate.pem");
-    assertNotNull("Test leaf certificate file not found!", leafCertUrl);
+    assertNotNull(leafCertUrl, "Test leaf certificate file not found!");
     File testCertFile = new File(leafCertUrl.getFile());
 
     URL intermediateCertUrl = classLoader.getResource("x509_intermediate_certificate.pem");
-    assertNotNull("Test intermediate certificate file not found!", intermediateCertUrl);
+    assertNotNull(intermediateCertUrl, "Test intermediate certificate file not found!");
 
-    when(mockCertificateConfig.useDefaultCertificateConfig()).thenReturn(false);
-    when(mockCertificateConfig.getCertificateConfigLocation())
+    lenient().when(mockCertificateConfig.useDefaultCertificateConfig()).thenReturn(false);
+    lenient().when(mockCertificateConfig.getCertificateConfigLocation())
         .thenReturn(testCertFile.getAbsolutePath());
 
-    when(mockCredentialSource.getCertificateConfig()).thenReturn(mockCertificateConfig);
-    when(mockCredentialSource.getCredentialLocation()).thenReturn(testCertFile.getAbsolutePath());
+    lenient().when(mockCredentialSource.getCertificateConfig()).thenReturn(mockCertificateConfig);
+    lenient().when(mockCredentialSource.getCredentialLocation()).thenReturn(testCertFile.getAbsolutePath());
 
     supplier = new CertificateIdentityPoolSubjectTokenSupplier(mockCredentialSource);
     testCertBytesFromFile = Files.readAllBytes(Paths.get(leafCertUrl.toURI()));
     intermediateCertBytesFromFile = Files.readAllBytes(Paths.get(intermediateCertUrl.toURI()));
   }
 
-  @Test
-  public void parseCertificate_validData_returnsCertificate() throws Exception {
+  @Test void parseCertificate_validData_returnsCertificate() throws Exception {
     X509Certificate cert =
         CertificateIdentityPoolSubjectTokenSupplier.parseCertificate(testCertBytesFromFile);
     assertNotNull(cert);
   }
 
-  @Test
-  public void parseCertificate_emptyData_throwsIllegalArgumentException() {
+  @Test void parseCertificate_emptyData_throwsIllegalArgumentException() {
     IllegalArgumentException exception =
         assertThrows(
             IllegalArgumentException.class,
@@ -125,8 +119,7 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
         "Invalid certificate data: Certificate file is empty or null.", exception.getMessage());
   }
 
-  @Test
-  public void parseCertificate_nullData_throwsIllegalArgumentException() {
+  @Test void parseCertificate_nullData_throwsIllegalArgumentException() {
     IllegalArgumentException exception =
         assertThrows(
             IllegalArgumentException.class,
@@ -135,8 +128,7 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
         "Invalid certificate data: Certificate file is empty or null.", exception.getMessage());
   }
 
-  @Test
-  public void parseCertificate_invalidData_throwsCertificateException() {
+  @Test void parseCertificate_invalidData_throwsCertificateException() {
     CertificateException exception =
         assertThrows(
             CertificateException.class,
@@ -144,8 +136,7 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
     assertEquals("Failed to parse X.509 certificate data.", exception.getMessage());
   }
 
-  @Test
-  public void getSubjectToken_withoutTrustChain_success() throws Exception {
+  @Test void getSubjectToken_withoutTrustChain_success() throws Exception {
     // Calculate expected result based on the file content.
     CertificateFactory cf = CertificateFactory.getInstance("X.509");
     X509Certificate expectedCert =
@@ -161,12 +152,11 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
     assertEquals(expectedSubjectToken, actualSubjectToken);
   }
 
-  @Test
-  public void getSubjectToken_trustChainWithLeafFirst_success() throws Exception {
+  @Test void getSubjectToken_trustChainWithLeafFirst_success() throws Exception {
     // Configure mock to return the path to the trust chain file with leaf.
     ClassLoader classLoader = getClass().getClassLoader();
     URL trustChainUrl = classLoader.getResource("trust_chain_with_leaf.pem");
-    assertNotNull("Test trust chain file not found!", trustChainUrl);
+    assertNotNull(trustChainUrl, "Test trust chain file not found!");
     when(mockCertificateConfig.getTrustChainPath())
         .thenReturn(new File(trustChainUrl.getFile()).getAbsolutePath());
 
@@ -195,12 +185,11 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
     assertEquals(expectedSubjectToken, actualSubjectToken);
   }
 
-  @Test
-  public void getSubjectToken_trustChainWithoutLeaf_success() throws Exception {
+  @Test void getSubjectToken_trustChainWithoutLeaf_success() throws Exception {
     // Configure mock to return the path to the trust chain file WITHOUT leaf.
     ClassLoader classLoader = getClass().getClassLoader();
     URL trustChainUrl = classLoader.getResource("trust_chain_without_leaf.pem");
-    assertNotNull("Test trust chain file (without leaf) not found!", trustChainUrl);
+    assertNotNull(trustChainUrl, "Test trust chain file (without leaf) not found!");
     when(mockCertificateConfig.getTrustChainPath())
         .thenReturn(new File(trustChainUrl.getFile()).getAbsolutePath());
 
@@ -234,11 +223,10 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
   // when the trust chain file is provided and contains the leaf certificate,
   // but the leaf certificate is not the *first* certificate in that file.
   // For example, an intermediate certificate appears before the leaf certificate.
-  @Test
-  public void getSubjectToken_trustChainWrongOrder_throwsIllegalArgumentException() {
+  @Test void getSubjectToken_trustChainWrongOrder_throwsIllegalArgumentException() {
     ClassLoader classLoader = getClass().getClassLoader();
     URL trustChainUrl = classLoader.getResource("trust_chain_wrong_order.pem");
-    assertNotNull("Test trust chain file (wrong order) not found!", trustChainUrl);
+    assertNotNull(trustChainUrl, "Test trust chain file (wrong order) not found!");
     String trustChainPath = new File(trustChainUrl.getFile()).getAbsolutePath();
     when(mockCertificateConfig.getTrustChainPath()).thenReturn(trustChainPath);
 
@@ -254,22 +242,17 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
     assertEquals(expectedOuterExceptionMessage, exception.getMessage());
 
     Throwable cause = exception.getCause();
-    assertNotNull("Exception cause should not be null", cause);
-    assertTrue(
-        "Exception cause should be an IllegalArgumentException",
-        cause instanceof IllegalArgumentException);
+    assertNotNull(cause, "Exception cause should not be null");
+    assertTrue(cause instanceof IllegalArgumentException, "Exception cause should be an IllegalArgumentException");
     assertEquals(expectedRootErrorMessage, cause.getMessage());
   }
 
-  @Test
-  public void getSubjectToken_trustChainOnlyLeaf_success() throws Exception {
+  @Test void getSubjectToken_trustChainOnlyLeaf_success() throws Exception {
     // Configure mock to use the leaf certificate file itself as the trust chain file,
     // simulating a scenario where the trust chain file contains only the leaf.
     ClassLoader classLoader = getClass().getClassLoader();
     URL trustChainUrl = classLoader.getResource("x509_leaf_certificate.pem");
-    assertNotNull(
-        "Test resource 'x509_leaf_certificate.pem' (used as trust chain) not found!",
-        trustChainUrl);
+    assertNotNull(trustChainUrl, "Test resource 'x509_leaf_certificate.pem' (used as trust chain) not found!");
     when(mockCertificateConfig.getTrustChainPath())
         .thenReturn(new File(trustChainUrl.getFile()).getAbsolutePath());
 
@@ -291,8 +274,7 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
     assertEquals(expectedSubjectToken, actualSubjectToken);
   }
 
-  @Test
-  public void getSubjectToken_trustChainFileNotFound_throwsIOException() {
+  @Test void getSubjectToken_trustChainFileNotFound_throwsIOException() {
     // Configure mock to return a non-existent path for the trust chain.
     String nonExistentPath = "/path/to/non/existent/trust_chain.pem";
     when(mockCertificateConfig.getTrustChainPath()).thenReturn(nonExistentPath);
@@ -308,8 +290,7 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
     assertEquals("Trust chain file not found: " + nonExistentPath, exception.getMessage());
   }
 
-  @Test
-  public void getSubjectToken_trustChainInvalidFormat_throwsIOException() throws Exception {
+  @Test void getSubjectToken_trustChainInvalidFormat_throwsIOException() throws Exception {
     // Create a temporary file with invalid cert data for the trust chain.
     File invalidTrustChainFile = File.createTempFile("invalid_trust_chain", ".pem");
     invalidTrustChainFile.deleteOnExit();
@@ -341,8 +322,7 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
                 "Error loading PEM certificates from the trust chain file: " + invalidPath));
   }
 
-  @Test
-  public void getSubjectToken_leafCertFileNotFound_throwsIOException() {
+  @Test void getSubjectToken_leafCertFileNotFound_throwsIOException() {
     // Configure mock to return a non-existent path for the leaf certificate.
     String nonExistentPath = "/path/to/non/existent/leaf.pem";
     when(mockCredentialSource.getCredentialLocation()).thenReturn(nonExistentPath);
@@ -357,9 +337,8 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
     assertEquals("Leaf certificate file not found: " + nonExistentPath, exception.getMessage());
 
     // Check that the cause is the original NoSuchFileException.
-    assertNotNull("Exception should have a cause", exception.getCause());
-    assertTrue(
-        "Cause should be NoSuchFileException", exception.getCause() instanceof NoSuchFileException);
+    assertNotNull(exception.getCause(), "Exception should have a cause");
+    assertTrue(exception.getCause()  instanceof NoSuchFileException, "Cause should be NoSuchFileException");
 
     // Check the message of the cause (which is the path) in a platform-agnostic way.
     Path expectedCausePath = Paths.get(nonExistentPath);
@@ -367,8 +346,7 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
     assertEquals(expectedCausePath, actualCausePath);
   }
 
-  @Test
-  public void getSubjectToken_leafCertInvalidFormat_throwsIOException() throws Exception {
+  @Test void getSubjectToken_leafCertInvalidFormat_throwsIOException() throws Exception {
     // Create a temporary file with invalid cert data.
     File invalidLeafFile = File.createTempFile("invalid_leaf", ".pem");
     invalidLeafFile.deleteOnExit();
@@ -395,8 +373,7 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
         exception.getMessage());
   }
 
-  @Test
-  public void readTrustChain_whenFileIsNotEmptyButContainsNoPemBlocks_throwsCertificateException()
+  @Test void readTrustChain_whenFileIsNotEmptyButContainsNoPemBlocks_throwsCertificateException()
       throws IOException {
     // Create a temporary file with content that does not match PEM certificate blocks.
     File trustChainFile = File.createTempFile("non_pem_content_trust_chain", ".txt");
@@ -417,15 +394,13 @@ public class CertificateIdentityPoolSubjectTokenSupplierTest {
     assertEquals(expectedMessage, exception.getMessage());
   }
 
-  @Test
-  public void readTrustChain_nullPath_returnsEmptyList() throws Exception {
+  @Test void readTrustChain_nullPath_returnsEmptyList() throws Exception {
     List<X509Certificate> certs = CertificateIdentityPoolSubjectTokenSupplier.readTrustChain(null);
     assertNotNull(certs);
     assertTrue(certs.isEmpty());
   }
 
-  @Test
-  public void readTrustChain_emptyFile_returnsEmptyList() throws IOException, CertificateException {
+  @Test void readTrustChain_emptyFile_returnsEmptyList() throws IOException, CertificateException {
     // Create an empty temporary file.
     File emptyFile = File.createTempFile("empty_trust_chain", ".pem");
     emptyFile.deleteOnExit();

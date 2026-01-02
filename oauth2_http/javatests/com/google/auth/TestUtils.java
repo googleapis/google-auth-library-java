@@ -31,10 +31,9 @@
 
 package com.google.auth;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.json.GenericJson;
@@ -70,20 +69,20 @@ public class TestUtils {
   public static void assertContainsBearerToken(Map<String, List<String>> metadata, String token) {
     assertNotNull(metadata);
     assertNotNull(token);
-    assertTrue("Bearer token not found", hasBearerToken(metadata, token));
+    assertTrue(hasBearerToken(metadata, token), "Bearer token not found");
   }
 
   public static void assertNotContainsBearerToken(
       Map<String, List<String>> metadata, String token) {
     assertNotNull(metadata);
     assertNotNull(token);
-    assertFalse("Bearer token found", hasBearerToken(metadata, token));
+    assertFalse(hasBearerToken(metadata, token), "Bearer token found");
   }
 
   private static boolean hasBearerToken(Map<String, List<String>> metadata, String token) {
     String expectedValue = AuthHttpConstants.BEARER + " " + token;
     List<String> authorizations = metadata.get(AuthHttpConstants.AUTHORIZATION);
-    assertNotNull("Authorization headers not found", authorizations);
+    assertNotNull(authorizations, "Authorization headers not found");
     return authorizations.contains(expectedValue);
   }
 

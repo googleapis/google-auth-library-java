@@ -31,10 +31,9 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
@@ -46,7 +45,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.auth.Credentials;
 import com.google.auth.http.HttpCredentialsAdapter;
 import java.io.IOException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Integration tests for Downscoping with Credential Access Boundaries via {@link
@@ -56,7 +55,7 @@ import org.junit.Test;
  * GOOGLE_APPLICATION_CREDENTIALS to point to the same service account configured in the setup
  * script (downscoping-with-cab-setup.sh).
  */
-public final class ITDownscopingTest {
+final class ITDownscopingTest {
 
   // Output copied from the setup script (downscoping-with-cab-setup.sh).
   private static final String GCS_BUCKET_NAME = "cab-int-bucket-cbi3qrv5";
@@ -92,8 +91,7 @@ public final class ITDownscopingTest {
    * downscoped token. 2. Validating that we do not have permission to retrieve a different object
    * in the same bucket.
    */
-  @Test
-  public void downscoping_serviceAccountSourceWithRefresh() throws IOException {
+  @Test void downscoping_serviceAccountSourceWithRefresh() throws IOException {
     OAuth2CredentialsWithRefresh.OAuth2RefreshHandler refreshHandler =
         new OAuth2CredentialsWithRefresh.OAuth2RefreshHandler() {
           @Override

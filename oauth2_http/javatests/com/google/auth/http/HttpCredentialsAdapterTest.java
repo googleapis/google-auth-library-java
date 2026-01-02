@@ -31,9 +31,9 @@
 
 package com.google.auth.http;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpHeaders;
@@ -47,20 +47,17 @@ import com.google.auth.oauth2.MockTokenServerTransportFactory;
 import com.google.auth.oauth2.OAuth2Credentials;
 import com.google.auth.oauth2.UserCredentials;
 import java.io.IOException;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
 /** Test case for {@link HttpCredentialsAdapter}. */
-@RunWith(JUnit4.class)
-public class HttpCredentialsAdapterTest {
+
+class HttpCredentialsAdapterTest {
 
   private static final String CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
   private static final String CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
   private static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
 
-  @Test
-  public void initialize_populatesOAuth2Credentials() throws IOException {
+  @Test void initialize_populatesOAuth2Credentials() throws IOException {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String expectedAuthorization = InternalAuthHttpConstants.BEARER_PREFIX + accessToken;
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -86,8 +83,7 @@ public class HttpCredentialsAdapterTest {
     assertEquals(authorizationHeader, expectedAuthorization);
   }
 
-  @Test
-  public void initialize_populatesOAuth2Credentials_handle401() throws IOException {
+  @Test void initialize_populatesOAuth2Credentials_handle401() throws IOException {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
 
@@ -124,8 +120,7 @@ public class HttpCredentialsAdapterTest {
     assertEquals(MockTokenCheckingTransport.SUCCESS_CONTENT, response.parseAsString());
   }
 
-  @Test
-  public void initialize_noURI() throws IOException {
+  @Test void initialize_noURI() throws IOException {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String expectedAuthorization = InternalAuthHttpConstants.BEARER_PREFIX + accessToken;
     MockTokenServerTransportFactory tokenServerTransportFactory =
@@ -153,8 +148,7 @@ public class HttpCredentialsAdapterTest {
     assertEquals(authorizationHeader, expectedAuthorization);
   }
 
-  @Test
-  public void getCredentials() {
+  @Test void getCredentials() {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory tokenServerTransportFactory =
         new MockTokenServerTransportFactory();

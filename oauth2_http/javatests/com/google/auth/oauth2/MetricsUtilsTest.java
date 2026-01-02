@@ -31,17 +31,14 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.*;
-
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.google.auth.CredentialTypeForMetrics;
 import com.google.auth.oauth2.MetricsUtils.RequestType;
 import java.util.regex.Pattern;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
-@RunWith(JUnit4.class)
-public class MetricsUtilsTest {
+class MetricsUtilsTest {
   static final String VERSION_PATTERN =
       "gl-java/[\\d\\._-]+ auth/\\d+\\.\\d+\\.\\d+(-sp\\.\\d+)?(-SNAPSHOT)?";
   static final String AUTH_REQUEST_TYPE_PATTERN =
@@ -53,19 +50,17 @@ public class MetricsUtilsTest {
   static final String METRICS_PATTERN_NO_CRED_TYPE = VERSION_PATTERN + AUTH_REQUEST_TYPE_PATTERN;
 
   private static void assertPatterns(String contentToTest, String patternString) {
-    assertNotNull("metric header string should not be null", contentToTest);
+    assertNotNull(contentToTest, "metric header string should not be null");
     Pattern pattern = Pattern.compile(patternString);
     assertTrue(pattern.matcher(contentToTest).matches());
   }
 
-  @Test
-  public void getLanguageAndAuthLibraryVersionsTest() {
+  @Test void getLanguageAndAuthLibraryVersionsTest() {
     String version = MetricsUtils.getLanguageAndAuthLibraryVersions();
     assertPatterns(version, VERSION_PATTERN);
   }
 
-  @Test
-  public void getGoogleCredentialsMetricsHeaderTest() {
+  @Test void getGoogleCredentialsMetricsHeaderTest() {
     String metricsStringNoRequestType =
         MetricsUtils.getGoogleCredentialsMetricsHeader(
             RequestType.UNTRACKED, CredentialTypeForMetrics.USER_CREDENTIALS);

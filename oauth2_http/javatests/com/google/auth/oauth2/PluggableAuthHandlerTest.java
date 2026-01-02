@@ -31,10 +31,10 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
@@ -42,6 +42,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.mockito.Mockito;
 import com.google.api.client.json.GenericJson;
 import com.google.auth.oauth2.ExecutableHandler.ExecutableOptions;
 import com.google.auth.oauth2.PluggableAuthHandler.InternalProcessBuilder;
@@ -57,14 +58,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.Test;
 
-/** Tests for {@link PluggableAuthHandler}. */
-@RunWith(MockitoJUnitRunner.class)
-public class PluggableAuthHandlerTest {
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+/** Unit tests for {@link PluggableAuthHandler}. */
+@ExtendWith(MockitoExtension.class)
+class PluggableAuthHandlerTest {
   private static final String TOKEN_TYPE_OIDC = "urn:ietf:params:oauth:token-type:id_token";
   private static final String TOKEN_TYPE_SAML = "urn:ietf:params:oauth:token-type:saml2";
   private static final String ID_TOKEN = "header.payload.signature";
@@ -99,8 +100,7 @@ public class PluggableAuthHandlerTest {
         }
       };
 
-  @Test
-  public void retrieveTokenFromExecutable_oidcResponse() throws IOException, InterruptedException {
+  @Test void retrieveTokenFromExecutable_oidcResponse() throws IOException, InterruptedException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 
@@ -143,8 +143,7 @@ public class PluggableAuthHandlerTest {
     assertEquals(expectedMap, currentEnv);
   }
 
-  @Test
-  public void retrieveTokenFromExecutable_samlResponse() throws IOException, InterruptedException {
+  @Test void retrieveTokenFromExecutable_samlResponse() throws IOException, InterruptedException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 
@@ -188,8 +187,7 @@ public class PluggableAuthHandlerTest {
     assertEquals(expectedMap, currentEnv);
   }
 
-  @Test
-  public void retrieveTokenFromExecutable_errorResponse_throws()
+  @Test void retrieveTokenFromExecutable_errorResponse_throws()
       throws InterruptedException, IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
@@ -221,8 +219,7 @@ public class PluggableAuthHandlerTest {
     }
   }
 
-  @Test
-  public void retrieveTokenFromExecutable_successResponseWithoutExpirationTimeField()
+  @Test void retrieveTokenFromExecutable_successResponseWithoutExpirationTimeField()
       throws InterruptedException, IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
@@ -279,8 +276,7 @@ public class PluggableAuthHandlerTest {
     }
   }
 
-  @Test
-  public void
+  @Test void
       retrieveTokenFromExecutable_successResponseWithoutExpirationTimeFieldWithOutputFileSpecified_throws()
           throws InterruptedException, IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
@@ -354,8 +350,7 @@ public class PluggableAuthHandlerTest {
     }
   }
 
-  @Test
-  public void
+  @Test void
       retrieveTokenFromExecutable_successResponseInOutputFileMissingExpirationTimeField_throws()
           throws InterruptedException, IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
@@ -430,8 +425,7 @@ public class PluggableAuthHandlerTest {
     }
   }
 
-  @Test
-  public void retrieveTokenFromExecutable_withOutputFile_usesCachedResponse()
+  @Test void retrieveTokenFromExecutable_withOutputFile_usesCachedResponse()
       throws IOException, InterruptedException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
@@ -486,8 +480,7 @@ public class PluggableAuthHandlerTest {
     assertEquals(ID_TOKEN, token);
   }
 
-  @Test
-  public void retrieveTokenFromExecutable_withInvalidOutputFile_throws()
+  @Test void retrieveTokenFromExecutable_withInvalidOutputFile_throws()
       throws IOException, InterruptedException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
@@ -540,8 +533,7 @@ public class PluggableAuthHandlerTest {
     }
   }
 
-  @Test
-  public void retrieveTokenFromExecutable_expiredOutputFileResponse_callsExecutable()
+  @Test void retrieveTokenFromExecutable_expiredOutputFileResponse_callsExecutable()
       throws IOException, InterruptedException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
@@ -607,8 +599,7 @@ public class PluggableAuthHandlerTest {
     assertEquals(ID_TOKEN, token);
   }
 
-  @Test
-  public void retrieveTokenFromExecutable_expiredResponse_throws()
+  @Test void retrieveTokenFromExecutable_expiredResponse_throws()
       throws InterruptedException, IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
@@ -640,8 +631,7 @@ public class PluggableAuthHandlerTest {
     }
   }
 
-  @Test
-  public void retrieveTokenFromExecutable_invalidVersion_throws()
+  @Test void retrieveTokenFromExecutable_invalidVersion_throws()
       throws InterruptedException, IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
@@ -679,8 +669,7 @@ public class PluggableAuthHandlerTest {
     }
   }
 
-  @Test
-  public void retrieveTokenFromExecutable_allowExecutablesDisabled_throws() throws IOException {
+  @Test void retrieveTokenFromExecutable_allowExecutablesDisabled_throws() throws IOException {
     // In order to use Pluggable Auth, GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES must be set to 1.
     // If set to 0, a runtime exception should be thrown.
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
@@ -700,8 +689,7 @@ public class PluggableAuthHandlerTest {
     }
   }
 
-  @Test
-  public void getExecutableResponse_oidcResponse() throws IOException, InterruptedException {
+  @Test void getExecutableResponse_oidcResponse() throws IOException, InterruptedException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 
@@ -752,8 +740,7 @@ public class PluggableAuthHandlerTest {
     assertEquals(expectedMap, currentEnv);
   }
 
-  @Test
-  public void getExecutableResponse_samlResponse() throws IOException, InterruptedException {
+  @Test void getExecutableResponse_samlResponse() throws IOException, InterruptedException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 
@@ -806,8 +793,7 @@ public class PluggableAuthHandlerTest {
     verify(mockProcess, times(1)).destroy();
   }
 
-  @Test
-  public void getExecutableResponse_errorResponse() throws IOException, InterruptedException {
+  @Test void getExecutableResponse_errorResponse() throws IOException, InterruptedException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 
@@ -854,8 +840,7 @@ public class PluggableAuthHandlerTest {
     assertEquals(expectedMap, currentEnv);
   }
 
-  @Test
-  public void getExecutableResponse_timeoutExceeded_throws()
+  @Test void getExecutableResponse_timeoutExceeded_throws()
       throws InterruptedException, IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
@@ -885,8 +870,7 @@ public class PluggableAuthHandlerTest {
     verify(mockProcess, times(1)).destroy();
   }
 
-  @Test
-  public void getExecutableResponse_nonZeroExitCode_throws()
+  @Test void getExecutableResponse_nonZeroExitCode_throws()
       throws InterruptedException, IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
@@ -919,8 +903,7 @@ public class PluggableAuthHandlerTest {
     verify(mockProcess, times(1)).destroy();
   }
 
-  @Test
-  public void getExecutableResponse_processInterrupted_throws()
+  @Test void getExecutableResponse_processInterrupted_throws()
       throws InterruptedException, IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
@@ -952,8 +935,7 @@ public class PluggableAuthHandlerTest {
     verify(mockProcess, times(1)).destroy();
   }
 
-  @Test
-  public void getExecutableResponse_invalidResponse_throws()
+  @Test void getExecutableResponse_invalidResponse_throws()
       throws InterruptedException, IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");

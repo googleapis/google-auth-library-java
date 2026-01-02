@@ -31,24 +31,21 @@
 
 package com.google.auth.oauth2.functional;
 
-import static org.junit.Assert.assertEquals;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.google.api.client.json.GenericJson;
 import com.google.auth.TestUtils;
 import com.google.auth.oauth2.GoogleCredentials;
 import java.io.IOException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public final class FTQuotaProjectId {
 
-  @Test
-  public void validate_quota_from_environment_used() throws IOException {
+  @Test void validate_quota_from_environment_used() throws IOException {
     GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
     assertEquals("gcloud-devel", credentials.getQuotaProjectId());
   }
 
-  @Test
-  public void validate_quota_from_environment_not_used() throws IOException {
+  @Test void validate_quota_from_environment_not_used() throws IOException {
     // Check the environment value for quota project
     assertEquals("gcloud-devel", System.getenv("GOOGLE_CLOUD_QUOTA_PROJECT"));
 

@@ -75,7 +75,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.google.http.version>2.0.2</project.google.http.version>
-    <project.junit.version>4.13.2</project.junit.version>
+    <project.junit.version>5.11.4</project.junit.version>
     <project.guava.version>33.5.0-android</project.guava.version>
     <project.appengine.version>2.0.33</project.appengine.version>
     <project.findbugs.version>3.0.2</project.findbugs.version>
@@ -105,6 +105,18 @@
         <groupId>com.google.auth</groupId>
         <artifactId>google-auth-library-cloudshell</artifactId>
         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <version>4.11.0</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-junit-jupiter</artifactId>
+        <version>4.11.0</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>com.google.http-client</groupId>
@@ -139,8 +151,15 @@
         <version>${project.findbugs.version}</version>
       </dependency>
       <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
+        <version>${project.junit.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter</artifactId>
         <version>${project.junit.version}</version>
         <scope>test</scope>
       </dependency>

@@ -31,14 +31,13 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.LowLevelHttpRequest;
 import com.google.api.client.http.LowLevelHttpResponse;
@@ -65,13 +64,11 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
 /** Test case for {@link DefaultCredentialsProvider}. */
-@RunWith(JUnit4.class)
-public class DefaultCredentialsProviderTest {
+
+class DefaultCredentialsProviderTest {
 
   private static final String USER_CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
   private static final String USER_CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
@@ -105,8 +102,7 @@ public class DefaultCredentialsProviderTest {
   private static final String QUOTA_PROJECT_EXPLICIT = "explicit-quota-project-id";
   private static final String SMBIOS_PATH_LINUX = "/sys/class/dmi/id/product_name";
 
-  @Test
-  public void getDefaultCredentials_noCredentials_throws() {
+  @Test void getDefaultCredentials_noCredentials_throws() {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
 
@@ -119,8 +115,7 @@ public class DefaultCredentialsProviderTest {
     }
   }
 
-  @Test
-  public void getDefaultCredentials_noCredentialsSandbox_throwsNonSecurity() {
+  @Test void getDefaultCredentials_noCredentialsSandbox_throwsNonSecurity() {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setFileSandbox(true);
@@ -134,8 +129,7 @@ public class DefaultCredentialsProviderTest {
     }
   }
 
-  @Test
-  public void getDefaultCredentials_envValidSandbox_throwsNonSecurity() throws Exception {
+  @Test void getDefaultCredentials_envValidSandbox_throwsNonSecurity() throws Exception {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     InputStream userStream =
         UserCredentialsTest.writeUserStream(
@@ -155,8 +149,7 @@ public class DefaultCredentialsProviderTest {
     }
   }
 
-  @Test
-  public void getDefaultCredentials_noCredentials_singleGceTestRequest() {
+  @Test void getDefaultCredentials_noCredentials_singleGceTestRequest() {
     MockRequestCountingTransportFactory transportFactory =
         new MockRequestCountingTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
@@ -182,8 +175,7 @@ public class DefaultCredentialsProviderTest {
         ComputeEngineCredentials.MAX_COMPUTE_PING_TRIES);
   }
 
-  @Test
-  public void getDefaultCredentials_noCredentials_linuxNotGce() throws IOException {
+  @Test void getDefaultCredentials_noCredentials_linuxNotGce() throws IOException {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setProperty("os.name", "Linux");
     String productFilePath = SMBIOS_PATH_LINUX;
@@ -193,8 +185,7 @@ public class DefaultCredentialsProviderTest {
     assertFalse(ComputeEngineCredentials.checkStaticGceDetection(testProvider));
   }
 
-  @Test
-  public void getDefaultCredentials_static_linux() throws IOException {
+  @Test void getDefaultCredentials_static_linux() throws IOException {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setProperty("os.name", "Linux");
     String productFilePath = SMBIOS_PATH_LINUX;
@@ -205,8 +196,7 @@ public class DefaultCredentialsProviderTest {
     assertTrue(ComputeEngineCredentials.checkStaticGceDetection(testProvider));
   }
 
-  @Test
-  public void getDefaultCredentials_static_windows_configuredAsLinux_notGce() throws IOException {
+  @Test void getDefaultCredentials_static_windows_configuredAsLinux_notGce() throws IOException {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setProperty("os.name", "windows");
     String productFilePath = SMBIOS_PATH_LINUX;
@@ -216,8 +206,7 @@ public class DefaultCredentialsProviderTest {
     assertFalse(ComputeEngineCredentials.checkStaticGceDetection(testProvider));
   }
 
-  @Test
-  public void getDefaultCredentials_static_unsupportedPlatform_notGce() throws IOException {
+  @Test void getDefaultCredentials_static_unsupportedPlatform_notGce() throws IOException {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setProperty("os.name", "macos");
     String productFilePath = SMBIOS_PATH_LINUX;
@@ -227,8 +216,7 @@ public class DefaultCredentialsProviderTest {
     assertFalse(ComputeEngineCredentials.checkStaticGceDetection(testProvider));
   }
 
-  @Test
-  public void checkGcpLinuxPlatformData() throws Exception {
+  @Test void checkGcpLinuxPlatformData() throws Exception {
     BufferedReader reader;
     reader = new BufferedReader(new StringReader("HP Z440 Workstation"));
     assertFalse(ComputeEngineCredentials.checkProductNameOnLinux(reader));
@@ -240,8 +228,7 @@ public class DefaultCredentialsProviderTest {
     assertTrue(ComputeEngineCredentials.checkProductNameOnLinux(reader));
   }
 
-  @Test
-  public void getDefaultCredentials_caches() throws IOException {
+  @Test void getDefaultCredentials_caches() throws IOException {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
 
@@ -252,8 +239,7 @@ public class DefaultCredentialsProviderTest {
     assertSame(firstCall, secondCall);
   }
 
-  @Test
-  public void getDefaultCredentials_appEngineClassWithoutRuntime_NotFoundError() {
+  @Test void getDefaultCredentials_appEngineClassWithoutRuntime_NotFoundError() {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.addType(
@@ -269,8 +255,7 @@ public class DefaultCredentialsProviderTest {
     }
   }
 
-  @Test
-  public void getDefaultCredentials_appEngineRuntimeWithoutClass_throwsHelpfulLoadError() {
+  @Test void getDefaultCredentials_appEngineRuntimeWithoutClass_throwsHelpfulLoadError() {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.addType(
@@ -287,8 +272,7 @@ public class DefaultCredentialsProviderTest {
     }
   }
 
-  @Test
-  public void getDefaultCredentials_appEngineSkipWorks_retrievesCloudShellCredential()
+  @Test void getDefaultCredentials_appEngineSkipWorks_retrievesCloudShellCredential()
       throws IOException {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
@@ -302,8 +286,7 @@ public class DefaultCredentialsProviderTest {
     assertTrue(credentials instanceof CloudShellCredentials);
   }
 
-  @Test
-  public void getDefaultCredentials_compute_providesToken() throws IOException {
+  @Test void getDefaultCredentials_compute_providesToken() throws IOException {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setServiceAccountEmail(SA_CLIENT_EMAIL);
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
@@ -315,8 +298,7 @@ public class DefaultCredentialsProviderTest {
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
-  @Test
-  public void getDefaultCredentials_cloudshell() throws IOException {
+  @Test void getDefaultCredentials_cloudshell() throws IOException {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setEnv(DefaultCredentialsProvider.CLOUD_SHELL_ENV_VAR, "4");
@@ -327,8 +309,7 @@ public class DefaultCredentialsProviderTest {
     assertEquals(((CloudShellCredentials) defaultCredentials).getAuthPort(), 4);
   }
 
-  @Test
-  public void getDefaultCredentials_cloudshell_withComputCredentialsPresent() throws IOException {
+  @Test void getDefaultCredentials_cloudshell_withComputCredentialsPresent() throws IOException {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setEnv(DefaultCredentialsProvider.CLOUD_SHELL_ENV_VAR, "4");
@@ -339,8 +320,7 @@ public class DefaultCredentialsProviderTest {
     assertEquals(((CloudShellCredentials) defaultCredentials).getAuthPort(), 4);
   }
 
-  @Test
-  public void getDefaultCredentials_envMissingFile_throws() {
+  @Test void getDefaultCredentials_envMissingFile_throws() {
     final String invalidPath = "/invalid/path";
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
@@ -356,8 +336,7 @@ public class DefaultCredentialsProviderTest {
     }
   }
 
-  @Test
-  public void getDefaultCredentials_envServiceAccount_providesToken() throws IOException {
+  @Test void getDefaultCredentials_envServiceAccount_providesToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     InputStream serviceAccountStream =
@@ -376,8 +355,7 @@ public class DefaultCredentialsProviderTest {
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
-  @Test
-  public void getDefaultCredentials_envUser_providesToken() throws IOException {
+  @Test void getDefaultCredentials_envUser_providesToken() throws IOException {
     InputStream userStream =
         UserCredentialsTest.writeUserStream(
             USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
@@ -389,8 +367,7 @@ public class DefaultCredentialsProviderTest {
     testUserProvidesToken(testProvider, USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
   }
 
-  @Test
-  public void getDefaultCredentials_GdchServiceAccount() throws IOException {
+  @Test void getDefaultCredentials_GdchServiceAccount() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     InputStream gdchServiceAccountStream =
         GdchCredentialsTest.writeGdchServiceAccountStream(
@@ -433,7 +410,7 @@ public class DefaultCredentialsProviderTest {
     assertNotNull(((GdchCredentials) defaultCredentials).getApiAudience());
   }
 
-  public void getDefaultCredentials_quota_project() throws IOException {
+  void getDefaultCredentials_quota_project() throws IOException {
     InputStream userStream =
         UserCredentialsTest.writeUserStream(
             USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
@@ -458,8 +435,7 @@ public class DefaultCredentialsProviderTest {
     testUserProvidesToken(testProvider, USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
   }
 
-  @Test
-  public void getDefaultCredentials_compute_quotaProject() throws IOException {
+  @Test void getDefaultCredentials_compute_quotaProject() throws IOException {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setEnv(
@@ -476,8 +452,7 @@ public class DefaultCredentialsProviderTest {
     assertEquals("Google", headers.get("metadata-flavor").get(0));
   }
 
-  @Test
-  public void getDefaultCredentials_cloudshell_quotaProject() throws IOException {
+  @Test void getDefaultCredentials_cloudshell_quotaProject() throws IOException {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setEnv(DefaultCredentialsProvider.CLOUD_SHELL_ENV_VAR, "4");
@@ -490,8 +465,7 @@ public class DefaultCredentialsProviderTest {
     assertEquals(QUOTA_PROJECT_FROM_ENVIRONMENT, defaultCredentials.getQuotaProjectId());
   }
 
-  @Test
-  public void getDefaultCredentials_envNoGceCheck_noGceRequest() throws IOException {
+  @Test void getDefaultCredentials_envNoGceCheck_noGceRequest() throws IOException {
     MockRequestCountingTransportFactory transportFactory =
         new MockRequestCountingTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
@@ -506,8 +480,7 @@ public class DefaultCredentialsProviderTest {
     assertEquals(transportFactory.transport.getRequestCount(), 0);
   }
 
-  @Test
-  public void getDefaultCredentials_linuxSetup_envNoGceCheck_noGce() throws IOException {
+  @Test void getDefaultCredentials_linuxSetup_envNoGceCheck_noGce() throws IOException {
     MockRequestCountingTransportFactory transportFactory =
         new MockRequestCountingTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
@@ -526,16 +499,14 @@ public class DefaultCredentialsProviderTest {
     assertEquals(transportFactory.transport.getRequestCount(), 0);
   }
 
-  @Test
-  public void getDefaultCredentials_envGceMetadataHost_setsMetadataServerUrl() {
+  @Test void getDefaultCredentials_envGceMetadataHost_setsMetadataServerUrl() {
     String testUrl = "192.0.2.0";
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setEnv(DefaultCredentialsProvider.GCE_METADATA_HOST_ENV_VAR, testUrl);
     assertEquals(ComputeEngineCredentials.getMetadataServerUrl(testProvider), "http://" + testUrl);
   }
 
-  @Test
-  public void getDefaultCredentials_envGceMetadataHost_setsTokenServerUrl() {
+  @Test void getDefaultCredentials_envGceMetadataHost_setsTokenServerUrl() {
     String testUrl = "192.0.2.0";
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setEnv(DefaultCredentialsProvider.GCE_METADATA_HOST_ENV_VAR, testUrl);
@@ -544,8 +515,7 @@ public class DefaultCredentialsProviderTest {
         "http://" + testUrl + "/computeMetadata/v1/instance/service-accounts/default/token");
   }
 
-  @Test
-  public void getDefaultCredentials_wellKnownFileEnv_providesToken() throws IOException {
+  @Test void getDefaultCredentials_wellKnownFileEnv_providesToken() throws IOException {
     File cloudConfigDir = getTempDirectory();
     InputStream userStream =
         UserCredentialsTest.writeUserStream(
@@ -559,8 +529,7 @@ public class DefaultCredentialsProviderTest {
     testUserProvidesToken(testProvider, USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
   }
 
-  @Test
-  public void getDefaultCredentials_wellKnownFileNonWindows_providesToken() throws IOException {
+  @Test void getDefaultCredentials_wellKnownFileNonWindows_providesToken() throws IOException {
     File homeDir = getTempDirectory();
     File configDir = new File(homeDir, ".config");
     File cloudConfigDir = new File(configDir, DefaultCredentialsProvider.CLOUDSDK_CONFIG_DIRECTORY);
@@ -577,8 +546,7 @@ public class DefaultCredentialsProviderTest {
     testUserProvidesToken(testProvider, USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
   }
 
-  @Test
-  public void getDefaultCredentials_wellKnownFileWindows_providesToken() throws IOException {
+  @Test void getDefaultCredentials_wellKnownFileWindows_providesToken() throws IOException {
     File homeDir = getTempDirectory();
     File cloudConfigDir = new File(homeDir, DefaultCredentialsProvider.CLOUDSDK_CONFIG_DIRECTORY);
     InputStream userStream =
@@ -594,8 +562,7 @@ public class DefaultCredentialsProviderTest {
     testUserProvidesToken(testProvider, USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN);
   }
 
-  @Test
-  public void getDefaultCredentials_envAndWellKnownFile_envPrecedence() throws IOException {
+  @Test void getDefaultCredentials_envAndWellKnownFile_envPrecedence() throws IOException {
     final String refreshTokenEnv = "2/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
     final String accessTokenEnv = "2/MkSJoj1xsli0AccessToken_NKPY2";
     final String refreshTokenWkf = "3/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
@@ -652,8 +619,7 @@ public class DefaultCredentialsProviderTest {
     public void flush() {}
   }
 
-  @Test
-  public void getDefaultCredentials_wellKnownFile_logsGcloudWarning() throws IOException {
+  @Test void getDefaultCredentials_wellKnownFile_logsGcloudWarning() throws IOException {
     LogRecord message = getCredentialsAndReturnLogMessage(false, true);
     assertNotNull(message);
     assertEquals(Level.WARNING, message.getLevel());
@@ -661,14 +627,12 @@ public class DefaultCredentialsProviderTest {
         message.getMessage().equals(DefaultCredentialsProvider.CLOUDSDK_CREDENTIALS_WARNING));
   }
 
-  @Test
-  public void getDefaultCredentials_wellKnownFile_noGcloudWarning() throws IOException {
+  @Test void getDefaultCredentials_wellKnownFile_noGcloudWarning() throws IOException {
     LogRecord message = getCredentialsAndReturnLogMessage(false, false);
     assertNull(message);
   }
 
-  @Test
-  public void getDefaultCredentials_wellKnownFile_suppressGcloudWarning() throws IOException {
+  @Test void getDefaultCredentials_wellKnownFile_suppressGcloudWarning() throws IOException {
     LogRecord message = getCredentialsAndReturnLogMessage(true, true);
     assertNull(message);
   }
@@ -743,8 +707,7 @@ public class DefaultCredentialsProviderTest {
     }
   }
 
-  @Test
-  public void getDefaultCredentials_envVarSet_serviceAccountCredentials_correctCredentialInfo()
+  @Test void getDefaultCredentials_envVarSet_serviceAccountCredentials_correctCredentialInfo()
       throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
@@ -770,8 +733,7 @@ public class DefaultCredentialsProviderTest {
     assertEquals(SA_CLIENT_EMAIL, credentialInfo.get("Principal"));
   }
 
-  @Test
-  public void getDefaultCredentials_envVarSet_userCredential_correctCredentialInfo()
+  @Test void getDefaultCredentials_envVarSet_userCredential_correctCredentialInfo()
       throws IOException {
     InputStream userStream =
         UserCredentialsTest.writeUserStream(
@@ -796,8 +758,7 @@ public class DefaultCredentialsProviderTest {
     assertNull(credentialInfo.get("Principal"));
   }
 
-  @Test
-  public void getDefaultCredentials_wellKnownFile_userCredential_correctCredentialInfo()
+  @Test void getDefaultCredentials_wellKnownFile_userCredential_correctCredentialInfo()
       throws IOException {
     File cloudConfigDir = getTempDirectory();
     InputStream userStream =
@@ -823,8 +784,7 @@ public class DefaultCredentialsProviderTest {
     assertNull(credentialInfo.get("Principal"));
   }
 
-  @Test
-  public void getDefaultCredentials_computeEngineCredentials_defaultMDSUrl_correctCredentialInfo()
+  @Test void getDefaultCredentials_computeEngineCredentials_defaultMDSUrl_correctCredentialInfo()
       throws IOException {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
@@ -843,8 +803,7 @@ public class DefaultCredentialsProviderTest {
     assertNull(credentialInfo.get("Principal"));
   }
 
-  @Test
-  public void getDefaultCredentials_computeEngineCredentials_customMDSUrl_correctCredentialInfo()
+  @Test void getDefaultCredentials_computeEngineCredentials_customMDSUrl_correctCredentialInfo()
       throws IOException {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();

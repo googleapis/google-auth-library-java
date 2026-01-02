@@ -30,26 +30,22 @@
  */
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.auth.oauth2.ComputeEngineCredentialsTest.MockMetadataServerTransportFactory;
 import com.google.common.collect.ImmutableMap;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
 /** Test cases for {@link SecureSessionAgent}. */
-@RunWith(JUnit4.class)
-public class SecureSessionAgentTest {
+
+class SecureSessionAgentTest {
 
   private static final String INVALID_JSON_KEY = "invalid_key";
   private static final String S2A_PLAINTEXT_ADDRESS = "plaintext";
   private static final String S2A_MTLS_ADDRESS = "mtls";
 
-  @Test
-  public void getS2AAddress_validAddress() {
+  @Test void getS2AAddress_validAddress() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setS2AContentMap(
         ImmutableMap.of(
@@ -68,8 +64,7 @@ public class SecureSessionAgentTest {
     assertEquals(S2A_MTLS_ADDRESS, mtlsS2AAddress);
   }
 
-  @Test
-  public void getS2AAddress_queryEndpointResponseErrorCode_emptyAddress() {
+  @Test void getS2AAddress_queryEndpointResponseErrorCode_emptyAddress() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setS2AContentMap(
         ImmutableMap.of(
@@ -88,8 +83,7 @@ public class SecureSessionAgentTest {
     assertTrue(mtlsS2AAddress.isEmpty());
   }
 
-  @Test
-  public void getS2AAddress_queryEndpointResponseEmpty_emptyAddress() {
+  @Test void getS2AAddress_queryEndpointResponseEmpty_emptyAddress() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setS2AContentMap(
         ImmutableMap.of(
@@ -109,8 +103,7 @@ public class SecureSessionAgentTest {
     assertTrue(mtlsS2AAddress.isEmpty());
   }
 
-  @Test
-  public void getS2AAddress_queryEndpointResponseInvalidPlaintextJsonKey_plaintextEmptyAddress() {
+  @Test void getS2AAddress_queryEndpointResponseInvalidPlaintextJsonKey_plaintextEmptyAddress() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setS2AContentMap(
         ImmutableMap.of(
@@ -129,8 +122,7 @@ public class SecureSessionAgentTest {
     assertEquals(S2A_MTLS_ADDRESS, mtlsS2AAddress);
   }
 
-  @Test
-  public void getS2AAddress_queryEndpointResponseInvalidMtlsJsonKey_mtlsEmptyAddress() {
+  @Test void getS2AAddress_queryEndpointResponseInvalidMtlsJsonKey_mtlsEmptyAddress() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setS2AContentMap(
         ImmutableMap.of(

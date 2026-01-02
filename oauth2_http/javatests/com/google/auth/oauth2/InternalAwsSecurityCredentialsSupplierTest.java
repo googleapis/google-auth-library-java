@@ -31,22 +31,19 @@
 
 package com.google.auth.oauth2;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static com.google.auth.oauth2.AwsCredentialsTest.buildAwsImdsv2CredentialSource;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import com.google.auth.oauth2.ExternalAccountCredentialsTest.MockExternalAccountCredentialsTransportFactory;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
 /** Tests for {@link InternalAwsSecurityCredentialsSupplier}. */
-@RunWith(JUnit4.class)
-public class InternalAwsSecurityCredentialsSupplierTest {
-  @Test
-  public void shouldUseMetadataServer_withRequiredEnvironmentVariables() {
+
+class InternalAwsSecurityCredentialsSupplierTest {
+  @Test void shouldUseMetadataServer_withRequiredEnvironmentVariables() {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -68,8 +65,7 @@ public class InternalAwsSecurityCredentialsSupplierTest {
     }
   }
 
-  @Test
-  public void shouldUseMetadataServer_missingRegion() {
+  @Test void shouldUseMetadataServer_missingRegion() {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -85,8 +81,7 @@ public class InternalAwsSecurityCredentialsSupplierTest {
     assertTrue(supplier.shouldUseMetadataServer());
   }
 
-  @Test
-  public void shouldUseMetadataServer_missingAwsAccessKeyId() {
+  @Test void shouldUseMetadataServer_missingAwsAccessKeyId() {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -107,8 +102,7 @@ public class InternalAwsSecurityCredentialsSupplierTest {
     }
   }
 
-  @Test
-  public void shouldUseMetadataServer_missingAwsSecretAccessKey() {
+  @Test void shouldUseMetadataServer_missingAwsSecretAccessKey() {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -129,8 +123,7 @@ public class InternalAwsSecurityCredentialsSupplierTest {
     }
   }
 
-  @Test
-  public void shouldUseMetadataServer_missingAwsSecurityCreds() {
+  @Test void shouldUseMetadataServer_missingAwsSecurityCreds() {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -150,8 +143,7 @@ public class InternalAwsSecurityCredentialsSupplierTest {
     }
   }
 
-  @Test
-  public void shouldUseMetadataServer_noEnvironmentVars() {
+  @Test void shouldUseMetadataServer_noEnvironmentVars() {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();

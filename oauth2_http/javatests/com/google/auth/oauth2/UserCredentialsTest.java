@@ -31,16 +31,15 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
@@ -64,13 +63,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
 /** Test case for {@link UserCredentials}. */
-@RunWith(JUnit4.class)
-public class UserCredentialsTest extends BaseSerializationTest {
+
+class UserCredentialsTest extends BaseSerializationTest {
 
   static final String CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
   static final String CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
@@ -86,13 +83,14 @@ public class UserCredentialsTest extends BaseSerializationTest {
           + "aXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwic3ViIjoiMTAyMTAxNTUwODM0MjAwNzA4NTY4In0"
           + ".redacted";
 
-  @Test(expected = IllegalStateException.class)
-  public void constructor_accessAndRefreshTokenNull_throws() {
-    UserCredentials.newBuilder().setClientId(CLIENT_ID).setClientSecret(CLIENT_SECRET).build();
+  @Test
+  void constructor_accessAndRefreshTokenNull_throws() {
+    assertThrows(
+        IllegalStateException.class,
+        () -> UserCredentials.newBuilder().setClientId(CLIENT_ID).setClientSecret(CLIENT_SECRET).build());
   }
 
-  @Test
-  public void constructor() {
+  @Test void constructor() {
     UserCredentials credentials =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -106,8 +104,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     assertEquals(QUOTA_PROJECT, credentials.getQuotaProjectId());
   }
 
-  @Test
-  public void createScoped_same() {
+  @Test void createScoped_same() {
     UserCredentials userCredentials =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -117,8 +114,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     assertSame(userCredentials, userCredentials.createScoped(SCOPES));
   }
 
-  @Test
-  public void createScopedRequired_false() {
+  @Test void createScopedRequired_false() {
     UserCredentials userCredentials =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -128,8 +124,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     assertFalse(userCredentials.createScopedRequired());
   }
 
-  @Test
-  public void fromJson_hasAccessToken() throws IOException {
+  @Test void fromJson_hasAccessToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
@@ -141,8 +136,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
-  @Test
-  public void fromJson_hasTokenUri() throws IOException {
+  @Test void fromJson_hasTokenUri() throws IOException {
     String tokenUrl = "token.url.xyz";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
@@ -153,8 +147,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     assertEquals(URI.create(tokenUrl), credentials.toBuilder().getTokenServerUri());
   }
 
-  @Test
-  public void fromJson_emptyTokenUri() throws IOException {
+  @Test void fromJson_emptyTokenUri() throws IOException {
     String tokenUrl = "";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
@@ -165,8 +158,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     assertEquals(OAuth2Utils.TOKEN_SERVER_URI, credentials.toBuilder().getTokenServerUri());
   }
 
-  @Test
-  public void fromJson_hasQuotaProjectId() throws IOException {
+  @Test void fromJson_hasQuotaProjectId() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
@@ -181,8 +173,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
         Collections.singletonList(QUOTA_PROJECT));
   }
 
-  @Test
-  public void getRequestMetadata_initialToken_hasAccessToken() throws IOException {
+  @Test void getRequestMetadata_initialToken_hasAccessToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
@@ -199,8 +190,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
-  @Test
-  public void getRequestMetadata_initialTokenRefreshed_throws() throws IOException {
+  @Test void getRequestMetadata_initialTokenRefreshed_throws() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
@@ -220,8 +210,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test
-  public void getRequestMetadata_fromRefreshToken_hasAccessToken() throws IOException {
+  @Test void getRequestMetadata_fromRefreshToken_hasAccessToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
@@ -238,8 +227,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
-  @Test
-  public void getRequestMetadata_customTokenServer_hasAccessToken() throws IOException {
+  @Test void getRequestMetadata_customTokenServer_hasAccessToken() throws IOException {
     final URI TOKEN_SERVER = URI.create("https://foo.com/bar");
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
@@ -259,8 +247,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
-  @Test
-  public void equals_true() throws IOException {
+  @Test void equals_true() throws IOException {
     final URI tokenServer = URI.create("https://foo.com/bar");
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
@@ -288,8 +275,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     assertTrue(otherCredentials.equals(credentials));
   }
 
-  @Test
-  public void equals_false_clientId() throws IOException {
+  @Test void equals_false_clientId() throws IOException {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
     MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
@@ -315,8 +301,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     assertFalse(otherCredentials.equals(credentials));
   }
 
-  @Test
-  public void equals_false_clientSecret() throws IOException {
+  @Test void equals_false_clientSecret() throws IOException {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
     MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
@@ -342,8 +327,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     assertFalse(otherCredentials.equals(credentials));
   }
 
-  @Test
-  public void equals_false_refreshToken() throws IOException {
+  @Test void equals_false_refreshToken() throws IOException {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
     MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
@@ -369,8 +353,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     assertFalse(otherCredentials.equals(credentials));
   }
 
-  @Test
-  public void equals_false_accessToken() throws IOException {
+  @Test void equals_false_accessToken() throws IOException {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
     AccessToken otherAccessToken = new AccessToken("otherAccessToken", null);
@@ -398,8 +381,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     assertNotEquals(credentials.hashCode(), otherAccessToken.hashCode());
   }
 
-  @Test
-  public void equals_false_transportFactory() throws IOException {
+  @Test void equals_false_transportFactory() throws IOException {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
     MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
@@ -426,8 +408,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     assertFalse(otherCredentials.equals(credentials));
   }
 
-  @Test
-  public void equals_false_tokenServer() throws IOException {
+  @Test void equals_false_tokenServer() throws IOException {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
     final URI tokenServer2 = URI.create("https://foo2.com/bar");
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
@@ -454,8 +435,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     assertFalse(otherCredentials.equals(credentials));
   }
 
-  @Test
-  public void equals_false_quotaProjectId() throws IOException {
+  @Test void equals_false_quotaProjectId() throws IOException {
     final String quotaProject1 = "sample-id-1";
     final String quotaProject2 = "sample-id-2";
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
@@ -482,8 +462,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     assertFalse(otherCredentials.equals(credentials));
   }
 
-  @Test
-  public void toString_containsFields() throws IOException {
+  @Test void toString_containsFields() throws IOException {
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
     final URI tokenServer = URI.create("https://foo.com/bar");
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -514,8 +493,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     assertEquals(expectedToString, credentials.toString());
   }
 
-  @Test
-  public void hashCode_equals() throws IOException {
+  @Test void hashCode_equals() throws IOException {
     final URI tokenServer = URI.create("https://foo.com/bar");
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
@@ -542,8 +520,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     assertEquals(credentials.hashCode(), otherCredentials.hashCode());
   }
 
-  @Test
-  public void serialize() throws IOException, ClassNotFoundException {
+  @Test void serialize() throws IOException, ClassNotFoundException {
     final URI tokenServer = URI.create("https://foo.com/bar");
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
@@ -563,8 +540,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
   }
 
-  @Test
-  public void fromStream_nullTransport_throws() throws IOException {
+  @Test void fromStream_nullTransport_throws() throws IOException {
     InputStream stream = new ByteArrayInputStream("foo".getBytes());
     try {
       UserCredentials.fromStream(stream, null);
@@ -574,8 +550,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test
-  public void fromStream_nullStream_throws() throws IOException {
+  @Test void fromStream_nullStream_throws() throws IOException {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     try {
       UserCredentials.fromStream(null, transportFactory);
@@ -585,8 +560,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test
-  public void fromStream_user_providesToken() throws IOException {
+  @Test void fromStream_user_providesToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
@@ -600,29 +574,25 @@ public class UserCredentialsTest extends BaseSerializationTest {
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
-  @Test
-  public void fromStream_userNoClientId_throws() throws IOException {
+  @Test void fromStream_userNoClientId_throws() throws IOException {
     InputStream userStream = writeUserStream(null, CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
 
     testFromStreamException(userStream, "client_id");
   }
 
-  @Test
-  public void fromStream_userNoClientSecret_throws() throws IOException {
+  @Test void fromStream_userNoClientSecret_throws() throws IOException {
     InputStream userStream = writeUserStream(CLIENT_ID, null, REFRESH_TOKEN, QUOTA_PROJECT);
 
     testFromStreamException(userStream, "client_secret");
   }
 
-  @Test
-  public void fromStream_userNoRefreshToken_throws() throws IOException {
+  @Test void fromStream_userNoRefreshToken_throws() throws IOException {
     InputStream userStream = writeUserStream(CLIENT_ID, CLIENT_SECRET, null, QUOTA_PROJECT);
 
     testFromStreamException(userStream, "refresh_token");
   }
 
-  @Test
-  public void saveUserCredentials_saved_throws() throws IOException {
+  @Test void saveUserCredentials_saved_throws() throws IOException {
     UserCredentials userCredentials =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -636,8 +606,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     userCredentials.save(filePath);
   }
 
-  @Test
-  public void saveAndRestoreUserCredential_saveAndRestored_throws() throws IOException {
+  @Test void saveAndRestoreUserCredential_saveAndRestored_throws() throws IOException {
     UserCredentials userCredentials =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -661,8 +630,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     assertEquals(userCredentials.getRefreshToken(), restoredCredentials.getRefreshToken());
   }
 
-  @Test
-  public void getRequestMetadataSetsQuotaProjectId() throws IOException {
+  @Test void getRequestMetadataSetsQuotaProjectId() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
@@ -683,8 +651,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     assertEquals("my-quota-project-id", headerValues.get(0));
   }
 
-  @Test
-  public void getRequestMetadataNoQuotaProjectId() throws IOException {
+  @Test void getRequestMetadataNoQuotaProjectId() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
@@ -701,8 +668,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     assertFalse(metadata.containsKey("x-goog-user-project"));
   }
 
-  @Test
-  public void getRequestMetadataWithCallback() throws IOException {
+  @Test void getRequestMetadataWithCallback() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
@@ -733,11 +699,10 @@ public class UserCredentialsTest extends BaseSerializationTest {
           }
         });
 
-    assertTrue("Should have run onSuccess() callback", success.get());
+    assertTrue(success.get(), "Should have run onSuccess() callback");
   }
 
-  @Test
-  public void IdTokenCredentials_WithUserEmailScope_success() throws IOException {
+  @Test void IdTokenCredentials_WithUserEmailScope_success() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     String refreshToken = MockTokenServerTransport.REFRESH_TOKEN_WITH_USER_SCOPE;
 
@@ -774,8 +739,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     com.google.auth.oauth2.TestUtils.validateMetricsHeader(idTokenRequestHeader, "untracked", "u");
   }
 
-  @Test
-  public void IdTokenCredentials_NoRetry_RetryableStatus_throws() throws IOException {
+  @Test void IdTokenCredentials_NoRetry_RetryableStatus_throws() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     String refreshToken = MockTokenServerTransport.REFRESH_TOKEN_WITH_USER_SCOPE;
 
@@ -815,8 +779,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test
-  public void idTokenWithAudience_non2xxError() throws IOException {
+  @Test void idTokenWithAudience_non2xxError() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.setError(new IOException("404 Not Found"));
     String refreshToken = MockTokenServerTransport.REFRESH_TOKEN_WITH_USER_SCOPE;
@@ -830,8 +793,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     assertThrows(GoogleAuthException.class, tokenCredential::refresh);
   }
 
-  @Test
-  public void refreshAccessToken_4xx_5xx_NonRetryableFails() throws IOException {
+  @Test void refreshAccessToken_4xx_5xx_NonRetryableFails() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     String refreshToken = MockTokenServerTransport.REFRESH_TOKEN_WITH_USER_SCOPE;
 
@@ -858,8 +820,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test
-  public void IdTokenCredentials_NoUserEmailScope_throws() throws IOException {
+  @Test void IdTokenCredentials_NoUserEmailScope_throws() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
@@ -885,8 +846,7 @@ public class UserCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test
-  public void userCredentials_toBuilder_copyEveryAttribute() {
+  @Test void userCredentials_toBuilder_copyEveryAttribute() {
     MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
     UserCredentials credentials =
         UserCredentials.newBuilder()

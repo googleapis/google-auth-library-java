@@ -31,8 +31,8 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -48,27 +48,25 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.KeyValuePair;
 import org.slf4j.event.Level;
 
 // part of Slf4jUtils test that needs logback dependency
-public class Slf4jUtilsLogbackTest {
+class Slf4jUtilsLogbackTest {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Slf4jUtilsLogbackTest.class);
 
   private TestEnvironmentProvider testEnvironmentProvider;
 
-  @Before
-  public void setup() {
+  @BeforeEach void setup() {
     testEnvironmentProvider = new TestEnvironmentProvider();
   }
 
-  @Test
-  public void testLogWithMDC_slf4jLogger() {
+  @Test void testLogWithMDC_slf4jLogger() {
 
     TestAppender testAppender = setupTestLogger();
 
@@ -90,8 +88,7 @@ public class Slf4jUtilsLogbackTest {
     testAppender.stop();
   }
 
-  @Test
-  public void testLogWithMDC_INFO() {
+  @Test void testLogWithMDC_INFO() {
     TestAppender testAppender = setupTestLogger();
     Slf4jUtils.logWithMDC(LOGGER, Level.INFO, new HashMap<>(), "test message");
 
@@ -100,8 +97,7 @@ public class Slf4jUtilsLogbackTest {
     testAppender.stop();
   }
 
-  @Test
-  public void testLogWithMDC_TRACE_notEnabled() {
+  @Test void testLogWithMDC_TRACE_notEnabled() {
     TestAppender testAppender = setupTestLogger();
     Slf4jUtils.logWithMDC(LOGGER, Level.TRACE, new HashMap<>(), "test message");
 
@@ -109,8 +105,7 @@ public class Slf4jUtilsLogbackTest {
     testAppender.stop();
   }
 
-  @Test
-  public void testLogWithMDC_WARN() {
+  @Test void testLogWithMDC_WARN() {
     TestAppender testAppender = setupTestLogger();
     Slf4jUtils.logWithMDC(LOGGER, Level.WARN, new HashMap<>(), "test message");
 
@@ -119,8 +114,7 @@ public class Slf4jUtilsLogbackTest {
     testAppender.stop();
   }
 
-  @Test
-  public void testLogWithMDC_ERROR() {
+  @Test void testLogWithMDC_ERROR() {
     TestAppender testAppender = setupTestLogger();
     Slf4jUtils.logWithMDC(LOGGER, Level.ERROR, new HashMap<>(), "test message");
 
@@ -129,8 +123,7 @@ public class Slf4jUtilsLogbackTest {
     testAppender.stop();
   }
 
-  @Test
-  public void testLogGenericData() {
+  @Test void testLogGenericData() {
     // mimic GOOGLE_SDK_JAVA_LOGGING = true
     testEnvironmentProvider.setEnv(LoggingUtils.GOOGLE_SDK_JAVA_LOGGING, "true");
     LoggingUtils.setEnvironmentProvider(testEnvironmentProvider);
@@ -150,16 +143,13 @@ public class Slf4jUtilsLogbackTest {
     assertEquals(2, keyValuePairs.size());
     for (KeyValuePair kvp : keyValuePairs) {
 
-      assertTrue(
-          "Key should be either 'key1' or 'token'",
-          kvp.key.equals("key1") || kvp.key.equals("token"));
+      assertTrue(kvp.key.equals("key1", "Key should be either 'key1' or 'token'") || kvp.key.equals("token"));
     }
 
     testAppender.stop();
   }
 
-  @Test
-  public void testLogRequest() throws IOException {
+  @Test void testLogRequest() throws IOException {
     // mimic GOOGLE_SDK_JAVA_LOGGING = true
     testEnvironmentProvider.setEnv(LoggingUtils.GOOGLE_SDK_JAVA_LOGGING, "true");
     LoggingUtils.setEnvironmentProvider(testEnvironmentProvider);

@@ -31,13 +31,13 @@
 
 package com.google.auth.oauth2;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static com.google.auth.Credentials.GOOGLE_DEFAULT_UNIVERSE;
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonParser;
@@ -56,13 +56,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
 /** Tests for {@link AwsCredentials}. */
-@RunWith(JUnit4.class)
-public class AwsCredentialsTest extends BaseSerializationTest {
+
+class AwsCredentialsTest extends BaseSerializationTest {
 
   private static final String STS_URL = "https://sts.googleapis.com/v1/token";
   private static final String AWS_CREDENTIALS_URL = "https://169.254.169.254";
@@ -111,8 +109,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
   private static final ExternalAccountSupplierContext emptyContext =
       ExternalAccountSupplierContext.newBuilder().setAudience("").setSubjectTokenType("").build();
 
-  @Test
-  public void test_awsCredentialSource() {
+  @Test void test_awsCredentialSource() {
     String keys[] = {"region_url", "url", "imdsv2_session_token_url"};
     for (String key : keys) {
       Map<String, Object> credentialSourceWithInvalidUrl = buildAwsIpv6CredentialSourceMap();
@@ -123,8 +120,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test
-  public void refreshAccessToken_withoutServiceAccountImpersonation() throws IOException {
+  @Test void refreshAccessToken_withoutServiceAccountImpersonation() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -145,8 +141,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     ExternalAccountCredentialsTest.validateMetricsHeader(headers, "aws", false, false);
   }
 
-  @Test
-  public void refreshAccessToken_withServiceAccountImpersonation() throws IOException {
+  @Test void refreshAccessToken_withServiceAccountImpersonation() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -175,8 +170,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     ExternalAccountCredentialsTest.validateMetricsHeader(headers, "aws", true, false);
   }
 
-  @Test
-  public void refreshAccessToken_withServiceAccountImpersonationOptions() throws IOException {
+  @Test void refreshAccessToken_withServiceAccountImpersonationOptions() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -215,8 +209,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     ExternalAccountCredentialsTest.validateMetricsHeader(headers, "aws", true, true);
   }
 
-  @Test
-  public void refreshAccessTokenProgrammaticRefresh_withoutServiceAccountImpersonation()
+  @Test void refreshAccessTokenProgrammaticRefresh_withoutServiceAccountImpersonation()
       throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
@@ -243,8 +236,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     ExternalAccountCredentialsTest.validateMetricsHeader(headers, "programmatic", false, false);
   }
 
-  @Test
-  public void refreshAccessTokenProgrammaticRefresh_withServiceAccountImpersonation()
+  @Test void refreshAccessTokenProgrammaticRefresh_withServiceAccountImpersonation()
       throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
@@ -278,7 +270,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void retrieveSubjectToken() throws IOException {
+  void retrieveSubjectToken() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -322,7 +314,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void retrieveSubjectTokenWithSessionTokenUrl() throws IOException {
+  void retrieveSubjectTokenWithSessionTokenUrl() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -385,8 +377,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     ValidateRequest(requests.get(4), AWS_CREDENTIALS_URL_WITH_ROLE, sessionTokenHeader);
   }
 
-  @Test
-  public void retrieveSubjectToken_imdsv1EnvVariablesSet_metadataServerNotCalled()
+  @Test void retrieveSubjectToken_imdsv1EnvVariablesSet_metadataServerNotCalled()
       throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
@@ -431,8 +422,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     assertEquals(0, requests.size());
   }
 
-  @Test
-  public void retrieveSubjectToken_imdsv2EnvVariablesSet_metadataServerNotCalled()
+  @Test void retrieveSubjectToken_imdsv2EnvVariablesSet_metadataServerNotCalled()
       throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
@@ -477,8 +467,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     assertEquals(0, requests.size());
   }
 
-  @Test
-  public void retrieveSubjectToken_noRegion_expectThrows() {
+  @Test void retrieveSubjectToken_noRegion_expectThrows() {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -505,8 +494,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     ValidateRequest(requests.get(0), AWS_REGION_URL, EMPTY_STRING_HEADERS);
   }
 
-  @Test
-  public void retrieveSubjectToken_noRole_expectThrows() {
+  @Test void retrieveSubjectToken_noRole_expectThrows() {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -537,8 +525,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     ValidateRequest(requests.get(1), AWS_CREDENTIALS_URL, EMPTY_STRING_HEADERS);
   }
 
-  @Test
-  public void retrieveSubjectToken_noCredentials_expectThrows() {
+  @Test void retrieveSubjectToken_noCredentials_expectThrows() {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -572,8 +559,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     ValidateRequest(requests.get(2), AWS_CREDENTIALS_URL_WITH_ROLE, EMPTY_STRING_HEADERS);
   }
 
-  @Test
-  public void retrieveSubjectToken_noRegionUrlProvided() {
+  @Test void retrieveSubjectToken_noRegionUrlProvided() {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -602,8 +588,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     assertTrue(requests.isEmpty());
   }
 
-  @Test
-  public void retrieveSubjectToken_withProgrammaticRefresh() throws IOException {
+  @Test void retrieveSubjectToken_withProgrammaticRefresh() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -641,8 +626,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     assertNotNull(headers.get("Authorization"));
   }
 
-  @Test
-  public void retrieveSubjectToken_withProgrammaticRefreshSessionToken() throws IOException {
+  @Test void retrieveSubjectToken_withProgrammaticRefreshSessionToken() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -684,8 +668,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     assertNotNull(headers.get("Authorization"));
   }
 
-  @Test
-  public void retrieveSubjectToken_passesContext() throws IOException {
+  @Test void retrieveSubjectToken_passesContext() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -714,8 +697,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     awsCredential.retrieveSubjectToken();
   }
 
-  @Test
-  public void retrieveSubjectToken_withProgrammaticRefreshThrowsError() throws IOException {
+  @Test void retrieveSubjectToken_withProgrammaticRefreshThrowsError() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -741,8 +723,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test
-  public void getAwsSecurityCredentials_fromEnvironmentVariablesNoToken() throws IOException {
+  @Test void getAwsSecurityCredentials_fromEnvironmentVariablesNoToken() throws IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider
         .setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId")
@@ -761,8 +742,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     assertNull(credentials.getSessionToken());
   }
 
-  @Test
-  public void getAwsSecurityCredentials_fromEnvironmentVariablesWithToken() throws IOException {
+  @Test void getAwsSecurityCredentials_fromEnvironmentVariablesWithToken() throws IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider
         .setEnv("AWS_ACCESS_KEY_ID", "awsAccessKeyId")
@@ -794,8 +774,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     assertEquals("awsSessionToken", credentials.getSessionToken());
   }
 
-  @Test
-  public void getAwsSecurityCredentials_fromEnvironmentVariables_noMetadataServerCall()
+  @Test void getAwsSecurityCredentials_fromEnvironmentVariables_noMetadataServerCall()
       throws IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider
@@ -816,8 +795,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     assertEquals("awsSessionToken", credentials.getSessionToken());
   }
 
-  @Test
-  public void getAwsSecurityCredentials_fromMetadataServer() throws IOException {
+  @Test void getAwsSecurityCredentials_fromMetadataServer() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -844,8 +822,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     ValidateRequest(requests.get(1), AWS_CREDENTIALS_URL_WITH_ROLE, EMPTY_STRING_HEADERS);
   }
 
-  @Test
-  public void getAwsSecurityCredentials_fromMetadataServer_noUrlProvided() {
+  @Test void getAwsSecurityCredentials_fromMetadataServer_noUrlProvided() {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -873,8 +850,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     assertTrue(requests.isEmpty());
   }
 
-  @Test
-  public void getAwsRegion_awsRegionEnvironmentVariable() throws IOException {
+  @Test void getAwsRegion_awsRegionEnvironmentVariable() throws IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("AWS_REGION", "region");
     environmentProvider.setEnv("AWS_DEFAULT_REGION", "defaultRegion");
@@ -899,8 +875,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     assertTrue(requests.isEmpty());
   }
 
-  @Test
-  public void getAwsRegion_awsDefaultRegionEnvironmentVariable() throws IOException {
+  @Test void getAwsRegion_awsDefaultRegionEnvironmentVariable() throws IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("AWS_DEFAULT_REGION", "defaultRegion");
 
@@ -924,8 +899,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     assertTrue(requests.isEmpty());
   }
 
-  @Test
-  public void getAwsRegion_metadataServer() throws IOException {
+  @Test void getAwsRegion_metadataServer() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
     AwsCredentials awsCredentials =
@@ -951,8 +925,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     ValidateRequest(requests.get(0), AWS_REGION_URL, EMPTY_STRING_HEADERS);
   }
 
-  @Test
-  public void createdScoped_clonedCredentialWithAddedScopes() throws IOException {
+  @Test void createdScoped_clonedCredentialWithAddedScopes() throws IOException {
     AwsCredentials credentials =
         AwsCredentials.newBuilder(AWS_CREDENTIAL)
             .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
@@ -982,8 +955,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     assertEquals("universeDomain", newCredentials.getUniverseDomain());
   }
 
-  @Test
-  public void credentialSource_invalidAwsEnvironmentId() {
+  @Test void credentialSource_invalidAwsEnvironmentId() {
     Map<String, Object> credentialSource = new HashMap<>();
     credentialSource.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
     credentialSource.put("environment_id", "azure1");
@@ -996,8 +968,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test
-  public void credentialSource_invalidAwsEnvironmentVersion() {
+  @Test void credentialSource_invalidAwsEnvironmentVersion() {
     Map<String, Object> credentialSource = new HashMap<>();
     int environmentVersion = 2;
     credentialSource.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
@@ -1014,8 +985,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test
-  public void credentialSource_missingRegionalCredVerificationUrl() {
+  @Test void credentialSource_missingRegionalCredVerificationUrl() {
     try {
       new AwsCredentialSource(new HashMap<String, Object>());
       fail("Exception should be thrown.");
@@ -1026,8 +996,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test
-  public void builder_allFields() throws IOException {
+  @Test void builder_allFields() throws IOException {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     AwsCredentials credentials =
@@ -1062,8 +1031,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     assertEquals("universeDomain", credentials.getUniverseDomain());
   }
 
-  @Test
-  public void builder_missingUniverseDomain_defaults() throws IOException {
+  @Test void builder_missingUniverseDomain_defaults() throws IOException {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     AwsCredentials credentials =
@@ -1099,8 +1067,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
-  @Test
-  public void newBuilder_allFields() throws IOException {
+  @Test void newBuilder_allFields() throws IOException {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     AwsCredentials credentials =
@@ -1137,8 +1104,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     assertEquals(credentials.getUniverseDomain(), newBuilderCreds.getUniverseDomain());
   }
 
-  @Test
-  public void newBuilder_noUniverseDomain_defaults() throws IOException {
+  @Test void newBuilder_noUniverseDomain_defaults() throws IOException {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     AwsCredentials credentials =
@@ -1174,8 +1140,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     assertEquals(GOOGLE_DEFAULT_UNIVERSE, newBuilderCreds.getUniverseDomain());
   }
 
-  @Test
-  public void builder_defaultRegionalCredentialVerificationUrlOverride() throws IOException {
+  @Test void builder_defaultRegionalCredentialVerificationUrlOverride() throws IOException {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     AwsSecurityCredentialsSupplier supplier =
@@ -1202,8 +1167,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
         credentials.getRegionalCredentialVerificationUrl());
   }
 
-  @Test
-  public void builder_supplierAndCredSourceThrows() throws IOException {
+  @Test void builder_supplierAndCredSourceThrows() throws IOException {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     AwsSecurityCredentialsSupplier supplier =
@@ -1233,8 +1197,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test
-  public void builder_noSupplieOrCredSourceThrows() throws IOException {
+  @Test void builder_noSupplieOrCredSourceThrows() throws IOException {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     Supplier<AwsSecurityCredentials> testSupplier = () -> null;
@@ -1262,8 +1225,7 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @Test
-  public void serialize() throws IOException, ClassNotFoundException {
+  @Test void serialize() throws IOException, ClassNotFoundException {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     AwsCredentials testCredentials =

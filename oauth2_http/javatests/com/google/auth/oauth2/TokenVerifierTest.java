@@ -30,11 +30,10 @@
  */
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.LowLevelHttpRequest;
 import com.google.api.client.http.LowLevelHttpResponse;
@@ -51,13 +50,10 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Arrays;
 import java.util.List;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-@RunWith(JUnit4.class)
-public class TokenVerifierTest {
+class TokenVerifierTest {
   private static final String ES256_TOKEN =
       "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Im1wZjBEQSJ9.eyJhdWQiOiIvcHJvamVjdHMvNjUyNTYyNzc2Nzk4L2FwcHMvY2xvdWQtc2FtcGxlcy10ZXN0cy1waHAtaWFwIiwiZW1haWwiOiJjaGluZ29yQGdvb2dsZS5jb20iLCJleHAiOjE1ODQwNDc2MTcsImdvb2dsZSI6eyJhY2Nlc3NfbGV2ZWxzIjpbImFjY2Vzc1BvbGljaWVzLzUxODU1MTI4MDkyNC9hY2Nlc3NMZXZlbHMvcmVjZW50U2VjdXJlQ29ubmVjdERhdGEiLCJhY2Nlc3NQb2xpY2llcy81MTg1NTEyODA5MjQvYWNjZXNzTGV2ZWxzL3Rlc3ROb09wIiwiYWNjZXNzUG9saWNpZXMvNTE4NTUxMjgwOTI0L2FjY2Vzc0xldmVscy9ldmFwb3JhdGlvblFhRGF0YUZ1bGx5VHJ1c3RlZCJdfSwiaGQiOiJnb29nbGUuY29tIiwiaWF0IjoxNTg0MDQ3MDE3LCJpc3MiOiJodHRwczovL2Nsb3VkLmdvb2dsZS5jb20vaWFwIiwic3ViIjoiYWNjb3VudHMuZ29vZ2xlLmNvbToxMTIxODE3MTI3NzEyMDE5NzI4OTEifQ.yKNtdFY5EKkRboYNexBdfugzLhC3VuGyFcuFYA8kgpxMqfyxa41zkML68hYKrWu2kOBTUW95UnbGpsIi_u1fiA";
 
@@ -83,8 +79,7 @@ public class TokenVerifierTest {
         }
       };
 
-  @Test
-  public void verifyExpiredToken() {
+  @Test void verifyExpiredToken() {
     for (String token : ALL_TOKENS) {
       TokenVerifier tokenVerifier = TokenVerifier.newBuilder().build();
       try {
@@ -96,8 +91,7 @@ public class TokenVerifierTest {
     }
   }
 
-  @Test
-  public void verifyExpectedAudience() {
+  @Test void verifyExpectedAudience() {
     TokenVerifier tokenVerifier =
         TokenVerifier.newBuilder().setAudience("expected audience").build();
     for (String token : ALL_TOKENS) {
@@ -110,8 +104,7 @@ public class TokenVerifierTest {
     }
   }
 
-  @Test
-  public void verifyExpectedIssuer() {
+  @Test void verifyExpectedIssuer() {
     TokenVerifier tokenVerifier = TokenVerifier.newBuilder().setIssuer("expected issuer").build();
     for (String token : ALL_TOKENS) {
       try {
@@ -123,8 +116,7 @@ public class TokenVerifierTest {
     }
   }
 
-  @Test
-  public void verifyEs256Token404CertificateUrl() {
+  @Test void verifyEs256Token404CertificateUrl() {
     // Mock HTTP requests
     HttpTransportFactory httpTransportFactory =
         new HttpTransportFactory() {
@@ -163,8 +155,7 @@ public class TokenVerifierTest {
     }
   }
 
-  @Test
-  public void verifyEs256TokenPublicKeyMismatch() {
+  @Test void verifyEs256TokenPublicKeyMismatch() {
     // Mock HTTP requests
     HttpTransportFactory httpTransportFactory =
         new HttpTransportFactory() {
@@ -200,8 +191,7 @@ public class TokenVerifierTest {
     }
   }
 
-  @Test
-  public void verifyPublicKeyStoreIntermittentError() throws VerificationException, IOException {
+  @Test void verifyPublicKeyStoreIntermittentError() throws VerificationException, IOException {
     // mock responses
     MockLowLevelHttpResponse response404 =
         new MockLowLevelHttpResponse()
@@ -250,8 +240,7 @@ public class TokenVerifierTest {
     assertNotNull(tokenVerifier.verify(ES256_TOKEN));
   }
 
-  @Test
-  public void verifyEs256Token() throws VerificationException, IOException {
+  @Test void verifyEs256Token() throws VerificationException, IOException {
     HttpTransportFactory httpTransportFactory =
         mockTransport(
             "https://www.gstatic.com/iap/verify/public_key-jwk",
@@ -264,8 +253,7 @@ public class TokenVerifierTest {
     assertNotNull(tokenVerifier.verify(ES256_TOKEN));
   }
 
-  @Test
-  public void verifyRs256Token() throws VerificationException, IOException {
+  @Test void verifyRs256Token() throws VerificationException, IOException {
     HttpTransportFactory httpTransportFactory =
         mockTransport(
             "https://www.googleapis.com/oauth2/v3/certs",
@@ -278,8 +266,7 @@ public class TokenVerifierTest {
     assertNotNull(tokenVerifier.verify(FEDERATED_SIGNON_RS256_TOKEN));
   }
 
-  @Test
-  public void verifyRs256TokenWithLegacyCertificateUrlFormat()
+  @Test void verifyRs256TokenWithLegacyCertificateUrlFormat()
       throws TokenVerifier.VerificationException, IOException {
     HttpTransportFactory httpTransportFactory =
         mockTransport(
@@ -294,8 +281,7 @@ public class TokenVerifierTest {
   }
 
   @Test
-  @Ignore
-  public void verifyServiceAccountRs256Token() throws VerificationException {
+  @Disabled void verifyServiceAccountRs256Token() throws VerificationException {
     final Clock clock =
         new Clock() {
           @Override

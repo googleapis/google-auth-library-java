@@ -31,23 +31,20 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Before;
-import org.junit.Test;
-
-public class LoggingUtilsTest {
+class LoggingUtilsTest {
 
   private TestEnvironmentProvider testEnvironmentProvider;
 
-  @Before
-  public void setup() {
+  @BeforeEach void setup() {
     testEnvironmentProvider = new TestEnvironmentProvider();
   }
 
-  @Test
-  public void testIsLoggingEnabled_true() {
+  @Test void testIsLoggingEnabled_true() {
     testEnvironmentProvider.setEnv(LoggingUtils.GOOGLE_SDK_JAVA_LOGGING, "true");
     LoggingUtils.setEnvironmentProvider(testEnvironmentProvider);
     assertTrue(LoggingUtils.isLoggingEnabled());
@@ -59,8 +56,7 @@ public class LoggingUtilsTest {
     assertTrue(LoggingUtils.isLoggingEnabled());
   }
 
-  @Test
-  public void testIsLoggingEnabled_defaultToFalse() {
+  @Test void testIsLoggingEnabled_defaultToFalse() {
     LoggingUtils.setEnvironmentProvider(testEnvironmentProvider);
     assertFalse(LoggingUtils.isLoggingEnabled());
   }

@@ -31,17 +31,16 @@
 
 package com.google.auth.oauth2;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static com.google.auth.oauth2.OAuth2Utils.generateBasicAuthHeader;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /** Tests for {@link OAuth2Utils}. */
-public class OAuth2UtilsTest {
+class OAuth2UtilsTest {
 
-  @Test
-  public void testValidCredentials() {
+  @Test void testValidCredentials() {
     String username = "testUser";
     String password = "testPassword";
     String expectedHeader = "Basic dGVzdFVzZXI6dGVzdFBhc3N3b3Jk";
@@ -51,8 +50,7 @@ public class OAuth2UtilsTest {
     assertEquals(expectedHeader, actualHeader);
   }
 
-  @Test
-  public void testEmptyUsername_throws() {
+  @Test void testEmptyUsername_throws() {
     String username = "";
     String password = "testPassword";
 
@@ -63,8 +61,7 @@ public class OAuth2UtilsTest {
         });
   }
 
-  @Test
-  public void testEmptyPassword_throws() {
+  @Test void testEmptyPassword_throws() {
     String username = "testUser";
     String password = "";
 
@@ -75,8 +72,7 @@ public class OAuth2UtilsTest {
         });
   }
 
-  @Test
-  public void testNullUsername_throws() {
+  @Test void testNullUsername_throws() {
     String username = null;
     String password = "testPassword";
 
@@ -87,8 +83,7 @@ public class OAuth2UtilsTest {
         });
   }
 
-  @Test
-  public void testNullPassword_throws() {
+  @Test void testNullPassword_throws() {
     String username = "testUser";
     String password = null;
 

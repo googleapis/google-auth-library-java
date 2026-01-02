@@ -31,14 +31,15 @@
 
 package com.google.auth.oauth2;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static com.google.auth.Credentials.GOOGLE_DEFAULT_UNIVERSE;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
@@ -62,14 +63,12 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /** Test case for {@link ExternalAccountAuthorizedUserCredentials}. */
-@RunWith(JUnit4.class)
-public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializationTest {
+
+class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializationTest {
 
   private static final String AUDIENCE =
       "//iam.googleapis.com/locations/global/workforcePools/$WORKFORCE_POOL_ID/providers/$PROVIDER_ID";
@@ -127,13 +126,11 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     }
   }
 
-  @Before
-  public void setup() {
+  @BeforeEach void setup() {
     transportFactory = new MockExternalAccountAuthorizedUserCredentialsTransportFactory();
   }
 
-  @Test
-  public void builder_allFields() throws IOException {
+  @Test void builder_allFields() throws IOException {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setAudience(AUDIENCE)
@@ -160,8 +157,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertEquals(UNIVERSE_DOMAIN, credentials.getUniverseDomain());
   }
 
-  @Test
-  public void builder_minimumRequiredFieldsForRefresh() {
+  @Test void builder_minimumRequiredFieldsForRefresh() {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -181,8 +177,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertNull(credentials.getQuotaProjectId());
   }
 
-  @Test
-  public void builder_accessTokenOnly() {
+  @Test void builder_accessTokenOnly() {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setAccessToken(AccessToken.newBuilder().setTokenValue(ACCESS_TOKEN).build())
@@ -199,8 +194,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertNull(credentials.getQuotaProjectId());
   }
 
-  @Test
-  public void builder_credentialConstructor() {
+  @Test void builder_credentialConstructor() {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setAudience(AUDIENCE)
@@ -225,8 +219,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertEquals(QUOTA_PROJECT, otherCredentials.getQuotaProjectId());
   }
 
-  @Test
-  public void builder_accessTokenWithMissingRefreshFields() {
+  @Test void builder_accessTokenWithMissingRefreshFields() {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setAccessToken(AccessToken.newBuilder().setTokenValue(ACCESS_TOKEN).build())
@@ -246,8 +239,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertNull(credentials.getQuotaProjectId());
   }
 
-  @Test
-  public void builder_accessAndRefreshTokenNull_throws() {
+  @Test void builder_accessAndRefreshTokenNull_throws() {
     try {
       ExternalAccountAuthorizedUserCredentials.newBuilder().build();
       fail("Should not be able to continue without exception.");
@@ -260,8 +252,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     }
   }
 
-  @Test
-  public void builder_missingTokenUrl_throws() {
+  @Test void builder_missingTokenUrl_throws() {
     try {
       ExternalAccountAuthorizedUserCredentials.newBuilder()
           .setRefreshToken(REFRESH_TOKEN)
@@ -278,8 +269,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     }
   }
 
-  @Test
-  public void builder_missingClientId_throws() {
+  @Test void builder_missingClientId_throws() {
     try {
       ExternalAccountAuthorizedUserCredentials.newBuilder()
           .setRefreshToken(REFRESH_TOKEN)
@@ -296,8 +286,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     }
   }
 
-  @Test
-  public void builder_missingClientSecret_throws() {
+  @Test void builder_missingClientSecret_throws() {
     try {
       ExternalAccountAuthorizedUserCredentials.newBuilder()
           .setRefreshToken(REFRESH_TOKEN)
@@ -314,8 +303,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     }
   }
 
-  @Test
-  public void builder_missingUniverseDomain_defaults() throws IOException {
+  @Test void builder_missingUniverseDomain_defaults() throws IOException {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setAudience(AUDIENCE)
@@ -341,8 +329,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
-  @Test
-  public void toBuilder_allFields() {
+  @Test void toBuilder_allFields() {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setAudience(AUDIENCE)
@@ -362,8 +349,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertEquals(credentials, secondCredentials);
   }
 
-  @Test
-  public void toBuilder_missingUniverseDomain_defaults() throws IOException {
+  @Test void toBuilder_missingUniverseDomain_defaults() throws IOException {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setAudience(AUDIENCE)
@@ -383,8 +369,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertEquals(GOOGLE_DEFAULT_UNIVERSE, secondCredentials.getUniverseDomain());
   }
 
-  @Test
-  public void fromJson_allFields() throws IOException {
+  @Test void fromJson_allFields() throws IOException {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.fromJson(
             buildJsonCredentials(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
@@ -400,8 +385,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertEquals(UNIVERSE_DOMAIN, credentials.getUniverseDomain());
   }
 
-  @Test
-  public void fromJson_minimumRequiredFieldsForRefresh() throws IOException {
+  @Test void fromJson_minimumRequiredFieldsForRefresh() throws IOException {
     GenericJson json = new GenericJson();
     json.put("client_id", CLIENT_ID);
     json.put("client_secret", CLIENT_SECRET);
@@ -422,8 +406,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertNull(credentials.getQuotaProjectId());
   }
 
-  @Test
-  public void fromJson_accessTokenOnly_notSupported() throws IOException {
+  @Test void fromJson_accessTokenOnly_notSupported() throws IOException {
     GenericJson json = new GenericJson();
     json.put("access_token", ACCESS_TOKEN);
 
@@ -439,8 +422,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     }
   }
 
-  @Test
-  public void fromJson_missingRefreshToken_throws() throws IOException {
+  @Test void fromJson_missingRefreshToken_throws() throws IOException {
     try {
       GenericJson json = buildJsonCredentials();
       json.remove("refresh_token");
@@ -455,8 +437,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     }
   }
 
-  @Test
-  public void fromJson_missingTokenUrl_throws() throws IOException {
+  @Test void fromJson_missingTokenUrl_throws() throws IOException {
     try {
       GenericJson json = buildJsonCredentials();
       json.remove("token_url");
@@ -471,8 +452,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     }
   }
 
-  @Test
-  public void fromJson_missingClientId_throws() throws IOException {
+  @Test void fromJson_missingClientId_throws() throws IOException {
     try {
       GenericJson json = buildJsonCredentials();
       json.remove("client_id");
@@ -487,8 +467,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     }
   }
 
-  @Test
-  public void fromJson_missingClientSecret_throws() throws IOException {
+  @Test void fromJson_missingClientSecret_throws() throws IOException {
     try {
       GenericJson json = buildJsonCredentials();
       json.remove("client_secret");
@@ -503,8 +482,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     }
   }
 
-  @Test
-  public void fromJson_missingUniverseDomain_defaults() throws IOException {
+  @Test void fromJson_missingUniverseDomain_defaults() throws IOException {
     GenericJson json = buildJsonCredentials();
     json.remove("universe_domain");
 
@@ -522,8 +500,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
-  @Test
-  public void fromStream_allFields() throws IOException {
+  @Test void fromStream_allFields() throws IOException {
     GenericJson json = buildJsonCredentials();
 
     ExternalAccountAuthorizedUserCredentials credentials =
@@ -539,8 +516,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertEquals(QUOTA_PROJECT, credentials.getQuotaProjectId());
   }
 
-  @Test
-  public void fromStream_minimumRequiredFieldsForRefresh() throws IOException {
+  @Test void fromStream_minimumRequiredFieldsForRefresh() throws IOException {
     GenericJson json = new GenericJson();
     json.put(
         "type", GoogleCredentialsInfo.EXTERNAL_ACCOUNT_AUTHORIZED_USER_CREDENTIALS.getFileType());
@@ -563,8 +539,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertNull(credentials.getQuotaProjectId());
   }
 
-  @Test
-  public void fromStream_accessTokenOnly_notSupported() throws IOException {
+  @Test void fromStream_accessTokenOnly_notSupported() throws IOException {
     GenericJson json = new GenericJson();
     json.put("access_token", ACCESS_TOKEN);
     json.put(
@@ -581,8 +556,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     }
   }
 
-  @Test
-  public void fromStream_missingRefreshToken_throws() throws IOException {
+  @Test void fromStream_missingRefreshToken_throws() throws IOException {
     try {
       GenericJson json = buildJsonCredentials();
       json.remove("refresh_token");
@@ -597,8 +571,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     }
   }
 
-  @Test
-  public void fromStream_missingTokenUrl_throws() throws IOException {
+  @Test void fromStream_missingTokenUrl_throws() throws IOException {
     try {
       GenericJson json = buildJsonCredentials();
       json.remove("token_url");
@@ -613,8 +586,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     }
   }
 
-  @Test
-  public void fromStream_missingClientId_throws() throws IOException {
+  @Test void fromStream_missingClientId_throws() throws IOException {
     try {
       GenericJson json = buildJsonCredentials();
       json.remove("client_id");
@@ -629,8 +601,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     }
   }
 
-  @Test
-  public void fromStream_missingClientSecret_throws() throws IOException {
+  @Test void fromStream_missingClientSecret_throws() throws IOException {
     try {
       GenericJson json = buildJsonCredentials();
       json.remove("client_secret");
@@ -645,8 +616,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     }
   }
 
-  @Test
-  public void fromStream_missingUniverseDomain_defaults() throws IOException {
+  @Test void fromStream_missingUniverseDomain_defaults() throws IOException {
     GenericJson json = buildJsonCredentials();
     json.remove("universe_domain");
 
@@ -664,8 +634,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
   }
 
-  @Test
-  public void fromStream_invalidInputStream_throws() throws IOException {
+  @Test void fromStream_invalidInputStream_throws() throws IOException {
     try {
       GenericJson json = buildJsonCredentials();
       json.put("audience", new HashMap<>());
@@ -676,8 +645,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     }
   }
 
-  @Test
-  public void createScoped_noChange() {
+  @Test void createScoped_noChange() {
     ExternalAccountAuthorizedUserCredentials externalAccountAuthorizedUserCredentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setTokenUrl(TOKEN_URL)
@@ -690,8 +658,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
         externalAccountAuthorizedUserCredentials.createScoped(SCOPES));
   }
 
-  @Test
-  public void createScopedRequired_false() {
+  @Test void createScopedRequired_false() {
     ExternalAccountAuthorizedUserCredentials externalAccountAuthorizedUserCredentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setTokenUrl(TOKEN_URL)
@@ -702,8 +669,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertFalse(externalAccountAuthorizedUserCredentials.createScopedRequired());
   }
 
-  @Test
-  public void getRequestMetadata() throws IOException {
+  @Test void getRequestMetadata() throws IOException {
     GoogleCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.fromJson(buildJsonCredentials(), transportFactory);
 
@@ -713,8 +679,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     validateAuthHeader(transportFactory.transport.getRequest());
   }
 
-  @Test
-  public void getRequestMetadata_withQuotaProjectId() throws IOException {
+  @Test void getRequestMetadata_withQuotaProjectId() throws IOException {
     GoogleCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.fromJson(buildJsonCredentials(), transportFactory);
 
@@ -728,8 +693,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     validateAuthHeader(transportFactory.transport.getRequest());
   }
 
-  @Test
-  public void getRequestMetadata_withAccessToken() throws IOException {
+  @Test void getRequestMetadata_withAccessToken() throws IOException {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setHttpTransportFactory(transportFactory)
@@ -741,8 +705,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
   }
 
-  @Test
-  public void refreshAccessToken() throws IOException {
+  @Test void refreshAccessToken() throws IOException {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.fromJson(buildJsonCredentials(), transportFactory);
 
@@ -752,8 +715,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     validateAuthHeader(transportFactory.transport.getRequest());
   }
 
-  @Test
-  public void refreshAccessToken_withRefreshTokenRotation() throws IOException {
+  @Test void refreshAccessToken_withRefreshTokenRotation() throws IOException {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.fromJson(buildJsonCredentials(), transportFactory);
 
@@ -768,8 +730,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     validateAuthHeader(transportFactory.transport.getRequest());
   }
 
-  @Test
-  public void refreshAccessToken_genericAuthError_throws() throws IOException {
+  @Test void refreshAccessToken_genericAuthError_throws() throws IOException {
     transportFactory.transport.addResponseErrorSequence(
         TestUtils.buildHttpResponseException(
             "invalid_request", "Invalid request.", /* errorUri= */ null));
@@ -786,18 +747,18 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     }
   }
 
-  @Test(expected = IOException.class)
-  public void refreshAccessToken_genericIOError_throws() throws IOException {
+  @Test
+  void refreshAccessToken_genericIOError_throws() throws IOException {
     transportFactory.transport.addResponseErrorSequence(new IOException(""));
 
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.fromJson(buildJsonCredentials(), transportFactory);
 
-    credentials.refreshAccessToken();
+    assertThrows(IOException.class, () -> credentials.refreshAccessToken());
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void refreshAccessToken_missingRefreshFields_throws() throws IOException {
+  @Test
+  void refreshAccessToken_missingRefreshFields_throws() throws IOException {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -807,11 +768,10 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
             .setHttpTransportFactory(transportFactory)
             .build();
 
-    credentials.refreshAccessToken();
+    assertThrows(IllegalStateException.class, () -> credentials.refreshAccessToken());
   }
 
-  @Test
-  public void hashCode_sameCredentials() {
+  @Test void hashCode_sameCredentials() {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setAudience(AUDIENCE)
@@ -843,8 +803,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertEquals(credentials.hashCode(), secondCredentials.hashCode());
   }
 
-  @Test
-  public void hashCode_differentCredentials() {
+  @Test void hashCode_differentCredentials() {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setAudience(AUDIENCE)
@@ -875,8 +834,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertNotEquals(credentials.hashCode(), secondCredentials.hashCode());
   }
 
-  @Test
-  public void hashCode_differentCredentialsWithCredentialsFile() throws IOException {
+  @Test void hashCode_differentCredentialsWithCredentialsFile() throws IOException {
     // Optional fields that can be specified in the credentials file.
     List<String> fields = Arrays.asList("audience", "revoke_url", "quota_project_id");
 
@@ -897,8 +855,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     }
   }
 
-  @Test
-  public void equals_differentCredentials() throws IOException {
+  @Test void equals_differentCredentials() throws IOException {
     UserCredentials userCredentials =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -916,8 +873,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertNotEquals(credentials, userCredentials);
   }
 
-  @Test
-  public void equals_differentAudience() {
+  @Test void equals_differentAudience() {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setAudience(AUDIENCE)
@@ -940,8 +896,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertNotEquals(credentials.hashCode(), secondCredentials.hashCode());
   }
 
-  @Test
-  public void equals_differentClientId() {
+  @Test void equals_differentClientId() {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setAudience(AUDIENCE)
@@ -964,8 +919,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertNotEquals(credentials.hashCode(), secondCredentials.hashCode());
   }
 
-  @Test
-  public void equals_differentClientSecret() {
+  @Test void equals_differentClientSecret() {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setAudience(AUDIENCE)
@@ -988,8 +942,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertNotEquals(credentials.hashCode(), secondCredentials.hashCode());
   }
 
-  @Test
-  public void equals_differentRefreshToken() {
+  @Test void equals_differentRefreshToken() {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setAudience(AUDIENCE)
@@ -1012,8 +965,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertNotEquals(credentials.hashCode(), secondCredentials.hashCode());
   }
 
-  @Test
-  public void equals_differentTokenUrl() {
+  @Test void equals_differentTokenUrl() {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setAudience(AUDIENCE)
@@ -1036,8 +988,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertNotEquals(credentials.hashCode(), secondCredentials.hashCode());
   }
 
-  @Test
-  public void equals_differentTokenInfoUrl() {
+  @Test void equals_differentTokenInfoUrl() {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setAudience(AUDIENCE)
@@ -1060,8 +1011,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertNotEquals(credentials.hashCode(), secondCredentials.hashCode());
   }
 
-  @Test
-  public void equals_differentRevokeUrl() {
+  @Test void equals_differentRevokeUrl() {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setAudience(AUDIENCE)
@@ -1084,8 +1034,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertNotEquals(credentials.hashCode(), secondCredentials.hashCode());
   }
 
-  @Test
-  public void equals_differentAccessToken() {
+  @Test void equals_differentAccessToken() {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setAudience(AUDIENCE)
@@ -1108,8 +1057,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertNotEquals(credentials.hashCode(), secondCredentials.hashCode());
   }
 
-  @Test
-  public void equals_differentQuotaProjectId() {
+  @Test void equals_differentQuotaProjectId() {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setAudience(AUDIENCE)
@@ -1132,8 +1080,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertNotEquals(credentials.hashCode(), secondCredentials.hashCode());
   }
 
-  @Test
-  public void equals_differentTransportFactory() {
+  @Test void equals_differentTransportFactory() {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setAudience(AUDIENCE)
@@ -1156,8 +1103,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertNotEquals(credentials.hashCode(), secondCredentials.hashCode());
   }
 
-  @Test
-  public void equals_differentUniverseDomain() {
+  @Test void equals_differentUniverseDomain() {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setAudience(AUDIENCE)
@@ -1181,8 +1127,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertNotEquals(credentials.hashCode(), secondCredentials.hashCode());
   }
 
-  @Test
-  public void toString_expectedFormat() {
+  @Test void toString_expectedFormat() {
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, new Date());
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
@@ -1220,8 +1165,7 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
     assertEquals(expectedToString, credentials.toString());
   }
 
-  @Test
-  public void serialize() throws IOException, ClassNotFoundException {
+  @Test void serialize() throws IOException, ClassNotFoundException {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setAudience(AUDIENCE)

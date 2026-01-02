@@ -31,31 +31,33 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.auth.oauth2.Slf4jUtils.LoggerFactoryProvider;
 import java.util.logging.Level;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.helpers.NOPLogger;
 
-public class Slf4jUtilsTest {
+class Slf4jUtilsTest {
 
   private TestEnvironmentProvider testEnvironmentProvider;
 
-  @Before
-  public void setup() {
+  @BeforeEach void setup() {
     testEnvironmentProvider = new TestEnvironmentProvider();
   }
 
   // This test mimics GOOGLE_SDK_JAVA_LOGGING != true
-  @Test
-  public void testGetLogger_loggingDisabled_shouldGetNOPLogger() {
+  @Test void testGetLogger_loggingDisabled_shouldGetNOPLogger() {
     testEnvironmentProvider.setEnv(LoggingUtils.GOOGLE_SDK_JAVA_LOGGING, "false");
     LoggingUtils.setEnvironmentProvider(testEnvironmentProvider);
     Logger logger = Slf4jUtils.getLogger(Slf4jUtilsTest.class);
@@ -66,8 +68,7 @@ public class Slf4jUtilsTest {
   }
 
   // This test require binding (e.g. logback) be present
-  @Test
-  public void testGetLogger_loggingEnabled_slf4jBindingPresent() {
+  @Test void testGetLogger_loggingEnabled_slf4jBindingPresent() {
     testEnvironmentProvider.setEnv(LoggingUtils.GOOGLE_SDK_JAVA_LOGGING, "true");
     LoggingUtils.setEnvironmentProvider(testEnvironmentProvider);
     Logger logger = Slf4jUtils.getLogger(LoggingUtilsTest.class);
@@ -75,8 +76,7 @@ public class Slf4jUtilsTest {
     assertNotEquals(NOPLogger.class, logger.getClass());
   }
 
-  @Test
-  public void testGetLogger_loggingEnabled_noBinding() {
+  @Test void testGetLogger_loggingEnabled_noBinding() {
     testEnvironmentProvider.setEnv(LoggingUtils.GOOGLE_SDK_JAVA_LOGGING, "true");
     LoggingUtils.setEnvironmentProvider(testEnvironmentProvider);
     // Create a mock LoggerFactoryProvider
@@ -93,14 +93,12 @@ public class Slf4jUtilsTest {
     assertTrue(logger instanceof org.slf4j.helpers.NOPLogger);
   }
 
-  @Test
-  public void testCheckIfClazzAvailable() {
+  @Test void testCheckIfClazzAvailable() {
     assertFalse(Slf4jUtils.checkIfClazzAvailable("fake.class.should.not.be.in.classpath"));
     assertTrue(Slf4jUtils.checkIfClazzAvailable("org.slf4j.event.KeyValuePair"));
   }
 
-  @Test
-  public void testMatchLevelSevere() {
+  @Test void testMatchLevelSevere() {
     assertEquals(
         org.slf4j.event.Level.ERROR, Slf4jLoggingHelpers.matchUtilLevelToSLF4JLevel(Level.SEVERE));
     assertEquals(

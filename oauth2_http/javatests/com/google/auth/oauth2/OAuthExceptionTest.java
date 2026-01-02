@@ -31,25 +31,21 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import com.google.auth.TestUtils;
 import java.io.IOException;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
 /** Tests for {@link OAuthException}. */
-@RunWith(JUnit4.class)
-public final class OAuthExceptionTest {
+
+final class OAuthExceptionTest {
 
   private static final String FULL_MESSAGE_FORMAT = "Error code %s: %s - %s";
   private static final String ERROR_DESCRIPTION_FORMAT = "Error code %s: %s";
   private static final String BASE_MESSAGE_FORMAT = "Error code %s";
 
-  @Test
-  public void getMessage_fullFormat() {
+  @Test void getMessage_fullFormat() {
     OAuthException e = new OAuthException("errorCode", "errorDescription", "errorUri");
 
     assertEquals("errorCode", e.getErrorCode());
@@ -61,8 +57,7 @@ public final class OAuthExceptionTest {
     assertEquals(expectedMessage, e.getMessage());
   }
 
-  @Test
-  public void getMessage_descriptionFormat() {
+  @Test void getMessage_descriptionFormat() {
     OAuthException e = new OAuthException("errorCode", "errorDescription", /* errorUri= */ null);
 
     assertEquals("errorCode", e.getErrorCode());
@@ -74,8 +69,7 @@ public final class OAuthExceptionTest {
     assertEquals(expectedMessage, e.getMessage());
   }
 
-  @Test
-  public void getMessage_baseFormat() {
+  @Test void getMessage_baseFormat() {
     OAuthException e =
         new OAuthException("errorCode", /* errorDescription= */ null, /* errorUri= */ null);
 
@@ -87,8 +81,7 @@ public final class OAuthExceptionTest {
     assertEquals(expectedMessage, e.getMessage());
   }
 
-  @Test
-  public void createFromHttpResponseException() throws IOException {
+  @Test void createFromHttpResponseException() throws IOException {
     OAuthException e =
         OAuthException.createFromHttpResponseException(
             TestUtils.buildHttpResponseException("errorCode", "errorDescription", "errorUri"));
@@ -102,8 +95,7 @@ public final class OAuthExceptionTest {
     assertEquals(expectedMessage, e.getMessage());
   }
 
-  @Test
-  public void createFromHttpResponseException_descriptionFormat() throws IOException {
+  @Test void createFromHttpResponseException_descriptionFormat() throws IOException {
     OAuthException e =
         OAuthException.createFromHttpResponseException(
             TestUtils.buildHttpResponseException(
@@ -118,8 +110,7 @@ public final class OAuthExceptionTest {
     assertEquals(expectedMessage, e.getMessage());
   }
 
-  @Test
-  public void createFromHttpResponseException_baseFormat() throws IOException {
+  @Test void createFromHttpResponseException_baseFormat() throws IOException {
     OAuthException e =
         OAuthException.createFromHttpResponseException(
             TestUtils.buildHttpResponseException(

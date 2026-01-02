@@ -31,21 +31,21 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.*;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.google.auth.oauth2.IdentityPoolCredentialSource.IdentityPoolCredentialSourceType;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
 /** Tests for {@link IdentityPoolCredentialSource}. */
-@RunWith(JUnit4.class)
-public class IdentityPoolCredentialsSourceTest {
 
-  @Test
-  public void constructor_certificateConfig() {
+class IdentityPoolCredentialsSourceTest {
+
+  @Test void constructor_certificateConfig() {
     Map<String, Object> certificateMap = new HashMap<>();
     certificateMap.put("certificate_config_location", "/path/to/certificate");
 
@@ -63,8 +63,7 @@ public class IdentityPoolCredentialsSourceTest {
         credentialSource.getCertificateConfig().getCertificateConfigLocation());
   }
 
-  @Test
-  public void constructor_certificateConfig_useDefault() {
+  @Test void constructor_certificateConfig_useDefault() {
     Map<String, Object> certificateMap = new HashMap<>();
     certificateMap.put("use_default_certificate_config", true);
 
@@ -79,8 +78,7 @@ public class IdentityPoolCredentialsSourceTest {
     assertTrue(credentialSource.getCertificateConfig().useDefaultCertificateConfig());
   }
 
-  @Test
-  public void constructor_certificateConfig_missingRequiredFields_throws() {
+  @Test void constructor_certificateConfig_missingRequiredFields_throws() {
     Map<String, Object> certificateMap = new HashMap<>();
     // Missing both use_default_certificate_config and certificate_config_location.
     certificateMap.put("trust_chain_path", "path/to/trust/chain");
@@ -97,8 +95,7 @@ public class IdentityPoolCredentialsSourceTest {
         exception.getMessage());
   }
 
-  @Test
-  public void constructor_certificateConfig_bothFieldsSet_throws() {
+  @Test void constructor_certificateConfig_bothFieldsSet_throws() {
     Map<String, Object> certificateMap = new HashMap<>();
     certificateMap.put("use_default_certificate_config", true);
     certificateMap.put("certificate_config_location", "/path/to/certificate");
@@ -116,8 +113,7 @@ public class IdentityPoolCredentialsSourceTest {
         exception.getMessage());
   }
 
-  @Test
-  public void constructor_certificateConfig_trustChainPath() {
+  @Test void constructor_certificateConfig_trustChainPath() {
     Map<String, Object> certificateMap = new HashMap<>();
     certificateMap.put("use_default_certificate_config", true);
     certificateMap.put("trust_chain_path", "path/to/trust/chain");
@@ -134,8 +130,7 @@ public class IdentityPoolCredentialsSourceTest {
         "path/to/trust/chain", credentialSource.getCertificateConfig().getTrustChainPath());
   }
 
-  @Test
-  public void constructor_certificateConfig_invalidType_throws() {
+  @Test void constructor_certificateConfig_invalidType_throws() {
     Map<String, Object> certificateMap = new HashMap<>();
     certificateMap.put("use_default_certificate_config", "invalid-type");
 

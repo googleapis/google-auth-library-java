@@ -31,13 +31,12 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 import java.util.Map;
 
-public class TestUtils {
+class TestUtils {
   static void validateMetricsHeader(
       Map<String, List<String>> headers, String requestType, String credentialType) {
     assertTrue(headers.containsKey(MetricsUtils.API_CLIENT_HEADER));

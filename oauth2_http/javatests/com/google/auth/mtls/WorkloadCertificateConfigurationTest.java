@@ -31,20 +31,19 @@
 
 package com.google.auth.mtls;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.google.api.client.json.GenericJson;
 import com.google.auth.TestUtils;
 import java.io.IOException;
 import java.io.InputStream;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-public class WorkloadCertificateConfigurationTest {
+class WorkloadCertificateConfigurationTest {
 
-  @Test
-  public void workloadCertificateConfig_fromStream_Succeeds() throws IOException {
+  @Test void workloadCertificateConfig_fromStream_Succeeds() throws IOException {
     String certPath = "cert.crt";
     String privateKeyPath = "key.crt";
     InputStream configStream = writeWorkloadCertificateConfigStream(certPath, privateKeyPath);
@@ -54,14 +53,13 @@ public class WorkloadCertificateConfigurationTest {
     assertNotNull(config);
   }
 
-  @Test
-  public void workloadCertificateConfig_fromStreamMissingCertPath_Fails() throws IOException {
+  @Test void workloadCertificateConfig_fromStreamMissingCertPath_Fails() throws IOException {
     String certPath = "";
     String privateKeyPath = "key.crt";
     InputStream configStream = writeWorkloadCertificateConfigStream(certPath, privateKeyPath);
 
     IllegalArgumentException exception =
-        Assert.assertThrows(
+        assertThrows(
             IllegalArgumentException.class,
             () ->
                 WorkloadCertificateConfiguration.fromCertificateConfigurationStream(configStream));
@@ -72,14 +70,13 @@ public class WorkloadCertificateConfigurationTest {
                 "The cert_path field must be provided in the workload certificate configuration."));
   }
 
-  @Test
-  public void workloadCertificateConfig_fromStreamMissingPrivateKeyPath_Fails() throws IOException {
+  @Test void workloadCertificateConfig_fromStreamMissingPrivateKeyPath_Fails() throws IOException {
     String certPath = "cert.crt";
     String privateKeyPath = "";
     InputStream configStream = writeWorkloadCertificateConfigStream(certPath, privateKeyPath);
 
     IllegalArgumentException exception =
-        Assert.assertThrows(
+        assertThrows(
             IllegalArgumentException.class,
             () ->
                 WorkloadCertificateConfiguration.fromCertificateConfigurationStream(configStream));
@@ -90,14 +87,13 @@ public class WorkloadCertificateConfigurationTest {
                 "The key_path field must be provided in the workload certificate configuration."));
   }
 
-  @Test
-  public void workloadCertificateConfig_fromStreamMissingWorkload_Fails() throws IOException {
+  @Test void workloadCertificateConfig_fromStreamMissingWorkload_Fails() throws IOException {
     GenericJson json = new GenericJson();
     json.put("cert_configs", new GenericJson());
     InputStream configStream = TestUtils.jsonToInputStream(json);
 
     CertificateSourceUnavailableException exception =
-        Assert.assertThrows(
+        assertThrows(
             CertificateSourceUnavailableException.class,
             () ->
                 WorkloadCertificateConfiguration.fromCertificateConfigurationStream(configStream));
@@ -108,13 +104,12 @@ public class WorkloadCertificateConfigurationTest {
                 "A workload certificate configuration must be provided in the cert_configs object."));
   }
 
-  @Test
-  public void workloadCertificateConfig_fromStreamMissingCertConfig_Fails() throws IOException {
+  @Test void workloadCertificateConfig_fromStreamMissingCertConfig_Fails() throws IOException {
     GenericJson json = new GenericJson();
     InputStream configStream = TestUtils.jsonToInputStream(json);
 
     IllegalArgumentException exception =
-        Assert.assertThrows(
+        assertThrows(
             IllegalArgumentException.class,
             () ->
                 WorkloadCertificateConfiguration.fromCertificateConfigurationStream(configStream));
