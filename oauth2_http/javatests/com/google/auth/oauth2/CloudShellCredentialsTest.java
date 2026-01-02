@@ -32,10 +32,8 @@
 package com.google.auth.oauth2;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import com.google.api.client.util.Clock;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -50,8 +48,7 @@ class CloudShellCredentialsTest extends BaseSerializationTest {
 
   @Test
   void refreshAccessToken() throws IOException {
-    final ServerSocket authSocket = new ServerSocket(0);
-    try {
+    try (ServerSocket authSocket = new ServerSocket(0)) {
       Runnable serverTask =
           new Runnable() {
             @Override
@@ -62,7 +59,7 @@ class CloudShellCredentialsTest extends BaseSerializationTest {
                     new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 String lines = input.readLine();
                 lines += '\n' + input.readLine();
-                assertEquals(lines, CloudShellCredentials.GET_AUTH_TOKEN_REQUEST);
+                assertEquals(CloudShellCredentials.GET_AUTH_TOKEN_REQUEST, lines);
 
                 PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
                 out.println("32\n[\"email\", \"project-id\", \"token\"]");
@@ -77,36 +74,34 @@ class CloudShellCredentialsTest extends BaseSerializationTest {
       GoogleCredentials creds =
           CloudShellCredentials.newBuilder().setAuthPort(authSocket.getLocalPort()).build();
       assertEquals("token", creds.refreshAccessToken().getTokenValue());
-    } finally {
-      authSocket.close();
     }
   }
 
   @Test
-  void equals_true() throws IOException {
+  void equals_true() {
     GoogleCredentials credentials = CloudShellCredentials.newBuilder().setAuthPort(42).build();
     GoogleCredentials otherCredentials = CloudShellCredentials.newBuilder().setAuthPort(42).build();
-    assertTrue(credentials.equals(otherCredentials));
-    assertTrue(otherCredentials.equals(credentials));
+    assertEquals(credentials, otherCredentials);
+    assertEquals(otherCredentials, credentials);
   }
 
   @Test
-  void equals_false_authPort() throws IOException {
+  void equals_false_authPort() {
     GoogleCredentials credentials = CloudShellCredentials.newBuilder().setAuthPort(42).build();
     GoogleCredentials otherCredentials = CloudShellCredentials.newBuilder().setAuthPort(43).build();
-    assertFalse(credentials.equals(otherCredentials));
-    assertFalse(otherCredentials.equals(credentials));
+    assertNotEquals(credentials, otherCredentials);
+    assertNotEquals(otherCredentials, credentials);
   }
 
   @Test
-  void toString_containsFields() throws IOException {
+  void toString_containsFields() {
     String expectedToString = String.format("CloudShellCredentials{authPort=%d}", 42);
     GoogleCredentials credentials = CloudShellCredentials.newBuilder().setAuthPort(42).build();
     assertEquals(expectedToString, credentials.toString());
   }
 
   @Test
-  void hashCode_equals() throws IOException {
+  void hashCode_equals() {
     GoogleCredentials credentials = CloudShellCredentials.newBuilder().setAuthPort(42).build();
     GoogleCredentials otherCredentials = CloudShellCredentials.newBuilder().setAuthPort(42).build();
     assertEquals(credentials.hashCode(), otherCredentials.hashCode());
@@ -119,7 +114,7 @@ class CloudShellCredentialsTest extends BaseSerializationTest {
     assertEquals(credentials, deserializedCredentials);
     assertEquals(credentials.hashCode(), deserializedCredentials.hashCode());
     assertEquals(credentials.toString(), deserializedCredentials.toString());
-    assertSame(deserializedCredentials.clock, Clock.SYSTEM);
+    assertSame(Clock.SYSTEM, deserializedCredentials.clock);
   }
 
   @Test

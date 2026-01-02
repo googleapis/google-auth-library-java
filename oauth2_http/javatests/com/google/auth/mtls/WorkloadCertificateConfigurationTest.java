@@ -58,18 +58,18 @@ class WorkloadCertificateConfigurationTest {
   void workloadCertificateConfig_fromStreamMissingCertPath_Fails() throws IOException {
     String certPath = "";
     String privateKeyPath = "key.crt";
-    InputStream configStream = writeWorkloadCertificateConfigStream(certPath, privateKeyPath);
-
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () ->
-                WorkloadCertificateConfiguration.fromCertificateConfigurationStream(configStream));
-    assertTrue(
-        exception
-            .getMessage()
-            .contains(
-                "The cert_path field must be provided in the workload certificate configuration."));
+    try (InputStream configStream = writeWorkloadCertificateConfigStream(certPath, privateKeyPath)) {
+      IllegalArgumentException exception =
+          assertThrows(
+              IllegalArgumentException.class,
+              () ->
+                  WorkloadCertificateConfiguration.fromCertificateConfigurationStream(configStream));
+      assertTrue(
+          exception
+              .getMessage()
+              .contains(
+                  "The cert_path field must be provided in the workload certificate configuration."));
+    }
   }
 
   @Test

@@ -57,9 +57,8 @@ class ClientIdTest {
 
   @Test
   void constructor_nullClientId_throws() {
-    assertThrows(
-        NullPointerException.class,
-        () -> ClientId.newBuilder().setClientSecret(CLIENT_SECRET).build());
+    ClientId.Builder builder = ClientId.newBuilder().setClientSecret(CLIENT_SECRET);
+    assertThrows(NullPointerException.class, builder::build);
   }
 
   @Test
@@ -100,21 +99,21 @@ class ClientIdTest {
   }
 
   @Test
-  void fromJson_invalidType_throws() throws IOException {
+  void fromJson_invalidType_throws() {
     GenericJson json = writeClientIdJson("invalid", CLIENT_ID, null);
 
     assertThrows(IOException.class, () -> ClientId.fromJson(json));
   }
 
   @Test
-  void fromJson_noClientId_throws() throws IOException {
+  void fromJson_noClientId_throws() {
     GenericJson json = writeClientIdJson("web", null, null);
 
     assertThrows(IOException.class, () -> ClientId.fromJson(json));
   }
 
   @Test
-  void fromJson_zeroLengthClientId_throws() throws IOException {
+  void fromJson_zeroLengthClientId_throws() {
     GenericJson json = writeClientIdJson("web", "", null);
 
     assertThrows(IOException.class, () -> ClientId.fromJson(json));
@@ -129,7 +128,7 @@ class ClientIdTest {
   }
 
   @Test
-  void fromResource_badResource() throws IOException {
+  void fromResource_badResource() {
     assertThrows(
         NullPointerException.class,
         () -> ClientId.fromResource(ClientIdTest.class, "invalid.json"));

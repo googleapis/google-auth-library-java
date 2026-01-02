@@ -147,8 +147,7 @@ class SecureConnectProviderTest {
   }
 
   @Test
-  void testGetKeyStore_FileNotFoundException()
-      throws IOException, GeneralSecurityException, InterruptedException {
+  void testGetKeyStore_FileNotFoundException() {
     SecureConnectProvider provider =
         new SecureConnectProvider(new TestProcessProvider(0), "/invalid/metadata/path.json");
 

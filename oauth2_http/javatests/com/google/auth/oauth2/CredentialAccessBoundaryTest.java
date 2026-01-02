@@ -33,6 +33,7 @@ package com.google.auth.oauth2;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.auth.oauth2.CredentialAccessBoundary.AccessBoundaryRule;
@@ -90,22 +91,15 @@ class CredentialAccessBoundaryTest {
 
   @Test
   void credentialAccessBoundary_nullRules_throws() {
-    try {
-      CredentialAccessBoundary.newBuilder().build();
-      fail("Should fail.");
-    } catch (NullPointerException e) {
-      // Expected.
-    }
+    CredentialAccessBoundary.Builder builder = CredentialAccessBoundary.newBuilder();
+    assertThrows(NullPointerException.class, builder::build);
   }
 
   @Test
   void credentialAccessBoundary_withoutRules_throws() {
-    try {
-      CredentialAccessBoundary.newBuilder().setRules(new ArrayList<AccessBoundaryRule>()).build();
-      fail("Should fail.");
-    } catch (IllegalArgumentException e) {
-      assertEquals("At least one access boundary rule must be provided.", e.getMessage());
-    }
+    CredentialAccessBoundary.Builder builder = CredentialAccessBoundary.newBuilder().setRules(new ArrayList<>());
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, builder::build);
+    assertEquals("At least one access boundary rule must be provided.", exception.getMessage());
   }
 
   @Test
@@ -204,15 +198,11 @@ class CredentialAccessBoundaryTest {
 
   @Test
   void accessBoundaryRule_withEmptyAvailableResource_throws() {
-    try {
-      AccessBoundaryRule.newBuilder()
-          .setAvailableResource("")
-          .addAvailablePermission("permission")
-          .build();
-      fail("Should fail.");
-    } catch (IllegalArgumentException e) {
-      assertEquals("The provided availableResource is empty.", e.getMessage());
-    }
+    AccessBoundaryRule.Builder builder = AccessBoundaryRule.newBuilder()
+        .setAvailableResource("")
+        .addAvailablePermission("permission");
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> builder.build());
+    assertEquals("The provided availableResource is empty.", exception.getMessage());
   }
 
   @Test

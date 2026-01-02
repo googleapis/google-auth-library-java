@@ -32,6 +32,7 @@
 package com.google.auth.oauth2;
 
 import static com.google.auth.Credentials.GOOGLE_DEFAULT_UNIVERSE;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -117,13 +118,13 @@ class AwsCredentialsTest extends BaseSerializationTest {
 
   @Test
   void test_awsCredentialSource() {
-    String keys[] = {"region_url", "url", "imdsv2_session_token_url"};
+    String[] keys = {"region_url", "url", "imdsv2_session_token_url"};
     for (String key : keys) {
       Map<String, Object> credentialSourceWithInvalidUrl = buildAwsIpv6CredentialSourceMap();
       credentialSourceWithInvalidUrl.put(key, "https://badhost.com/fake");
 
       // Should succeed as no validation is done.
-      new AwsCredentialSource(credentialSourceWithInvalidUrl);
+      assertDoesNotThrow(() -> new AwsCredentialSource(credentialSourceWithInvalidUrl));
     }
   }
 
@@ -686,7 +687,7 @@ class AwsCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void retrieveSubjectToken_passesContext() throws IOException {
+  void retrieveSubjectToken_passesContext() {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -712,7 +713,7 @@ class AwsCredentialsTest extends BaseSerializationTest {
             .setSubjectTokenType("subjectTokenType")
             .build();
 
-    awsCredential.retrieveSubjectToken();
+    assertDoesNotThrow(awsCredential::retrieveSubjectToken);
   }
 
   @Test
@@ -735,7 +736,7 @@ class AwsCredentialsTest extends BaseSerializationTest {
             .build();
 
     try {
-      String subjectToken = URLDecoder.decode(awsCredential.retrieveSubjectToken(), "UTF-8");
+      URLDecoder.decode(awsCredential.retrieveSubjectToken(), "UTF-8");
       fail("retrieveSubjectToken should not succeed");
     } catch (IOException e) {
       assertEquals("test", e.getMessage());
@@ -953,7 +954,7 @@ class AwsCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void createdScoped_clonedCredentialWithAddedScopes() throws IOException {
+  void createdScoped_clonedCredentialWithAddedScopes() {
     AwsCredentials credentials =
         AwsCredentials.newBuilder(AWS_CREDENTIAL)
             .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
@@ -1028,7 +1029,7 @@ class AwsCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void builder_allFields() throws IOException {
+  void builder_allFields() {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     AwsCredentials credentials =
@@ -1064,7 +1065,7 @@ class AwsCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void builder_missingUniverseDomain_defaults() throws IOException {
+  void builder_missingUniverseDomain_defaults() {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     AwsCredentials credentials =
@@ -1101,7 +1102,7 @@ class AwsCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void newBuilder_allFields() throws IOException {
+  void newBuilder_allFields() {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     AwsCredentials credentials =
@@ -1139,7 +1140,7 @@ class AwsCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void newBuilder_noUniverseDomain_defaults() throws IOException {
+  void newBuilder_noUniverseDomain_defaults() {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     AwsCredentials credentials =
@@ -1176,7 +1177,7 @@ class AwsCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void builder_defaultRegionalCredentialVerificationUrlOverride() throws IOException {
+  void builder_defaultRegionalCredentialVerificationUrlOverride() {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     AwsSecurityCredentialsSupplier supplier =
@@ -1204,14 +1205,13 @@ class AwsCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void builder_supplierAndCredSourceThrows() throws IOException {
+  void builder_supplierAndCredSourceThrows() {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
     AwsSecurityCredentialsSupplier supplier =
         new TestAwsSecurityCredentialsSupplier("region", null, null, null);
 
     try {
-      AwsCredentials credentials =
           AwsCredentials.newBuilder()
               .setAwsSecurityCredentialsSupplier(supplier)
               .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
@@ -1235,13 +1235,10 @@ class AwsCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void builder_noSupplieOrCredSourceThrows() throws IOException {
+  void builder_noSupplieOrCredSourceThrows() {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
-    Supplier<AwsSecurityCredentials> testSupplier = () -> null;
-
     try {
-      AwsCredentials credentials =
           AwsCredentials.newBuilder()
               .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
               .setAudience("audience")
@@ -1288,7 +1285,7 @@ class AwsCredentialsTest extends BaseSerializationTest {
     assertEquals(testCredentials, deserializedCredentials);
     assertEquals(testCredentials.hashCode(), deserializedCredentials.hashCode());
     assertEquals(testCredentials.toString(), deserializedCredentials.toString());
-    assertSame(deserializedCredentials.clock, Clock.SYSTEM);
+    assertSame(Clock.SYSTEM, deserializedCredentials.clock);
   }
 
   private static void ValidateRequest(
