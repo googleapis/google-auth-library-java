@@ -61,8 +61,7 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
 
   private static final Collection<String> SCOPES =
       Collections.unmodifiableCollection(Arrays.asList("scope1", "scope2"));
-  private static final Collection<String> DEFAULT_SCOPES =
-      Collections.singletonList("scope3");
+  private static final Collection<String> DEFAULT_SCOPES = Collections.singletonList("scope3");
 
   @Test
   void constructor_usesAppIdentityService() throws IOException {
