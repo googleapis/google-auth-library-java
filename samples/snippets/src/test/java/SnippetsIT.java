@@ -86,29 +86,34 @@ class SnippetsIT {
     return idToken.getTokenValue();
   }
 
-  @Test void testIdTokenFromServiceAccount() throws IOException {
+  @Test
+  void testIdTokenFromServiceAccount() throws IOException {
     IdTokenFromServiceAccount.getIdTokenFromServiceAccount(CREDENTIALS, "https://example.com");
     assertThat(stdOut.toString()).contains("Generated ID token.");
   }
 
-  @Test void testVerifyGoogleIdToken() throws IOException {
+  @Test
+  void testVerifyGoogleIdToken() throws IOException {
     String idToken = getIdTokenFromServiceAccount(CREDENTIALS, "https://example.com");
 
     VerifyGoogleIdToken.verifyGoogleIdToken(
         idToken, "https://example.com", "https://www.googleapis.com/oauth2/v3/certs");
   }
 
-  @Test void testIdTokenFromMetadataServer() throws GeneralSecurityException, IOException {
+  @Test
+  void testIdTokenFromMetadataServer() throws GeneralSecurityException, IOException {
     IdTokenFromMetadataServer.getIdTokenFromMetadataServer("https://www.google.com");
     assertThat(stdOut.toString()).contains("Generated ID token.");
   }
 
-  @Test void testAuthenticateImplicitWithAdc() throws IOException {
+  @Test
+  void testAuthenticateImplicitWithAdc() throws IOException {
     AuthenticateImplicitWithAdc.authenticateImplicitWithAdc(PROJECT_ID);
     assertThat(stdOut.toString()).contains("Listed all storage buckets.");
   }
 
-  @Test void testAuthenticateExplicit() throws IOException {
+  @Test
+  void testAuthenticateExplicit() throws IOException {
     AuthenticateExplicit.authenticateExplicit(PROJECT_ID);
     assertThat(stdOut.toString()).contains("Listed all storage buckets.");
   }
