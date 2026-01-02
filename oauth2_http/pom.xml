@@ -23,29 +23,6 @@
 
   <profiles>
     <profile>
-      <id>junit</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <version>${surefire.version}</version>
-            <configuration>
-              <!-- Excludes integration tests when unit tests are run. -->
-              <excludes>
-                <exclude>**/IT*.java</exclude>
-                <exclude>**/functional/*.java</exclude>
-              </excludes>
-              <reportNameSuffix>sponge_log</reportNameSuffix>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
       <id>native-test</id>
       <build>
         <plugins>
