@@ -158,12 +158,6 @@
         <scope>import</scope>
       </dependency>
       <dependency>
-        <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter</artifactId>
-        <version>${project.junit.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
         <groupId>com.google.appengine</groupId>
         <artifactId>appengine</artifactId>
         <version>${project.appengine.version}</version>
@@ -409,6 +403,14 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
         <version>3.3.1</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <configuration>
+          <!-- maven-dependency-plugin cannot detect the runtime usage of junit-jupiter-engine for executing JUnit 5+ tests. -->
+          <ignoredUnusedDeclaredDependencies>org.junit.jupiter:junit-jupiter-engine</ignoredUnusedDeclaredDependencies>
+        </configuration>
       </plugin>
     </plugins>
   </build>
