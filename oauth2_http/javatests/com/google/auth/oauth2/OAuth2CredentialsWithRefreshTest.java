@@ -33,6 +33,7 @@ package com.google.auth.oauth2;
 
 import static com.google.auth.oauth2.OAuth2Credentials.DEFAULT_EXPIRATION_MARGIN;
 import static com.google.auth.oauth2.OAuth2Credentials.DEFAULT_REFRESH_MARGIN;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -150,21 +151,17 @@ class OAuth2CredentialsWithRefreshTest {
 
   @Test
   void builder_noAccessToken() {
-    OAuth2CredentialsWithRefresh.newBuilder()
-        .setRefreshHandler(
-            new OAuth2CredentialsWithRefresh.OAuth2RefreshHandler() {
-              @Override
-              public AccessToken refreshAccessToken() {
-                return null;
-              }
-            })
-        .build();
+    OAuth2CredentialsWithRefresh.Builder builder =
+        OAuth2CredentialsWithRefresh.newBuilder().setRefreshHandler(() -> null);
+    assertDoesNotThrow(builder::build);
   }
 
   @Test
   void builder_noRefreshHandler_throws() {
+    OAuth2CredentialsWithRefresh.Builder builder =
+        OAuth2CredentialsWithRefresh.newBuilder().setAccessToken(ACCESS_TOKEN);
     try {
-      OAuth2CredentialsWithRefresh.newBuilder().setAccessToken(ACCESS_TOKEN).build();
+      builder.build();
       fail("Should fail as a refresh handler must be provided.");
     } catch (NullPointerException e) {
       // Expected.
@@ -173,10 +170,11 @@ class OAuth2CredentialsWithRefreshTest {
 
   @Test
   void builder_noExpirationTimeInAccessToken_throws() {
+    OAuth2CredentialsWithRefresh.Builder builder =
+        OAuth2CredentialsWithRefresh.newBuilder()
+            .setAccessToken(new AccessToken("accessToken", null));
     try {
-      OAuth2CredentialsWithRefresh.newBuilder()
-          .setAccessToken(new AccessToken("accessToken", null))
-          .build();
+      builder.build();
       fail("Should fail as a refresh handler must be provided.");
     } catch (IllegalArgumentException e) {
       // Expected.

@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -167,9 +168,9 @@ class ClientIdTest {
             + CLIENT_SECRET
             + "\""
             + "}"; // No closing brace
-    InputStream stream = TestUtils.stringToInputStream(invalidJson);
-
-    ClientId.fromStream(stream);
+    try (InputStream stream = TestUtils.stringToInputStream(invalidJson)) {
+      assertDoesNotThrow(() -> ClientId.fromStream(stream));
+    }
   }
 
   private GenericJson writeClientIdJson(String type, String clientId, String clientSecret) {

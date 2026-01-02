@@ -33,6 +33,7 @@ package com.google.auth.oauth2;
 
 import static com.google.auth.Credentials.GOOGLE_DEFAULT_UNIVERSE;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -127,32 +128,35 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
   @Test
   void constructor_noClientId_constructs() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
-    ServiceAccountJwtAccessCredentials.newBuilder()
-        .setClientEmail(SA_CLIENT_EMAIL)
-        .setPrivateKey(privateKey)
-        .setPrivateKeyId(SA_PRIVATE_KEY_ID)
-        .build();
+    ServiceAccountJwtAccessCredentials.Builder builder =
+        ServiceAccountJwtAccessCredentials.newBuilder()
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(privateKey)
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID);
+    assertDoesNotThrow(builder::build);
   }
 
   @Test
   void constructor_noPrivateKeyId_constructs() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
-    ServiceAccountJwtAccessCredentials.newBuilder()
-        .setClientId(SA_CLIENT_ID)
-        .setClientEmail(SA_CLIENT_EMAIL)
-        .setPrivateKey(privateKey)
-        .build();
+    ServiceAccountJwtAccessCredentials.Builder builder =
+        ServiceAccountJwtAccessCredentials.newBuilder()
+            .setClientId(SA_CLIENT_ID)
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(privateKey);
+    assertDoesNotThrow(builder::build);
   }
 
   @Test
   void constructor_noEmail_throws() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
+    ServiceAccountJwtAccessCredentials.Builder builder =
+        ServiceAccountJwtAccessCredentials.newBuilder()
+            .setClientId(SA_CLIENT_ID)
+            .setPrivateKey(privateKey)
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID);
     try {
-      ServiceAccountJwtAccessCredentials.newBuilder()
-          .setClientId(SA_CLIENT_ID)
-          .setPrivateKey(privateKey)
-          .setPrivateKeyId(SA_PRIVATE_KEY_ID)
-          .build();
+      builder.build();
       fail("exception expected");
     } catch (NullPointerException e) {
       // Expected
@@ -161,12 +165,13 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
 
   @Test
   void constructor_noPrivateKey_throws() {
+    ServiceAccountJwtAccessCredentials.Builder builder =
+        ServiceAccountJwtAccessCredentials.newBuilder()
+            .setClientId(SA_CLIENT_ID)
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID);
     try {
-      ServiceAccountJwtAccessCredentials.newBuilder()
-          .setClientId(SA_CLIENT_ID)
-          .setClientEmail(SA_CLIENT_EMAIL)
-          .setPrivateKeyId(SA_PRIVATE_KEY_ID)
-          .build();
+      builder.build();
       fail("exception expected");
     } catch (NullPointerException e) {
       // Expected
@@ -178,7 +183,7 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     Credentials credentials =
         ServiceAccountJwtAccessCredentials.fromPkcs8(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
-    assertEquals(credentials.getAuthenticationType(), "JWTAccess");
+    assertEquals("JWTAccess", credentials.getAuthenticationType());
   }
 
   @Test
@@ -210,7 +215,7 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
 
-    verifyJwtAccess(metadata, SA_CLIENT_EMAIL, CALL_URI, SA_PRIVATE_KEY_ID);
+    verifyJwtAccess(metadata, CALL_URI);
   }
 
   @Test
@@ -227,7 +232,7 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata();
 
-    verifyJwtAccess(metadata, SA_CLIENT_EMAIL, CALL_URI, SA_PRIVATE_KEY_ID);
+    verifyJwtAccess(metadata, CALL_URI);
   }
 
   @Test
@@ -315,7 +320,7 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     credentials.getRequestMetadata(CALL_URI, executor, callback);
     assertEquals(0, executor.numTasks());
     assertNotNull(callback.metadata);
-    verifyJwtAccess(callback.metadata, SA_CLIENT_EMAIL, CALL_URI, SA_PRIVATE_KEY_ID);
+    verifyJwtAccess(callback.metadata, CALL_URI);
   }
 
   @Test
@@ -335,7 +340,7 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     credentials.getRequestMetadata(null, executor, callback);
     assertEquals(0, executor.numTasks());
     assertNotNull(callback.metadata);
-    verifyJwtAccess(callback.metadata, SA_CLIENT_EMAIL, CALL_URI, SA_PRIVATE_KEY_ID);
+    verifyJwtAccess(callback.metadata, CALL_URI);
   }
 
   @Test
@@ -428,8 +433,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     assertTrue(metadata.containsKey(GoogleCredentials.QUOTA_PROJECT_ID_HEADER_KEY));
     assertEquals(
-        metadata.get(GoogleCredentials.QUOTA_PROJECT_ID_HEADER_KEY),
-        Collections.singletonList(QUOTA_PROJECT));
+        Collections.singletonList(QUOTA_PROJECT),
+        metadata.get(GoogleCredentials.QUOTA_PROJECT_ID_HEADER_KEY));
   }
 
   @Test
@@ -483,8 +488,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
             .setPrivateKeyId(SA_PRIVATE_KEY_ID)
             .setDefaultAudience(CALL_URI)
             .build();
-    assertTrue(credentials.equals(otherCredentials));
-    assertTrue(otherCredentials.equals(credentials));
+    assertEquals(credentials, otherCredentials);
+    assertEquals(otherCredentials, credentials);
   }
 
   @Test
@@ -506,8 +511,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
             .setPrivateKeyId(SA_PRIVATE_KEY_ID)
             .setDefaultAudience(CALL_URI)
             .build();
-    assertFalse(credentials.equals(otherCredentials));
-    assertFalse(otherCredentials.equals(credentials));
+    assertNotEquals(credentials, otherCredentials);
+    assertNotEquals(otherCredentials, credentials);
   }
 
   @Test
@@ -529,8 +534,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
             .setPrivateKeyId(SA_PRIVATE_KEY_ID)
             .setDefaultAudience(CALL_URI)
             .build();
-    assertFalse(credentials.equals(otherCredentials));
-    assertFalse(otherCredentials.equals(credentials));
+    assertNotEquals(credentials, otherCredentials);
+    assertNotEquals(otherCredentials, credentials);
   }
 
   @Test
@@ -552,8 +557,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
             .setPrivateKeyId("otherKeyId")
             .setDefaultAudience(CALL_URI)
             .build();
-    assertFalse(credentials.equals(otherCredentials));
-    assertFalse(otherCredentials.equals(credentials));
+    assertNotEquals(credentials, otherCredentials);
+    assertNotEquals(otherCredentials, credentials);
   }
 
   @Test
@@ -576,8 +581,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
             .setPrivateKeyId(SA_PRIVATE_KEY_ID)
             .setDefaultAudience(otherCallUri)
             .build();
-    assertFalse(credentials.equals(otherCredentials));
-    assertFalse(otherCredentials.equals(credentials));
+    assertNotEquals(credentials, otherCredentials);
+    assertNotEquals(otherCredentials, credentials);
   }
 
   @Test
@@ -635,12 +640,11 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
             .build();
     ServiceAccountJwtAccessCredentials deserializedCredentials =
         serializeAndDeserialize(credentials);
-    verifyJwtAccess(
-        deserializedCredentials.getRequestMetadata(), SA_CLIENT_EMAIL, CALL_URI, SA_PRIVATE_KEY_ID);
+    verifyJwtAccess(deserializedCredentials.getRequestMetadata(), CALL_URI);
     assertEquals(credentials, deserializedCredentials);
     assertEquals(credentials.hashCode(), deserializedCredentials.hashCode());
     assertEquals(credentials.toString(), deserializedCredentials.toString());
-    assertSame(deserializedCredentials.clock, Clock.SYSTEM);
+    assertSame(Clock.SYSTEM, deserializedCredentials.clock);
   }
 
   @Test
@@ -664,7 +668,7 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
 
     assertNotNull(credentials);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
-    verifyJwtAccess(metadata, SA_CLIENT_EMAIL, CALL_URI, SA_PRIVATE_KEY_ID);
+    verifyJwtAccess(metadata, CALL_URI);
   }
 
   @Test
@@ -678,7 +682,7 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
 
     assertNotNull(credentials);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(null);
-    verifyJwtAccess(metadata, SA_CLIENT_EMAIL, CALL_URI, SA_PRIVATE_KEY_ID);
+    verifyJwtAccess(metadata, CALL_URI);
   }
 
   @Test
@@ -732,7 +736,7 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
 
     Map<String, List<String>> metadata = withAudience.getRequestMetadata(CALL_URI);
 
-    verifyJwtAccess(metadata, SA_CLIENT_EMAIL, URI.create("new-audience"), SA_PRIVATE_KEY_ID);
+    verifyJwtAccess(metadata, URI.create("new-audience"));
   }
 
   @Test
@@ -745,8 +749,9 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
             .setPrivateKey(privateKey)
             .setPrivateKeyId(SA_PRIVATE_KEY_ID)
             .build();
+    JwtClaims claims = JwtClaims.newBuilder().build();
     try {
-      credentials.jwtWithClaims(JwtClaims.newBuilder().build());
+      credentials.jwtWithClaims(claims);
       fail("Expected to throw exception for missing audience");
     } catch (IllegalStateException ex) {
       // expected exception
@@ -767,7 +772,7 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     Credentials withAudience = credentials.jwtWithClaims(JwtClaims.newBuilder().build());
 
     Map<String, List<String>> metadata = withAudience.getRequestMetadata(CALL_URI);
-    verifyJwtAccess(metadata, SA_CLIENT_EMAIL, URI.create("default-audience"), SA_PRIVATE_KEY_ID);
+    verifyJwtAccess(metadata, URI.create("default-audience"));
   }
 
   @Test
@@ -842,15 +847,7 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
 
   @Test
   void fromJSON_noUniverseDomain() throws IOException {
-    GenericJson json =
-        writeServiceAccountJson(
-            SA_CLIENT_ID,
-            SA_CLIENT_EMAIL,
-            SA_PRIVATE_KEY_PKCS8,
-            "test-project-id",
-            SA_PRIVATE_KEY_ID,
-            QUOTA_PROJECT,
-            null);
+    GenericJson json = writeServiceAccountJson(null);
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.fromJson(json, URI.create("default-aud"));
     assertEquals(SA_CLIENT_ID, credentials.getClientId());
@@ -863,15 +860,7 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
 
   @Test
   void fromJSON_UniverseDomainSet() throws IOException {
-    GenericJson json =
-        writeServiceAccountJson(
-            SA_CLIENT_ID,
-            SA_CLIENT_EMAIL,
-            SA_PRIVATE_KEY_PKCS8,
-            "test-project-id",
-            SA_PRIVATE_KEY_ID,
-            QUOTA_PROJECT,
-            "example.com");
+    GenericJson json = writeServiceAccountJson("example.com");
     ServiceAccountJwtAccessCredentials credentials =
         ServiceAccountJwtAccessCredentials.fromJson(json, URI.create("default-aud"));
     assertEquals(SA_CLIENT_ID, credentials.getClientId());
@@ -943,11 +932,7 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     assertEquals("example.com", credentials.getUniverseDomain());
   }
 
-  private void verifyJwtAccess(
-      Map<String, List<String>> metadata,
-      String expectedEmail,
-      URI expectedAudience,
-      String expectedKeyId)
+  private void verifyJwtAccess(Map<String, List<String>> metadata, URI expectedAudience)
       throws IOException {
     assertNotNull(metadata);
     List<String> authorizations = metadata.get(AuthHttpConstants.AUTHORIZATION);
@@ -961,10 +946,14 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     }
     assertNotNull(assertion, "Bearer assertion not found");
     JsonWebSignature signature = JsonWebSignature.parse(JSON_FACTORY, assertion);
-    assertEquals(expectedEmail, signature.getPayload().getIssuer());
-    assertEquals(expectedEmail, signature.getPayload().getSubject());
+    assertEquals(
+        ServiceAccountJwtAccessCredentialsTest.SA_CLIENT_EMAIL, signature.getPayload().getIssuer());
+    assertEquals(
+        ServiceAccountJwtAccessCredentialsTest.SA_CLIENT_EMAIL,
+        signature.getPayload().getSubject());
     assertEquals(expectedAudience.toString(), signature.getPayload().getAudience());
-    assertEquals(expectedKeyId, signature.getHeader().getKeyId());
+    assertEquals(
+        ServiceAccountJwtAccessCredentialsTest.SA_PRIVATE_KEY_ID, signature.getHeader().getKeyId());
   }
 
   private static void testFromStreamException(InputStream stream, String expectedMessageContent) {
@@ -978,33 +967,14 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  private GenericJson writeServiceAccountJson(
-      String clientId,
-      String clientEmail,
-      String privateKeyPkcs8,
-      String privateKeyId,
-      String projectId,
-      String quotaProjectId,
-      String universeDomain) {
+  private GenericJson writeServiceAccountJson(String universeDomain) {
     GenericJson json = new GenericJson();
-    if (clientId != null) {
-      json.put("client_id", clientId);
-    }
-    if (clientEmail != null) {
-      json.put("client_email", clientEmail);
-    }
-    if (privateKeyPkcs8 != null) {
-      json.put("private_key", privateKeyPkcs8);
-    }
-    if (privateKeyId != null) {
-      json.put("private_key_id", privateKeyId);
-    }
-    if (projectId != null) {
-      json.put("project_id", projectId);
-    }
-    if (quotaProjectId != null) {
-      json.put("quota_project_id", quotaProjectId);
-    }
+    json.put("client_id", ServiceAccountJwtAccessCredentialsTest.SA_CLIENT_ID);
+    json.put("client_email", ServiceAccountJwtAccessCredentialsTest.SA_CLIENT_EMAIL);
+    json.put("private_key", ServiceAccountJwtAccessCredentialsTest.SA_PRIVATE_KEY_PKCS8);
+    json.put("private_key_id", "test-project-id");
+    json.put("project_id", ServiceAccountJwtAccessCredentialsTest.SA_PRIVATE_KEY_ID);
+    json.put("quota_project_id", ServiceAccountJwtAccessCredentialsTest.QUOTA_PROJECT);
     if (universeDomain != null) {
       json.put("universe_domain", universeDomain);
     }

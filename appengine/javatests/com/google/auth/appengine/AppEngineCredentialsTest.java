@@ -37,7 +37,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.auth.Credentials;
 import com.google.auth.oauth2.AccessToken;
@@ -135,11 +134,7 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
             .setAppIdentityService(appIdentity)
             .build();
     assertTrue(credentials.createScopedRequired());
-    try {
-      credentials.getRequestMetadata(CALL_URI);
-      fail("Should not be able to use credential without scopes.");
-    } catch (Exception expected) {
-    }
+    assertThrows(IOException.class, () -> credentials.getRequestMetadata(CALL_URI));
     assertEquals(0, appIdentity.getGetAccessTokenCallCount());
 
     GoogleCredentials scopedCredentials = credentials.createScoped(SCOPES);

@@ -38,7 +38,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.GenericJson;
@@ -100,13 +99,8 @@ class GoogleCredentialsTest extends BaseSerializationTest {
   private static final String TPC_UNIVERSE = "foo.bar";
 
   @Test
-  void getApplicationDefault_nullTransport_throws() throws IOException {
-    try {
-      GoogleCredentials.getApplicationDefault(null);
-      fail();
-    } catch (NullPointerException expected) {
-      // Expected
-    }
+  void getApplicationDefault_nullTransport_throws() {
+    assertThrows(NullPointerException.class, () -> GoogleCredentials.getApplicationDefault(null));
   }
 
   @Test
@@ -114,29 +108,23 @@ class GoogleCredentialsTest extends BaseSerializationTest {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     GenericJson json = new GenericJson();
     json.put("type", "unsupported_credential");
-    InputStream stream = TestUtils.jsonToInputStream(json);
-    try {
-      GoogleCredentials.fromStream(stream, transportFactory);
-      fail("Should throw if type is unknown.");
-    } catch (IOException expected) {
+    try (InputStream stream = TestUtils.jsonToInputStream(json)) {
+      IOException exception =
+          assertThrows(
+              IOException.class, () -> GoogleCredentials.fromStream(stream, transportFactory));
       String expectedError =
           "Error reading credentials from stream, 'type' value "
               + "'unsupported_credential' not recognized. Valid values are 'authorized_user', "
               + "'service_account', 'gdch_service_account', 'external_account', "
               + "'external_account_authorized_user', 'impersonated_service_account'.";
-      assertTrue(expected.getMessage().contains(expectedError));
+      assertTrue(exception.getMessage().contains(expectedError));
     }
   }
 
   @Test
-  void fromStream_nullTransport_throws() throws IOException {
+  void fromStream_nullTransport_throws() {
     InputStream stream = new ByteArrayInputStream("foo".getBytes());
-    try {
-      GoogleCredentials.fromStream(stream, null);
-      fail("Should throw if HttpTransportFactory is null");
-    } catch (NullPointerException expected) {
-      // Expected
-    }
+    assertThrows(NullPointerException.class, () -> GoogleCredentials.fromStream(stream, null));
   }
 
   @Test
@@ -146,19 +134,17 @@ class GoogleCredentialsTest extends BaseSerializationTest {
         ServiceAccountCredentialsTest.writeServiceAccountJson(
             "project_id", QUOTA_PROJECT, "universe");
     json.remove("type");
-    InputStream stream = TestUtils.jsonToInputStream(json);
-    try {
-      GoogleCredentials.fromStream(stream, transportFactory);
-      fail("Should throw if type is unknown.");
-    } catch (IOException expected) {
+    try (InputStream stream = TestUtils.jsonToInputStream(json)) {
+      IOException exception =
+          assertThrows(
+              IOException.class, () -> GoogleCredentials.fromStream(stream, transportFactory));
       String expectedError = "Error reading credentials from stream, 'type' field not specified.";
-      assertEquals(expectedError, expected.getMessage());
+      assertEquals(expectedError, exception.getMessage());
     }
   }
 
   @Test
   void fromStream_nullStream_throws() {
-    MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     assertThrows(NullPointerException.class, () -> GoogleCredentials.parseJsonInputStream(null));
   }
 
@@ -175,7 +161,7 @@ class GoogleCredentialsTest extends BaseSerializationTest {
 
     assertNotNull(credentials);
     assertEquals(GOOGLE_DEFAULT_UNIVERSE, credentials.getUniverseDomain());
-    assertEquals(false, credentials.isExplicitUniverseDomain());
+    assertFalse(credentials.isExplicitUniverseDomain());
     credentials = credentials.createScoped(SCOPES);
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
@@ -210,7 +196,11 @@ class GoogleCredentialsTest extends BaseSerializationTest {
         ServiceAccountCredentialsTest.writeServiceAccountStream(
             null, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
 
-    testFromStreamException(serviceAccountStream, "client_id");
+    IOException exception =
+        assertThrows(
+            IOException.class,
+            () -> GoogleCredentials.fromStream(serviceAccountStream, DUMMY_TRANSPORT_FACTORY));
+    assertTrue(exception.getMessage().contains("client_id"));
   }
 
   @Test
@@ -219,7 +209,11 @@ class GoogleCredentialsTest extends BaseSerializationTest {
         ServiceAccountCredentialsTest.writeServiceAccountStream(
             SA_CLIENT_ID, null, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
 
-    testFromStreamException(serviceAccountStream, "client_email");
+    IOException exception =
+        assertThrows(
+            IOException.class,
+            () -> GoogleCredentials.fromStream(serviceAccountStream, DUMMY_TRANSPORT_FACTORY));
+    assertTrue(exception.getMessage().contains("client_email"));
   }
 
   @Test
@@ -228,7 +222,11 @@ class GoogleCredentialsTest extends BaseSerializationTest {
         ServiceAccountCredentialsTest.writeServiceAccountStream(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, null, SA_PRIVATE_KEY_ID);
 
-    testFromStreamException(serviceAccountStream, "private_key");
+    IOException exception =
+        assertThrows(
+            IOException.class,
+            () -> GoogleCredentials.fromStream(serviceAccountStream, DUMMY_TRANSPORT_FACTORY));
+    assertTrue(exception.getMessage().contains("private_key"));
   }
 
   @Test
@@ -237,7 +235,11 @@ class GoogleCredentialsTest extends BaseSerializationTest {
         ServiceAccountCredentialsTest.writeServiceAccountStream(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, null);
 
-    testFromStreamException(serviceAccountStream, "private_key_id");
+    IOException exception =
+        assertThrows(
+            IOException.class,
+            () -> GoogleCredentials.fromStream(serviceAccountStream, DUMMY_TRANSPORT_FACTORY));
+    assertTrue(exception.getMessage().contains("private_key_id"));
   }
 
   @Test
@@ -288,7 +290,11 @@ class GoogleCredentialsTest extends BaseSerializationTest {
             GDCH_SA_CA_CERT_PATH,
             GDCH_SA_TOKEN_SERVER_URI);
 
-    testFromStreamException(gdchServiceAccountStream, "format_version");
+    IOException exception =
+        assertThrows(
+            IOException.class,
+            () -> GoogleCredentials.fromStream(gdchServiceAccountStream, DUMMY_TRANSPORT_FACTORY));
+    assertTrue(exception.getMessage().contains("format_version"));
   }
 
   @Test
@@ -303,7 +309,11 @@ class GoogleCredentialsTest extends BaseSerializationTest {
             GDCH_SA_CA_CERT_PATH,
             GDCH_SA_TOKEN_SERVER_URI);
 
-    testFromStreamException(gdchServiceAccountStream, "project");
+    IOException exception =
+        assertThrows(
+            IOException.class,
+            () -> GoogleCredentials.fromStream(gdchServiceAccountStream, DUMMY_TRANSPORT_FACTORY));
+    assertTrue(exception.getMessage().contains("project"));
   }
 
   @Test
@@ -318,7 +328,11 @@ class GoogleCredentialsTest extends BaseSerializationTest {
             GDCH_SA_CA_CERT_PATH,
             GDCH_SA_TOKEN_SERVER_URI);
 
-    testFromStreamException(gdchServiceAccountStream, "private_key_id");
+    IOException exception =
+        assertThrows(
+            IOException.class,
+            () -> GoogleCredentials.fromStream(gdchServiceAccountStream, DUMMY_TRANSPORT_FACTORY));
+    assertTrue(exception.getMessage().contains("private_key_id"));
   }
 
   @Test
@@ -333,7 +347,11 @@ class GoogleCredentialsTest extends BaseSerializationTest {
             GDCH_SA_CA_CERT_PATH,
             GDCH_SA_TOKEN_SERVER_URI);
 
-    testFromStreamException(gdchServiceAccountStream, "private_key");
+    IOException exception =
+        assertThrows(
+            IOException.class,
+            () -> GoogleCredentials.fromStream(gdchServiceAccountStream, DUMMY_TRANSPORT_FACTORY));
+    assertTrue(exception.getMessage().contains("private_key"));
   }
 
   @Test
@@ -348,7 +366,11 @@ class GoogleCredentialsTest extends BaseSerializationTest {
             GDCH_SA_CA_CERT_PATH,
             GDCH_SA_TOKEN_SERVER_URI);
 
-    testFromStreamException(gdchServiceAccountStream, "name");
+    IOException exception =
+        assertThrows(
+            IOException.class,
+            () -> GoogleCredentials.fromStream(gdchServiceAccountStream, DUMMY_TRANSPORT_FACTORY));
+    assertTrue(exception.getMessage().contains("name"));
   }
 
   @Test
@@ -363,7 +385,11 @@ class GoogleCredentialsTest extends BaseSerializationTest {
             GDCH_SA_CA_CERT_PATH,
             null);
 
-    testFromStreamException(gdchServiceAccountStream, "token_uri");
+    IOException exception =
+        assertThrows(
+            IOException.class,
+            () -> GoogleCredentials.fromStream(gdchServiceAccountStream, DUMMY_TRANSPORT_FACTORY));
+    assertTrue(exception.getMessage().contains("token_uri"));
   }
 
   @Test
@@ -378,9 +404,15 @@ class GoogleCredentialsTest extends BaseSerializationTest {
             GDCH_SA_CA_CERT_PATH,
             GDCH_SA_TOKEN_SERVER_URI);
 
-    testFromStreamException(
-        gdchServiceAccountStream,
-        String.format("Only format version %s is supported", GDCH_SA_FORMAT_VERSION));
+    IOException exception =
+        assertThrows(
+            IOException.class,
+            () -> GoogleCredentials.fromStream(gdchServiceAccountStream, DUMMY_TRANSPORT_FACTORY));
+    assertTrue(
+        exception
+            .getMessage()
+            .contains(
+                String.format("Only format version %s is supported", GDCH_SA_FORMAT_VERSION)));
   }
 
   @Test
@@ -395,9 +427,11 @@ class GoogleCredentialsTest extends BaseSerializationTest {
             "/path/to/missing/file",
             GDCH_SA_TOKEN_SERVER_URI);
 
-    testFromStreamException(
-        gdchServiceAccountStream,
-        String.format("Error reading certificate file from CA cert path"));
+    IOException exception =
+        assertThrows(
+            IOException.class,
+            () -> GoogleCredentials.fromStream(gdchServiceAccountStream, DUMMY_TRANSPORT_FACTORY));
+    assertTrue(exception.getMessage().contains("Error reading certificate file from CA cert path"));
   }
 
   @Test
@@ -433,7 +467,11 @@ class GoogleCredentialsTest extends BaseSerializationTest {
     InputStream userStream =
         UserCredentialsTest.writeUserStream(null, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
 
-    testFromStreamException(userStream, "client_id");
+    IOException exception =
+        assertThrows(
+            IOException.class,
+            () -> GoogleCredentials.fromStream(userStream, DUMMY_TRANSPORT_FACTORY));
+    assertTrue(exception.getMessage().contains("client_id"));
   }
 
   @Test
@@ -441,7 +479,11 @@ class GoogleCredentialsTest extends BaseSerializationTest {
     InputStream userStream =
         UserCredentialsTest.writeUserStream(USER_CLIENT_ID, null, REFRESH_TOKEN, QUOTA_PROJECT);
 
-    testFromStreamException(userStream, "client_secret");
+    IOException exception =
+        assertThrows(
+            IOException.class,
+            () -> GoogleCredentials.fromStream(userStream, DUMMY_TRANSPORT_FACTORY));
+    assertTrue(exception.getMessage().contains("client_secret"));
   }
 
   @Test
@@ -450,7 +492,11 @@ class GoogleCredentialsTest extends BaseSerializationTest {
         UserCredentialsTest.writeUserStream(
             USER_CLIENT_ID, USER_CLIENT_SECRET, null, QUOTA_PROJECT);
 
-    testFromStreamException(userStream, "refresh_token");
+    IOException exception =
+        assertThrows(
+            IOException.class,
+            () -> GoogleCredentials.fromStream(userStream, DUMMY_TRANSPORT_FACTORY));
+    assertTrue(exception.getMessage().contains("refresh_token"));
   }
 
   @Test
@@ -778,11 +824,11 @@ class GoogleCredentialsTest extends BaseSerializationTest {
     assertEquals(testCredentials, deserializedCredentials);
     assertEquals(testCredentials.hashCode(), deserializedCredentials.hashCode());
     assertEquals(testCredentials.toString(), deserializedCredentials.toString());
-    assertSame(deserializedCredentials.clock, Clock.SYSTEM);
+    assertSame(Clock.SYSTEM, deserializedCredentials.clock);
   }
 
   @Test
-  void toString_containsFields() throws IOException {
+  void toString_containsFields() {
     String expectedToString =
         String.format(
             "GoogleCredentials{quotaProjectId=%s, universeDomain=%s, isExplicitUniverseDomain=%s}",
@@ -793,7 +839,7 @@ class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void hashCode_equals() throws IOException {
+  void hashCode_equals() {
     GoogleCredentials credentials =
         GoogleCredentials.newBuilder().setUniverseDomain("some-domain").build();
     GoogleCredentials otherCredentials =
@@ -802,24 +848,13 @@ class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void equals_true() throws IOException {
+  void equals_true() {
     GoogleCredentials credentials =
         GoogleCredentials.newBuilder().setUniverseDomain("some-domain").build();
     GoogleCredentials otherCredentials =
         GoogleCredentials.newBuilder().setUniverseDomain("some-domain").build();
-    assertTrue(credentials.equals(otherCredentials));
-    assertTrue(otherCredentials.equals(credentials));
-  }
-
-  private static void testFromStreamException(InputStream stream, String expectedMessageContent) {
-    try {
-      GoogleCredentials.fromStream(stream, DUMMY_TRANSPORT_FACTORY);
-      fail(
-          String.format(
-              "Should throw exception with message containing '%s'", expectedMessageContent));
-    } catch (IOException expected) {
-      assertTrue(expected.getMessage().contains(expectedMessageContent));
-    }
+    assertEquals(credentials, otherCredentials);
+    assertEquals(otherCredentials, credentials);
   }
 
   @Test

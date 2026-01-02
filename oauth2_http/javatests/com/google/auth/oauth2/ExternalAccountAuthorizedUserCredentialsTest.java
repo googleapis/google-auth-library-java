@@ -729,8 +729,8 @@ class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializationTest
 
     assertTrue(metadata.containsKey(GoogleCredentials.QUOTA_PROJECT_ID_HEADER_KEY));
     assertEquals(
-        metadata.get(GoogleCredentials.QUOTA_PROJECT_ID_HEADER_KEY),
-        Collections.singletonList(QUOTA_PROJECT));
+        Collections.singletonList(QUOTA_PROJECT),
+        metadata.get(GoogleCredentials.QUOTA_PROJECT_ID_HEADER_KEY));
 
     validateAuthHeader(transportFactory.transport.getRequest());
   }
@@ -800,11 +800,11 @@ class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializationTest
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.fromJson(buildJsonCredentials(), transportFactory);
 
-    assertThrows(IOException.class, () -> credentials.refreshAccessToken());
+    assertThrows(IOException.class, credentials::refreshAccessToken);
   }
 
   @Test
-  void refreshAccessToken_missingRefreshFields_throws() throws IOException {
+  void refreshAccessToken_missingRefreshFields_throws() {
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -814,7 +814,7 @@ class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializationTest
             .setHttpTransportFactory(transportFactory)
             .build();
 
-    assertThrows(IllegalStateException.class, () -> credentials.refreshAccessToken());
+    assertThrows(IllegalStateException.class, credentials::refreshAccessToken);
   }
 
   @Test
@@ -1247,7 +1247,7 @@ class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializationTest
     assertEquals(credentials, deserializedCredentials);
     assertEquals(credentials.hashCode(), deserializedCredentials.hashCode());
     assertEquals(credentials.toString(), deserializedCredentials.toString());
-    assertSame(deserializedCredentials.clock, Clock.SYSTEM);
+    assertSame(Clock.SYSTEM, deserializedCredentials.clock);
   }
 
   static GenericJson buildJsonCredentials() {

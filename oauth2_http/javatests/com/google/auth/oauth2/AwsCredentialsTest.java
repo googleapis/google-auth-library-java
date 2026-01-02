@@ -37,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static com.google.auth.Credentials.GOOGLE_DEFAULT_UNIVERSE;
@@ -63,7 +64,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 
 /** Tests for {@link AwsCredentials}. */
@@ -94,7 +94,6 @@ class AwsCredentialsTest extends BaseSerializationTest {
         }
       };
 
-  private static final Map<String, Object> EMPTY_METADATA_HEADERS = Collections.emptyMap();
   private static final Map<String, String> EMPTY_STRING_HEADERS = Collections.emptyMap();
 
   private static final AwsCredentialSource AWS_CREDENTIAL_SOURCE =
@@ -493,12 +492,8 @@ class AwsCredentialsTest extends BaseSerializationTest {
             .setCredentialSource(buildAwsCredentialSource(transportFactory))
             .build();
 
-    try {
-      awsCredential.retrieveSubjectToken();
-      fail("Should not be able to use credential without exception.");
-    } catch (IOException exception) {
-      assertEquals("Failed to retrieve AWS region.", exception.getMessage());
-    }
+    IOException exception = assertThrows(IOException.class, awsCredential::retrieveSubjectToken);
+    assertEquals("Failed to retrieve AWS region.", exception.getMessage());
 
     List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
     assertEquals(1, requests.size());
@@ -522,12 +517,8 @@ class AwsCredentialsTest extends BaseSerializationTest {
             .setCredentialSource(buildAwsCredentialSource(transportFactory))
             .build();
 
-    try {
-      awsCredential.retrieveSubjectToken();
-      fail("Should not be able to use credential without exception.");
-    } catch (IOException exception) {
-      assertEquals("Failed to retrieve AWS IAM role.", exception.getMessage());
-    }
+    IOException exception = assertThrows(IOException.class, awsCredential::retrieveSubjectToken);
+    assertEquals("Failed to retrieve AWS IAM role.", exception.getMessage());
 
     List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
     assertEquals(2, requests.size());
@@ -554,12 +545,8 @@ class AwsCredentialsTest extends BaseSerializationTest {
             .setCredentialSource(buildAwsCredentialSource(transportFactory))
             .build();
 
-    try {
-      awsCredential.retrieveSubjectToken();
-      fail("Should not be able to use credential without exception.");
-    } catch (IOException exception) {
-      assertEquals("Failed to retrieve AWS credentials.", exception.getMessage());
-    }
+    IOException exception = assertThrows(IOException.class, awsCredential::retrieveSubjectToken);
+    assertEquals("Failed to retrieve AWS credentials.", exception.getMessage());
 
     List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
     assertEquals(3, requests.size());
@@ -589,15 +576,11 @@ class AwsCredentialsTest extends BaseSerializationTest {
             .setCredentialSource(new AwsCredentialSource(credentialSource))
             .build();
 
-    try {
-      awsCredential.retrieveSubjectToken();
-      fail("Should not be able to use credential without exception.");
-    } catch (IOException exception) {
-      assertEquals(
-          "Unable to determine the AWS region. The credential source does not "
-              + "contain the region URL.",
-          exception.getMessage());
-    }
+    IOException exception = assertThrows(IOException.class, awsCredential::retrieveSubjectToken);
+    assertEquals(
+        "Unable to determine the AWS region. The credential source does not "
+            + "contain the region URL.",
+        exception.getMessage());
 
     // No requests because the credential source does not contain region URL.
     List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
@@ -735,12 +718,8 @@ class AwsCredentialsTest extends BaseSerializationTest {
             .setSubjectTokenType("subjectTokenType")
             .build();
 
-    try {
-      URLDecoder.decode(awsCredential.retrieveSubjectToken(), "UTF-8");
-      fail("retrieveSubjectToken should not succeed");
-    } catch (IOException e) {
-      assertEquals("test", e.getMessage());
-    }
+    IOException exception = assertThrows(IOException.class, awsCredential::retrieveSubjectToken);
+    assertEquals("test", exception.getMessage());
   }
 
   @Test
@@ -861,14 +840,13 @@ class AwsCredentialsTest extends BaseSerializationTest {
             .setCredentialSource(new AwsCredentialSource(credentialSource))
             .build();
 
-    try {
-      awsCredential.getAwsSecurityCredentialsSupplier().getCredentials(emptyContext);
-      fail("Should not be able to use credential without exception.");
-    } catch (IOException exception) {
-      assertEquals(
-          "Unable to determine the AWS IAM role name. The credential source does not contain the url field.",
-          exception.getMessage());
-    }
+    IOException exception =
+        assertThrows(
+            IOException.class,
+            () -> awsCredential.getAwsSecurityCredentialsSupplier().getCredentials(emptyContext));
+    assertEquals(
+        "Unable to determine the AWS IAM role name. The credential source does not contain the url field.",
+        exception.getMessage());
 
     // No requests because url field is not present in credential source.
     List<MockLowLevelHttpRequest> requests = transportFactory.transport.getRequests();
@@ -990,12 +968,10 @@ class AwsCredentialsTest extends BaseSerializationTest {
     credentialSource.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
     credentialSource.put("environment_id", "azure1");
 
-    try {
-      new AwsCredentialSource(credentialSource);
-      fail("Exception should be thrown.");
-    } catch (IllegalArgumentException e) {
-      assertEquals("Invalid AWS environment ID.", e.getMessage());
-    }
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class, () -> new AwsCredentialSource(credentialSource));
+    assertEquals("Invalid AWS environment ID.", exception.getMessage());
   }
 
   @Test
@@ -1005,27 +981,23 @@ class AwsCredentialsTest extends BaseSerializationTest {
     credentialSource.put("regional_cred_verification_url", GET_CALLER_IDENTITY_URL);
     credentialSource.put("environment_id", "aws" + environmentVersion);
 
-    try {
-      new AwsCredentialSource(credentialSource);
-      fail("Exception should be thrown.");
-    } catch (IllegalArgumentException e) {
-      assertEquals(
-          String.format(
-              "AWS version %s is not supported in the current build.", environmentVersion),
-          e.getMessage());
-    }
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class, () -> new AwsCredentialSource(credentialSource));
+    assertEquals(
+        String.format("AWS version %s is not supported in the current build.", environmentVersion),
+        exception.getMessage());
   }
 
   @Test
   void credentialSource_missingRegionalCredVerificationUrl() {
-    try {
-      new AwsCredentialSource(new HashMap<String, Object>());
-      fail("Exception should be thrown.");
-    } catch (IllegalArgumentException e) {
-      assertEquals(
-          "A regional_cred_verification_url representing the GetCallerIdentity action URL must be specified.",
-          e.getMessage());
-    }
+    HashMap<String, Object> credentialSourceMap = new HashMap<>();
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class, () -> new AwsCredentialSource(credentialSourceMap));
+    assertEquals(
+        "A regional_cred_verification_url representing the GetCallerIdentity action URL must be specified.",
+        exception.getMessage());
   }
 
   @Test
@@ -1211,53 +1183,49 @@ class AwsCredentialsTest extends BaseSerializationTest {
     AwsSecurityCredentialsSupplier supplier =
         new TestAwsSecurityCredentialsSupplier("region", null, null, null);
 
-    try {
-          AwsCredentials.newBuilder()
-              .setAwsSecurityCredentialsSupplier(supplier)
-              .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-              .setAudience("audience")
-              .setSubjectTokenType("subjectTokenType")
-              .setTokenUrl(STS_URL)
-              .setTokenInfoUrl("tokenInfoUrl")
-              .setCredentialSource(AWS_CREDENTIAL_SOURCE)
-              .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-              .setQuotaProjectId("quotaProjectId")
-              .setClientId("clientId")
-              .setClientSecret("clientSecret")
-              .setScopes(scopes)
-              .build();
-      fail("Should not be able to continue without exception.");
-    } catch (IllegalArgumentException exception) {
-      assertEquals(
-          "AwsCredentials cannot have both an awsSecurityCredentialsSupplier and a credentialSource.",
-          exception.getMessage());
-    }
+    AwsCredentials.Builder builder =
+        AwsCredentials.newBuilder()
+            .setAwsSecurityCredentialsSupplier(supplier)
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .setAudience("audience")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setCredentialSource(AWS_CREDENTIAL_SOURCE)
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .setQuotaProjectId("quotaProjectId")
+            .setClientId("clientId")
+            .setClientSecret("clientSecret")
+            .setScopes(scopes);
+    IllegalArgumentException exception =
+        assertThrows(IllegalArgumentException.class, builder::build);
+    assertEquals(
+        "AwsCredentials cannot have both an awsSecurityCredentialsSupplier and a credentialSource.",
+        exception.getMessage());
   }
 
   @Test
   void builder_noSupplieOrCredSourceThrows() {
     List<String> scopes = Arrays.asList("scope1", "scope2");
 
-    try {
-          AwsCredentials.newBuilder()
-              .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-              .setAudience("audience")
-              .setSubjectTokenType("subjectTokenType")
-              .setTokenUrl(STS_URL)
-              .setTokenInfoUrl("tokenInfoUrl")
-              .setTokenInfoUrl("tokenInfoUrl")
-              .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-              .setQuotaProjectId("quotaProjectId")
-              .setClientId("clientId")
-              .setClientSecret("clientSecret")
-              .setScopes(scopes)
-              .build();
-      fail("Should not be able to continue without exception.");
-    } catch (IllegalArgumentException exception) {
-      assertEquals(
-          "An awsSecurityCredentialsSupplier or a credentialSource must be provided.",
-          exception.getMessage());
-    }
+    AwsCredentials.Builder builder =
+        AwsCredentials.newBuilder()
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .setAudience("audience")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setTokenInfoUrl("tokenInfoUrl")
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .setQuotaProjectId("quotaProjectId")
+            .setClientId("clientId")
+            .setClientSecret("clientSecret")
+            .setScopes(scopes);
+    IllegalArgumentException exception =
+        assertThrows(IllegalArgumentException.class, builder::build);
+    assertEquals(
+        "An awsSecurityCredentialsSupplier or a credentialSource must be provided.",
+        exception.getMessage());
   }
 
   @Test

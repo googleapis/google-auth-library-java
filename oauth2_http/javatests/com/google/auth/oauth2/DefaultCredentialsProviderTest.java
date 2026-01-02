@@ -33,11 +33,13 @@ package com.google.auth.oauth2;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.LowLevelHttpRequest;
@@ -107,13 +109,10 @@ class DefaultCredentialsProviderTest {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
 
-    try {
-      testProvider.getDefaultCredentials(transportFactory);
-      fail("No credential expected.");
-    } catch (IOException e) {
-      String message = e.getMessage();
-      assertTrue(message.equals(DefaultCredentialsProvider.CLOUDSDK_MISSING_CREDENTIALS));
-    }
+    IOException e =
+        assertThrows(IOException.class, () -> testProvider.getDefaultCredentials(transportFactory));
+    String message = e.getMessage();
+    assertEquals(DefaultCredentialsProvider.CLOUDSDK_MISSING_CREDENTIALS, message);
   }
 
   @Test
@@ -122,13 +121,10 @@ class DefaultCredentialsProviderTest {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setFileSandbox(true);
 
-    try {
-      testProvider.getDefaultCredentials(transportFactory);
-      fail("No credential expected.");
-    } catch (IOException e) {
-      String message = e.getMessage();
-      assertTrue(message.equals(DefaultCredentialsProvider.CLOUDSDK_MISSING_CREDENTIALS));
-    }
+    IOException e =
+        assertThrows(IOException.class, () -> testProvider.getDefaultCredentials(transportFactory));
+    String message = e.getMessage();
+    assertEquals(DefaultCredentialsProvider.CLOUDSDK_MISSING_CREDENTIALS, message);
   }
 
   @Test
@@ -143,13 +139,10 @@ class DefaultCredentialsProviderTest {
     testProvider.addFile(userPath, userStream);
     testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, userPath);
 
-    try {
-      testProvider.getDefaultCredentials(transportFactory);
-      fail("No credential expected.");
-    } catch (IOException e) {
-      String message = e.getMessage();
-      assertTrue(message.equals(DefaultCredentialsProvider.CLOUDSDK_MISSING_CREDENTIALS));
-    }
+    IOException e =
+        assertThrows(IOException.class, () -> testProvider.getDefaultCredentials(transportFactory));
+    String message = e.getMessage();
+    assertEquals(DefaultCredentialsProvider.CLOUDSDK_MISSING_CREDENTIALS, message);
   }
 
   @Test
@@ -158,44 +151,34 @@ class DefaultCredentialsProviderTest {
         new MockRequestCountingTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
 
-    try {
-      testProvider.getDefaultCredentials(transportFactory);
-      fail("No credential expected.");
-    } catch (IOException expected) {
-      String message = expected.getMessage();
-      assertTrue(message.equals(DefaultCredentialsProvider.CLOUDSDK_MISSING_CREDENTIALS));
-    }
+    IOException expected =
+        assertThrows(IOException.class, () -> testProvider.getDefaultCredentials(transportFactory));
+    String message = expected.getMessage();
+    assertEquals(DefaultCredentialsProvider.CLOUDSDK_MISSING_CREDENTIALS, message);
     assertEquals(
-        transportFactory.transport.getRequestCount(),
-        ComputeEngineCredentials.MAX_COMPUTE_PING_TRIES);
-    try {
-      testProvider.getDefaultCredentials(transportFactory);
-      fail("No credential expected.");
-    } catch (IOException expected) {
-      // Expected
-    }
+        ComputeEngineCredentials.MAX_COMPUTE_PING_TRIES,
+        transportFactory.transport.getRequestCount());
+    assertThrows(IOException.class, () -> testProvider.getDefaultCredentials(transportFactory));
     assertEquals(
-        transportFactory.transport.getRequestCount(),
-        ComputeEngineCredentials.MAX_COMPUTE_PING_TRIES);
+        ComputeEngineCredentials.MAX_COMPUTE_PING_TRIES,
+        transportFactory.transport.getRequestCount());
   }
 
   @Test
-  void getDefaultCredentials_noCredentials_linuxNotGce() throws IOException {
+  void getDefaultCredentials_noCredentials_linuxNotGce() {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setProperty("os.name", "Linux");
-    String productFilePath = SMBIOS_PATH_LINUX;
     InputStream productStream = new ByteArrayInputStream("test".getBytes());
-    testProvider.addFile(productFilePath, productStream);
+    testProvider.addFile(SMBIOS_PATH_LINUX, productStream);
 
     assertFalse(ComputeEngineCredentials.checkStaticGceDetection(testProvider));
   }
 
   @Test
-  void getDefaultCredentials_static_linux() throws IOException {
+  void getDefaultCredentials_static_linux() {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setProperty("os.name", "Linux");
-    String productFilePath = SMBIOS_PATH_LINUX;
-    File productFile = new File(productFilePath);
+    File productFile = new File(SMBIOS_PATH_LINUX);
     InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
     testProvider.addFile(productFile.getAbsolutePath(), productStream);
 
@@ -203,23 +186,21 @@ class DefaultCredentialsProviderTest {
   }
 
   @Test
-  void getDefaultCredentials_static_windows_configuredAsLinux_notGce() throws IOException {
+  void getDefaultCredentials_static_windows_configuredAsLinux_notGce() {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setProperty("os.name", "windows");
-    String productFilePath = SMBIOS_PATH_LINUX;
     InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
-    testProvider.addFile(productFilePath, productStream);
+    testProvider.addFile(SMBIOS_PATH_LINUX, productStream);
 
     assertFalse(ComputeEngineCredentials.checkStaticGceDetection(testProvider));
   }
 
   @Test
-  void getDefaultCredentials_static_unsupportedPlatform_notGce() throws IOException {
+  void getDefaultCredentials_static_unsupportedPlatform_notGce() {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setProperty("os.name", "macos");
-    String productFilePath = SMBIOS_PATH_LINUX;
     InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
-    testProvider.addFile(productFilePath, productStream);
+    testProvider.addFile(SMBIOS_PATH_LINUX, productStream);
 
     assertFalse(ComputeEngineCredentials.checkStaticGceDetection(testProvider));
   }
@@ -257,13 +238,10 @@ class DefaultCredentialsProviderTest {
         DefaultCredentialsProvider.APP_ENGINE_SIGNAL_CLASS, MockOffAppEngineSystemProperty.class);
     testProvider.setProperty("isOnGAEStandard7", "true");
 
-    try {
-      testProvider.getDefaultCredentials(transportFactory);
-      fail("No credential expected when not on App Engine.");
-    } catch (IOException e) {
-      String message = e.getMessage();
-      assertTrue(message.equals(DefaultCredentialsProvider.CLOUDSDK_MISSING_CREDENTIALS));
-    }
+    IOException e =
+        assertThrows(IOException.class, () -> testProvider.getDefaultCredentials(transportFactory));
+    String message = e.getMessage();
+    assertEquals(DefaultCredentialsProvider.CLOUDSDK_MISSING_CREDENTIALS, message);
   }
 
   @Test
@@ -274,14 +252,11 @@ class DefaultCredentialsProviderTest {
         DefaultCredentialsProvider.APP_ENGINE_SIGNAL_CLASS, MockAppEngineSystemProperty.class);
     testProvider.setProperty("isOnGAEStandard7", "true");
 
-    try {
-      testProvider.getDefaultCredentials(transportFactory);
-      fail("Credential expected to fail to load if credential class not present.");
-    } catch (IOException e) {
-      String message = e.getMessage();
-      assertFalse(message.equals(DefaultCredentialsProvider.CLOUDSDK_MISSING_CREDENTIALS));
-      assertTrue(message.contains("Check that the App Engine SDK is deployed."));
-    }
+    IOException e =
+        assertThrows(IOException.class, () -> testProvider.getDefaultCredentials(transportFactory));
+    String message = e.getMessage();
+    assertNotEquals(DefaultCredentialsProvider.CLOUDSDK_MISSING_CREDENTIALS, message);
+    assertTrue(message.contains("Check that the App Engine SDK is deployed."));
   }
 
   @Test
@@ -319,8 +294,8 @@ class DefaultCredentialsProviderTest {
 
     GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory);
 
-    assertTrue(defaultCredentials instanceof CloudShellCredentials);
-    assertEquals(((CloudShellCredentials) defaultCredentials).getAuthPort(), 4);
+    assertInstanceOf(CloudShellCredentials.class, defaultCredentials);
+    assertEquals(4, ((CloudShellCredentials) defaultCredentials).getAuthPort());
   }
 
   @Test
@@ -331,8 +306,8 @@ class DefaultCredentialsProviderTest {
 
     GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory);
 
-    assertTrue(defaultCredentials instanceof CloudShellCredentials);
-    assertEquals(((CloudShellCredentials) defaultCredentials).getAuthPort(), 4);
+    assertInstanceOf(CloudShellCredentials.class, defaultCredentials);
+    assertEquals(4, ((CloudShellCredentials) defaultCredentials).getAuthPort());
   }
 
   @Test
@@ -342,14 +317,11 @@ class DefaultCredentialsProviderTest {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setEnv(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR, invalidPath);
 
-    try {
-      testProvider.getDefaultCredentials(transportFactory);
-      fail("Non existent credential should throw exception");
-    } catch (IOException e) {
-      String message = e.getMessage();
-      assertTrue(message.contains(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR));
-      assertTrue(message.contains(invalidPath));
-    }
+    IOException e =
+        assertThrows(IOException.class, () -> testProvider.getDefaultCredentials(transportFactory));
+    String message = e.getMessage();
+    assertTrue(message.contains(DefaultCredentialsProvider.CREDENTIAL_ENV_VAR));
+    assertTrue(message.contains(invalidPath));
   }
 
   @Test
@@ -482,44 +454,33 @@ class DefaultCredentialsProviderTest {
 
     GoogleCredentials defaultCredentials = testProvider.getDefaultCredentials(transportFactory);
 
-    assertTrue(defaultCredentials instanceof CloudShellCredentials);
+    assertInstanceOf(CloudShellCredentials.class, defaultCredentials);
     assertEquals(QUOTA_PROJECT_FROM_ENVIRONMENT, defaultCredentials.getQuotaProjectId());
   }
 
   @Test
-  void getDefaultCredentials_envNoGceCheck_noGceRequest() throws IOException {
+  void getDefaultCredentials_envNoGceCheck_noGceRequest() {
     MockRequestCountingTransportFactory transportFactory =
         new MockRequestCountingTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setEnv(DefaultCredentialsProvider.NO_GCE_CHECK_ENV_VAR, "true");
 
-    try {
-      testProvider.getDefaultCredentials(transportFactory);
-      fail("No credential expected.");
-    } catch (IOException expected) {
-      // Expected
-    }
-    assertEquals(transportFactory.transport.getRequestCount(), 0);
+    assertThrows(IOException.class, () -> testProvider.getDefaultCredentials(transportFactory));
+    assertEquals(0, transportFactory.transport.getRequestCount());
   }
 
   @Test
-  void getDefaultCredentials_linuxSetup_envNoGceCheck_noGce() throws IOException {
+  void getDefaultCredentials_linuxSetup_envNoGceCheck_noGce() {
     MockRequestCountingTransportFactory transportFactory =
         new MockRequestCountingTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setEnv(DefaultCredentialsProvider.NO_GCE_CHECK_ENV_VAR, "true");
     testProvider.setProperty("os.name", "Linux");
-    String productFilePath = SMBIOS_PATH_LINUX;
-    File productFile = new File(productFilePath);
+    File productFile = new File(SMBIOS_PATH_LINUX);
     InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
     testProvider.addFile(productFile.getAbsolutePath(), productStream);
-    try {
-      testProvider.getDefaultCredentials(transportFactory);
-      fail("No credential expected.");
-    } catch (IOException expected) {
-      // Expected
-    }
-    assertEquals(transportFactory.transport.getRequestCount(), 0);
+    assertThrows(IOException.class, () -> testProvider.getDefaultCredentials(transportFactory));
+    assertEquals(0, transportFactory.transport.getRequestCount());
   }
 
   @Test
@@ -527,7 +488,7 @@ class DefaultCredentialsProviderTest {
     String testUrl = "192.0.2.0";
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setEnv(DefaultCredentialsProvider.GCE_METADATA_HOST_ENV_VAR, testUrl);
-    assertEquals(ComputeEngineCredentials.getMetadataServerUrl(testProvider), "http://" + testUrl);
+    assertEquals("http://" + testUrl, ComputeEngineCredentials.getMetadataServerUrl(testProvider));
   }
 
   @Test
@@ -536,8 +497,8 @@ class DefaultCredentialsProviderTest {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setEnv(DefaultCredentialsProvider.GCE_METADATA_HOST_ENV_VAR, testUrl);
     assertEquals(
-        ComputeEngineCredentials.getTokenServerEncodedUrl(testProvider),
-        "http://" + testUrl + "/computeMetadata/v1/instance/service-accounts/default/token");
+        "http://" + testUrl + "/computeMetadata/v1/instance/service-accounts/default/token",
+        ComputeEngineCredentials.getTokenServerEncodedUrl(testProvider));
   }
 
   @Test
@@ -653,8 +614,7 @@ class DefaultCredentialsProviderTest {
     LogRecord message = getCredentialsAndReturnLogMessage(false, true);
     assertNotNull(message);
     assertEquals(Level.WARNING, message.getLevel());
-    assertTrue(
-        message.getMessage().equals(DefaultCredentialsProvider.CLOUDSDK_CREDENTIALS_WARNING));
+    assertEquals(DefaultCredentialsProvider.CLOUDSDK_CREDENTIALS_WARNING, message.getMessage());
   }
 
   @Test
@@ -690,8 +650,7 @@ class DefaultCredentialsProviderTest {
     testProvider.setProperty("os.name", "linux");
     testProvider.setProperty("user.home", homeDir.getAbsolutePath());
     if (isGce) {
-      String productFilePath = SMBIOS_PATH_LINUX;
-      File productFile = new File(productFilePath);
+      File productFile = new File(SMBIOS_PATH_LINUX);
       InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
       testProvider.addFile(productFile.getAbsolutePath(), productStream);
     }
@@ -868,7 +827,7 @@ class DefaultCredentialsProviderTest {
 
     @SuppressWarnings("unused")
     public static final MockEnvironment environment =
-        new MockEnvironment(MockEnvironmentEnum.Production);
+        new MockEnvironment(MockEnvironmentEnum.PRODUCTION);
   }
 
   private static class MockOffAppEngineSystemProperty {
@@ -878,13 +837,13 @@ class DefaultCredentialsProviderTest {
   }
 
   private enum MockEnvironmentEnum {
-    Production,
-    Development;
+    PRODUCTION,
+    DEVELOPMENT;
   }
 
   public static class MockEnvironment {
 
-    private MockEnvironmentEnum innerValue;
+    private final MockEnvironmentEnum innerValue;
 
     MockEnvironment(MockEnvironmentEnum value) {
       this.innerValue = value;

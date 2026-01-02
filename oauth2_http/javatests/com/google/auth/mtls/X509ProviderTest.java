@@ -166,7 +166,7 @@ class X509ProviderTest {
     String certConfigPath = "certConfig.txt";
     String certPath = "cert.crt";
     String keyPath = "key.crt";
-    try(InputStream certConfigStream =
+    try (InputStream certConfigStream =
         WorkloadCertificateConfigurationTest.writeWorkloadCertificateConfigStream(
             certPath, keyPath)) {
       TestX509Provider testProvider = new TestX509Provider();

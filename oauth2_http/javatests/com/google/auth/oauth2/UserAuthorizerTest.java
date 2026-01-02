@@ -157,20 +157,15 @@ class UserAuthorizerTest {
 
   @Test
   void constructorCommon_nullClientId_throws() {
-    assertThrows(
-        NullPointerException.class,
-        () ->
-            UserAuthorizer.newBuilder()
-                .setScopes(DUMMY_SCOPES)
-                .setCallbackUri(CALLBACK_URI)
-                .build());
+    UserAuthorizer.Builder builder =
+        UserAuthorizer.newBuilder().setScopes(DUMMY_SCOPES).setCallbackUri(CALLBACK_URI);
+    assertThrows(NullPointerException.class, builder::build);
   }
 
   @Test
   void constructorCommon_nullScopes_throws() {
-    assertThrows(
-        NullPointerException.class,
-        () -> UserAuthorizer.newBuilder().setClientId(CLIENT_ID).build());
+    UserAuthorizer.Builder builder = UserAuthorizer.newBuilder().setClientId(CLIENT_ID);
+    assertThrows(NullPointerException.class, builder::build);
   }
 
   @Test
@@ -191,30 +186,30 @@ class UserAuthorizerTest {
 
   @Test
   void getAuthorizationUrl() throws IOException {
-    final String CUSTOM_STATE = "custom_state";
-    final String PROTOCOL = "https";
-    final String HOST = "accounts.test.com";
-    final String PATH = "/o/o/oauth2/auth";
-    final URI AUTH_URI = URI.create(PROTOCOL + "://" + HOST + PATH);
+    final String customState = "custom_state";
+    final String protocol = "https";
+    final String host = "accounts.test.com";
+    final String path = "/o/o/oauth2/auth";
+    final URI authUri = URI.create(protocol + "://" + host + path);
     final String EXPECTED_CALLBACK = "http://example.com" + CALLBACK_URI.toString();
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
             .setScopes(DUMMY_SCOPES)
             .setCallbackUri(CALLBACK_URI)
-            .setUserAuthUri(AUTH_URI)
+            .setUserAuthUri(authUri)
             .setPKCEProvider(pkce)
             .build();
 
-    URL authorizationUrl = authorizer.getAuthorizationUrl(USER_ID, CUSTOM_STATE, BASE_URI);
+    URL authorizationUrl = authorizer.getAuthorizationUrl(USER_ID, customState, BASE_URI);
 
-    assertEquals(PROTOCOL, authorizationUrl.getProtocol());
+    assertEquals(protocol, authorizationUrl.getProtocol());
     assertEquals(-1, authorizationUrl.getPort());
-    assertEquals(PATH, authorizationUrl.getPath());
-    assertEquals(HOST, authorizationUrl.getHost());
+    assertEquals(path, authorizationUrl.getPath());
+    assertEquals(host, authorizationUrl.getHost());
     String query = authorizationUrl.getQuery();
     Map<String, String> parameters = TestUtils.parseQuery(query);
-    assertEquals(CUSTOM_STATE, parameters.get("state"));
+    assertEquals(customState, parameters.get("state"));
     assertEquals(USER_ID, parameters.get("login_hint"));
     assertEquals(EXPECTED_CALLBACK, parameters.get("redirect_uri"));
     assertEquals(CLIENT_ID_VALUE, parameters.get("client_id"));
@@ -227,18 +222,17 @@ class UserAuthorizerTest {
 
   @Test
   void getAuthorizationUrl_additionalParameters() throws IOException {
-    final String CUSTOM_STATE = "custom_state";
-    final String PROTOCOL = "https";
-    final String HOST = "accounts.test.com";
-    final String PATH = "/o/o/oauth2/auth";
-    final URI AUTH_URI = URI.create(PROTOCOL + "://" + HOST + PATH);
-    final String EXPECTED_CALLBACK = "http://example.com" + CALLBACK_URI.toString();
+    final String customState = "custom_state";
+    final String protocol = "https";
+    final String host = "accounts.test.com";
+    final String path = "/o/o/oauth2/auth";
+    final URI authUri = URI.create(protocol + "://" + host + path);
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
             .setScopes(DUMMY_SCOPES)
             .setCallbackUri(CALLBACK_URI)
-            .setUserAuthUri(AUTH_URI)
+            .setUserAuthUri(authUri)
             .build();
     Map<String, String> additionalParameters = new HashMap<String, String>();
     additionalParameters.put("param1", "value1");
@@ -246,7 +240,7 @@ class UserAuthorizerTest {
 
     // Verify that the authorization URL doesn't include the additional parameters if they are not
     // passed in.
-    URL authorizationUrl = authorizer.getAuthorizationUrl(USER_ID, CUSTOM_STATE, BASE_URI);
+    URL authorizationUrl = authorizer.getAuthorizationUrl(USER_ID, customState, BASE_URI);
     String query = authorizationUrl.getQuery();
     Map<String, String> parameters = TestUtils.parseQuery(query);
     assertFalse(parameters.containsKey("param1"));
@@ -254,7 +248,7 @@ class UserAuthorizerTest {
 
     // Verify that the authorization URL includes the additional parameters if they are passed in.
     authorizationUrl =
-        authorizer.getAuthorizationUrl(USER_ID, CUSTOM_STATE, BASE_URI, additionalParameters);
+        authorizer.getAuthorizationUrl(USER_ID, customState, BASE_URI, additionalParameters);
     query = authorizationUrl.getQuery();
     parameters = TestUtils.parseQuery(query);
     assertEquals("value1", parameters.get("param1"));
@@ -262,7 +256,7 @@ class UserAuthorizerTest {
 
     // Verify that the authorization URL doesn't include the additional parameters passed in the
     // previous call to the authorizer
-    authorizationUrl = authorizer.getAuthorizationUrl(USER_ID, CUSTOM_STATE, BASE_URI);
+    authorizationUrl = authorizer.getAuthorizationUrl(USER_ID, customState, BASE_URI);
     query = authorizationUrl.getQuery();
     parameters = TestUtils.parseQuery(query);
     assertFalse(parameters.containsKey("param1"));
@@ -402,7 +396,7 @@ class UserAuthorizerTest {
   }
 
   @Test
-  void testGetTokenResponseFromAuthCodeExchange_missingAccessToken_throws() throws IOException {
+  void testGetTokenResponseFromAuthCodeExchange_missingAccessToken_throws() {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
     // Missing access token.
@@ -462,7 +456,7 @@ class UserAuthorizerTest {
   }
 
   @Test
-  void getCredentials_nullUserId_throws() throws IOException {
+  void getCredentials_nullUserId_throws() {
     TokenStore tokenStore = new MemoryTokensStorage();
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
@@ -653,7 +647,7 @@ class UserAuthorizerTest {
   }
 
   @Test
-  void getCredentialsFromCode_nullCode_throws() throws IOException {
+  void getCredentialsFromCode_nullCode_throws() {
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
@@ -705,7 +699,7 @@ class UserAuthorizerTest {
   }
 
   @Test
-  void getAndStoreCredentialsFromCode_nullCode_throws() throws IOException {
+  void getAndStoreCredentialsFromCode_nullCode_throws() {
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
@@ -719,7 +713,7 @@ class UserAuthorizerTest {
   }
 
   @Test
-  void getAndStoreCredentialsFromCode_nullUserId_throws() throws IOException {
+  void getAndStoreCredentialsFromCode_nullUserId_throws() {
     UserAuthorizer authorizer =
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
@@ -766,12 +760,7 @@ class UserAuthorizerTest {
 
     authorizer.revokeAuthorization(USER_ID);
 
-    try {
-      credentials1.refresh();
-      fail("Credentials should not refresh after revoke.");
-    } catch (IOException expected) {
-      // Expected
-    }
+    assertThrows(IOException.class, credentials1::refresh);
     UserCredentials credentials2 = authorizer.getCredentials(USER_ID);
     assertNull(credentials2);
   }
@@ -796,15 +785,13 @@ class UserAuthorizerTest {
           }
         };
 
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            UserAuthorizer.newBuilder()
-                .setClientId(CLIENT_ID)
-                .setScopes(DUMMY_SCOPES)
-                .setTokenStore(new MemoryTokensStorage())
-                .setPKCEProvider(pkce)
-                .build());
+    UserAuthorizer.Builder builder =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(DUMMY_SCOPES)
+            .setTokenStore(new MemoryTokensStorage())
+            .setPKCEProvider(pkce);
+    assertThrows(IllegalArgumentException.class, builder::build);
   }
 
   @Test
@@ -827,15 +814,13 @@ class UserAuthorizerTest {
           }
         };
 
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            UserAuthorizer.newBuilder()
-                .setClientId(CLIENT_ID)
-                .setScopes(DUMMY_SCOPES)
-                .setTokenStore(new MemoryTokensStorage())
-                .setPKCEProvider(pkce)
-                .build());
+    UserAuthorizer.Builder builder =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(DUMMY_SCOPES)
+            .setTokenStore(new MemoryTokensStorage())
+            .setPKCEProvider(pkce);
+    assertThrows(IllegalArgumentException.class, builder::build);
   }
 
   @Test
@@ -858,15 +843,13 @@ class UserAuthorizerTest {
           }
         };
 
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            UserAuthorizer.newBuilder()
-                .setClientId(CLIENT_ID)
-                .setScopes(DUMMY_SCOPES)
-                .setTokenStore(new MemoryTokensStorage())
-                .setPKCEProvider(pkce)
-                .build());
+    UserAuthorizer.Builder builder =
+        UserAuthorizer.newBuilder()
+            .setClientId(CLIENT_ID)
+            .setScopes(DUMMY_SCOPES)
+            .setTokenStore(new MemoryTokensStorage())
+            .setPKCEProvider(pkce);
+    assertThrows(IllegalArgumentException.class, builder::build);
   }
 
   @Test

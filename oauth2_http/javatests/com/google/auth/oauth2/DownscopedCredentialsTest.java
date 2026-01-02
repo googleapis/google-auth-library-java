@@ -284,7 +284,7 @@ class DownscopedCredentialsTest {
   }
 
   @Test
-  void builder_sourceUniverseDomainUnavailable_throws() throws IOException {
+  void builder_sourceUniverseDomainUnavailable_throws() {
     GoogleCredentials sourceCredentials = new MockSourceCredentialWithoutUniverseDomain();
 
     try {

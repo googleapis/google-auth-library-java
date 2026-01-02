@@ -58,7 +58,7 @@ final class DefaultPKCEProviderTest {
   }
 
   @Test
-  void testNoBase64Padding() throws NoSuchAlgorithmException {
+  void testNoBase64Padding() {
     PKCEProvider pkce = new DefaultPKCEProvider();
     assertFalse(pkce.getCodeChallenge().endsWith("="));
     assertFalse(pkce.getCodeChallenge().contains("="));

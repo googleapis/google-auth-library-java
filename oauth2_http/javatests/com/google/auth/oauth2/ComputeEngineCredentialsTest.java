@@ -438,15 +438,12 @@ class ComputeEngineCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.setServiceAccountEmail("SA_CLIENT_EMAIL");
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
-    try {
-      credentials.getRequestMetadata(CALL_URI);
-      fail("Expected error refreshing token.");
-    } catch (IOException expected) {
-      String message = expected.getMessage();
-      assertTrue(message.contains(Integer.toString(HttpStatusCodes.STATUS_CODE_NOT_FOUND)));
-      // Message should mention scopes are missing on the VM.
-      assertTrue(message.contains("scope"));
-    }
+    IOException exception =
+        assertThrows(IOException.class, () -> credentials.getRequestMetadata(CALL_URI));
+    String message = exception.getMessage();
+    assertTrue(message.contains(Integer.toString(HttpStatusCodes.STATUS_CODE_NOT_FOUND)));
+    // Message should mention scopes are missing on the VM.
+    assertTrue(message.contains("scope"));
   }
 
   @Test
@@ -456,14 +453,11 @@ class ComputeEngineCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.setServiceAccountEmail("SA_CLIENT_EMAIL");
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
-    try {
-      credentials.getRequestMetadata(CALL_URI);
-      fail("Expected error refreshing token.");
-    } catch (IOException expected) {
-      String message = expected.getMessage();
-      assertTrue(message.contains(Integer.toString(HttpStatusCodes.STATUS_CODE_SERVER_ERROR)));
-      assertTrue(message.contains("Unexpected"));
-    }
+    IOException exception =
+        assertThrows(IOException.class, () -> credentials.getRequestMetadata(CALL_URI));
+    String message = exception.getMessage();
+    assertTrue(message.contains(Integer.toString(HttpStatusCodes.STATUS_CODE_SERVER_ERROR)));
+    assertTrue(message.contains("Unexpected"));
   }
 
   @Test
@@ -616,14 +610,10 @@ class ComputeEngineCredentialsTest extends BaseSerializationTest {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
-    try {
-      credentials.getAccount();
-      fail("Fetching default service account should have failed");
-    } catch (RuntimeException e) {
-      assertEquals("Failed to get service account", e.getMessage());
-      assertNotNull(e.getCause());
-      assertTrue(e.getCause().getMessage().contains("404"));
-    }
+    RuntimeException exception = assertThrows(RuntimeException.class, credentials::getAccount);
+    assertEquals("Failed to get service account", exception.getMessage());
+    assertNotNull(exception.getCause());
+    assertTrue(exception.getCause().getMessage().contains("404"));
   }
 
   @Test
@@ -651,14 +641,10 @@ class ComputeEngineCredentialsTest extends BaseSerializationTest {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
-    try {
-      credentials.getAccount();
-      fail("Fetching default service account should have failed");
-    } catch (RuntimeException e) {
-      assertEquals("Failed to get service account", e.getMessage());
-      assertNotNull(e.getCause());
-      assertTrue(e.getCause().getMessage().contains("Empty content"));
-    }
+    RuntimeException exception = assertThrows(RuntimeException.class, credentials::getAccount);
+    assertEquals("Failed to get service account", exception.getMessage());
+    assertNotNull(exception.getCause());
+    assertTrue(exception.getCause().getMessage().contains("Empty content"));
   }
 
   @Test
@@ -842,8 +828,7 @@ class ComputeEngineCredentialsTest extends BaseSerializationTest {
       ComputeEngineCredentials credentials =
           ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
 
-      IOException exception =
-          assertThrows(IOException.class, credentials::refreshAccessToken);
+      IOException exception = assertThrows(IOException.class, credentials::refreshAccessToken);
       assertFalse(exception instanceof GoogleAuthException);
     }
   }
@@ -975,13 +960,10 @@ class ComputeEngineCredentialsTest extends BaseSerializationTest {
       if (status == 404) {
         continue;
       }
-      try {
-        transportFactory.transport.setStatusCode(status);
-        credentials.getUniverseDomain();
-        fail("Should not be able to use credential without exception.");
-      } catch (GoogleAuthException ex) {
-        assertTrue(ex.isRetryable());
-      }
+      transportFactory.transport.setStatusCode(status);
+      GoogleAuthException ex =
+          assertThrows(GoogleAuthException.class, credentials::getUniverseDomain);
+      assertTrue(ex.isRetryable());
     }
   }
 
