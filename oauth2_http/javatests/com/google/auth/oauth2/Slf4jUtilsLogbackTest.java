@@ -149,10 +149,9 @@ class Slf4jUtilsLogbackTest {
     List<KeyValuePair> keyValuePairs = testAppender.events.get(0).getKeyValuePairs();
     assertEquals(2, keyValuePairs.size());
     for (KeyValuePair kvp : keyValuePairs) {
-
       assertTrue(
-          kvp.key.equals("key1", "Key should be either 'key1' or 'token'")
-              || kvp.key.equals("token"));
+          kvp.key.equals("key1") || kvp.key.equals("token"),
+          "Key should be either 'key1' or 'token'");
     }
 
     testAppender.stop();
