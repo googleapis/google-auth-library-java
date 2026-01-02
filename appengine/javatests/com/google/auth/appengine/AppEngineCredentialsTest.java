@@ -34,6 +34,7 @@ package com.google.auth.appengine;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -56,7 +57,7 @@ import org.junit.jupiter.api.Test;
 /** Unit tests for AppEngineCredentials */
 class AppEngineCredentialsTest extends BaseSerializationTest {
 
-  private static Collection<String> SCOPES =
+  private static final Collection<String> SCOPES =
       Collections.unmodifiableCollection(Arrays.asList("scope1", "scope2"));
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
   private static final String EXPECTED_ACCOUNT = "serviceAccount";
@@ -97,7 +98,7 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void getAccount_sameAs() throws IOException {
+  void getAccount_sameAs() {
     MockAppIdentityService appIdentity = new MockAppIdentityService();
     appIdentity.setServiceAccountName(EXPECTED_ACCOUNT);
     AppEngineCredentials credentials =
@@ -109,7 +110,7 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void sign_sameAs() throws IOException {
+  void sign_sameAs() {
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
     MockAppIdentityService appIdentity = new MockAppIdentityService();
     appIdentity.setSignature(expectedSignature);
@@ -152,7 +153,7 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void equals_true() throws IOException {
+  void equals_true() {
     Collection<String> emptyScopes = Collections.emptyList();
     MockAppIdentityService appIdentity = new MockAppIdentityService();
 
@@ -166,13 +167,12 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
             .setScopes(emptyScopes)
             .setAppIdentityService(appIdentity)
             .build();
-    assertTrue(credentials.equals(credentials));
-    assertTrue(credentials.equals(otherCredentials));
-    assertTrue(otherCredentials.equals(credentials));
+    assertEquals(credentials, otherCredentials);
+    assertEquals(otherCredentials, credentials);
   }
 
   @Test
-  void equals_false_scopes() throws IOException {
+  void equals_false_scopes() {
     Collection<String> emptyScopes = Collections.emptyList();
     Collection<String> scopes = Collections.singleton("SomeScope");
     MockAppIdentityService appIdentity = new MockAppIdentityService();
@@ -187,12 +187,12 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
             .setScopes(scopes)
             .setAppIdentityService(appIdentity)
             .build();
-    assertFalse(credentials.equals(otherCredentials));
-    assertFalse(otherCredentials.equals(credentials));
+    assertNotEquals(credentials, otherCredentials);
+    assertNotEquals(otherCredentials, credentials);
   }
 
   @Test
-  void toString_containsFields() throws IOException {
+  void toString_containsFields() {
     String expectedToString =
         String.format(
             "AppEngineCredentials{scopes=[%s], scopesRequired=%b, appIdentityServiceClassName=%s}",
@@ -210,7 +210,7 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void hashCode_equals() throws IOException {
+  void hashCode_equals() {
     Collection<String> emptyScopes = Collections.emptyList();
     MockAppIdentityService appIdentity = new MockAppIdentityService();
     AppEngineCredentials credentials =

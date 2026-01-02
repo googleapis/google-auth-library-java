@@ -34,6 +34,8 @@ package com.google.auth.oauth2;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -60,7 +62,7 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
   private static final Collection<String> SCOPES =
       Collections.unmodifiableCollection(Arrays.asList("scope1", "scope2"));
   private static final Collection<String> DEFAULT_SCOPES =
-      Collections.unmodifiableCollection(Arrays.asList("scope3"));
+      Collections.singletonList("scope3");
 
   @Test
   void constructor_usesAppIdentityService() throws IOException {
@@ -75,14 +77,14 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void constructor_noAppEngineRuntime_throwsHelpfulLoadError() throws IOException {
+  void constructor_noAppEngineRuntime_throwsHelpfulLoadError() {
     try {
       new TestAppEngineCredentialsNoSdk();
       fail("Credential expected to fail to load if credential class not present.");
     } catch (IOException e) {
       String message = e.getMessage();
       assertTrue(message.contains("Check that the App Engine SDK is deployed."));
-      assertTrue(e.getCause() instanceof ClassNotFoundException);
+      assertInstanceOf(ClassNotFoundException.class, e.getCause());
       assertTrue(
           e.getCause()
               .getMessage()
@@ -152,9 +154,8 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
   void equals_true() throws IOException {
     GoogleCredentials credentials = new TestAppEngineCredentials(SCOPES);
     GoogleCredentials otherCredentials = new TestAppEngineCredentials(SCOPES);
-    assertTrue(credentials.equals(credentials));
-    assertTrue(credentials.equals(otherCredentials));
-    assertTrue(otherCredentials.equals(credentials));
+    assertEquals(credentials, otherCredentials);
+    assertEquals(otherCredentials, credentials);
   }
 
   @Test
@@ -163,8 +164,8 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
     Collection<String> scopes = Collections.singleton("SomeScope");
     AppEngineCredentials credentials = new TestAppEngineCredentials(emptyScopes);
     AppEngineCredentials otherCredentials = new TestAppEngineCredentials(scopes);
-    assertFalse(credentials.equals(otherCredentials));
-    assertFalse(otherCredentials.equals(credentials));
+    assertNotEquals(credentials, otherCredentials);
+    assertNotEquals(otherCredentials, credentials);
   }
 
   @Test

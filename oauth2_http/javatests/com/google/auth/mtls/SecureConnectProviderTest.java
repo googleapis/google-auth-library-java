@@ -46,8 +46,8 @@ class SecureConnectProviderTest {
 
   private static class TestCertProviderCommandProcess extends Process {
 
-    private boolean runForever;
-    private int exitValue;
+    private final boolean runForever;
+    private final int exitValue;
 
     public TestCertProviderCommandProcess(int exitValue, boolean runForever) {
       this.runForever = runForever;
@@ -88,7 +88,7 @@ class SecureConnectProviderTest {
 
   static class TestProcessProvider implements SecureConnectProvider.ProcessProvider {
 
-    private int exitCode;
+    private final int exitCode;
 
     public TestProcessProvider(int exitCode) {
       this.exitCode = exitCode;
@@ -101,8 +101,7 @@ class SecureConnectProviderTest {
   }
 
   @Test
-  void testGetKeyStoreNonZeroExitCode()
-      throws IOException, InterruptedException, GeneralSecurityException {
+  void testGetKeyStoreNonZeroExitCode() {
     InputStream metadata =
         this.getClass()
             .getClassLoader()
@@ -136,7 +135,7 @@ class SecureConnectProviderTest {
   }
 
   @Test
-  void testRunCertificateProviderCommandTimeout() throws InterruptedException {
+  void testRunCertificateProviderCommandTimeout() {
     Process certCommandProcess = new TestCertProviderCommandProcess(0, true);
     IOException actual =
         assertThrows(
