@@ -32,11 +32,11 @@
 package com.google.auth.oauth2;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
 /** Test case for {@link IdTokenCredentials}. */
-
 class IdTokenCredentialsTest extends BaseSerializationTest {
 
   @Test

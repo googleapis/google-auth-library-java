@@ -34,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.LowLevelHttpRequest;
 import com.google.api.client.http.LowLevelHttpResponse;
@@ -290,7 +291,8 @@ class TokenVerifierTest {
   }
 
   @Test
-  @Disabled void verifyServiceAccountRs256Token() throws VerificationException {
+  @Disabled
+  void verifyServiceAccountRs256Token() throws VerificationException {
     final Clock clock =
         new Clock() {
           @Override

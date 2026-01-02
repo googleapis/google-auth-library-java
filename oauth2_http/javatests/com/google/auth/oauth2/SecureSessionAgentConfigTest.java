@@ -32,10 +32,10 @@ package com.google.auth.oauth2;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.Test;
 
 /** Test cases for {@linkSecureSessionAgentConfig}. */
-
 class SecureSessionAgentConfigTest {
   private static final String S2A_PLAINTEXT_ADDRESS = "plaintext";
   private static final String S2A_MTLS_ADDRESS = "mtls";

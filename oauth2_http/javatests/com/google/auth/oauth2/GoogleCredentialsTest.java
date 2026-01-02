@@ -39,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.util.Clock;
@@ -61,7 +62,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 
 /** Test case for {@link GoogleCredentials}. */
-
 class GoogleCredentialsTest extends BaseSerializationTest {
 
   private static final String SA_CLIENT_EMAIL =
@@ -564,8 +564,7 @@ class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void fromStream_externalAccountAuthorizedUserCredentials_providesToken()
-      throws IOException {
+  void fromStream_externalAccountAuthorizedUserCredentials_providesToken() throws IOException {
     MockExternalAccountAuthorizedUserCredentialsTransportFactory transportFactory =
         new MockExternalAccountAuthorizedUserCredentialsTransportFactory();
     InputStream stream =
@@ -579,8 +578,7 @@ class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void fromStream_externalAccountAuthorizedUserCredentials_defaultUniverse()
-      throws IOException {
+  void fromStream_externalAccountAuthorizedUserCredentials_defaultUniverse() throws IOException {
     MockExternalAccountAuthorizedUserCredentialsTransportFactory transportFactory =
         new MockExternalAccountAuthorizedUserCredentialsTransportFactory();
 

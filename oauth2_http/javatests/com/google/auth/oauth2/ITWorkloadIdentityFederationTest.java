@@ -33,6 +33,7 @@ package com.google.auth.oauth2;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
@@ -78,7 +79,8 @@ final class ITWorkloadIdentityFederationTest {
 
   private String clientEmail;
 
-  @BeforeEach void setup() throws IOException {
+  @BeforeEach
+  void setup() throws IOException {
     GenericJson keys = getServiceAccountKeyFileAsJson();
     clientEmail = (String) keys.get("client_email");
   }

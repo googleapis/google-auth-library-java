@@ -36,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+
 import com.google.api.client.json.GenericJson;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -67,8 +68,7 @@ class ExecutableResponseTest {
   }
 
   @Test
-  void constructor_successOidcResponseMissingExpirationTimeField_notExpired()
-      throws IOException {
+  void constructor_successOidcResponseMissingExpirationTimeField_notExpired() throws IOException {
     GenericJson jsonResponse = buildOidcResponse();
     jsonResponse.remove("expiration_time");
 
@@ -97,8 +97,7 @@ class ExecutableResponseTest {
   }
 
   @Test
-  void constructor_successSamlResponseMissingExpirationTimeField_notExpired()
-      throws IOException {
+  void constructor_successSamlResponseMissingExpirationTimeField_notExpired() throws IOException {
     GenericJson jsonResponse = buildSamlResponse();
     jsonResponse.remove("expiration_time");
 

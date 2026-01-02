@@ -31,6 +31,8 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.TestUtils.WORKFORCE_IDENTITY_FEDERATION_AUTH_URI;
+import static com.google.auth.TestUtils.WORKFORCE_IDENTITY_FEDERATION_TOKEN_SERVER_URI;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -39,8 +41,6 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import static com.google.auth.TestUtils.WORKFORCE_IDENTITY_FEDERATION_AUTH_URI;
-import static com.google.auth.TestUtils.WORKFORCE_IDENTITY_FEDERATION_TOKEN_SERVER_URI;
 
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
@@ -58,7 +58,6 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /** Unit Tests for UserAuthorizer */
-
 class UserAuthorizerTest {
   private static final String CLIENT_ID_VALUE = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
   private static final String CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
@@ -150,13 +149,18 @@ class UserAuthorizerTest {
   void constructorCommon_nullClientId_throws() {
     assertThrows(
         NullPointerException.class,
-        () -> UserAuthorizer.newBuilder().setScopes(DUMMY_SCOPES).setCallbackUri(CALLBACK_URI).build());
+        () ->
+            UserAuthorizer.newBuilder()
+                .setScopes(DUMMY_SCOPES)
+                .setCallbackUri(CALLBACK_URI)
+                .build());
   }
 
   @Test
   void constructorCommon_nullScopes_throws() {
     assertThrows(
-        NullPointerException.class, () -> UserAuthorizer.newBuilder().setClientId(CLIENT_ID).build());
+        NullPointerException.class,
+        () -> UserAuthorizer.newBuilder().setClientId(CLIENT_ID).build());
   }
 
   @Test
@@ -388,8 +392,7 @@ class UserAuthorizerTest {
   }
 
   @Test
-  void testGetTokenResponseFromAuthCodeExchange_missingAccessToken_throws()
-      throws IOException {
+  void testGetTokenResponseFromAuthCodeExchange_missingAccessToken_throws() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID_VALUE, CLIENT_SECRET);
     // Missing access token.
@@ -648,7 +651,8 @@ class UserAuthorizerTest {
             .setTokenStore(new MemoryTokensStorage())
             .build();
 
-    assertThrows(NullPointerException.class, () -> authorizer.getCredentialsFromCode(null, BASE_URI));
+    assertThrows(
+        NullPointerException.class, () -> authorizer.getCredentialsFromCode(null, BASE_URI));
   }
 
   @Test

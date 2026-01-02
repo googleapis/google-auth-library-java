@@ -38,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.LowLevelHttpRequest;
 import com.google.api.client.http.LowLevelHttpResponse;
@@ -67,7 +68,6 @@ import java.util.logging.Logger;
 import org.junit.jupiter.api.Test;
 
 /** Test case for {@link DefaultCredentialsProvider}. */
-
 class DefaultCredentialsProviderTest {
 
   private static final String USER_CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
@@ -285,8 +285,7 @@ class DefaultCredentialsProviderTest {
   }
 
   @Test
-  void getDefaultCredentials_appEngineSkipWorks_retrievesCloudShellCredential()
-      throws IOException {
+  void getDefaultCredentials_appEngineSkipWorks_retrievesCloudShellCredential() throws IOException {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.addType(
@@ -768,8 +767,7 @@ class DefaultCredentialsProviderTest {
   }
 
   @Test
-  void getDefaultCredentials_envVarSet_userCredential_correctCredentialInfo()
-      throws IOException {
+  void getDefaultCredentials_envVarSet_userCredential_correctCredentialInfo() throws IOException {
     InputStream userStream =
         UserCredentialsTest.writeUserStream(
             USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);

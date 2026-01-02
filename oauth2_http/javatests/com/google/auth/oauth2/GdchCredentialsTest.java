@@ -38,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
@@ -56,7 +57,6 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /** Test case for {@link GdchCredentials}. */
-
 class GdchCredentialsTest extends BaseSerializationTest {
   private static final String FORMAT_VERSION = GdchCredentials.SUPPORTED_FORMAT_VERSION;
   private static final String PRIVATE_KEY_ID = "d84a4fefcf50791d4a90f2d7af17469d6282df9d";

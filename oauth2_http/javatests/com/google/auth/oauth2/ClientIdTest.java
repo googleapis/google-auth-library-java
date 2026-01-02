@@ -34,6 +34,7 @@ package com.google.auth.oauth2;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import com.google.api.client.json.GenericJson;
 import com.google.auth.TestUtils;
 import java.io.IOException;
@@ -41,7 +42,6 @@ import java.io.InputStream;
 import org.junit.jupiter.api.Test;
 
 /** Unit tests for ClientId */
-
 class ClientIdTest {
   private static final String CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
   private static final String CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
@@ -58,7 +58,8 @@ class ClientIdTest {
   @Test
   void constructor_nullClientId_throws() {
     assertThrows(
-        NullPointerException.class, () -> ClientId.newBuilder().setClientSecret(CLIENT_SECRET).build());
+        NullPointerException.class,
+        () -> ClientId.newBuilder().setClientSecret(CLIENT_SECRET).build());
   }
 
   @Test
@@ -130,7 +131,8 @@ class ClientIdTest {
   @Test
   void fromResource_badResource() throws IOException {
     assertThrows(
-        NullPointerException.class, () -> ClientId.fromResource(ClientIdTest.class, "invalid.json"));
+        NullPointerException.class,
+        () -> ClientId.fromResource(ClientIdTest.class, "invalid.json"));
   }
 
   @Test

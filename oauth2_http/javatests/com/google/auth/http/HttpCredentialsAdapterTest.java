@@ -31,9 +31,9 @@
 
 package com.google.auth.http;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.hamcrest.CoreMatchers.instanceOf;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpHeaders;
@@ -50,7 +50,6 @@ import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
 /** Test case for {@link HttpCredentialsAdapter}. */
-
 class HttpCredentialsAdapterTest {
 
   private static final String CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";

@@ -34,11 +34,11 @@ package com.google.auth.mtls;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.google.api.client.json.GenericJson;
 import com.google.auth.TestUtils;
 import java.io.IOException;
 import java.io.InputStream;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 class WorkloadCertificateConfigurationTest {

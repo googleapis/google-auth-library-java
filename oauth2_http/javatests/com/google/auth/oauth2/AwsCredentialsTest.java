@@ -31,13 +31,13 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.Credentials.GOOGLE_DEFAULT_UNIVERSE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import static com.google.auth.Credentials.GOOGLE_DEFAULT_UNIVERSE;
 
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonParser;
@@ -59,7 +59,6 @@ import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 
 /** Tests for {@link AwsCredentials}. */
-
 class AwsCredentialsTest extends BaseSerializationTest {
 
   private static final String STS_URL = "https://sts.googleapis.com/v1/token";
@@ -242,8 +241,7 @@ class AwsCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void refreshAccessTokenProgrammaticRefresh_withServiceAccountImpersonation()
-      throws IOException {
+  void refreshAccessTokenProgrammaticRefresh_withServiceAccountImpersonation() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -384,8 +382,7 @@ class AwsCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void retrieveSubjectToken_imdsv1EnvVariablesSet_metadataServerNotCalled()
-      throws IOException {
+  void retrieveSubjectToken_imdsv1EnvVariablesSet_metadataServerNotCalled() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -430,8 +427,7 @@ class AwsCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void retrieveSubjectToken_imdsv2EnvVariablesSet_metadataServerNotCalled()
-      throws IOException {
+  void retrieveSubjectToken_imdsv2EnvVariablesSet_metadataServerNotCalled() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 

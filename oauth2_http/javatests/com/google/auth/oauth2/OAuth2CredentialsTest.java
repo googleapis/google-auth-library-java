@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import static java.util.concurrent.TimeUnit.HOURS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -39,7 +40,6 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import static java.util.concurrent.TimeUnit.HOURS;
 
 import com.google.api.client.util.Clock;
 import com.google.auth.TestClock;
@@ -74,10 +74,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
 
 /** Test case for {@link OAuth2Credentials}. */
-
 class OAuth2CredentialsTest extends BaseSerializationTest {
 
   private static final String CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
@@ -88,11 +86,13 @@ class OAuth2CredentialsTest extends BaseSerializationTest {
 
   private ExecutorService realExecutor;
 
-  @BeforeEach void setUp() {
+  @BeforeEach
+  void setUp() {
     realExecutor = Executors.newCachedThreadPool();
   }
 
-  @AfterEach void tearDown() {
+  @AfterEach
+  void tearDown() {
     realExecutor.shutdown();
   }
 
@@ -417,8 +417,7 @@ class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void getRequestMetadata_async_refreshRace()
-      throws ExecutionException, InterruptedException {
+  void getRequestMetadata_async_refreshRace() throws ExecutionException, InterruptedException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
@@ -669,17 +668,12 @@ class OAuth2CredentialsTest extends BaseSerializationTest {
 
     // Get the error that getRequestMetadata(uri) created
     Throwable actualBlockingError =
-        assertThrows(
-                ExecutionException.class,
-                () -> blockingCall.get())
-            .getCause();
+        assertThrows(ExecutionException.class, () -> blockingCall.get()).getCause();
 
     assertEquals(error, actualBlockingError);
 
     RuntimeException actualAsyncError =
-        assertThrows(
-            RuntimeException.class,
-            () -> callback1.awaitResult());
+        assertThrows(RuntimeException.class, () -> callback1.awaitResult());
     assertEquals(error, actualAsyncError);
   }
 
@@ -862,7 +856,8 @@ class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  @Disabled void updateTokenValueBeforeWake() throws IOException, InterruptedException {
+  @Disabled
+  void updateTokenValueBeforeWake() throws IOException, InterruptedException {
     final SettableFuture<AccessToken> refreshedTokenFuture = SettableFuture.create();
     AccessToken refreshedToken = new AccessToken("2/MkSJoj1xsli0AccessToken_NKPY2", null);
     refreshedTokenFuture.set(refreshedToken);

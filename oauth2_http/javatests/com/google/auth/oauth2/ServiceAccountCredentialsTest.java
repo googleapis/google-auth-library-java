@@ -41,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+
 import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.GenericJson;
@@ -82,7 +83,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 
 /** Test case for {@link ServiceAccountCredentials}. */
-
 class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   static final String CLIENT_EMAIL =
@@ -365,8 +365,7 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void createdScoped_withAud_noUniverse_jwtWithScopesDisabled_accessToken()
-      throws IOException {
+  void createdScoped_withAud_noUniverse_jwtWithScopesDisabled_accessToken() throws IOException {
     GoogleCredentials credentials = createDefaultBuilderWithToken(ACCESS_TOKEN).build();
 
     // No aud, no scopes gives an exception.
@@ -890,8 +889,7 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void idTokenWithAudience_oauthFlow_targetAudienceDoesNotMatchAudClaim()
-      throws IOException {
+  void idTokenWithAudience_oauthFlow_targetAudienceDoesNotMatchAudClaim() throws IOException {
     String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     MockTokenServerTransport transport = transportFactory.transport;

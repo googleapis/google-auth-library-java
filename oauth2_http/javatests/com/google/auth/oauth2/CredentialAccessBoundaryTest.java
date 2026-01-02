@@ -34,6 +34,7 @@ package com.google.auth.oauth2;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.fail;
+
 import com.google.auth.oauth2.CredentialAccessBoundary.AccessBoundaryRule;
 import com.google.auth.oauth2.CredentialAccessBoundary.AccessBoundaryRule.AvailabilityCondition;
 import java.util.ArrayList;
@@ -42,7 +43,6 @@ import java.util.Collections;
 import org.junit.jupiter.api.Test;
 
 /** Tests for {@link CredentialAccessBoundary} and encompassing classes. */
-
 class CredentialAccessBoundaryTest {
 
   @Test

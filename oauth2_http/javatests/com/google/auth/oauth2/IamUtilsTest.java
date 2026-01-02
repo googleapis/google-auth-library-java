@@ -34,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.auth.Credentials;
 import com.google.auth.ServiceAccountSigner;
@@ -41,7 +42,6 @@ import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import org.mockito.Mockito;
 
 class IamUtilsTest {
@@ -51,7 +51,8 @@ class IamUtilsTest {
 
   private ServiceAccountCredentials credentials;
 
-  @BeforeEach void setup() throws IOException {
+  @BeforeEach
+  void setup() throws IOException {
     // Mock this call for the Credentials because the IAM SignBlob RPC requires an access token. The
     // call is initialized with HttpCredentialsAdapter which will make a call to get the access
     // token

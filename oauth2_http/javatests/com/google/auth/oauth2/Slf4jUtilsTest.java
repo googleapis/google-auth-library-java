@@ -52,7 +52,8 @@ class Slf4jUtilsTest {
 
   private TestEnvironmentProvider testEnvironmentProvider;
 
-  @BeforeEach void setup() {
+  @BeforeEach
+  void setup() {
     testEnvironmentProvider = new TestEnvironmentProvider();
   }
 

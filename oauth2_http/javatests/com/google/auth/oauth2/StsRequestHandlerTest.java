@@ -34,6 +34,7 @@ package com.google.auth.oauth2;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.util.GenericData;
@@ -46,10 +47,8 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
 
 /** Tests for {@link StsRequestHandler}. */
-
 final class StsRequestHandlerTest {
 
   private static final String TOKEN_EXCHANGE_GRANT_TYPE =
@@ -60,7 +59,8 @@ final class StsRequestHandlerTest {
 
   private MockStsTransport transport;
 
-  @BeforeEach void setup() {
+  @BeforeEach
+  void setup() {
     transport = new MockStsTransport();
   }
 
@@ -176,10 +176,7 @@ final class StsRequestHandlerTest {
         TestUtils.buildHttpResponseException(
             "invalidRequest", /* errorDescription= */ null, /* errorUri= */ null));
 
-    OAuthException e =
-        assertThrows(
-            OAuthException.class,
-            () -> requestHandler.exchangeToken());
+    OAuthException e = assertThrows(OAuthException.class, () -> requestHandler.exchangeToken());
 
     assertEquals("invalidRequest", e.getErrorCode());
     assertNull(e.getErrorDescription());
@@ -199,10 +196,7 @@ final class StsRequestHandlerTest {
     transport.addResponseErrorSequence(
         TestUtils.buildHttpResponseException("invalidRequest", "errorDescription", "errorUri"));
 
-    OAuthException e =
-        assertThrows(
-            OAuthException.class,
-            () -> requestHandler.exchangeToken());
+    OAuthException e = assertThrows(OAuthException.class, () -> requestHandler.exchangeToken());
 
     assertEquals("invalidRequest", e.getErrorCode());
     assertEquals("errorDescription", e.getErrorDescription());
@@ -223,9 +217,7 @@ final class StsRequestHandlerTest {
     transport.addResponseErrorSequence(e);
 
     IOException thrownException =
-        assertThrows(
-            IOException.class,
-            () -> requestHandler.exchangeToken());
+        assertThrows(IOException.class, () -> requestHandler.exchangeToken());
     assertEquals(e, thrownException);
   }
 

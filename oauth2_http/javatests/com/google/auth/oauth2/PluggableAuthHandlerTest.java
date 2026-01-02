@@ -42,7 +42,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.mockito.Mockito;
 import com.google.api.client.json.GenericJson;
 import com.google.auth.oauth2.ExecutableHandler.ExecutableOptions;
 import com.google.auth.oauth2.PluggableAuthHandler.InternalProcessBuilder;
@@ -59,8 +58,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
-
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /** Unit tests for {@link PluggableAuthHandler}. */
@@ -190,8 +189,7 @@ class PluggableAuthHandlerTest {
   }
 
   @Test
-  void retrieveTokenFromExecutable_errorResponse_throws()
-      throws InterruptedException, IOException {
+  void retrieveTokenFromExecutable_errorResponse_throws() throws InterruptedException, IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 
@@ -356,9 +354,8 @@ class PluggableAuthHandlerTest {
   }
 
   @Test
-  void
-      retrieveTokenFromExecutable_successResponseInOutputFileMissingExpirationTimeField_throws()
-          throws InterruptedException, IOException {
+  void retrieveTokenFromExecutable_successResponseInOutputFileMissingExpirationTimeField_throws()
+      throws InterruptedException, IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 
@@ -856,8 +853,7 @@ class PluggableAuthHandlerTest {
   }
 
   @Test
-  void getExecutableResponse_timeoutExceeded_throws()
-      throws InterruptedException, IOException {
+  void getExecutableResponse_timeoutExceeded_throws() throws InterruptedException, IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 
@@ -887,8 +883,7 @@ class PluggableAuthHandlerTest {
   }
 
   @Test
-  void getExecutableResponse_nonZeroExitCode_throws()
-      throws InterruptedException, IOException {
+  void getExecutableResponse_nonZeroExitCode_throws() throws InterruptedException, IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 
@@ -921,8 +916,7 @@ class PluggableAuthHandlerTest {
   }
 
   @Test
-  void getExecutableResponse_processInterrupted_throws()
-      throws InterruptedException, IOException {
+  void getExecutableResponse_processInterrupted_throws() throws InterruptedException, IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 
@@ -954,8 +948,7 @@ class PluggableAuthHandlerTest {
   }
 
   @Test
-  void getExecutableResponse_invalidResponse_throws()
-      throws InterruptedException, IOException {
+  void getExecutableResponse_invalidResponse_throws() throws InterruptedException, IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 

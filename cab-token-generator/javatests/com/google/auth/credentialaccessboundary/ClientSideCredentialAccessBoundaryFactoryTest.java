@@ -31,12 +31,11 @@
 
 package com.google.auth.credentialaccessboundary;
 
+import static com.google.auth.oauth2.OAuth2Utils.TOKEN_EXCHANGE_URL_FORMAT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static com.google.auth.oauth2.OAuth2Utils.TOKEN_EXCHANGE_URL_FORMAT;
-
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -77,7 +76,6 @@ import org.junit.jupiter.api.Test;
  * Tests for {@link
  * com.google.auth.credentialaccessboundary.ClientSideCredentialAccessBoundaryFactory}.
  */
-
 class ClientSideCredentialAccessBoundaryFactoryTest {
   private static final String SA_PRIVATE_KEY_PKCS8 =
       "-----BEGIN PRIVATE KEY-----\n"
@@ -105,7 +103,8 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
     }
   }
 
-  @BeforeEach void setUp() {
+  @BeforeEach
+  void setUp() {
     mockStsTransportFactory = new MockStsTransportFactory();
     mockStsTransportFactory.transport.setReturnAccessBoundarySessionKey(true);
 
@@ -185,8 +184,7 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
   }
 
   @Test
-  void fetchIntermediateCredentials_noExpiresInReturned_copiesSourceExpiration()
-      throws Exception {
+  void fetchIntermediateCredentials_noExpiresInReturned_copiesSourceExpiration() throws Exception {
     // Simulate STS not returning expires_in.
     mockStsTransportFactory.transport.setReturnExpiresIn(false);
 
@@ -214,8 +212,7 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
   }
 
   @Test
-  void refreshCredentialsIfRequired_firstCallWillFetchIntermediateCredentials()
-      throws IOException {
+  void refreshCredentialsIfRequired_firstCallWillFetchIntermediateCredentials() throws IOException {
     GoogleCredentials sourceCredentials =
         getServiceAccountSourceCredentials(mockTokenServerTransportFactory);
 
@@ -307,8 +304,7 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
   }
 
   @Test
-  void refreshCredentialsIfRequired_blockingMultiThread()
-      throws IOException, InterruptedException {
+  void refreshCredentialsIfRequired_blockingMultiThread() throws IOException, InterruptedException {
     final ClientSideCredentialAccessBoundaryFactory factory =
         getClientSideCredentialAccessBoundaryFactory(RefreshType.BLOCKING);
 
@@ -328,8 +324,7 @@ class ClientSideCredentialAccessBoundaryFactoryTest {
   }
 
   @Test
-  void refreshCredentialsIfRequired_asyncMultiThread()
-      throws IOException, InterruptedException {
+  void refreshCredentialsIfRequired_asyncMultiThread() throws IOException, InterruptedException {
     final ClientSideCredentialAccessBoundaryFactory factory =
         getClientSideCredentialAccessBoundaryFactory(RefreshType.ASYNC);
 

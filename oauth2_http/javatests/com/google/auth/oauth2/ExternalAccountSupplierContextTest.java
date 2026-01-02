@@ -32,6 +32,7 @@
 package com.google.auth.oauth2;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import com.google.auth.oauth2.ExternalAccountCredentials.SubjectTokenTypes;
 import org.junit.jupiter.api.Test;
 

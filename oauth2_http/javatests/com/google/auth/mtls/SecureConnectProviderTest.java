@@ -34,6 +34,7 @@ package com.google.auth.mtls;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -141,7 +142,9 @@ class SecureConnectProviderTest {
         assertThrows(
             IOException.class,
             () -> SecureConnectProvider.runCertificateProviderCommand(certCommandProcess, 100));
-    assertTrue(actual.getMessage().contains("SecureConnect: Cert provider command timed out"), "expected to fail with timeout");
+    assertTrue(
+        actual.getMessage().contains("SecureConnect: Cert provider command timed out"),
+        "expected to fail with timeout");
   }
 
   @Test

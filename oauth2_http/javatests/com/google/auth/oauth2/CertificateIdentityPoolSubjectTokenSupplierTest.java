@@ -57,7 +57,6 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -83,7 +82,8 @@ class CertificateIdentityPoolSubjectTokenSupplierTest {
   private byte[] testCertBytesFromFile;
   private byte[] intermediateCertBytesFromFile;
 
-  @BeforeEach void setUp() throws IOException, URISyntaxException {
+  @BeforeEach
+  void setUp() throws IOException, URISyntaxException {
     ClassLoader classLoader = getClass().getClassLoader();
     URL leafCertUrl = classLoader.getResource("x509_leaf_certificate.pem");
     assertNotNull(leafCertUrl, "Test leaf certificate file not found!");
@@ -93,11 +93,14 @@ class CertificateIdentityPoolSubjectTokenSupplierTest {
     assertNotNull(intermediateCertUrl, "Test intermediate certificate file not found!");
 
     lenient().when(mockCertificateConfig.useDefaultCertificateConfig()).thenReturn(false);
-    lenient().when(mockCertificateConfig.getCertificateConfigLocation())
+    lenient()
+        .when(mockCertificateConfig.getCertificateConfigLocation())
         .thenReturn(testCertFile.getAbsolutePath());
 
     lenient().when(mockCredentialSource.getCertificateConfig()).thenReturn(mockCertificateConfig);
-    lenient().when(mockCredentialSource.getCredentialLocation()).thenReturn(testCertFile.getAbsolutePath());
+    lenient()
+        .when(mockCredentialSource.getCredentialLocation())
+        .thenReturn(testCertFile.getAbsolutePath());
 
     supplier = new CertificateIdentityPoolSubjectTokenSupplier(mockCredentialSource);
     testCertBytesFromFile = Files.readAllBytes(Paths.get(leafCertUrl.toURI()));
@@ -251,7 +254,9 @@ class CertificateIdentityPoolSubjectTokenSupplierTest {
 
     Throwable cause = exception.getCause();
     assertNotNull(cause, "Exception cause should not be null");
-    assertTrue(cause instanceof IllegalArgumentException, "Exception cause should be an IllegalArgumentException");
+    assertTrue(
+        cause instanceof IllegalArgumentException,
+        "Exception cause should be an IllegalArgumentException");
     assertEquals(expectedRootErrorMessage, cause.getMessage());
   }
 
@@ -261,7 +266,9 @@ class CertificateIdentityPoolSubjectTokenSupplierTest {
     // simulating a scenario where the trust chain file contains only the leaf.
     ClassLoader classLoader = getClass().getClassLoader();
     URL trustChainUrl = classLoader.getResource("x509_leaf_certificate.pem");
-    assertNotNull(trustChainUrl, "Test resource 'x509_leaf_certificate.pem' (used as trust chain) not found!");
+    assertNotNull(
+        trustChainUrl,
+        "Test resource 'x509_leaf_certificate.pem' (used as trust chain) not found!");
     when(mockCertificateConfig.getTrustChainPath())
         .thenReturn(new File(trustChainUrl.getFile()).getAbsolutePath());
 
@@ -350,7 +357,8 @@ class CertificateIdentityPoolSubjectTokenSupplierTest {
 
     // Check that the cause is the original NoSuchFileException.
     assertNotNull(exception.getCause(), "Exception should have a cause");
-    assertTrue(exception.getCause()  instanceof NoSuchFileException, "Cause should be NoSuchFileException");
+    assertTrue(
+        exception.getCause() instanceof NoSuchFileException, "Cause should be NoSuchFileException");
 
     // Check the message of the cause (which is the path) in a platform-agnostic way.
     Path expectedCausePath = Paths.get(nonExistentPath);

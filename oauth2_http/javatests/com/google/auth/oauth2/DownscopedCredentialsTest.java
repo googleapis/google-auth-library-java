@@ -31,11 +31,11 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.Credentials.GOOGLE_DEFAULT_UNIVERSE;
+import static com.google.auth.oauth2.OAuth2Utils.TOKEN_EXCHANGE_URL_FORMAT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
-import static com.google.auth.Credentials.GOOGLE_DEFAULT_UNIVERSE;
-import static com.google.auth.oauth2.OAuth2Utils.TOKEN_EXCHANGE_URL_FORMAT;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.auth.TestUtils;
@@ -46,7 +46,6 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /** Tests for {@link DownscopedCredentials}. */
-
 class DownscopedCredentialsTest {
 
   private static final String SA_PRIVATE_KEY_PKCS8 =

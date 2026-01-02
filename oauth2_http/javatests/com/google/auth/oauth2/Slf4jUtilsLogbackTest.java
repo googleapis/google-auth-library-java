@@ -62,7 +62,8 @@ class Slf4jUtilsLogbackTest {
 
   private TestEnvironmentProvider testEnvironmentProvider;
 
-  @BeforeEach void setup() {
+  @BeforeEach
+  void setup() {
     testEnvironmentProvider = new TestEnvironmentProvider();
   }
 
@@ -149,7 +150,9 @@ class Slf4jUtilsLogbackTest {
     assertEquals(2, keyValuePairs.size());
     for (KeyValuePair kvp : keyValuePairs) {
 
-      assertTrue(kvp.key.equals("key1", "Key should be either 'key1' or 'token'") || kvp.key.equals("token"));
+      assertTrue(
+          kvp.key.equals("key1", "Key should be either 'key1' or 'token'")
+              || kvp.key.equals("token"));
     }
 
     testAppender.stop();

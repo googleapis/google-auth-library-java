@@ -31,9 +31,6 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static com.google.auth.TestUtils.getDefaultExpireTime;
 import static com.google.auth.oauth2.ImpersonatedCredentialsTest.DEFAULT_IMPERSONATION_URL;
 import static com.google.auth.oauth2.ImpersonatedCredentialsTest.IMMUTABLE_SCOPES_LIST;
@@ -49,6 +46,9 @@ import static com.google.auth.oauth2.ServiceAccountCredentialsTest.createDefault
 import static com.google.auth.oauth2.UserCredentialsTest.CLIENT_ID;
 import static com.google.auth.oauth2.UserCredentialsTest.CLIENT_SECRET;
 import static com.google.auth.oauth2.UserCredentialsTest.REFRESH_TOKEN;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.google.api.client.http.HttpStatusCodes;
@@ -83,7 +83,8 @@ class LoggingTest {
     return testAppender;
   }
 
-  @BeforeAll static void setup() {
+  @BeforeAll
+  static void setup() {
     // mimic GOOGLE_SDK_JAVA_LOGGING = true
     TestEnvironmentProvider testEnvironmentProvider = new TestEnvironmentProvider();
     testEnvironmentProvider.setEnv(LoggingUtils.GOOGLE_SDK_JAVA_LOGGING, "true");
@@ -91,8 +92,7 @@ class LoggingTest {
   }
 
   @Test
-  void userCredentials_getRequestMetadata_fromRefreshToken_hasAccessToken()
-      throws IOException {
+  void userCredentials_getRequestMetadata_fromRefreshToken_hasAccessToken() throws IOException {
     TestAppender testAppender = setupTestLogger(UserCredentials.class);
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
@@ -258,7 +258,8 @@ class LoggingTest {
     testAppender.stop();
   }
 
-  @Test() void impersonatedCredentials_refreshAccessToken_success()
+  @Test()
+  void impersonatedCredentials_refreshAccessToken_success()
       throws IOException, IllegalStateException {
     TestAppender testAppender = setupTestLogger(ImpersonatedCredentials.class);
     MockIAMCredentialsServiceTransportFactory mockTransportFactory =

@@ -32,13 +32,13 @@ package com.google.auth.oauth2;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.auth.oauth2.ComputeEngineCredentialsTest.MockMetadataServerTransportFactory;
 import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Test;
 
 /** Test cases for {@link SecureSessionAgent}. */
-
 class SecureSessionAgentTest {
 
   private static final String INVALID_JSON_KEY = "invalid_key";

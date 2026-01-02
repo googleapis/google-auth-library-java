@@ -32,6 +32,7 @@
 package com.google.auth.oauth2.functional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import com.google.api.client.json.GenericJson;
 import com.google.auth.TestUtils;
 import com.google.auth.oauth2.GoogleCredentials;

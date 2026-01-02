@@ -40,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
@@ -66,7 +67,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 
 /** Test case for {@link UserCredentials}. */
-
 class UserCredentialsTest extends BaseSerializationTest {
 
   static final String CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
@@ -87,7 +87,11 @@ class UserCredentialsTest extends BaseSerializationTest {
   void constructor_accessAndRefreshTokenNull_throws() {
     assertThrows(
         IllegalStateException.class,
-        () -> UserCredentials.newBuilder().setClientId(CLIENT_ID).setClientSecret(CLIENT_SECRET).build());
+        () ->
+            UserCredentials.newBuilder()
+                .setClientId(CLIENT_ID)
+                .setClientSecret(CLIENT_SECRET)
+                .build());
   }
 
   @Test

@@ -33,6 +33,7 @@ package com.google.auth.oauth2;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.google.auth.CredentialTypeForMetrics;
 import com.google.auth.oauth2.MetricsUtils.RequestType;
 import java.util.regex.Pattern;

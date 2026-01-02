@@ -35,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.google.api.client.util.Clock;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -45,7 +46,6 @@ import java.net.Socket;
 import org.junit.jupiter.api.Test;
 
 /** Unit tests for CloudShellCredentials */
-
 class CloudShellCredentialsTest extends BaseSerializationTest {
 
   @Test

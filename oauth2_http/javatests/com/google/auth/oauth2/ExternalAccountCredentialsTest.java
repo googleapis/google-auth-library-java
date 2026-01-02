@@ -31,13 +31,13 @@
 
 package com.google.auth.oauth2;
 
+import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
@@ -60,7 +60,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /** Tests for {@link ExternalAccountCredentials}. */
-
 class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
   private static final String STS_URL = "https://sts.googleapis.com/v1/token";
@@ -86,7 +85,8 @@ class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
   private MockExternalAccountCredentialsTransportFactory transportFactory;
 
-  @BeforeEach void setup() {
+  @BeforeEach
+  void setup() {
     transportFactory = new MockExternalAccountCredentialsTransportFactory();
   }
 
@@ -223,8 +223,7 @@ class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void fromJson_identityPoolCredentialsWithServiceAccountImpersonationOptions()
-      throws IOException {
+  void fromJson_identityPoolCredentialsWithServiceAccountImpersonationOptions() throws IOException {
     GenericJson identityPoolCredentialJson = buildJsonIdentityPoolCredential();
     identityPoolCredentialJson.set(
         "service_account_impersonation", buildServiceAccountImpersonationOptions(2800));
@@ -958,9 +957,8 @@ class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void
-      exchangeExternalCredentialForAccessToken_workforceCredWithInternalOptions_expectOverridden()
-          throws IOException {
+  void exchangeExternalCredentialForAccessToken_workforceCredWithInternalOptions_expectOverridden()
+      throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
             buildJsonIdentityPoolWorkforceCredential(), transportFactory);

@@ -33,12 +33,12 @@ package com.google.auth.oauth2;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+
 import com.google.auth.TestUtils;
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
 /** Tests for {@link OAuthException}. */
-
 final class OAuthExceptionTest {
 
   private static final String FULL_MESSAGE_FORMAT = "Error code %s: %s - %s";

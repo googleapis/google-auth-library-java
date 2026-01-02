@@ -32,6 +32,7 @@
 package com.google.auth.oauth2;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
@@ -62,7 +63,8 @@ class AwsRequestSignerTest {
 
   private AwsSecurityCredentials awsSecurityCredentials;
 
-  @BeforeEach void setUp() throws IOException {
+  @BeforeEach
+  void setUp() throws IOException {
     // Required for date parsing when run in different Locales
     Locale.setDefault(Locale.US);
     awsSecurityCredentials = retrieveAwsSecurityCredentials();

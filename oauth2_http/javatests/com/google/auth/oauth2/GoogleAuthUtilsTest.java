@@ -33,6 +33,7 @@ package com.google.auth.oauth2;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import java.io.File;
 import org.junit.jupiter.api.Test;
 

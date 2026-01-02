@@ -33,6 +33,7 @@ package com.google.auth.oauth2;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -40,7 +41,8 @@ class LoggingUtilsTest {
 
   private TestEnvironmentProvider testEnvironmentProvider;
 
-  @BeforeEach void setup() {
+  @BeforeEach
+  void setup() {
     testEnvironmentProvider = new TestEnvironmentProvider();
   }
 
