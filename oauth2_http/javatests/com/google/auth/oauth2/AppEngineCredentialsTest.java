@@ -207,7 +207,7 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
 
   private static class TestAppIdentityService {
 
-    public TestGetAccessTokenResult getAccessToken() {
+    public TestGetAccessTokenResult getAccessToken(Iterable<String> scopes) {
       return new TestGetAccessTokenResult(EXPECTED_ACCESS_TOKEN, EXPECTED_EXPIRATION_DATE);
     }
 
@@ -215,10 +215,9 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
       return EXPECTED_ACCOUNT;
     }
 
-    public TestSigningResult signForApp() {
+    public TestSigningResult signForApp(byte[] toSign) {
       return new TestSigningResult(EXPECTED_SIGNATURE);
-    }
-  }
+    }  }
 
   private static class TestGetAccessTokenResult {
 

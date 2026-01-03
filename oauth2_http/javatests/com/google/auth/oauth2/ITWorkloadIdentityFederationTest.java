@@ -52,8 +52,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -405,8 +403,8 @@ final class ITWorkloadIdentityFederationTest {
   }
 
   /**
-   * Generates a Google ID token using the iamcredentials generateIdToken API.
-   * <a href="https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oidc">...</a>
+   * Generates a Google ID token using the iamcredentials generateIdToken API. <a
+   * href="https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oidc">...</a>
    */
   private String generateGoogleIdToken(String audience) throws IOException {
     GoogleCredentials googleCredentials =

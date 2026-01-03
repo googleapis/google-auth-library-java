@@ -658,7 +658,9 @@ class GdchCredentialsTest extends BaseSerializationTest {
   @Test
   void equals_false_caCertPath() throws IOException {
     File tmpDirectory = Files.createTempDirectory("tmpDirectory").toFile();
+    tmpDirectory.deleteOnExit();
     File testCaCertFile = File.createTempFile("testCert", ".pem", tmpDirectory);
+    testCaCertFile.deleteOnExit();
     GenericJson json =
         writeGdchServiceAccountJson(
             FORMAT_VERSION,
@@ -686,8 +688,6 @@ class GdchCredentialsTest extends BaseSerializationTest {
     otherCredentials = otherCredentials.createWithGdchAudience(API_AUDIENCE);
     assertNotEquals(credentials, otherCredentials);
     assertNotEquals(otherCredentials, credentials);
-
-    testCaCertFile.delete();
   }
 
   @Test

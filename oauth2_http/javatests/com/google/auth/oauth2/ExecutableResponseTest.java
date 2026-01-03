@@ -34,8 +34,8 @@ package com.google.auth.oauth2;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
 
 import com.google.api.client.json.GenericJson;
 import java.io.IOException;
@@ -128,7 +128,7 @@ class ExecutableResponseTest {
   }
 
   @Test
-  void constructor_errorResponseMissingCode_throws() throws IOException {
+  void constructor_errorResponseMissingCode_throws() {
     GenericJson jsonResponse = buildErrorResponse();
 
     Object[] values = new Object[] {null, ""};
@@ -144,7 +144,7 @@ class ExecutableResponseTest {
   }
 
   @Test
-  void constructor_errorResponseMissingMessage_throws() throws IOException {
+  void constructor_errorResponseMissingMessage_throws() {
     GenericJson jsonResponse = buildErrorResponse();
 
     Object[] values = new Object[] {null, ""};
@@ -161,7 +161,7 @@ class ExecutableResponseTest {
   }
 
   @Test
-  void constructor_successResponseMissingVersionField_throws() throws IOException {
+  void constructor_successResponseMissingVersionField_throws() {
     GenericJson jsonResponse = buildOidcResponse();
     jsonResponse.remove("version");
 
@@ -174,7 +174,7 @@ class ExecutableResponseTest {
   }
 
   @Test
-  void constructor_successResponseMissingSuccessField_throws() throws Exception {
+  void constructor_successResponseMissingSuccessField_throws() {
     GenericJson jsonResponse = buildOidcResponse();
     jsonResponse.remove("success");
 
@@ -187,7 +187,7 @@ class ExecutableResponseTest {
   }
 
   @Test
-  void constructor_successResponseMissingTokenTypeField_throws() throws IOException {
+  void constructor_successResponseMissingTokenTypeField_throws() {
     GenericJson jsonResponse = buildOidcResponse();
     jsonResponse.remove("token_type");
 
@@ -200,13 +200,12 @@ class ExecutableResponseTest {
   }
 
   @Test
-  void constructor_samlResponseMissingSubjectToken_throws() throws IOException {
+  void constructor_samlResponseMissingSubjectToken_throws() {
     GenericJson jsonResponse = buildSamlResponse();
 
     Object[] values = new Object[] {null, ""};
     for (Object value : values) {
       jsonResponse.put("saml_response", value);
-
       PluggableAuthException exception =
           assertThrows(PluggableAuthException.class, () -> new ExecutableResponse(jsonResponse));
       assertEquals(
@@ -217,7 +216,7 @@ class ExecutableResponseTest {
   }
 
   @Test
-  void constructor_oidcResponseMissingSubjectToken_throws() throws IOException {
+  void constructor_oidcResponseMissingSubjectToken_throws() {
     GenericJson jsonResponse = buildOidcResponse();
 
     Object[] values = new Object[] {null, ""};

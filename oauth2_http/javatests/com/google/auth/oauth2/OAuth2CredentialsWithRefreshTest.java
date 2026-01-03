@@ -35,7 +35,7 @@ import static com.google.auth.oauth2.OAuth2Credentials.DEFAULT_EXPIRATION_MARGIN
 import static com.google.auth.oauth2.OAuth2Credentials.DEFAULT_REFRESH_MARGIN;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.google.auth.TestUtils;
 import java.io.IOException;
@@ -160,7 +160,7 @@ class OAuth2CredentialsWithRefreshTest {
   void builder_noRefreshHandler_throws() {
     OAuth2CredentialsWithRefresh.Builder builder =
         OAuth2CredentialsWithRefresh.newBuilder().setAccessToken(ACCESS_TOKEN);
-    assertThrows(NullPointerException.class, builder::build);
+    assertThrows(NullPointerException.class, () -> builder.build());
   }
 
   @Test
@@ -168,7 +168,7 @@ class OAuth2CredentialsWithRefreshTest {
     OAuth2CredentialsWithRefresh.Builder builder =
         OAuth2CredentialsWithRefresh.newBuilder()
             .setAccessToken(new AccessToken("accessToken", null));
-    assertThrows(IllegalArgumentException.class, builder::build);
+    assertThrows(IllegalArgumentException.class, () -> builder.build());
   }
 
   @Test

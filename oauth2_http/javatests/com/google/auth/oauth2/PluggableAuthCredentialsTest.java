@@ -271,7 +271,7 @@ class PluggableAuthCredentialsTest extends BaseSerializationTest {
             .setServiceAccountImpersonationUrl(
                 transportFactory.transport.getServiceAccountImpersonationUrl())
             .setServiceAccountImpersonationOptions(
-                ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(2800))
+                ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions())
             .setHttpTransportFactory(transportFactory)
             .build();
 

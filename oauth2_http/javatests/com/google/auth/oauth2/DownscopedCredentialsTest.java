@@ -193,38 +193,25 @@ class DownscopedCredentialsTest {
             .setHttpTransportFactory(transportFactory)
             .build();
 
-    try {
-      downscopedCredentials.refreshAccessToken();
-      fail("Should fail as the source credential should not be able to be refreshed.");
-    } catch (IOException e) {
-      assertEquals("Unable to refresh the provided source credential.", e.getMessage());
-    }
+    IOException e = assertThrows(IOException.class, downscopedCredentials::refreshAccessToken);
+    assertEquals("Unable to refresh the provided source credential.", e.getMessage());
   }
 
   @Test
   void builder_noSourceCredential_throws() {
-    DownscopedCredentials.Builder builder = DownscopedCredentials.newBuilder()
-        .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-        .setCredentialAccessBoundary(CREDENTIAL_ACCESS_BOUNDARY);
-    try {
-      builder.build();
-      fail("Should fail as the source credential is null.");
-    } catch (NullPointerException e) {
-      // Expected.
-    }
+    DownscopedCredentials.Builder builder =
+        DownscopedCredentials.newBuilder()
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+    assertThrows(NullPointerException.class, builder::build);
   }
 
   @Test
   void builder_noCredentialAccessBoundary_throws() throws IOException {
-    DownscopedCredentials.Builder builder = DownscopedCredentials.newBuilder()
-        .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-        .setSourceCredential(getServiceAccountSourceCredentials(/* canRefresh= */ true));
-    try {
-      builder.build();
-      fail("Should fail as no access boundary was provided.");
-    } catch (NullPointerException e) {
-      // Expected.
-    }
+    DownscopedCredentials.Builder builder =
+        DownscopedCredentials.newBuilder()
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .setSourceCredential(getServiceAccountSourceCredentials(/* canRefresh= */ true));
+    assertThrows(NullPointerException.class, builder::build);
   }
 
   @Test
@@ -268,37 +255,31 @@ class DownscopedCredentialsTest {
     GoogleCredentials sourceCredentials =
         getServiceAccountSourceCredentials(/* canRefresh= */ true);
 
-    DownscopedCredentials.Builder builder = DownscopedCredentials.newBuilder()
-        .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-        .setSourceCredential(sourceCredentials)
-        .setCredentialAccessBoundary(CREDENTIAL_ACCESS_BOUNDARY)
-        .setUniverseDomain("differentUniverseDomain");
-    try {
-      builder.build();
-      fail("Should fail with universe domain mismatch.");
-    } catch (IllegalArgumentException e) {
-      assertEquals(
-          "The downscoped credential's universe domain must be the same as the source credential.",
-          e.getMessage());
-    }
+    DownscopedCredentials.Builder builder =
+        DownscopedCredentials.newBuilder()
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .setSourceCredential(sourceCredentials)
+            .setCredentialAccessBoundary(CREDENTIAL_ACCESS_BOUNDARY)
+            .setUniverseDomain("differentUniverseDomain");
+    IllegalArgumentException e = assertThrows(IllegalArgumentException.class, builder::build);
+    assertEquals(
+        "The downscoped credential's universe domain must be the same as the source credential.",
+        e.getMessage());
   }
 
   @Test
   void builder_sourceUniverseDomainUnavailable_throws() {
     GoogleCredentials sourceCredentials = new MockSourceCredentialWithoutUniverseDomain();
 
-    DownscopedCredentials.Builder builder = DownscopedCredentials.newBuilder()
-        .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-        .setSourceCredential(sourceCredentials)
-        .setCredentialAccessBoundary(CREDENTIAL_ACCESS_BOUNDARY);
-    try {
-      builder.build();
-      fail("Should fail to retrieve source credential universe domain.");
-    } catch (IllegalStateException e) {
-      assertEquals(
-          "Error occurred when attempting to retrieve source credential universe domain.",
-          e.getMessage());
-    }
+    DownscopedCredentials.Builder builder =
+        DownscopedCredentials.newBuilder()
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .setSourceCredential(sourceCredentials)
+            .setCredentialAccessBoundary(CREDENTIAL_ACCESS_BOUNDARY);
+    IllegalStateException e = assertThrows(IllegalStateException.class, builder::build);
+    assertEquals(
+        "Error occurred when attempting to retrieve source credential universe domain.",
+        e.getMessage());
   }
 
   private static GoogleCredentials getServiceAccountSourceCredentials(boolean canRefresh)

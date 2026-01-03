@@ -40,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static com.google.auth.Credentials.GOOGLE_DEFAULT_UNIVERSE;
@@ -133,7 +134,7 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
             .setClientEmail(SA_CLIENT_EMAIL)
             .setPrivateKey(privateKey)
             .setPrivateKeyId(SA_PRIVATE_KEY_ID);
-    assertDoesNotThrow(builder::build);
+    assertDoesNotThrow(() -> builder.build());
   }
 
   @Test
@@ -144,17 +145,15 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
             .setClientId(SA_CLIENT_ID)
             .setClientEmail(SA_CLIENT_EMAIL)
             .setPrivateKey(privateKey);
-    assertDoesNotThrow(builder::build);
+    assertDoesNotThrow(() -> builder.build());
   }
 
   @Test
   void constructor_noEmail_throws() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials.Builder builder =
-        ServiceAccountJwtAccessCredentials.newBuilder()
-            .setClientId(SA_CLIENT_ID)
-    NullPointerException e =
-        assertThrows(NullPointerException.class, builder::build);
+        ServiceAccountJwtAccessCredentials.newBuilder().setClientId(SA_CLIENT_ID);
+    NullPointerException e = assertThrows(NullPointerException.class, builder::build);
   }
 
   @Test
@@ -164,8 +163,7 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
             .setClientId(SA_CLIENT_ID)
             .setClientEmail(SA_CLIENT_EMAIL)
             .setPrivateKeyId(SA_PRIVATE_KEY_ID);
-    NullPointerException e =
-        assertThrows(NullPointerException.class, builder::build);
+    NullPointerException e = assertThrows(NullPointerException.class, builder::build);
   }
 
   @Test
@@ -236,7 +234,7 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
             .setPrivateKeyId(SA_PRIVATE_KEY_ID)
             .build();
 
-    assertThrows(IOException.class, credentials::getRequestMetadata);
+    assertThrows(IOException.class, () -> credentials.getRequestMetadata());
   }
 
   @Test
@@ -635,7 +633,9 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
   @Test
   void fromStream_nullStream_throws() throws IOException {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
-    assertThrows(NullPointerException.class, () -> ServiceAccountCredentials.fromStream(null, transportFactory));
+    assertThrows(
+        NullPointerException.class,
+        () -> ServiceAccountCredentials.fromStream(null, transportFactory));
   }
 
   @Test
@@ -932,14 +932,11 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
   }
 
   private static void testFromStreamException(InputStream stream, String expectedMessageContent) {
-    try {
-      ServiceAccountJwtAccessCredentials.fromStream(stream, CALL_URI);
-      fail(
-          String.format(
-              "Should throw exception with message containing '%s'", expectedMessageContent));
-    } catch (IOException expected) {
-      assertTrue(expected.getMessage().contains(expectedMessageContent));
-    }
+    IOException expected =
+        assertThrows(
+            IOException.class,
+            () -> ServiceAccountJwtAccessCredentials.fromStream(stream, CALL_URI));
+    assertTrue(expected.getMessage().contains(expectedMessageContent));
   }
 
   private GenericJson writeServiceAccountJson(String universeDomain) {

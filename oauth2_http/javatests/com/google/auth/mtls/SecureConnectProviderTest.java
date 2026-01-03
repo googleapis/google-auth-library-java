@@ -101,19 +101,22 @@ class SecureConnectProviderTest {
 
   @Test
   void testGetKeyStoreNonZeroExitCode() {
-    InputStream metadata =
+    try (InputStream metadata =
         this.getClass()
             .getClassLoader()
-            .getResourceAsStream("com/google/api/gax/rpc/mtls/mtlsCertAndKey.pem");
-    IOException actual =
-        assertThrows(
-            IOException.class,
-            () -> SecureConnectProvider.getKeyStore(metadata, new TestProcessProvider(1)));
-    assertTrue(
-        actual
-            .getMessage()
-            .contains("SecureConnect: Cert provider command failed with exit code: 1"),
-        "expected to fail with nonzero exit code");
+            .getResourceAsStream("com/google/api/gax/rpc/mtls/mtlsCertAndKey.pem")) {
+      IOException actual =
+          assertThrows(
+              IOException.class,
+              () -> SecureConnectProvider.getKeyStore(metadata, new TestProcessProvider(1)));
+      assertTrue(
+          actual
+              .getMessage()
+              .contains("SecureConnect: Cert provider command failed with exit code: 1"),
+          "expected to fail with nonzero exit code");
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Test

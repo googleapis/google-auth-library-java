@@ -197,7 +197,7 @@ class AwsCredentialsTest extends BaseSerializationTest {
             .setServiceAccountImpersonationUrl(
                 transportFactory.transport.getServiceAccountImpersonationUrl())
             .setServiceAccountImpersonationOptions(
-                ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions(2800))
+                ExternalAccountCredentialsTest.buildServiceAccountImpersonationOptions())
             .build();
 
     AccessToken accessToken = awsCredential.refreshAccessToken();
@@ -206,17 +206,17 @@ class AwsCredentialsTest extends BaseSerializationTest {
         transportFactory.transport.getServiceAccountAccessToken(), accessToken.getTokenValue());
 
     // Validate that default lifetime was set correctly on the request.
-    GenericJson query =
-        OAuth2Utils.JSON_FACTORY
-            .createJsonParser(transportFactory.transport.getLastRequest().getContentAsString())
-            .parseAndClose(GenericJson.class);
+    try (JsonParser jsonParser =
+        OAuth2Utils.JSON_FACTORY.createJsonParser(
+            transportFactory.transport.getLastRequest().getContentAsString())) {
+      GenericJson query = jsonParser.parseAndClose(GenericJson.class);
+      assertEquals("2800s", query.get("lifetime"));
 
-    assertEquals("2800s", query.get("lifetime"));
-
-    // Validate metrics header is set correctly on the sts request.
-    Map<String, List<String>> headers =
-        transportFactory.transport.getRequests().get(6).getHeaders();
-    ExternalAccountCredentialsTest.validateMetricsHeader(headers, "aws", true, true);
+      // Validate metrics header is set correctly on the sts request.
+      Map<String, List<String>> headers =
+          transportFactory.transport.getRequests().get(6).getHeaders();
+      ExternalAccountCredentialsTest.validateMetricsHeader(headers, "aws", true, true);
+    }
   }
 
   @Test
@@ -700,7 +700,7 @@ class AwsCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void retrieveSubjectToken_withProgrammaticRefreshThrowsError() throws IOException {
+  void retrieveSubjectToken_withProgrammaticRefreshThrowsError() {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -1325,12 +1325,12 @@ class AwsCredentialsTest extends BaseSerializationTest {
     return TestUtils.jsonToInputStream(json);
   }
 
-  class TestAwsSecurityCredentialsSupplier implements AwsSecurityCredentialsSupplier {
+  static class TestAwsSecurityCredentialsSupplier implements AwsSecurityCredentialsSupplier {
 
-    private String region;
-    private AwsSecurityCredentials credentials;
-    private IOException credentialException;
-    private ExternalAccountSupplierContext expectedContext;
+    private final String region;
+    private final AwsSecurityCredentials credentials;
+    private final IOException credentialException;
+    private final ExternalAccountSupplierContext expectedContext;
 
     TestAwsSecurityCredentialsSupplier(
         String region,

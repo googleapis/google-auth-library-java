@@ -51,6 +51,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
+import com.google.api.client.json.JsonParser;
 import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
@@ -149,8 +150,7 @@ class ExternalAccountCredentialsTest extends BaseSerializationTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            ExternalAccountCredentials.fromStream(
-                credentialsStream, /* transportFactory= */ null));
+            ExternalAccountCredentials.fromStream(credentialsStream, /* transportFactory= */ null));
   }
 
   @Test
@@ -230,7 +230,7 @@ class ExternalAccountCredentialsTest extends BaseSerializationTest {
   void fromJson_identityPoolCredentialsWithServiceAccountImpersonationOptions() {
     GenericJson identityPoolCredentialJson = buildJsonIdentityPoolCredential();
     identityPoolCredentialJson.set(
-        "service_account_impersonation", buildServiceAccountImpersonationOptions(2800));
+        "service_account_impersonation", buildServiceAccountImpersonationOptions());
 
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
@@ -287,7 +287,7 @@ class ExternalAccountCredentialsTest extends BaseSerializationTest {
   void fromJson_awsCredentialsWithServiceAccountImpersonationOptions() {
     GenericJson awsCredentialJson = buildJsonAwsCredential();
     awsCredentialJson.set(
-        "service_account_impersonation", buildServiceAccountImpersonationOptions(2800));
+        "service_account_impersonation", buildServiceAccountImpersonationOptions());
 
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(awsCredentialJson, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
@@ -398,13 +398,13 @@ class ExternalAccountCredentialsTest extends BaseSerializationTest {
   void fromJson_pluggableAuthCredentialsWithServiceAccountImpersonationOptions() {
     GenericJson pluggableAuthCredentialJson = buildJsonPluggableAuthCredential();
     pluggableAuthCredentialJson.set(
-        "service_account_impersonation", buildServiceAccountImpersonationOptions(2800));
+        "service_account_impersonation", buildServiceAccountImpersonationOptions());
 
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
             pluggableAuthCredentialJson, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
 
-    assertTrue(credential instanceof PluggableAuthCredentials);
+    assertInstanceOf(PluggableAuthCredentials.class, credential);
     assertEquals("audience", credential.getAudience());
     assertEquals("subjectTokenType", credential.getSubjectTokenType());
     assertEquals(STS_URL, credential.getTokenUrl());
@@ -487,9 +487,7 @@ class ExternalAccountCredentialsTest extends BaseSerializationTest {
   @Test
   void fromJson_nullTransport_throws() {
     HashMap<String, Object> json = new HashMap<>();
-    assertThrows(
-        NullPointerException.class,
-        () -> ExternalAccountCredentials.fromJson(json, null));
+    assertThrows(NullPointerException.class, () -> ExternalAccountCredentials.fromJson(json, null));
   }
 
   @Test
@@ -693,13 +691,15 @@ class ExternalAccountCredentialsTest extends BaseSerializationTest {
     HashMap<String, Object> credentialSource = new HashMap<>();
     credentialSource.put("file", "file");
     // No exception should be thrown.
-    ExternalAccountCredentials.Builder builder = TestExternalAccountCredentials.newBuilder()
-        .setWorkforcePoolUserProject("")
-        .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-        .setAudience("//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
-        .setSubjectTokenType("subjectTokenType")
-        .setTokenUrl(STS_URL)
-        .setCredentialSource(new TestCredentialSource(credentialSource));
+    ExternalAccountCredentials.Builder builder =
+        TestExternalAccountCredentials.newBuilder()
+            .setWorkforcePoolUserProject("")
+            .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+            .setAudience(
+                "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setCredentialSource(new TestCredentialSource(credentialSource));
     assertDoesNotThrow(builder::build);
   }
 
@@ -851,31 +851,26 @@ class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   void constructor_builder_highTokenLifetime_throws() {
-    Map<String, Object> optionsMap = new HashMap<String, Object>();
+    Map<String, Object> optionsMap = new HashMap<>();
     optionsMap.put("token_lifetime_seconds", 43201);
 
-    IllegalArgumentException e =
-        assertThrows(
-            IllegalArgumentException.class,
-            (org.junit.jupiter.api.function.Executable)
-                () ->
-                    IdentityPoolCredentials.newBuilder()
-                        .setHttpTransportFactory(transportFactory)
-                        .setAudience(
-                            "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
-                        .setSubjectTokenType("subjectTokenType")
-                        .setTokenUrl(STS_URL)
-                        .setTokenInfoUrl("https://tokeninfo.com")
-                        .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
-                        .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
-                        .setScopes(Arrays.asList("scope1", "scope2"))
-                        .setQuotaProjectId("projectId")
-                        .setClientId("clientId")
-                        .setClientSecret("clientSecret")
-                        .setWorkforcePoolUserProject("workforcePoolUserProject")
-                        .setUniverseDomain("universeDomain")
-                        .setServiceAccountImpersonationOptions(optionsMap)
-                        .build());
+    IdentityPoolCredentials.Builder builder =
+        IdentityPoolCredentials.newBuilder()
+            .setHttpTransportFactory(transportFactory)
+            .setAudience(
+                "//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
+            .setSubjectTokenType("subjectTokenType")
+            .setTokenUrl(STS_URL)
+            .setTokenInfoUrl("https://tokeninfo.com")
+            .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
+            .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
+            .setScopes(Arrays.asList("scope1", "scope2"))
+            .setQuotaProjectId("projectId")
+            .setClientId("clientId")
+            .setClientSecret("clientSecret")
+            .setWorkforcePoolUserProject("workforcePoolUserProject")
+            .setUniverseDomain("universeDomain");
+    IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> builder.setServiceAccountImpersonationOptions(optionsMap));
     assertEquals(
         "The \"token_lifetime_seconds\" field must be between 600 and 43200 seconds.",
         e.getMessage());
@@ -1014,17 +1009,18 @@ class ExternalAccountCredentialsTest extends BaseSerializationTest {
         transportFactory.transport.getServiceAccountAccessToken(), returnedToken.getTokenValue());
 
     // Validate that default lifetime was set correctly on the request.
-    GenericJson query =
-        OAuth2Utils.JSON_FACTORY
-            .createJsonParser(transportFactory.transport.getLastRequest().getContentAsString())
-            .parseAndClose(GenericJson.class);
+    try (JsonParser jsonParser =
+        OAuth2Utils.JSON_FACTORY.createJsonParser(
+            transportFactory.transport.getLastRequest().getContentAsString())) {
+      GenericJson query = jsonParser.parseAndClose(GenericJson.class);
 
-    assertEquals("3600s", query.get("lifetime"));
+      assertEquals("3600s", query.get("lifetime"));
 
-    // Validate metrics header is set correctly on the sts request.
-    Map<String, List<String>> headers =
-        transportFactory.transport.getRequests().get(1).getHeaders();
-    validateMetricsHeader(headers, "url", true, false);
+      // Validate metrics header is set correctly on the sts request.
+      Map<String, List<String>> headers =
+          transportFactory.transport.getRequests().get(1).getHeaders();
+      validateMetricsHeader(headers, "url", true, false);
+    }
   }
 
   @Test
@@ -1038,7 +1034,7 @@ class ExternalAccountCredentialsTest extends BaseSerializationTest {
                 transportFactory.transport.getStsUrl(),
                 transportFactory.transport.getMetadataUrl(),
                 transportFactory.transport.getServiceAccountImpersonationUrl(),
-                buildServiceAccountImpersonationOptions(2800)),
+                buildServiceAccountImpersonationOptions()),
             transportFactory);
 
     StsTokenExchangeRequest stsTokenExchangeRequest =
@@ -1051,16 +1047,16 @@ class ExternalAccountCredentialsTest extends BaseSerializationTest {
         transportFactory.transport.getServiceAccountAccessToken(), returnedToken.getTokenValue());
 
     // Validate that lifetime was set correctly on the request.
-    GenericJson query =
-        OAuth2Utils.JSON_FACTORY
-            .createJsonParser(transportFactory.transport.getLastRequest().getContentAsString())
-            .parseAndClose(GenericJson.class);
-
-    // Validate metrics header is set correctly on the sts request.
-    Map<String, List<String>> headers =
-        transportFactory.transport.getRequests().get(1).getHeaders();
-    validateMetricsHeader(headers, "url", true, true);
-    assertEquals("2800s", query.get("lifetime"));
+    try (JsonParser jsonParser =
+        OAuth2Utils.JSON_FACTORY.createJsonParser(
+            transportFactory.transport.getLastRequest().getContentAsString())) {
+      GenericJson query = jsonParser.parseAndClose(GenericJson.class);
+      // Validate metrics header is set correctly on the sts request.
+      Map<String, List<String>> headers =
+          transportFactory.transport.getRequests().get(1).getHeaders();
+      validateMetricsHeader(headers, "url", true, true);
+      assertEquals("2800s", query.get("lifetime"));
+    }
   }
 
   @Test
@@ -1323,10 +1319,9 @@ class ExternalAccountCredentialsTest extends BaseSerializationTest {
     return json;
   }
 
-  static Map<String, Object> buildServiceAccountImpersonationOptions(Integer lifetime) {
+  static Map<String, Object> buildServiceAccountImpersonationOptions() {
     Map<String, Object> map = new HashMap<String, Object>();
-    map.put("token_lifetime_seconds", lifetime);
-
+    map.put("token_lifetime_seconds", 2800);
     return map;
   }
 

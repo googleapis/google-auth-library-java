@@ -92,7 +92,7 @@ class AccessTokenTest extends BaseSerializationTest {
             .setTokenValue(TOKEN)
             .setScopes("dummy")
             .build();
-    assertEquals(Arrays.asList("dummy"), accessToken.getScopes());
+    assertEquals(Collections.singletonList("dummy"), accessToken.getScopes());
 
     // empty scope
     accessToken =

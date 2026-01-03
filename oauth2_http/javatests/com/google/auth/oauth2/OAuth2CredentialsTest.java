@@ -32,6 +32,7 @@
 package com.google.auth.oauth2;
 
 import static java.util.concurrent.TimeUnit.HOURS;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -869,14 +870,12 @@ class OAuth2CredentialsTest extends BaseSerializationTest {
 
     Thread t =
         new Thread(
-            () -> {
-              try {
-                creds.refresh();
-                assertNotNull(creds.getAccessToken());
-              } catch (Exception e) {
-                fail("Unexpected error. Exception: " + e);
-              }
-            });
+            () ->
+                assertDoesNotThrow(
+                    () -> {
+                      creds.refresh();
+                      assertNotNull(creds.getAccessToken());
+                    }));
     t.start();
 
     synchronized (creds) {
@@ -915,14 +914,13 @@ class OAuth2CredentialsTest extends BaseSerializationTest {
             new RefreshTaskListener(task) {
               @Override
               public void run() {
-                try {
-                  // Sleep before setting accessToken to new accessToken. Refresh should not
-                  // complete before this, and the accessToken is `null` until it is.
-                  Thread.sleep(300);
-                  super.run();
-                } catch (Exception e) {
-                  fail("Unexpected error. Exception: " + e);
-                }
+                assertDoesNotThrow(
+                    () -> {
+                      // Sleep before setting accessToken to new accessToken. Refresh should not
+                      // complete before this, and the accessToken is `null` until it is.
+                      Thread.sleep(300);
+                      super.run();
+                    });
               }
             };
 

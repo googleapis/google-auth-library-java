@@ -33,8 +33,8 @@ package com.google.auth.oauth2;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
@@ -189,7 +189,7 @@ class PluggableAuthHandlerTest {
   }
 
   @Test
-  void retrieveTokenFromExecutable_errorResponse_throws() throws InterruptedException, IOException {
+  void retrieveTokenFromExecutable_errorResponse_throws() throws InterruptedException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 
@@ -212,7 +212,9 @@ class PluggableAuthHandlerTest {
 
     // Call retrieveTokenFromExecutable().
     PluggableAuthException e =
-        assertThrows(PluggableAuthException.class, () -> handler.retrieveTokenFromExecutable(DEFAULT_OPTIONS));
+        assertThrows(
+            PluggableAuthException.class,
+            () -> handler.retrieveTokenFromExecutable(DEFAULT_OPTIONS));
     assertEquals("401", e.getErrorCode());
     assertEquals("Caller not authorized.", e.getErrorDescription());
   }
@@ -276,9 +278,7 @@ class PluggableAuthHandlerTest {
   }
 
   @Test
-  void
-      retrieveTokenFromExecutable_successResponseWithoutExpirationTimeFieldWithOutputFileSpecified_throws()
-          throws InterruptedException, IOException {
+  void retrieveTokenFromExecutable_successResponseWithoutExpirationTimeFieldWithOutputFileSpecified_throws() throws InterruptedException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 
@@ -331,12 +331,13 @@ class PluggableAuthHandlerTest {
       PluggableAuthHandler handler = new PluggableAuthHandler(environmentProvider, processBuilder);
 
       PluggableAuthException exception =
-          assertThrows(PluggableAuthException.class, () -> handler.retrieveTokenFromExecutable(options));
-        assertEquals(
-            "Error code INVALID_EXECUTABLE_RESPONSE: The executable response must contain the "
-                + "`expiration_time` field for successful responses when an output_file has been specified in the"
-                + " configuration.",
-            exception.getMessage());
+          assertThrows(
+              PluggableAuthException.class, () -> handler.retrieveTokenFromExecutable(options));
+      assertEquals(
+          "Error code INVALID_EXECUTABLE_RESPONSE: The executable response must contain the "
+              + "`expiration_time` field for successful responses when an output_file has been specified in the"
+              + " configuration.",
+          exception.getMessage());
 
       verify(mockProcess, times(i + 1)).destroy();
       verify(mockProcess, times(i + 1))
@@ -402,12 +403,13 @@ class PluggableAuthHandlerTest {
       // response is missing
       // the `expiration_time` field.
       PluggableAuthException exception =
-          assertThrows(PluggableAuthException.class, () -> handler.retrieveTokenFromExecutable(options));
-        assertEquals(
-            "Error code INVALID_EXECUTABLE_RESPONSE: The executable response must contain the "
-                + "`expiration_time` field for successful responses when an output_file has been specified in the"
-                + " configuration.",
-            exception.getMessage());
+          assertThrows(
+              PluggableAuthException.class, () -> handler.retrieveTokenFromExecutable(options));
+      assertEquals(
+          "Error code INVALID_EXECUTABLE_RESPONSE: The executable response must contain the "
+              + "`expiration_time` field for successful responses when an output_file has been specified in the"
+              + " configuration.",
+          exception.getMessage());
 
       // Validate executable not invoked.
       verify(mockProcess, times(0)).destroyForcibly();
@@ -474,7 +476,7 @@ class PluggableAuthHandlerTest {
 
   @Test
   void retrieveTokenFromExecutable_withInvalidOutputFile_throws()
-      throws IOException, InterruptedException {
+      throws IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 
@@ -519,7 +521,8 @@ class PluggableAuthHandlerTest {
 
     // Call retrieveTokenFromExecutable().
     PluggableAuthException e =
-        assertThrows(PluggableAuthException.class, () -> handler.retrieveTokenFromExecutable(options));
+        assertThrows(
+            PluggableAuthException.class, () -> handler.retrieveTokenFromExecutable(options));
     assertEquals("INVALID_OUTPUT_FILE", e.getErrorCode());
   }
 
@@ -615,14 +618,16 @@ class PluggableAuthHandlerTest {
 
     // Call retrieveTokenFromExecutable().
     PluggableAuthException e =
-        assertThrows(PluggableAuthException.class, () -> handler.retrieveTokenFromExecutable(DEFAULT_OPTIONS));
+        assertThrows(
+            PluggableAuthException.class,
+            () -> handler.retrieveTokenFromExecutable(DEFAULT_OPTIONS));
     assertEquals("INVALID_RESPONSE", e.getErrorCode());
     assertEquals("The executable response is expired.", e.getErrorDescription());
   }
 
   @Test
   void retrieveTokenFromExecutable_invalidVersion_throws()
-      throws InterruptedException, IOException {
+      throws InterruptedException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 
@@ -645,22 +650,20 @@ class PluggableAuthHandlerTest {
     PluggableAuthHandler handler = new PluggableAuthHandler(environmentProvider, processBuilder);
 
     // Call retrieveTokenFromExecutable().
-    try {
-      handler.retrieveTokenFromExecutable(DEFAULT_OPTIONS);
-      fail("Should not be able to continue without exception.");
-    } catch (PluggableAuthException e) {
-      assertEquals("UNSUPPORTED_VERSION", e.getErrorCode());
-      assertEquals(
-          "The version of the executable response is not supported. "
-              + String.format(
-                  "The maximum version currently supported is %s.",
-                  EXECUTABLE_SUPPORTED_MAX_VERSION),
-          e.getErrorDescription());
-    }
+    PluggableAuthException e =
+        assertThrows(
+            PluggableAuthException.class,
+            () -> handler.retrieveTokenFromExecutable(DEFAULT_OPTIONS));
+    assertEquals("UNSUPPORTED_VERSION", e.getErrorCode());
+    assertEquals(
+        "The version of the executable response is not supported. "
+            + String.format(
+                "The maximum version currently supported is %s.", EXECUTABLE_SUPPORTED_MAX_VERSION),
+        e.getErrorDescription());
   }
 
   @Test
-  void retrieveTokenFromExecutable_allowExecutablesDisabled_throws() throws IOException {
+  void retrieveTokenFromExecutable_allowExecutablesDisabled_throws() {
     // In order to use Pluggable Auth, GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES must be set to 1.
     // If set to 0, a runtime exception should be thrown.
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
@@ -668,16 +671,15 @@ class PluggableAuthHandlerTest {
 
     PluggableAuthHandler handler = new PluggableAuthHandler(environmentProvider);
 
-    try {
-      handler.retrieveTokenFromExecutable(DEFAULT_OPTIONS);
-      fail("Should not be able to continue without exception.");
-    } catch (PluggableAuthException e) {
-      assertEquals("PLUGGABLE_AUTH_DISABLED", e.getErrorCode());
-      assertEquals(
-          "Pluggable Auth executables need to be explicitly allowed to run by "
-              + "setting the GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES environment variable to 1.",
-          e.getErrorDescription());
-    }
+    PluggableAuthException e =
+        assertThrows(
+            PluggableAuthException.class,
+            () -> handler.retrieveTokenFromExecutable(DEFAULT_OPTIONS));
+    assertEquals("PLUGGABLE_AUTH_DISABLED", e.getErrorCode());
+    assertEquals(
+        "Pluggable Auth executables need to be explicitly allowed to run by "
+            + "setting the GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES environment variable to 1.",
+        e.getErrorDescription());
   }
 
   @Test
@@ -835,7 +837,7 @@ class PluggableAuthHandlerTest {
   }
 
   @Test
-  void getExecutableResponse_timeoutExceeded_throws() throws InterruptedException, IOException {
+  void getExecutableResponse_timeoutExceeded_throws() throws InterruptedException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 
@@ -850,7 +852,8 @@ class PluggableAuthHandlerTest {
 
     // Call getExecutableResponse().
     PluggableAuthException e =
-        assertThrows(PluggableAuthException.class, () -> handler.getExecutableResponse(DEFAULT_OPTIONS));
+        assertThrows(
+            PluggableAuthException.class, () -> handler.getExecutableResponse(DEFAULT_OPTIONS));
     assertEquals("TIMEOUT_EXCEEDED", e.getErrorCode());
     assertEquals(
         "The executable failed to finish within the timeout specified.", e.getErrorDescription());
@@ -862,7 +865,7 @@ class PluggableAuthHandlerTest {
   }
 
   @Test
-  void getExecutableResponse_nonZeroExitCode_throws() throws InterruptedException, IOException {
+  void getExecutableResponse_nonZeroExitCode_throws() throws InterruptedException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 
@@ -879,7 +882,8 @@ class PluggableAuthHandlerTest {
 
     // Call getExecutableResponse().
     PluggableAuthException e =
-        assertThrows(PluggableAuthException.class, () -> handler.getExecutableResponse(DEFAULT_OPTIONS));
+        assertThrows(
+            PluggableAuthException.class, () -> handler.getExecutableResponse(DEFAULT_OPTIONS));
     assertEquals("EXIT_CODE", e.getErrorCode());
     assertEquals(
         String.format("The executable failed with exit code %s.", EXIT_CODE_FAIL),
@@ -892,7 +896,7 @@ class PluggableAuthHandlerTest {
   }
 
   @Test
-  void getExecutableResponse_processInterrupted_throws() throws InterruptedException, IOException {
+  void getExecutableResponse_processInterrupted_throws() throws InterruptedException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 
@@ -908,7 +912,8 @@ class PluggableAuthHandlerTest {
 
     // Call getExecutableResponse().
     PluggableAuthException e =
-        assertThrows(PluggableAuthException.class, () -> handler.getExecutableResponse(DEFAULT_OPTIONS));
+        assertThrows(
+            PluggableAuthException.class, () -> handler.getExecutableResponse(DEFAULT_OPTIONS));
     assertEquals("INTERRUPTED", e.getErrorCode());
     assertEquals(
         String.format("The execution was interrupted: %s.", new InterruptedException()),
@@ -921,7 +926,7 @@ class PluggableAuthHandlerTest {
   }
 
   @Test
-  void getExecutableResponse_invalidResponse_throws() throws InterruptedException, IOException {
+  void getExecutableResponse_invalidResponse_throws() throws InterruptedException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
     environmentProvider.setEnv("GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES", "1");
 
@@ -943,7 +948,8 @@ class PluggableAuthHandlerTest {
 
     // Call getExecutableResponse().
     PluggableAuthException e =
-        assertThrows(PluggableAuthException.class, () -> handler.getExecutableResponse(DEFAULT_OPTIONS));
+        assertThrows(
+            PluggableAuthException.class, () -> handler.getExecutableResponse(DEFAULT_OPTIONS));
     assertEquals("INVALID_RESPONSE", e.getErrorCode());
     assertEquals(
         String.format("The executable returned an invalid response: %s.", badResponse),

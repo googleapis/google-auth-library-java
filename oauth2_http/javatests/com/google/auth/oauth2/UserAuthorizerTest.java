@@ -76,7 +76,7 @@ class UserAuthorizerTest {
   private static final List<String> GRANTED_SCOPES = Arrays.asList("scope1", "scope2");
   private static final String GRANTED_SCOPES_STRING = String.join(" ", GRANTED_SCOPES);
   private static final String DUMMY_SCOPE = "dummy_scope";
-  private static final List<String> DUMMY_SCOPES = Arrays.asList(DUMMY_SCOPE);
+  private static final List<String> DUMMY_SCOPES = Collections.singletonList(DUMMY_SCOPE);
   private static final Long EXPIRATION_TIME = 504000300L;
   private static final AccessToken ACCESS_TOKEN =
       AccessToken.newBuilder()
@@ -789,9 +789,8 @@ class UserAuthorizerTest {
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
             .setScopes(DUMMY_SCOPES)
-            .setTokenStore(new MemoryTokensStorage())
-            .setPKCEProvider(pkce);
-    assertThrows(IllegalArgumentException.class, builder::build);
+            .setTokenStore(new MemoryTokensStorage());
+    assertThrows(IllegalArgumentException.class, () -> builder.setPKCEProvider(pkce));
   }
 
   @Test
@@ -818,9 +817,8 @@ class UserAuthorizerTest {
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
             .setScopes(DUMMY_SCOPES)
-            .setTokenStore(new MemoryTokensStorage())
-            .setPKCEProvider(pkce);
-    assertThrows(IllegalArgumentException.class, builder::build);
+            .setTokenStore(new MemoryTokensStorage());
+    assertThrows(IllegalArgumentException.class, () -> builder.setPKCEProvider(pkce));
   }
 
   @Test
@@ -847,9 +845,8 @@ class UserAuthorizerTest {
         UserAuthorizer.newBuilder()
             .setClientId(CLIENT_ID)
             .setScopes(DUMMY_SCOPES)
-            .setTokenStore(new MemoryTokensStorage())
-            .setPKCEProvider(pkce);
-    assertThrows(IllegalArgumentException.class, builder::build);
+            .setTokenStore(new MemoryTokensStorage());
+    assertThrows(IllegalArgumentException.class, () -> builder.setPKCEProvider(pkce));
   }
 
   @Test

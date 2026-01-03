@@ -164,7 +164,7 @@ class ComputeEngineCredentialsTest extends BaseSerializationTest {
   @Test
   void buildTokenUrlWithScopes_single_scope() {
     ComputeEngineCredentials credentials =
-        ComputeEngineCredentials.newBuilder().setScopes(Arrays.asList("foo")).build();
+        ComputeEngineCredentials.newBuilder().setScopes(Collections.singletonList("foo")).build();
     String tokenUrlWithScopes = credentials.createTokenUrlWithScopes();
     Collection<String> scopes = credentials.getScopes();
 
@@ -312,7 +312,7 @@ class ComputeEngineCredentialsTest extends BaseSerializationTest {
     ComputeEngineCredentials credentials =
         ComputeEngineCredentials.newBuilder().setScopes(null).build();
     ComputeEngineCredentials scopedCredentials =
-        (ComputeEngineCredentials) credentials.createScoped(Arrays.asList("foo"));
+        (ComputeEngineCredentials) credentials.createScoped(Collections.singletonList("foo"));
     Collection<String> scopes = scopedCredentials.getScopes();
 
     assertEquals(1, scopes.size());
@@ -365,7 +365,7 @@ class ComputeEngineCredentialsTest extends BaseSerializationTest {
             .setQuotaProjectId("some-project-id")
             .build();
     ComputeEngineCredentials scopedCredentials =
-        (ComputeEngineCredentials) credentials.createScoped(Arrays.asList("foo"));
+        (ComputeEngineCredentials) credentials.createScoped(Collections.singletonList("foo"));
 
     assertEquals("some-project-id", scopedCredentials.getQuotaProjectId());
   }
@@ -378,7 +378,7 @@ class ComputeEngineCredentialsTest extends BaseSerializationTest {
             .setUniverseDomain("some-universe")
             .build();
     ComputeEngineCredentials scopedCredentials =
-        (ComputeEngineCredentials) credentials.createScoped(null, Arrays.asList("foo"));
+        (ComputeEngineCredentials) credentials.createScoped(null, Collections.singletonList("foo"));
 
     assertEquals("some-universe", scopedCredentials.getUniverseDomain());
     assertTrue(scopedCredentials.isExplicitUniverseDomain());
@@ -387,7 +387,7 @@ class ComputeEngineCredentialsTest extends BaseSerializationTest {
   @Test
   void create_scoped_correctMargins() {
     GoogleCredentials credentials =
-        ComputeEngineCredentials.create().createScoped(null, Arrays.asList("foo"));
+        ComputeEngineCredentials.create().createScoped(null, Collections.singletonList("foo"));
 
     assertEquals(
         ComputeEngineCredentials.COMPUTE_EXPIRATION_MARGIN, credentials.getExpirationMargin());
@@ -857,7 +857,7 @@ class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
     String universeDomain = credentials.getUniverseDomain();
     assertEquals("some-universe.xyz", universeDomain);
-    assertEquals(false, credentials.isExplicitUniverseDomain());
+    assertFalse(credentials.isExplicitUniverseDomain());
   }
 
   @Test
@@ -884,7 +884,7 @@ class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
     String universeDomain = credentials.getUniverseDomain();
     assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, universeDomain);
-    assertEquals(false, credentials.isExplicitUniverseDomain());
+    assertFalse(credentials.isExplicitUniverseDomain());
   }
 
   @Test
@@ -911,7 +911,7 @@ class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
     String universeDomain = credentials.getUniverseDomain();
     assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, universeDomain);
-    assertEquals(false, credentials.isExplicitUniverseDomain());
+    assertFalse(credentials.isExplicitUniverseDomain());
   }
 
   @Test
@@ -927,7 +927,7 @@ class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
     String universeDomain = credentials.getUniverseDomain();
     assertEquals("explicit.universe", universeDomain);
-    assertEquals(true, credentials.isExplicitUniverseDomain());
+    assertTrue(credentials.isExplicitUniverseDomain());
     assertEquals(0, transportFactory.transport.getRequestCount());
   }
 
@@ -944,12 +944,12 @@ class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
     String universeDomain = credentials.getUniverseDomain();
     assertEquals(Credentials.GOOGLE_DEFAULT_UNIVERSE, universeDomain);
-    assertEquals(true, credentials.isExplicitUniverseDomain());
+    assertTrue(credentials.isExplicitUniverseDomain());
     assertEquals(0, transportFactory.transport.getRequestCount());
   }
 
   @Test
-  void getUniverseDomain_fromMetadata_non404error_throws() throws IOException {
+  void getUniverseDomain_fromMetadata_non404error_throws() {
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
 
     ComputeEngineCredentials credentials =
@@ -979,7 +979,7 @@ class ComputeEngineCredentialsTest extends BaseSerializationTest {
             if (isSignRequestUrl(url)) {
               return new MockLowLevelHttpRequest(url) {
                 @Override
-                public LowLevelHttpResponse execute() throws IOException {
+                public LowLevelHttpResponse execute() {
                   return new MockLowLevelHttpResponse()
                       .setStatusCode(HttpStatusCodes.STATUS_CODE_OK);
                 }
@@ -1055,7 +1055,7 @@ class ComputeEngineCredentialsTest extends BaseSerializationTest {
         IdTokenCredentials.newBuilder()
             .setIdTokenProvider(credentials)
             .setTargetAudience(targetAudience)
-            .setOptions(Arrays.asList(IdTokenProvider.Option.FORMAT_FULL))
+            .setOptions(Collections.singletonList(IdTokenProvider.Option.FORMAT_FULL))
             .build();
     tokenCredential.refresh();
     Payload p = tokenCredential.getIdToken().getJsonWebSignature().getPayload();

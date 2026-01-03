@@ -144,7 +144,7 @@ class X509ProviderTest {
         WorkloadCertificateConfigurationTest.writeWorkloadCertificateConfigStream(
             certPath, keyPath)) {
       TestX509Provider testProvider = new TestX509Provider();
-      testProvider.setEnv("GOOGLE_API_CERTIFICATE_CONFIG", certConfigPath);
+      testProvider.setEnv(certConfigPath);
       testProvider.addFile(certConfigPath, certConfigStream);
       testProvider.addFile(certPath, new ByteArrayInputStream(TEST_CERT.getBytes()));
       testProvider.addFile(keyPath, new ByteArrayInputStream(TEST_PRIVATE_KEY.getBytes()));
@@ -170,7 +170,7 @@ class X509ProviderTest {
         WorkloadCertificateConfigurationTest.writeWorkloadCertificateConfigStream(
             certPath, keyPath)) {
       TestX509Provider testProvider = new TestX509Provider();
-      testProvider.setEnv("GOOGLE_API_CERTIFICATE_CONFIG", certConfigPath);
+      testProvider.setEnv(certConfigPath);
       testProvider.addFile(certConfigPath, certConfigStream);
       testProvider.addFile(certPath, new ByteArrayInputStream(TEST_CERT.getBytes()));
       testProvider.addFile(keyPath, new ByteArrayInputStream(TEST_PRIVATE_KEY.getBytes()));
@@ -211,8 +211,8 @@ class X509ProviderTest {
       return variables.get(name);
     }
 
-    void setEnv(String name, String value) {
-      variables.put(name, value);
+    void setEnv(String value) {
+      variables.put("GOOGLE_API_CERTIFICATE_CONFIG", value);
     }
 
     @Override

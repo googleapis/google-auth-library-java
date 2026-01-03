@@ -187,14 +187,15 @@ class GoogleCredentialsTest extends BaseSerializationTest {
     assertEquals(TPC_UNIVERSE, credentials.getUniverseDomain());
     assertTrue(credentials.isExplicitUniverseDomain());
     credentials = credentials.createScoped(SCOPES);
+    credentials.getRequestMetadata(CALL_URI);
     assertNotNull(((ServiceAccountCredentials) credentials).getSelfSignedJwtCredentialsWithScope());
   }
 
   @Test
   void fromStream_serviceAccountNoClientId_throws() throws IOException {
     try (InputStream serviceAccountStream =
-             ServiceAccountCredentialsTest.writeServiceAccountStream(
-                 null, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID)) {
+        ServiceAccountCredentialsTest.writeServiceAccountStream(
+            null, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID)) {
       IOException exception =
           assertThrows(
               IOException.class,
@@ -206,8 +207,8 @@ class GoogleCredentialsTest extends BaseSerializationTest {
   @Test
   void fromStream_serviceAccountNoClientEmail_throws() throws IOException {
     try (InputStream serviceAccountStream =
-             ServiceAccountCredentialsTest.writeServiceAccountStream(
-                 SA_CLIENT_ID, null, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID)) {
+        ServiceAccountCredentialsTest.writeServiceAccountStream(
+            SA_CLIENT_ID, null, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID)) {
       IOException exception =
           assertThrows(
               IOException.class,
@@ -219,8 +220,8 @@ class GoogleCredentialsTest extends BaseSerializationTest {
   @Test
   void fromStream_serviceAccountNoPrivateKey_throws() throws IOException {
     try (InputStream serviceAccountStream =
-             ServiceAccountCredentialsTest.writeServiceAccountStream(
-                 SA_CLIENT_ID, SA_CLIENT_EMAIL, null, SA_PRIVATE_KEY_ID)) {
+        ServiceAccountCredentialsTest.writeServiceAccountStream(
+            SA_CLIENT_ID, SA_CLIENT_EMAIL, null, SA_PRIVATE_KEY_ID)) {
       IOException exception =
           assertThrows(
               IOException.class,
@@ -232,8 +233,8 @@ class GoogleCredentialsTest extends BaseSerializationTest {
   @Test
   void fromStream_serviceAccountNoPrivateKeyId_throws() throws IOException {
     try (InputStream serviceAccountStream =
-             ServiceAccountCredentialsTest.writeServiceAccountStream(
-                 SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, null)) {
+        ServiceAccountCredentialsTest.writeServiceAccountStream(
+            SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, null)) {
       IOException exception =
           assertThrows(
               IOException.class,
@@ -281,18 +282,19 @@ class GoogleCredentialsTest extends BaseSerializationTest {
   @Test
   void fromStream_gdchServiceAccountNoFormatVersion_throws() throws IOException {
     try (InputStream gdchServiceAccountStream =
-             GdchCredentialsTest.writeGdchServiceAccountStream(
-                 null,
-                 GDCH_SA_PROJECT_ID,
-                 GDCH_SA_PRIVATE_KEY_ID,
-                 GDCH_SA_PRIVATE_KEY_PKC8,
-                 GDCH_SA_SERVICE_IDENTITY_NAME,
-                 GDCH_SA_CA_CERT_PATH,
-                 GDCH_SA_TOKEN_SERVER_URI)) {
+        GdchCredentialsTest.writeGdchServiceAccountStream(
+            null,
+            GDCH_SA_PROJECT_ID,
+            GDCH_SA_PRIVATE_KEY_ID,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_CA_CERT_PATH,
+            GDCH_SA_TOKEN_SERVER_URI)) {
       IOException exception =
           assertThrows(
               IOException.class,
-              () -> GoogleCredentials.fromStream(gdchServiceAccountStream, DUMMY_TRANSPORT_FACTORY));
+              () ->
+                  GoogleCredentials.fromStream(gdchServiceAccountStream, DUMMY_TRANSPORT_FACTORY));
       assertTrue(exception.getMessage().contains("format_version"));
     }
   }
@@ -300,18 +302,19 @@ class GoogleCredentialsTest extends BaseSerializationTest {
   @Test
   void fromStream_gdchServiceAccountNoProjectId_throws() throws IOException {
     try (InputStream gdchServiceAccountStream =
-             GdchCredentialsTest.writeGdchServiceAccountStream(
-                 GDCH_SA_FORMAT_VERSION,
-                 null,
-                 GDCH_SA_PRIVATE_KEY_ID,
-                 GDCH_SA_PRIVATE_KEY_PKC8,
-                 GDCH_SA_SERVICE_IDENTITY_NAME,
-                 GDCH_SA_CA_CERT_PATH,
-                 GDCH_SA_TOKEN_SERVER_URI)) {
+        GdchCredentialsTest.writeGdchServiceAccountStream(
+            GDCH_SA_FORMAT_VERSION,
+            null,
+            GDCH_SA_PRIVATE_KEY_ID,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_CA_CERT_PATH,
+            GDCH_SA_TOKEN_SERVER_URI)) {
       IOException exception =
           assertThrows(
               IOException.class,
-              () -> GoogleCredentials.fromStream(gdchServiceAccountStream, DUMMY_TRANSPORT_FACTORY));
+              () ->
+                  GoogleCredentials.fromStream(gdchServiceAccountStream, DUMMY_TRANSPORT_FACTORY));
       assertTrue(exception.getMessage().contains("project"));
     }
   }
@@ -319,18 +322,19 @@ class GoogleCredentialsTest extends BaseSerializationTest {
   @Test
   void fromStream_gdchServiceAccountNoPrivateKeyId_throws() throws IOException {
     try (InputStream gdchServiceAccountStream =
-             GdchCredentialsTest.writeGdchServiceAccountStream(
-                 GDCH_SA_FORMAT_VERSION,
-                 GDCH_SA_PROJECT_ID,
-                 null,
-                 GDCH_SA_PRIVATE_KEY_PKC8,
-                 GDCH_SA_SERVICE_IDENTITY_NAME,
-                 GDCH_SA_CA_CERT_PATH,
-                 GDCH_SA_TOKEN_SERVER_URI)) {
+        GdchCredentialsTest.writeGdchServiceAccountStream(
+            GDCH_SA_FORMAT_VERSION,
+            GDCH_SA_PROJECT_ID,
+            null,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_CA_CERT_PATH,
+            GDCH_SA_TOKEN_SERVER_URI)) {
       IOException exception =
           assertThrows(
               IOException.class,
-              () -> GoogleCredentials.fromStream(gdchServiceAccountStream, DUMMY_TRANSPORT_FACTORY));
+              () ->
+                  GoogleCredentials.fromStream(gdchServiceAccountStream, DUMMY_TRANSPORT_FACTORY));
       assertTrue(exception.getMessage().contains("private_key_id"));
     }
   }
@@ -338,18 +342,19 @@ class GoogleCredentialsTest extends BaseSerializationTest {
   @Test
   void fromStream_gdchServiceAccountNoPrivateKey_throws() throws IOException {
     try (InputStream gdchServiceAccountStream =
-             GdchCredentialsTest.writeGdchServiceAccountStream(
-                 GDCH_SA_FORMAT_VERSION,
-                 GDCH_SA_PROJECT_ID,
-                 GDCH_SA_PRIVATE_KEY_ID,
-                 null,
-                 GDCH_SA_SERVICE_IDENTITY_NAME,
-                 GDCH_SA_CA_CERT_PATH,
-                 GDCH_SA_TOKEN_SERVER_URI)) {
+        GdchCredentialsTest.writeGdchServiceAccountStream(
+            GDCH_SA_FORMAT_VERSION,
+            GDCH_SA_PROJECT_ID,
+            GDCH_SA_PRIVATE_KEY_ID,
+            null,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_CA_CERT_PATH,
+            GDCH_SA_TOKEN_SERVER_URI)) {
       IOException exception =
           assertThrows(
               IOException.class,
-              () -> GoogleCredentials.fromStream(gdchServiceAccountStream, DUMMY_TRANSPORT_FACTORY));
+              () ->
+                  GoogleCredentials.fromStream(gdchServiceAccountStream, DUMMY_TRANSPORT_FACTORY));
       assertTrue(exception.getMessage().contains("private_key"));
     }
   }
@@ -357,18 +362,19 @@ class GoogleCredentialsTest extends BaseSerializationTest {
   @Test
   void fromStream_gdchServiceAccountNoServiceIdentityName_throws() throws IOException {
     try (InputStream gdchServiceAccountStream =
-             GdchCredentialsTest.writeGdchServiceAccountStream(
-                 GDCH_SA_FORMAT_VERSION,
-                 GDCH_SA_PROJECT_ID,
-                 GDCH_SA_PRIVATE_KEY_ID,
-                 GDCH_SA_PRIVATE_KEY_PKC8,
-                 null,
-                 GDCH_SA_CA_CERT_PATH,
-                 GDCH_SA_TOKEN_SERVER_URI)) {
+        GdchCredentialsTest.writeGdchServiceAccountStream(
+            GDCH_SA_FORMAT_VERSION,
+            GDCH_SA_PROJECT_ID,
+            GDCH_SA_PRIVATE_KEY_ID,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            null,
+            GDCH_SA_CA_CERT_PATH,
+            GDCH_SA_TOKEN_SERVER_URI)) {
       IOException exception =
           assertThrows(
               IOException.class,
-              () -> GoogleCredentials.fromStream(gdchServiceAccountStream, DUMMY_TRANSPORT_FACTORY));
+              () ->
+                  GoogleCredentials.fromStream(gdchServiceAccountStream, DUMMY_TRANSPORT_FACTORY));
       assertTrue(exception.getMessage().contains("name"));
     }
   }
@@ -376,18 +382,19 @@ class GoogleCredentialsTest extends BaseSerializationTest {
   @Test
   void fromStream_gdchServiceAccountNoTokenServerUri_throws() throws IOException {
     try (InputStream gdchServiceAccountStream =
-             GdchCredentialsTest.writeGdchServiceAccountStream(
-                 GDCH_SA_FORMAT_VERSION,
-                 GDCH_SA_PROJECT_ID,
-                 GDCH_SA_PRIVATE_KEY_ID,
-                 GDCH_SA_PRIVATE_KEY_PKC8,
-                 GDCH_SA_SERVICE_IDENTITY_NAME,
-                 GDCH_SA_CA_CERT_PATH,
-                 null)) {
+        GdchCredentialsTest.writeGdchServiceAccountStream(
+            GDCH_SA_FORMAT_VERSION,
+            GDCH_SA_PROJECT_ID,
+            GDCH_SA_PRIVATE_KEY_ID,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_CA_CERT_PATH,
+            null)) {
       IOException exception =
           assertThrows(
               IOException.class,
-              () -> GoogleCredentials.fromStream(gdchServiceAccountStream, DUMMY_TRANSPORT_FACTORY));
+              () ->
+                  GoogleCredentials.fromStream(gdchServiceAccountStream, DUMMY_TRANSPORT_FACTORY));
       assertTrue(exception.getMessage().contains("token_uri"));
     }
   }
@@ -395,18 +402,19 @@ class GoogleCredentialsTest extends BaseSerializationTest {
   @Test
   void fromStream_gdchServiceAccountInvalidFormatVersion_throws() throws IOException {
     try (InputStream gdchServiceAccountStream =
-             GdchCredentialsTest.writeGdchServiceAccountStream(
-                 "100",
-                 GDCH_SA_PROJECT_ID,
-                 GDCH_SA_PRIVATE_KEY_ID,
-                 GDCH_SA_PRIVATE_KEY_PKC8,
-                 GDCH_SA_SERVICE_IDENTITY_NAME,
-                 GDCH_SA_CA_CERT_PATH,
-                 GDCH_SA_TOKEN_SERVER_URI)) {
+        GdchCredentialsTest.writeGdchServiceAccountStream(
+            "100",
+            GDCH_SA_PROJECT_ID,
+            GDCH_SA_PRIVATE_KEY_ID,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            GDCH_SA_CA_CERT_PATH,
+            GDCH_SA_TOKEN_SERVER_URI)) {
       IOException exception =
           assertThrows(
               IOException.class,
-              () -> GoogleCredentials.fromStream(gdchServiceAccountStream, DUMMY_TRANSPORT_FACTORY));
+              () ->
+                  GoogleCredentials.fromStream(gdchServiceAccountStream, DUMMY_TRANSPORT_FACTORY));
       assertTrue(
           exception
               .getMessage()
@@ -418,19 +426,21 @@ class GoogleCredentialsTest extends BaseSerializationTest {
   @Test
   void fromStream_gdchServiceAccountInvalidCaCertPath_throws() throws IOException {
     try (InputStream gdchServiceAccountStream =
-             GdchCredentialsTest.writeGdchServiceAccountStream(
-                 GDCH_SA_FORMAT_VERSION,
-                 GDCH_SA_PROJECT_ID,
-                 GDCH_SA_PRIVATE_KEY_ID,
-                 GDCH_SA_PRIVATE_KEY_PKC8,
-                 GDCH_SA_SERVICE_IDENTITY_NAME,
-                 "/path/to/missing/file",
-                 GDCH_SA_TOKEN_SERVER_URI)) {
+        GdchCredentialsTest.writeGdchServiceAccountStream(
+            GDCH_SA_FORMAT_VERSION,
+            GDCH_SA_PROJECT_ID,
+            GDCH_SA_PRIVATE_KEY_ID,
+            GDCH_SA_PRIVATE_KEY_PKC8,
+            GDCH_SA_SERVICE_IDENTITY_NAME,
+            "/path/to/missing/file",
+            GDCH_SA_TOKEN_SERVER_URI)) {
       IOException exception =
           assertThrows(
               IOException.class,
-              () -> GoogleCredentials.fromStream(gdchServiceAccountStream, DUMMY_TRANSPORT_FACTORY));
-      assertTrue(exception.getMessage().contains("Error reading certificate file from CA cert path"));
+              () ->
+                  GoogleCredentials.fromStream(gdchServiceAccountStream, DUMMY_TRANSPORT_FACTORY));
+      assertTrue(
+          exception.getMessage().contains("Error reading certificate file from CA cert path"));
     }
   }
 
@@ -465,7 +475,8 @@ class GoogleCredentialsTest extends BaseSerializationTest {
   @Test
   void fromStream_userCredentials_NoClientId_throws() throws IOException {
     try (InputStream userStream =
-             UserCredentialsTest.writeUserStream(null, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT)) {
+        UserCredentialsTest.writeUserStream(
+            null, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT)) {
       IOException exception =
           assertThrows(
               IOException.class,
@@ -477,7 +488,7 @@ class GoogleCredentialsTest extends BaseSerializationTest {
   @Test
   void fromStream_userCredentials_NoClientSecret_throws() throws IOException {
     try (InputStream userStream =
-             UserCredentialsTest.writeUserStream(USER_CLIENT_ID, null, REFRESH_TOKEN, QUOTA_PROJECT)) {
+        UserCredentialsTest.writeUserStream(USER_CLIENT_ID, null, REFRESH_TOKEN, QUOTA_PROJECT)) {
       IOException exception =
           assertThrows(
               IOException.class,
@@ -489,8 +500,8 @@ class GoogleCredentialsTest extends BaseSerializationTest {
   @Test
   void fromStream_userCredentials_NoRefreshToken_throws() throws IOException {
     try (InputStream userStream =
-             UserCredentialsTest.writeUserStream(
-                 USER_CLIENT_ID, USER_CLIENT_SECRET, null, QUOTA_PROJECT)) {
+        UserCredentialsTest.writeUserStream(
+            USER_CLIENT_ID, USER_CLIENT_SECRET, null, QUOTA_PROJECT)) {
       IOException exception =
           assertThrows(
               IOException.class,

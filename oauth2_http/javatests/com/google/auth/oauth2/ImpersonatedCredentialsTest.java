@@ -447,15 +447,13 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
   @Test()
   void credential_with_invalid_lifetime() throws IllegalStateException {
-    ImpersonatedCredentials impersonatedCredentials =
-        ImpersonatedCredentials.create(
+    IllegalStateException expected =
+        assertThrows(IllegalStateException.class, () -> ImpersonatedCredentials.create(
             sourceCredentials,
             IMPERSONATED_CLIENT_EMAIL,
             null,
             IMMUTABLE_SCOPES_LIST,
-            INVALID_LIFETIME);
-    IllegalStateException expected =
-        assertThrows(IllegalStateException.class, impersonatedCredentials::refreshAccessToken);
+            INVALID_LIFETIME));
     assertTrue(expected.getMessage().contains("lifetime must be less than or equal to 43200"));
   }
 

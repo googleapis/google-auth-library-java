@@ -32,6 +32,7 @@
 package com.google.auth.oauth2;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -1559,7 +1560,7 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
           @Override
           public void onFailure(Throwable exception) {
-            fail("Should not throw a failure.");
+            // Test framework should fail if this is called and success.set(true) is not reached.
           }
         });
 
@@ -1599,7 +1600,7 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
           @Override
           public void onFailure(Throwable exception) {
-            fail("Should not throw a failure.");
+            // Test framework should fail if this is called and success.set(true) is not reached.
           }
         });
 
@@ -1656,7 +1657,7 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, accessToken1);
 
-    assertThrows(AssertionError.class, () -> verifyJwtAccess(metadata, "dummy.scope"));
+    assertThrows(IllegalArgumentException.class, () -> verifyJwtAccess(metadata, "dummy.scope"));
 
     transport.addServiceAccount(CLIENT_EMAIL, accessToken2);
     credentials.refresh();
@@ -1723,11 +1724,7 @@ class ServiceAccountCredentialsTest extends BaseSerializationTest {
         new RequestMetadataCallback() {
           @Override
           public void onSuccess(Map<String, List<String>> metadata) {
-            try {
-              verifyJwtAccess(metadata, "dummy.scope");
-            } catch (IOException e) {
-              fail("Should not throw a failure");
-            }
+            assertDoesNotThrow(() -> verifyJwtAccess(metadata, "dummy.scope"));
             success.set(true);
           }
 
