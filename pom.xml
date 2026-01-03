@@ -408,12 +408,14 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <configuration>
-          <!-- This dependency is still declared even though tests are migrated to JUnit 5. -->
-          <!-- failsafe plugin pulls in surefire-platform-47 dep from shared-config to run the ITs. -->
-          <!-- It runs the ITs with JUnit4 and until that is removed upstream, we need to decare it -->
-          <ignoredUnusedDeclaredDependencies>junit:junit</ignoredUnusedDeclaredDependencies>
-          <!-- maven-dependency-plugin cannot detect the runtime usage of junit-jupiter-engine for executing JUnit 5+ tests. -->
-          <ignoredUnusedDeclaredDependencies>org.junit.jupiter:junit-jupiter-engine</ignoredUnusedDeclaredDependencies>
+          <ignoredUnusedDeclaredDependencies>
+            <!-- This dependency is still declared even though tests are migrated to JUnit 5. -->
+            <!-- failsafe plugin pulls in surefire-platform-47 dep from shared-config to run the ITs. -->
+            <!-- It runs the ITs with JUnit4 and until that is removed upstream, we need to decare it -->
+            <ignoredUnusedDeclaredDependency>junit:junit</ignoredUnusedDeclaredDependency>
+            <!-- maven-dependency-plugin cannot detect the runtime usage of junit-jupiter-engine for executing JUnit 5+ tests. -->
+            <ignoredUnusedDeclaredDependency>org.junit.jupiter:junit-jupiter-engine</ignoredUnusedDeclaredDependency>
+          </ignoredUnusedDeclaredDependencies>
         </configuration>
       </plugin>
     </plugins>
