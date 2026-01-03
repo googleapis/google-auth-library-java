@@ -211,13 +211,10 @@ class PluggableAuthHandlerTest {
     PluggableAuthHandler handler = new PluggableAuthHandler(environmentProvider, processBuilder);
 
     // Call retrieveTokenFromExecutable().
-    try {
-      handler.retrieveTokenFromExecutable(DEFAULT_OPTIONS);
-      fail("Should not be able to continue without exception.");
-    } catch (PluggableAuthException e) {
-      assertEquals("401", e.getErrorCode());
-      assertEquals("Caller not authorized.", e.getErrorDescription());
-    }
+    PluggableAuthException e =
+        assertThrows(PluggableAuthException.class, () -> handler.retrieveTokenFromExecutable(DEFAULT_OPTIONS));
+    assertEquals("401", e.getErrorCode());
+    assertEquals("Caller not authorized.", e.getErrorDescription());
   }
 
   @Test
@@ -333,19 +330,13 @@ class PluggableAuthHandlerTest {
 
       PluggableAuthHandler handler = new PluggableAuthHandler(environmentProvider, processBuilder);
 
-      // Call retrieveTokenFromExecutable() should throw an exception as the STDOUT response
-      // is missing
-      // the `expiration_time` field and an output file was specified in the configuration.
-      try {
-        handler.retrieveTokenFromExecutable(options);
-        fail("Should not be able to continue without exception.");
-      } catch (PluggableAuthException exception) {
+      PluggableAuthException exception =
+          assertThrows(PluggableAuthException.class, () -> handler.retrieveTokenFromExecutable(options));
         assertEquals(
             "Error code INVALID_EXECUTABLE_RESPONSE: The executable response must contain the "
                 + "`expiration_time` field for successful responses when an output_file has been specified in the"
                 + " configuration.",
             exception.getMessage());
-      }
 
       verify(mockProcess, times(i + 1)).destroy();
       verify(mockProcess, times(i + 1))
@@ -410,16 +401,13 @@ class PluggableAuthHandlerTest {
       // Call retrieveTokenFromExecutable() which should throw an exception as the output file
       // response is missing
       // the `expiration_time` field.
-      try {
-        handler.retrieveTokenFromExecutable(options);
-        fail("Should not be able to continue without exception.");
-      } catch (PluggableAuthException exception) {
+      PluggableAuthException exception =
+          assertThrows(PluggableAuthException.class, () -> handler.retrieveTokenFromExecutable(options));
         assertEquals(
             "Error code INVALID_EXECUTABLE_RESPONSE: The executable response must contain the "
                 + "`expiration_time` field for successful responses when an output_file has been specified in the"
                 + " configuration.",
             exception.getMessage());
-      }
 
       // Validate executable not invoked.
       verify(mockProcess, times(0)).destroyForcibly();
@@ -530,12 +518,9 @@ class PluggableAuthHandlerTest {
     PluggableAuthHandler handler = new PluggableAuthHandler(environmentProvider, processBuilder);
 
     // Call retrieveTokenFromExecutable().
-    try {
-      handler.retrieveTokenFromExecutable(options);
-      fail("Should not be able to continue without exception.");
-    } catch (PluggableAuthException e) {
-      assertEquals("INVALID_OUTPUT_FILE", e.getErrorCode());
-    }
+    PluggableAuthException e =
+        assertThrows(PluggableAuthException.class, () -> handler.retrieveTokenFromExecutable(options));
+    assertEquals("INVALID_OUTPUT_FILE", e.getErrorCode());
   }
 
   @Test
@@ -629,13 +614,10 @@ class PluggableAuthHandlerTest {
     PluggableAuthHandler handler = new PluggableAuthHandler(environmentProvider, processBuilder);
 
     // Call retrieveTokenFromExecutable().
-    try {
-      handler.retrieveTokenFromExecutable(DEFAULT_OPTIONS);
-      fail("Should not be able to continue without exception.");
-    } catch (PluggableAuthException e) {
-      assertEquals("INVALID_RESPONSE", e.getErrorCode());
-      assertEquals("The executable response is expired.", e.getErrorDescription());
-    }
+    PluggableAuthException e =
+        assertThrows(PluggableAuthException.class, () -> handler.retrieveTokenFromExecutable(DEFAULT_OPTIONS));
+    assertEquals("INVALID_RESPONSE", e.getErrorCode());
+    assertEquals("The executable response is expired.", e.getErrorDescription());
   }
 
   @Test
@@ -867,14 +849,11 @@ class PluggableAuthHandlerTest {
     PluggableAuthHandler handler = new PluggableAuthHandler(environmentProvider, processBuilder);
 
     // Call getExecutableResponse().
-    try {
-      handler.getExecutableResponse(DEFAULT_OPTIONS);
-      fail("Should not be able to continue without exception.");
-    } catch (PluggableAuthException e) {
-      assertEquals("TIMEOUT_EXCEEDED", e.getErrorCode());
-      assertEquals(
-          "The executable failed to finish within the timeout specified.", e.getErrorDescription());
-    }
+    PluggableAuthException e =
+        assertThrows(PluggableAuthException.class, () -> handler.getExecutableResponse(DEFAULT_OPTIONS));
+    assertEquals("TIMEOUT_EXCEEDED", e.getErrorCode());
+    assertEquals(
+        "The executable failed to finish within the timeout specified.", e.getErrorDescription());
 
     verify(mockProcess, times(1))
         .waitFor(
@@ -899,15 +878,12 @@ class PluggableAuthHandlerTest {
     PluggableAuthHandler handler = new PluggableAuthHandler(environmentProvider, processBuilder);
 
     // Call getExecutableResponse().
-    try {
-      handler.getExecutableResponse(DEFAULT_OPTIONS);
-      fail("Should not be able to continue without exception.");
-    } catch (PluggableAuthException e) {
-      assertEquals("EXIT_CODE", e.getErrorCode());
-      assertEquals(
-          String.format("The executable failed with exit code %s.", EXIT_CODE_FAIL),
-          e.getErrorDescription());
-    }
+    PluggableAuthException e =
+        assertThrows(PluggableAuthException.class, () -> handler.getExecutableResponse(DEFAULT_OPTIONS));
+    assertEquals("EXIT_CODE", e.getErrorCode());
+    assertEquals(
+        String.format("The executable failed with exit code %s.", EXIT_CODE_FAIL),
+        e.getErrorDescription());
 
     verify(mockProcess, times(1))
         .waitFor(
@@ -931,15 +907,12 @@ class PluggableAuthHandlerTest {
     PluggableAuthHandler handler = new PluggableAuthHandler(environmentProvider, processBuilder);
 
     // Call getExecutableResponse().
-    try {
-      handler.getExecutableResponse(DEFAULT_OPTIONS);
-      fail("Should not be able to continue without exception.");
-    } catch (PluggableAuthException e) {
-      assertEquals("INTERRUPTED", e.getErrorCode());
-      assertEquals(
-          String.format("The execution was interrupted: %s.", new InterruptedException()),
-          e.getErrorDescription());
-    }
+    PluggableAuthException e =
+        assertThrows(PluggableAuthException.class, () -> handler.getExecutableResponse(DEFAULT_OPTIONS));
+    assertEquals("INTERRUPTED", e.getErrorCode());
+    assertEquals(
+        String.format("The execution was interrupted: %s.", new InterruptedException()),
+        e.getErrorDescription());
 
     verify(mockProcess, times(1))
         .waitFor(
@@ -969,15 +942,12 @@ class PluggableAuthHandlerTest {
     PluggableAuthHandler handler = new PluggableAuthHandler(environmentProvider, processBuilder);
 
     // Call getExecutableResponse().
-    try {
-      handler.getExecutableResponse(DEFAULT_OPTIONS);
-      fail("Should not be able to continue without exception.");
-    } catch (PluggableAuthException e) {
-      assertEquals("INVALID_RESPONSE", e.getErrorCode());
-      assertEquals(
-          String.format("The executable returned an invalid response: %s.", badResponse),
-          e.getErrorDescription());
-    }
+    PluggableAuthException e =
+        assertThrows(PluggableAuthException.class, () -> handler.getExecutableResponse(DEFAULT_OPTIONS));
+    assertEquals("INVALID_RESPONSE", e.getErrorCode());
+    assertEquals(
+        String.format("The executable returned an invalid response: %s.", badResponse),
+        e.getErrorDescription());
 
     verify(mockProcess, times(1))
         .waitFor(

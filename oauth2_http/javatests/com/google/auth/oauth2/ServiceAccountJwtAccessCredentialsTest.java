@@ -153,14 +153,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
     ServiceAccountJwtAccessCredentials.Builder builder =
         ServiceAccountJwtAccessCredentials.newBuilder()
             .setClientId(SA_CLIENT_ID)
-            .setPrivateKey(privateKey)
-            .setPrivateKeyId(SA_PRIVATE_KEY_ID);
-    try {
-      builder.build();
-      fail("exception expected");
-    } catch (NullPointerException e) {
-      // Expected
-    }
+    NullPointerException e =
+        assertThrows(NullPointerException.class, builder::build);
   }
 
   @Test
@@ -170,12 +164,8 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
             .setClientId(SA_CLIENT_ID)
             .setClientEmail(SA_CLIENT_EMAIL)
             .setPrivateKeyId(SA_PRIVATE_KEY_ID);
-    try {
-      builder.build();
-      fail("exception expected");
-    } catch (NullPointerException e) {
-      // Expected
-    }
+    NullPointerException e =
+        assertThrows(NullPointerException.class, builder::build);
   }
 
   @Test
@@ -246,12 +236,7 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
             .setPrivateKeyId(SA_PRIVATE_KEY_ID)
             .build();
 
-    try {
-      credentials.getRequestMetadata();
-      fail("exception expected");
-    } catch (IOException e) {
-      // Expected
-    }
+    assertThrows(IOException.class, credentials::getRequestMetadata);
   }
 
   @Test
@@ -650,12 +635,7 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
   @Test
   void fromStream_nullStream_throws() throws IOException {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
-    try {
-      ServiceAccountCredentials.fromStream(null, transportFactory);
-      fail("Should throw if InputStream is null");
-    } catch (NullPointerException expected) {
-      // Expected
-    }
+    assertThrows(NullPointerException.class, () -> ServiceAccountCredentials.fromStream(null, transportFactory));
   }
 
   @Test
@@ -750,12 +730,7 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
             .setPrivateKeyId(SA_PRIVATE_KEY_ID)
             .build();
     JwtClaims claims = JwtClaims.newBuilder().build();
-    try {
-      credentials.jwtWithClaims(claims);
-      fail("Expected to throw exception for missing audience");
-    } catch (IllegalStateException ex) {
-      // expected exception
-    }
+    assertThrows(IllegalStateException.class, () -> credentials.jwtWithClaims(claims));
   }
 
   @Test

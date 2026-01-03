@@ -54,7 +54,7 @@ final class DefaultPKCEProviderTest {
     String expectedCodeChallengeMethod = "S256";
 
     assertEquals(pkce.getCodeChallenge(), expectedCodeChallenge);
-    assertEquals(pkce.getCodeChallengeMethod(), expectedCodeChallengeMethod);
+    assertEquals(expectedCodeChallengeMethod, pkce.getCodeChallengeMethod());
   }
 
   @Test

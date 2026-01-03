@@ -196,8 +196,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
     assertEquals(DELEGATES, credentials.getDelegates());
     assertEquals(IMMUTABLE_SCOPES_LIST, credentials.getScopes());
     assertEquals(3600, credentials.getLifetime());
-    GoogleCredentials sourceCredentials = credentials.getSourceCredentials();
-    assertInstanceOf(UserCredentials.class, sourceCredentials);
+    assertInstanceOf(UserCredentials.class, credentials.getSourceCredentials());
   }
 
   @Test()
@@ -219,8 +218,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
     assertEquals(DELEGATES, credentials.getDelegates());
     assertEquals(IMMUTABLE_SCOPES_LIST, credentials.getScopes());
     assertEquals(3600, credentials.getLifetime());
-    GoogleCredentials sourceCredentials = credentials.getSourceCredentials();
-    assertInstanceOf(UserCredentials.class, sourceCredentials);
+    assertInstanceOf(UserCredentials.class, credentials.getSourceCredentials());
   }
 
   @Test()
@@ -243,8 +241,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
     assertEquals(new ArrayList<String>(), credentials.getDelegates());
     assertEquals(IMMUTABLE_SCOPES_LIST, credentials.getScopes());
     assertEquals(3600, credentials.getLifetime());
-    GoogleCredentials sourceCredentials = credentials.getSourceCredentials();
-    assertTrue(sourceCredentials instanceof UserCredentials);
+    assertInstanceOf(UserCredentials.class, credentials.getSourceCredentials());
   }
 
   @Test()
@@ -260,8 +257,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
     assertEquals(DELEGATES, credentials.getDelegates());
     assertEquals(IMMUTABLE_SCOPES_LIST, credentials.getScopes());
     assertEquals(3600, credentials.getLifetime());
-    GoogleCredentials sourceCredentials = credentials.getSourceCredentials();
-    assertInstanceOf(ServiceAccountCredentials.class, sourceCredentials);
+    assertInstanceOf(ServiceAccountCredentials.class, credentials.getSourceCredentials());
   }
 
   @Test()
@@ -464,7 +460,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   @Test()
-  void credential_with_invalid_scope() throws IOException, IllegalStateException {
+  void credential_with_invalid_scope() throws IllegalStateException {
     assertThrows(
         NullPointerException.class,
         () ->
@@ -786,7 +782,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
     Calendar c = Calendar.getInstance();
     c.add(Calendar.DATE, 1);
     Date expiry = c.getTime();
-    GoogleCredentials sourceCredentials =
+    GoogleCredentials sourceCred =
         new GoogleCredentials.Builder()
             .setAccessToken(new AccessToken("source-token", expiry))
             .build();
@@ -797,7 +793,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
     mockTransportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
     ImpersonatedCredentials targetCredentials =
         ImpersonatedCredentials.create(
-            sourceCredentials,
+            sourceCred,
             IMPERSONATED_CLIENT_EMAIL,
             ImmutableList.of("delegate@example.com"),
             IMMUTABLE_SCOPES_LIST,

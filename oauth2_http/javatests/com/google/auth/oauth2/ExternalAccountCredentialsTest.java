@@ -32,6 +32,7 @@
 package com.google.auth.oauth2;
 
 import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -144,11 +145,12 @@ class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   void fromStream_nullTransport_throws() {
+    ByteArrayInputStream credentialsStream = new ByteArrayInputStream("foo".getBytes());
     assertThrows(
         NullPointerException.class,
         () ->
             ExternalAccountCredentials.fromStream(
-                new ByteArrayInputStream("foo".getBytes()), /* transportFactory= */ null));
+                credentialsStream, /* transportFactory= */ null));
   }
 
   @Test
@@ -484,9 +486,10 @@ class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   void fromJson_nullTransport_throws() {
+    HashMap<String, Object> json = new HashMap<>();
     assertThrows(
         NullPointerException.class,
-        () -> ExternalAccountCredentials.fromJson(new HashMap<>(), null));
+        () -> ExternalAccountCredentials.fromJson(json, null));
   }
 
   @Test
@@ -690,14 +693,14 @@ class ExternalAccountCredentialsTest extends BaseSerializationTest {
     HashMap<String, Object> credentialSource = new HashMap<>();
     credentialSource.put("file", "file");
     // No exception should be thrown.
-    TestExternalAccountCredentials.newBuilder()
+    ExternalAccountCredentials.Builder builder = TestExternalAccountCredentials.newBuilder()
         .setWorkforcePoolUserProject("")
         .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
         .setAudience("//iam.googleapis.com/locations/global/workforcePools/pool/providers/provider")
         .setSubjectTokenType("subjectTokenType")
         .setTokenUrl(STS_URL)
-        .setCredentialSource(new TestCredentialSource(credentialSource))
-        .build();
+        .setCredentialSource(new TestCredentialSource(credentialSource));
+    assertDoesNotThrow(builder::build);
   }
 
   @Test
@@ -1085,8 +1088,7 @@ class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void exchangeExternalCredentialForAccessToken_invalidImpersonatedCredentialsThrows()
-      throws IOException {
+  void exchangeExternalCredentialForAccessToken_invalidImpersonatedCredentialsThrows() {
     GenericJson json = buildJsonIdentityPoolCredential();
     json.put("service_account_impersonation_url", "https://iamcredentials.googleapis.com");
     ExternalAccountCredentials credential =
@@ -1095,14 +1097,13 @@ class ExternalAccountCredentialsTest extends BaseSerializationTest {
     StsTokenExchangeRequest stsTokenExchangeRequest =
         StsTokenExchangeRequest.newBuilder("credential", "subjectTokenType").build();
 
-    try {
-      credential.exchangeExternalCredentialForAccessToken(stsTokenExchangeRequest);
-      fail("Exception should be thrown.");
-    } catch (IllegalArgumentException e) {
-      assertEquals(
-          "Unable to determine target principal from service account impersonation URL.",
-          e.getMessage());
-    }
+    IllegalArgumentException e =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> credential.exchangeExternalCredentialForAccessToken(stsTokenExchangeRequest));
+    assertEquals(
+        "Unable to determine target principal from service account impersonation URL.",
+        e.getMessage());
   }
 
   @Test

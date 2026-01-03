@@ -202,60 +202,59 @@ class CredentialAccessBoundaryTest {
             .setAvailableResource("")
             .addAvailablePermission("permission");
     IllegalArgumentException exception =
-        assertThrows(IllegalArgumentException.class, () -> builder.build());
+        assertThrows(IllegalArgumentException.class, builder::build);
     assertEquals("The provided availableResource is empty.", exception.getMessage());
   }
 
   @Test
   void accessBoundaryRule_withoutAvailableResource_throws() {
+    AccessBoundaryRule.Builder builder = AccessBoundaryRule.newBuilder().addAvailablePermission("permission");
     assertThrows(
         NullPointerException.class,
-        () -> AccessBoundaryRule.newBuilder().addAvailablePermission("permission").build());
+        builder::build);
   }
 
   @Test
   void accessBoundaryRule_withoutAvailablePermissions_throws() {
+    AccessBoundaryRule.Builder builder = AccessBoundaryRule.newBuilder().setAvailableResource("resource");
     assertThrows(
         NullPointerException.class,
-        () -> AccessBoundaryRule.newBuilder().setAvailableResource("resource").build());
+        builder::build);
   }
 
   @Test
   void accessBoundaryRule_withEmptyAvailablePermissions_throws() {
+    AccessBoundaryRule.Builder builder = AccessBoundaryRule.newBuilder()
+        .setAvailableResource("resource")
+        .setAvailablePermissions(new ArrayList<>());
     IllegalArgumentException exception =
         assertThrows(
             IllegalArgumentException.class,
-            () ->
-                AccessBoundaryRule.newBuilder()
-                    .setAvailableResource("resource")
-                    .setAvailablePermissions(new ArrayList<String>())
-                    .build());
+            builder::build);
     assertEquals("The list of provided availablePermissions is empty.", exception.getMessage());
   }
 
   @Test
   void accessBoundaryRule_withNullAvailablePermissions_throws() {
+    AccessBoundaryRule.Builder builder = AccessBoundaryRule.newBuilder()
+        .setAvailableResource("resource")
+        .addAvailablePermission(null);
     IllegalArgumentException exception =
         assertThrows(
             IllegalArgumentException.class,
-            () ->
-                AccessBoundaryRule.newBuilder()
-                    .setAvailableResource("resource")
-                    .addAvailablePermission(null)
-                    .build());
+            builder::build);
     assertEquals("One of the provided available permissions is null.", exception.getMessage());
   }
 
   @Test
   void accessBoundaryRule_withEmptyAvailablePermission_throws() {
+    AccessBoundaryRule.Builder builder = AccessBoundaryRule.newBuilder()
+        .setAvailableResource("resource")
+        .addAvailablePermission("");
     IllegalArgumentException exception =
         assertThrows(
             IllegalArgumentException.class,
-            () ->
-                AccessBoundaryRule.newBuilder()
-                    .setAvailableResource("resource")
-                    .addAvailablePermission("")
-                    .build());
+            builder::build);
     assertEquals("One of the provided available permissions is empty.", exception.getMessage());
   }
 
@@ -285,17 +284,19 @@ class CredentialAccessBoundaryTest {
 
   @Test
   void availabilityCondition_nullExpression_throws() {
+    AvailabilityCondition.Builder builder = AvailabilityCondition.newBuilder().setExpression(null);
     assertThrows(
         NullPointerException.class,
-        () -> AvailabilityCondition.newBuilder().setExpression(null).build());
+        builder::build);
   }
 
   @Test
   void availabilityCondition_emptyExpression_throws() {
+    AvailabilityCondition.Builder builder = AvailabilityCondition.newBuilder().setExpression("");
     IllegalArgumentException exception =
         assertThrows(
             IllegalArgumentException.class,
-            () -> AvailabilityCondition.newBuilder().setExpression("").build());
+            builder::build);
     assertEquals("The provided expression is empty.", exception.getMessage());
   }
 }

@@ -523,17 +523,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void getIssuerSubjectValue_correct() throws IOException {
-    GenericJson json =
-        writeGdchServiceAccountJson(
-            FORMAT_VERSION,
-            PROJECT_ID,
-            PRIVATE_KEY_ID,
-            PRIVATE_KEY_PKCS8,
-            SERVICE_IDENTITY_NAME,
-            CA_CERT_PATH,
-            TOKEN_SERVER_URI);
-    GdchCredentials credentials = GdchCredentials.fromJson(json);
+  void getIssuerSubjectValue_correct() {
     Object expectedIssSubValue =
         String.format("system:serviceaccount:%s:%s", PROJECT_ID, SERVICE_IDENTITY_NAME);
     assertEquals(

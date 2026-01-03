@@ -203,11 +203,11 @@ class DownscopedCredentialsTest {
 
   @Test
   void builder_noSourceCredential_throws() {
+    DownscopedCredentials.Builder builder = DownscopedCredentials.newBuilder()
+        .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+        .setCredentialAccessBoundary(CREDENTIAL_ACCESS_BOUNDARY);
     try {
-      DownscopedCredentials.newBuilder()
-          .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-          .setCredentialAccessBoundary(CREDENTIAL_ACCESS_BOUNDARY)
-          .build();
+      builder.build();
       fail("Should fail as the source credential is null.");
     } catch (NullPointerException e) {
       // Expected.
@@ -216,11 +216,11 @@ class DownscopedCredentialsTest {
 
   @Test
   void builder_noCredentialAccessBoundary_throws() throws IOException {
+    DownscopedCredentials.Builder builder = DownscopedCredentials.newBuilder()
+        .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+        .setSourceCredential(getServiceAccountSourceCredentials(/* canRefresh= */ true));
     try {
-      DownscopedCredentials.newBuilder()
-          .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-          .setSourceCredential(getServiceAccountSourceCredentials(/* canRefresh= */ true))
-          .build();
+      builder.build();
       fail("Should fail as no access boundary was provided.");
     } catch (NullPointerException e) {
       // Expected.
@@ -268,13 +268,13 @@ class DownscopedCredentialsTest {
     GoogleCredentials sourceCredentials =
         getServiceAccountSourceCredentials(/* canRefresh= */ true);
 
+    DownscopedCredentials.Builder builder = DownscopedCredentials.newBuilder()
+        .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+        .setSourceCredential(sourceCredentials)
+        .setCredentialAccessBoundary(CREDENTIAL_ACCESS_BOUNDARY)
+        .setUniverseDomain("differentUniverseDomain");
     try {
-      DownscopedCredentials.newBuilder()
-          .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-          .setSourceCredential(sourceCredentials)
-          .setCredentialAccessBoundary(CREDENTIAL_ACCESS_BOUNDARY)
-          .setUniverseDomain("differentUniverseDomain")
-          .build();
+      builder.build();
       fail("Should fail with universe domain mismatch.");
     } catch (IllegalArgumentException e) {
       assertEquals(
@@ -287,12 +287,12 @@ class DownscopedCredentialsTest {
   void builder_sourceUniverseDomainUnavailable_throws() {
     GoogleCredentials sourceCredentials = new MockSourceCredentialWithoutUniverseDomain();
 
+    DownscopedCredentials.Builder builder = DownscopedCredentials.newBuilder()
+        .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
+        .setSourceCredential(sourceCredentials)
+        .setCredentialAccessBoundary(CREDENTIAL_ACCESS_BOUNDARY);
     try {
-      DownscopedCredentials.newBuilder()
-          .setHttpTransportFactory(OAuth2Utils.HTTP_TRANSPORT_FACTORY)
-          .setSourceCredential(sourceCredentials)
-          .setCredentialAccessBoundary(CREDENTIAL_ACCESS_BOUNDARY)
-          .build();
+      builder.build();
       fail("Should fail to retrieve source credential universe domain.");
     } catch (IllegalStateException e) {
       assertEquals(
