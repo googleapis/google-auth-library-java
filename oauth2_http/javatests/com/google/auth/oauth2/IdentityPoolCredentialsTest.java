@@ -697,7 +697,9 @@ class IdentityPoolCredentialsTest extends BaseSerializationTest {
         assertThrows(
             IllegalArgumentException.class,
             () -> new IdentityPoolCredentialSource(credentialSourceMap));
-    assertEquals("Missing credential source file location, URL, or certificate. At least one must be specified.", e.getMessage());
+    assertEquals(
+        "Missing credential source file location, URL, or certificate. At least one must be specified.",
+        e.getMessage());
   }
 
   @Test

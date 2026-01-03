@@ -870,7 +870,10 @@ class ExternalAccountCredentialsTest extends BaseSerializationTest {
             .setClientSecret("clientSecret")
             .setWorkforcePoolUserProject("workforcePoolUserProject")
             .setUniverseDomain("universeDomain");
-    IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> builder.setServiceAccountImpersonationOptions(optionsMap));
+    IllegalArgumentException e =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> builder.setServiceAccountImpersonationOptions(optionsMap));
     assertEquals(
         "The \"token_lifetime_seconds\" field must be between 600 and 43200 seconds.",
         e.getMessage());

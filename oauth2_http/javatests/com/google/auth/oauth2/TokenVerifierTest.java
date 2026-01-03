@@ -34,7 +34,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.LowLevelHttpRequest;
@@ -145,7 +144,8 @@ class TokenVerifierTest {
 
     VerificationException exception =
         assertThrows(VerificationException.class, () -> tokenVerifier.verify(ES256_TOKEN));
-    assertTrue(exception.getMessage().contains("Error fetching PublicKey from certificate location"));
+    assertTrue(
+        exception.getMessage().contains("Error fetching PublicKey from certificate location"));
   }
 
   @Test

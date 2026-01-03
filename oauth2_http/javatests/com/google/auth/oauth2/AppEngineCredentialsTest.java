@@ -217,7 +217,8 @@ class AppEngineCredentialsTest extends BaseSerializationTest {
 
     public TestSigningResult signForApp(byte[] toSign) {
       return new TestSigningResult(EXPECTED_SIGNATURE);
-    }  }
+    }
+  }
 
   private static class TestGetAccessTokenResult {
 
