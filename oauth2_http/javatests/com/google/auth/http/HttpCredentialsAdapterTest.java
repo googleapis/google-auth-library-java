@@ -31,9 +31,8 @@
 
 package com.google.auth.http;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpHeaders;
@@ -168,6 +167,6 @@ class HttpCredentialsAdapterTest {
 
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
     Credentials returnedCredentials = adapter.getCredentials();
-    assertThat(returnedCredentials, instanceOf(Credentials.class));
+    assertInstanceOf(Credentials.class, returnedCredentials);
   }
 }
