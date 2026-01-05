@@ -843,7 +843,7 @@ class GoogleCredentialsTest extends BaseSerializationTest {
     String expectedToString =
         String.format(
             "GoogleCredentials{quotaProjectId=%s, universeDomain=%s, isExplicitUniverseDomain=%s}",
-            "some-project", "googleapis.com", false, "[some scope]");
+            "some-project", "googleapis.com", false);
     GoogleCredentials credentials =
         GoogleCredentials.newBuilder().setQuotaProjectId("some-project").build();
     assertEquals(expectedToString, credentials.toString());

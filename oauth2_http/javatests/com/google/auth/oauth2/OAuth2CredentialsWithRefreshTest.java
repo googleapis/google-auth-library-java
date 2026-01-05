@@ -160,7 +160,7 @@ class OAuth2CredentialsWithRefreshTest {
   void builder_noRefreshHandler_throws() {
     OAuth2CredentialsWithRefresh.Builder builder =
         OAuth2CredentialsWithRefresh.newBuilder().setAccessToken(ACCESS_TOKEN);
-    assertThrows(NullPointerException.class, () -> builder.build());
+    assertThrows(NullPointerException.class, builder::build);
   }
 
   @Test
@@ -168,7 +168,7 @@ class OAuth2CredentialsWithRefreshTest {
     OAuth2CredentialsWithRefresh.Builder builder =
         OAuth2CredentialsWithRefresh.newBuilder()
             .setAccessToken(new AccessToken("accessToken", null));
-    assertThrows(IllegalArgumentException.class, () -> builder.build());
+    assertThrows(IllegalArgumentException.class, builder::build);
   }
 
   @Test
@@ -177,13 +177,7 @@ class OAuth2CredentialsWithRefreshTest {
     OAuth2CredentialsWithRefresh credentials =
         OAuth2CredentialsWithRefresh.newBuilder()
             .setAccessToken(ACCESS_TOKEN)
-            .setRefreshHandler(
-                new OAuth2CredentialsWithRefresh.OAuth2RefreshHandler() {
-                  @Override
-                  public AccessToken refreshAccessToken() {
-                    return refreshedToken;
-                  }
-                })
+            .setRefreshHandler(() -> refreshedToken)
             .build();
 
     AccessToken accessToken = credentials.refreshAccessToken();
@@ -198,13 +192,7 @@ class OAuth2CredentialsWithRefreshTest {
     OAuth2CredentialsWithRefresh credentials =
         OAuth2CredentialsWithRefresh.newBuilder()
             .setAccessToken(ACCESS_TOKEN)
-            .setRefreshHandler(
-                new OAuth2CredentialsWithRefresh.OAuth2RefreshHandler() {
-                  @Override
-                  public AccessToken refreshAccessToken() {
-                    return refreshedToken;
-                  }
-                })
+            .setRefreshHandler(() -> refreshedToken)
             .build();
 
     Map<String, List<String>> metadata = credentials.getRequestMetadata(uri);

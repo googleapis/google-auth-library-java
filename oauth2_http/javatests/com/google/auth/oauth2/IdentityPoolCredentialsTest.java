@@ -218,7 +218,7 @@ class IdentityPoolCredentialsTest extends BaseSerializationTest {
             .setCredentialSource(credentialSource)
             .build();
 
-    IOException e = assertThrows(IOException.class, () -> credentials.retrieveSubjectToken());
+    IOException e = assertThrows(IOException.class, credentials::retrieveSubjectToken);
     assertEquals(
         String.format("Invalid credential location. The file at %s does not exist.", path),
         e.getMessage());
@@ -281,7 +281,7 @@ class IdentityPoolCredentialsTest extends BaseSerializationTest {
                 buildUrlBasedCredentialSource(transportFactory.transport.getMetadataUrl()))
             .build();
 
-    IOException e = assertThrows(IOException.class, () -> credential.retrieveSubjectToken());
+    IOException e = assertThrows(IOException.class, credential::retrieveSubjectToken);
     assertEquals(
         String.format(
             "Error getting subject token from metadata server: %s", response.getMessage()),
@@ -317,7 +317,7 @@ class IdentityPoolCredentialsTest extends BaseSerializationTest {
             .setSubjectTokenSupplier(errorProvider)
             .build();
 
-    IOException e = assertThrows(IOException.class, () -> credentials.retrieveSubjectToken());
+    IOException e = assertThrows(IOException.class, credentials::retrieveSubjectToken);
     assertEquals("test", e.getMessage());
   }
 
@@ -835,8 +835,7 @@ class IdentityPoolCredentialsTest extends BaseSerializationTest {
               .setTokenInfoUrl("tokenInfoUrl")
               .setCredentialSource(createFileCredentialSource())
               .setQuotaProjectId("quotaProjectId");
-      IllegalArgumentException e =
-          assertThrows(IllegalArgumentException.class, () -> builder.build());
+      IllegalArgumentException e = assertThrows(IllegalArgumentException.class, builder::build);
       assertEquals(
           "The workforce_pool_user_project parameter should only be provided for a Workforce Pool configuration.",
           e.getMessage());
@@ -873,7 +872,7 @@ class IdentityPoolCredentialsTest extends BaseSerializationTest {
             .setTokenUrl(STS_URL)
             .setCredentialSource(createFileCredentialSource());
     IllegalArgumentException exception =
-        assertThrows(IllegalArgumentException.class, () -> builder.build());
+        assertThrows(IllegalArgumentException.class, builder::build);
     assertEquals(
         "IdentityPoolCredentials cannot have both a subjectTokenSupplier and a credentialSource.",
         exception.getMessage());
@@ -888,7 +887,7 @@ class IdentityPoolCredentialsTest extends BaseSerializationTest {
             .setSubjectTokenType("subjectTokenType")
             .setTokenUrl(STS_URL);
     IllegalArgumentException exception =
-        assertThrows(IllegalArgumentException.class, () -> builder.build());
+        assertThrows(IllegalArgumentException.class, builder::build);
     assertEquals(
         "A subjectTokenSupplier or a credentialSource must be provided.", exception.getMessage());
   }
@@ -1093,7 +1092,7 @@ class IdentityPoolCredentialsTest extends BaseSerializationTest {
             .setAudience("test-audience")
             .setSubjectTokenType("test-token-type")
             .setCredentialSource(credentialSource);
-    RuntimeException exception = assertThrows(RuntimeException.class, () -> builder.build());
+    RuntimeException exception = assertThrows(RuntimeException.class, builder::build);
 
     assertEquals(
         "Failed to initialize IdentityPoolCredentials from certificate source due to an I/O error.",

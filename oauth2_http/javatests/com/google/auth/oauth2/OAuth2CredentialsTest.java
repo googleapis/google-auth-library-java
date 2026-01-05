@@ -180,7 +180,7 @@ class OAuth2CredentialsTest extends BaseSerializationTest {
     assertEquals(lastMetadata, callback.awaitResult());
     waitForRefreshTaskCompletion(credentials);
     assertEquals(1, refreshCount.get());
-    lastMetadata = credentials.getRequestMetadata();
+    credentials.getRequestMetadata();
     refreshCount.set(0);
 
     // Fast forward to expired
@@ -192,7 +192,7 @@ class OAuth2CredentialsTest extends BaseSerializationTest {
     TestUtils.assertContainsBearerToken(callback.awaitResult(), newToken.getTokenValue());
     assertEquals(1, refreshCount.get());
     waitForRefreshTaskCompletion(credentials);
-    lastMetadata = credentials.getRequestMetadata();
+    credentials.getRequestMetadata();
   }
 
   @Test
@@ -225,7 +225,7 @@ class OAuth2CredentialsTest extends BaseSerializationTest {
             .setClientSecret(CLIENT_SECRET)
             .setRefreshToken(REFRESH_TOKEN)
             .build();
-    assertTrue(credentials.hasRequestMetadata());
+    assertTrue(credentials.hasRequestMetadataOnly());
   }
 
   @Test
@@ -354,7 +354,7 @@ class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void getRequestMetadata_async() throws IOException {
+  void getRequestMetadata_async() {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();

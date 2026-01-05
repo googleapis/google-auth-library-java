@@ -44,8 +44,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.BaseEncoding;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.List;
@@ -227,7 +226,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
   }
 
   private MockLowLevelHttpRequest getMockRequestForIdentityDocument(String url)
-      throws MalformedURLException, UnsupportedEncodingException {
+      throws UnsupportedEncodingException {
     if (statusCode != null && statusCode != HttpStatusCodes.STATUS_CODE_OK) {
       return new MockLowLevelHttpRequest(url) {
         @Override
@@ -253,7 +252,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
 
     // https://cloud.google.com/compute/docs/instances/verifying-instance-identity#token_format
     Map<String, String> queryPairs = new HashMap<String, String>();
-    String query = (new URL(url)).getQuery();
+    String query = (URI.create(url)).getQuery();
     String[] pairs = query.split("&");
     for (String pair : pairs) {
       int idx = pair.indexOf("=");

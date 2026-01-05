@@ -69,7 +69,7 @@ class SecureConnectProviderTest {
     }
 
     @Override
-    public int waitFor() throws InterruptedException {
+    public int waitFor() {
       return 0;
     }
 
@@ -82,7 +82,9 @@ class SecureConnectProviderTest {
     }
 
     @Override
-    public void destroy() {}
+    public void destroy() {
+      // Nothing was initialized and nothing needs to be destroyed
+    }
   }
 
   static class TestProcessProvider implements SecureConnectProvider.ProcessProvider {

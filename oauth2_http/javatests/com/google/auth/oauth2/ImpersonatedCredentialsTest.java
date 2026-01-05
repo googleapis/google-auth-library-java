@@ -47,6 +47,7 @@ import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonGenerator;
+import com.google.api.client.json.JsonParser;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.json.webtoken.JsonWebToken.Payload;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
@@ -125,10 +126,6 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
   private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ssX";
 
   private static final String TEST_UNIVERSE_DOMAIN = "test.xyz";
-  private static final String OLD_IMPERSONATION_URL =
-      "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/"
-          + IMPERSONATED_CLIENT_EMAIL
-          + ":generateAccessToken";
   public static final String DEFAULT_IMPERSONATION_URL =
       String.format(
           IamUtils.IAM_ACCESS_TOKEN_ENDPOINT_FORMAT,
@@ -769,13 +766,13 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
     assertArrayEquals(expectedSignature, targetCredentials.sign(expectedSignature));
 
     MockLowLevelHttpRequest request = mockTransportFactory.getTransport().getRequest();
-    GenericJson body =
-        JSON_FACTORY
-            .createJsonParser(request.getContentAsString())
-            .parseAndClose(GenericJson.class);
-    List<String> delegates = new ArrayList<>();
-    delegates.add("delegate@example.com");
-    assertEquals(delegates, body.get("delegates"));
+
+    try (JsonParser jsonParser = JSON_FACTORY.createJsonParser(request.getContentAsString())) {
+      GenericJson body = jsonParser.parseAndClose(GenericJson.class);
+      List<String> delegates = new ArrayList<>();
+      delegates.add("delegate@example.com");
+      assertEquals(delegates, body.get("delegates"));
+    }
   }
 
   @Test
@@ -1130,7 +1127,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void universeDomain_whenExplicit_notAllowedIfNotMatchToSourceUD() throws IOException {
+  void universeDomain_whenExplicit_notAllowedIfNotMatchToSourceUD() {
     GoogleCredentials sourceCredentialsNonGDU =
         sourceCredentials.toBuilder().setUniverseDomain("source.domain.xyz").build();
     GoogleCredentials.Builder builder =
@@ -1208,7 +1205,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void hashCode_equals() throws IOException {
+  void hashCode_equals() {
     mockTransportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mockTransportFactory.getTransport().setAccessToken(ACCESS_TOKEN);
     mockTransportFactory.getTransport().setExpireTime(getDefaultExpireTime());

@@ -51,30 +51,27 @@ class CloudShellCredentialsTest extends BaseSerializationTest {
   void refreshAccessToken() throws IOException {
     try (ServerSocket authSocket = new ServerSocket(0)) {
       Runnable serverTask =
-          new Runnable() {
-            @Override
-            public void run() {
-              try {
-                Socket clientSocket = authSocket.accept();
-                BufferedReader input =
-                    new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                String lines = input.readLine();
-                lines += '\n' + input.readLine();
-                assertEquals(CloudShellCredentials.GET_AUTH_TOKEN_REQUEST, lines);
+          () -> {
+            try {
+              Socket clientSocket = authSocket.accept();
+              BufferedReader input =
+                  new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+              String lines = input.readLine();
+              lines += '\n' + input.readLine();
+              assertEquals(CloudShellCredentials.GET_AUTH_TOKEN_REQUEST, lines);
 
-                PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-                out.println("32\n[\"email\", \"project-id\", \"token\"]");
-              } catch (Exception reThrown) {
-                throw new RuntimeException(reThrown);
-              }
+              PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+              out.println("32\n[\"email\", \"project-id\", \"token\"]");
+            } catch (Exception reThrown) {
+              throw new RuntimeException(reThrown);
             }
           };
       Thread serverThread = new Thread(serverTask);
       serverThread.start();
 
-      GoogleCredentials creds =
+      GoogleCredentials credentials =
           CloudShellCredentials.newBuilder().setAuthPort(authSocket.getLocalPort()).build();
-      assertEquals("token", creds.refreshAccessToken().getTokenValue());
+      assertEquals("token", credentials.refreshAccessToken().getTokenValue());
     }
   }
 

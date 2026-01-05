@@ -60,12 +60,12 @@ import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.GoogleCredentials.GoogleCredentialsInfo;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.io.BaseEncoding;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -93,8 +93,8 @@ class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializationTest
   private static final String BASIC_AUTH =
       String.format(
           "Basic %s",
-          BaseEncoding.base64()
-              .encode(
+          Base64.getEncoder()
+              .encodeToString(
                   String.format("%s:%s", CLIENT_ID, CLIENT_SECRET)
                       .getBytes(StandardCharsets.UTF_8)));
 
@@ -255,10 +255,9 @@ class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializationTest
 
   @Test
   void builder_accessAndRefreshTokenNull_throws() {
-    IllegalStateException exception =
-        assertThrows(
-            IllegalStateException.class,
-            () -> ExternalAccountAuthorizedUserCredentials.newBuilder().build());
+    ExternalAccountAuthorizedUserCredentials.Builder builder =
+        ExternalAccountAuthorizedUserCredentials.newBuilder();
+    IllegalStateException exception = assertThrows(IllegalStateException.class, builder::build);
     assertEquals(
         "ExternalAccountAuthorizedUserCredentials must be initialized with "
             + "an access token or fields to enable refresh: "
@@ -268,15 +267,12 @@ class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializationTest
 
   @Test
   void builder_missingTokenUrl_throws() {
-    IllegalStateException exception =
-        assertThrows(
-            IllegalStateException.class,
-            () ->
-                ExternalAccountAuthorizedUserCredentials.newBuilder()
-                    .setRefreshToken(REFRESH_TOKEN)
-                    .setClientId(CLIENT_ID)
-                    .setClientSecret(CLIENT_SECRET)
-                    .build());
+    ExternalAccountAuthorizedUserCredentials.Builder builder =
+        ExternalAccountAuthorizedUserCredentials.newBuilder()
+            .setRefreshToken(REFRESH_TOKEN)
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET);
+    IllegalStateException exception = assertThrows(IllegalStateException.class, builder::build);
     assertEquals(
         "ExternalAccountAuthorizedUserCredentials must be initialized with "
             + "an access token or fields to enable refresh: "
@@ -286,15 +282,12 @@ class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializationTest
 
   @Test
   void builder_missingClientId_throws() {
-    IllegalStateException exception =
-        assertThrows(
-            IllegalStateException.class,
-            () ->
-                ExternalAccountAuthorizedUserCredentials.newBuilder()
-                    .setRefreshToken(REFRESH_TOKEN)
-                    .setTokenUrl(TOKEN_URL)
-                    .setClientSecret(CLIENT_SECRET)
-                    .build());
+    ExternalAccountAuthorizedUserCredentials.Builder builder =
+        ExternalAccountAuthorizedUserCredentials.newBuilder()
+            .setRefreshToken(REFRESH_TOKEN)
+            .setTokenUrl(TOKEN_URL)
+            .setClientSecret(CLIENT_SECRET);
+    IllegalStateException exception = assertThrows(IllegalStateException.class, builder::build);
     assertEquals(
         "ExternalAccountAuthorizedUserCredentials must be initialized with "
             + "an access token or fields to enable refresh: "
@@ -304,15 +297,12 @@ class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializationTest
 
   @Test
   void builder_missingClientSecret_throws() {
-    IllegalStateException exception =
-        assertThrows(
-            IllegalStateException.class,
-            () ->
-                ExternalAccountAuthorizedUserCredentials.newBuilder()
-                    .setRefreshToken(REFRESH_TOKEN)
-                    .setTokenUrl(TOKEN_URL)
-                    .setClientId(CLIENT_ID)
-                    .build());
+    ExternalAccountAuthorizedUserCredentials.Builder builder =
+        ExternalAccountAuthorizedUserCredentials.newBuilder()
+            .setRefreshToken(REFRESH_TOKEN)
+            .setTokenUrl(TOKEN_URL)
+            .setClientId(CLIENT_ID);
+    IllegalStateException exception = assertThrows(IllegalStateException.class, builder::build);
     assertEquals(
         "ExternalAccountAuthorizedUserCredentials must be initialized with "
             + "an access token or fields to enable refresh: "
@@ -429,7 +419,7 @@ class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializationTest
   }
 
   @Test
-  void fromJson_accessTokenOnly_notSupported() throws IOException {
+  void fromJson_accessTokenOnly_notSupported() {
     GenericJson json = new GenericJson();
     json.put("access_token", ACCESS_TOKEN);
 
@@ -447,16 +437,15 @@ class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializationTest
   }
 
   @Test
-  void fromJson_missingRefreshToken_throws() throws IOException {
+  void fromJson_missingRefreshToken_throws() {
+    GenericJson json = buildJsonCredentials();
+    json.remove("refresh_token");
     IllegalStateException exception =
         assertThrows(
             IllegalStateException.class,
-            () -> {
-              GenericJson json = buildJsonCredentials();
-              json.remove("refresh_token");
-              ExternalAccountAuthorizedUserCredentials.fromJson(
-                  json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
-            });
+            () ->
+                ExternalAccountAuthorizedUserCredentials.fromJson(
+                    json, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     assertEquals(
         "ExternalAccountAuthorizedUserCredentials must be initialized with "
             + "an access token or fields to enable refresh: "
@@ -465,16 +454,15 @@ class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializationTest
   }
 
   @Test
-  void fromJson_missingTokenUrl_throws() throws IOException {
+  void fromJson_missingTokenUrl_throws() {
+    GenericJson json = buildJsonCredentials();
+    json.remove("token_url");
     IllegalStateException exception =
         assertThrows(
             IllegalStateException.class,
-            () -> {
-              GenericJson json = buildJsonCredentials();
-              json.remove("token_url");
-              ExternalAccountAuthorizedUserCredentials.fromJson(
-                  json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
-            });
+            () ->
+                ExternalAccountAuthorizedUserCredentials.fromJson(
+                    json, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     assertEquals(
         "ExternalAccountAuthorizedUserCredentials must be initialized with "
             + "an access token or fields to enable refresh: "
@@ -483,16 +471,15 @@ class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializationTest
   }
 
   @Test
-  void fromJson_missingClientId_throws() throws IOException {
+  void fromJson_missingClientId_throws() {
+    GenericJson json = buildJsonCredentials();
+    json.remove("client_id");
     IllegalStateException exception =
         assertThrows(
             IllegalStateException.class,
-            () -> {
-              GenericJson json = buildJsonCredentials();
-              json.remove("client_id");
-              ExternalAccountAuthorizedUserCredentials.fromJson(
-                  json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
-            });
+            () ->
+                ExternalAccountAuthorizedUserCredentials.fromJson(
+                    json, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     assertEquals(
         "ExternalAccountAuthorizedUserCredentials must be initialized with "
             + "an access token or fields to enable refresh: "
@@ -501,16 +488,15 @@ class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializationTest
   }
 
   @Test
-  void fromJson_missingClientSecret_throws() throws IOException {
+  void fromJson_missingClientSecret_throws() {
+    GenericJson json = buildJsonCredentials();
+    json.remove("client_secret");
     IllegalStateException exception =
         assertThrows(
             IllegalStateException.class,
-            () -> {
-              GenericJson json = buildJsonCredentials();
-              json.remove("client_secret");
-              ExternalAccountAuthorizedUserCredentials.fromJson(
-                  json, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
-            });
+            () ->
+                ExternalAccountAuthorizedUserCredentials.fromJson(
+                    json, OAuth2Utils.HTTP_TRANSPORT_FACTORY));
     assertEquals(
         "ExternalAccountAuthorizedUserCredentials must be initialized with "
             + "an access token or fields to enable refresh: "
@@ -584,89 +570,85 @@ class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializationTest
     json.put("access_token", ACCESS_TOKEN);
     json.put(
         "type", GoogleCredentialsInfo.EXTERNAL_ACCOUNT_AUTHORIZED_USER_CREDENTIALS.getFileType());
-    IllegalStateException exception =
-        assertThrows(
-            IllegalStateException.class,
-            () ->
-                ExternalAccountAuthorizedUserCredentials.fromStream(
-                    TestUtils.jsonToInputStream(json)));
-    assertEquals(
-        "ExternalAccountAuthorizedUserCredentials must be initialized with "
-            + "an access token or fields to enable refresh: "
-            + "('refresh_token', 'token_url', 'client_id', 'client_secret').",
-        exception.getMessage());
+    try (InputStream credentialsStream = TestUtils.jsonToInputStream(json)) {
+      IllegalStateException exception =
+          assertThrows(
+              IllegalStateException.class,
+              () -> ExternalAccountAuthorizedUserCredentials.fromStream(credentialsStream));
+      assertEquals(
+          "ExternalAccountAuthorizedUserCredentials must be initialized with "
+              + "an access token or fields to enable refresh: "
+              + "('refresh_token', 'token_url', 'client_id', 'client_secret').",
+          exception.getMessage());
+    }
   }
 
   @Test
   void fromStream_missingRefreshToken_throws() throws IOException {
-    IllegalStateException exception =
-        assertThrows(
-            IllegalStateException.class,
-            () -> {
-              GenericJson json = buildJsonCredentials();
-              json.remove("refresh_token");
-              ExternalAccountAuthorizedUserCredentials.fromStream(
-                  TestUtils.jsonToInputStream(json));
-            });
-    assertEquals(
-        "ExternalAccountAuthorizedUserCredentials must be initialized with "
-            + "an access token or fields to enable refresh: "
-            + "('refresh_token', 'token_url', 'client_id', 'client_secret').",
-        exception.getMessage());
+    GenericJson json = buildJsonCredentials();
+    json.remove("refresh_token");
+    try (InputStream credentialsStream = TestUtils.jsonToInputStream(json)) {
+      IllegalStateException exception =
+          assertThrows(
+              IllegalStateException.class,
+              () -> ExternalAccountAuthorizedUserCredentials.fromStream(credentialsStream));
+      assertEquals(
+          "ExternalAccountAuthorizedUserCredentials must be initialized with "
+              + "an access token or fields to enable refresh: "
+              + "('refresh_token', 'token_url', 'client_id', 'client_secret').",
+          exception.getMessage());
+    }
   }
 
   @Test
   void fromStream_missingTokenUrl_throws() throws IOException {
-    IllegalStateException exception =
-        assertThrows(
-            IllegalStateException.class,
-            () -> {
-              GenericJson json = buildJsonCredentials();
-              json.remove("token_url");
-              ExternalAccountAuthorizedUserCredentials.fromStream(
-                  TestUtils.jsonToInputStream(json));
-            });
-    assertEquals(
-        "ExternalAccountAuthorizedUserCredentials must be initialized with "
-            + "an access token or fields to enable refresh: "
-            + "('refresh_token', 'token_url', 'client_id', 'client_secret').",
-        exception.getMessage());
+    GenericJson json = buildJsonCredentials();
+    json.remove("token_url");
+    try (InputStream credentialsStream = TestUtils.jsonToInputStream(json)) {
+      IllegalStateException exception =
+          assertThrows(
+              IllegalStateException.class,
+              () -> ExternalAccountAuthorizedUserCredentials.fromStream(credentialsStream));
+      assertEquals(
+          "ExternalAccountAuthorizedUserCredentials must be initialized with "
+              + "an access token or fields to enable refresh: "
+              + "('refresh_token', 'token_url', 'client_id', 'client_secret').",
+          exception.getMessage());
+    }
   }
 
   @Test
   void fromStream_missingClientId_throws() throws IOException {
-    IllegalStateException exception =
-        assertThrows(
-            IllegalStateException.class,
-            () -> {
-              GenericJson json = buildJsonCredentials();
-              json.remove("client_id");
-              ExternalAccountAuthorizedUserCredentials.fromStream(
-                  TestUtils.jsonToInputStream(json));
-            });
-    assertEquals(
-        "ExternalAccountAuthorizedUserCredentials must be initialized with "
-            + "an access token or fields to enable refresh: "
-            + "('refresh_token', 'token_url', 'client_id', 'client_secret').",
-        exception.getMessage());
+    GenericJson json = buildJsonCredentials();
+    json.remove("client_id");
+    try (InputStream credentialsStream = TestUtils.jsonToInputStream(json)) {
+      IllegalStateException exception =
+          assertThrows(
+              IllegalStateException.class,
+              () -> ExternalAccountAuthorizedUserCredentials.fromStream(credentialsStream));
+      assertEquals(
+          "ExternalAccountAuthorizedUserCredentials must be initialized with "
+              + "an access token or fields to enable refresh: "
+              + "('refresh_token', 'token_url', 'client_id', 'client_secret').",
+          exception.getMessage());
+    }
   }
 
   @Test
   void fromStream_missingClientSecret_throws() throws IOException {
-    IllegalStateException exception =
-        assertThrows(
-            IllegalStateException.class,
-            () -> {
-              GenericJson json = buildJsonCredentials();
-              json.remove("client_secret");
-              ExternalAccountAuthorizedUserCredentials.fromStream(
-                  TestUtils.jsonToInputStream(json));
-            });
-    assertEquals(
-        "ExternalAccountAuthorizedUserCredentials must be initialized with "
-            + "an access token or fields to enable refresh: "
-            + "('refresh_token', 'token_url', 'client_id', 'client_secret').",
-        exception.getMessage());
+    GenericJson json = buildJsonCredentials();
+    json.remove("client_secret");
+    try (InputStream credentialsStream = TestUtils.jsonToInputStream(json)) {
+      IllegalStateException exception =
+          assertThrows(
+              IllegalStateException.class,
+              () -> ExternalAccountAuthorizedUserCredentials.fromStream(credentialsStream));
+      assertEquals(
+          "ExternalAccountAuthorizedUserCredentials must be initialized with "
+              + "an access token or fields to enable refresh: "
+              + "('refresh_token', 'token_url', 'client_id', 'client_secret').",
+          exception.getMessage());
+    }
   }
 
   @Test
@@ -690,16 +672,15 @@ class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializationTest
 
   @Test
   void fromStream_invalidInputStream_throws() throws IOException {
-    CredentialFormatException e =
-        assertThrows(
-            CredentialFormatException.class,
-            () -> {
-              GenericJson json = buildJsonCredentials();
-              json.put("audience", new HashMap<>());
-              ExternalAccountAuthorizedUserCredentials.fromStream(
-                  TestUtils.jsonToInputStream(json));
-            });
-    assertEquals("Invalid input stream provided.", e.getMessage());
+    GenericJson json = buildJsonCredentials();
+    json.put("audience", new HashMap<>());
+    try (InputStream credentialsStream = TestUtils.jsonToInputStream(json)) {
+      CredentialFormatException e =
+          assertThrows(
+              CredentialFormatException.class,
+              () -> ExternalAccountAuthorizedUserCredentials.fromStream(credentialsStream));
+      assertEquals("Invalid input stream provided.", e.getMessage());
+    }
   }
 
   @Test
@@ -803,7 +784,7 @@ class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializationTest
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.fromJson(buildJsonCredentials(), transportFactory);
 
-    OAuthException e = assertThrows(OAuthException.class, () -> credentials.refreshAccessToken());
+    OAuthException e = assertThrows(OAuthException.class, credentials::refreshAccessToken);
     assertEquals("invalid_request", e.getErrorCode());
     assertEquals("Invalid request.", e.getErrorDescription());
   }
@@ -829,7 +810,7 @@ class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializationTest
             .setHttpTransportFactory(transportFactory)
             .build();
 
-    assertThrows(IllegalStateException.class, () -> credentials.refreshAccessToken());
+    assertThrows(IllegalStateException.class, credentials::refreshAccessToken);
   }
 
   @Test

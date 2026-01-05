@@ -767,7 +767,7 @@ class UserAuthorizerTest {
 
   @Test
   void nullCodeVerifierPKCEProvider() {
-    PKCEProvider pkce =
+    PKCEProvider pkceProvider =
         new PKCEProvider() {
           @Override
           public String getCodeVerifier() {
@@ -790,12 +790,12 @@ class UserAuthorizerTest {
             .setClientId(CLIENT_ID)
             .setScopes(DUMMY_SCOPES)
             .setTokenStore(new MemoryTokensStorage());
-    assertThrows(IllegalArgumentException.class, () -> builder.setPKCEProvider(pkce));
+    assertThrows(IllegalArgumentException.class, () -> builder.setPKCEProvider(pkceProvider));
   }
 
   @Test
   void nullCodeChallengePKCEProvider() {
-    PKCEProvider pkce =
+    PKCEProvider pkceProvider =
         new PKCEProvider() {
           @Override
           public String getCodeVerifier() {
@@ -818,12 +818,12 @@ class UserAuthorizerTest {
             .setClientId(CLIENT_ID)
             .setScopes(DUMMY_SCOPES)
             .setTokenStore(new MemoryTokensStorage());
-    assertThrows(IllegalArgumentException.class, () -> builder.setPKCEProvider(pkce));
+    assertThrows(IllegalArgumentException.class, () -> builder.setPKCEProvider(pkceProvider));
   }
 
   @Test
   void nullCodeChallengeMethodPKCEProvider() {
-    PKCEProvider pkce =
+    PKCEProvider pkceProvider =
         new PKCEProvider() {
           @Override
           public String getCodeVerifier() {
@@ -846,7 +846,7 @@ class UserAuthorizerTest {
             .setClientId(CLIENT_ID)
             .setScopes(DUMMY_SCOPES)
             .setTokenStore(new MemoryTokensStorage());
-    assertThrows(IllegalArgumentException.class, () -> builder.setPKCEProvider(pkce));
+    assertThrows(IllegalArgumentException.class, () -> builder.setPKCEProvider(pkceProvider));
   }
 
   @Test

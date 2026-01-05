@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -283,7 +284,7 @@ class UserCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void equals_false_clientId() throws IOException {
+  void equals_false_clientId() {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
     MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
@@ -310,7 +311,7 @@ class UserCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void equals_false_clientSecret() throws IOException {
+  void equals_false_clientSecret() {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
     MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
@@ -337,7 +338,7 @@ class UserCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void equals_false_refreshToken() throws IOException {
+  void equals_false_refreshToken() {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
     MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
@@ -364,7 +365,7 @@ class UserCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void equals_false_accessToken() throws IOException {
+  void equals_false_accessToken() {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
     AccessToken otherAccessToken = new AccessToken("otherAccessToken", null);
@@ -393,7 +394,7 @@ class UserCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void equals_false_transportFactory() throws IOException {
+  void equals_false_transportFactory() {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
     MockHttpTransportFactory httpTransportFactory = new MockHttpTransportFactory();
@@ -421,7 +422,7 @@ class UserCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void equals_false_tokenServer() throws IOException {
+  void equals_false_tokenServer() {
     final URI tokenServer1 = URI.create("https://foo1.com/bar");
     final URI tokenServer2 = URI.create("https://foo2.com/bar");
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
@@ -449,7 +450,7 @@ class UserCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void equals_false_quotaProjectId() throws IOException {
+  void equals_false_quotaProjectId() {
     final String quotaProject1 = "sample-id-1";
     final String quotaProject2 = "sample-id-2";
     AccessToken accessToken = new AccessToken(ACCESS_TOKEN, null);
@@ -564,7 +565,7 @@ class UserCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void fromStream_nullStream_throws() throws IOException {
+  void fromStream_nullStream_throws() {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     assertThrows(
         NullPointerException.class, () -> UserCredentials.fromStream(null, transportFactory));
@@ -613,7 +614,7 @@ class UserCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void saveUserCredentials_saved_throws() throws IOException {
+  void saveUserCredentials_saved_doesNotThrow() throws IOException {
     UserCredentials userCredentials =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -624,11 +625,11 @@ class UserCredentialsTest extends BaseSerializationTest {
     file.deleteOnExit();
 
     String filePath = file.getAbsolutePath();
-    userCredentials.save(filePath);
+    assertDoesNotThrow(() -> userCredentials.save(filePath));
   }
 
   @Test
-  void saveAndRestoreUserCredential_saveAndRestored_throws() throws IOException {
+  void saveAndRestoreUserCredential_saveAndRestored_doesNotThrow() throws IOException {
     UserCredentials userCredentials =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -641,15 +642,14 @@ class UserCredentialsTest extends BaseSerializationTest {
 
     String filePath = file.getAbsolutePath();
 
-    userCredentials.save(filePath);
+    assertDoesNotThrow(() -> userCredentials.save(filePath));
 
-    FileInputStream inputStream = new FileInputStream(new File(filePath));
-
-    UserCredentials restoredCredentials = UserCredentials.fromStream(inputStream);
-
-    assertEquals(userCredentials.getClientId(), restoredCredentials.getClientId());
-    assertEquals(userCredentials.getClientSecret(), restoredCredentials.getClientSecret());
-    assertEquals(userCredentials.getRefreshToken(), restoredCredentials.getRefreshToken());
+    try (FileInputStream inputStream = new FileInputStream(filePath)) {
+      UserCredentials restoredCredentials = UserCredentials.fromStream(inputStream);
+      assertEquals(userCredentials.getClientId(), restoredCredentials.getClientId());
+      assertEquals(userCredentials.getClientSecret(), restoredCredentials.getClientSecret());
+      assertEquals(userCredentials.getRefreshToken(), restoredCredentials.getRefreshToken());
+    }
   }
 
   @Test

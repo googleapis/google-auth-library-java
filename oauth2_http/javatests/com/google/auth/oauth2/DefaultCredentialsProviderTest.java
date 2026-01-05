@@ -591,8 +591,8 @@ class DefaultCredentialsProviderTest {
     LogRecord lastRecord;
 
     @Override
-    public void publish(LogRecord record) {
-      lastRecord = record;
+    public void publish(LogRecord logRecord) {
+      this.lastRecord = logRecord;
     }
 
     public LogRecord getRecord() {
@@ -600,10 +600,14 @@ class DefaultCredentialsProviderTest {
     }
 
     @Override
-    public void close() {}
+    public void close() {
+      // Test implementation. Nothing to close
+    }
 
     @Override
-    public void flush() {}
+    public void flush() {
+      // Test implementation. Nothing to flush
+    }
   }
 
   @Test

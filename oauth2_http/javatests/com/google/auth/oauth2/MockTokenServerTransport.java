@@ -138,9 +138,9 @@ public class MockTokenServerTransport extends MockHttpTransport {
     this.error = error;
   }
 
-  public void addResponseErrorSequence(IOException... errors) {
-    for (IOException error : errors) {
-      responseSequence.add(Futures.<LowLevelHttpResponse>immediateFailedFuture(error));
+  public void addResponseErrorSequence(IOException... ioExceptions) {
+    for (IOException ioException : ioExceptions) {
+      responseSequence.add(Futures.immediateFailedFuture(ioException));
     }
   }
 
@@ -170,7 +170,6 @@ public class MockTokenServerTransport extends MockHttpTransport {
     }
     int questionMarkPos = url.indexOf('?');
     final String urlWithoutQuery = (questionMarkPos > 0) ? url.substring(0, questionMarkPos) : url;
-    final String query = (questionMarkPos > 0) ? url.substring(questionMarkPos + 1) : "";
 
     if (!responseSequence.isEmpty()) {
       request =

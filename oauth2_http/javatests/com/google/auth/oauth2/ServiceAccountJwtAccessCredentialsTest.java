@@ -134,7 +134,7 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
             .setClientEmail(SA_CLIENT_EMAIL)
             .setPrivateKey(privateKey)
             .setPrivateKeyId(SA_PRIVATE_KEY_ID);
-    assertDoesNotThrow(() -> builder.build());
+    assertDoesNotThrow(builder::build);
   }
 
   @Test
@@ -145,15 +145,18 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
             .setClientId(SA_CLIENT_ID)
             .setClientEmail(SA_CLIENT_EMAIL)
             .setPrivateKey(privateKey);
-    assertDoesNotThrow(() -> builder.build());
+    assertDoesNotThrow(builder::build);
   }
 
   @Test
   void constructor_noEmail_throws() throws IOException {
     PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8);
     ServiceAccountJwtAccessCredentials.Builder builder =
-        ServiceAccountJwtAccessCredentials.newBuilder().setClientId(SA_CLIENT_ID);
-    NullPointerException e = assertThrows(NullPointerException.class, builder::build);
+        ServiceAccountJwtAccessCredentials.newBuilder()
+            .setClientId(SA_CLIENT_ID)
+            .setPrivateKey(privateKey)
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID);
+    assertThrows(NullPointerException.class, builder::build);
   }
 
   @Test
@@ -163,7 +166,7 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
             .setClientId(SA_CLIENT_ID)
             .setClientEmail(SA_CLIENT_EMAIL)
             .setPrivateKeyId(SA_PRIVATE_KEY_ID);
-    NullPointerException e = assertThrows(NullPointerException.class, builder::build);
+    assertThrows(NullPointerException.class, builder::build);
   }
 
   @Test
@@ -234,7 +237,7 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
             .setPrivateKeyId(SA_PRIVATE_KEY_ID)
             .build();
 
-    assertThrows(IOException.class, () -> credentials.getRequestMetadata());
+    assertThrows(IOException.class, credentials::getRequestMetadata);
   }
 
   @Test
@@ -631,7 +634,7 @@ class ServiceAccountJwtAccessCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void fromStream_nullStream_throws() throws IOException {
+  void fromStream_nullStream_throws() {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     assertThrows(
         NullPointerException.class,
