@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.41.1](https://github.com/googleapis/google-auth-library-java/compare/v1.41.0...v1.41.1) (2026-01-05)
+
+
+### Bug Fixes
+
+* Simplify call to directly retrieve the default service account from MDS ([#1844](https://github.com/googleapis/google-auth-library-java/issues/1844)) ([6efda0b](https://github.com/googleapis/google-auth-library-java/commit/6efda0bc2063b1d1b30de43785d08ec86da1791c))
+
 ## [1.41.0](https://github.com/googleapis/google-auth-library-java/compare/v1.40.0...v1.41.0) (2025-12-03)
 
 
