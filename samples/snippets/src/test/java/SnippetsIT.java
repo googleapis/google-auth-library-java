@@ -27,27 +27,30 @@ import java.io.PrintStream;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.List;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-class SnippetsIT {
+@RunWith(JUnit4.class)
+public class SnippetsIT {
 
   private static final String PROJECT_ID = System.getenv("GOOGLE_CLOUD_PROJECT");
   private static final String CREDENTIALS = System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
   private ByteArrayOutputStream stdOut;
 
   // Check if the required environment variables are set.
-  static void requireEnvVar(String envVarName) {
+  public static void requireEnvVar(String envVarName) {
     assertWithMessage(String.format("Missing environment variable '%s' ", envVarName))
         .that(System.getenv(envVarName))
         .isNotEmpty();
   }
 
-  @BeforeAll
-  static void setup() throws IOException {
+  @BeforeClass
+  public static void setup() throws IOException {
     final PrintStream out = System.out;
     ByteArrayOutputStream stdOut = new ByteArrayOutputStream();
     System.setOut(new PrintStream(stdOut));
@@ -58,17 +61,17 @@ class SnippetsIT {
     System.setOut(out);
   }
 
-  @AfterAll
-  static void cleanup() {}
+  @AfterClass
+  public static void cleanup() {}
 
-  @BeforeEach
-  void beforeEach() {
+  @Before
+  public void beforeEach() {
     stdOut = new ByteArrayOutputStream();
     System.setOut(new PrintStream(stdOut));
   }
 
-  @AfterEach
-  void afterEach() {
+  @After
+  public void afterEach() {
     stdOut = null;
     System.setOut(null);
   }
@@ -91,13 +94,13 @@ class SnippetsIT {
   }
 
   @Test
-  void testIdTokenFromServiceAccount() throws IOException {
+  public void testIdTokenFromServiceAccount() throws IOException {
     IdTokenFromServiceAccount.getIdTokenFromServiceAccount(CREDENTIALS, "https://example.com");
     assertThat(stdOut.toString()).contains("Generated ID token.");
   }
 
   @Test
-  void testVerifyGoogleIdToken() throws IOException {
+  public void testVerifyGoogleIdToken() throws IOException {
     String idToken = getIdTokenFromServiceAccount(CREDENTIALS, "https://example.com");
 
     VerifyGoogleIdToken.verifyGoogleIdToken(
@@ -105,19 +108,19 @@ class SnippetsIT {
   }
 
   @Test
-  void testIdTokenFromMetadataServer() throws GeneralSecurityException, IOException {
+  public void testIdTokenFromMetadataServer() throws GeneralSecurityException, IOException {
     IdTokenFromMetadataServer.getIdTokenFromMetadataServer("https://www.google.com");
     assertThat(stdOut.toString()).contains("Generated ID token.");
   }
 
   @Test
-  void testAuthenticateImplicitWithAdc() throws IOException {
+  public void testAuthenticateImplicitWithAdc() throws IOException {
     AuthenticateImplicitWithAdc.authenticateImplicitWithAdc(PROJECT_ID);
     assertThat(stdOut.toString()).contains("Listed all storage buckets.");
   }
 
   @Test
-  void testAuthenticateExplicit() throws IOException {
+  public void testAuthenticateExplicit() throws IOException {
     AuthenticateExplicit.authenticateExplicit(PROJECT_ID);
     assertThat(stdOut.toString()).contains("Listed all storage buckets.");
   }
