@@ -46,9 +46,9 @@ import static com.google.auth.oauth2.ServiceAccountCredentialsTest.createDefault
 import static com.google.auth.oauth2.UserCredentialsTest.CLIENT_ID;
 import static com.google.auth.oauth2.UserCredentialsTest.CLIENT_SECRET;
 import static com.google.auth.oauth2.UserCredentialsTest.REFRESH_TOKEN;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.google.api.client.http.HttpStatusCodes;
@@ -62,8 +62,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.KeyValuePair;
@@ -73,7 +73,7 @@ import org.slf4j.event.KeyValuePair;
  * credentials test classes with addition of test logging appender setup and test logic for logging.
  * This duplicates tests setups, but centralizes logging test setup in this class.
  */
-public class LoggingTest {
+class LoggingTest {
 
   private TestAppender setupTestLogger(Class<?> clazz) {
     TestAppender testAppender = new TestAppender();
@@ -83,8 +83,8 @@ public class LoggingTest {
     return testAppender;
   }
 
-  @BeforeClass
-  public static void setup() {
+  @BeforeAll
+  static void setup() {
     // mimic GOOGLE_SDK_JAVA_LOGGING = true
     TestEnvironmentProvider testEnvironmentProvider = new TestEnvironmentProvider();
     testEnvironmentProvider.setEnv(LoggingUtils.GOOGLE_SDK_JAVA_LOGGING, "true");
@@ -92,8 +92,7 @@ public class LoggingTest {
   }
 
   @Test
-  public void userCredentials_getRequestMetadata_fromRefreshToken_hasAccessToken()
-      throws IOException {
+  void userCredentials_getRequestMetadata_fromRefreshToken_hasAccessToken() throws IOException {
     TestAppender testAppender = setupTestLogger(UserCredentials.class);
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
@@ -155,7 +154,7 @@ public class LoggingTest {
   }
 
   @Test
-  public void serviceAccountCredentials_getRequestMetadata_hasAccessToken() throws IOException {
+  void serviceAccountCredentials_getRequestMetadata_hasAccessToken() throws IOException {
     TestAppender testAppender = setupTestLogger(ServiceAccountCredentials.class);
     GoogleCredentials credentials =
         ServiceAccountCredentialsTest.createDefaultBuilderWithToken(ACCESS_TOKEN)
@@ -201,7 +200,7 @@ public class LoggingTest {
   }
 
   @Test
-  public void serviceAccountCredentials_idTokenWithAudience_iamFlow_targetAudienceMatchesAudClaim()
+  void serviceAccountCredentials_idTokenWithAudience_iamFlow_targetAudienceMatchesAudClaim()
       throws IOException {
     TestAppender testAppender = setupTestLogger(ServiceAccountCredentials.class);
     String nonGDU = "test.com";
@@ -260,7 +259,7 @@ public class LoggingTest {
   }
 
   @Test()
-  public void impersonatedCredentials_refreshAccessToken_success()
+  void impersonatedCredentials_refreshAccessToken_success()
       throws IOException, IllegalStateException {
     TestAppender testAppender = setupTestLogger(ImpersonatedCredentials.class);
     MockIAMCredentialsServiceTransportFactory mockTransportFactory =
@@ -313,7 +312,7 @@ public class LoggingTest {
   }
 
   @Test
-  public void idTokenWithAudience_withEmail() throws IOException {
+  void idTokenWithAudience_withEmail() throws IOException {
     TestAppender testAppender = setupTestLogger(IamUtils.class);
     MockIAMCredentialsServiceTransportFactory mockTransportFactory =
         new MockIAMCredentialsServiceTransportFactory();
@@ -374,7 +373,7 @@ public class LoggingTest {
   }
 
   @Test
-  public void sign_sameAs() throws IOException {
+  void sign_sameAs() throws IOException {
     TestAppender testAppender = setupTestLogger(IamUtils.class);
     MockIAMCredentialsServiceTransportFactory mockTransportFactory =
         new MockIAMCredentialsServiceTransportFactory();
@@ -431,7 +430,7 @@ public class LoggingTest {
   }
 
   @Test
-  public void getRequestMetadata_hasAccessToken() throws IOException {
+  void getRequestMetadata_hasAccessToken() throws IOException {
     TestAppender testAppender = setupTestLogger(ComputeEngineCredentials.class);
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     transportFactory.transport.setServiceAccountEmail("SA_CLIENT_EMAIL");
@@ -473,7 +472,7 @@ public class LoggingTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void idTokenWithAudience_full() throws IOException {
+  void idTokenWithAudience_full() throws IOException {
     TestAppender testAppender = setupTestLogger(ComputeEngineCredentials.class);
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     ComputeEngineCredentials credentials =
@@ -488,7 +487,7 @@ public class LoggingTest {
             .build();
     tokenCredential.refresh();
     Payload p = tokenCredential.getIdToken().getJsonWebSignature().getPayload();
-    assertTrue("Full ID Token format not provided", p.containsKey("google"));
+    assertTrue(p.containsKey("google"), "Full ID Token format not provided");
     ArrayMap<String, ArrayMap> googleClaim = (ArrayMap<String, ArrayMap>) p.get("google");
     assertTrue(googleClaim.containsKey("compute_engine"));
 

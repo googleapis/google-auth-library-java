@@ -31,23 +31,23 @@
 
 package com.google.auth.mtls;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.GeneralSecurityException;
 import java.util.List;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class SecureConnectProviderTest {
+class SecureConnectProviderTest {
 
   private static class TestCertProviderCommandProcess extends Process {
 
-    private boolean runForever;
-    private int exitValue;
+    private final boolean runForever;
+    private final int exitValue;
 
     public TestCertProviderCommandProcess(int exitValue, boolean runForever) {
       this.runForever = runForever;
@@ -88,7 +88,7 @@ public class SecureConnectProviderTest {
 
   static class TestProcessProvider implements SecureConnectProvider.ProcessProvider {
 
-    private int exitCode;
+    private final int exitCode;
 
     public TestProcessProvider(int exitCode) {
       this.exitCode = exitCode;
@@ -101,8 +101,7 @@ public class SecureConnectProviderTest {
   }
 
   @Test
-  public void testGetKeyStoreNonZeroExitCode()
-      throws IOException, InterruptedException, GeneralSecurityException {
+  void testGetKeyStoreNonZeroExitCode() {
     InputStream metadata =
         this.getClass()
             .getClassLoader()
@@ -112,14 +111,14 @@ public class SecureConnectProviderTest {
             IOException.class,
             () -> SecureConnectProvider.getKeyStore(metadata, new TestProcessProvider(1)));
     assertTrue(
-        "expected to fail with nonzero exit code",
         actual
             .getMessage()
-            .contains("SecureConnect: Cert provider command failed with exit code: 1"));
+            .contains("SecureConnect: Cert provider command failed with exit code: 1"),
+        "expected to fail with nonzero exit code");
   }
 
   @Test
-  public void testExtractCertificateProviderCommand() throws IOException {
+  void testExtractCertificateProviderCommand() throws IOException {
     InputStream inputStream =
         this.getClass().getClassLoader().getResourceAsStream("mtls_context_aware_metadata.json");
     List<String> command = SecureConnectProvider.extractCertificateProviderCommand(inputStream);
@@ -129,26 +128,26 @@ public class SecureConnectProviderTest {
   }
 
   @Test
-  public void testRunCertificateProviderCommandSuccess() throws IOException, InterruptedException {
+  void testRunCertificateProviderCommandSuccess() throws IOException, InterruptedException {
     Process certCommandProcess = new TestCertProviderCommandProcess(0, false);
     int exitValue = SecureConnectProvider.runCertificateProviderCommand(certCommandProcess, 100);
     assertEquals(0, exitValue);
   }
 
   @Test
-  public void testRunCertificateProviderCommandTimeout() throws InterruptedException {
+  void testRunCertificateProviderCommandTimeout() {
     Process certCommandProcess = new TestCertProviderCommandProcess(0, true);
     IOException actual =
         assertThrows(
             IOException.class,
             () -> SecureConnectProvider.runCertificateProviderCommand(certCommandProcess, 100));
     assertTrue(
-        "expected to fail with timeout",
-        actual.getMessage().contains("SecureConnect: Cert provider command timed out"));
+        actual.getMessage().contains("SecureConnect: Cert provider command timed out"),
+        "expected to fail with timeout");
   }
 
   @Test
-  public void testGetKeyStore_FileNotFoundException()
+  void testGetKeyStore_FileNotFoundException()
       throws IOException, GeneralSecurityException, InterruptedException {
     SecureConnectProvider provider =
         new SecureConnectProvider(new TestProcessProvider(0), "/invalid/metadata/path.json");

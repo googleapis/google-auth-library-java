@@ -31,9 +31,10 @@
 
 package com.google.auth.mtls;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -47,10 +48,9 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class X509ProviderTest {
+class X509ProviderTest {
 
   private static final String TEST_CERT =
       "-----BEGIN CERTIFICATE-----\n"
@@ -87,18 +87,18 @@ public class X509ProviderTest {
           + "-----END PRIVATE KEY-----";
 
   @Test
-  public void x509Provider_fileDoesntExist_throws() {
+  void x509Provider_fileDoesntExist_throws() {
     String certConfigPath = "badfile.txt";
     X509Provider testProvider = new TestX509Provider(certConfigPath);
     String expectedErrorMessage = "File does not exist.";
 
     CertificateSourceUnavailableException exception =
-        Assert.assertThrows(CertificateSourceUnavailableException.class, testProvider::getKeyStore);
+        assertThrows(CertificateSourceUnavailableException.class, testProvider::getKeyStore);
     assertTrue(exception.getMessage().contains(expectedErrorMessage));
   }
 
   @Test
-  public void x509Provider_emptyFile_throws() {
+  void x509Provider_emptyFile_throws() {
     String certConfigPath = "certConfig.txt";
     InputStream certConfigStream = new ByteArrayInputStream("".getBytes());
     TestX509Provider testProvider = new TestX509Provider(certConfigPath);
@@ -106,12 +106,12 @@ public class X509ProviderTest {
     String expectedErrorMessage = "no JSON input found";
 
     IllegalArgumentException exception =
-        Assert.assertThrows(IllegalArgumentException.class, testProvider::getKeyStore);
+        assertThrows(IllegalArgumentException.class, testProvider::getKeyStore);
     assertTrue(exception.getMessage().contains(expectedErrorMessage));
   }
 
   @Test
-  public void x509Provider_succeeds() throws IOException, KeyStoreException, CertificateException {
+  void x509Provider_succeeds() throws IOException, KeyStoreException, CertificateException {
     String certConfigPath = "certConfig.txt";
     String certPath = "cert.crt";
     String keyPath = "key.crt";
@@ -135,7 +135,7 @@ public class X509ProviderTest {
   }
 
   @Test
-  public void x509Provider_succeeds_withEnvVariable()
+  void x509Provider_succeeds_withEnvVariable()
       throws IOException, KeyStoreException, CertificateException {
     String certConfigPath = "certConfig.txt";
     String certPath = "cert.crt";
@@ -161,7 +161,7 @@ public class X509ProviderTest {
   }
 
   @Test
-  public void x509Provider_succeeds_withWellKnownPath()
+  void x509Provider_succeeds_withWellKnownPath()
       throws IOException, KeyStoreException, CertificateException {
     String certConfigPath = "certConfig.txt";
     String certPath = "cert.crt";

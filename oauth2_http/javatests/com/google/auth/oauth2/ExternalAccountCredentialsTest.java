@@ -32,12 +32,12 @@
 package com.google.auth.oauth2;
 
 import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
@@ -56,14 +56,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /** Tests for {@link ExternalAccountCredentials}. */
-@RunWith(JUnit4.class)
-public class ExternalAccountCredentialsTest extends BaseSerializationTest {
+class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
   private static final String STS_URL = "https://sts.googleapis.com/v1/token";
   private static final String GOOGLE_DEFAULT_UNIVERSE = "googleapis.com";
@@ -88,13 +85,13 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
   private MockExternalAccountCredentialsTransportFactory transportFactory;
 
-  @Before
-  public void setup() {
+  @BeforeEach
+  void setup() {
     transportFactory = new MockExternalAccountCredentialsTransportFactory();
   }
 
   @Test
-  public void fromStream_identityPoolCredentials() throws IOException {
+  void fromStream_identityPoolCredentials() throws IOException {
     GenericJson json = buildJsonIdentityPoolCredential();
 
     ExternalAccountCredentials credential =
@@ -104,7 +101,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_awsCredentials() throws IOException {
+  void fromStream_awsCredentials() throws IOException {
     GenericJson json = buildJsonAwsCredential();
 
     ExternalAccountCredentials credential =
@@ -114,7 +111,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_pluggableAuthCredentials() throws IOException {
+  void fromStream_pluggableAuthCredentials() throws IOException {
     GenericJson json = buildJsonPluggableAuthCredential();
 
     ExternalAccountCredentials credential =
@@ -124,7 +121,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_invalidStream_throws() throws IOException {
+  void fromStream_invalidStream_throws() throws IOException {
     GenericJson json = buildJsonAwsCredential();
 
     json.put("audience", new HashMap<>());
@@ -138,7 +135,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_nullTransport_throws() throws IOException {
+  void fromStream_nullTransport_throws() throws IOException {
     try {
       ExternalAccountCredentials.fromStream(
           new ByteArrayInputStream("foo".getBytes()), /* transportFactory= */ null);
@@ -149,7 +146,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_nullOptionalField() throws IOException {
+  void fromStream_nullOptionalField() throws IOException {
     ExternalAccountCredentials credentials =
         ExternalAccountCredentials.fromStream(
             new ByteArrayInputStream(
@@ -167,7 +164,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_nullStream_throws() throws IOException {
+  void fromStream_nullStream_throws() throws IOException {
     try {
       ExternalAccountCredentials.fromStream(
           /* credentialsStream= */ null, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
@@ -178,7 +175,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_invalidWorkloadAudience_throws() throws IOException {
+  void fromStream_invalidWorkloadAudience_throws() throws IOException {
     try {
       GenericJson json = buildJsonIdentityPoolWorkforceCredential();
       json.put("audience", "invalidAudience");
@@ -191,7 +188,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromJson_identityPoolCredentialsWorkload() throws IOException {
+  void fromJson_identityPoolCredentialsWorkload() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
             buildJsonIdentityPoolCredential(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
@@ -208,7 +205,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromJson_identityPoolCredentialsWorkforce() throws IOException {
+  void fromJson_identityPoolCredentialsWorkforce() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
             buildJsonIdentityPoolWorkforceCredential(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
@@ -226,8 +223,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromJson_identityPoolCredentialsWithServiceAccountImpersonationOptions()
-      throws IOException {
+  void fromJson_identityPoolCredentialsWithServiceAccountImpersonationOptions() throws IOException {
     GenericJson identityPoolCredentialJson = buildJsonIdentityPoolCredential();
     identityPoolCredentialJson.set(
         "service_account_impersonation", buildServiceAccountImpersonationOptions(2800));
@@ -249,7 +245,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromJson_identityPoolCredentialsWithUniverseDomain() throws IOException {
+  void fromJson_identityPoolCredentialsWithUniverseDomain() throws IOException {
     GenericJson identityPoolCredentialJson = buildJsonIdentityPoolCredential();
     identityPoolCredentialJson.set("universe_domain", "universeDomain");
 
@@ -269,7 +265,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromJson_awsCredentials() throws IOException {
+  void fromJson_awsCredentials() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
             buildJsonAwsCredential(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
@@ -284,7 +280,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromJson_awsCredentialsWithServiceAccountImpersonationOptions() throws IOException {
+  void fromJson_awsCredentialsWithServiceAccountImpersonationOptions() throws IOException {
     GenericJson awsCredentialJson = buildJsonAwsCredential();
     awsCredentialJson.set(
         "service_account_impersonation", buildServiceAccountImpersonationOptions(2800));
@@ -303,7 +299,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromJson_awsCredentialsWithUniverseDomain() throws IOException {
+  void fromJson_awsCredentialsWithUniverseDomain() throws IOException {
     GenericJson awsCredentialJson = buildJsonAwsCredential();
     awsCredentialJson.set("universe_domain", "universeDomain");
 
@@ -320,7 +316,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromJson_pluggableAuthCredentials() throws IOException {
+  void fromJson_pluggableAuthCredentials() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
             buildJsonPluggableAuthCredential(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
@@ -341,7 +337,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromJson_pluggableAuthCredentialsWorkforce() throws IOException {
+  void fromJson_pluggableAuthCredentialsWorkforce() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
             buildJsonPluggableAuthWorkforceCredential(), OAuth2Utils.HTTP_TRANSPORT_FACTORY);
@@ -367,7 +363,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void fromJson_pluggableAuthCredentials_allExecutableOptionsSet() throws IOException {
+  void fromJson_pluggableAuthCredentials_allExecutableOptionsSet() throws IOException {
     GenericJson json = buildJsonPluggableAuthCredential();
     Map<String, Object> credentialSourceMap = (Map<String, Object>) json.get("credential_source");
     // Add optional params to the executable config (timeout, output file path).
@@ -395,7 +391,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromJson_pluggableAuthCredentialsWithServiceAccountImpersonationOptions()
+  void fromJson_pluggableAuthCredentialsWithServiceAccountImpersonationOptions()
       throws IOException {
     GenericJson pluggableAuthCredentialJson = buildJsonPluggableAuthCredential();
     pluggableAuthCredentialJson.set(
@@ -423,7 +419,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void fromJson_pluggableAuthCredentials_withUniverseDomain() throws IOException {
+  void fromJson_pluggableAuthCredentials_withUniverseDomain() throws IOException {
     GenericJson json = buildJsonPluggableAuthCredential();
     json.set("universe_domain", "universeDomain");
 
@@ -453,7 +449,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromJson_pluggableAuthCredentialsWithUniverseDomain() throws IOException {
+  void fromJson_pluggableAuthCredentialsWithUniverseDomain() throws IOException {
     GenericJson pluggableAuthCredentialJson = buildJsonPluggableAuthCredential();
     pluggableAuthCredentialJson.set("universe_domain", "universeDomain");
 
@@ -477,7 +473,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromJson_nullJson_throws() throws IOException {
+  void fromJson_nullJson_throws() throws IOException {
     try {
       ExternalAccountCredentials.fromJson(/* json= */ null, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
       fail("Exception should be thrown.");
@@ -487,7 +483,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromJson_nullTransport_throws() throws IOException {
+  void fromJson_nullTransport_throws() throws IOException {
     try {
       ExternalAccountCredentials.fromJson(
           new HashMap<String, Object>(), /* transportFactory= */ null);
@@ -498,7 +494,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromJson_invalidWorkforceAudiences_throws() throws IOException {
+  void fromJson_invalidWorkforceAudiences_throws() throws IOException {
     List<String> invalidAudiences =
         Arrays.asList(
             "//iam.googleapis.com/locations/global/workloadIdentityPools/pool/providers/provider",
@@ -527,7 +523,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void constructor_builder() throws IOException {
+  void constructor_builder() throws IOException {
     HashMap<String, Object> credentialSource = new HashMap<>();
     credentialSource.put("file", "file");
 
@@ -567,7 +563,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void constructor_builder_defaultTokenUrl() {
+  void constructor_builder_defaultTokenUrl() {
     HashMap<String, Object> credentialSource = new HashMap<>();
     credentialSource.put("file", "file");
 
@@ -584,7 +580,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void constructor_builder_defaultTokenUrlwithUniverseDomain() {
+  void constructor_builder_defaultTokenUrlwithUniverseDomain() {
     HashMap<String, Object> credentialSource = new HashMap<>();
     credentialSource.put("file", "file");
 
@@ -602,7 +598,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void constructor_builder_subjectTokenTypeEnum() {
+  void constructor_builder_subjectTokenTypeEnum() {
     HashMap<String, Object> credentialSource = new HashMap<>();
     credentialSource.put("file", "file");
 
@@ -620,7 +616,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void constructor_builder_invalidTokenUrl() {
+  void constructor_builder_invalidTokenUrl() {
     try {
       ExternalAccountCredentials.Builder builder =
           TestExternalAccountCredentials.newBuilder()
@@ -637,7 +633,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void constructor_builder_invalidServiceAccountImpersonationUrl() {
+  void constructor_builder_invalidServiceAccountImpersonationUrl() {
     try {
       ExternalAccountCredentials.Builder builder =
           TestExternalAccountCredentials.newBuilder()
@@ -655,7 +651,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void constructor_builderWithInvalidWorkforceAudiences_throws() {
+  void constructor_builderWithInvalidWorkforceAudiences_throws() {
     List<String> invalidAudiences =
         Arrays.asList(
             "",
@@ -690,7 +686,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void constructor_builderWithEmptyWorkforceUserProjectAndWorkforceAudience() {
+  void constructor_builderWithEmptyWorkforceUserProjectAndWorkforceAudience() {
     HashMap<String, Object> credentialSource = new HashMap<>();
     credentialSource.put("file", "file");
     // No exception should be thrown.
@@ -705,7 +701,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void constructor_builder_invalidTokenLifetime_throws() {
+  void constructor_builder_invalidTokenLifetime_throws() {
     Map<String, Object> invalidOptionsMap = new HashMap<String, Object>();
     invalidOptionsMap.put("token_lifetime_seconds", "thisIsAString");
 
@@ -737,7 +733,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void constructor_builder_stringTokenLifetime() {
+  void constructor_builder_stringTokenLifetime() {
     Map<String, Object> optionsMap = new HashMap<String, Object>();
     optionsMap.put("token_lifetime_seconds", "2800");
 
@@ -764,7 +760,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void constructor_builder_bigDecimalTokenLifetime() {
+  void constructor_builder_bigDecimalTokenLifetime() {
     Map<String, Object> optionsMap = new HashMap<String, Object>();
     optionsMap.put("token_lifetime_seconds", new BigDecimal("2800"));
 
@@ -791,7 +787,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void constructor_builder_integerTokenLifetime() {
+  void constructor_builder_integerTokenLifetime() {
     Map<String, Object> optionsMap = new HashMap<String, Object>();
     optionsMap.put("token_lifetime_seconds", Integer.valueOf(2800));
 
@@ -818,7 +814,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void constructor_builder_lowTokenLifetime_throws() {
+  void constructor_builder_lowTokenLifetime_throws() {
     Map<String, Object> optionsMap = new HashMap<String, Object>();
     optionsMap.put("token_lifetime_seconds", 599);
 
@@ -848,7 +844,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void constructor_builder_highTokenLifetime_throws() {
+  void constructor_builder_highTokenLifetime_throws() {
     Map<String, Object> optionsMap = new HashMap<String, Object>();
     optionsMap.put("token_lifetime_seconds", 43201);
 
@@ -878,7 +874,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void exchangeExternalCredentialForAccessToken() throws IOException {
+  void exchangeExternalCredentialForAccessToken() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(buildJsonIdentityPoolCredential(), transportFactory);
 
@@ -902,7 +898,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void exchangeExternalCredentialForAccessToken_withInternalOptions() throws IOException {
+  void exchangeExternalCredentialForAccessToken_withInternalOptions() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(buildJsonIdentityPoolCredential(), transportFactory);
 
@@ -927,7 +923,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void exchangeExternalCredentialForAccessToken_workforceCred_expectUserProjectPassedToSts()
+  void exchangeExternalCredentialForAccessToken_workforceCred_expectUserProjectPassedToSts()
       throws IOException {
     ExternalAccountCredentials identityPoolCredential =
         ExternalAccountCredentials.fromJson(
@@ -961,9 +957,8 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void
-      exchangeExternalCredentialForAccessToken_workforceCredWithInternalOptions_expectOverridden()
-          throws IOException {
+  void exchangeExternalCredentialForAccessToken_workforceCredWithInternalOptions_expectOverridden()
+      throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(
             buildJsonIdentityPoolWorkforceCredential(), transportFactory);
@@ -988,7 +983,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void exchangeExternalCredentialForAccessToken_withServiceAccountImpersonation()
+  void exchangeExternalCredentialForAccessToken_withServiceAccountImpersonation()
       throws IOException {
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
 
@@ -1025,7 +1020,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void exchangeExternalCredentialForAccessToken_withServiceAccountImpersonationOptions()
+  void exchangeExternalCredentialForAccessToken_withServiceAccountImpersonationOptions()
       throws IOException {
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
 
@@ -1061,7 +1056,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void exchangeExternalCredentialForAccessToken_throws() throws IOException {
+  void exchangeExternalCredentialForAccessToken_throws() throws IOException {
     ExternalAccountCredentials credential =
         ExternalAccountCredentials.fromJson(buildJsonIdentityPoolCredential(), transportFactory);
 
@@ -1085,7 +1080,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void exchangeExternalCredentialForAccessToken_invalidImpersonatedCredentialsThrows()
+  void exchangeExternalCredentialForAccessToken_invalidImpersonatedCredentialsThrows()
       throws IOException {
     GenericJson json = buildJsonIdentityPoolCredential();
     json.put("service_account_impersonation_url", "https://iamcredentials.googleapis.com");
@@ -1106,7 +1101,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getRequestMetadata_withQuotaProjectId() throws IOException {
+  void getRequestMetadata_withQuotaProjectId() throws IOException {
     TestExternalAccountCredentials testCredentials =
         (TestExternalAccountCredentials)
             TestExternalAccountCredentials.newBuilder()
@@ -1125,7 +1120,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void serialize() throws IOException, ClassNotFoundException {
+  void serialize() throws IOException, ClassNotFoundException {
     Map<String, Object> impersonationOpts =
         new HashMap<String, Object>() {
           {
@@ -1159,7 +1154,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void validateTokenUrl_validUrls() {
+  void validateTokenUrl_validUrls() {
     List<String> validUrls =
         Arrays.asList(
             "https://sts.googleapis.com",
@@ -1181,7 +1176,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void validateTokenUrl_invalidUrls() {
+  void validateTokenUrl_invalidUrls() {
     List<String> invalidUrls =
         Arrays.asList(
             "sts.googleapis.com",
@@ -1204,7 +1199,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void validateServiceAccountImpersonationUrls_validUrls() {
+  void validateServiceAccountImpersonationUrls_validUrls() {
     List<String> validUrls =
         Arrays.asList(
             "https://iamcredentials.googleapis.com",
@@ -1227,7 +1222,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void validateServiceAccountImpersonationUrls_invalidUrls() {
+  void validateServiceAccountImpersonationUrls_invalidUrls() {
     List<String> invalidUrls =
         Arrays.asList(
             "iamcredentials.googleapis.com",

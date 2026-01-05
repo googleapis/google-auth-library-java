@@ -31,25 +31,23 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.google.api.client.json.GenericJson;
 import com.google.auth.TestUtils;
 import java.io.IOException;
 import java.io.InputStream;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
 /** Unit tests for ClientId */
-@RunWith(JUnit4.class)
-public class ClientIdTest {
+class ClientIdTest {
   private static final String CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
   private static final String CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
 
   @Test
-  public void constructor() {
+  void constructor() {
     ClientId clientId =
         ClientId.newBuilder().setClientId(CLIENT_ID).setClientSecret(CLIENT_SECRET).build();
 
@@ -57,20 +55,22 @@ public class ClientIdTest {
     assertEquals(CLIENT_SECRET, clientId.getClientSecret());
   }
 
-  @Test(expected = NullPointerException.class)
-  public void constructor_nullClientId_throws() {
-    ClientId.newBuilder().setClientSecret(CLIENT_SECRET).build();
+  @Test
+  void constructor_nullClientId_throws() {
+    assertThrows(
+        NullPointerException.class,
+        () -> ClientId.newBuilder().setClientSecret(CLIENT_SECRET).build());
   }
 
   @Test
-  public void constructor_nullClientSecret() {
+  void constructor_nullClientSecret() {
     ClientId clientId = ClientId.newBuilder().setClientId(CLIENT_ID).build();
     assertEquals(CLIENT_ID, clientId.getClientId());
     assertNull(clientId.getClientSecret());
   }
 
   @Test
-  public void fromJson_web() throws IOException {
+  void fromJson_web() throws IOException {
     GenericJson json = writeClientIdJson("web", CLIENT_ID, CLIENT_SECRET);
 
     ClientId clientId = ClientId.fromJson(json);
@@ -80,7 +80,7 @@ public class ClientIdTest {
   }
 
   @Test
-  public void fromJson_installed() throws IOException {
+  void fromJson_installed() throws IOException {
     GenericJson json = writeClientIdJson("installed", CLIENT_ID, CLIENT_SECRET);
 
     ClientId clientId = ClientId.fromJson(json);
@@ -90,7 +90,7 @@ public class ClientIdTest {
   }
 
   @Test
-  public void fromJson_installedNoSecret() throws IOException {
+  void fromJson_installedNoSecret() throws IOException {
     GenericJson json = writeClientIdJson("installed", CLIENT_ID, null);
 
     ClientId clientId = ClientId.fromJson(json);
@@ -99,42 +99,44 @@ public class ClientIdTest {
     assertNull(clientId.getClientSecret());
   }
 
-  @Test(expected = IOException.class)
-  public void fromJson_invalidType_throws() throws IOException {
+  @Test
+  void fromJson_invalidType_throws() throws IOException {
     GenericJson json = writeClientIdJson("invalid", CLIENT_ID, null);
 
-    ClientId.fromJson(json);
-  }
-
-  @Test(expected = IOException.class)
-  public void fromJson_noClientId_throws() throws IOException {
-    GenericJson json = writeClientIdJson("web", null, null);
-
-    ClientId.fromJson(json);
-  }
-
-  @Test(expected = IOException.class)
-  public void fromJson_zeroLengthClientId_throws() throws IOException {
-    GenericJson json = writeClientIdJson("web", "", null);
-
-    ClientId.fromJson(json);
+    assertThrows(IOException.class, () -> ClientId.fromJson(json));
   }
 
   @Test
-  public void fromResource() throws IOException {
+  void fromJson_noClientId_throws() throws IOException {
+    GenericJson json = writeClientIdJson("web", null, null);
+
+    assertThrows(IOException.class, () -> ClientId.fromJson(json));
+  }
+
+  @Test
+  void fromJson_zeroLengthClientId_throws() throws IOException {
+    GenericJson json = writeClientIdJson("web", "", null);
+
+    assertThrows(IOException.class, () -> ClientId.fromJson(json));
+  }
+
+  @Test
+  void fromResource() throws IOException {
     ClientId clientId = ClientId.fromResource(ClientIdTest.class, "/client_secret.json");
 
     assertEquals(CLIENT_ID, clientId.getClientId());
     assertEquals(CLIENT_SECRET, clientId.getClientSecret());
   }
 
-  @Test(expected = NullPointerException.class)
-  public void fromResource_badResource() throws IOException {
-    ClientId.fromResource(ClientIdTest.class, "invalid.json");
+  @Test
+  void fromResource_badResource() throws IOException {
+    assertThrows(
+        NullPointerException.class,
+        () -> ClientId.fromResource(ClientIdTest.class, "invalid.json"));
   }
 
   @Test
-  public void fromStream() throws IOException {
+  void fromStream() throws IOException {
     String text =
         "{"
             + "\"web\": {"
@@ -155,7 +157,7 @@ public class ClientIdTest {
   }
 
   @Test
-  public void fromStream_invalidJson_doesNotThrow() throws IOException {
+  void fromStream_invalidJson_doesNotThrow() throws IOException {
     String invalidJson =
         "{"
             + "\"web\": {"

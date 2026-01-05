@@ -31,7 +31,14 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.GenericJson;
@@ -52,13 +59,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
 /** Test case for {@link GoogleCredentials}. */
-@RunWith(JUnit4.class)
-public class GoogleCredentialsTest extends BaseSerializationTest {
+class GoogleCredentialsTest extends BaseSerializationTest {
 
   private static final String SA_CLIENT_EMAIL =
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr@developer.gserviceaccount.com";
@@ -96,7 +100,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   private static final String TPC_UNIVERSE = "foo.bar";
 
   @Test
-  public void getApplicationDefault_nullTransport_throws() throws IOException {
+  void getApplicationDefault_nullTransport_throws() throws IOException {
     try {
       GoogleCredentials.getApplicationDefault(null);
       fail();
@@ -106,7 +110,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_unknownType_throws() throws IOException {
+  void fromStream_unknownType_throws() throws IOException {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     GenericJson json = new GenericJson();
     json.put("type", "unsupported_credential");
@@ -125,7 +129,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_nullTransport_throws() throws IOException {
+  void fromStream_nullTransport_throws() throws IOException {
     InputStream stream = new ByteArrayInputStream("foo".getBytes());
     try {
       GoogleCredentials.fromStream(stream, null);
@@ -136,7 +140,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_noType_throws() throws IOException {
+  void fromStream_noType_throws() throws IOException {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     GenericJson json =
         ServiceAccountCredentialsTest.writeServiceAccountJson(
@@ -153,13 +157,13 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_nullStream_throws() {
+  void fromStream_nullStream_throws() {
     MockHttpTransportFactory transportFactory = new MockHttpTransportFactory();
     assertThrows(NullPointerException.class, () -> GoogleCredentials.parseJsonInputStream(null));
   }
 
   @Test
-  public void fromStream_serviceAccount_noUniverse_providesToken() throws IOException {
+  void fromStream_serviceAccount_noUniverse_providesToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     InputStream serviceAccountStream =
@@ -182,7 +186,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_serviceAccount_Universe_noToken() throws IOException {
+  void fromStream_serviceAccount_Universe_noToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     InputStream serviceAccountStream =
@@ -201,7 +205,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_serviceAccountNoClientId_throws() throws IOException {
+  void fromStream_serviceAccountNoClientId_throws() throws IOException {
     InputStream serviceAccountStream =
         ServiceAccountCredentialsTest.writeServiceAccountStream(
             null, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
@@ -210,7 +214,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_serviceAccountNoClientEmail_throws() throws IOException {
+  void fromStream_serviceAccountNoClientEmail_throws() throws IOException {
     InputStream serviceAccountStream =
         ServiceAccountCredentialsTest.writeServiceAccountStream(
             SA_CLIENT_ID, null, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
@@ -219,7 +223,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_serviceAccountNoPrivateKey_throws() throws IOException {
+  void fromStream_serviceAccountNoPrivateKey_throws() throws IOException {
     InputStream serviceAccountStream =
         ServiceAccountCredentialsTest.writeServiceAccountStream(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, null, SA_PRIVATE_KEY_ID);
@@ -228,7 +232,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_serviceAccountNoPrivateKeyId_throws() throws IOException {
+  void fromStream_serviceAccountNoPrivateKeyId_throws() throws IOException {
     InputStream serviceAccountStream =
         ServiceAccountCredentialsTest.writeServiceAccountStream(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, null);
@@ -237,7 +241,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_gdchServiceAccount_correct() throws IOException {
+  void fromStream_gdchServiceAccount_correct() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     InputStream gdchServiceAccountStream =
         GdchCredentialsTest.writeGdchServiceAccountStream(
@@ -273,7 +277,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_gdchServiceAccountNoFormatVersion_throws() throws IOException {
+  void fromStream_gdchServiceAccountNoFormatVersion_throws() throws IOException {
     InputStream gdchServiceAccountStream =
         GdchCredentialsTest.writeGdchServiceAccountStream(
             null,
@@ -288,7 +292,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_gdchServiceAccountNoProjectId_throws() throws IOException {
+  void fromStream_gdchServiceAccountNoProjectId_throws() throws IOException {
     InputStream gdchServiceAccountStream =
         GdchCredentialsTest.writeGdchServiceAccountStream(
             GDCH_SA_FORMAT_VERSION,
@@ -303,7 +307,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_gdchServiceAccountNoPrivateKeyId_throws() throws IOException {
+  void fromStream_gdchServiceAccountNoPrivateKeyId_throws() throws IOException {
     InputStream gdchServiceAccountStream =
         GdchCredentialsTest.writeGdchServiceAccountStream(
             GDCH_SA_FORMAT_VERSION,
@@ -318,7 +322,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_gdchServiceAccountNoPrivateKey_throws() throws IOException {
+  void fromStream_gdchServiceAccountNoPrivateKey_throws() throws IOException {
     InputStream gdchServiceAccountStream =
         GdchCredentialsTest.writeGdchServiceAccountStream(
             GDCH_SA_FORMAT_VERSION,
@@ -333,7 +337,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_gdchServiceAccountNoServiceIdentityName_throws() throws IOException {
+  void fromStream_gdchServiceAccountNoServiceIdentityName_throws() throws IOException {
     InputStream gdchServiceAccountStream =
         GdchCredentialsTest.writeGdchServiceAccountStream(
             GDCH_SA_FORMAT_VERSION,
@@ -348,7 +352,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_gdchServiceAccountNoTokenServerUri_throws() throws IOException {
+  void fromStream_gdchServiceAccountNoTokenServerUri_throws() throws IOException {
     InputStream gdchServiceAccountStream =
         GdchCredentialsTest.writeGdchServiceAccountStream(
             GDCH_SA_FORMAT_VERSION,
@@ -363,7 +367,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_gdchServiceAccountInvalidFormatVersion_throws() throws IOException {
+  void fromStream_gdchServiceAccountInvalidFormatVersion_throws() throws IOException {
     InputStream gdchServiceAccountStream =
         GdchCredentialsTest.writeGdchServiceAccountStream(
             "100",
@@ -380,7 +384,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_gdchServiceAccountInvalidCaCertPath_throws() throws IOException {
+  void fromStream_gdchServiceAccountInvalidCaCertPath_throws() throws IOException {
     InputStream gdchServiceAccountStream =
         GdchCredentialsTest.writeGdchServiceAccountStream(
             GDCH_SA_FORMAT_VERSION,
@@ -397,7 +401,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_userCredentials_providesToken() throws IOException {
+  void fromStream_userCredentials_providesToken() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(USER_CLIENT_ID, USER_CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
@@ -413,7 +417,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_userCredentials_defaultUniverse() throws IOException {
+  void fromStream_userCredentials_defaultUniverse() throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     InputStream userStream =
         UserCredentialsTest.writeUserStream(
@@ -425,7 +429,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_userCredentials_NoClientId_throws() throws IOException {
+  void fromStream_userCredentials_NoClientId_throws() throws IOException {
     InputStream userStream =
         UserCredentialsTest.writeUserStream(null, USER_CLIENT_SECRET, REFRESH_TOKEN, QUOTA_PROJECT);
 
@@ -433,7 +437,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_userCredentials_NoClientSecret_throws() throws IOException {
+  void fromStream_userCredentials_NoClientSecret_throws() throws IOException {
     InputStream userStream =
         UserCredentialsTest.writeUserStream(USER_CLIENT_ID, null, REFRESH_TOKEN, QUOTA_PROJECT);
 
@@ -441,7 +445,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_userCredentials_NoRefreshToken_throws() throws IOException {
+  void fromStream_userCredentials_NoRefreshToken_throws() throws IOException {
     InputStream userStream =
         UserCredentialsTest.writeUserStream(
             USER_CLIENT_ID, USER_CLIENT_SECRET, null, QUOTA_PROJECT);
@@ -450,7 +454,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_identityPoolCredentials_providesToken() throws IOException {
+  void fromStream_identityPoolCredentials_providesToken() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
     InputStream identityPoolCredentialStream =
@@ -470,7 +474,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_identityPoolCredentials_defaultUniverse() throws IOException {
+  void fromStream_identityPoolCredentials_defaultUniverse() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
     InputStream identityPoolCredentialStream =
@@ -487,7 +491,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_awsCredentials_providesToken() throws IOException {
+  void fromStream_awsCredentials_providesToken() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -507,7 +511,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_awsCredentials_defaultUniverse() throws IOException {
+  void fromStream_awsCredentials_defaultUniverse() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -524,7 +528,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_pluggableAuthCredentials_providesToken() throws IOException {
+  void fromStream_pluggableAuthCredentials_providesToken() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -547,7 +551,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_pluggableAuthCredentials_defaultUniverse() throws IOException {
+  void fromStream_pluggableAuthCredentials_defaultUniverse() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -560,8 +564,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_externalAccountAuthorizedUserCredentials_providesToken()
-      throws IOException {
+  void fromStream_externalAccountAuthorizedUserCredentials_providesToken() throws IOException {
     MockExternalAccountAuthorizedUserCredentialsTransportFactory transportFactory =
         new MockExternalAccountAuthorizedUserCredentialsTransportFactory();
     InputStream stream =
@@ -575,8 +578,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_externalAccountAuthorizedUserCredentials_defaultUniverse()
-      throws IOException {
+  void fromStream_externalAccountAuthorizedUserCredentials_defaultUniverse() throws IOException {
     MockExternalAccountAuthorizedUserCredentialsTransportFactory transportFactory =
         new MockExternalAccountAuthorizedUserCredentialsTransportFactory();
 
@@ -590,7 +592,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_Impersonation_providesToken_WithQuotaProject() throws IOException {
+  void fromStream_Impersonation_providesToken_WithQuotaProject() throws IOException {
     MockTokenServerTransportFactory transportFactoryForSource =
         new MockTokenServerTransportFactory();
     transportFactoryForSource.transport.addServiceAccount(
@@ -632,7 +634,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_Impersonation_defaultUniverse() throws IOException {
+  void fromStream_Impersonation_defaultUniverse() throws IOException {
     MockTokenServerTransportFactory transportFactoryForSource =
         new MockTokenServerTransportFactory();
     transportFactoryForSource.transport.addServiceAccount(
@@ -657,7 +659,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void fromStream_Impersonation_providesToken_WithoutQuotaProject() throws IOException {
+  void fromStream_Impersonation_providesToken_WithoutQuotaProject() throws IOException {
     MockTokenServerTransportFactory transportFactoryForSource =
         new MockTokenServerTransportFactory();
     transportFactoryForSource.transport.addServiceAccount(
@@ -696,7 +698,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void createScoped_overloadCallsImplementation() {
+  void createScoped_overloadCallsImplementation() {
     final AtomicReference<Collection<String>> called = new AtomicReference<>();
     final GoogleCredentials expectedScopedCredentials = new GoogleCredentials();
 
@@ -716,7 +718,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void create_withoutUniverse() throws IOException {
+  void create_withoutUniverse() throws IOException {
     AccessToken token = AccessToken.newBuilder().setTokenValue(ACCESS_TOKEN).build();
     GoogleCredentials credentials = GoogleCredentials.create(token);
 
@@ -725,7 +727,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void create_withUniverse() throws IOException {
+  void create_withUniverse() throws IOException {
     AccessToken token = AccessToken.newBuilder().setTokenValue(ACCESS_TOKEN).build();
     GoogleCredentials credentials = GoogleCredentials.create("some-universe", token);
 
@@ -734,7 +736,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void buildWithQuotaProject() {
+  void buildWithQuotaProject() {
     final GoogleCredentials googleCredentials =
         new GoogleCredentials.Builder().setQuotaProjectId("old_quota").build();
     GoogleCredentials withUpdatedQuota = googleCredentials.createWithQuotaProject("new_quota");
@@ -750,7 +752,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void buildWithUniverseDomain() throws IOException {
+  void buildWithUniverseDomain() throws IOException {
     final GoogleCredentials original =
         new GoogleCredentials.Builder().setUniverseDomain("universe1").build();
     GoogleCredentials updated = original.toBuilder().setUniverseDomain("universe2").build();
@@ -770,7 +772,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void serialize() throws IOException, ClassNotFoundException {
+  void serialize() throws IOException, ClassNotFoundException {
     final GoogleCredentials testCredentials = new GoogleCredentials.Builder().build();
     GoogleCredentials deserializedCredentials = serializeAndDeserialize(testCredentials);
     assertEquals(testCredentials, deserializedCredentials);
@@ -780,7 +782,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void toString_containsFields() throws IOException {
+  void toString_containsFields() throws IOException {
     String expectedToString =
         String.format(
             "GoogleCredentials{quotaProjectId=%s, universeDomain=%s, isExplicitUniverseDomain=%s}",
@@ -791,7 +793,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void hashCode_equals() throws IOException {
+  void hashCode_equals() throws IOException {
     GoogleCredentials credentials =
         GoogleCredentials.newBuilder().setUniverseDomain("some-domain").build();
     GoogleCredentials otherCredentials =
@@ -800,7 +802,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void equals_true() throws IOException {
+  void equals_true() throws IOException {
     GoogleCredentials credentials =
         GoogleCredentials.newBuilder().setUniverseDomain("some-domain").build();
     GoogleCredentials otherCredentials =
@@ -821,7 +823,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getCredentialInfo_serviceAccountCredentials() throws IOException {
+  void getCredentialInfo_serviceAccountCredentials() throws IOException {
     InputStream serviceAccountStream =
         ServiceAccountCredentialsTest.writeServiceAccountStream(
             SA_CLIENT_ID, SA_CLIENT_EMAIL, SA_PRIVATE_KEY_PKCS8, SA_PRIVATE_KEY_ID);
@@ -835,7 +837,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getCredentialInfo_userCredentials() throws IOException {
+  void getCredentialInfo_userCredentials() throws IOException {
     InputStream userStream =
         UserCredentialsTest.writeUserStream(
             USER_CLIENT_ID, USER_CLIENT_SECRET, REFRESH_TOKEN, null);
@@ -849,7 +851,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getCredentialInfo_gdchCredentials() throws IOException {
+  void getCredentialInfo_gdchCredentials() throws IOException {
     InputStream gdchServiceAccountStream =
         GdchCredentialsTest.writeGdchServiceAccountStream(
             GDCH_SA_FORMAT_VERSION,
@@ -869,7 +871,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getCredentialInfo_externalAccount() throws IOException {
+  void getCredentialInfo_externalAccount() throws IOException {
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
     InputStream identityPoolCredentialStream =
@@ -889,7 +891,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getCredentialInfo_externalAccountUserCredentials() throws IOException {
+  void getCredentialInfo_externalAccountUserCredentials() throws IOException {
     InputStream externalAccountUserCredentialStream =
         ExternalAccountAuthorizedUserCredentialsTest.writeExternalAccountUserCredentialStream(
             USER_CLIENT_ID,
@@ -909,7 +911,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getCredentialInfo_impersonatedServiceAccount() throws IOException {
+  void getCredentialInfo_impersonatedServiceAccount() throws IOException {
     InputStream impersonationCredentialsStream =
         ImpersonatedCredentialsTest.writeImpersonationCredentialsStream(
             ImpersonatedCredentialsTest.IMPERSONATION_OVERRIDE_URL,

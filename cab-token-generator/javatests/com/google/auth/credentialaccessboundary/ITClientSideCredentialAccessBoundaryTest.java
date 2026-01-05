@@ -31,9 +31,9 @@
 
 package com.google.auth.credentialaccessboundary;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
@@ -52,7 +52,7 @@ import com.google.auth.oauth2.ServiceAccountCredentials;
 import dev.cel.common.CelValidationException;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Integration tests for {@link ClientSideCredentialAccessBoundaryFactory}. *
@@ -61,7 +61,7 @@ import org.junit.Test;
  * GOOGLE_APPLICATION_CREDENTIALS to point to the same service account configured in the setup
  * script (downscoping-with-cab-setup.sh).
  */
-public final class ITClientSideCredentialAccessBoundaryTest {
+final class ITClientSideCredentialAccessBoundaryTest {
 
   // Output copied from the setup script (downscoping-with-cab-setup.sh).
   private static final String GCS_BUCKET_NAME = "cab-int-bucket-cbi3qrv5";
@@ -98,7 +98,7 @@ public final class ITClientSideCredentialAccessBoundaryTest {
    * in the same bucket.
    */
   @Test
-  public void clientSideCredentialAccessBoundary_serviceAccountSource() throws IOException {
+  void clientSideCredentialAccessBoundary_serviceAccountSource() throws IOException {
     OAuth2CredentialsWithRefresh.OAuth2RefreshHandler refreshHandler =
         () -> {
           ServiceAccountCredentials sourceCredentials =

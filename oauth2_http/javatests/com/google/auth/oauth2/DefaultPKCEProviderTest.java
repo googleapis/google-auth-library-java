@@ -31,20 +31,17 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
-@RunWith(JUnit4.class)
-public final class DefaultPKCEProviderTest {
+final class DefaultPKCEProviderTest {
   @Test
-  public void testPkceExpected() throws NoSuchAlgorithmException {
+  void testPkceExpected() throws NoSuchAlgorithmException {
     PKCEProvider pkce = new DefaultPKCEProvider();
 
     byte[] bytes = pkce.getCodeVerifier().getBytes();
@@ -61,7 +58,7 @@ public final class DefaultPKCEProviderTest {
   }
 
   @Test
-  public void testNoBase64Padding() throws NoSuchAlgorithmException {
+  void testNoBase64Padding() throws NoSuchAlgorithmException {
     PKCEProvider pkce = new DefaultPKCEProvider();
     assertFalse(pkce.getCodeChallenge().endsWith("="));
     assertFalse(pkce.getCodeChallenge().contains("="));

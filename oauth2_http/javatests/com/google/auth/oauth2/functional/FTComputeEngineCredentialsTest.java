@@ -31,10 +31,10 @@
 
 package com.google.auth.oauth2.functional;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
@@ -45,14 +45,14 @@ import com.google.auth.oauth2.IdToken;
 import com.google.auth.oauth2.IdTokenCredentials;
 import com.google.auth.oauth2.IdTokenProvider;
 import com.google.auth.oauth2.OAuth2Utils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public final class FTComputeEngineCredentialsTest {
+final class FTComputeEngineCredentialsTest {
   private final String computeUrl =
       "https://compute.googleapis.com/compute/v1/projects/gcloud-devel/zones/us-central1-a/instances";
 
   @Test
-  public void RefreshCredentials() throws Exception {
+  void RefreshCredentials() throws Exception {
     final ComputeEngineCredentials credentials = ComputeEngineCredentials.create();
 
     AccessToken accessToken = credentials.refreshAccessToken();
@@ -62,7 +62,7 @@ public final class FTComputeEngineCredentialsTest {
   }
 
   @Test
-  public void DefaultCredentials() throws Exception {
+  void DefaultCredentials() throws Exception {
     final GoogleCredentials defaultCredential =
         GoogleCredentials.getApplicationDefault().createScoped(OAuth2Utils.CLOUD_PLATFORM_SCOPE);
 
@@ -72,7 +72,7 @@ public final class FTComputeEngineCredentialsTest {
   }
 
   @Test
-  public void IdTokenFromMetadata() throws Exception {
+  void IdTokenFromMetadata() throws Exception {
     final ComputeEngineCredentials credentials = ComputeEngineCredentials.create();
     IdToken idToken = credentials.idTokenWithAudience(computeUrl, null);
     assertNotNull(idToken);
@@ -84,7 +84,7 @@ public final class FTComputeEngineCredentialsTest {
   }
 
   @Test
-  public void FetchIdToken() throws Exception {
+  void FetchIdToken() throws Exception {
     final ComputeEngineCredentials credentials = ComputeEngineCredentials.create();
     IdTokenCredentials idTokenCredential =
         IdTokenCredentials.newBuilder()

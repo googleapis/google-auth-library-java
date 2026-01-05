@@ -31,25 +31,22 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.auth.oauth2.CredentialAccessBoundary.AccessBoundaryRule;
 import com.google.auth.oauth2.CredentialAccessBoundary.AccessBoundaryRule.AvailabilityCondition;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
 /** Tests for {@link CredentialAccessBoundary} and encompassing classes. */
-@RunWith(JUnit4.class)
-public class CredentialAccessBoundaryTest {
+class CredentialAccessBoundaryTest {
 
   @Test
-  public void credentialAccessBoundary() {
+  void credentialAccessBoundary() {
     AvailabilityCondition availabilityCondition =
         AvailabilityCondition.newBuilder().setExpression("expression").build();
 
@@ -92,7 +89,7 @@ public class CredentialAccessBoundaryTest {
   }
 
   @Test
-  public void credentialAccessBoundary_nullRules_throws() {
+  void credentialAccessBoundary_nullRules_throws() {
     try {
       CredentialAccessBoundary.newBuilder().build();
       fail("Should fail.");
@@ -102,7 +99,7 @@ public class CredentialAccessBoundaryTest {
   }
 
   @Test
-  public void credentialAccessBoundary_withoutRules_throws() {
+  void credentialAccessBoundary_withoutRules_throws() {
     try {
       CredentialAccessBoundary.newBuilder().setRules(new ArrayList<AccessBoundaryRule>()).build();
       fail("Should fail.");
@@ -112,7 +109,7 @@ public class CredentialAccessBoundaryTest {
   }
 
   @Test
-  public void credentialAccessBoundary_ruleCountExceeded_throws() {
+  void credentialAccessBoundary_ruleCountExceeded_throws() {
     AccessBoundaryRule rule =
         AccessBoundaryRule.newBuilder()
             .setAvailableResource("resource")
@@ -133,7 +130,7 @@ public class CredentialAccessBoundaryTest {
   }
 
   @Test
-  public void credentialAccessBoundary_toJson() {
+  void credentialAccessBoundary_toJson() {
     AvailabilityCondition availabilityCondition =
         AvailabilityCondition.newBuilder()
             .setExpression("expression")
@@ -172,7 +169,7 @@ public class CredentialAccessBoundaryTest {
   }
 
   @Test
-  public void accessBoundaryRule_allFields() {
+  void accessBoundaryRule_allFields() {
     AvailabilityCondition availabilityCondition =
         AvailabilityCondition.newBuilder().setExpression("expression").build();
 
@@ -192,7 +189,7 @@ public class CredentialAccessBoundaryTest {
   }
 
   @Test
-  public void accessBoundaryRule_requiredFields() {
+  void accessBoundaryRule_requiredFields() {
     AccessBoundaryRule rule =
         AccessBoundaryRule.newBuilder()
             .setAvailableResource("resource")
@@ -206,7 +203,7 @@ public class CredentialAccessBoundaryTest {
   }
 
   @Test
-  public void accessBoundaryRule_withEmptyAvailableResource_throws() {
+  void accessBoundaryRule_withEmptyAvailableResource_throws() {
     try {
       AccessBoundaryRule.newBuilder()
           .setAvailableResource("")
@@ -219,7 +216,7 @@ public class CredentialAccessBoundaryTest {
   }
 
   @Test
-  public void accessBoundaryRule_withoutAvailableResource_throws() {
+  void accessBoundaryRule_withoutAvailableResource_throws() {
     try {
       AccessBoundaryRule.newBuilder().addAvailablePermission("permission").build();
       fail("Should fail.");
@@ -229,7 +226,7 @@ public class CredentialAccessBoundaryTest {
   }
 
   @Test
-  public void accessBoundaryRule_withoutAvailablePermissions_throws() {
+  void accessBoundaryRule_withoutAvailablePermissions_throws() {
     try {
       AccessBoundaryRule.newBuilder().setAvailableResource("resource").build();
       fail("Should fail.");
@@ -239,7 +236,7 @@ public class CredentialAccessBoundaryTest {
   }
 
   @Test
-  public void accessBoundaryRule_withEmptyAvailablePermissions_throws() {
+  void accessBoundaryRule_withEmptyAvailablePermissions_throws() {
     try {
       AccessBoundaryRule.newBuilder()
           .setAvailableResource("resource")
@@ -252,7 +249,7 @@ public class CredentialAccessBoundaryTest {
   }
 
   @Test
-  public void accessBoundaryRule_withNullAvailablePermissions_throws() {
+  void accessBoundaryRule_withNullAvailablePermissions_throws() {
     try {
       AccessBoundaryRule.newBuilder()
           .setAvailableResource("resource")
@@ -265,7 +262,7 @@ public class CredentialAccessBoundaryTest {
   }
 
   @Test
-  public void accessBoundaryRule_withEmptyAvailablePermission_throws() {
+  void accessBoundaryRule_withEmptyAvailablePermission_throws() {
     try {
       AccessBoundaryRule.newBuilder()
           .setAvailableResource("resource")
@@ -278,7 +275,7 @@ public class CredentialAccessBoundaryTest {
   }
 
   @Test
-  public void availabilityCondition_allFields() {
+  void availabilityCondition_allFields() {
     AvailabilityCondition availabilityCondition =
         AvailabilityCondition.newBuilder()
             .setExpression("expression")
@@ -292,7 +289,7 @@ public class CredentialAccessBoundaryTest {
   }
 
   @Test
-  public void availabilityCondition_expressionOnly() {
+  void availabilityCondition_expressionOnly() {
     AvailabilityCondition availabilityCondition =
         AvailabilityCondition.newBuilder().setExpression("expression").build();
 
@@ -302,7 +299,7 @@ public class CredentialAccessBoundaryTest {
   }
 
   @Test
-  public void availabilityCondition_nullExpression_throws() {
+  void availabilityCondition_nullExpression_throws() {
     try {
       AvailabilityCondition.newBuilder().setExpression(null).build();
       fail("Should fail.");
@@ -312,7 +309,7 @@ public class CredentialAccessBoundaryTest {
   }
 
   @Test
-  public void availabilityCondition_emptyExpression_throws() {
+  void availabilityCondition_emptyExpression_throws() {
     try {
       AvailabilityCondition.newBuilder().setExpression("").build();
       fail("Should fail.");

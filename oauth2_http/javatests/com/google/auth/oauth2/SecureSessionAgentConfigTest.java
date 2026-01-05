@@ -30,21 +30,18 @@
  */
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
 /** Test cases for {@linkSecureSessionAgentConfig}. */
-@RunWith(JUnit4.class)
-public class SecureSessionAgentConfigTest {
+class SecureSessionAgentConfigTest {
   private static final String S2A_PLAINTEXT_ADDRESS = "plaintext";
   private static final String S2A_MTLS_ADDRESS = "mtls";
 
   @Test
-  public void createS2AConfig_success() {
+  void createS2AConfig_success() {
     SecureSessionAgentConfig config =
         SecureSessionAgentConfig.createBuilder()
             .setPlaintextAddress(S2A_PLAINTEXT_ADDRESS)
@@ -55,7 +52,7 @@ public class SecureSessionAgentConfigTest {
   }
 
   @Test
-  public void createEmptyS2AConfig_success() {
+  void createEmptyS2AConfig_success() {
     SecureSessionAgentConfig config = SecureSessionAgentConfig.createBuilder().build();
     assertTrue(config.getPlaintextAddress().isEmpty());
     assertTrue(config.getMtlsAddress().isEmpty());

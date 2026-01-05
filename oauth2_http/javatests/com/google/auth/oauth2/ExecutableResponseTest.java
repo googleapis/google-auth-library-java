@@ -31,20 +31,20 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.api.client.json.GenericJson;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Instant;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /** Tests for {@link ExecutableResponse}. */
-public class ExecutableResponseTest {
+class ExecutableResponseTest {
 
   private static final String TOKEN_TYPE_OIDC = "urn:ietf:params:oauth:token-type:id_token";
   private static final String TOKEN_TYPE_SAML = "urn:ietf:params:oauth:token-type:saml2";
@@ -55,7 +55,7 @@ public class ExecutableResponseTest {
   private static final int EXPIRATION_DURATION = 3600;
 
   @Test
-  public void constructor_successOidcResponse() throws IOException {
+  void constructor_successOidcResponse() throws IOException {
     ExecutableResponse response = new ExecutableResponse(buildOidcResponse());
 
     assertTrue(response.isSuccessful());
@@ -68,8 +68,7 @@ public class ExecutableResponseTest {
   }
 
   @Test
-  public void constructor_successOidcResponseMissingExpirationTimeField_notExpired()
-      throws IOException {
+  void constructor_successOidcResponseMissingExpirationTimeField_notExpired() throws IOException {
     GenericJson jsonResponse = buildOidcResponse();
     jsonResponse.remove("expiration_time");
 
@@ -85,7 +84,7 @@ public class ExecutableResponseTest {
   }
 
   @Test
-  public void constructor_successSamlResponse() throws IOException {
+  void constructor_successSamlResponse() throws IOException {
     ExecutableResponse response = new ExecutableResponse(buildSamlResponse());
 
     assertTrue(response.isSuccessful());
@@ -98,8 +97,7 @@ public class ExecutableResponseTest {
   }
 
   @Test
-  public void constructor_successSamlResponseMissingExpirationTimeField_notExpired()
-      throws IOException {
+  void constructor_successSamlResponseMissingExpirationTimeField_notExpired() throws IOException {
     GenericJson jsonResponse = buildSamlResponse();
     jsonResponse.remove("expiration_time");
 
@@ -115,7 +113,7 @@ public class ExecutableResponseTest {
   }
 
   @Test
-  public void constructor_validErrorResponse() throws IOException {
+  void constructor_validErrorResponse() throws IOException {
     ExecutableResponse response = new ExecutableResponse(buildErrorResponse());
 
     assertFalse(response.isSuccessful());
@@ -130,7 +128,7 @@ public class ExecutableResponseTest {
   }
 
   @Test
-  public void constructor_errorResponseMissingCode_throws() throws IOException {
+  void constructor_errorResponseMissingCode_throws() throws IOException {
     GenericJson jsonResponse = buildErrorResponse();
 
     Object[] values = new Object[] {null, ""};
@@ -149,7 +147,7 @@ public class ExecutableResponseTest {
   }
 
   @Test
-  public void constructor_errorResponseMissingMessage_throws() throws IOException {
+  void constructor_errorResponseMissingMessage_throws() throws IOException {
     GenericJson jsonResponse = buildErrorResponse();
 
     Object[] values = new Object[] {null, ""};
@@ -169,7 +167,7 @@ public class ExecutableResponseTest {
   }
 
   @Test
-  public void constructor_successResponseMissingVersionField_throws() throws IOException {
+  void constructor_successResponseMissingVersionField_throws() throws IOException {
     GenericJson jsonResponse = buildOidcResponse();
     jsonResponse.remove("version");
 
@@ -185,7 +183,7 @@ public class ExecutableResponseTest {
   }
 
   @Test
-  public void constructor_successResponseMissingSuccessField_throws() throws Exception {
+  void constructor_successResponseMissingSuccessField_throws() throws Exception {
     GenericJson jsonResponse = buildOidcResponse();
     jsonResponse.remove("success");
 
@@ -201,7 +199,7 @@ public class ExecutableResponseTest {
   }
 
   @Test
-  public void constructor_successResponseMissingTokenTypeField_throws() throws IOException {
+  void constructor_successResponseMissingTokenTypeField_throws() throws IOException {
     GenericJson jsonResponse = buildOidcResponse();
     jsonResponse.remove("token_type");
 
@@ -217,7 +215,7 @@ public class ExecutableResponseTest {
   }
 
   @Test
-  public void constructor_samlResponseMissingSubjectToken_throws() throws IOException {
+  void constructor_samlResponseMissingSubjectToken_throws() throws IOException {
     GenericJson jsonResponse = buildSamlResponse();
 
     Object[] values = new Object[] {null, ""};
@@ -237,7 +235,7 @@ public class ExecutableResponseTest {
   }
 
   @Test
-  public void constructor_oidcResponseMissingSubjectToken_throws() throws IOException {
+  void constructor_oidcResponseMissingSubjectToken_throws() throws IOException {
     GenericJson jsonResponse = buildOidcResponse();
 
     Object[] values = new Object[] {null, ""};
@@ -257,7 +255,7 @@ public class ExecutableResponseTest {
   }
 
   @Test
-  public void isExpired() throws IOException {
+  void isExpired() throws IOException {
     GenericJson jsonResponse = buildOidcResponse();
 
     BigDecimal[] values =

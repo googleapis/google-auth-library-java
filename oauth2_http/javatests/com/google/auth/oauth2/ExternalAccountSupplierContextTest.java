@@ -31,15 +31,15 @@
 
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.google.auth.oauth2.ExternalAccountCredentials.SubjectTokenTypes;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class ExternalAccountSupplierContextTest {
+class ExternalAccountSupplierContextTest {
 
   @Test
-  public void constructor_builder() {
+  void constructor_builder() {
     String expectedAudience =
         "//iam.googleapis.com/locations/global/workloadPools/pool/providers/provider";
     String expectedTokenType = SubjectTokenTypes.JWT.value;
@@ -54,7 +54,7 @@ public class ExternalAccountSupplierContextTest {
   }
 
   @Test
-  public void constructor_builder_subjectTokenEnum() {
+  void constructor_builder_subjectTokenEnum() {
     String expectedAudience =
         "//iam.googleapis.com/locations/global/workloadPools/pool/providers/provider";
     SubjectTokenTypes expectedTokenType = SubjectTokenTypes.JWT;

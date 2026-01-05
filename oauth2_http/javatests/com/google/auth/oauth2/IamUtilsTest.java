@@ -30,32 +30,29 @@
  */
 package com.google.auth.oauth2;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.auth.Credentials;
 import com.google.auth.ServiceAccountSigner;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-@RunWith(JUnit4.class)
-public class IamUtilsTest {
+class IamUtilsTest {
 
   private static final String CLIENT_EMAIL =
       "36680232662-vrd7ji19qe3nelgchd0ah2csanun6bnr@developer.gserviceaccount.com";
 
   private ServiceAccountCredentials credentials;
 
-  @Before
-  public void setup() throws IOException {
+  @BeforeEach
+  void setup() throws IOException {
     // Mock this call for the Credentials because the IAM SignBlob RPC requires an access token. The
     // call is initialized with HttpCredentialsAdapter which will make a call to get the access
     // token
@@ -65,7 +62,7 @@ public class IamUtilsTest {
   }
 
   @Test
-  public void sign_success_noRetry() {
+  void sign_success_noRetry() {
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
     MockIAMCredentialsServiceTransportFactory transportFactory =
@@ -91,7 +88,7 @@ public class IamUtilsTest {
   // 5xx status codes before returning a success. This test covers the cases where the number of
   // retry attempts is below the configured retry attempt count bounds (3 attempts).
   @Test
-  public void sign_retryTwoTimes_success() {
+  void sign_retryTwoTimes_success() {
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
     MockIAMCredentialsServiceTransportFactory transportFactory =
@@ -125,7 +122,7 @@ public class IamUtilsTest {
   // status codes + messages before returning a success. After the third retry attempt, the request
   // will try one last time and the result will be reported back to the user.
   @Test
-  public void sign_retryThreeTimes_success() {
+  void sign_retryThreeTimes_success() {
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
     MockIAMCredentialsServiceTransportFactory transportFactory =
@@ -162,7 +159,7 @@ public class IamUtilsTest {
   // status codes + messages before returning a success. After the third retry attempt, the request
   // will try one last time and the result will be reported back to the user.
   @Test
-  public void sign_retryThreeTimes_exception() {
+  void sign_retryThreeTimes_exception() {
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
     MockIAMCredentialsServiceTransportFactory transportFactory =
@@ -207,7 +204,7 @@ public class IamUtilsTest {
   }
 
   @Test
-  public void sign_4xxError_noRetry_exception() {
+  void sign_4xxError_noRetry_exception() {
     byte[] expectedSignature = {0xD, 0xE, 0xA, 0xD};
 
     MockIAMCredentialsServiceTransportFactory transportFactory =

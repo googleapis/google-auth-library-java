@@ -32,14 +32,14 @@
 package com.google.auth.oauth2;
 
 import static java.util.concurrent.TimeUnit.HOURS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.api.client.util.Clock;
 import com.google.auth.TestClock;
@@ -70,17 +70,13 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.function.ThrowingRunnable;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 /** Test case for {@link OAuth2Credentials}. */
-@RunWith(JUnit4.class)
-public class OAuth2CredentialsTest extends BaseSerializationTest {
+class OAuth2CredentialsTest extends BaseSerializationTest {
 
   private static final String CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
   private static final String CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
@@ -90,25 +86,25 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
 
   private ExecutorService realExecutor;
 
-  @Before
-  public void setUp() {
+  @BeforeEach
+  void setUp() {
     realExecutor = Executors.newCachedThreadPool();
   }
 
-  @After
-  public void tearDown() {
+  @AfterEach
+  void tearDown() {
     realExecutor.shutdown();
   }
 
   @Test
-  public void constructor_storesAccessToken() {
+  void constructor_storesAccessToken() {
     OAuth2Credentials credentials =
         OAuth2Credentials.newBuilder().setAccessToken(new AccessToken(ACCESS_TOKEN, null)).build();
     assertEquals(credentials.getAccessToken().getTokenValue(), ACCESS_TOKEN);
   }
 
   @Test
-  public void constructor_overrideMargin() throws Throwable {
+  void constructor_overrideMargin() throws Throwable {
     Duration staleMargin = Duration.ofMinutes(3);
     Duration expirationMargin = Duration.ofMinutes(2);
 
@@ -189,7 +185,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getAuthenticationType_returnsOAuth2() {
+  void getAuthenticationType_returnsOAuth2() {
     OAuth2Credentials credentials =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -200,7 +196,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void hasRequestMetadata_returnsTrue() {
+  void hasRequestMetadata_returnsTrue() {
     OAuth2Credentials credentials =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -211,7 +207,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void hasRequestMetadataOnly_returnsTrue() {
+  void hasRequestMetadataOnly_returnsTrue() {
     OAuth2Credentials credentials =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -222,7 +218,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void addChangeListener_notifiesOnRefresh() throws IOException {
+  void addChangeListener_notifiesOnRefresh() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -260,7 +256,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void removeChangeListener_unregisters_observer() throws IOException {
+  void removeChangeListener_unregisters_observer() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -297,7 +293,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getRequestMetadata_blocking_cachesExpiringToken() throws IOException {
+  void getRequestMetadata_blocking_cachesExpiringToken() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -351,7 +347,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getRequestMetadata_async() throws IOException {
+  void getRequestMetadata_async() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -421,8 +417,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getRequestMetadata_async_refreshRace()
-      throws ExecutionException, InterruptedException {
+  void getRequestMetadata_async_refreshRace() throws ExecutionException, InterruptedException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
@@ -480,7 +475,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getRequestMetadata_temporaryToken_hasToken() throws IOException {
+  void getRequestMetadata_temporaryToken_hasToken() throws IOException {
     OAuth2Credentials credentials =
         OAuth2Credentials.newBuilder().setAccessToken(new AccessToken(ACCESS_TOKEN, null)).build();
 
@@ -490,7 +485,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getRequestMetadata_staleTemporaryToken() throws IOException, InterruptedException {
+  void getRequestMetadata_staleTemporaryToken() throws IOException, InterruptedException {
     Instant actualExpiration = Instant.now();
     Instant clientStale = actualExpiration.minus(OAuth2Credentials.DEFAULT_REFRESH_MARGIN);
 
@@ -560,7 +555,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getRequestMetadata_staleTemporaryToken_expirationWaits() throws Throwable {
+  void getRequestMetadata_staleTemporaryToken_expirationWaits() throws Throwable {
     Instant actualExpiration = Instant.now();
     Instant clientStale = actualExpiration.minus(OAuth2Credentials.DEFAULT_REFRESH_MARGIN);
     Instant clientExpired = actualExpiration.minus(OAuth2Credentials.DEFAULT_EXPIRATION_MARGIN);
@@ -629,7 +624,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getRequestMetadata_singleFlightErrorSharing() {
+  void getRequestMetadata_singleFlightErrorSharing() {
     Instant actualExpiration = Instant.now();
     Instant clientStale = actualExpiration.minus(OAuth2Credentials.DEFAULT_REFRESH_MARGIN);
     Instant clientExpired = actualExpiration.minus(OAuth2Credentials.DEFAULT_EXPIRATION_MARGIN);
@@ -673,32 +668,17 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
 
     // Get the error that getRequestMetadata(uri) created
     Throwable actualBlockingError =
-        assertThrows(
-                ExecutionException.class,
-                new ThrowingRunnable() {
-                  @Override
-                  public void run() throws Throwable {
-                    blockingCall.get();
-                  }
-                })
-            .getCause();
+        assertThrows(ExecutionException.class, () -> blockingCall.get()).getCause();
 
     assertEquals(error, actualBlockingError);
 
     RuntimeException actualAsyncError =
-        assertThrows(
-            RuntimeException.class,
-            new ThrowingRunnable() {
-              @Override
-              public void run() throws Throwable {
-                callback1.awaitResult();
-              }
-            });
+        assertThrows(RuntimeException.class, () -> callback1.awaitResult());
     assertEquals(error, actualAsyncError);
   }
 
   @Test
-  public void getRequestMetadata_syncErrorsIncludeCallingStackframe() {
+  void getRequestMetadata_syncErrorsIncludeCallingStackframe() {
     final OAuth2Credentials creds =
         new OAuth2Credentials() {
           @Override
@@ -729,7 +709,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void refresh_refreshesToken() throws IOException {
+  void refresh_refreshesToken() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -765,7 +745,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void refreshIfExpired_refreshesToken() throws IOException {
+  void refreshIfExpired_refreshesToken() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
@@ -808,15 +788,15 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
     assertEquals(1, transportFactory.transport.buildRequestCount--);
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void refresh_temporaryToken_throws() throws IOException {
+  @Test
+  void refresh_temporaryToken_throws() throws IOException {
     OAuth2Credentials credentials =
         OAuth2Credentials.newBuilder().setAccessToken(new AccessToken(ACCESS_TOKEN, null)).build();
-    credentials.refresh();
+    assertThrows(IllegalStateException.class, () -> credentials.refresh());
   }
 
   @Test
-  public void equals_true() throws IOException {
+  void equals_true() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     OAuth2Credentials credentials =
         OAuth2Credentials.newBuilder().setAccessToken(new AccessToken(accessToken1, null)).build();
@@ -827,7 +807,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void equals_false_accessToken() throws IOException {
+  void equals_false_accessToken() throws IOException {
     final String accessToken1 = "1/MkSJoj1xsli0AccessToken_NKPY2";
     final String accessToken2 = "2/MkSJoj1xsli0AccessToken_NKPY2";
     OAuth2Credentials credentials =
@@ -839,7 +819,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void toString_containsFields() throws IOException {
+  void toString_containsFields() throws IOException {
     AccessToken accessToken = new AccessToken("1/MkSJoj1xsli0AccessToken_NKPY2", null);
     OAuth2Credentials credentials =
         OAuth2Credentials.newBuilder().setAccessToken(accessToken).build();
@@ -854,7 +834,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void hashCode_equals() throws IOException {
+  void hashCode_equals() throws IOException {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     OAuth2Credentials credentials =
         OAuth2Credentials.newBuilder().setAccessToken(new AccessToken(accessToken, null)).build();
@@ -864,7 +844,7 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void serialize() throws IOException, ClassNotFoundException {
+  void serialize() throws IOException, ClassNotFoundException {
     final String accessToken = "1/MkSJoj1xsli0AccessToken_NKPY2";
     OAuth2Credentials credentials =
         OAuth2Credentials.newBuilder().setAccessToken(new AccessToken(accessToken, null)).build();
@@ -876,8 +856,8 @@ public class OAuth2CredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  @Ignore
-  public void updateTokenValueBeforeWake() throws IOException, InterruptedException {
+  @Disabled
+  void updateTokenValueBeforeWake() throws IOException, InterruptedException {
     final SettableFuture<AccessToken> refreshedTokenFuture = SettableFuture.create();
     AccessToken refreshedToken = new AccessToken("2/MkSJoj1xsli0AccessToken_NKPY2", null);
     refreshedTokenFuture.set(refreshedToken);

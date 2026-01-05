@@ -33,8 +33,8 @@ package com.google.auth.oauth2;
 
 import static com.google.auth.oauth2.OAuth2Credentials.DEFAULT_EXPIRATION_MARGIN;
 import static com.google.auth.oauth2.OAuth2Credentials.DEFAULT_REFRESH_MARGIN;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.auth.TestUtils;
 import java.io.IOException;
@@ -44,17 +44,14 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
 /** Tests for {@link OAuth2CredentialsWithRefresh}. */
-@RunWith(JUnit4.class)
-public class OAuth2CredentialsWithRefreshTest {
+class OAuth2CredentialsWithRefreshTest {
   private static final AccessToken ACCESS_TOKEN = new AccessToken("accessToken", new Date());
 
   @Test
-  public void builder() {
+  void builder() {
     OAuth2CredentialsWithRefresh.OAuth2RefreshHandler refreshHandler =
         new OAuth2CredentialsWithRefresh.OAuth2RefreshHandler() {
           @Override
@@ -73,7 +70,7 @@ public class OAuth2CredentialsWithRefreshTest {
   }
 
   @Test
-  public void builder_withRefreshAndExpirationMargins() {
+  void builder_withRefreshAndExpirationMargins() {
     OAuth2CredentialsWithRefresh.OAuth2RefreshHandler refreshHandler =
         new OAuth2CredentialsWithRefresh.OAuth2RefreshHandler() {
           @Override
@@ -101,7 +98,7 @@ public class OAuth2CredentialsWithRefreshTest {
   }
 
   @Test
-  public void builder_onlyRefreshMarginSet() {
+  void builder_onlyRefreshMarginSet() {
     OAuth2CredentialsWithRefresh.OAuth2RefreshHandler refreshHandler =
         new OAuth2CredentialsWithRefresh.OAuth2RefreshHandler() {
           @Override
@@ -127,7 +124,7 @@ public class OAuth2CredentialsWithRefreshTest {
   }
 
   @Test
-  public void builder_onlyExpirationMarginSet() {
+  void builder_onlyExpirationMarginSet() {
     OAuth2CredentialsWithRefresh.OAuth2RefreshHandler refreshHandler =
         new OAuth2CredentialsWithRefresh.OAuth2RefreshHandler() {
           @Override
@@ -152,7 +149,7 @@ public class OAuth2CredentialsWithRefreshTest {
   }
 
   @Test
-  public void builder_noAccessToken() {
+  void builder_noAccessToken() {
     OAuth2CredentialsWithRefresh.newBuilder()
         .setRefreshHandler(
             new OAuth2CredentialsWithRefresh.OAuth2RefreshHandler() {
@@ -165,7 +162,7 @@ public class OAuth2CredentialsWithRefreshTest {
   }
 
   @Test
-  public void builder_noRefreshHandler_throws() {
+  void builder_noRefreshHandler_throws() {
     try {
       OAuth2CredentialsWithRefresh.newBuilder().setAccessToken(ACCESS_TOKEN).build();
       fail("Should fail as a refresh handler must be provided.");
@@ -175,7 +172,7 @@ public class OAuth2CredentialsWithRefreshTest {
   }
 
   @Test
-  public void builder_noExpirationTimeInAccessToken_throws() {
+  void builder_noExpirationTimeInAccessToken_throws() {
     try {
       OAuth2CredentialsWithRefresh.newBuilder()
           .setAccessToken(new AccessToken("accessToken", null))
@@ -187,7 +184,7 @@ public class OAuth2CredentialsWithRefreshTest {
   }
 
   @Test
-  public void refreshAccessToken_delegateToRefreshHandler() throws IOException {
+  void refreshAccessToken_delegateToRefreshHandler() throws IOException {
     final AccessToken refreshedToken = new AccessToken("refreshedAccessToken", new Date());
     OAuth2CredentialsWithRefresh credentials =
         OAuth2CredentialsWithRefresh.newBuilder()
@@ -207,7 +204,7 @@ public class OAuth2CredentialsWithRefreshTest {
   }
 
   @Test
-  public void getRequestMetadata() throws IOException {
+  void getRequestMetadata() throws IOException {
     URI uri = URI.create("http://googleapis.com/testapi/v1/foo");
     final AccessToken refreshedToken = new AccessToken("refreshedAccessToken", new Date());
     OAuth2CredentialsWithRefresh credentials =
