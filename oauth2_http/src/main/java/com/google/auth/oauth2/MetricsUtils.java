@@ -59,8 +59,7 @@ class MetricsUtils {
     // This value should be read and cached for later use.
     String version = "unknown-version";
     try (InputStream inputStream =
-        MetricsUtils.class.getResourceAsStream(
-            "/com/google/auth/oauth2/google-auth-library.properties")) {
+        MetricsUtils.class.getResourceAsStream("/com/google/auth/oauth2/google-auth-library.properties")) {
       if (inputStream != null) {
         final Properties properties = new Properties();
         properties.load(inputStream);
