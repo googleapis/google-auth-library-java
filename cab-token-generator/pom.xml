@@ -12,11 +12,6 @@
   <artifactId>google-auth-library-cab-token-generator</artifactId>
   <name>Google Auth Library for Java - Cab Token Generator</name>
 
-  <build>
-    <sourceDirectory>java</sourceDirectory>
-    <testSourceDirectory>javatests</testSourceDirectory>
-  </build>
-
   <dependencies>
     <!-- Compile and Runtime Dependencies -->
     <dependency>

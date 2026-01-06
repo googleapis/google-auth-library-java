@@ -71,11 +71,14 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 /**
  * Tests for {@link
  * com.google.auth.credentialaccessboundary.ClientSideCredentialAccessBoundaryFactory}.
  */
+@Execution(ExecutionMode.SAME_THREAD)
 class ClientSideCredentialAccessBoundaryFactoryTest {
   private static final String SA_PRIVATE_KEY_PKCS8 =
       "-----BEGIN PRIVATE KEY-----\n"

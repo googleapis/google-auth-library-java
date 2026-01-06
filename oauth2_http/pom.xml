@@ -130,19 +130,6 @@
   </profiles>
 
   <build>
-    <sourceDirectory>java</sourceDirectory>
-    <resources>
-      <resource>
-        <directory>resources</directory>
-        <filtering>true</filtering>
-      </resource>
-    </resources>
-    <testSourceDirectory>javatests</testSourceDirectory>
-    <testResources>
-      <testResource>
-        <directory>testresources</directory>
-      </testResource>
-    </testResources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
