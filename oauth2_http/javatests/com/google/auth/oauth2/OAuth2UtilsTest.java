@@ -34,9 +34,6 @@ package com.google.auth.oauth2;
 import static com.google.auth.oauth2.OAuth2Utils.generateBasicAuthHeader;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static com.google.auth.oauth2.OAuth2Utils.generateBasicAuthHeader;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
