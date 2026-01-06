@@ -129,6 +129,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
   private transient HttpTransportFactory transportFactory;
 
   private String universeDomainFromMetadata = null;
+  private String projectId = null;
 
   /**
    * Experimental Feature.
@@ -338,6 +339,76 @@ public class ComputeEngineCredentials extends GoogleCredentials
       return Credentials.GOOGLE_DEFAULT_UNIVERSE;
     }
     return responseString;
+  }
+
+  /**
+   * Retrieves the Google Cloud project ID from the Compute Engine (GCE) metadata server.
+   *
+   * <p>On its first successful execution, it fetches the project ID and caches it for the lifetime
+   * of the object. Subsequent calls will return the cached value without making additional network
+   * requests.
+   *
+   * <p>If the request to the metadata server fails (e.g., due to network issues, or if the VM lacks
+   * the required service account permissions), the method will attempt to fall back to a default
+   * project ID provider which could be {@code null}.
+   *
+   * @return the GCP project ID string, or {@code null} if the metadata server is inaccessible and
+   *     no fallback project ID can be determined.
+   */
+  @Override
+  public String getProjectId() {
+    synchronized (this) {
+      if (this.projectId != null) {
+        return this.projectId;
+      }
+    }
+
+    String projectIdFromMetadata = getProjectIdFromMetadata();
+    synchronized (this) {
+      this.projectId = projectIdFromMetadata;
+    }
+    return projectIdFromMetadata;
+  }
+
+  private String getProjectIdFromMetadata() {
+    try {
+      HttpResponse response = getMetadataResponse(getProjectIdUrl(), RequestType.UNTRACKED, false);
+      int statusCode = response.getStatusCode();
+      if (statusCode == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
+        LoggingUtils.log(
+            LOGGER_PROVIDER,
+            Level.WARNING,
+            Collections.emptyMap(),
+            String.format(
+                "Error code %s trying to get project ID from"
+                    + " Compute Engine metadata. This may be because the virtual machine instance"
+                    + " does not have permission scopes specified.",
+                statusCode));
+        return super.getProjectId();
+      }
+      if (statusCode != HttpStatusCodes.STATUS_CODE_OK) {
+        LoggingUtils.log(
+            LOGGER_PROVIDER,
+            Level.WARNING,
+            Collections.emptyMap(),
+            String.format(
+                "Unexpected Error code %s trying to get project ID"
+                    + " from Compute Engine metadata for the default service account: %s",
+                statusCode, response.parseAsString()));
+        return super.getProjectId();
+      }
+      return response.parseAsString();
+    } catch (IOException e) {
+      LoggingUtils.log(
+          LOGGER_PROVIDER,
+          Level.WARNING,
+          Collections.emptyMap(),
+          String.format(
+              "Unexpected Error: %s trying to get project ID"
+                  + " from Compute Engine metadata server. Reason: %s",
+              e.getMessage(), e.getCause().toString()));
+      return super.getProjectId();
+    }
   }
 
   /** Refresh the access token by getting it from the GCE metadata server */
@@ -640,6 +711,11 @@ public class ComputeEngineCredentials extends GoogleCredentials
   public static String getIdentityDocumentUrl() {
     return getMetadataServerUrl(DefaultCredentialsProvider.DEFAULT)
         + "/computeMetadata/v1/instance/service-accounts/default/identity";
+  }
+
+  public static String getProjectIdUrl() {
+    return getMetadataServerUrl(DefaultCredentialsProvider.DEFAULT)
+        + "/computeMetadata/v1/project/project-id";
   }
 
   @Override
