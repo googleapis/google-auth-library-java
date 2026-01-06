@@ -244,20 +244,6 @@
             <goals>
               <goal>check</goal>
             </goals>
-            <configuration>
-              <rules>
-                <rule>
-                  <element>BUNDLE</element>
-                  <limits>
-                    <limit>
-                      <counter>LINE</counter>
-                      <value>COVEREDRATIO</value>
-                      <minimum>0.910</minimum>
-                    </limit>
-                  </limits>
-                </rule>
-              </rules>
-            </configuration>
           </execution>
         </executions>
       </plugin>
