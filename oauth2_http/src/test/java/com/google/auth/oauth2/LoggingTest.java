@@ -64,6 +64,8 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.KeyValuePair;
@@ -73,6 +75,7 @@ import org.slf4j.event.KeyValuePair;
  * credentials test classes with addition of test logging appender setup and test logic for logging.
  * This duplicates tests setups, but centralizes logging test setup in this class.
  */
+@Execution(ExecutionMode.SAME_THREAD)
 class LoggingTest {
 
   private TestAppender setupTestLogger(Class<?> clazz) {
