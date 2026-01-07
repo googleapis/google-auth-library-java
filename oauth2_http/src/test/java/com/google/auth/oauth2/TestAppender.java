@@ -38,13 +38,17 @@ import java.util.List;
 
 /** Logback appender used to set up tests. */
 class TestAppender extends AppenderBase<ILoggingEvent> {
-  public List<ILoggingEvent> events = new ArrayList<>();
+  private final List<ILoggingEvent> events = new ArrayList<>();
 
   @Override
   protected void append(ILoggingEvent eventObject) {
     // triggering Logback to capture the current MDC context and store it with the log event
     eventObject.getMDCPropertyMap();
     events.add(eventObject);
+  }
+
+  List<ILoggingEvent> getEvents() {
+    return events;
   }
 
   public void clearEvents() {

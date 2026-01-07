@@ -77,11 +77,11 @@ class Slf4jUtilsLogbackTest {
     contextMap.put("key2", "value2");
     Slf4jUtils.logWithMDC(LOGGER, Level.DEBUG, contextMap, "test message");
 
-    assertEquals(1, testAppender.events.size());
-    assertEquals("test message", testAppender.events.get(0).getMessage());
+    assertEquals(1, testAppender.getEvents().size());
+    assertEquals("test message", testAppender.getEvents().get(0).getMessage());
 
     // Verify MDC content
-    ILoggingEvent event = testAppender.events.get(0);
+    ILoggingEvent event = testAppender.getEvents().get(0);
     assertEquals(2, event.getMDCPropertyMap().size());
     assertEquals(ch.qos.logback.classic.Level.DEBUG, event.getLevel());
     assertEquals("value1", event.getMDCPropertyMap().get("key1"));
@@ -95,8 +95,8 @@ class Slf4jUtilsLogbackTest {
     TestAppender testAppender = setupTestLogger();
     Slf4jUtils.logWithMDC(LOGGER, Level.INFO, new HashMap<>(), "test message");
 
-    assertEquals(1, testAppender.events.size());
-    assertEquals(ch.qos.logback.classic.Level.INFO, testAppender.events.get(0).getLevel());
+    assertEquals(1, testAppender.getEvents().size());
+    assertEquals(ch.qos.logback.classic.Level.INFO, testAppender.getEvents().get(0).getLevel());
     testAppender.stop();
   }
 
@@ -105,7 +105,7 @@ class Slf4jUtilsLogbackTest {
     TestAppender testAppender = setupTestLogger();
     Slf4jUtils.logWithMDC(LOGGER, Level.TRACE, new HashMap<>(), "test message");
 
-    assertEquals(0, testAppender.events.size());
+    assertEquals(0, testAppender.getEvents().size());
     testAppender.stop();
   }
 
@@ -114,8 +114,8 @@ class Slf4jUtilsLogbackTest {
     TestAppender testAppender = setupTestLogger();
     Slf4jUtils.logWithMDC(LOGGER, Level.WARN, new HashMap<>(), "test message");
 
-    assertEquals(1, testAppender.events.size());
-    assertEquals(ch.qos.logback.classic.Level.WARN, testAppender.events.get(0).getLevel());
+    assertEquals(1, testAppender.getEvents().size());
+    assertEquals(ch.qos.logback.classic.Level.WARN, testAppender.getEvents().get(0).getLevel());
     testAppender.stop();
   }
 
@@ -124,8 +124,8 @@ class Slf4jUtilsLogbackTest {
     TestAppender testAppender = setupTestLogger();
     Slf4jUtils.logWithMDC(LOGGER, Level.ERROR, new HashMap<>(), "test message");
 
-    assertEquals(1, testAppender.events.size());
-    assertEquals(ch.qos.logback.classic.Level.ERROR, testAppender.events.get(0).getLevel());
+    assertEquals(1, testAppender.getEvents().size());
+    assertEquals(ch.qos.logback.classic.Level.ERROR, testAppender.getEvents().get(0).getLevel());
     testAppender.stop();
   }
 
@@ -145,8 +145,8 @@ class Slf4jUtilsLogbackTest {
     when(loggerProvider.getLogger()).thenReturn(LOGGER);
     LoggingUtils.logResponsePayload(data, loggerProvider, "test generic data");
 
-    assertEquals(1, testAppender.events.size());
-    List<KeyValuePair> keyValuePairs = testAppender.events.get(0).getKeyValuePairs();
+    assertEquals(1, testAppender.getEvents().size());
+    List<KeyValuePair> keyValuePairs = testAppender.getEvents().get(0).getKeyValuePairs();
     assertEquals(2, keyValuePairs.size());
     for (KeyValuePair kvp : keyValuePairs) {
       assertTrue(
@@ -180,11 +180,11 @@ class Slf4jUtilsLogbackTest {
     when(loggerProvider.getLogger()).thenReturn(LOGGER);
     LoggingUtils.logRequest(request, loggerProvider, "test log request");
 
-    assertEquals(1, testAppender.events.size());
-    assertEquals("test log request", testAppender.events.get(0).getMessage());
-    List<KeyValuePair> keyValuePairs = testAppender.events.get(0).getKeyValuePairs();
+    assertEquals(1, testAppender.getEvents().size());
+    assertEquals("test log request", testAppender.getEvents().get(0).getMessage());
+    List<KeyValuePair> keyValuePairs = testAppender.getEvents().get(0).getKeyValuePairs();
     assertEquals(4, keyValuePairs.size());
-    for (KeyValuePair kvp : testAppender.events.get(0).getKeyValuePairs()) {
+    for (KeyValuePair kvp : testAppender.getEvents().get(0).getKeyValuePairs()) {
       assertTrue(
           kvp.key.equals("request.headers")
               || kvp.key.equals("request.payload")

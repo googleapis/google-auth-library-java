@@ -62,6 +62,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
@@ -83,7 +85,8 @@ class LoggingTest {
   private static final long LOGBACK_POLL_DELAY_MS = 100L;
 
   private TestAppender setupTestLogger(Class<?> clazz) {
-    TestAppender testAppender = new TestAppender();
+    ThreadLocal<TestAppender> testAppenderThreadLocal = ThreadLocal.withInitial(TestAppender::new);
+    TestAppender testAppender = testAppenderThreadLocal.get();
     testAppender.start();
     Logger logger = LoggerFactory.getLogger(clazz);
     // From
@@ -130,11 +133,11 @@ class LoggingTest {
 
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
 
-    assertEquals(3, testAppender.events.size());
+    assertEquals(3, testAppender.getEvents().size());
     assertEquals(
-        "Sending request to refresh access token", testAppender.events.get(0).getMessage());
-    assertEquals(4, testAppender.events.get(0).getKeyValuePairs().size());
-    for (KeyValuePair kvp : testAppender.events.get(0).getKeyValuePairs()) {
+        "Sending request to refresh access token", testAppender.getEvents().get(0).getMessage());
+    assertEquals(4, testAppender.getEvents().get(0).getKeyValuePairs().size());
+    for (KeyValuePair kvp : testAppender.getEvents().get(0).getKeyValuePairs()) {
       assertTrue(
           kvp.key.equals("request.headers")
               || kvp.key.equals("request.payload")
@@ -145,17 +148,17 @@ class LoggingTest {
       }
     }
     assertEquals(
-        "Received response for refresh access token", testAppender.events.get(1).getMessage());
-    assertEquals(3, testAppender.events.get(1).getKeyValuePairs().size());
-    for (KeyValuePair kvp : testAppender.events.get(1).getKeyValuePairs()) {
+        "Received response for refresh access token", testAppender.getEvents().get(1).getMessage());
+    assertEquals(3, testAppender.getEvents().get(1).getKeyValuePairs().size());
+    for (KeyValuePair kvp : testAppender.getEvents().get(1).getKeyValuePairs()) {
       assertTrue(
           kvp.key.equals("response.headers")
               || kvp.key.equals("response.status")
               || kvp.key.equals("response.status.message"));
     }
-    assertEquals("Response payload for access token", testAppender.events.get(2).getMessage());
-    assertEquals(4, testAppender.events.get(2).getKeyValuePairs().size());
-    for (KeyValuePair kvp : testAppender.events.get(2).getKeyValuePairs()) {
+    assertEquals("Response payload for access token", testAppender.getEvents().get(2).getMessage());
+    assertEquals(4, testAppender.getEvents().get(2).getKeyValuePairs().size());
+    for (KeyValuePair kvp : testAppender.getEvents().get(2).getKeyValuePairs()) {
       assertTrue(
           kvp.key.equals("access_token")
               || kvp.key.equals("refresh_token")
@@ -163,6 +166,7 @@ class LoggingTest {
               || kvp.key.equals("expires_in"));
     }
     testAppender.stop();
+    testAppender.clearEvents();
   }
 
   boolean isValidJson(String jsonString) {
@@ -184,12 +188,12 @@ class LoggingTest {
     Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
 
-    assertEquals(3, testAppender.events.size());
+    assertEquals(3, testAppender.getEvents().size());
 
     assertEquals(
-        "Sending request to refresh access token", testAppender.events.get(0).getMessage());
-    assertEquals(4, testAppender.events.get(0).getKeyValuePairs().size());
-    for (KeyValuePair kvp : testAppender.events.get(0).getKeyValuePairs()) {
+        "Sending request to refresh access token", testAppender.getEvents().get(0).getMessage());
+    assertEquals(4, testAppender.getEvents().get(0).getKeyValuePairs().size());
+    for (KeyValuePair kvp : testAppender.getEvents().get(0).getKeyValuePairs()) {
       assertTrue(
           kvp.key.equals("request.headers")
               || kvp.key.equals("request.payload")
@@ -201,23 +205,24 @@ class LoggingTest {
       }
     }
     assertEquals(
-        "Received response for refresh access token", testAppender.events.get(1).getMessage());
-    assertEquals(3, testAppender.events.get(1).getKeyValuePairs().size());
-    for (KeyValuePair kvp : testAppender.events.get(1).getKeyValuePairs()) {
+        "Received response for refresh access token", testAppender.getEvents().get(1).getMessage());
+    assertEquals(3, testAppender.getEvents().get(1).getKeyValuePairs().size());
+    for (KeyValuePair kvp : testAppender.getEvents().get(1).getKeyValuePairs()) {
       assertTrue(
           kvp.key.equals("response.headers")
               || kvp.key.equals("response.status")
               || kvp.key.equals("response.status.message"));
     }
-    assertEquals("Response payload", testAppender.events.get(2).getMessage());
-    assertEquals(3, testAppender.events.get(2).getKeyValuePairs().size());
-    for (KeyValuePair kvp : testAppender.events.get(2).getKeyValuePairs()) {
+    assertEquals("Response payload", testAppender.getEvents().get(2).getMessage());
+    assertEquals(3, testAppender.getEvents().get(2).getKeyValuePairs().size());
+    for (KeyValuePair kvp : testAppender.getEvents().get(2).getKeyValuePairs()) {
       assertTrue(
           kvp.key.equals("access_token")
               || kvp.key.equals("token_type")
               || kvp.key.equals("expires_in"));
     }
     testAppender.stop();
+    testAppender.clearEvents();
   }
 
   @Test
@@ -252,11 +257,11 @@ class LoggingTest {
         targetAudience,
         tokenCredential.getIdToken().getJsonWebSignature().getPayload().getAudience());
 
-    assertEquals(3, testAppender.events.size());
+    assertEquals(3, testAppender.getEvents().size());
 
-    assertEquals("Sending request to get ID token", testAppender.events.get(0).getMessage());
-    assertEquals(4, testAppender.events.get(0).getKeyValuePairs().size());
-    for (KeyValuePair kvp : testAppender.events.get(0).getKeyValuePairs()) {
+    assertEquals("Sending request to get ID token", testAppender.getEvents().get(0).getMessage());
+    assertEquals(4, testAppender.getEvents().get(0).getKeyValuePairs().size());
+    for (KeyValuePair kvp : testAppender.getEvents().get(0).getKeyValuePairs()) {
       assertTrue(
           kvp.key.equals("request.headers")
               || kvp.key.equals("request.payload")
@@ -266,17 +271,18 @@ class LoggingTest {
         assertTrue(isValidJson((String) kvp.value));
       }
     }
-    assertEquals("Received response for ID token request", testAppender.events.get(1).getMessage());
-    assertEquals(3, testAppender.events.get(1).getKeyValuePairs().size());
-    for (KeyValuePair kvp : testAppender.events.get(1).getKeyValuePairs()) {
+    assertEquals("Received response for ID token request", testAppender.getEvents().get(1).getMessage());
+    assertEquals(3, testAppender.getEvents().get(1).getKeyValuePairs().size());
+    for (KeyValuePair kvp : testAppender.getEvents().get(1).getKeyValuePairs()) {
       assertTrue(
           kvp.key.equals("response.headers")
               || kvp.key.equals("response.status")
               || kvp.key.equals("response.status.message"));
     }
-    assertEquals("Response payload", testAppender.events.get(2).getMessage());
-    assertEquals(1, testAppender.events.get(2).getKeyValuePairs().size());
+    assertEquals("Response payload", testAppender.getEvents().get(2).getMessage());
+    assertEquals(1, testAppender.getEvents().get(2).getKeyValuePairs().size());
     testAppender.stop();
+    testAppender.clearEvents();
   }
 
   @Test()
@@ -302,12 +308,12 @@ class LoggingTest {
     assertEquals(
         DEFAULT_IMPERSONATION_URL, mockTransportFactory.getTransport().getRequest().getUrl());
 
-    assertEquals(3, testAppender.events.size());
+    assertEquals(3, testAppender.getEvents().size());
 
     assertEquals(
-        "Sending request to refresh access token", testAppender.events.get(0).getMessage());
-    assertEquals(4, testAppender.events.get(0).getKeyValuePairs().size());
-    for (KeyValuePair kvp : testAppender.events.get(0).getKeyValuePairs()) {
+        "Sending request to refresh access token", testAppender.getEvents().get(0).getMessage());
+    assertEquals(4, testAppender.getEvents().get(0).getKeyValuePairs().size());
+    for (KeyValuePair kvp : testAppender.getEvents().get(0).getKeyValuePairs()) {
       assertTrue(
           kvp.key.equals("request.headers")
               || kvp.key.equals("request.payload")
@@ -318,18 +324,19 @@ class LoggingTest {
       }
     }
     assertEquals(
-        "Received response for refresh access token", testAppender.events.get(1).getMessage());
-    assertEquals(3, testAppender.events.get(1).getKeyValuePairs().size());
-    for (KeyValuePair kvp : testAppender.events.get(1).getKeyValuePairs()) {
+        "Received response for refresh access token", testAppender.getEvents().get(1).getMessage());
+    assertEquals(3, testAppender.getEvents().get(1).getKeyValuePairs().size());
+    for (KeyValuePair kvp : testAppender.getEvents().get(1).getKeyValuePairs()) {
       assertTrue(
           kvp.key.equals("response.headers")
               || kvp.key.equals("response.status")
               || kvp.key.equals("response.status.message"));
     }
-    assertEquals("Response payload for access token", testAppender.events.get(2).getMessage());
-    assertEquals(2, testAppender.events.get(2).getKeyValuePairs().size());
+    assertEquals("Response payload for access token", testAppender.getEvents().get(2).getMessage());
+    assertEquals(2, testAppender.getEvents().get(2).getKeyValuePairs().size());
 
     testAppender.stop();
+    testAppender.clearEvents();
   }
 
   @Test
@@ -365,11 +372,11 @@ class LoggingTest {
     Payload p = tokenCredential.getIdToken().getJsonWebSignature().getPayload();
     assertTrue(p.containsKey("email"));
 
-    assertEquals(3, testAppender.events.size());
+    assertEquals(3, testAppender.getEvents().size());
 
-    assertEquals("Sending request to get ID token", testAppender.events.get(0).getMessage());
-    assertEquals(4, testAppender.events.get(0).getKeyValuePairs().size());
-    for (KeyValuePair kvp : testAppender.events.get(0).getKeyValuePairs()) {
+    assertEquals("Sending request to get ID token", testAppender.getEvents().get(0).getMessage());
+    assertEquals(4, testAppender.getEvents().get(0).getKeyValuePairs().size());
+    for (KeyValuePair kvp : testAppender.getEvents().get(0).getKeyValuePairs()) {
       assertTrue(
           kvp.key.equals("request.headers")
               || kvp.key.equals("request.payload")
@@ -379,18 +386,19 @@ class LoggingTest {
         assertTrue(isValidJson((String) kvp.value));
       }
     }
-    assertEquals("Received response for ID token request", testAppender.events.get(1).getMessage());
-    assertEquals(3, testAppender.events.get(1).getKeyValuePairs().size());
-    for (KeyValuePair kvp : testAppender.events.get(1).getKeyValuePairs()) {
+    assertEquals("Received response for ID token request", testAppender.getEvents().get(1).getMessage());
+    assertEquals(3, testAppender.getEvents().get(1).getKeyValuePairs().size());
+    for (KeyValuePair kvp : testAppender.getEvents().get(1).getKeyValuePairs()) {
       assertTrue(
           kvp.key.equals("response.headers")
               || kvp.key.equals("response.status")
               || kvp.key.equals("response.status.message"));
     }
-    assertEquals("Response payload for ID token request", testAppender.events.get(2).getMessage());
-    assertEquals(1, testAppender.events.get(2).getKeyValuePairs().size());
+    assertEquals("Response payload for ID token request", testAppender.getEvents().get(2).getMessage());
+    assertEquals(1, testAppender.getEvents().get(2).getKeyValuePairs().size());
 
     testAppender.stop();
+    testAppender.clearEvents();
   }
 
   @Test
@@ -418,13 +426,13 @@ class LoggingTest {
 
     assertArrayEquals(expectedSignature, targetCredentials.sign(expectedSignature));
 
-    assertEquals(3, testAppender.events.size());
+    assertEquals(3, testAppender.getEvents().size());
 
     assertEquals(
         "Sending request to get signature to sign the blob",
-        testAppender.events.get(0).getMessage());
-    assertEquals(4, testAppender.events.get(0).getKeyValuePairs().size());
-    for (KeyValuePair kvp : testAppender.events.get(0).getKeyValuePairs()) {
+        testAppender.getEvents().get(0).getMessage());
+    assertEquals(4, testAppender.getEvents().get(0).getKeyValuePairs().size());
+    for (KeyValuePair kvp : testAppender.getEvents().get(0).getKeyValuePairs()) {
       assertTrue(
           kvp.key.equals("request.headers")
               || kvp.key.equals("request.payload")
@@ -436,18 +444,19 @@ class LoggingTest {
     }
     assertEquals(
         "Received response for signature to sign the blob",
-        testAppender.events.get(1).getMessage());
-    assertEquals(3, testAppender.events.get(1).getKeyValuePairs().size());
-    for (KeyValuePair kvp : testAppender.events.get(1).getKeyValuePairs()) {
+        testAppender.getEvents().get(1).getMessage());
+    assertEquals(3, testAppender.getEvents().get(1).getKeyValuePairs().size());
+    for (KeyValuePair kvp : testAppender.getEvents().get(1).getKeyValuePairs()) {
       assertTrue(
           kvp.key.equals("response.headers")
               || kvp.key.equals("response.status")
               || kvp.key.equals("response.status.message"));
     }
-    assertEquals("Response payload for sign blob", testAppender.events.get(2).getMessage());
-    assertEquals(1, testAppender.events.get(2).getKeyValuePairs().size());
+    assertEquals("Response payload for sign blob", testAppender.getEvents().get(2).getMessage());
+    assertEquals(1, testAppender.getEvents().get(2).getKeyValuePairs().size());
 
     testAppender.stop();
+    testAppender.clearEvents();
   }
 
   @Test
@@ -461,9 +470,9 @@ class LoggingTest {
 
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
 
-    assertEquals(3, testAppender.events.size());
+    assertEquals(3, testAppender.getEvents().size());
 
-    ILoggingEvent accessTokenRequest = testAppender.events.get(0);
+    ILoggingEvent accessTokenRequest = testAppender.getEvents().get(0);
     assertEquals("Sending request to refresh access token", accessTokenRequest.getMessage());
     assertEquals(3, accessTokenRequest.getKeyValuePairs().size());
     for (KeyValuePair kvp : accessTokenRequest.getKeyValuePairs()) {
@@ -475,7 +484,7 @@ class LoggingTest {
         assertTrue(isValidJson((String) kvp.value));
       }
     }
-    ILoggingEvent accessTokenResponse = testAppender.events.get(1);
+    ILoggingEvent accessTokenResponse = testAppender.getEvents().get(1);
     assertEquals("Received response for refresh access token", accessTokenResponse.getMessage());
     assertEquals(3, accessTokenResponse.getKeyValuePairs().size());
     for (KeyValuePair kvp : accessTokenResponse.getKeyValuePairs()) {
@@ -484,11 +493,12 @@ class LoggingTest {
               || kvp.key.equals("response.status")
               || kvp.key.equals("response.status.message"));
     }
-    ILoggingEvent accessTokenPayload = testAppender.events.get(2);
+    ILoggingEvent accessTokenPayload = testAppender.getEvents().get(2);
     assertEquals("Response payload for access token", accessTokenPayload.getMessage());
     assertEquals(3, accessTokenPayload.getKeyValuePairs().size());
 
     testAppender.stop();
+    testAppender.clearEvents();
   }
 
   @Test
@@ -512,11 +522,11 @@ class LoggingTest {
     ArrayMap<String, ArrayMap> googleClaim = (ArrayMap<String, ArrayMap>) p.get("google");
     assertTrue(googleClaim.containsKey("compute_engine"));
 
-    assertEquals(3, testAppender.events.size());
+    assertEquals(3, testAppender.getEvents().size());
 
-    assertEquals("Sending request to get ID token", testAppender.events.get(0).getMessage());
-    assertEquals(3, testAppender.events.get(0).getKeyValuePairs().size());
-    for (KeyValuePair kvp : testAppender.events.get(0).getKeyValuePairs()) {
+    assertEquals("Sending request to get ID token", testAppender.getEvents().get(0).getMessage());
+    assertEquals(3, testAppender.getEvents().get(0).getKeyValuePairs().size());
+    for (KeyValuePair kvp : testAppender.getEvents().get(0).getKeyValuePairs()) {
       assertTrue(
           kvp.key.equals("request.headers")
               || kvp.key.equals("request.method")
@@ -525,21 +535,22 @@ class LoggingTest {
         assertTrue(isValidJson((String) kvp.value));
       }
     }
-    assertEquals("Received response for ID token request", testAppender.events.get(1).getMessage());
-    assertEquals(3, testAppender.events.get(1).getKeyValuePairs().size());
-    for (KeyValuePair kvp : testAppender.events.get(1).getKeyValuePairs()) {
+    assertEquals("Received response for ID token request", testAppender.getEvents().get(1).getMessage());
+    assertEquals(3, testAppender.getEvents().get(1).getKeyValuePairs().size());
+    for (KeyValuePair kvp : testAppender.getEvents().get(1).getKeyValuePairs()) {
       assertTrue(
           kvp.key.equals("response.headers")
               || kvp.key.equals("response.status")
               || kvp.key.equals("response.status.message"));
     }
 
-    assertEquals("Response Payload for ID token", testAppender.events.get(2).getMessage());
-    assertEquals(1, testAppender.events.get(2).getKeyValuePairs().size());
-    assertEquals("idToken", testAppender.events.get(2).getKeyValuePairs().get(0).key);
+    assertEquals("Response Payload for ID token", testAppender.getEvents().get(2).getMessage());
+    assertEquals(1, testAppender.getEvents().get(2).getKeyValuePairs().size());
+    assertEquals("idToken", testAppender.getEvents().get(2).getKeyValuePairs().get(0).key);
     assertEquals(
         ComputeEngineCredentialsTest.FULL_ID_TOKEN,
-        testAppender.events.get(2).getKeyValuePairs().get(0).value);
+        testAppender.getEvents().get(2).getKeyValuePairs().get(0).value);
     testAppender.stop();
+    testAppender.clearEvents();
   }
 }
