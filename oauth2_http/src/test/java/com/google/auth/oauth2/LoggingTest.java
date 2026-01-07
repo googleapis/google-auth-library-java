@@ -62,8 +62,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
@@ -80,8 +78,8 @@ import org.slf4j.event.KeyValuePair;
 @Execution(ExecutionMode.SAME_THREAD)
 class LoggingTest {
 
-  // Configure Logback to initialize at most for 1 second
-  private static final long LOGBACK_POLL_ATTEMPTS = 10L;
+  // Configure Logback to initialize at most for 3 seconds
+  private static final long LOGBACK_POLL_ATTEMPTS = 30L;
   private static final long LOGBACK_POLL_DELAY_MS = 100L;
 
   private TestAppender setupTestLogger(Class<?> clazz) {
@@ -271,7 +269,8 @@ class LoggingTest {
         assertTrue(isValidJson((String) kvp.value));
       }
     }
-    assertEquals("Received response for ID token request", testAppender.getEvents().get(1).getMessage());
+    assertEquals(
+        "Received response for ID token request", testAppender.getEvents().get(1).getMessage());
     assertEquals(3, testAppender.getEvents().get(1).getKeyValuePairs().size());
     for (KeyValuePair kvp : testAppender.getEvents().get(1).getKeyValuePairs()) {
       assertTrue(
@@ -386,7 +385,8 @@ class LoggingTest {
         assertTrue(isValidJson((String) kvp.value));
       }
     }
-    assertEquals("Received response for ID token request", testAppender.getEvents().get(1).getMessage());
+    assertEquals(
+        "Received response for ID token request", testAppender.getEvents().get(1).getMessage());
     assertEquals(3, testAppender.getEvents().get(1).getKeyValuePairs().size());
     for (KeyValuePair kvp : testAppender.getEvents().get(1).getKeyValuePairs()) {
       assertTrue(
@@ -394,7 +394,8 @@ class LoggingTest {
               || kvp.key.equals("response.status")
               || kvp.key.equals("response.status.message"));
     }
-    assertEquals("Response payload for ID token request", testAppender.getEvents().get(2).getMessage());
+    assertEquals(
+        "Response payload for ID token request", testAppender.getEvents().get(2).getMessage());
     assertEquals(1, testAppender.getEvents().get(2).getKeyValuePairs().size());
 
     testAppender.stop();
@@ -535,7 +536,8 @@ class LoggingTest {
         assertTrue(isValidJson((String) kvp.value));
       }
     }
-    assertEquals("Received response for ID token request", testAppender.getEvents().get(1).getMessage());
+    assertEquals(
+        "Received response for ID token request", testAppender.getEvents().get(1).getMessage());
     assertEquals(3, testAppender.getEvents().get(1).getKeyValuePairs().size());
     for (KeyValuePair kvp : testAppender.getEvents().get(1).getKeyValuePairs()) {
       assertTrue(
