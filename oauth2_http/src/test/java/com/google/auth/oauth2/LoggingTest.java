@@ -78,12 +78,30 @@ import org.slf4j.event.KeyValuePair;
 @Execution(ExecutionMode.SAME_THREAD)
 class LoggingTest {
 
+  // Configure Logback to initialize at most for 1 second
+  private static final long LOGBACK_POLL_ATTEMPTS = 10L;
+  private static final long LOGBACK_POLL_DELAY_MS = 100L;
+
   private TestAppender setupTestLogger(Class<?> clazz) {
     TestAppender testAppender = new TestAppender();
     testAppender.start();
     Logger logger = LoggerFactory.getLogger(clazz);
-    ((ch.qos.logback.classic.Logger) logger).addAppender(testAppender);
-    return testAppender;
+    // From
+    // https://stackoverflow.com/questions/1827677/how-to-do-a-junit-assert-on-a-message-in-a-logger/51812144#comment128302495_51812144
+    // LoggerFactory.getLogger() might return an org.slf4j.helpers.SubstituteLogger instance despite
+    // the usage of Logback while the logging is still initializing
+    for (int i = 0; i < LOGBACK_POLL_ATTEMPTS; i++) {
+      if ((logger instanceof ch.qos.logback.classic.Logger)) {
+        ((ch.qos.logback.classic.Logger) logger).addAppender(testAppender);
+        return testAppender;
+      }
+      try {
+        Thread.sleep(LOGBACK_POLL_DELAY_MS);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    throw new RuntimeException("Unable to setup test logger");
   }
 
   @BeforeAll
