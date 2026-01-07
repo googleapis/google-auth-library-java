@@ -20,8 +20,6 @@
   </distributionManagement>
 
   <build>
-    <sourceDirectory>java</sourceDirectory>
-    <testSourceDirectory>javatests</testSourceDirectory>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
