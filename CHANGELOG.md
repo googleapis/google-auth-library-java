@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.42.1](https://github.com/googleapis/google-auth-library-java/compare/v1.42.0...v1.42.1) (2026-01-23)
+
+
+### Bug Fixes
+
+* Mark GdchCredentialsTestUtil test util class as public ([#1877](https://github.com/googleapis/google-auth-library-java/issues/1877)) ([1868969](https://github.com/googleapis/google-auth-library-java/commit/1868969b2701fe0faa4511c36443666c3aaad534))
+
 ## [1.42.0](https://github.com/googleapis/google-auth-library-java/compare/v1.41.0...v1.42.0) (2026-01-23)
 
 
