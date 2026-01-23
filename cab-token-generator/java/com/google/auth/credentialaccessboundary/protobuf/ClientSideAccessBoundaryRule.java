@@ -3,7 +3,7 @@
 // source: cloud/identity/unifiedauth/proto/client_side_access_boundary.proto
 // Protobuf Java Version: 4.33.2
 
-package com.google.cloud.identity.unifiedauth.proto;
+package com.google.auth.credentialaccessboundary.protobuf;
 
 /**
  * <pre>
@@ -43,15 +43,15 @@ private static final long serialVersionUID = 0L;
 
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryProto.internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundaryRule_descriptor;
+    return com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto.internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundaryRule_descriptor;
   }
 
   @java.lang.Override
   protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryProto.internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundaryRule_fieldAccessorTable
+    return com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto.internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundaryRule_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
-            com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule.class, com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule.Builder.class);
+            com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.class, com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.Builder.class);
   }
 
   private int bitField0_;
@@ -196,7 +196,7 @@ private static final long serialVersionUID = 0L;
   }
 
   public static final int COMPILED_AVAILABILITY_CONDITION_FIELD_NUMBER = 4;
-  private com.google.api.expr.Expr compiledAvailabilityCondition_;
+  private dev.cel.expr.Expr compiledAvailabilityCondition_;
   /**
    * <pre>
    * The compiled version of the
@@ -224,8 +224,8 @@ private static final long serialVersionUID = 0L;
    * @return The compiledAvailabilityCondition.
    */
   @java.lang.Override
-  public com.google.api.expr.Expr getCompiledAvailabilityCondition() {
-    return compiledAvailabilityCondition_ == null ? com.google.api.expr.Expr.getDefaultInstance() : compiledAvailabilityCondition_;
+  public dev.cel.expr.Expr getCompiledAvailabilityCondition() {
+    return compiledAvailabilityCondition_ == null ? dev.cel.expr.Expr.getDefaultInstance() : compiledAvailabilityCondition_;
   }
   /**
    * <pre>
@@ -238,8 +238,8 @@ private static final long serialVersionUID = 0L;
    * <code>.google.api.expr.Expr compiled_availability_condition = 4;</code>
    */
   @java.lang.Override
-  public com.google.api.expr.ExprOrBuilder getCompiledAvailabilityConditionOrBuilder() {
-    return compiledAvailabilityCondition_ == null ? com.google.api.expr.Expr.getDefaultInstance() : compiledAvailabilityCondition_;
+  public dev.cel.expr.ExprOrBuilder getCompiledAvailabilityConditionOrBuilder() {
+    return compiledAvailabilityCondition_ == null ? dev.cel.expr.Expr.getDefaultInstance() : compiledAvailabilityCondition_;
   }
 
   private byte memoizedIsInitialized = -1;
@@ -299,10 +299,10 @@ private static final long serialVersionUID = 0L;
     if (obj == this) {
      return true;
     }
-    if (!(obj instanceof com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule)) {
+    if (!(obj instanceof com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule)) {
       return super.equals(obj);
     }
-    com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule other = (com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule) obj;
+      com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule other = (com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule) obj;
 
     if (!getAvailableResource()
         .equals(other.getAvailableResource())) return false;
@@ -339,44 +339,44 @@ private static final long serialVersionUID = 0L;
     return hash;
   }
 
-  public static com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule parseFrom(
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule parseFrom(
       java.nio.ByteBuffer data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule parseFrom(
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule parseFrom(
       java.nio.ByteBuffer data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule parseFrom(
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule parseFrom(
       com.google.protobuf.ByteString data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule parseFrom(
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule parseFrom(
       com.google.protobuf.ByteString data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule parseFrom(byte[] data)
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule parseFrom(byte[] data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule parseFrom(
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule parseFrom(
       byte[] data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule parseFrom(java.io.InputStream input)
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule parseFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessage
         .parseWithIOException(PARSER, input);
   }
-  public static com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule parseFrom(
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule parseFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
@@ -384,26 +384,26 @@ private static final long serialVersionUID = 0L;
         .parseWithIOException(PARSER, input, extensionRegistry);
   }
 
-  public static com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule parseDelimitedFrom(java.io.InputStream input)
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule parseDelimitedFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessage
         .parseDelimitedWithIOException(PARSER, input);
   }
 
-  public static com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule parseDelimitedFrom(
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule parseDelimitedFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessage
         .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
   }
-  public static com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule parseFrom(
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule parseFrom(
       com.google.protobuf.CodedInputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessage
         .parseWithIOException(PARSER, input);
   }
-  public static com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule parseFrom(
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule parseFrom(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
@@ -416,7 +416,7 @@ private static final long serialVersionUID = 0L;
   public static Builder newBuilder() {
     return DEFAULT_INSTANCE.toBuilder();
   }
-  public static Builder newBuilder(com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule prototype) {
+  public static Builder newBuilder(com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule prototype) {
     return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
   }
   @java.lang.Override
@@ -445,21 +445,21 @@ private static final long serialVersionUID = 0L;
   public static final class Builder extends
       com.google.protobuf.GeneratedMessage.Builder<Builder> implements
       // @@protoc_insertion_point(builder_implements:cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule)
-      com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRuleOrBuilder {
+      com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRuleOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryProto.internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundaryRule_descriptor;
+      return com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto.internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundaryRule_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryProto.internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundaryRule_fieldAccessorTable
+      return com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto.internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundaryRule_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule.class, com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule.Builder.class);
+              com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.class, com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.Builder.class);
     }
 
-    // Construct using com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule.newBuilder()
+    // Construct using com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.newBuilder()
     private Builder() {
       maybeForceBuilderInitialization();
     }
@@ -493,17 +493,17 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryProto.internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundaryRule_descriptor;
+      return com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto.internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundaryRule_descriptor;
     }
 
     @java.lang.Override
-    public com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule getDefaultInstanceForType() {
-      return com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule.getDefaultInstance();
+    public com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule getDefaultInstanceForType() {
+      return com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.getDefaultInstance();
     }
 
     @java.lang.Override
-    public com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule build() {
-      com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule result = buildPartial();
+    public com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule build() {
+      com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule result = buildPartial();
       if (!result.isInitialized()) {
         throw newUninitializedMessageException(result);
       }
@@ -511,14 +511,14 @@ private static final long serialVersionUID = 0L;
     }
 
     @java.lang.Override
-    public com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule buildPartial() {
-      com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule result = new com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule(this);
+    public com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule buildPartial() {
+      com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule result = new com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule(this);
       if (bitField0_ != 0) { buildPartial0(result); }
       onBuilt();
       return result;
     }
 
-    private void buildPartial0(com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule result) {
+    private void buildPartial0(com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule result) {
       int from_bitField0_ = bitField0_;
       if (((from_bitField0_ & 0x00000001) != 0)) {
         result.availableResource_ = availableResource_;
@@ -539,16 +539,16 @@ private static final long serialVersionUID = 0L;
 
     @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.Message other) {
-      if (other instanceof com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule) {
-        return mergeFrom((com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule)other);
+      if (other instanceof com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule) {
+        return mergeFrom((com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule)other);
       } else {
         super.mergeFrom(other);
         return this;
       }
     }
 
-    public Builder mergeFrom(com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule other) {
-      if (other == com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule.getDefaultInstance()) return this;
+    public Builder mergeFrom(com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule other) {
+      if (other == com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.getDefaultInstance()) return this;
       if (!other.getAvailableResource().isEmpty()) {
         availableResource_ = other.availableResource_;
         bitField0_ |= 0x00000001;
@@ -959,9 +959,9 @@ private static final long serialVersionUID = 0L;
       return this;
     }
 
-    private com.google.api.expr.Expr compiledAvailabilityCondition_;
+    private dev.cel.expr.Expr compiledAvailabilityCondition_;
     private com.google.protobuf.SingleFieldBuilder<
-        com.google.api.expr.Expr, com.google.api.expr.Expr.Builder, com.google.api.expr.ExprOrBuilder> compiledAvailabilityConditionBuilder_;
+        dev.cel.expr.Expr, dev.cel.expr.Expr.Builder, dev.cel.expr.ExprOrBuilder> compiledAvailabilityConditionBuilder_;
     /**
      * <pre>
      * The compiled version of the
@@ -987,9 +987,9 @@ private static final long serialVersionUID = 0L;
      * <code>.google.api.expr.Expr compiled_availability_condition = 4;</code>
      * @return The compiledAvailabilityCondition.
      */
-    public com.google.api.expr.Expr getCompiledAvailabilityCondition() {
+    public dev.cel.expr.Expr getCompiledAvailabilityCondition() {
       if (compiledAvailabilityConditionBuilder_ == null) {
-        return compiledAvailabilityCondition_ == null ? com.google.api.expr.Expr.getDefaultInstance() : compiledAvailabilityCondition_;
+        return compiledAvailabilityCondition_ == null ? dev.cel.expr.Expr.getDefaultInstance() : compiledAvailabilityCondition_;
       } else {
         return compiledAvailabilityConditionBuilder_.getMessage();
       }
@@ -1004,7 +1004,7 @@ private static final long serialVersionUID = 0L;
      *
      * <code>.google.api.expr.Expr compiled_availability_condition = 4;</code>
      */
-    public Builder setCompiledAvailabilityCondition(com.google.api.expr.Expr value) {
+    public Builder setCompiledAvailabilityCondition(dev.cel.expr.Expr value) {
       if (compiledAvailabilityConditionBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -1028,7 +1028,7 @@ private static final long serialVersionUID = 0L;
      * <code>.google.api.expr.Expr compiled_availability_condition = 4;</code>
      */
     public Builder setCompiledAvailabilityCondition(
-        com.google.api.expr.Expr.Builder builderForValue) {
+        dev.cel.expr.Expr.Builder builderForValue) {
       if (compiledAvailabilityConditionBuilder_ == null) {
         compiledAvailabilityCondition_ = builderForValue.build();
       } else {
@@ -1048,11 +1048,11 @@ private static final long serialVersionUID = 0L;
      *
      * <code>.google.api.expr.Expr compiled_availability_condition = 4;</code>
      */
-    public Builder mergeCompiledAvailabilityCondition(com.google.api.expr.Expr value) {
+    public Builder mergeCompiledAvailabilityCondition(dev.cel.expr.Expr value) {
       if (compiledAvailabilityConditionBuilder_ == null) {
         if (((bitField0_ & 0x00000004) != 0) &&
           compiledAvailabilityCondition_ != null &&
-          compiledAvailabilityCondition_ != com.google.api.expr.Expr.getDefaultInstance()) {
+          compiledAvailabilityCondition_ != dev.cel.expr.Expr.getDefaultInstance()) {
           getCompiledAvailabilityConditionBuilder().mergeFrom(value);
         } else {
           compiledAvailabilityCondition_ = value;
@@ -1096,7 +1096,7 @@ private static final long serialVersionUID = 0L;
      *
      * <code>.google.api.expr.Expr compiled_availability_condition = 4;</code>
      */
-    public com.google.api.expr.Expr.Builder getCompiledAvailabilityConditionBuilder() {
+    public dev.cel.expr.Expr.Builder getCompiledAvailabilityConditionBuilder() {
       bitField0_ |= 0x00000004;
       onChanged();
       return internalGetCompiledAvailabilityConditionFieldBuilder().getBuilder();
@@ -1111,12 +1111,12 @@ private static final long serialVersionUID = 0L;
      *
      * <code>.google.api.expr.Expr compiled_availability_condition = 4;</code>
      */
-    public com.google.api.expr.ExprOrBuilder getCompiledAvailabilityConditionOrBuilder() {
+    public dev.cel.expr.ExprOrBuilder getCompiledAvailabilityConditionOrBuilder() {
       if (compiledAvailabilityConditionBuilder_ != null) {
         return compiledAvailabilityConditionBuilder_.getMessageOrBuilder();
       } else {
         return compiledAvailabilityCondition_ == null ?
-            com.google.api.expr.Expr.getDefaultInstance() : compiledAvailabilityCondition_;
+            dev.cel.expr.Expr.getDefaultInstance() : compiledAvailabilityCondition_;
       }
     }
     /**
@@ -1130,11 +1130,11 @@ private static final long serialVersionUID = 0L;
      * <code>.google.api.expr.Expr compiled_availability_condition = 4;</code>
      */
     private com.google.protobuf.SingleFieldBuilder<
-        com.google.api.expr.Expr, com.google.api.expr.Expr.Builder, com.google.api.expr.ExprOrBuilder> 
+        dev.cel.expr.Expr, dev.cel.expr.Expr.Builder, dev.cel.expr.ExprOrBuilder>
         internalGetCompiledAvailabilityConditionFieldBuilder() {
       if (compiledAvailabilityConditionBuilder_ == null) {
         compiledAvailabilityConditionBuilder_ = new com.google.protobuf.SingleFieldBuilder<
-            com.google.api.expr.Expr, com.google.api.expr.Expr.Builder, com.google.api.expr.ExprOrBuilder>(
+            dev.cel.expr.Expr, dev.cel.expr.Expr.Builder, dev.cel.expr.ExprOrBuilder>(
                 getCompiledAvailabilityCondition(),
                 getParentForChildren(),
                 isClean());
@@ -1147,12 +1147,12 @@ private static final long serialVersionUID = 0L;
   }
 
   // @@protoc_insertion_point(class_scope:cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule)
-  private static final com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule DEFAULT_INSTANCE;
+  private static final com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule DEFAULT_INSTANCE;
   static {
-    DEFAULT_INSTANCE = new com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule();
+    DEFAULT_INSTANCE = new com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule();
   }
 
-  public static com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule getDefaultInstance() {
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule getDefaultInstance() {
     return DEFAULT_INSTANCE;
   }
 
@@ -1188,7 +1188,7 @@ private static final long serialVersionUID = 0L;
   }
 
   @java.lang.Override
-  public com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule getDefaultInstanceForType() {
+  public com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule getDefaultInstanceForType() {
     return DEFAULT_INSTANCE;
   }
 

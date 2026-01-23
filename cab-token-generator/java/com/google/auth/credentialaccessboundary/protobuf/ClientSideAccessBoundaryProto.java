@@ -3,7 +3,7 @@
 // source: cloud/identity/unifiedauth/proto/client_side_access_boundary.proto
 // Protobuf Java Version: 4.33.2
 
-package com.google.cloud.identity.unifiedauth.proto;
+package com.google.auth.credentialaccessboundary.protobuf;
 
 @com.google.protobuf.Generated
 public final class ClientSideAccessBoundaryProto extends com.google.protobuf.GeneratedFile {
@@ -61,7 +61,7 @@ public final class ClientSideAccessBoundaryProto extends com.google.protobuf.Gen
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-          com.google.api.expr.SyntaxProto.getDescriptor(),
+                dev.cel.expr.SyntaxProto.getDescriptor(),
         });
     internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundaryRule_descriptor =
       getDescriptor().getMessageType(0);
@@ -76,7 +76,7 @@ public final class ClientSideAccessBoundaryProto extends com.google.protobuf.Gen
         internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundary_descriptor,
         new java.lang.String[] { "AccessBoundaryRules", });
     descriptor.resolveAllFeaturesImmutable();
-    com.google.api.expr.SyntaxProto.getDescriptor();
+      dev.cel.expr.SyntaxProto.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

@@ -3,7 +3,7 @@
 // source: cloud/identity/unifiedauth/proto/client_side_access_boundary.proto
 // Protobuf Java Version: 4.33.2
 
-package com.google.cloud.identity.unifiedauth.proto;
+package com.google.auth.credentialaccessboundary.protobuf;
 
 @com.google.protobuf.Generated
 public interface ClientSideAccessBoundaryRuleOrBuilder extends
@@ -134,7 +134,7 @@ public interface ClientSideAccessBoundaryRuleOrBuilder extends
    * <code>.google.api.expr.Expr compiled_availability_condition = 4;</code>
    * @return The compiledAvailabilityCondition.
    */
-  com.google.api.expr.Expr getCompiledAvailabilityCondition();
+  dev.cel.expr.Expr getCompiledAvailabilityCondition();
   /**
    * <pre>
    * The compiled version of the
@@ -145,5 +145,5 @@ public interface ClientSideAccessBoundaryRuleOrBuilder extends
    *
    * <code>.google.api.expr.Expr compiled_availability_condition = 4;</code>
    */
-  com.google.api.expr.ExprOrBuilder getCompiledAvailabilityConditionOrBuilder();
+  dev.cel.expr.ExprOrBuilder getCompiledAvailabilityConditionOrBuilder();
 }

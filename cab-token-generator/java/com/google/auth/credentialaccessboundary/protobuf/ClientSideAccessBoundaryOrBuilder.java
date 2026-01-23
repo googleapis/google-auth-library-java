@@ -3,7 +3,7 @@
 // source: cloud/identity/unifiedauth/proto/client_side_access_boundary.proto
 // Protobuf Java Version: 4.33.2
 
-package com.google.cloud.identity.unifiedauth.proto;
+package com.google.auth.credentialaccessboundary.protobuf;
 
 @com.google.protobuf.Generated
 public interface ClientSideAccessBoundaryOrBuilder extends
@@ -20,7 +20,7 @@ public interface ClientSideAccessBoundaryOrBuilder extends
    *
    * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
    */
-  java.util.List<com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule> 
+  java.util.List<com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule>
       getAccessBoundaryRulesList();
   /**
    * <pre>
@@ -32,7 +32,7 @@ public interface ClientSideAccessBoundaryOrBuilder extends
    *
    * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
    */
-  com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule getAccessBoundaryRules(int index);
+  com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule getAccessBoundaryRules(int index);
   /**
    * <pre>
    * A list of client-side access boundary rules which defines the upper bound
@@ -54,7 +54,7 @@ public interface ClientSideAccessBoundaryOrBuilder extends
    *
    * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
    */
-  java.util.List<? extends com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRuleOrBuilder> 
+  java.util.List<? extends com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRuleOrBuilder>
       getAccessBoundaryRulesOrBuilderList();
   /**
    * <pre>
@@ -66,6 +66,6 @@ public interface ClientSideAccessBoundaryOrBuilder extends
    *
    * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
    */
-  com.google.cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRuleOrBuilder getAccessBoundaryRulesOrBuilder(
+  com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRuleOrBuilder getAccessBoundaryRulesOrBuilder(
       int index);
 }
