@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.42.0](https://github.com/googleapis/google-auth-library-java/compare/v1.41.0...v1.42.0) (2026-01-23)
+
+
+### Features
+
+* Update protobuf version to 4.33.2 ([#1875](https://github.com/googleapis/google-auth-library-java/issues/1875)) ([13ddbd1](https://github.com/googleapis/google-auth-library-java/commit/13ddbd1744fb908fb51e8866e5aac291f0e9bada))
+
+
+### Bug Fixes
+
+* Simplify call to directly retrieve the default service account from MDS ([#1844](https://github.com/googleapis/google-auth-library-java/issues/1844)) ([6efda0b](https://github.com/googleapis/google-auth-library-java/commit/6efda0bc2063b1d1b30de43785d08ec86da1791c))
+
 ## [1.41.0](https://github.com/googleapis/google-auth-library-java/compare/v1.40.0...v1.41.0) (2025-12-03)
 
 
