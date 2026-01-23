@@ -6,6 +6,8 @@
 package com.google.auth.credentialaccessboundary.protobuf;
 
 /**
+ *
+ *
  * <pre>
  * An access boundary defines the upper bound of what a principal may access. It
  * includes a list of client-side access boundary rules that each defines the
@@ -16,45 +18,57 @@ package com.google.auth.credentialaccessboundary.protobuf;
  * Protobuf type {@code cloud.identity.unifiedauth.proto.ClientSideAccessBoundary}
  */
 @com.google.protobuf.Generated
-public final class ClientSideAccessBoundary extends
-    com.google.protobuf.GeneratedMessage implements
+public final class ClientSideAccessBoundary extends com.google.protobuf.GeneratedMessage
+    implements
     // @@protoc_insertion_point(message_implements:cloud.identity.unifiedauth.proto.ClientSideAccessBoundary)
     ClientSideAccessBoundaryOrBuilder {
-private static final long serialVersionUID = 0L;
+  private static final long serialVersionUID = 0L;
+
   static {
     com.google.protobuf.RuntimeVersion.validateProtobufGencodeVersion(
-      com.google.protobuf.RuntimeVersion.RuntimeDomain.PUBLIC,
-      /* major= */ 4,
-      /* minor= */ 33,
-      /* patch= */ 2,
-      /* suffix= */ "",
-      "ClientSideAccessBoundary");
+        com.google.protobuf.RuntimeVersion.RuntimeDomain.PUBLIC,
+        /* major= */ 4,
+        /* minor= */ 33,
+        /* patch= */ 2,
+        /* suffix= */ "",
+        "ClientSideAccessBoundary");
   }
+
   // Use ClientSideAccessBoundary.newBuilder() to construct.
   private ClientSideAccessBoundary(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
     super(builder);
   }
+
   private ClientSideAccessBoundary() {
     accessBoundaryRules_ = java.util.Collections.emptyList();
   }
 
-  public static final com.google.protobuf.Descriptors.Descriptor
-      getDescriptor() {
-    return com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto.internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundary_descriptor;
+  public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+    return com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto
+        .internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundary_descriptor;
   }
 
   @java.lang.Override
   protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto.internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundary_fieldAccessorTable
+    return com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto
+        .internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundary_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
-            com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary.class, com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary.Builder.class);
+            com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary.class,
+            com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary.Builder
+                .class);
   }
 
   public static final int ACCESS_BOUNDARY_RULES_FIELD_NUMBER = 1;
+
   @SuppressWarnings("serial")
-  private java.util.List<com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule> accessBoundaryRules_;
+  private java.util.List<
+          com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule>
+      accessBoundaryRules_;
+
   /**
+   *
+   *
    * <pre>
    * A list of client-side access boundary rules which defines the upper bound
    * of the permission a principal may carry. If multiple rules are specified,
@@ -62,13 +76,20 @@ private static final long serialVersionUID = 0L;
    * attached.
    * </pre>
    *
-   * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+   * <code>
+   * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+   * </code>
    */
   @java.lang.Override
-  public java.util.List<com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule> getAccessBoundaryRulesList() {
+  public java.util.List<
+          com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule>
+      getAccessBoundaryRulesList() {
     return accessBoundaryRules_;
   }
+
   /**
+   *
+   *
    * <pre>
    * A list of client-side access boundary rules which defines the upper bound
    * of the permission a principal may carry. If multiple rules are specified,
@@ -76,14 +97,22 @@ private static final long serialVersionUID = 0L;
    * attached.
    * </pre>
    *
-   * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+   * <code>
+   * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+   * </code>
    */
   @java.lang.Override
-  public java.util.List<? extends com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRuleOrBuilder>
+  public java.util.List<
+          ? extends
+              com.google.auth.credentialaccessboundary.protobuf
+                  .ClientSideAccessBoundaryRuleOrBuilder>
       getAccessBoundaryRulesOrBuilderList() {
     return accessBoundaryRules_;
   }
+
   /**
+   *
+   *
    * <pre>
    * A list of client-side access boundary rules which defines the upper bound
    * of the permission a principal may carry. If multiple rules are specified,
@@ -91,13 +120,18 @@ private static final long serialVersionUID = 0L;
    * attached.
    * </pre>
    *
-   * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+   * <code>
+   * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+   * </code>
    */
   @java.lang.Override
   public int getAccessBoundaryRulesCount() {
     return accessBoundaryRules_.size();
   }
+
   /**
+   *
+   *
    * <pre>
    * A list of client-side access boundary rules which defines the upper bound
    * of the permission a principal may carry. If multiple rules are specified,
@@ -105,13 +139,19 @@ private static final long serialVersionUID = 0L;
    * attached.
    * </pre>
    *
-   * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+   * <code>
+   * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+   * </code>
    */
   @java.lang.Override
-  public com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule getAccessBoundaryRules(int index) {
+  public com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule
+      getAccessBoundaryRules(int index) {
     return accessBoundaryRules_.get(index);
   }
+
   /**
+   *
+   *
    * <pre>
    * A list of client-side access boundary rules which defines the upper bound
    * of the permission a principal may carry. If multiple rules are specified,
@@ -119,15 +159,18 @@ private static final long serialVersionUID = 0L;
    * attached.
    * </pre>
    *
-   * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+   * <code>
+   * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+   * </code>
    */
   @java.lang.Override
-  public com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRuleOrBuilder getAccessBoundaryRulesOrBuilder(
-      int index) {
+  public com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRuleOrBuilder
+      getAccessBoundaryRulesOrBuilder(int index) {
     return accessBoundaryRules_.get(index);
   }
 
   private byte memoizedIsInitialized = -1;
+
   @java.lang.Override
   public final boolean isInitialized() {
     byte isInitialized = memoizedIsInitialized;
@@ -139,8 +182,7 @@ private static final long serialVersionUID = 0L;
   }
 
   @java.lang.Override
-  public void writeTo(com.google.protobuf.CodedOutputStream output)
-                      throws java.io.IOException {
+  public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
     for (int i = 0; i < accessBoundaryRules_.size(); i++) {
       output.writeMessage(1, accessBoundaryRules_.get(i));
     }
@@ -154,8 +196,8 @@ private static final long serialVersionUID = 0L;
 
     size = 0;
     for (int i = 0; i < accessBoundaryRules_.size(); i++) {
-      size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(1, accessBoundaryRules_.get(i));
+      size +=
+          com.google.protobuf.CodedOutputStream.computeMessageSize(1, accessBoundaryRules_.get(i));
     }
     size += getUnknownFields().getSerializedSize();
     memoizedSize = size;
@@ -165,15 +207,16 @@ private static final long serialVersionUID = 0L;
   @java.lang.Override
   public boolean equals(final java.lang.Object obj) {
     if (obj == this) {
-     return true;
+      return true;
     }
-    if (!(obj instanceof com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary)) {
+    if (!(obj
+        instanceof com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary)) {
       return super.equals(obj);
     }
-      com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary other = (com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary) obj;
+    com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary other =
+        (com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary) obj;
 
-    if (!getAccessBoundaryRulesList()
-        .equals(other.getAccessBoundaryRulesList())) return false;
+    if (!getAccessBoundaryRulesList().equals(other.getAccessBoundaryRulesList())) return false;
     if (!getUnknownFields().equals(other.getUnknownFields())) return false;
     return true;
   }
@@ -194,99 +237,112 @@ private static final long serialVersionUID = 0L;
     return hash;
   }
 
-  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary parseFrom(
-      java.nio.ByteBuffer data)
-      throws com.google.protobuf.InvalidProtocolBufferException {
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary
+      parseFrom(java.nio.ByteBuffer data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
-  }
-  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary parseFrom(
-      java.nio.ByteBuffer data,
-      com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-      throws com.google.protobuf.InvalidProtocolBufferException {
-    return PARSER.parseFrom(data, extensionRegistry);
-  }
-  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary parseFrom(
-      com.google.protobuf.ByteString data)
-      throws com.google.protobuf.InvalidProtocolBufferException {
-    return PARSER.parseFrom(data);
-  }
-  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary parseFrom(
-      com.google.protobuf.ByteString data,
-      com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-      throws com.google.protobuf.InvalidProtocolBufferException {
-    return PARSER.parseFrom(data, extensionRegistry);
-  }
-  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary parseFrom(byte[] data)
-      throws com.google.protobuf.InvalidProtocolBufferException {
-    return PARSER.parseFrom(data);
-  }
-  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary parseFrom(
-      byte[] data,
-      com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-      throws com.google.protobuf.InvalidProtocolBufferException {
-    return PARSER.parseFrom(data, extensionRegistry);
-  }
-  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary parseFrom(java.io.InputStream input)
-      throws java.io.IOException {
-    return com.google.protobuf.GeneratedMessage
-        .parseWithIOException(PARSER, input);
-  }
-  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary parseFrom(
-      java.io.InputStream input,
-      com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-      throws java.io.IOException {
-    return com.google.protobuf.GeneratedMessage
-        .parseWithIOException(PARSER, input, extensionRegistry);
   }
 
-  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary parseDelimitedFrom(java.io.InputStream input)
-      throws java.io.IOException {
-    return com.google.protobuf.GeneratedMessage
-        .parseDelimitedWithIOException(PARSER, input);
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary
+      parseFrom(
+          java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+    return PARSER.parseFrom(data, extensionRegistry);
   }
 
-  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary parseDelimitedFrom(
-      java.io.InputStream input,
-      com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-      throws java.io.IOException {
-    return com.google.protobuf.GeneratedMessage
-        .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary
+      parseFrom(com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+    return PARSER.parseFrom(data);
   }
-  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary parseFrom(
-      com.google.protobuf.CodedInputStream input)
-      throws java.io.IOException {
-    return com.google.protobuf.GeneratedMessage
-        .parseWithIOException(PARSER, input);
+
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary
+      parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+    return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary parseFrom(
-      com.google.protobuf.CodedInputStream input,
-      com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-      throws java.io.IOException {
-    return com.google.protobuf.GeneratedMessage
-        .parseWithIOException(PARSER, input, extensionRegistry);
+
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary
+      parseFrom(byte[] data) throws com.google.protobuf.InvalidProtocolBufferException {
+    return PARSER.parseFrom(data);
+  }
+
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary
+      parseFrom(byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+    return PARSER.parseFrom(data, extensionRegistry);
+  }
+
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary
+      parseFrom(java.io.InputStream input) throws java.io.IOException {
+    return com.google.protobuf.GeneratedMessage.parseWithIOException(PARSER, input);
+  }
+
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary
+      parseFrom(
+          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+    return com.google.protobuf.GeneratedMessage.parseWithIOException(
+        PARSER, input, extensionRegistry);
+  }
+
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary
+      parseDelimitedFrom(java.io.InputStream input) throws java.io.IOException {
+    return com.google.protobuf.GeneratedMessage.parseDelimitedWithIOException(PARSER, input);
+  }
+
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary
+      parseDelimitedFrom(
+          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+    return com.google.protobuf.GeneratedMessage.parseDelimitedWithIOException(
+        PARSER, input, extensionRegistry);
+  }
+
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary
+      parseFrom(com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+    return com.google.protobuf.GeneratedMessage.parseWithIOException(PARSER, input);
+  }
+
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary
+      parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+    return com.google.protobuf.GeneratedMessage.parseWithIOException(
+        PARSER, input, extensionRegistry);
   }
 
   @java.lang.Override
-  public Builder newBuilderForType() { return newBuilder(); }
+  public Builder newBuilderForType() {
+    return newBuilder();
+  }
+
   public static Builder newBuilder() {
     return DEFAULT_INSTANCE.toBuilder();
   }
-  public static Builder newBuilder(com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary prototype) {
+
+  public static Builder newBuilder(
+      com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary prototype) {
     return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-  }
-  @java.lang.Override
-  public Builder toBuilder() {
-    return this == DEFAULT_INSTANCE
-        ? new Builder() : new Builder().mergeFrom(this);
   }
 
   @java.lang.Override
-  protected Builder newBuilderForType(
-      com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+  public Builder toBuilder() {
+    return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+  }
+
+  @java.lang.Override
+  protected Builder newBuilderForType(com.google.protobuf.GeneratedMessage.BuilderParent parent) {
     Builder builder = new Builder(parent);
     return builder;
   }
+
   /**
+   *
+   *
    * <pre>
    * An access boundary defines the upper bound of what a principal may access. It
    * includes a list of client-side access boundary rules that each defines the
@@ -296,33 +352,34 @@ private static final long serialVersionUID = 0L;
    *
    * Protobuf type {@code cloud.identity.unifiedauth.proto.ClientSideAccessBoundary}
    */
-  public static final class Builder extends
-      com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+  public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
+      implements
       // @@protoc_insertion_point(builder_implements:cloud.identity.unifiedauth.proto.ClientSideAccessBoundary)
       com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryOrBuilder {
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto.internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundary_descriptor;
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      return com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto
+          .internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundary_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto.internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundary_fieldAccessorTable
+      return com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto
+          .internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundary_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary.class, com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary.Builder.class);
+              com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary.class,
+              com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary.Builder
+                  .class);
     }
 
-    // Construct using com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary.newBuilder()
-    private Builder() {
+    // Construct using
+    // com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary.newBuilder()
+    private Builder() {}
 
-    }
-
-    private Builder(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+    private Builder(com.google.protobuf.GeneratedMessage.BuilderParent parent) {
       super(parent);
-
     }
+
     @java.lang.Override
     public Builder clear() {
       super.clear();
@@ -338,19 +395,22 @@ private static final long serialVersionUID = 0L;
     }
 
     @java.lang.Override
-    public com.google.protobuf.Descriptors.Descriptor
-        getDescriptorForType() {
-      return com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto.internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundary_descriptor;
+    public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+      return com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto
+          .internal_static_cloud_identity_unifiedauth_proto_ClientSideAccessBoundary_descriptor;
     }
 
     @java.lang.Override
-    public com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary getDefaultInstanceForType() {
-      return com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary.getDefaultInstance();
+    public com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary
+        getDefaultInstanceForType() {
+      return com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary
+          .getDefaultInstance();
     }
 
     @java.lang.Override
     public com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary build() {
-      com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary result = buildPartial();
+      com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary result =
+          buildPartial();
       if (!result.isInitialized()) {
         throw newUninitializedMessageException(result);
       }
@@ -358,15 +418,20 @@ private static final long serialVersionUID = 0L;
     }
 
     @java.lang.Override
-    public com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary buildPartial() {
-      com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary result = new com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary(this);
+    public com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary
+        buildPartial() {
+      com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary result =
+          new com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary(this);
       buildPartialRepeatedFields(result);
-      if (bitField0_ != 0) { buildPartial0(result); }
+      if (bitField0_ != 0) {
+        buildPartial0(result);
+      }
       onBuilt();
       return result;
     }
 
-    private void buildPartialRepeatedFields(com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary result) {
+    private void buildPartialRepeatedFields(
+        com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary result) {
       if (accessBoundaryRulesBuilder_ == null) {
         if (((bitField0_ & 0x00000001) != 0)) {
           accessBoundaryRules_ = java.util.Collections.unmodifiableList(accessBoundaryRules_);
@@ -378,22 +443,28 @@ private static final long serialVersionUID = 0L;
       }
     }
 
-    private void buildPartial0(com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary result) {
+    private void buildPartial0(
+        com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary result) {
       int from_bitField0_ = bitField0_;
     }
 
     @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.Message other) {
-      if (other instanceof com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary) {
-        return mergeFrom((com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary)other);
+      if (other
+          instanceof com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary) {
+        return mergeFrom(
+            (com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary) other);
       } else {
         super.mergeFrom(other);
         return this;
       }
     }
 
-    public Builder mergeFrom(com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary other) {
-      if (other == com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary.getDefaultInstance()) return this;
+    public Builder mergeFrom(
+        com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary other) {
+      if (other
+          == com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary
+              .getDefaultInstance()) return this;
       if (accessBoundaryRulesBuilder_ == null) {
         if (!other.accessBoundaryRules_.isEmpty()) {
           if (accessBoundaryRules_.isEmpty()) {
@@ -412,9 +483,10 @@ private static final long serialVersionUID = 0L;
             accessBoundaryRulesBuilder_ = null;
             accessBoundaryRules_ = other.accessBoundaryRules_;
             bitField0_ = (bitField0_ & ~0x00000001);
-            accessBoundaryRulesBuilder_ = 
-              com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
-                 internalGetAccessBoundaryRulesFieldBuilder() : null;
+            accessBoundaryRulesBuilder_ =
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders
+                    ? internalGetAccessBoundaryRulesFieldBuilder()
+                    : null;
           } else {
             accessBoundaryRulesBuilder_.addAllMessages(other.accessBoundaryRules_);
           }
@@ -446,25 +518,28 @@ private static final long serialVersionUID = 0L;
             case 0:
               done = true;
               break;
-            case 10: {
-              com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule m =
-                  input.readMessage(
-                      com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.parser(),
-                      extensionRegistry);
-              if (accessBoundaryRulesBuilder_ == null) {
-                ensureAccessBoundaryRulesIsMutable();
-                accessBoundaryRules_.add(m);
-              } else {
-                accessBoundaryRulesBuilder_.addMessage(m);
-              }
-              break;
-            } // case 10
-            default: {
-              if (!super.parseUnknownField(input, extensionRegistry, tag)) {
-                done = true; // was an endgroup tag
-              }
-              break;
-            } // default:
+            case 10:
+              {
+                com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule m =
+                    input.readMessage(
+                        com.google.auth.credentialaccessboundary.protobuf
+                            .ClientSideAccessBoundaryRule.parser(),
+                        extensionRegistry);
+                if (accessBoundaryRulesBuilder_ == null) {
+                  ensureAccessBoundaryRulesIsMutable();
+                  accessBoundaryRules_.add(m);
+                } else {
+                  accessBoundaryRulesBuilder_.addMessage(m);
+                }
+                break;
+              } // case 10
+            default:
+              {
+                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
+                  done = true; // was an endgroup tag
+                }
+                break;
+              } // default:
           } // switch (tag)
         } // while (!done)
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -474,21 +549,32 @@ private static final long serialVersionUID = 0L;
       } // finally
       return this;
     }
+
     private int bitField0_;
 
-    private java.util.List<com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule> accessBoundaryRules_ =
-      java.util.Collections.emptyList();
+    private java.util.List<
+            com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule>
+        accessBoundaryRules_ = java.util.Collections.emptyList();
+
     private void ensureAccessBoundaryRulesIsMutable() {
       if (!((bitField0_ & 0x00000001) != 0)) {
-        accessBoundaryRules_ = new java.util.ArrayList<com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule>(accessBoundaryRules_);
+        accessBoundaryRules_ =
+            new java.util.ArrayList<
+                com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule>(
+                accessBoundaryRules_);
         bitField0_ |= 0x00000001;
-       }
+      }
     }
 
     private com.google.protobuf.RepeatedFieldBuilder<
-        com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule, com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.Builder, com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRuleOrBuilder> accessBoundaryRulesBuilder_;
+            com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule,
+            com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.Builder,
+            com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRuleOrBuilder>
+        accessBoundaryRulesBuilder_;
 
     /**
+     *
+     *
      * <pre>
      * A list of client-side access boundary rules which defines the upper bound
      * of the permission a principal may carry. If multiple rules are specified,
@@ -496,16 +582,23 @@ private static final long serialVersionUID = 0L;
      * attached.
      * </pre>
      *
-     * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+     * <code>
+     * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+     * </code>
      */
-    public java.util.List<com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule> getAccessBoundaryRulesList() {
+    public java.util.List<
+            com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule>
+        getAccessBoundaryRulesList() {
       if (accessBoundaryRulesBuilder_ == null) {
         return java.util.Collections.unmodifiableList(accessBoundaryRules_);
       } else {
         return accessBoundaryRulesBuilder_.getMessageList();
       }
     }
+
     /**
+     *
+     *
      * <pre>
      * A list of client-side access boundary rules which defines the upper bound
      * of the permission a principal may carry. If multiple rules are specified,
@@ -513,7 +606,9 @@ private static final long serialVersionUID = 0L;
      * attached.
      * </pre>
      *
-     * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+     * <code>
+     * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+     * </code>
      */
     public int getAccessBoundaryRulesCount() {
       if (accessBoundaryRulesBuilder_ == null) {
@@ -522,7 +617,10 @@ private static final long serialVersionUID = 0L;
         return accessBoundaryRulesBuilder_.getCount();
       }
     }
+
     /**
+     *
+     *
      * <pre>
      * A list of client-side access boundary rules which defines the upper bound
      * of the permission a principal may carry. If multiple rules are specified,
@@ -530,16 +628,22 @@ private static final long serialVersionUID = 0L;
      * attached.
      * </pre>
      *
-     * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+     * <code>
+     * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+     * </code>
      */
-    public com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule getAccessBoundaryRules(int index) {
+    public com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule
+        getAccessBoundaryRules(int index) {
       if (accessBoundaryRulesBuilder_ == null) {
         return accessBoundaryRules_.get(index);
       } else {
         return accessBoundaryRulesBuilder_.getMessage(index);
       }
     }
+
     /**
+     *
+     *
      * <pre>
      * A list of client-side access boundary rules which defines the upper bound
      * of the permission a principal may carry. If multiple rules are specified,
@@ -547,10 +651,13 @@ private static final long serialVersionUID = 0L;
      * attached.
      * </pre>
      *
-     * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+     * <code>
+     * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+     * </code>
      */
     public Builder setAccessBoundaryRules(
-        int index, com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule value) {
+        int index,
+        com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule value) {
       if (accessBoundaryRulesBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -563,7 +670,10 @@ private static final long serialVersionUID = 0L;
       }
       return this;
     }
+
     /**
+     *
+     *
      * <pre>
      * A list of client-side access boundary rules which defines the upper bound
      * of the permission a principal may carry. If multiple rules are specified,
@@ -571,10 +681,14 @@ private static final long serialVersionUID = 0L;
      * attached.
      * </pre>
      *
-     * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+     * <code>
+     * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+     * </code>
      */
     public Builder setAccessBoundaryRules(
-        int index, com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.Builder builderForValue) {
+        int index,
+        com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.Builder
+            builderForValue) {
       if (accessBoundaryRulesBuilder_ == null) {
         ensureAccessBoundaryRulesIsMutable();
         accessBoundaryRules_.set(index, builderForValue.build());
@@ -584,7 +698,10 @@ private static final long serialVersionUID = 0L;
       }
       return this;
     }
+
     /**
+     *
+     *
      * <pre>
      * A list of client-side access boundary rules which defines the upper bound
      * of the permission a principal may carry. If multiple rules are specified,
@@ -592,9 +709,12 @@ private static final long serialVersionUID = 0L;
      * attached.
      * </pre>
      *
-     * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+     * <code>
+     * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+     * </code>
      */
-    public Builder addAccessBoundaryRules(com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule value) {
+    public Builder addAccessBoundaryRules(
+        com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule value) {
       if (accessBoundaryRulesBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -607,7 +727,10 @@ private static final long serialVersionUID = 0L;
       }
       return this;
     }
+
     /**
+     *
+     *
      * <pre>
      * A list of client-side access boundary rules which defines the upper bound
      * of the permission a principal may carry. If multiple rules are specified,
@@ -615,10 +738,13 @@ private static final long serialVersionUID = 0L;
      * attached.
      * </pre>
      *
-     * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+     * <code>
+     * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+     * </code>
      */
     public Builder addAccessBoundaryRules(
-        int index, com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule value) {
+        int index,
+        com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule value) {
       if (accessBoundaryRulesBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -631,7 +757,10 @@ private static final long serialVersionUID = 0L;
       }
       return this;
     }
+
     /**
+     *
+     *
      * <pre>
      * A list of client-side access boundary rules which defines the upper bound
      * of the permission a principal may carry. If multiple rules are specified,
@@ -639,10 +768,13 @@ private static final long serialVersionUID = 0L;
      * attached.
      * </pre>
      *
-     * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+     * <code>
+     * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+     * </code>
      */
     public Builder addAccessBoundaryRules(
-        com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.Builder builderForValue) {
+        com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.Builder
+            builderForValue) {
       if (accessBoundaryRulesBuilder_ == null) {
         ensureAccessBoundaryRulesIsMutable();
         accessBoundaryRules_.add(builderForValue.build());
@@ -652,7 +784,10 @@ private static final long serialVersionUID = 0L;
       }
       return this;
     }
+
     /**
+     *
+     *
      * <pre>
      * A list of client-side access boundary rules which defines the upper bound
      * of the permission a principal may carry. If multiple rules are specified,
@@ -660,10 +795,14 @@ private static final long serialVersionUID = 0L;
      * attached.
      * </pre>
      *
-     * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+     * <code>
+     * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+     * </code>
      */
     public Builder addAccessBoundaryRules(
-        int index, com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.Builder builderForValue) {
+        int index,
+        com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.Builder
+            builderForValue) {
       if (accessBoundaryRulesBuilder_ == null) {
         ensureAccessBoundaryRulesIsMutable();
         accessBoundaryRules_.add(index, builderForValue.build());
@@ -673,7 +812,10 @@ private static final long serialVersionUID = 0L;
       }
       return this;
     }
+
     /**
+     *
+     *
      * <pre>
      * A list of client-side access boundary rules which defines the upper bound
      * of the permission a principal may carry. If multiple rules are specified,
@@ -681,21 +823,28 @@ private static final long serialVersionUID = 0L;
      * attached.
      * </pre>
      *
-     * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+     * <code>
+     * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+     * </code>
      */
     public Builder addAllAccessBoundaryRules(
-        java.lang.Iterable<? extends com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule> values) {
+        java.lang.Iterable<
+                ? extends
+                    com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule>
+            values) {
       if (accessBoundaryRulesBuilder_ == null) {
         ensureAccessBoundaryRulesIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(
-            values, accessBoundaryRules_);
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(values, accessBoundaryRules_);
         onChanged();
       } else {
         accessBoundaryRulesBuilder_.addAllMessages(values);
       }
       return this;
     }
+
     /**
+     *
+     *
      * <pre>
      * A list of client-side access boundary rules which defines the upper bound
      * of the permission a principal may carry. If multiple rules are specified,
@@ -703,7 +852,9 @@ private static final long serialVersionUID = 0L;
      * attached.
      * </pre>
      *
-     * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+     * <code>
+     * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+     * </code>
      */
     public Builder clearAccessBoundaryRules() {
       if (accessBoundaryRulesBuilder_ == null) {
@@ -715,7 +866,10 @@ private static final long serialVersionUID = 0L;
       }
       return this;
     }
+
     /**
+     *
+     *
      * <pre>
      * A list of client-side access boundary rules which defines the upper bound
      * of the permission a principal may carry. If multiple rules are specified,
@@ -723,7 +877,9 @@ private static final long serialVersionUID = 0L;
      * attached.
      * </pre>
      *
-     * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+     * <code>
+     * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+     * </code>
      */
     public Builder removeAccessBoundaryRules(int index) {
       if (accessBoundaryRulesBuilder_ == null) {
@@ -735,7 +891,10 @@ private static final long serialVersionUID = 0L;
       }
       return this;
     }
+
     /**
+     *
+     *
      * <pre>
      * A list of client-side access boundary rules which defines the upper bound
      * of the permission a principal may carry. If multiple rules are specified,
@@ -743,13 +902,18 @@ private static final long serialVersionUID = 0L;
      * attached.
      * </pre>
      *
-     * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+     * <code>
+     * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+     * </code>
      */
-    public com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.Builder getAccessBoundaryRulesBuilder(
-        int index) {
+    public com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.Builder
+        getAccessBoundaryRulesBuilder(int index) {
       return internalGetAccessBoundaryRulesFieldBuilder().getBuilder(index);
     }
+
     /**
+     *
+     *
      * <pre>
      * A list of client-side access boundary rules which defines the upper bound
      * of the permission a principal may carry. If multiple rules are specified,
@@ -757,16 +921,22 @@ private static final long serialVersionUID = 0L;
      * attached.
      * </pre>
      *
-     * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+     * <code>
+     * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+     * </code>
      */
-    public com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRuleOrBuilder getAccessBoundaryRulesOrBuilder(
-        int index) {
+    public com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRuleOrBuilder
+        getAccessBoundaryRulesOrBuilder(int index) {
       if (accessBoundaryRulesBuilder_ == null) {
-        return accessBoundaryRules_.get(index);  } else {
+        return accessBoundaryRules_.get(index);
+      } else {
         return accessBoundaryRulesBuilder_.getMessageOrBuilder(index);
       }
     }
+
     /**
+     *
+     *
      * <pre>
      * A list of client-side access boundary rules which defines the upper bound
      * of the permission a principal may carry. If multiple rules are specified,
@@ -774,17 +944,25 @@ private static final long serialVersionUID = 0L;
      * attached.
      * </pre>
      *
-     * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+     * <code>
+     * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+     * </code>
      */
-    public java.util.List<? extends com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRuleOrBuilder>
-         getAccessBoundaryRulesOrBuilderList() {
+    public java.util.List<
+            ? extends
+                com.google.auth.credentialaccessboundary.protobuf
+                    .ClientSideAccessBoundaryRuleOrBuilder>
+        getAccessBoundaryRulesOrBuilderList() {
       if (accessBoundaryRulesBuilder_ != null) {
         return accessBoundaryRulesBuilder_.getMessageOrBuilderList();
       } else {
         return java.util.Collections.unmodifiableList(accessBoundaryRules_);
       }
     }
+
     /**
+     *
+     *
      * <pre>
      * A list of client-side access boundary rules which defines the upper bound
      * of the permission a principal may carry. If multiple rules are specified,
@@ -792,13 +970,21 @@ private static final long serialVersionUID = 0L;
      * attached.
      * </pre>
      *
-     * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+     * <code>
+     * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+     * </code>
      */
-    public com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.Builder addAccessBoundaryRulesBuilder() {
-      return internalGetAccessBoundaryRulesFieldBuilder().addBuilder(
-          com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.getDefaultInstance());
+    public com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.Builder
+        addAccessBoundaryRulesBuilder() {
+      return internalGetAccessBoundaryRulesFieldBuilder()
+          .addBuilder(
+              com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule
+                  .getDefaultInstance());
     }
+
     /**
+     *
+     *
      * <pre>
      * A list of client-side access boundary rules which defines the upper bound
      * of the permission a principal may carry. If multiple rules are specified,
@@ -806,14 +992,22 @@ private static final long serialVersionUID = 0L;
      * attached.
      * </pre>
      *
-     * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+     * <code>
+     * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+     * </code>
      */
-    public com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.Builder addAccessBoundaryRulesBuilder(
-        int index) {
-      return internalGetAccessBoundaryRulesFieldBuilder().addBuilder(
-          index, com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.getDefaultInstance());
+    public com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.Builder
+        addAccessBoundaryRulesBuilder(int index) {
+      return internalGetAccessBoundaryRulesFieldBuilder()
+          .addBuilder(
+              index,
+              com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule
+                  .getDefaultInstance());
     }
+
     /**
+     *
+     *
      * <pre>
      * A list of client-side access boundary rules which defines the upper bound
      * of the permission a principal may carry. If multiple rules are specified,
@@ -821,18 +1015,29 @@ private static final long serialVersionUID = 0L;
      * attached.
      * </pre>
      *
-     * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+     * <code>
+     * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+     * </code>
      */
-    public java.util.List<com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.Builder>
-         getAccessBoundaryRulesBuilderList() {
+    public java.util.List<
+            com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.Builder>
+        getAccessBoundaryRulesBuilderList() {
       return internalGetAccessBoundaryRulesFieldBuilder().getBuilderList();
     }
+
     private com.google.protobuf.RepeatedFieldBuilder<
-        com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule, com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.Builder, com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRuleOrBuilder>
+            com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule,
+            com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.Builder,
+            com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRuleOrBuilder>
         internalGetAccessBoundaryRulesFieldBuilder() {
       if (accessBoundaryRulesBuilder_ == null) {
-        accessBoundaryRulesBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
-            com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule, com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule.Builder, com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRuleOrBuilder>(
+        accessBoundaryRulesBuilder_ =
+            new com.google.protobuf.RepeatedFieldBuilder<
+                com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule,
+                com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule
+                    .Builder,
+                com.google.auth.credentialaccessboundary.protobuf
+                    .ClientSideAccessBoundaryRuleOrBuilder>(
                 accessBoundaryRules_,
                 ((bitField0_ & 0x00000001) != 0),
                 getParentForChildren(),
@@ -846,36 +1051,40 @@ private static final long serialVersionUID = 0L;
   }
 
   // @@protoc_insertion_point(class_scope:cloud.identity.unifiedauth.proto.ClientSideAccessBoundary)
-  private static final com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary DEFAULT_INSTANCE;
+  private static final com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary
+      DEFAULT_INSTANCE;
+
   static {
-    DEFAULT_INSTANCE = new com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary();
+    DEFAULT_INSTANCE =
+        new com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary();
   }
 
-  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary getDefaultInstance() {
+  public static com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary
+      getDefaultInstance() {
     return DEFAULT_INSTANCE;
   }
 
-  private static final com.google.protobuf.Parser<ClientSideAccessBoundary>
-      PARSER = new com.google.protobuf.AbstractParser<ClientSideAccessBoundary>() {
-    @java.lang.Override
-    public ClientSideAccessBoundary parsePartialFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      Builder builder = newBuilder();
-      try {
-        builder.mergeFrom(input, extensionRegistry);
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(builder.buildPartial());
-      } catch (com.google.protobuf.UninitializedMessageException e) {
-        throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(e)
-            .setUnfinishedMessage(builder.buildPartial());
-      }
-      return builder.buildPartial();
-    }
-  };
+  private static final com.google.protobuf.Parser<ClientSideAccessBoundary> PARSER =
+      new com.google.protobuf.AbstractParser<ClientSideAccessBoundary>() {
+        @java.lang.Override
+        public ClientSideAccessBoundary parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          Builder builder = newBuilder();
+          try {
+            builder.mergeFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            throw e.setUnfinishedMessage(builder.buildPartial());
+          } catch (com.google.protobuf.UninitializedMessageException e) {
+            throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
+          } catch (java.io.IOException e) {
+            throw new com.google.protobuf.InvalidProtocolBufferException(e)
+                .setUnfinishedMessage(builder.buildPartial());
+          }
+          return builder.buildPartial();
+        }
+      };
 
   public static com.google.protobuf.Parser<ClientSideAccessBoundary> parser() {
     return PARSER;
@@ -887,9 +1096,8 @@ private static final long serialVersionUID = 0L;
   }
 
   @java.lang.Override
-  public com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary getDefaultInstanceForType() {
+  public com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary
+      getDefaultInstanceForType() {
     return DEFAULT_INSTANCE;
   }
-
 }
-

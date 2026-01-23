@@ -6,11 +6,14 @@
 package com.google.auth.credentialaccessboundary.protobuf;
 
 @com.google.protobuf.Generated
-public interface ClientSideAccessBoundaryOrBuilder extends
+public interface ClientSideAccessBoundaryOrBuilder
+    extends
     // @@protoc_insertion_point(interface_extends:cloud.identity.unifiedauth.proto.ClientSideAccessBoundary)
     com.google.protobuf.MessageOrBuilder {
 
   /**
+   *
+   *
    * <pre>
    * A list of client-side access boundary rules which defines the upper bound
    * of the permission a principal may carry. If multiple rules are specified,
@@ -18,11 +21,16 @@ public interface ClientSideAccessBoundaryOrBuilder extends
    * attached.
    * </pre>
    *
-   * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+   * <code>
+   * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+   * </code>
    */
   java.util.List<com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule>
       getAccessBoundaryRulesList();
+
   /**
+   *
+   *
    * <pre>
    * A list of client-side access boundary rules which defines the upper bound
    * of the permission a principal may carry. If multiple rules are specified,
@@ -30,10 +38,16 @@ public interface ClientSideAccessBoundaryOrBuilder extends
    * attached.
    * </pre>
    *
-   * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+   * <code>
+   * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+   * </code>
    */
-  com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule getAccessBoundaryRules(int index);
+  com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule
+      getAccessBoundaryRules(int index);
+
   /**
+   *
+   *
    * <pre>
    * A list of client-side access boundary rules which defines the upper bound
    * of the permission a principal may carry. If multiple rules are specified,
@@ -41,10 +55,15 @@ public interface ClientSideAccessBoundaryOrBuilder extends
    * attached.
    * </pre>
    *
-   * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+   * <code>
+   * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+   * </code>
    */
   int getAccessBoundaryRulesCount();
+
   /**
+   *
+   *
    * <pre>
    * A list of client-side access boundary rules which defines the upper bound
    * of the permission a principal may carry. If multiple rules are specified,
@@ -52,11 +71,19 @@ public interface ClientSideAccessBoundaryOrBuilder extends
    * attached.
    * </pre>
    *
-   * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+   * <code>
+   * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+   * </code>
    */
-  java.util.List<? extends com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRuleOrBuilder>
+  java.util.List<
+          ? extends
+              com.google.auth.credentialaccessboundary.protobuf
+                  .ClientSideAccessBoundaryRuleOrBuilder>
       getAccessBoundaryRulesOrBuilderList();
+
   /**
+   *
+   *
    * <pre>
    * A list of client-side access boundary rules which defines the upper bound
    * of the permission a principal may carry. If multiple rules are specified,
@@ -64,8 +91,10 @@ public interface ClientSideAccessBoundaryOrBuilder extends
    * attached.
    * </pre>
    *
-   * <code>repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;</code>
+   * <code>
+   * repeated .cloud.identity.unifiedauth.proto.ClientSideAccessBoundaryRule access_boundary_rules = 1;
+   * </code>
    */
-  com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRuleOrBuilder getAccessBoundaryRulesOrBuilder(
-      int index);
+  com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRuleOrBuilder
+      getAccessBoundaryRulesOrBuilder(int index);
 }
