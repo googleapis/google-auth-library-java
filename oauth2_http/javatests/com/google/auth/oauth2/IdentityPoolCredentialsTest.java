@@ -1306,9 +1306,9 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void testRefresh_trustBoundarySuccess() throws IOException {
+  public void testRefresh_regionalAccessBoundarySuccess() throws IOException, InterruptedException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
     environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
 
     MockExternalAccountCredentialsTransportFactory transportFactory =
@@ -1325,11 +1325,29 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
             .setTokenUrl(STS_URL)
             .build();
 
-    credentials.refresh();
+    // First call: initiates async refresh.
+    Map<String, List<String>> headers = credentials.getRequestMetadata();
+    assertNull(headers.get(RegionalAccessBoundary.HEADER_KEY));
 
-    TrustBoundary trustBoundary = credentials.getTrustBoundary();
-    assertNotNull(trustBoundary);
-    assertEquals(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, trustBoundary.getEncodedLocations());
-    TrustBoundary.setEnvironmentProviderForTest(null);
+    waitForRegionalAccessBoundary(credentials);
+
+    // Second call: should have header.
+    headers = credentials.getRequestMetadata();
+    assertEquals(
+        headers.get(RegionalAccessBoundary.HEADER_KEY),
+        Arrays.asList(TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION));
+    RegionalAccessBoundary.setEnvironmentProviderForTest(null);
+  }
+
+  private void waitForRegionalAccessBoundary(GoogleCredentials credentials)
+      throws InterruptedException {
+    long deadline = System.currentTimeMillis() + 5000;
+    while (credentials.getRegionalAccessBoundary() == null
+        && System.currentTimeMillis() < deadline) {
+      Thread.sleep(100);
+    }
+    if (credentials.getRegionalAccessBoundary() == null) {
+      fail("Timed out waiting for regional access boundary refresh");
+    }
   }
 }

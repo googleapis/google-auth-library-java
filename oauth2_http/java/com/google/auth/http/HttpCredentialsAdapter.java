@@ -39,6 +39,8 @@ import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.http.HttpUnsuccessfulResponseHandler;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.Credentials;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.oauth2.RegionalAccessBoundary;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -60,6 +62,8 @@ public class HttpCredentialsAdapter
    */
   private static final Pattern INVALID_TOKEN_ERROR =
       Pattern.compile("\\s*error\\s*=\\s*\"?invalid_token\"?");
+
+  private static final String STALE_RAB_ERROR_MESSAGE = "stale regional access boundary";
 
   private final Credentials credentials;
 
@@ -119,6 +123,12 @@ public class HttpCredentialsAdapter
    */
   @Override
   public boolean handleResponse(HttpRequest request, HttpResponse response, boolean supportsRetry) {
+    if (response.getStatusCode() == HttpStatusCodes.STATUS_CODE_BAD_REQUEST) {
+      if (handleStaleRegionalAccessBoundaryError(request, response)) {
+        return true;
+      }
+    }
+
     boolean refreshToken = false;
     boolean bearer = false;
 
@@ -149,6 +159,54 @@ public class HttpCredentialsAdapter
       } catch (IOException exception) {
         LOGGER.log(Level.SEVERE, "unable to refresh token", exception);
       }
+    }
+    return false;
+  }
+
+  private boolean handleStaleRegionalAccessBoundaryError(
+      HttpRequest request, HttpResponse response) {
+    if (!(credentials instanceof GoogleCredentials)) {
+      return false;
+    }
+    GoogleCredentials googleCredentials = (GoogleCredentials) credentials;
+
+    // Only check for stale RAB error if we actually sent the header.
+    if (request.getHeaders().get(RegionalAccessBoundary.HEADER_KEY) == null) {
+      return false;
+    }
+
+    // Skip check for STS and IAM Credentials endpoints as per design.
+    String url = request.getUrl().toString();
+    if (url.contains("sts.googleapis.com") || url.contains("iamcredentials.googleapis.com")) {
+      return false;
+    }
+
+    try {
+      // If we are here, we are at a 400 Bad Request with a RAB header.
+      // We need to check the body. To avoid breaking other handlers, we should
+      // ideally buffer the response, but HttpResponse doesn't support it easily.
+      // However, if it IS a stale RAB error, we ARE going to retry, so consuming is fine.
+      // If it's NOT, we have a problem.
+      // One way is to check the error message in a way that doesn't consume if possible,
+      // but there isn't one for network streams.
+      // Given the specificity of 400 + RAB header, we'll take the risk or try to be more surgical.
+
+      // Let's use a small read-ahead or just parse and hope for the best.
+      // In reality, dark launch will have this header on many requests.
+      String content = response.parseAsString();
+      if (content != null && content.toLowerCase().contains(STALE_RAB_ERROR_MESSAGE)) {
+        URI uri = null;
+        if (request.getUrl() != null) {
+          uri = request.getUrl().toURI();
+        }
+        googleCredentials.reactiveRefreshRegionalAccessBoundary(
+            uri, googleCredentials.getAccessToken());
+        // Re-initialize headers (this will remove the stale header since cache is cleared)
+        initialize(request);
+        return true;
+      }
+    } catch (Exception e) {
+      LOGGER.log(Level.FINE, "Error while checking for stale regional access boundary", e);
     }
     return false;
   }

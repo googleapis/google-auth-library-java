@@ -31,7 +31,7 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.auth.oauth2.TrustBoundary.TRUST_BOUNDARY_KEY;
+import static com.google.auth.oauth2.RegionalAccessBoundary.HEADER_KEY;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -156,9 +156,10 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   private static final String REFRESH_TOKEN = "dasdfasdffa4ffdfadgyjirasdfadsft";
   public static final List<String> DELEGATES =
       Arrays.asList("sa1@developer.gserviceaccount.com", "sa2@developer.gserviceaccount.com");
-  public static final TrustBoundary TRUST_BOUNDARY =
-      new TrustBoundary(
-          TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, TestUtils.TRUST_BOUNDARY_LOCATIONS);
+  public static final RegionalAccessBoundary REGIONAL_ACCESS_BOUNDARY =
+      new RegionalAccessBoundary(
+          TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION,
+          TestUtils.REGIONAL_ACCESS_BOUNDARY_LOCATIONS);
 
   private GoogleCredentials sourceCredentials;
   private MockIAMCredentialsServiceTransportFactory mockTransportFactory;
@@ -171,7 +172,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
   @After
   public void tearDown() {
-    TrustBoundary.setEnvironmentProviderForTest(null);
+    RegionalAccessBoundary.setEnvironmentProviderForTest(null);
   }
 
   static GoogleCredentials getSourceCredentials() throws IOException {
@@ -187,7 +188,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             .setHttpTransportFactory(transportFactory)
             .build();
     transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
-    transportFactory.transport.setTrustBoundary(TRUST_BOUNDARY);
+    transportFactory.transport.setRegionalAccessBoundary(REGIONAL_ACCESS_BOUNDARY);
 
     return sourceCredentials;
   }
@@ -1315,15 +1316,15 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void refresh_trustBoundarySuccess() throws IOException {
+  public void refresh_regionalAccessBoundarySuccess() throws IOException, InterruptedException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
     environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
 
-    // Mock trust boundary response
-    TrustBoundary trustBoundary = TRUST_BOUNDARY;
+    // Mock regional access boundary response
+    RegionalAccessBoundary regionalAccessBoundary = REGIONAL_ACCESS_BOUNDARY;
 
-    mockTransportFactory.getTransport().setTrustBoundary(trustBoundary);
+    mockTransportFactory.getTransport().setRegionalAccessBoundary(regionalAccessBoundary);
     mockTransportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mockTransportFactory.getTransport().setAccessToken(ACCESS_TOKEN);
     mockTransportFactory.getTransport().setExpireTime(getDefaultExpireTime());
@@ -1340,40 +1341,29 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
             VALID_LIFETIME,
             mockTransportFactory);
 
+    // First call: initiates async refresh.
     Map<String, List<String>> headers = targetCredentials.getRequestMetadata();
+    assertNull(headers.get(HEADER_KEY));
+
+    waitForRegionalAccessBoundary(targetCredentials);
+
+    // Second call: should have header.
+    headers = targetCredentials.getRequestMetadata();
     assertEquals(
-        headers.get(TRUST_BOUNDARY_KEY),
-        Collections.singletonList(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION));
+        headers.get(HEADER_KEY),
+        Collections.singletonList(TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION));
   }
 
-  @Test
-  public void refresh_trustBoundaryFails_throwsIOException() throws IOException {
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
-
-    mockTransportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mockTransportFactory.getTransport().setAccessToken(ACCESS_TOKEN);
-    mockTransportFactory.getTransport().setExpireTime(getDefaultExpireTime());
-    mockTransportFactory
-        .getTransport()
-        .addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "", true);
-
-    ImpersonatedCredentials targetCredentials =
-        ImpersonatedCredentials.create(
-            sourceCredentials,
-            IMPERSONATED_CLIENT_EMAIL,
-            null,
-            IMMUTABLE_SCOPES_LIST,
-            VALID_LIFETIME,
-            mockTransportFactory);
-
-    IOException exception = assertThrows(IOException.class, () -> targetCredentials.refresh());
-    assertTrue(
-        "The exception message should explain why the refresh failed.",
-        exception
-            .getMessage()
-            .contains("Failed to refresh trust boundary and no cached value is available."));
+  private void waitForRegionalAccessBoundary(GoogleCredentials credentials)
+      throws InterruptedException {
+    long deadline = System.currentTimeMillis() + 5000;
+    while (credentials.getRegionalAccessBoundary() == null
+        && System.currentTimeMillis() < deadline) {
+      Thread.sleep(100);
+    }
+    if (credentials.getRegionalAccessBoundary() == null) {
+      fail("Timed out waiting for regional access boundary refresh");
+    }
   }
 
   public static String getDefaultExpireTime() {

@@ -62,7 +62,7 @@ public final class MockStsTransport extends MockHttpTransport {
   private static final String ISSUED_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:access_token";
   private static final String VALID_STS_PATTERN =
       "https:\\/\\/sts.[a-z-_\\.]+\\/v1\\/(token|oauthtoken)";
-  private static final String VALID_TRUST_BOUNDARY_PATTERN =
+  private static final String VALID_REGIONAL_ACCESS_BOUNDARY_PATTERN =
       "https:\\/\\/iam.[a-z-_\\.]+\\/v1\\/.*\\/allowedLocations";
   private static final String ACCESS_TOKEN = "accessToken";
   private static final String TOKEN_TYPE = "Bearer";
@@ -103,15 +103,16 @@ public final class MockStsTransport extends MockHttpTransport {
           public LowLevelHttpResponse execute() throws IOException {
             // Mocking call to refresh trust boundaries.
             // The lookup endpoint is located in the IAM server.
-            Matcher trustBoundaryMatcher =
-                Pattern.compile(VALID_TRUST_BOUNDARY_PATTERN).matcher(url);
-            if (trustBoundaryMatcher.matches()) {
-              // Mocking call to the /allowedLocations endpoint for trust boundary refresh.
+            Matcher regionalAccessBoundaryMatcher =
+                Pattern.compile(VALID_REGIONAL_ACCESS_BOUNDARY_PATTERN).matcher(url);
+            if (regionalAccessBoundaryMatcher.matches()) {
+              // Mocking call to the /allowedLocations endpoint for regional access boundary
+              // refresh.
               // For testing convenience, this mock transport handles
               // the /allowedLocations endpoint.
               GenericJson response = new GenericJson();
-              response.put("locations", TestUtils.TRUST_BOUNDARY_LOCATIONS);
-              response.put("encodedLocations", TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION);
+              response.put("locations", TestUtils.REGIONAL_ACCESS_BOUNDARY_LOCATIONS);
+              response.put("encodedLocations", TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION);
               return new MockLowLevelHttpResponse()
                   .setContentType(Json.MEDIA_TYPE)
                   .setContent(OAuth2Utils.JSON_FACTORY.toString(response));
