@@ -80,7 +80,7 @@ import javax.annotation.Nullable;
  * </pre>
  */
 public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials
-    implements TrustBoundaryProvider {
+    implements RegionalAccessBoundaryProvider {
 
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
 
@@ -214,19 +214,15 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials
       this.refreshToken = refreshToken;
     }
 
-    AccessToken newAccessToken =
-        AccessToken.newBuilder()
-            .setExpirationTime(expiresAtMilliseconds)
-            .setTokenValue(accessToken)
-            .build();
-
-    refreshTrustBoundary(newAccessToken, transportFactory);
-    return newAccessToken;
+    return AccessToken.newBuilder()
+        .setExpirationTime(expiresAtMilliseconds)
+        .setTokenValue(accessToken)
+        .build();
   }
 
   @InternalApi
   @Override
-  public String getTrustBoundaryUrl() throws IOException {
+  public String getRegionalAccessBoundaryUrl() throws IOException {
     Matcher matcher = WORKFORCE_AUDIENCE_PATTERN.matcher(getAudience());
     if (!matcher.matches()) {
       throw new IllegalStateException(
@@ -236,6 +232,11 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials
     String poolId = matcher.group("pool");
     return String.format(
         IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKFORCE_POOL, getUniverseDomain(), poolId);
+  }
+
+  @Override
+  HttpTransportFactory getTransportFactory() {
+    return transportFactory;
   }
 
   @Nullable

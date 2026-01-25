@@ -41,6 +41,7 @@ import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpUnsuccessfulResponseHandler;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonParser;
+import com.google.api.client.util.Clock;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.client.util.Key;
 import com.google.auth.http.HttpTransportFactory;
@@ -48,39 +49,57 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import javax.annotation.Nullable;
 
 /**
- * Represents the trust boundary configuration for a credential. This class holds the information
- * retrieved from the IAM `allowedLocations` endpoint. This data is then used to populate the
- * `x-allowed-locations` header in outgoing API requests, which in turn allows Google's
+ * Represents the regional access boundary configuration for a credential. This class holds the
+ * information retrieved from the IAM `allowedLocations` endpoint. This data is then used to
+ * populate the `x-allowed-locations` header in outgoing API requests, which in turn allows Google's
  * infrastructure to enforce regional security restrictions. This class does not perform any
  * client-side validation or enforcement.
  */
-final class TrustBoundary {
+public final class RegionalAccessBoundary implements Serializable {
 
-  static final String TRUST_BOUNDARY_KEY = "x-allowed-locations";
-  static final String GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR =
-      "GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT";
-  private static final String NO_OP_VALUE = "0x0";
+  public static final String HEADER_KEY = "x-allowed-locations";
+  private static final long serialVersionUID = -2428522338274020302L;
+
+  static final String ENABLE_EXPERIMENT_ENV_VAR = "GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT";
+  static final long TTL_MILLIS = 6 * 60 * 60 * 1000L; // 6 hours
+  private static int maxRetryElapsedTimeMillis = 60000; // 1 minute
+
   private final String encodedLocations;
   private final List<String> locations;
+  private final long refreshTime;
+  private static Clock clock = Clock.SYSTEM;
 
   /**
-   * Creates a new TrustBoundary instance.
+   * Creates a new RegionalAccessBoundary instance.
    *
    * @param encodedLocations The encoded string representation of the allowed locations.
    * @param locations A list of human-readable location strings.
    */
-  TrustBoundary(String encodedLocations, List<String> locations) {
+  RegionalAccessBoundary(String encodedLocations, List<String> locations) {
+    this(encodedLocations, locations, clock.currentTimeMillis());
+  }
+
+  /**
+   * Internal constructor for testing and manual creation with refresh time.
+   *
+   * @param encodedLocations The encoded string representation of the allowed locations.
+   * @param locations A list of human-readable location strings.
+   * @param refreshTime The time at which the information was last refreshed.
+   */
+  RegionalAccessBoundary(String encodedLocations, List<String> locations, long refreshTime) {
     this.encodedLocations = encodedLocations;
     this.locations =
         locations == null
             ? Collections.<String>emptyList()
             : Collections.unmodifiableList(locations);
+    this.refreshTime = refreshTime;
   }
 
   private static EnvironmentProvider environmentProvider = SystemEnvironmentProvider.getInstance();
@@ -95,17 +114,22 @@ final class TrustBoundary {
     return locations;
   }
 
-  /**
-   * Checks if this TrustBoundary represents a "no-op" (no restrictions).
-   *
-   * @return True if the encoded locations indicate no restrictions, false otherwise.
-   */
-  public boolean isNoOp() {
-    return NO_OP_VALUE.equals(encodedLocations);
+  /** Returns the time at which the information was last refreshed. */
+  public long getRefreshTime() {
+    return refreshTime;
   }
 
-  /** Represents the JSON response from the trust boundary endpoint. */
-  public static class TrustBoundaryResponse extends GenericJson {
+  /**
+   * Checks if the regional access boundary data is expired.
+   *
+   * @return True if the data has expired based on the TTL, false otherwise.
+   */
+  public boolean isExpired() {
+    return clock.currentTimeMillis() > refreshTime + TTL_MILLIS;
+  }
+
+  /** Represents the JSON response from the regional access boundary endpoint. */
+  public static class RegionalAccessBoundaryResponse extends GenericJson {
     @Key("encodedLocations")
     private String encodedLocations;
 
@@ -123,7 +147,7 @@ final class TrustBoundary {
     }
 
     @Override
-    /** Returns a string representation of the TrustBoundaryResponse. */
+    /** Returns a string representation of the RegionalAccessBoundaryResponse. */
     public String toString() {
       return MoreObjects.toStringHelper(this)
           .add("encodedLocations", encodedLocations)
@@ -137,40 +161,52 @@ final class TrustBoundary {
     environmentProvider = provider == null ? SystemEnvironmentProvider.getInstance() : provider;
   }
 
-  /**
-   * Checks if the trust boundary feature is enabled based on an environment variable. The feature
-   * is enabled if the environment variable is set to "true" or "1" (case-insensitive). Any other
-   * value, or if the variable is unset, will result in the feature being disabled.
-   *
-   * @return True if the trust boundary feature is enabled, false otherwise.
-   */
-  static boolean isTrustBoundaryEnabled() {
-    String trustBoundaryEnabled =
-        environmentProvider.getEnv(GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR);
-    if (trustBoundaryEnabled == null) {
-      return false;
-    }
-    String lowercasedTrustBoundaryEnabled = trustBoundaryEnabled.toLowerCase();
-    return "true".equals(lowercasedTrustBoundaryEnabled) || "1".equals(trustBoundaryEnabled);
+  @VisibleForTesting
+  static void setClockForTest(Clock testClock) {
+    clock = testClock;
+  }
+
+  @VisibleForTesting
+  static void setMaxRetryElapsedTimeMillisForTest(int millis) {
+    maxRetryElapsedTimeMillis = millis;
   }
 
   /**
-   * Refreshes the trust boundary by making a network call to the trust boundary endpoint.
+   * Checks if the regional access boundary feature is enabled. The feature is enabled if the
+   * environment variable or system property "GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT" is set
+   * to "true" or "1" (case-insensitive).
+   *
+   * @return True if the regional access boundary feature is enabled, false otherwise.
+   */
+  static boolean isEnabled() {
+    String enabled = environmentProvider.getEnv(ENABLE_EXPERIMENT_ENV_VAR);
+    if (enabled == null) {
+      enabled = System.getProperty(ENABLE_EXPERIMENT_ENV_VAR);
+    }
+    if (enabled == null) {
+      return false;
+    }
+    String lowercased = enabled.toLowerCase();
+    return "true".equals(lowercased) || "1".equals(enabled);
+  }
+
+  /**
+   * Refreshes the regional access boundary by making a network call to the lookup endpoint.
    *
    * @param transportFactory The HTTP transport factory to use for the network request.
-   * @param url The URL of the trust boundary endpoint.
+   * @param url The URL of the regional access boundary endpoint.
    * @param accessToken The access token to authenticate the request.
-   * @param cachedTrustBoundary An optional previously cached trust boundary, which may be used in
+   * @param cachedRAB An optional previously cached regional access boundary, which may be used in
    *     the request headers.
-   * @return A new TrustBoundary object containing the refreshed information.
+   * @return A new RegionalAccessBoundary object containing the refreshed information.
    * @throws IllegalArgumentException If the provided access token is null or expired.
    * @throws IOException If a network error occurs or the response is malformed.
    */
-  static TrustBoundary refresh(
+  static RegionalAccessBoundary refresh(
       HttpTransportFactory transportFactory,
       String url,
       AccessToken accessToken,
-      @Nullable TrustBoundary cachedTrustBoundary)
+      @Nullable RegionalAccessBoundary cachedRAB)
       throws IOException {
     Preconditions.checkNotNull(accessToken, "The provided access token is null.");
     if (accessToken.getExpirationTime() != null
@@ -182,9 +218,9 @@ final class TrustBoundary {
     HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(url));
     request.getHeaders().setAuthorization("Bearer " + accessToken.getTokenValue());
 
-    // Add the cached trust boundary header, if available.
-    if (cachedTrustBoundary != null) {
-      request.getHeaders().set(TRUST_BOUNDARY_KEY, cachedTrustBoundary.getEncodedLocations());
+    // Add the cached regional access boundary header, if available.
+    if (cachedRAB != null) {
+      request.getHeaders().set(HEADER_KEY, cachedRAB.getEncodedLocations());
     }
 
     // Add retry logic
@@ -193,33 +229,40 @@ final class TrustBoundary {
             .setInitialIntervalMillis(OAuth2Utils.INITIAL_RETRY_INTERVAL_MILLIS)
             .setRandomizationFactor(OAuth2Utils.RETRY_RANDOMIZATION_FACTOR)
             .setMultiplier(OAuth2Utils.RETRY_MULTIPLIER)
+            .setMaxElapsedTimeMillis(maxRetryElapsedTimeMillis)
             .build();
 
     HttpUnsuccessfulResponseHandler unsuccessfulResponseHandler =
-        new HttpBackOffUnsuccessfulResponseHandler(backoff);
+        new HttpBackOffUnsuccessfulResponseHandler(backoff)
+            .setBackOffRequired(
+                response -> {
+                  int statusCode = response.getStatusCode();
+                  return (statusCode >= 500 && statusCode < 600)
+                      || statusCode == 403
+                      || statusCode == 404;
+                });
     request.setUnsuccessfulResponseHandler(unsuccessfulResponseHandler);
 
     HttpIOExceptionHandler ioExceptionHandler = new HttpBackOffIOExceptionHandler(backoff);
     request.setIOExceptionHandler(ioExceptionHandler);
 
-    TrustBoundaryResponse json;
+    RegionalAccessBoundaryResponse json;
     try {
       HttpResponse response = request.execute();
       String responseString = response.parseAsString();
       JsonParser parser = OAuth2Utils.JSON_FACTORY.createJsonParser(responseString);
-      json = parser.parseAndClose(TrustBoundaryResponse.class);
+      json = parser.parseAndClose(RegionalAccessBoundaryResponse.class);
     } catch (IOException e) {
-      throw new IOException("TrustBoundary: Failure while getting trust boundaries:", e);
+      throw new IOException(
+          "RegionalAccessBoundary: Failure while getting regional access boundaries:", e);
     }
     String encodedLocations = json.getEncodedLocations();
-    // The encodedLocations is the value attached to the x-allowed-locations header and
-    // it should always have a value. In case of NO_OP the lookup endpoint returns
-    // encodedLocations as '0x0' and locations as null. That is why we only check for
-    // encodedLocations.
+    // The encodedLocations is the value attached to the x-allowed-locations header, and
+    // it should always have a value.
     if (encodedLocations == null) {
       throw new IOException(
-          "TrustBoundary: Malformed response from lookup endpoint - `encodedLocations` was null.");
+          "RegionalAccessBoundary: Malformed response from lookup endpoint - `encodedLocations` was null.");
     }
-    return new TrustBoundary(encodedLocations, json.getLocations());
+    return new RegionalAccessBoundary(encodedLocations, json.getLocations());
   }
 }
