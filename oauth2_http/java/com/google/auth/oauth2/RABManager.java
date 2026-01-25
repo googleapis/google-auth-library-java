@@ -126,26 +126,26 @@ final class RABManager {
     // Atomically check if a refresh is already running. If compareAndSet returns true,
     // this thread "won the race" and is responsible for starting the background task.
     // All other concurrent threads will return false and exit immediately.
-        if (refreshFuture.compareAndSet(null, future)) {
-          CompletableFuture.runAsync(
-              () -> {
-                try {
-                  RegionalAccessBoundary newRAB =
-                      RegionalAccessBoundary.refresh(
-                          transportFactory, url, accessToken, cachedRAB.get());
-                  cachedRAB.set(newRAB);
-                  resetCooldown();
-                  // Complete the future so monitors (like unit tests) know we are done.
-                  future.complete(newRAB);
-                } catch (Exception e) {
-                  handleRefreshFailure(e);
-                  future.completeExceptionally(e);
-                } finally {
-                  // Open the gate again for future refresh requests.
-                  refreshFuture.set(null);
-                }
-              });
-        }
+    if (refreshFuture.compareAndSet(null, future)) {
+      CompletableFuture.runAsync(
+          () -> {
+            try {
+              RegionalAccessBoundary newRAB =
+                  RegionalAccessBoundary.refresh(
+                      transportFactory, url, accessToken, cachedRAB.get());
+              cachedRAB.set(newRAB);
+              resetCooldown();
+              // Complete the future so monitors (like unit tests) know we are done.
+              future.complete(newRAB);
+            } catch (Exception e) {
+              handleRefreshFailure(e);
+              future.completeExceptionally(e);
+            } finally {
+              // Open the gate again for future refresh requests.
+              refreshFuture.set(null);
+            }
+          });
+    }
   }
 
   /** Invalidates the current cache. Useful for reactive refresh on stale error. */

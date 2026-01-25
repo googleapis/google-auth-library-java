@@ -182,17 +182,8 @@ public class HttpCredentialsAdapter
     }
 
     try {
-      // If we are here, we are at a 400 Bad Request with a RAB header.
-      // We need to check the body. To avoid breaking other handlers, we should
-      // ideally buffer the response, but HttpResponse doesn't support it easily.
-      // However, if it IS a stale RAB error, we ARE going to retry, so consuming is fine.
-      // If it's NOT, we have a problem.
-      // One way is to check the error message in a way that doesn't consume if possible,
-      // but there isn't one for network streams.
-      // Given the specificity of 400 + RAB header, we'll take the risk or try to be more surgical.
-
-      // Let's use a small read-ahead or just parse and hope for the best.
-      // In reality, dark launch will have this header on many requests.
+      // Check for the stale regional access boundary error message in the response body.
+      // Note: This consumes the response stream.
       String content = response.parseAsString();
       if (content != null && content.toLowerCase().contains(STALE_RAB_ERROR_MESSAGE)) {
         URI uri = null;
