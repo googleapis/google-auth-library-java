@@ -46,9 +46,8 @@ import org.junit.jupiter.api.Test;
 
 class AppEngineDeserializationSecurityTest {
 
-  static class ArbitraryClass {
-    public ArbitraryClass() {}
-  }
+  /** A class that does not implement HttpTransportFactory. */
+  static class ArbitraryClass {}
 
   @Test
   void testArbitraryClassInstantiationPrevented() throws Exception {

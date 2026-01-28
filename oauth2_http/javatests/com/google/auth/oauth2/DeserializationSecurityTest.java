@@ -56,24 +56,21 @@ import org.junit.jupiter.api.io.TempDir;
 class DeserializationSecurityTest {
 
   /** A class that does not implement HttpTransportFactory. */
-  static class ArbitraryClass {
-    public ArbitraryClass() {}
-  }
+  static class ArbitraryClass {}
 
   /** A custom implementation of HttpTransportFactory that should be allowed. */
   static class CustomTransportFactory implements HttpTransportFactory {
+    @Override
     public HttpTransport create() {
       return new NetHttpTransport();
     }
   }
 
   /**
-   * Implementation that is registered via
-   * META-INF/services/com.google.auth.http.HttpTransportFactory.
+   * An implementation of HttpTransportFactory that can registered to the ServiceLoader. Used in
+   * {@link #runWithTempServiceLoader} to load to `META_INF/services/*`.
    */
   public static class TestServiceLoaderFactory implements HttpTransportFactory {
-    public TestServiceLoaderFactory() {}
-
     @Override
     public HttpTransport create() {
       return new NetHttpTransport();
@@ -101,6 +98,40 @@ class DeserializationSecurityTest {
 
   private static String getSAPrivateKey() {
     return ServiceAccountCredentialsTest.PRIVATE_KEY_PKCS8.replace("\n", "\\n");
+  }
+
+  /**
+   * Helper method to run a task within a temporary ServiceLoader environment.
+   *
+   * <p>This method prevents test pollution by isolating the ServiceLoader configuration. It creates
+   * a temporary directory structure for META-INF/services, writes the service provider
+   * configuration file, and creates a URLClassLoader that includes this temporary directory. It
+   * then sets the current thread's context class loader (TCCL) to this custom class loader before
+   * executing the task. This ensures that ServiceLoader.load() calls within the task will find the
+   * specific service provider defined for the test, without affecting other tests or the global
+   * environment.
+   *
+   * @param task The task to execute within the isolated environment.
+   * @param tempDir The temporary directory to use for ServiceLoader configuration.
+   * @throws Exception If any error occurs during setup, execution, or cleanup.
+   */
+  private void runWithTempServiceLoader(Callable<Void> task, Path tempDir) throws Exception {
+    ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
+    try {
+      Path servicesDir = tempDir.resolve("META-INF").resolve("services");
+      Files.createDirectories(servicesDir);
+      Path serviceFile = servicesDir.resolve(HttpTransportFactory.class.getName());
+      Files.write(
+          serviceFile, TestServiceLoaderFactory.class.getName().getBytes(StandardCharsets.UTF_8));
+
+      URL[] urls = new URL[] {tempDir.toUri().toURL()};
+      try (URLClassLoader testClassLoader = new URLClassLoader(urls, originalClassLoader)) {
+        Thread.currentThread().setContextClassLoader(testClassLoader);
+        task.call();
+      }
+    } finally {
+      Thread.currentThread().setContextClassLoader(originalClassLoader);
+    }
   }
 
   @Test
@@ -230,40 +261,6 @@ class DeserializationSecurityTest {
     Object factory = transportFactoryField.get(deserialized);
 
     assertEquals(CustomTransportFactory.class.getName(), factory.getClass().getName());
-  }
-
-  /**
-   * Helper method to run a task within a temporary ServiceLoader environment.
-   *
-   * <p>This method prevents test pollution by isolating the ServiceLoader configuration. It creates
-   * a temporary directory structure for META-INF/services, writes the service provider
-   * configuration file, and creates a URLClassLoader that includes this temporary directory. It
-   * then sets the current thread's context class loader (TCCL) to this custom class loader before
-   * executing the task. This ensures that ServiceLoader.load() calls within the task will find the
-   * specific service provider defined for the test, without affecting other tests or the global
-   * environment.
-   *
-   * @param task The task to execute within the isolated environment.
-   * @param tempDir The temporary directory to use for ServiceLoader configuration.
-   * @throws Exception If any error occurs during setup, execution, or cleanup.
-   */
-  private void runWithTempServiceLoader(Callable<Void> task, Path tempDir) throws Exception {
-    ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
-    try {
-      Path servicesDir = tempDir.resolve("META-INF").resolve("services");
-      Files.createDirectories(servicesDir);
-      Path serviceFile = servicesDir.resolve(HttpTransportFactory.class.getName());
-      Files.write(
-          serviceFile, TestServiceLoaderFactory.class.getName().getBytes(StandardCharsets.UTF_8));
-
-      URL[] urls = new URL[] {tempDir.toUri().toURL()};
-      try (URLClassLoader testClassLoader = new URLClassLoader(urls, originalClassLoader)) {
-        Thread.currentThread().setContextClassLoader(testClassLoader);
-        task.call();
-      }
-    } finally {
-      Thread.currentThread().setContextClassLoader(originalClassLoader);
-    }
   }
 
   @Test
