@@ -35,6 +35,7 @@ import com.google.api.client.util.Clock;
 import com.google.auth.Credentials;
 import com.google.auth.RequestMetadataCallback;
 import com.google.auth.http.AuthHttpConstants;
+import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -51,6 +52,8 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -475,11 +478,60 @@ public class OAuth2Credentials extends Credentials {
     refreshTask = null;
   }
 
-  @SuppressWarnings("unchecked")
-  protected static <T> T newInstance(String className) throws IOException, ClassNotFoundException {
+  /**
+   * Best-effort safe mechanism to attempt to instantiate an {@link HttpTransportFactory} from a
+   * class name.
+   *
+   * <p>This method attempts to avoid Arbitrary Code Execution (ACE) vulnerabilities by:
+   *
+   * <ol>
+   *   <li>Checking if the class name matches the default or ServiceLoader-provided factory, and
+   *       returning that instance if so.
+   *   <li>If not, loading the class using reflection without running static initializers.
+   *   <li>Verifying that the loaded class is assignable to {@link HttpTransportFactory}.
+   *   <li>Only after verification, instantiating the class using its default constructor.
+   * </ol>
+   *
+   * @param className The fully qualified name of the class to instantiate.
+   * @return An instance of {@link HttpTransportFactory}.
+   * @throws IOException If the class cannot be loaded, is the wrong type, or cannot be
+   *     instantiated.
+   * @throws ClassNotFoundException If the class cannot be found.
+   */
+  protected static HttpTransportFactory newInstance(String className)
+      throws IOException, ClassNotFoundException {
+    // Check if the requested class matches the default or ServiceLoader-provided
+    // factory. This avoids unsafe reflection for the most common use cases.
+    // This check runs first to replicate the logic in Credential constructor.
+    HttpTransportFactory currentFactory =
+        getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
+    // It is possible that there is a custom implementation of HttpTransportFactory
+    if (className.equals(currentFactory.getClass().getName())) {
+      return currentFactory;
+    }
+
+    // Fallback to reflection if the requested class differs from the ServiceLoader
+    // default. This handles cases where a custom factory was used during
+    // serialization but is not the currently active ServiceLoader provider.
     try {
-      return (T) Class.forName(className).newInstance();
-    } catch (InstantiationException | IllegalAccessException e) {
+      // Load the class without initializing it (second argument: false) to prevent
+      // static initializers from running, which could potentially be used for
+      // malicious purposes. Use the class loader of HttpTransportFactory (third argument)
+      // to ensure the class is loaded from the same context as the library, preventing
+      // class loading manipulation.
+      Class<?> clazz = Class.forName(className, false, HttpTransportFactory.class.getClassLoader());
+      if (!HttpTransportFactory.class.isAssignableFrom(clazz)) {
+        throw new IOException(
+            String.format(
+                "The class, %s, is not assignable from %s.",
+                className, HttpTransportFactory.class.getName()));
+      }
+      Constructor<?> constructor = clazz.getDeclaredConstructor();
+      return (HttpTransportFactory) constructor.newInstance();
+    } catch (InstantiationException
+        | IllegalAccessException
+        | NoSuchMethodException
+        | InvocationTargetException e) {
       throw new IOException(e);
     }
   }

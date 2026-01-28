@@ -43,6 +43,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Objects;
@@ -132,7 +134,29 @@ public class AppEngineCredentials extends GoogleCredentials implements ServiceAc
 
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
     input.defaultReadObject();
-    appIdentityService = newInstance(appIdentityServiceClassName);
+    try {
+      // Load the class without initializing it (second argument: false) to prevent
+      // static initializers from running, which could potentially be used for
+      // malicious purposes. Use the class loader of AppIdentityService (third
+      // argument) to ensure the class is loaded from the same context as the library,
+      // preventing class loading manipulation.
+      Class<?> clazz =
+          Class.forName(
+              appIdentityServiceClassName, false, AppIdentityService.class.getClassLoader());
+      if (!AppIdentityService.class.isAssignableFrom(clazz)) {
+        throw new IOException(
+            String.format(
+                "The class, %s, is not assignable from %s.",
+                appIdentityServiceClassName, AppIdentityService.class.getName()));
+      }
+      Constructor<?> constructor = clazz.getConstructor();
+      appIdentityService = (AppIdentityService) constructor.newInstance();
+    } catch (InstantiationException
+        | IllegalAccessException
+        | NoSuchMethodException
+        | InvocationTargetException e) {
+      throw new IOException(e);
+    }
   }
 
   public static Builder newBuilder() {
