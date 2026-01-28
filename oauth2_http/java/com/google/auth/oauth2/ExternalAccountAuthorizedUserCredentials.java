@@ -355,6 +355,9 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
 
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
     input.defaultReadObject();
+    // Use Oauth2Credential's newInstance() to try to safely instantiate the transport factory,
+    // with best-effort prevention against RCE attacks by validating the class name and loading
+    // behavior.
     transportFactory = newInstance(transportFactoryClassName);
   }
 
