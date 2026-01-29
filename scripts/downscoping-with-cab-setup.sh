@@ -74,18 +74,18 @@ service_account_email=""
 gcloud config set project ${project_id}
 
 # Create the GCS bucket.
-gsutil mb -b on -l us-east1 gs://${bucket_id}
+gcloud storage buckets create gs://${bucket_id} --uniform-bucket-level-access --location us-east1
 
 # Give the specified service account the objectAdmin role for this bucket.
-gsutil iam ch serviceAccount:${service_account_email}:objectAdmin gs://${bucket_id}
+gcloud storage buckets add-iam-policy-binding gs://${bucket_id} --member=serviceAccount:${service_account_email} --role=roles/storage.objectAdmin
 
 # Create both objects.
 echo "first" >> ${first_object}
 echo "second" >> ${second_object}
 
 # Upload the created objects to the bucket.
-gsutil cp ${first_object} gs://${bucket_id}
-gsutil cp ${second_object} gs://${bucket_id}
+gcloud storage cp ${first_object} gs://${bucket_id}
+gcloud storage cp ${second_object} gs://${bucket_id}
 
 echo "Bucket ID: "${bucket_id}
 echo "First object ID: "${first_object}
