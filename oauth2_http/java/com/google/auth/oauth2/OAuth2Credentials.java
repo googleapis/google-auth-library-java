@@ -163,6 +163,16 @@ public class OAuth2Credentials extends Credentials {
     return this.expirationMargin;
   }
 
+  /**
+   * Asynchronously provides the request metadata by ensuring there is a current access token and
+   * providing it as an authorization bearer token.
+   *
+   * <p>This method is non-blocking. The results are provided through the given callback.
+   *
+   * @param uri The URI of the request.
+   * @param executor The executor to use for any required background tasks.
+   * @param callback The callback to receive the metadata or any error.
+   */
   @Override
   public void getRequestMetadata(
       final URI uri, Executor executor, final RequestMetadataCallback callback) {
@@ -174,8 +184,14 @@ public class OAuth2Credentials extends Credentials {
   }
 
   /**
-   * Provide the request metadata by ensuring there is a current access token and providing it as an
-   * authorization bearer token.
+   * Synchronously provides the request metadata by ensuring there is a current access token and
+   * providing it as an authorization bearer token.
+   *
+   * <p>This method is blocking and will wait for a token refresh if necessary.
+   *
+   * @param uri The URI of the request.
+   * @return The request metadata containing the authorization header.
+   * @throws IOException If an error occurs while fetching the token.
    */
   @Override
   public Map<String, List<String>> getRequestMetadata(URI uri) throws IOException {
