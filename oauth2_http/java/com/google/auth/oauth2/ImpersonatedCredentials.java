@@ -330,9 +330,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
   @Override
   public String getRegionalAccessBoundaryUrl() throws IOException {
     return String.format(
-        OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT,
-        getUniverseDomain(),
-        getAccount());
+        OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT, getAccount());
   }
 
   int getLifetime() {

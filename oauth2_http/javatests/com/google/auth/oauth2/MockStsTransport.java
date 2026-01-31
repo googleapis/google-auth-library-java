@@ -101,7 +101,7 @@ public final class MockStsTransport extends MockHttpTransport {
         new MockLowLevelHttpRequest(url) {
           @Override
           public LowLevelHttpResponse execute() throws IOException {
-            // Mocking call to refresh trust boundaries.
+            // Mocking call to refresh regional access boundaries.
             // The lookup endpoint is located in the IAM server.
             Matcher regionalAccessBoundaryMatcher =
                 Pattern.compile(VALID_REGIONAL_ACCESS_BOUNDARY_PATTERN).matcher(url);

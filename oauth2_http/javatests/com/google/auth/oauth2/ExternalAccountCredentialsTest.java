@@ -1406,10 +1406,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     // 1. Setup distinct RABs for workload and impersonated identities.
     String workloadRabUrl =
         String.format(
-            IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKLOAD_POOL,
-            GOOGLE_DEFAULT_UNIVERSE,
-            projectNumber,
-            poolId);
+            IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKLOAD_POOL, projectNumber, poolId);
     RegionalAccessBoundary workloadRab =
         new RegionalAccessBoundary("workload-encoded", Collections.singletonList("workload-loc"));
     transportFactory.transport.addRegionalAccessBoundary(workloadRabUrl, workloadRab);
@@ -1417,10 +1414,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     String saEmail =
         ImpersonatedCredentials.extractTargetPrincipal(SERVICE_ACCOUNT_IMPERSONATION_URL);
     String impersonatedRabUrl =
-        String.format(
-            IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT,
-            GOOGLE_DEFAULT_UNIVERSE,
-            saEmail);
+        String.format(IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT, saEmail);
     RegionalAccessBoundary impersonatedRab =
         new RegionalAccessBoundary(
             "impersonated-encoded", Collections.singletonList("impersonated-loc"));
@@ -1475,10 +1469,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
     // 1. Setup distinct RABs for workforce and impersonated identities.
     String workforceRabUrl =
-        String.format(
-            IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKFORCE_POOL,
-            GOOGLE_DEFAULT_UNIVERSE,
-            poolId);
+        String.format(IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKFORCE_POOL, poolId);
     RegionalAccessBoundary workforceRab =
         new RegionalAccessBoundary("workforce-encoded", Collections.singletonList("workforce-loc"));
     transportFactory.transport.addRegionalAccessBoundary(workforceRabUrl, workforceRab);
@@ -1486,10 +1477,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     String saEmail =
         ImpersonatedCredentials.extractTargetPrincipal(SERVICE_ACCOUNT_IMPERSONATION_URL);
     String impersonatedRabUrl =
-        String.format(
-            IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT,
-            GOOGLE_DEFAULT_UNIVERSE,
-            saEmail);
+        String.format(IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT, saEmail);
     RegionalAccessBoundary impersonatedRab =
         new RegionalAccessBoundary(
             "impersonated-encoded", Collections.singletonList("impersonated-loc"));

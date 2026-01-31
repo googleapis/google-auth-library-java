@@ -230,8 +230,7 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials
               + "Refer: https://docs.cloud.google.com/iam/docs/principal-identifiers");
     }
     String poolId = matcher.group("pool");
-    return String.format(
-        IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKFORCE_POOL, getUniverseDomain(), poolId);
+    return String.format(IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKFORCE_POOL, poolId);
   }
 
   @Override

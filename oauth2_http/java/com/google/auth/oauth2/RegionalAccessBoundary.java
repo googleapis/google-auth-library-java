@@ -1,5 +1,5 @@
 /*
- * Copyright 2025, Google LLC
+ * Copyright 2026, Google LLC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -237,9 +237,10 @@ public final class RegionalAccessBoundary implements Serializable {
             .setBackOffRequired(
                 response -> {
                   int statusCode = response.getStatusCode();
-                  return (statusCode >= 500 && statusCode < 600)
-                      || statusCode == 403
-                      || statusCode == 404;
+                  return statusCode == 500
+                      || statusCode == 502
+                      || statusCode == 503
+                      || statusCode == 504;
                 });
     request.setUnsuccessfulResponseHandler(unsuccessfulResponseHandler);
 

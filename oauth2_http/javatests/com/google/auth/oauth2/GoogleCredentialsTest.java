@@ -1012,7 +1012,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
     environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "true");
 
-    // This transport will be used for the trust boundary lookup.
+    // This transport will be used for the regional access boundary lookup.
     // We will configure it to fail on the first attempt.
     MockTokenServerTransport regionalAccessBoundaryTransport = new MockTokenServerTransport();
     regionalAccessBoundaryTransport.addResponseErrorSequence(

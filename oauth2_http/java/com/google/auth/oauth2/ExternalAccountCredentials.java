@@ -629,7 +629,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     if (getServiceAccountEmail() != null) {
       return String.format(
           OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT,
-          getUniverseDomain(),
           getServiceAccountEmail());
     }
 
@@ -637,9 +636,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     if (workforceMatcher.matches()) {
       String poolId = workforceMatcher.group("pool");
       return String.format(
-          OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKFORCE_POOL,
-          getUniverseDomain(),
-          poolId);
+          OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKFORCE_POOL, poolId);
     }
 
     Matcher workloadMatcher = WORKLOAD_AUDIENCE_PATTERN.matcher(getAudience());
@@ -648,7 +645,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       String poolId = workloadMatcher.group("pool");
       return String.format(
           OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKLOAD_POOL,
-          getUniverseDomain(),
           projectNumber,
           poolId);
     }
