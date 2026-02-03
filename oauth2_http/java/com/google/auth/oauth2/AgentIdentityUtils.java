@@ -48,14 +48,17 @@ import java.security.MessageDigest;
 import java.security.cert.CertificateFactory;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
+import org.slf4j.Logger;
 
 /** Internal utility class for handling Agent Identity certificate-bound access tokens. */
 final class AgentIdentityUtils {
-  private static final Logger LOGGER = Logger.getLogger(AgentIdentityUtils.class.getName());
+  private static final Logger LOGGER = Slf4jUtils.getLogger(AgentIdentityUtils.class);
 
   static final String GOOGLE_API_CERTIFICATE_CONFIG = "GOOGLE_API_CERTIFICATE_CONFIG";
   static final String GOOGLE_API_PREVENT_AGENT_TOKEN_SHARING_FOR_GCP_SERVICES =
@@ -156,7 +159,7 @@ final class AgentIdentityUtils {
    */
   private static boolean isOptedOut() {
     String optOut = envReader.getEnv(GOOGLE_API_PREVENT_AGENT_TOKEN_SHARING_FOR_GCP_SERVICES);
-    return optOut != null && "false".equalsIgnoreCase(optOut);
+    return "false".equalsIgnoreCase(optOut);
   }
 
   /**
@@ -189,7 +192,10 @@ final class AgentIdentityUtils {
 
       // If we are here, we failed to find the certificate, log a warning only once.
       if (!warned) {
-        LOGGER.warning(
+        Slf4jUtils.log(
+            LOGGER,
+            org.slf4j.event.Level.WARN,
+            Collections.emptyMap(),
             String.format(
                 "Certificate config file not found at %s (from %s environment variable). "
                     + "Retrying for up to %d seconds.",
@@ -256,7 +262,29 @@ final class AgentIdentityUtils {
     }
   }
 
-  /** Checks if the certificate belongs to an Agent Identity by inspecting SANs. */
+  /**
+   * Determines whether the provided certificate belongs to an "Agent Identity," indicating that the
+   * SDK should request a certificate-bound access token.
+   *
+   * <p>Agent Identities are distinguished from other workloads by inspecting the <b>Subject
+   * Alternative Name (SAN)</b> extension of the X.509 certificate for a <b>SPIFFE (Secure
+   * Production Identity Framework for Everyone)</b> ID.
+   *
+   * <p>Specifically, this method iterates through the URI entries in the SAN and checks if any
+   * {@code spiffe://} URI has a trust domain that matches one of the following Agent Identity
+   * patterns:
+   *
+   * <ul>
+   *   <li>{@code agents.global.org-[0-9]+.system.id.goog}
+   *   <li>{@code agents.global.proj-[0-9]+.system.id.goog}
+   * </ul>
+   *
+   * <p>If a matching SPIFFE ID is found, the certificate is identified as an Agent Identity, and
+   * this method returns {@code true}.
+   *
+   * @param cert the X.509 certificate to inspect
+   * @return {@code true} if the certificate represents an Agent Identity, {@code false} otherwise
+   */
   static boolean shouldRequestBoundToken(X509Certificate cert) {
     try {
       Collection<List<?>> sans = cert.getSubjectAlternativeNames();
@@ -289,7 +317,7 @@ final class AgentIdentityUtils {
         }
       }
     } catch (CertificateParsingException e) {
-      LOGGER.log(Level.WARNING, "Failed to parse Subject Alternative Names from certificate", e);
+      LOGGER.warn("Failed to parse Subject Alternative Names from certificate", e);
     }
     return false;
   }
