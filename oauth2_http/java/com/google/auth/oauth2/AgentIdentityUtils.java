@@ -64,11 +64,26 @@ final class AgentIdentityUtils {
   static final String GOOGLE_API_PREVENT_AGENT_TOKEN_SHARING_FOR_GCP_SERVICES =
       "GOOGLE_API_PREVENT_AGENT_TOKEN_SHARING_FOR_GCP_SERVICES";
 
+  /**
+   * Patterns for matching Agent Identity SPIFFE trust domains.
+   *
+   * <p>SPIFFE (Secure Production Identity Framework for Everyone) is a set of open-source standards
+   * for securely identifying software services. A SPIFFE ID is a URI structured as {@code
+   * spiffe://<trust-domain>/<path>}.
+   */
   private static final List<Pattern> AGENT_IDENTITY_SPIFFE_PATTERNS =
       ImmutableList.of(
           Pattern.compile("^agents\\.global\\.org-\\d+\\.system\\.id\\.goog$"),
           Pattern.compile("^agents\\.global\\.proj-\\d+\\.system\\.id\\.goog$"));
+
+  /**
+   * SAN (Subject Alternative Name) entry type for URIs.
+   *
+   * <p>SAN is an extension to X.509 certificates that allows additional identities, such as URIs,
+   * to be bound to the subject of the certificate.
+   */
   private static final int SAN_URI_TYPE = 6;
+
   private static final String SPIFFE_SCHEME_PREFIX = "spiffe://";
 
   // Polling configuration
