@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.42.2](https://github.com/googleapis/google-auth-library-java/compare/v1.42.1...v1.42.2) (2026-02-04)
+
+
+### Bug Fixes
+
+* Deserialization checks valid class types for HttpTransportFactory ([#1882](https://github.com/googleapis/google-auth-library-java/issues/1882)) ([76ff74e](https://github.com/googleapis/google-auth-library-java/commit/76ff74e4c810d54763ca34d4f483730c43c329a8))
+
 ## [1.42.1](https://github.com/googleapis/google-auth-library-java/compare/v1.42.0...v1.42.1) (2026-01-23)
 
 
