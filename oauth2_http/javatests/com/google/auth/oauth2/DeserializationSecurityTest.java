@@ -101,15 +101,15 @@ class DeserializationSecurityTest {
   }
 
   /**
-   * Helper method to run a task within a temporary ServiceLoader environment.
+   * Helper method to run a task within a temporary ServiceLoader environment to prevent test
+   * configuration changes impacting other tests.
    *
-   * <p>This method prevents test pollution by isolating the ServiceLoader configuration. It creates
-   * a temporary directory structure for META-INF/services, writes the service provider
-   * configuration file, and creates a URLClassLoader that includes this temporary directory. It
-   * then sets the current thread's context class loader (TCCL) to this custom class loader before
-   * executing the task. This ensures that ServiceLoader.load() calls within the task will find the
-   * specific service provider defined for the test, without affecting other tests or the global
-   * environment.
+   * <p>It creates a temporary directory structure for META-INF/services, writes the service
+   * provider configuration file to the temp directory, and creates a URLClassLoader that includes
+   * this temp directory. It then sets the current thread's context class loader to this custom
+   * class loader before executing the task. This ensures that ServiceLoader.load() calls within the
+   * task will find the specific service provider defined for the test, without affecting other
+   * tests or the global environment.
    *
    * @param task The task to execute within the isolated environment.
    * @param tempDir The temporary directory to use for ServiceLoader configuration.
@@ -136,59 +136,57 @@ class DeserializationSecurityTest {
 
   @Test
   void testArbitraryClassInstantiationPrevented() throws Exception {
-    // 1. Create a valid ServiceAccountCredentials
     ServiceAccountCredentials credentials = createCredentials();
 
-    // 2. Use reflection to set transportFactoryClassName to our arbitrary class.
-    // We expect verification failure because ArbitraryClass does not implement
-    // HttpTransportFactory. We use reflection here to verify that we cannot
-    // deserialize into an arbitrary class, simulating a malicious stream which
-    // could not be created via the public Builder API.
+    // Use reflection to set `transportFactoryClassName` to ArbitraryClass.
+    // Reflection is needed because ArbitraryClass does not implement
+    // HttpTransportFactory. Setting the className simulates a malicious stream
+    // which could not be created via the public Builder API.
     Field transportFactoryClassNameField =
         ServiceAccountCredentials.class.getDeclaredField("transportFactoryClassName");
     transportFactoryClassNameField.setAccessible(true);
     transportFactoryClassNameField.set(credentials, ArbitraryClass.class.getName());
 
-    // 3. Serialize
+    // Serialize this to a stream
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(bos);
     oos.writeObject(credentials);
-    oos.close();
 
-    // 4. Deserialize
+    // Deserialize from the stream
     ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
     ObjectInputStream ois = new ObjectInputStream(bis);
 
-    // 5. Assert that an exception is thrown because ArbitraryClass is not a valid
+    // Assert that an exception is thrown because ArbitraryClass is not a valid
     // HttpTransportFactory
     assertThrows(IOException.class, ois::readObject);
+
+    bos.close();
+    oos.close();
+    bis.close();
+    ois.close();
   }
 
   @Test
   void testValidTransportFactoryDeserialization() throws Exception {
-    // 1. Create a valid ServiceAccountCredentials
     ServiceAccountCredentials credentials = createCredentials();
 
-    // 2. Use the builder to set the transport factory.
-    // This will set the transportFactoryClassName field used during serialization.
+    // Use the builder to set a valid transport factory. This will set the
+    // transportFactoryClassName field used during serialization.
     credentials =
         credentials.toBuilder()
             .setHttpTransportFactory(new OAuth2Utils.DefaultHttpTransportFactory())
             .build();
 
-    // 3. Serialize
+    // Serialize this to a stream
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(bos);
     oos.writeObject(credentials);
-    oos.close();
 
-    // 4. Deserialize
+    // Deserialize from the stream
     ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
     ObjectInputStream ois = new ObjectInputStream(bis);
 
     ServiceAccountCredentials deserialized = (ServiceAccountCredentials) ois.readObject();
-
-    // 5. Assert that it deserialized correctly and has the correct factory type
     assertNotNull(deserialized);
 
     // Use reflection to get the field as there is no getter for transportFactory.
@@ -199,59 +197,63 @@ class DeserializationSecurityTest {
 
     assertEquals(
         OAuth2Utils.DefaultHttpTransportFactory.class.getName(), factory.getClass().getName());
+
+    bos.close();
+    oos.close();
+    bis.close();
+    ois.close();
   }
 
   @Test
   void testNonExistentClassDeserialization() throws Exception {
-    // 1. Create a valid ServiceAccountCredentials
     ServiceAccountCredentials credentials = createCredentials();
 
-    // 2. Use reflection to set transportFactoryClassName to a non-existent class.
-    // We use reflection here to verify that we cannot deserialize into a
-    // non-existent class, simulating a malicious stream which could not be created
-    // via the public Builder API.
+    // Use reflection to set `transportFactoryClassName` to a non-existent class.
+    // Reflection is needed because the non-existent class does not exist. Setting
+    // the className simulates a malicious stream which could not be created via the
+    // public Builder API.
     Field transportFactoryClassNameField =
         ServiceAccountCredentials.class.getDeclaredField("transportFactoryClassName");
     transportFactoryClassNameField.setAccessible(true);
     transportFactoryClassNameField.set(credentials, "com.malicious.NonExistentClass");
 
-    // 3. Serialize
+    // Serialize this to a stream
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(bos);
     oos.writeObject(credentials);
-    oos.close();
 
-    // 4. Deserialize
+    // Deserialize from the stream
     ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
     ObjectInputStream ois = new ObjectInputStream(bis);
 
-    // 5. Assert that ClassNotFoundException is thrown
+    // Assert that ClassNotFoundException (for a non-existent class) is thrown
     assertThrows(ClassNotFoundException.class, ois::readObject);
+
+    bos.close();
+    oos.close();
+    bis.close();
+    ois.close();
   }
 
   @Test
   void testCustomTransportFactory() throws Exception {
-    // 1. Create a valid ServiceAccountCredentials
     ServiceAccountCredentials credentials = createCredentials();
 
-    // 2. Use the builder to set our custom transport factory.
-    // This will set the transportFactoryClassName field used during serialization.
+    // Use the builder to set our custom transport factory. This will set the
+    // transportFactoryClassName field used during serialization.
     credentials =
         credentials.toBuilder().setHttpTransportFactory(new CustomTransportFactory()).build();
 
-    // 3. Serialize
+    // Serialize this to a stream
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(bos);
     oos.writeObject(credentials);
-    oos.close();
 
-    // 4. Deserialize
+    // Deserialize from the stream
     ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
     ObjectInputStream ois = new ObjectInputStream(bis);
 
     ServiceAccountCredentials deserialized = (ServiceAccountCredentials) ois.readObject();
-
-    // 5. Assert that it IS instantiated (by verifying the factory type)
     assertNotNull(deserialized);
 
     // Use reflection to get the field as there is no getter for transportFactory.
@@ -261,13 +263,18 @@ class DeserializationSecurityTest {
     Object factory = transportFactoryField.get(deserialized);
 
     assertEquals(CustomTransportFactory.class.getName(), factory.getClass().getName());
+
+    bos.close();
+    oos.close();
+    bis.close();
+    ois.close();
   }
 
   @Test
   void testServiceLoaderPathDeserialization(@TempDir Path tempDir) throws Exception {
     runWithTempServiceLoader(
         () -> {
-          // 1. Create a ServiceAccountCredentials using the builder WITHOUT setting the
+          // Create a ServiceAccountCredentials using the builder WITHOUT setting the
           // transport factory. The constructor should automatically look up the factory
           // via ServiceLoader.
           ServiceAccountCredentials credentials =
@@ -278,8 +285,7 @@ class DeserializationSecurityTest {
                   .setProjectId("project-id")
                   .build();
 
-          // 2. Verify that the credentials were created with the
-          // TestServiceLoaderFactory.
+          // 2Verify that the credentials were created with the TestServiceLoaderFactory.
           // This confirms that the ServiceLoader mechanism in the constructor is working.
           Field transportFactoryClassNameField =
               ServiceAccountCredentials.class.getDeclaredField("transportFactoryClassName");
@@ -288,28 +294,32 @@ class DeserializationSecurityTest {
               TestServiceLoaderFactory.class.getName(),
               transportFactoryClassNameField.get(credentials));
 
-          // 3. Serialize
+          // Serialize this to a stream
           ByteArrayOutputStream bos = new ByteArrayOutputStream();
           ObjectOutputStream oos = new ObjectOutputStream(bos);
           oos.writeObject(credentials);
-          oos.close();
 
-          // 4. Deserialize
+          // Deserialize from the stream
           ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
           ObjectInputStream ois = new ObjectInputStream(bis);
 
           ServiceAccountCredentials deserialized = (ServiceAccountCredentials) ois.readObject();
-
-          // 5. Assert that it deserialized correctly and has the correct factory type.
-          // This confirms that newInstance() found it via the ServiceLoader path.
           assertNotNull(deserialized);
 
+          // Assert that it deserialized correctly and has the correct factory type.
+          // This confirms that newInstance() found it via the ServiceLoader path.
           Field transportFactoryField =
               ServiceAccountCredentials.class.getDeclaredField("transportFactory");
           transportFactoryField.setAccessible(true);
           Object factory = transportFactoryField.get(deserialized);
 
           assertEquals(TestServiceLoaderFactory.class.getName(), factory.getClass().getName());
+
+          bos.close();
+          oos.close();
+          bis.close();
+          ois.close();
+
           return null;
         },
         tempDir);

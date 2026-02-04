@@ -500,30 +500,31 @@ public class OAuth2Credentials extends Credentials {
    */
   protected static HttpTransportFactory newInstance(String className)
       throws IOException, ClassNotFoundException {
-    // Check if the requested class matches the default or ServiceLoader-provided
-    // factory. This avoids unsafe reflection for the most common use cases.
-    // This check runs first to replicate the logic in Credential constructor.
+    // Check if the requested class matches the default transport or ServiceLoader-provided
+    // transport. This avoids unsafe reflection for the most common use cases. This check runs first
+    // to replicate the logic in each Credential's constructor.
     HttpTransportFactory currentFactory =
         getFromServiceLoader(HttpTransportFactory.class, OAuth2Utils.HTTP_TRANSPORT_FACTORY);
-    // It is possible that there is a custom implementation of HttpTransportFactory
+    // If this doesn't match, then it may be a custom implementation of HttpTransportFactory
     if (className.equals(currentFactory.getClass().getName())) {
       return currentFactory;
     }
 
-    // Fallback to reflection if the requested class differs from the ServiceLoader
-    // default. This handles cases where a custom factory was used during
-    // serialization but is not the currently active ServiceLoader provider.
+    // Fallback to reflection to initialize the transport if the requested class is not from
+    // ServiceLoader or the default value. This handles cases where a custom factory was used.
     try {
       // Load the class without initializing it (second argument: false) to prevent
-      // static initializers from running, which could potentially be used for
-      // malicious purposes. Use the class loader of HttpTransportFactory (third argument)
-      // to ensure the class is loaded from the same context as the library, preventing
-      // class loading manipulation.
+      // static initializers from running (preventing gadget chain attacks). Use the class loader
+      // of HttpTransportFactory to ensure the class is loaded from the same context as the library
+      // to try to prevent any class loading manipulation.
       Class<?> clazz = Class.forName(className, false, HttpTransportFactory.class.getClassLoader());
+
+      // Check that the class is an instance of `HttpTransportFactory` to prevent loading of
+      // arbitrary classes.
       if (!HttpTransportFactory.class.isAssignableFrom(clazz)) {
         throw new IOException(
             String.format(
-                "The class, %s, is not assignable from %s.",
+                "Class: %s, is not assignable from %s",
                 className, HttpTransportFactory.class.getName()));
       }
       Constructor<?> constructor = clazz.getDeclaredConstructor();

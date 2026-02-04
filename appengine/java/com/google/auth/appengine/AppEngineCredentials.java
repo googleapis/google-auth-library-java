@@ -136,13 +136,15 @@ public class AppEngineCredentials extends GoogleCredentials implements ServiceAc
     input.defaultReadObject();
     try {
       // Load the class without initializing it (second argument: false) to prevent
-      // static initializers from running, which could potentially be used for
-      // malicious purposes. Use the class loader of AppIdentityService (third
-      // argument) to ensure the class is loaded from the same context as the library,
-      // preventing class loading manipulation.
+      // static initializers from running (preventing gadget chain attacks). Use the class loader
+      // of HttpTransportFactory to ensure the class is loaded from the same context as the library
+      // to try to prevent any class loading manipulation.
       Class<?> clazz =
           Class.forName(
               appIdentityServiceClassName, false, AppIdentityService.class.getClassLoader());
+
+      // Check that the class is an instance of `AppIdentityService` to prevent loading of
+      // arbitrary classes.
       if (!AppIdentityService.class.isAssignableFrom(clazz)) {
         throw new IOException(
             String.format(

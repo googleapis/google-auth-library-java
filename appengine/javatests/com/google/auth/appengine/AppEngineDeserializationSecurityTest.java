@@ -51,34 +51,33 @@ class AppEngineDeserializationSecurityTest {
 
   @Test
   void testArbitraryClassInstantiationPrevented() throws Exception {
-    // 1. Create valid credentials
     AppEngineCredentials credentials =
         AppEngineCredentials.newBuilder().setScopes(Collections.singleton("scope")).build();
 
-    // 2. Use reflection to set appIdentityServiceClassName to ArbitraryClass
+    // Use reflection to set appIdentityServiceClassName to ArbitraryClass
     // as the setter must be of AppIdentityService
     Field classNameField =
         AppEngineCredentials.class.getDeclaredField("appIdentityServiceClassName");
     classNameField.setAccessible(true);
     classNameField.set(credentials, ArbitraryClass.class.getName());
 
-    // 3. Serialize
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(bos);
     oos.writeObject(credentials);
-    oos.close();
 
-    // 4. Deserialize
     ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
     ObjectInputStream ois = new ObjectInputStream(bis);
 
-    // 5. Assert that IOException is thrown (validation failure)
     assertThrows(IOException.class, ois::readObject);
+
+    bos.close();
+    oos.close();
+    bis.close();
+    ois.close();
   }
 
   @Test
   void testValidServiceDeserialization() throws Exception {
-    // 1. Create valid credentials with MockAppIdentityService
     MockAppIdentityService mockService = new MockAppIdentityService();
     AppEngineCredentials credentials =
         AppEngineCredentials.newBuilder()
@@ -86,29 +85,30 @@ class AppEngineDeserializationSecurityTest {
             .setAppIdentityService(mockService)
             .build();
 
-    // 2. Serialize
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(bos);
     oos.writeObject(credentials);
     oos.close();
 
-    // 3. Deserialize
     ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
     ObjectInputStream ois = new ObjectInputStream(bis);
 
     AppEngineCredentials deserialized = (AppEngineCredentials) ois.readObject();
 
-    // 4. Verify deserialization success and field type
     assertNotNull(deserialized);
     Field serviceField = AppEngineCredentials.class.getDeclaredField("appIdentityService");
     serviceField.setAccessible(true);
     Object service = serviceField.get(deserialized);
     assertEquals(MockAppIdentityService.class, service.getClass());
+
+    bos.close();
+    oos.close();
+    bis.close();
+    ois.close();
   }
 
   @Test
   void testNonExistentClassDeserialization() throws Exception {
-    // 1. Create valid credentials
     AppEngineCredentials credentials =
         AppEngineCredentials.newBuilder().setScopes(Collections.singleton("scope")).build();
 
@@ -118,17 +118,19 @@ class AppEngineDeserializationSecurityTest {
     classNameField.setAccessible(true);
     classNameField.set(credentials, "com.google.nonexistent.Class");
 
-    // 3. Serialize
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(bos);
     oos.writeObject(credentials);
     oos.close();
 
-    // 4. Deserialize
     ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
     ObjectInputStream ois = new ObjectInputStream(bis);
 
-    // 5. Assert ClassNotFoundException
     assertThrows(ClassNotFoundException.class, ois::readObject);
+
+    bos.close();
+    oos.close();
+    bis.close();
+    ois.close();
   }
 }
