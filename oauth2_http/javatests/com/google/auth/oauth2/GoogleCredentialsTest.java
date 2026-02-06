@@ -104,7 +104,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   public void tearDown() {
     RegionalAccessBoundary.setEnvironmentProviderForTest(null);
     RegionalAccessBoundary.setClockForTest(Clock.SYSTEM);
-    RABManager.setClockForTest(Clock.SYSTEM);
+    RegionalAccessBoundaryManager.setClockForTest(Clock.SYSTEM);
   }
 
   @Test
@@ -794,7 +794,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     assertEquals(testCredentials.hashCode(), deserializedCredentials.hashCode());
     assertEquals(testCredentials.toString(), deserializedCredentials.toString());
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
-    assertNotNull(deserializedCredentials.rabManager);
+    assertNotNull(deserializedCredentials.regionalAccessBoundaryManager);
   }
 
   @Test
@@ -1106,32 +1106,32 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
             .build();
 
     TestClock testClock = new TestClock();
-    RABManager.setClockForTest(testClock);
+    RegionalAccessBoundaryManager.setClockForTest(testClock);
     RegionalAccessBoundary.setMaxRetryElapsedTimeMillisForTest(100);
 
     // First attempt: triggers lookup, fails, enters 15m cooldown.
     credentials.getRequestMetadata();
     waitForCooldownActive(credentials);
-    assertTrue(credentials.rabManager.isCooldownActive());
-    assertEquals(15 * 60 * 1000L, credentials.rabManager.getCurrentCooldownMillis());
+    assertTrue(credentials.regionalAccessBoundaryManager.isCooldownActive());
+    assertEquals(15 * 60 * 1000L, credentials.regionalAccessBoundaryManager.getCurrentCooldownMillis());
 
     // Second attempt (during cooldown): does not trigger lookup.
     credentials.getRequestMetadata();
-    assertTrue(credentials.rabManager.isCooldownActive());
+    assertTrue(credentials.regionalAccessBoundaryManager.isCooldownActive());
 
     // Fast-forward past 15m cooldown.
     testClock.advanceTime(16 * 60 * 1000L);
-    assertFalse(credentials.rabManager.isCooldownActive());
+    assertFalse(credentials.regionalAccessBoundaryManager.isCooldownActive());
 
     // Third attempt (cooldown expired): triggers lookup, fails again, cooldown should double.
     credentials.getRequestMetadata();
     waitForCooldownActive(credentials);
-    assertTrue(credentials.rabManager.isCooldownActive());
-    assertEquals(30 * 60 * 1000L, credentials.rabManager.getCurrentCooldownMillis());
+    assertTrue(credentials.regionalAccessBoundaryManager.isCooldownActive());
+    assertEquals(30 * 60 * 1000L, credentials.regionalAccessBoundaryManager.getCurrentCooldownMillis());
 
     // Fast-forward past 30m cooldown.
     testClock.advanceTime(31 * 60 * 1000L);
-    assertFalse(credentials.rabManager.isCooldownActive());
+    assertFalse(credentials.regionalAccessBoundaryManager.isCooldownActive());
 
     // Set successful response.
     transport.setRegionalAccessBoundary(
@@ -1140,9 +1140,9 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     // Fourth attempt: triggers lookup, succeeds, resets cooldown.
     credentials.getRequestMetadata();
     waitForRegionalAccessBoundary(credentials);
-    assertFalse(credentials.rabManager.isCooldownActive());
+    assertFalse(credentials.regionalAccessBoundaryManager.isCooldownActive());
     assertEquals("0x123", credentials.getRegionalAccessBoundary().getEncodedLocations());
-    assertEquals(15 * 60 * 1000L, credentials.rabManager.getCurrentCooldownMillis());
+    assertEquals(15 * 60 * 1000L, credentials.regionalAccessBoundaryManager.getCurrentCooldownMillis());
   }
 
   @Test
@@ -1179,7 +1179,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     // Reactive refresh should clear cache and start a background lookup.
     // We pass the token explicitly to avoid triggering a refresh inside getRequestMetadata.
     credentials.reactiveRefreshRegionalAccessBoundary(
-        CALL_URI, new AccessToken(ACCESS_TOKEN, null));
+            new AccessToken(ACCESS_TOKEN, null));
 
     // Current cache should be null (cleared).
     assertNull(credentials.getRegionalAccessBoundary());
@@ -1299,10 +1299,10 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
   private void waitForCooldownActive(GoogleCredentials credentials) throws InterruptedException {
     long deadline = System.currentTimeMillis() + 5000;
-    while (!credentials.rabManager.isCooldownActive() && System.currentTimeMillis() < deadline) {
+    while (!credentials.regionalAccessBoundaryManager.isCooldownActive() && System.currentTimeMillis() < deadline) {
       Thread.sleep(100);
     }
-    if (!credentials.rabManager.isCooldownActive()) {
+    if (!credentials.regionalAccessBoundaryManager.isCooldownActive()) {
       fail("Timed out waiting for cooldown to become active");
     }
   }

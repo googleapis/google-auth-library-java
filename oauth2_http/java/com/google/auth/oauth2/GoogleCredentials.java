@@ -111,7 +111,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   private final String universeDomain;
   private final boolean isExplicitUniverseDomain;
 
-  transient RABManager rabManager = new RABManager();
+  transient RegionalAccessBoundaryManager regionalAccessBoundaryManager =
+      new RegionalAccessBoundaryManager();
 
   protected final String quotaProjectId;
 
@@ -344,7 +345,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    * @return The cached regional access boundary, or null.
    */
   public final RegionalAccessBoundary getRegionalAccessBoundary() {
-    return rabManager.getCachedRAB();
+    return regionalAccessBoundaryManager.getCachedRAB();
   }
 
   /**
@@ -355,17 +356,16 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    * @param rab The regional access boundary to set.
    */
   public final void setRegionalAccessBoundary(RegionalAccessBoundary rab) {
-    rabManager.setManualOverride(rab);
+    regionalAccessBoundaryManager.setManualOverride(rab);
   }
 
   /**
    * Invalidates the regional access boundary cache and triggers an immediate asynchronous refresh.
    *
-   * @param uri The URI of the outbound request.
    * @param token The access token to use for the refresh.
    * @throws IOException If getting the universe domain fails.
    */
-  public final void reactiveRefreshRegionalAccessBoundary(@Nullable URI uri, AccessToken token)
+  public final void reactiveRefreshRegionalAccessBoundary(AccessToken token)
       throws IOException {
     if (!RegionalAccessBoundary.isEnabled()) {
       return;
@@ -377,7 +377,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       return;
     }
 
-    rabManager.reactiveRefresh(transportFactory, rabUrl, token);
+    regionalAccessBoundaryManager.reactiveRefresh(transportFactory, rabUrl, token);
   }
 
   /**
@@ -393,12 +393,6 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
         || !RegionalAccessBoundary.isEnabled()
         || !isDefaultUniverseDomain()) {
       return;
-    }
-
-    if (this instanceof ExternalAccountCredentials) {
-      if (((ExternalAccountCredentials) this).getAudience() == null) {
-        return;
-      }
     }
 
     // Skip refresh for regional endpoints.
@@ -422,7 +416,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       return;
     }
 
-    rabManager.triggerAsyncRefresh(transportFactory, rabUrl, token);
+    regionalAccessBoundaryManager.triggerAsyncRefresh(transportFactory, rabUrl, token);
   }
 
   /**
@@ -545,7 +539,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   protected Map<String, List<String>> getAdditionalHeaders() {
     Map<String, List<String>> headers = new HashMap<>(super.getAdditionalHeaders());
 
-    RegionalAccessBoundary rab = rabManager.getCachedRAB();
+    RegionalAccessBoundary rab = regionalAccessBoundaryManager.getCachedRAB();
     if (rab != null) {
       headers.put(
           RegionalAccessBoundary.HEADER_KEY, Collections.singletonList(rab.getEncodedLocations()));
@@ -668,7 +662,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
 
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
     input.defaultReadObject();
-    rabManager = new RABManager();
+    regionalAccessBoundaryManager = new RegionalAccessBoundaryManager();
   }
 
   public static Builder newBuilder() {

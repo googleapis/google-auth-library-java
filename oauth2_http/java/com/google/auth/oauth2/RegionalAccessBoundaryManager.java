@@ -48,10 +48,10 @@ import javax.annotation.Nullable;
  * requests are not blocked by lookup failures and that the lookup service is not overwhelmed.
  */
 @InternalApi
-final class RABManager {
+final class RegionalAccessBoundaryManager {
 
-  private static final Logger LOGGER = Logger.getLogger(RABManager.class.getName());
-  private static final LoggerProvider LOGGER_PROVIDER = LoggerProvider.forClazz(RABManager.class);
+  private static final Logger LOGGER = Logger.getLogger(RegionalAccessBoundaryManager.class.getName());
+  private static final LoggerProvider LOGGER_PROVIDER = LoggerProvider.forClazz(RegionalAccessBoundaryManager.class);
 
   static final long INITIAL_COOLDOWN_MILLIS = 15 * 60 * 1000L; // 15 minutes
   static final long MAX_COOLDOWN_MILLIS = 24 * 60 * 60 * 1000L; // 24 hours
