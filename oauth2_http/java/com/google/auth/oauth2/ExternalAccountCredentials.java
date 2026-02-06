@@ -69,7 +69,7 @@ import javax.annotation.Nullable;
  * account impersonation.
  */
 public abstract class ExternalAccountCredentials extends GoogleCredentials
-    implements TrustBoundaryProvider {
+    implements RegionalAccessBoundaryProvider {
 
   private static final long serialVersionUID = 8049126194174465023L;
 
@@ -532,11 +532,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       this.impersonatedCredentials = this.buildImpersonatedCredentials();
     }
     if (this.impersonatedCredentials != null) {
-      AccessToken accessToken = this.impersonatedCredentials.refreshAccessToken();
-      // After the impersonated credential refreshes, its trust boundary is
-      // also refreshed. That is the trust boundary we will use.
-      this.trustBoundary = this.impersonatedCredentials.getTrustBoundary();
-      return accessToken;
+      return this.impersonatedCredentials.refreshAccessToken();
     }
 
     StsRequestHandler.Builder requestHandler =
@@ -565,9 +561,7 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
     }
 
     StsTokenExchangeResponse response = requestHandler.build().exchangeToken();
-    AccessToken accessToken = response.getAccessToken();
-    refreshTrustBoundary(accessToken, transportFactory);
-    return accessToken;
+    return response.getAccessToken();
   }
 
   /**
@@ -580,6 +574,11 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
    * @throws IOException if the subject token cannot be retrieved
    */
   public abstract String retrieveSubjectToken() throws IOException;
+
+  @Override
+  HttpTransportFactory getTransportFactory() {
+    return transportFactory;
+  }
 
   public String getAudience() {
     return audience;
@@ -626,14 +625,18 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
 
   @InternalApi
   @Override
-  public String getTrustBoundaryUrl() {
+  public String getRegionalAccessBoundaryUrl() throws IOException {
+    if (getServiceAccountEmail() != null) {
+      return String.format(
+          OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT,
+          getServiceAccountEmail());
+    }
+
     Matcher workforceMatcher = WORKFORCE_AUDIENCE_PATTERN.matcher(getAudience());
     if (workforceMatcher.matches()) {
       String poolId = workforceMatcher.group("pool");
       return String.format(
-          OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKFORCE_POOL,
-          getUniverseDomain(),
-          poolId);
+          OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKFORCE_POOL, poolId);
     }
 
     Matcher workloadMatcher = WORKLOAD_AUDIENCE_PATTERN.matcher(getAudience());
@@ -642,7 +645,6 @@ public abstract class ExternalAccountCredentials extends GoogleCredentials
       String poolId = workloadMatcher.group("pool");
       return String.format(
           OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKLOAD_POOL,
-          getUniverseDomain(),
           projectNumber,
           poolId);
     }

@@ -73,7 +73,8 @@ public class MockMetadataServerTransport extends MockHttpTransport {
   private boolean emptyContent;
   private MockLowLevelHttpRequest request;
 
-  private TrustBoundary trustBoundary;
+  private RegionalAccessBoundary regionalAccessBoundary;
+  private IOException lookupError;
 
   public MockMetadataServerTransport() {}
 
@@ -122,8 +123,12 @@ public class MockMetadataServerTransport extends MockHttpTransport {
     this.emptyContent = emptyContent;
   }
 
-  public void setTrustBoundary(TrustBoundary trustBoundary) {
-    this.trustBoundary = trustBoundary;
+  public void setRegionalAccessBoundary(RegionalAccessBoundary regionalAccessBoundary) {
+    this.regionalAccessBoundary = regionalAccessBoundary;
+  }
+
+  public void setLookupError(IOException lookupError) {
+    this.lookupError = lookupError;
   }
 
   public MockLowLevelHttpRequest getRequest() {
@@ -147,7 +152,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
     } else if (isMtlsConfigRequestUrl(url)) {
       return getMockRequestForMtlsConfig(url);
     } else if (isIamLookupUrl(url)) {
-      return getMockRequestForTrustBoundaryLookup(url);
+      return getMockRequestForRegionalAccessBoundaryLookup(url);
     }
     this.request =
         new MockLowLevelHttpRequest(url) {
@@ -370,17 +375,20 @@ public class MockMetadataServerTransport extends MockHttpTransport {
             + SecureSessionAgent.S2A_CONFIG_ENDPOINT_POSTFIX);
   }
 
-  private MockLowLevelHttpRequest getMockRequestForTrustBoundaryLookup(String url) {
+  private MockLowLevelHttpRequest getMockRequestForRegionalAccessBoundaryLookup(String url) {
     return new MockLowLevelHttpRequest(url) {
       @Override
       public LowLevelHttpResponse execute() throws IOException {
-        if (trustBoundary == null) {
+        if (lookupError != null) {
+          throw lookupError;
+        }
+        if (regionalAccessBoundary == null) {
           return new MockLowLevelHttpResponse().setStatusCode(404);
         }
         GenericJson responseJson = new GenericJson();
         responseJson.setFactory(OAuth2Utils.JSON_FACTORY);
-        responseJson.put("encodedLocations", trustBoundary.getEncodedLocations());
-        responseJson.put("locations", trustBoundary.getLocations());
+        responseJson.put("encodedLocations", regionalAccessBoundary.getEncodedLocations());
+        responseJson.put("locations", regionalAccessBoundary.getLocations());
         String content = responseJson.toPrettyString();
         return new MockLowLevelHttpResponse().setContentType(Json.MEDIA_TYPE).setContent(content);
       }
@@ -388,7 +396,7 @@ public class MockMetadataServerTransport extends MockHttpTransport {
   }
 
   protected boolean isIamLookupUrl(String url) {
-    // Mocking call to the /allowedLocations endpoint for trust boundary refresh.
+    // Mocking call to the /allowedLocations endpoint for regional access boundary refresh.
     // For testing convenience, this mock transport handles
     // the /allowedLocations endpoint. The actual server for this endpoint
     // will be the IAM Credentials API.
