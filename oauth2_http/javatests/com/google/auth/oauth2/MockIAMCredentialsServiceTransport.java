@@ -80,7 +80,7 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
 
   private String universeDomain;
 
-  private TrustBoundary trustBoundary;
+  private RegionalAccessBoundary regionalAccessBoundary;
 
   private MockLowLevelHttpRequest request;
 
@@ -134,8 +134,8 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
     this.iamAccessTokenEndpoint = accessTokenEndpoint;
   }
 
-  public void setTrustBoundary(TrustBoundary trustBoundary) {
-    this.trustBoundary = trustBoundary;
+  public void setRegionalAccessBoundary(RegionalAccessBoundary regionalAccessBoundary) {
+    this.regionalAccessBoundary = regionalAccessBoundary;
   }
 
   public MockLowLevelHttpRequest getRequest() {
@@ -232,13 +232,13 @@ public class MockIAMCredentialsServiceTransport extends MockHttpTransport {
           new MockLowLevelHttpRequest(url) {
             @Override
             public LowLevelHttpResponse execute() throws IOException {
-              if (trustBoundary == null) {
+              if (regionalAccessBoundary == null) {
                 return new MockLowLevelHttpResponse().setStatusCode(404);
               }
               GenericJson responseJson = new GenericJson();
               responseJson.setFactory(OAuth2Utils.JSON_FACTORY);
-              responseJson.put("encodedLocations", trustBoundary.getEncodedLocations());
-              responseJson.put("locations", trustBoundary.getLocations());
+              responseJson.put("encodedLocations", regionalAccessBoundary.getEncodedLocations());
+              responseJson.put("locations", regionalAccessBoundary.getLocations());
               String content = responseJson.toPrettyString();
               return new MockLowLevelHttpResponse()
                   .setContentType(Json.MEDIA_TYPE)

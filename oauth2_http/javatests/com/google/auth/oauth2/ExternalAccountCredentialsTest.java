@@ -32,6 +32,9 @@
 package com.google.auth.oauth2;
 
 import static com.google.auth.oauth2.MockExternalAccountCredentialsTransport.SERVICE_ACCOUNT_IMPERSONATION_URL;
+import static com.google.auth.oauth2.OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT;
+import static com.google.auth.oauth2.OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKFORCE_POOL;
+import static com.google.auth.oauth2.OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKLOAD_POOL;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -51,12 +54,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -97,7 +95,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
   @After
   public void tearDown() {
-    TrustBoundary.setEnvironmentProviderForTest(null);
+    RegionalAccessBoundary.setEnvironmentProviderForTest(null);
   }
 
   @Test
@@ -1256,7 +1254,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void getTrustBoundaryUrl_workload() throws IOException {
+  public void getRegionalAccessBoundaryUrl_workload() throws IOException {
     String audience =
         "//iam.googleapis.com/projects/12345/locations/global/workloadIdentityPools/my-pool/providers/my-provider";
     ExternalAccountCredentials credentials =
@@ -1268,11 +1266,11 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
     String expectedUrl =
         "https://iamcredentials.googleapis.com/v1/projects/12345/locations/global/workloadIdentityPools/my-pool/allowedLocations";
-    assertEquals(expectedUrl, credentials.getTrustBoundaryUrl());
+    assertEquals(expectedUrl, credentials.getRegionalAccessBoundaryUrl());
   }
 
   @Test
-  public void getTrustBoundaryUrl_workforce() throws IOException {
+  public void getRegionalAccessBoundaryUrl_workforce() throws IOException {
     String audience =
         "//iam.googleapis.com/locations/global/workforcePools/my-pool/providers/my-provider";
     ExternalAccountCredentials credentials =
@@ -1285,11 +1283,11 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
     String expectedUrl =
         "https://iamcredentials.googleapis.com/v1/locations/global/workforcePools/my-pool/allowedLocations";
-    assertEquals(expectedUrl, credentials.getTrustBoundaryUrl());
+    assertEquals(expectedUrl, credentials.getRegionalAccessBoundaryUrl());
   }
 
   @Test
-  public void getTrustBoundaryUrl_invalidAudience_throws() {
+  public void getRegionalAccessBoundaryUrl_invalidAudience_throws() {
     ExternalAccountCredentials credentials =
         TestExternalAccountCredentials.newBuilder()
             .setAudience("invalid-audience")
@@ -1301,7 +1299,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
         assertThrows(
             IllegalStateException.class,
             () -> {
-              credentials.getTrustBoundaryUrl();
+              credentials.getRegionalAccessBoundaryUrl();
             });
 
     assertEquals(
@@ -1311,12 +1309,13 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void refresh_workload_trustBoundarySuccess() throws IOException {
+  public void refresh_workload_regionalAccessBoundarySuccess()
+      throws IOException, InterruptedException {
     String audience =
         "//iam.googleapis.com/projects/12345/locations/global/workloadIdentityPools/my-pool/providers/my-provider";
 
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
     environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
 
     ExternalAccountCredentials credentials =
@@ -1334,20 +1333,28 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
             return "dummy-subject-token";
           }
         };
-    credentials.refresh();
 
-    TrustBoundary trustBoundary = credentials.getTrustBoundary();
-    assertNotNull(trustBoundary);
-    assertEquals(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, trustBoundary.getEncodedLocations());
+    // First call: initiates async refresh.
+    Map<String, List<String>> headers = credentials.getRequestMetadata();
+    assertNull(headers.get(RegionalAccessBoundary.HEADER_KEY));
+
+    waitForRegionalAccessBoundary(credentials);
+
+    // Second call: should have header.
+    headers = credentials.getRequestMetadata();
+    assertEquals(
+        headers.get(RegionalAccessBoundary.HEADER_KEY),
+        Arrays.asList(TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION));
   }
 
   @Test
-  public void refresh_workforce_trustBoundarySuccess() throws IOException {
+  public void refresh_workforce_regionalAccessBoundarySuccess()
+      throws IOException, InterruptedException {
     String audience =
         "//iam.googleapis.com/locations/global/workforcePools/my-pool/providers/my-provider";
 
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
     environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
 
     ExternalAccountCredentials credentials =
@@ -1366,22 +1373,52 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
           }
         };
 
-    credentials.refresh();
+    // First call: initiates async refresh.
+    Map<String, List<String>> headers = credentials.getRequestMetadata();
+    assertNull(headers.get(RegionalAccessBoundary.HEADER_KEY));
 
-    TrustBoundary trustBoundary = credentials.getTrustBoundary();
-    assertNotNull(trustBoundary);
-    assertEquals(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, trustBoundary.getEncodedLocations());
+    waitForRegionalAccessBoundary(credentials);
+
+    // Second call: should have header.
+    headers = credentials.getRequestMetadata();
+    assertEquals(
+        headers.get(RegionalAccessBoundary.HEADER_KEY),
+        Arrays.asList(TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION));
   }
 
   @Test
-  public void refresh_impersonated_workload_trustBoundarySuccess() throws IOException {
+  public void refresh_impersonated_workload_regionalAccessBoundarySuccess()
+      throws IOException, InterruptedException {
+    String projectNumber = "12345";
+    String poolId = "my-pool";
+    String providerId = "my-provider";
     String audience =
-        "//iam.googleapis.com/projects/12345/locations/global/workloadIdentityPools/my-pool/providers/my-provider";
+        String.format(
+            "//iam.googleapis.com/projects/%s/locations/global/workloadIdentityPools/%s/providers/%s",
+            projectNumber, poolId, providerId);
+
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
     environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
 
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
+
+    // 1. Setup distinct RABs for workload and impersonated identities.
+    String workloadRabUrl =
+        String.format(
+            IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKLOAD_POOL, projectNumber, poolId);
+    RegionalAccessBoundary workloadRab =
+        new RegionalAccessBoundary("workload-encoded", Collections.singletonList("workload-loc"));
+    transportFactory.transport.addRegionalAccessBoundary(workloadRabUrl, workloadRab);
+
+    String saEmail =
+        ImpersonatedCredentials.extractTargetPrincipal(SERVICE_ACCOUNT_IMPERSONATION_URL);
+    String impersonatedRabUrl =
+        String.format(IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT, saEmail);
+    RegionalAccessBoundary impersonatedRab =
+        new RegionalAccessBoundary(
+            "impersonated-encoded", Collections.singletonList("impersonated-loc"));
+    transportFactory.transport.addRegionalAccessBoundary(impersonatedRabUrl, impersonatedRab);
 
     // Use a URL-based source that the mock transport can handle, to avoid file IO.
     Map<String, Object> urlCredentialSourceMap = new HashMap<>();
@@ -1401,22 +1438,50 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
             .setEnvironmentProvider(environmentProvider)
             .build();
 
-    credentials.refresh();
+    // First call: initiates async refresh.
+    Map<String, List<String>> requestHeaders = credentials.getRequestMetadata();
+    assertNull(requestHeaders.get(RegionalAccessBoundary.HEADER_KEY));
 
-    TrustBoundary trustBoundary = credentials.getTrustBoundary();
-    assertNotNull(trustBoundary);
-    assertEquals(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, trustBoundary.getEncodedLocations());
+    waitForRegionalAccessBoundary(credentials);
+
+    // Second call: should have the IMPERSONATED header, not the workload one.
+    requestHeaders = credentials.getRequestMetadata();
+    assertEquals(
+        Arrays.asList("impersonated-encoded"),
+        requestHeaders.get(RegionalAccessBoundary.HEADER_KEY));
   }
 
   @Test
-  public void refresh_impersonated_workforce_trustBoundarySuccess() throws IOException {
+  public void refresh_impersonated_workforce_regionalAccessBoundarySuccess()
+      throws IOException, InterruptedException {
+    String poolId = "my-pool";
+    String providerId = "my-provider";
     String audience =
-        "//iam.googleapis.com/locations/global/workforcePools/my-pool/providers/my-provider";
+        String.format(
+            "//iam.googleapis.com/locations/global/workforcePools/%s/providers/%s",
+            poolId, providerId);
+
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
     environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
 
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
+
+    // 1. Setup distinct RABs for workforce and impersonated identities.
+    String workforceRabUrl =
+        String.format(IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKFORCE_POOL, poolId);
+    RegionalAccessBoundary workforceRab =
+        new RegionalAccessBoundary("workforce-encoded", Collections.singletonList("workforce-loc"));
+    transportFactory.transport.addRegionalAccessBoundary(workforceRabUrl, workforceRab);
+
+    String saEmail =
+        ImpersonatedCredentials.extractTargetPrincipal(SERVICE_ACCOUNT_IMPERSONATION_URL);
+    String impersonatedRabUrl =
+        String.format(IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT, saEmail);
+    RegionalAccessBoundary impersonatedRab =
+        new RegionalAccessBoundary(
+            "impersonated-encoded", Collections.singletonList("impersonated-loc"));
+    transportFactory.transport.addRegionalAccessBoundary(impersonatedRabUrl, impersonatedRab);
 
     // Use a URL-based source that the mock transport can handle, to avoid file IO.
     Map<String, Object> urlCredentialSourceMap = new HashMap<>();
@@ -1437,11 +1502,29 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
             .setEnvironmentProvider(environmentProvider)
             .build();
 
-    credentials.refresh();
+    // First call: initiates async refresh.
+    Map<String, List<String>> requestHeaders = credentials.getRequestMetadata();
+    assertNull(requestHeaders.get(RegionalAccessBoundary.HEADER_KEY));
 
-    TrustBoundary trustBoundary = credentials.getTrustBoundary();
-    assertNotNull(trustBoundary);
-    assertEquals(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, trustBoundary.getEncodedLocations());
+    waitForRegionalAccessBoundary(credentials);
+
+    // Second call: should have the IMPERSONATED header, not the workforce one.
+    requestHeaders = credentials.getRequestMetadata();
+    assertEquals(
+        Arrays.asList("impersonated-encoded"),
+        requestHeaders.get(RegionalAccessBoundary.HEADER_KEY));
+  }
+
+  private void waitForRegionalAccessBoundary(GoogleCredentials credentials)
+      throws InterruptedException {
+    long deadline = System.currentTimeMillis() + 5000;
+    while (credentials.getRegionalAccessBoundary() == null
+        && System.currentTimeMillis() < deadline) {
+      Thread.sleep(100);
+    }
+    if (credentials.getRegionalAccessBoundary() == null) {
+      fail("Timed out waiting for regional access boundary refresh");
+    }
   }
 
   private GenericJson buildJsonIdentityPoolCredential() {

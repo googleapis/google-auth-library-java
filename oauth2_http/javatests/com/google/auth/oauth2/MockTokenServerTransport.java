@@ -77,10 +77,25 @@ public class MockTokenServerTransport extends MockHttpTransport {
   private MockLowLevelHttpRequest request;
   private ClientAuthenticationType clientAuthenticationType;
   private PKCEProvider pkceProvider;
-  private TrustBoundary trustBoundary;
+  private RegionalAccessBoundary regionalAccessBoundary;
+  private final Map<String, RegionalAccessBoundary> regionalAccessBoundaries = new HashMap<>();
+  private int regionalAccessBoundaryRequestCount = 0;
+  private int responseDelayMillis = 0;
 
-  public void setTrustBoundary(TrustBoundary trustBoundary) {
-    this.trustBoundary = trustBoundary;
+  public void setRegionalAccessBoundary(RegionalAccessBoundary regionalAccessBoundary) {
+    this.regionalAccessBoundary = regionalAccessBoundary;
+  }
+
+  public void addRegionalAccessBoundary(String url, RegionalAccessBoundary regionalAccessBoundary) {
+    this.regionalAccessBoundaries.put(url, regionalAccessBoundary);
+  }
+
+  public int getRegionalAccessBoundaryRequestCount() {
+    return regionalAccessBoundaryRequestCount;
+  }
+
+  public void setResponseDelayMillis(int responseDelayMillis) {
+    this.responseDelayMillis = responseDelayMillis;
   }
 
   public MockTokenServerTransport() {}
@@ -327,7 +342,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
           };
       return request;
     } else if (urlWithoutQuery.endsWith("/allowedLocations")) {
-      // Mocking call to the /allowedLocations endpoint for trust boundary refresh.
+      // Mocking call to the /allowedLocations endpoint for regional access boundary refresh.
       // For testing convenience, this mock transport handles
       // the /allowedLocations endpoint. The actual server for this endpoint
       // will be the IAM Credentials API.
@@ -335,13 +350,25 @@ public class MockTokenServerTransport extends MockHttpTransport {
           new MockLowLevelHttpRequest(url) {
             @Override
             public LowLevelHttpResponse execute() throws IOException {
-              if (trustBoundary == null) {
+              regionalAccessBoundaryRequestCount++;
+              if (responseDelayMillis > 0) {
+                try {
+                  Thread.sleep(responseDelayMillis);
+                } catch (InterruptedException e) {
+                  Thread.currentThread().interrupt();
+                }
+              }
+              RegionalAccessBoundary rab = regionalAccessBoundaries.get(url);
+              if (rab == null) {
+                rab = regionalAccessBoundary;
+              }
+              if (rab == null) {
                 return new MockLowLevelHttpResponse().setStatusCode(404);
               }
               GenericJson responseJson = new GenericJson();
               responseJson.setFactory(JSON_FACTORY);
-              responseJson.put("encodedLocations", trustBoundary.getEncodedLocations());
-              responseJson.put("locations", trustBoundary.getLocations());
+              responseJson.put("encodedLocations", rab.getEncodedLocations());
+              responseJson.put("locations", rab.getLocations());
               String content = responseJson.toPrettyString();
               return new MockLowLevelHttpResponse()
                   .setContentType(Json.MEDIA_TYPE)

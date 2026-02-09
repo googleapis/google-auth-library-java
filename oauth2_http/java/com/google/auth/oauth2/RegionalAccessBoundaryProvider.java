@@ -1,5 +1,5 @@
 /*
- * Copyright 2025, Google LLC
+ * Copyright 2026, Google LLC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -35,16 +35,16 @@ import com.google.api.core.InternalApi;
 import java.io.IOException;
 
 /**
- * An interface for providing trust boundary information. It is used to provide a common interface
- * for credentials that support trust boundary checks.
+ * An interface for providing regional access boundary information. It is used to provide a common
+ * interface for credentials that support regional access boundary checks.
  */
 @InternalApi
-interface TrustBoundaryProvider {
+interface RegionalAccessBoundaryProvider {
 
   /**
-   * Returns the trust boundary URI.
+   * Returns the regional access boundary URI.
    *
-   * @return The trust boundary URI.
+   * @return The regional access boundary URI.
    */
-  String getTrustBoundaryUrl() throws IOException;
+  String getRegionalAccessBoundaryUrl() throws IOException;
 }

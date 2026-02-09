@@ -31,7 +31,7 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.auth.oauth2.TrustBoundary.TRUST_BOUNDARY_KEY;
+import static com.google.auth.oauth2.RegionalAccessBoundary.HEADER_KEY;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -164,7 +164,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @After
   public void tearDown() {
-    TrustBoundary.setEnvironmentProviderForTest(null);
+    RegionalAccessBoundary.setEnvironmentProviderForTest(null);
   }
 
   @Test
@@ -1810,19 +1810,20 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void refresh_trustBoundarySuccess() throws IOException {
+  public void refresh_regionalAccessBoundarySuccess() throws IOException, InterruptedException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
     environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
 
-    // Mock trust boundary response
-    TrustBoundary trustBoundary =
-        new TrustBoundary(
-            TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, TestUtils.TRUST_BOUNDARY_LOCATIONS);
+    // Mock regional access boundary response
+    RegionalAccessBoundary regionalAccessBoundary =
+        new RegionalAccessBoundary(
+            TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION,
+            TestUtils.REGIONAL_ACCESS_BOUNDARY_LOCATIONS);
 
     MockTokenServerTransport transport = new MockTokenServerTransport();
     transport.addServiceAccount(CLIENT_EMAIL, "test-access-token");
-    transport.setTrustBoundary(trustBoundary);
+    transport.setRegionalAccessBoundary(regionalAccessBoundary);
 
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.newBuilder()
@@ -1834,19 +1835,33 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             .setScopes(SCOPES)
             .build();
 
+    // First call: initiates async refresh.
     Map<String, List<String>> headers = credentials.getRequestMetadata();
+    assertNull(headers.get(HEADER_KEY));
+
+    waitForRegionalAccessBoundary(credentials);
+
+    // Second call: should have header.
+    headers = credentials.getRequestMetadata();
     assertEquals(
-        headers.get(TRUST_BOUNDARY_KEY), Arrays.asList(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION));
+        headers.get(HEADER_KEY),
+        Arrays.asList(TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION));
   }
 
   @Test
-  public void refresh_trustBoundaryFails_throwsIOException() throws IOException {
+  public void refresh_regionalAccessBoundary_selfSignedJWT()
+      throws IOException, InterruptedException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
     environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
 
+    RegionalAccessBoundary regionalAccessBoundary =
+        new RegionalAccessBoundary(
+            TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION,
+            TestUtils.REGIONAL_ACCESS_BOUNDARY_LOCATIONS);
+
     MockTokenServerTransport transport = new MockTokenServerTransport();
-    transport.addServiceAccount(CLIENT_EMAIL, "test-access-token");
+    transport.setRegionalAccessBoundary(regionalAccessBoundary);
 
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.newBuilder()
@@ -1855,14 +1870,30 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
                 OAuth2Utils.privateKeyFromPkcs8(ServiceAccountCredentialsTest.PRIVATE_KEY_PKCS8))
             .setPrivateKeyId("test-key-id")
             .setHttpTransportFactory(() -> transport)
+            .setUseJwtAccessWithScope(true)
             .setScopes(SCOPES)
             .build();
-    IOException exception = assertThrows(IOException.class, () -> credentials.refresh());
-    assertTrue(
-        "The exception message should explain why the refresh failed.",
-        exception
-            .getMessage()
-            .contains("Failed to refresh trust boundary and no cached value is available."));
+
+    // First call: initiates async refresh using the SSJWT as the token.
+    credentials.getRequestMetadata();
+
+    waitForRegionalAccessBoundary(credentials);
+
+    assertEquals(
+        TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION,
+        credentials.getRegionalAccessBoundary().getEncodedLocations());
+  }
+
+  private void waitForRegionalAccessBoundary(GoogleCredentials credentials)
+      throws InterruptedException {
+    long deadline = System.currentTimeMillis() + 5000;
+    while (credentials.getRegionalAccessBoundary() == null
+        && System.currentTimeMillis() < deadline) {
+      Thread.sleep(100);
+    }
+    if (credentials.getRegionalAccessBoundary() == null) {
+      fail("Timed out waiting for regional access boundary refresh");
+    }
   }
 
   private void verifyJwtAccess(Map<String, List<String>> metadata, String expectedScopeClaim)
