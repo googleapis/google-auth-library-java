@@ -51,7 +51,6 @@ import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -209,8 +208,8 @@ public final class RegionalAccessBoundary implements Serializable {
       @Nullable RegionalAccessBoundary cachedRAB)
       throws IOException {
     Preconditions.checkNotNull(accessToken, "The provided access token is null.");
-    if (accessToken.getExpirationTime() != null
-        && accessToken.getExpirationTime().before(new Date())) {
+    if (accessToken.getExpirationTimeMillis() != null
+        && accessToken.getExpirationTimeMillis() < clock.currentTimeMillis()) {
       throw new IllegalArgumentException("The provided access token is expired.");
     }
 

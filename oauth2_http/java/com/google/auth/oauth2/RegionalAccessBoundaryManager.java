@@ -50,8 +50,10 @@ import javax.annotation.Nullable;
 @InternalApi
 final class RegionalAccessBoundaryManager {
 
-  private static final Logger LOGGER = Logger.getLogger(RegionalAccessBoundaryManager.class.getName());
-  private static final LoggerProvider LOGGER_PROVIDER = LoggerProvider.forClazz(RegionalAccessBoundaryManager.class);
+  private static final Logger LOGGER =
+      Logger.getLogger(RegionalAccessBoundaryManager.class.getName());
+  private static final LoggerProvider LOGGER_PROVIDER =
+      LoggerProvider.forClazz(RegionalAccessBoundaryManager.class);
 
   static final long INITIAL_COOLDOWN_MILLIS = 15 * 60 * 1000L; // 15 minutes
   static final long MAX_COOLDOWN_MILLIS = 24 * 60 * 60 * 1000L; // 24 hours
@@ -70,8 +72,9 @@ final class RegionalAccessBoundaryManager {
   private final AtomicReference<CompletableFuture<RegionalAccessBoundary>> refreshFuture =
       new AtomicReference<>();
 
-  private long cooldownStartTime = 0;
-  private long currentCooldownMillis = INITIAL_COOLDOWN_MILLIS;
+  private final AtomicReference<CooldownState> cooldownState =
+      new AtomicReference<>(new CooldownState(0, INITIAL_COOLDOWN_MILLIS));
+
   private static Clock clock = Clock.SYSTEM;
 
   /**
@@ -168,53 +171,64 @@ final class RegionalAccessBoundaryManager {
     triggerAsyncRefresh(transportFactory, url, accessToken);
   }
 
-  private synchronized void handleRefreshFailure(Exception e) {
-    if (cooldownStartTime == 0) {
-      cooldownStartTime = clock.currentTimeMillis();
-      currentCooldownMillis = INITIAL_COOLDOWN_MILLIS;
+  private void handleRefreshFailure(Exception e) {
+    CooldownState current = cooldownState.get();
+    CooldownState next;
+    if (current.startTime == 0) {
+      next = new CooldownState(clock.currentTimeMillis(), INITIAL_COOLDOWN_MILLIS);
+    } else {
+      long nextDuration = Math.min(current.durationMillis * 2, MAX_COOLDOWN_MILLIS);
+      next = new CooldownState(clock.currentTimeMillis(), nextDuration);
+    }
+
+    // Atomically update the cooldown state. compareAndSet returns true only if the state
+    // hasn't been changed by another thread in the meantime. This prevents multiple
+    // concurrent failures from logging redundant messages or incorrectly calculating
+    // the exponential backoff.
+    if (cooldownState.compareAndSet(current, next)) {
       LoggingUtils.log(
           LOGGER_PROVIDER,
           Level.INFO,
           null,
           "RAB lookup failed; entering cooldown for "
-              + (currentCooldownMillis / 60000)
-              + "m. Error: "
-              + e.getMessage());
-    } else {
-      // Extend cooldown
-      currentCooldownMillis = Math.min(currentCooldownMillis * 2, MAX_COOLDOWN_MILLIS);
-      cooldownStartTime = clock.currentTimeMillis();
-      LoggingUtils.log(
-          LOGGER_PROVIDER,
-          Level.INFO,
-          null,
-          "RAB lookup failed again; extending cooldown to "
-              + (currentCooldownMillis / 60000)
+              + (next.durationMillis / 60000)
               + "m. Error: "
               + e.getMessage());
     }
   }
 
-  private synchronized void resetCooldown() {
-    cooldownStartTime = 0;
-    currentCooldownMillis = INITIAL_COOLDOWN_MILLIS;
+  private void resetCooldown() {
+    cooldownState.set(new CooldownState(0, INITIAL_COOLDOWN_MILLIS));
   }
 
-  synchronized boolean isCooldownActive() {
-    if (cooldownStartTime == 0) {
+  boolean isCooldownActive() {
+    CooldownState state = cooldownState.get();
+    if (state.startTime == 0) {
       return false;
     }
-    return clock.currentTimeMillis() < cooldownStartTime + currentCooldownMillis;
+    return clock.currentTimeMillis() < state.startTime + state.durationMillis;
   }
 
   @VisibleForTesting
-  synchronized long getCurrentCooldownMillis() {
-
-    return currentCooldownMillis;
+  long getCurrentCooldownMillis() {
+    return cooldownState.get().durationMillis;
   }
 
   @VisibleForTesting
   static void setClockForTest(Clock testClock) {
     clock = testClock;
+  }
+
+  private static class CooldownState {
+    /** The time (in milliseconds) when the current cooldown period started. */
+    final long startTime;
+
+    /** The duration (in milliseconds) of the current cooldown period. */
+    final long durationMillis;
+
+    CooldownState(long startTime, long durationMillis) {
+      this.startTime = startTime;
+      this.durationMillis = durationMillis;
+    }
   }
 }

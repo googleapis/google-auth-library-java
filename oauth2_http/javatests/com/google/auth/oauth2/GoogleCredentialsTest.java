@@ -1113,7 +1113,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     credentials.getRequestMetadata();
     waitForCooldownActive(credentials);
     assertTrue(credentials.regionalAccessBoundaryManager.isCooldownActive());
-    assertEquals(15 * 60 * 1000L, credentials.regionalAccessBoundaryManager.getCurrentCooldownMillis());
+    assertEquals(
+        15 * 60 * 1000L, credentials.regionalAccessBoundaryManager.getCurrentCooldownMillis());
 
     // Second attempt (during cooldown): does not trigger lookup.
     credentials.getRequestMetadata();
@@ -1127,7 +1128,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     credentials.getRequestMetadata();
     waitForCooldownActive(credentials);
     assertTrue(credentials.regionalAccessBoundaryManager.isCooldownActive());
-    assertEquals(30 * 60 * 1000L, credentials.regionalAccessBoundaryManager.getCurrentCooldownMillis());
+    assertEquals(
+        30 * 60 * 1000L, credentials.regionalAccessBoundaryManager.getCurrentCooldownMillis());
 
     // Fast-forward past 30m cooldown.
     testClock.advanceTime(31 * 60 * 1000L);
@@ -1142,7 +1144,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     waitForRegionalAccessBoundary(credentials);
     assertFalse(credentials.regionalAccessBoundaryManager.isCooldownActive());
     assertEquals("0x123", credentials.getRegionalAccessBoundary().getEncodedLocations());
-    assertEquals(15 * 60 * 1000L, credentials.regionalAccessBoundaryManager.getCurrentCooldownMillis());
+    assertEquals(
+        15 * 60 * 1000L, credentials.regionalAccessBoundaryManager.getCurrentCooldownMillis());
   }
 
   @Test
@@ -1178,8 +1181,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     // Reactive refresh should clear cache and start a background lookup.
     // We pass the token explicitly to avoid triggering a refresh inside getRequestMetadata.
-    credentials.reactiveRefreshRegionalAccessBoundary(
-            new AccessToken(ACCESS_TOKEN, null));
+    credentials.reactiveRefreshRegionalAccessBoundary(new AccessToken(ACCESS_TOKEN, null));
 
     // Current cache should be null (cleared).
     assertNull(credentials.getRegionalAccessBoundary());
@@ -1299,7 +1301,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
   private void waitForCooldownActive(GoogleCredentials credentials) throws InterruptedException {
     long deadline = System.currentTimeMillis() + 5000;
-    while (!credentials.regionalAccessBoundaryManager.isCooldownActive() && System.currentTimeMillis() < deadline) {
+    while (!credentials.regionalAccessBoundaryManager.isCooldownActive()
+        && System.currentTimeMillis() < deadline) {
       Thread.sleep(100);
     }
     if (!credentials.regionalAccessBoundaryManager.isCooldownActive()) {

@@ -192,12 +192,7 @@ public class HttpCredentialsAdapter
       HttpRequest request, HttpResponse response) {
     GoogleCredentials googleCredentials = (GoogleCredentials) credentials;
     try {
-      URI uri = null;
-      if (request.getUrl() != null) {
-        uri = request.getUrl().toURI();
-      }
-      googleCredentials.reactiveRefreshRegionalAccessBoundary(
-              googleCredentials.getAccessToken());
+      googleCredentials.reactiveRefreshRegionalAccessBoundary(googleCredentials.getAccessToken());
       // Re-initialize headers (this will remove the stale header since cache is cleared)
       initialize(request);
       return true;

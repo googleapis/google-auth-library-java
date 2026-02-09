@@ -365,8 +365,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    * @param token The access token to use for the refresh.
    * @throws IOException If getting the universe domain fails.
    */
-  public final void reactiveRefreshRegionalAccessBoundary(AccessToken token)
-      throws IOException {
+  public final void reactiveRefreshRegionalAccessBoundary(AccessToken token) throws IOException {
     if (!RegionalAccessBoundary.isEnabled()) {
       return;
     }
@@ -405,8 +404,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
 
     // We need a valid access token for the refresh.
     if (token == null
-        || (token.getExpirationTime() != null
-            && token.getExpirationTime().before(new java.util.Date()))) {
+        || (token.getExpirationTimeMillis() != null
+            && token.getExpirationTimeMillis() < clock.currentTimeMillis())) {
       return;
     }
 
