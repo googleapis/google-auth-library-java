@@ -156,7 +156,7 @@ branchProtectionRules:
 permissionRules:
   - team: Googlers
     permission: pull
-  - team: yoshi-java
+  - team: cloud-sdk-java-team
     permission: push
   - team: java-samples-reviewers
     permission: push
@@ -166,5 +166,5 @@ permissionRules:
     permission: admin
   - team: googleapis-auth
     permission: admin
-  - team: aion-sdk
+  - team: aion-team
     permission: push
