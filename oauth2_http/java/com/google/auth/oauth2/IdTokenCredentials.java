@@ -161,6 +161,7 @@ public class IdTokenCredentials extends OAuth2Credentials {
     return new Builder();
   }
 
+  /** Builder of IdTokenCredentials. For usage and examples, see {@link IdTokenCredentials} */
   public static class Builder extends OAuth2Credentials.Builder {
 
     private IdTokenProvider idTokenProvider;
