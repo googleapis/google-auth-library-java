@@ -164,7 +164,7 @@ permissionRules:
     permission: admin
   - team: yoshi-admins
     permission: admin
-  - team: googleapis-auth
+  - team: cloud-sdk-auth-team
     permission: admin
   - team: aion-team
     permission: push
