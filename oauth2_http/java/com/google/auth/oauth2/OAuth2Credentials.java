@@ -560,6 +560,8 @@ public class OAuth2Credentials extends Credentials {
 
   /** Stores an immutable snapshot of the accesstoken owned by {@link OAuth2Credentials} */
   static class OAuthValue implements Serializable {
+    private static final long serialVersionUID = -7269184394646019967L;
+  
     private final AccessToken temporaryAccess;
     private final Map<String, List<String>> requestMetadata;
 
