@@ -1240,14 +1240,14 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
 
     // First call: initiates async refresh.
     Map<String, List<String>> headers = credentials.getRequestMetadata();
-    assertNull(headers.get(RegionalAccessBoundary.HEADER_KEY));
+    assertNull(headers.get(RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY));
 
     waitForRegionalAccessBoundary(credentials);
 
     // Second call: should have header.
     headers = credentials.getRequestMetadata();
     assertEquals(
-        headers.get(RegionalAccessBoundary.HEADER_KEY),
+        headers.get(RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY),
         Arrays.asList(TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION));
   }
 

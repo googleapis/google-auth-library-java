@@ -39,8 +39,6 @@ import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.http.HttpUnsuccessfulResponseHandler;
 import com.google.api.client.util.Preconditions;
 import com.google.auth.Credentials;
-import com.google.auth.oauth2.GoogleCredentials;
-import com.google.auth.oauth2.RegionalAccessBoundary;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;

@@ -63,6 +63,7 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
   public void tearDown() {
     RegionalAccessBoundary.setEnvironmentProviderForTest(null);
   }
+
   // The default timeout for waiting for the executable to finish (30 seconds).
   private static final int DEFAULT_EXECUTABLE_TIMEOUT_MS = 30 * 1000;
   // The minimum timeout for waiting for the executable to finish (5 seconds).
@@ -635,14 +636,14 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
 
     // First call: initiates async refresh.
     Map<String, List<String>> headers = credentials.getRequestMetadata();
-    assertNull(headers.get(RegionalAccessBoundary.HEADER_KEY));
+    assertNull(headers.get(RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY));
 
     waitForRegionalAccessBoundary(credentials);
 
     // Second call: should have header.
     headers = credentials.getRequestMetadata();
     assertEquals(
-        headers.get(RegionalAccessBoundary.HEADER_KEY),
+        headers.get(RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY),
         Arrays.asList(TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION));
     RegionalAccessBoundary.setEnvironmentProviderForTest(null);
   }

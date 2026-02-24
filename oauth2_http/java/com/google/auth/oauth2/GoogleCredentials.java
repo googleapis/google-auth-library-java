@@ -378,13 +378,13 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       return;
     }
 
-    String rabUrl = ((RegionalAccessBoundaryProvider) this).getRegionalAccessBoundaryUrl();
     HttpTransportFactory transportFactory = getTransportFactory();
     if (transportFactory == null) {
       return;
     }
 
-    regionalAccessBoundaryManager.triggerAsyncRefresh(transportFactory, rabUrl, token);
+    regionalAccessBoundaryManager.triggerAsyncRefresh(
+        transportFactory, (RegionalAccessBoundaryProvider) this, token);
   }
 
   /**
@@ -405,7 +405,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     if (rab != null) {
       metadata = new HashMap<>(metadata);
       metadata.put(
-          RegionalAccessBoundary.HEADER_KEY, Collections.singletonList(rab.getEncodedLocations()));
+          RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY,
+          Collections.singletonList(rab.getEncodedLocations()));
     }
     refreshRegionalAccessBoundaryIfExpired(uri, getAccessToken());
     return metadata;
@@ -434,7 +435,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
             if (rab != null) {
               metadata = new HashMap<>(metadata);
               metadata.put(
-                  RegionalAccessBoundary.HEADER_KEY,
+                  RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY,
                   Collections.singletonList(rab.getEncodedLocations()));
             }
             try {
@@ -510,7 +511,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     RegionalAccessBoundary rab = regionalAccessBoundaryManager.getCachedRAB();
     if (rab != null) {
       headers.put(
-          RegionalAccessBoundary.HEADER_KEY, Collections.singletonList(rab.getEncodedLocations()));
+          RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY,
+          Collections.singletonList(rab.getEncodedLocations()));
     }
 
     String quotaProjectId = this.getQuotaProjectId();

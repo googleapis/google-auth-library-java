@@ -31,7 +31,7 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.auth.oauth2.RegionalAccessBoundary.HEADER_KEY;
+import static com.google.auth.oauth2.RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -994,14 +994,14 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     // First call: returns no header, initiates async refresh.
     Map<String, List<String>> headers = credentials.getRequestMetadata();
-    assertNull(headers.get(HEADER_KEY));
+    assertNull(headers.get(X_ALLOWED_LOCATIONS_HEADER_KEY));
 
     waitForRegionalAccessBoundary(credentials);
 
     // Second call: should have header.
     headers = credentials.getRequestMetadata();
     assertEquals(
-        headers.get(HEADER_KEY),
+        headers.get(X_ALLOWED_LOCATIONS_HEADER_KEY),
         Arrays.asList(TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION));
   }
 
@@ -1055,7 +1055,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     Map<String, List<String>> headers = credentials.getRequestMetadata();
     assertEquals(
         Arrays.asList(TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION),
-        headers.get(HEADER_KEY));
+        headers.get(X_ALLOWED_LOCATIONS_HEADER_KEY));
   }
 
   @Test
@@ -1081,7 +1081,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     // Should not throw, but just fail-open (no header).
     Map<String, List<String>> headers = credentials.getRequestMetadata();
-    assertNull(headers.get(HEADER_KEY));
+    assertNull(headers.get(X_ALLOWED_LOCATIONS_HEADER_KEY));
   }
 
   @Test
@@ -1155,7 +1155,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     // Should not throw, but just fail-open (no header).
     Map<String, List<String>> headers = credentials.getRequestMetadata();
-    assertNull(headers.get(HEADER_KEY));
+    assertNull(headers.get(X_ALLOWED_LOCATIONS_HEADER_KEY));
   }
 
   @Test

@@ -63,11 +63,12 @@ import javax.annotation.Nullable;
  */
 public final class RegionalAccessBoundary implements Serializable {
 
-  public static final String HEADER_KEY = "x-allowed-locations";
+  public static final String X_ALLOWED_LOCATIONS_HEADER_KEY = "x-allowed-locations";
   private static final long serialVersionUID = -2428522338274020302L;
 
   static final String ENABLE_EXPERIMENT_ENV_VAR = "GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT";
   static final long TTL_MILLIS = 6 * 60 * 60 * 1000L; // 6 hours
+  static final long REFRESH_THRESHOLD_MILLIS = 1 * 60 * 60 * 1000L; // 1 hour
   private static int maxRetryElapsedTimeMillis = 60000; // 1 minute
 
   private final String encodedLocations;
@@ -125,6 +126,16 @@ public final class RegionalAccessBoundary implements Serializable {
    */
   public boolean isExpired() {
     return clock.currentTimeMillis() > refreshTime + TTL_MILLIS;
+  }
+
+  /**
+   * Checks if the regional access boundary data should be refreshed. This is a "soft-expiry" check
+   * that allows for background refreshes before the data actually expires.
+   *
+   * @return True if the data is within the refresh threshold, false otherwise.
+   */
+  public boolean shouldRefresh() {
+    return clock.currentTimeMillis() > refreshTime + (TTL_MILLIS - REFRESH_THRESHOLD_MILLIS);
   }
 
   /** Represents the JSON response from the regional access boundary endpoint. */
@@ -219,7 +230,7 @@ public final class RegionalAccessBoundary implements Serializable {
 
     // Add the cached regional access boundary header, if available.
     if (cachedRAB != null) {
-      request.getHeaders().set(HEADER_KEY, cachedRAB.getEncodedLocations());
+      request.getHeaders().set(X_ALLOWED_LOCATIONS_HEADER_KEY, cachedRAB.getEncodedLocations());
     }
 
     // Add retry logic

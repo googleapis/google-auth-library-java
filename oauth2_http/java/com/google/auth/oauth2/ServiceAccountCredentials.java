@@ -1155,6 +1155,9 @@ public class ServiceAccountCredentials extends GoogleCredentials
         String tokenValue = authHeader.substring((AuthHttpConstants.BEARER + " ").length());
         // Use a null expiration as JWTs are short-lived anyway.
         AccessToken wrappedToken = new AccessToken(tokenValue, null);
+        // Self-signed JWT do not go through the typical OAuth2Credentials.getRequestMetadata()
+        // flow.
+        // We explicitly trigger it here to ensure the RAB cache is populated/maintained.
         refreshRegionalAccessBoundaryIfExpired(uri, wrappedToken);
       }
     }

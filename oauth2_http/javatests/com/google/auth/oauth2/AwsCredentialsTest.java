@@ -1430,14 +1430,14 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
     // First call: initiates async refresh.
     Map<String, List<String>> headers = awsCredential.getRequestMetadata();
-    assertNull(headers.get(RegionalAccessBoundary.HEADER_KEY));
+    assertNull(headers.get(RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY));
 
     waitForRegionalAccessBoundary(awsCredential);
 
     // Second call: should have header.
     headers = awsCredential.getRequestMetadata();
     assertEquals(
-        headers.get(RegionalAccessBoundary.HEADER_KEY),
+        headers.get(RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY),
         Arrays.asList(TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION));
     RegionalAccessBoundary.setEnvironmentProviderForTest(null);
   }

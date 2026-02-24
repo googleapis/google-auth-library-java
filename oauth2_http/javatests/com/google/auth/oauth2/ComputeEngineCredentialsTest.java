@@ -33,7 +33,7 @@ package com.google.auth.oauth2;
 
 import static com.google.auth.oauth2.ComputeEngineCredentials.METADATA_RESPONSE_EMPTY_CONTENT_ERROR_MESSAGE;
 import static com.google.auth.oauth2.ImpersonatedCredentialsTest.SA_CLIENT_EMAIL;
-import static com.google.auth.oauth2.RegionalAccessBoundary.HEADER_KEY;
+import static com.google.auth.oauth2.RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -1171,14 +1171,14 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
     // First call: initiates async refresh.
     Map<String, List<String>> headers = credentials.getRequestMetadata();
-    assertNull(headers.get(HEADER_KEY));
+    assertNull(headers.get(X_ALLOWED_LOCATIONS_HEADER_KEY));
 
     waitForRegionalAccessBoundary(credentials);
 
     // Second call: should have header.
     headers = credentials.getRequestMetadata();
     assertEquals(
-        headers.get(HEADER_KEY),
+        headers.get(X_ALLOWED_LOCATIONS_HEADER_KEY),
         Arrays.asList(TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION));
   }
 

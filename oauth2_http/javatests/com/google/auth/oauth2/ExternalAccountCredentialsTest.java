@@ -1265,7 +1265,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
             .build();
 
     String expectedUrl =
-        "https://staging-iamcredentials.sandbox.googleapis.com/v1/projects/12345/locations/global/workloadIdentityPools/my-pool/allowedLocations";
+        "https://iamcredentials.googleapis.com/v1/projects/12345/locations/global/workloadIdentityPools/my-pool/allowedLocations";
     assertEquals(expectedUrl, credentials.getRegionalAccessBoundaryUrl());
   }
 
@@ -1336,14 +1336,14 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
     // First call: initiates async refresh.
     Map<String, List<String>> headers = credentials.getRequestMetadata();
-    assertNull(headers.get(RegionalAccessBoundary.HEADER_KEY));
+    assertNull(headers.get(RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY));
 
     waitForRegionalAccessBoundary(credentials);
 
     // Second call: should have header.
     headers = credentials.getRequestMetadata();
     assertEquals(
-        headers.get(RegionalAccessBoundary.HEADER_KEY),
+        headers.get(RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY),
         Arrays.asList(TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION));
   }
 
@@ -1375,14 +1375,14 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
     // First call: initiates async refresh.
     Map<String, List<String>> headers = credentials.getRequestMetadata();
-    assertNull(headers.get(RegionalAccessBoundary.HEADER_KEY));
+    assertNull(headers.get(RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY));
 
     waitForRegionalAccessBoundary(credentials);
 
     // Second call: should have header.
     headers = credentials.getRequestMetadata();
     assertEquals(
-        headers.get(RegionalAccessBoundary.HEADER_KEY),
+        headers.get(RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY),
         Arrays.asList(TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION));
   }
 
@@ -1440,7 +1440,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
     // First call: initiates async refresh.
     Map<String, List<String>> requestHeaders = credentials.getRequestMetadata();
-    assertNull(requestHeaders.get(RegionalAccessBoundary.HEADER_KEY));
+    assertNull(requestHeaders.get(RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY));
 
     waitForRegionalAccessBoundary(credentials);
 
@@ -1448,7 +1448,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     requestHeaders = credentials.getRequestMetadata();
     assertEquals(
         Arrays.asList("impersonated-encoded"),
-        requestHeaders.get(RegionalAccessBoundary.HEADER_KEY));
+        requestHeaders.get(RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY));
   }
 
   @Test
@@ -1504,7 +1504,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
     // First call: initiates async refresh.
     Map<String, List<String>> requestHeaders = credentials.getRequestMetadata();
-    assertNull(requestHeaders.get(RegionalAccessBoundary.HEADER_KEY));
+    assertNull(requestHeaders.get(RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY));
 
     waitForRegionalAccessBoundary(credentials);
 
@@ -1512,7 +1512,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     requestHeaders = credentials.getRequestMetadata();
     assertEquals(
         Arrays.asList("impersonated-encoded"),
-        requestHeaders.get(RegionalAccessBoundary.HEADER_KEY));
+        requestHeaders.get(RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY));
   }
 
   private void waitForRegionalAccessBoundary(GoogleCredentials credentials)

@@ -31,7 +31,7 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.auth.oauth2.RegionalAccessBoundary.HEADER_KEY;
+import static com.google.auth.oauth2.RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -1343,14 +1343,14 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
     // First call: initiates async refresh.
     Map<String, List<String>> headers = targetCredentials.getRequestMetadata();
-    assertNull(headers.get(HEADER_KEY));
+    assertNull(headers.get(X_ALLOWED_LOCATIONS_HEADER_KEY));
 
     waitForRegionalAccessBoundary(targetCredentials);
 
     // Second call: should have header.
     headers = targetCredentials.getRequestMetadata();
     assertEquals(
-        headers.get(HEADER_KEY),
+        headers.get(X_ALLOWED_LOCATIONS_HEADER_KEY),
         Collections.singletonList(TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION));
   }
 

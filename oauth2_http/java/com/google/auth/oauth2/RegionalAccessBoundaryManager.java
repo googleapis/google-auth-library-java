@@ -100,19 +100,19 @@ final class RegionalAccessBoundaryManager {
    * progress or a cooldown is active, it returns immediately.
    *
    * @param transportFactory The HTTP transport factory to use for the lookup.
-   * @param url The lookup endpoint URL.
+   * @param provider The provider used to retrieve the lookup endpoint URL.
    * @param accessToken The access token for authentication.
    */
   void triggerAsyncRefresh(
       final HttpTransportFactory transportFactory,
-      final String url,
+      final RegionalAccessBoundaryProvider provider,
       final AccessToken accessToken) {
     if (isCooldownActive()) {
       return;
     }
 
     RegionalAccessBoundary currentRab = cachedRAB.get();
-    if (currentRab != null && !currentRab.isExpired()) {
+    if (currentRab != null && !currentRab.shouldRefresh()) {
       return;
     }
 
@@ -124,6 +124,7 @@ final class RegionalAccessBoundaryManager {
       CompletableFuture.runAsync(
           () -> {
             try {
+              String url = provider.getRegionalAccessBoundaryUrl();
               RegionalAccessBoundary newRAB =
                   RegionalAccessBoundary.refresh(
                       transportFactory, url, accessToken, cachedRAB.get());
@@ -161,7 +162,7 @@ final class RegionalAccessBoundaryManager {
           LOGGER_PROVIDER,
           Level.INFO,
           null,
-          "RAB lookup failed; entering cooldown for "
+          "Regional Access Boundary lookup failed; entering cooldown for "
               + (next.durationMillis / 60000)
               + "m. Error: "
               + e.getMessage());
@@ -191,7 +192,7 @@ final class RegionalAccessBoundaryManager {
   }
 
   private static class CooldownState {
-    /** The time (in milliseconds) when the current cooldown period started. */
+    /** The time (in milliseconds from epoch) when the current cooldown period started. */
     final long startTime;
 
     /** The duration (in milliseconds) of the current cooldown period. */
