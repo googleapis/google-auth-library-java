@@ -344,7 +344,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    *
    * @return The cached regional access boundary, or null.
    */
-  public final RegionalAccessBoundary getRegionalAccessBoundary() {
+  final RegionalAccessBoundary getRegionalAccessBoundary() {
     return regionalAccessBoundaryManager.getCachedRAB();
   }
 
