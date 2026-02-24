@@ -349,37 +349,6 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * Manually sets the regional access boundary for this credential. This seeds the internal cache
-   * and bypasses the initial lookup. The manually provided data will follow the standard 6-hour TTL
-   * expiration logic.
-   *
-   * @param rab The regional access boundary to set.
-   */
-  public final void setRegionalAccessBoundary(RegionalAccessBoundary rab) {
-    regionalAccessBoundaryManager.setManualOverride(rab);
-  }
-
-  /**
-   * Invalidates the regional access boundary cache and triggers an immediate asynchronous refresh.
-   *
-   * @param token The access token to use for the refresh.
-   * @throws IOException If getting the universe domain fails.
-   */
-  public final void reactiveRefreshRegionalAccessBoundary(AccessToken token) throws IOException {
-    if (!RegionalAccessBoundary.isEnabled()) {
-      return;
-    }
-
-    String rabUrl = ((RegionalAccessBoundaryProvider) this).getRegionalAccessBoundaryUrl();
-    HttpTransportFactory transportFactory = getTransportFactory();
-    if (transportFactory == null) {
-      return;
-    }
-
-    regionalAccessBoundaryManager.reactiveRefresh(transportFactory, rabUrl, token);
-  }
-
-  /**
    * Refreshes the Regional Access Boundary if it is expired or not yet fetched.
    *
    * @param uri The URI of the outbound request.
@@ -599,9 +568,6 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     }
 
     this.source = builder.source;
-    if (builder.regionalAccessBoundary != null) {
-      setRegionalAccessBoundary(builder.regionalAccessBoundary);
-    }
   }
 
   /**
@@ -813,7 +779,6 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     @Nullable protected String quotaProjectId;
     @Nullable protected String universeDomain;
     @Nullable String source;
-    @Nullable protected RegionalAccessBoundary regionalAccessBoundary;
 
     protected Builder() {}
 
@@ -823,14 +788,12 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       if (credentials.isExplicitUniverseDomain) {
         this.universeDomain = credentials.universeDomain;
       }
-      this.regionalAccessBoundary = credentials.getRegionalAccessBoundary();
     }
 
     protected Builder(GoogleCredentials.Builder builder) {
       setAccessToken(builder.getAccessToken());
       this.quotaProjectId = builder.quotaProjectId;
       this.universeDomain = builder.universeDomain;
-      this.regionalAccessBoundary = builder.regionalAccessBoundary;
     }
 
     @Override
@@ -846,19 +809,6 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
 
     public Builder setUniverseDomain(String universeDomain) {
       this.universeDomain = universeDomain;
-      return this;
-    }
-
-    /**
-     * Manually sets the regional access boundary for this credential. This seeds the internal cache
-     * and bypasses the initial lookup.
-     *
-     * @param regionalAccessBoundary The regional access boundary to set.
-     * @return this {@code Builder} object.
-     */
-    @CanIgnoreReturnValue
-    public Builder setRegionalAccessBoundary(RegionalAccessBoundary regionalAccessBoundary) {
-      this.regionalAccessBoundary = regionalAccessBoundary;
       return this;
     }
 

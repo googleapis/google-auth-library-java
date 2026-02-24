@@ -1265,7 +1265,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
             .build();
 
     String expectedUrl =
-        "https://iamcredentials.googleapis.com/v1/projects/12345/locations/global/workloadIdentityPools/my-pool/allowedLocations";
+        "https://staging-iamcredentials.sandbox.googleapis.com/v1/projects/12345/locations/global/workloadIdentityPools/my-pool/allowedLocations";
     assertEquals(expectedUrl, credentials.getRegionalAccessBoundaryUrl());
   }
 

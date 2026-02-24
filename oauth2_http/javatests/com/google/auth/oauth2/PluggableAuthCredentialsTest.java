@@ -50,10 +50,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
+import org.junit.After;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** Tests for {@link PluggableAuthCredentials}. */
+@RunWith(JUnit4.class)
 public class PluggableAuthCredentialsTest extends BaseSerializationTest {
+
+  @After
+  public void tearDown() {
+    RegionalAccessBoundary.setEnvironmentProviderForTest(null);
+  }
   // The default timeout for waiting for the executable to finish (30 seconds).
   private static final int DEFAULT_EXECUTABLE_TIMEOUT_MS = 30 * 1000;
   // The minimum timeout for waiting for the executable to finish (5 seconds).

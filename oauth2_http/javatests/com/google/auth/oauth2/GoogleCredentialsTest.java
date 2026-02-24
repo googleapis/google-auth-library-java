@@ -1149,50 +1149,6 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void regionalAccessBoundary_manualOverride() throws IOException {
-    RegionalAccessBoundary manualRAB =
-        new RegionalAccessBoundary("0x999", Collections.singletonList("us-east1"));
-    GoogleCredentials credentials =
-        GoogleCredentials.newBuilder()
-            .setAccessToken(new AccessToken(ACCESS_TOKEN, null))
-            .setRegionalAccessBoundary(manualRAB)
-            .build();
-
-    Map<String, List<String>> headers = credentials.getRequestMetadata();
-    assertEquals(Collections.singletonList("0x999"), headers.get(HEADER_KEY));
-  }
-
-  @Test
-  public void regionalAccessBoundary_staleRabErrorInitiatesBackgroundLookup()
-      throws IOException, InterruptedException {
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "true");
-
-    MockTokenServerTransport transport = new MockTokenServerTransport();
-    // Ensure success response.
-    transport.setRegionalAccessBoundary(
-        new RegionalAccessBoundary("new-rab", Collections.singletonList("us-central1")));
-
-    GoogleCredentials credentials = createTestCredentials(transport);
-    // Seed with an "old" RAB.
-    credentials.setRegionalAccessBoundary(
-        new RegionalAccessBoundary("old-rab", Collections.singletonList("us-central1")));
-
-    // Reactive refresh should clear cache and start a background lookup.
-    // We pass the token explicitly to avoid triggering a refresh inside getRequestMetadata.
-    credentials.reactiveRefreshRegionalAccessBoundary(new AccessToken(ACCESS_TOKEN, null));
-
-    // Current cache should be null (cleared).
-    assertNull(credentials.getRegionalAccessBoundary());
-
-    waitForRegionalAccessBoundary(credentials);
-    assertEquals("new-rab", credentials.getRegionalAccessBoundary().getEncodedLocations());
-    // Verify one lookup was made.
-    assertEquals(1, transport.getRegionalAccessBoundaryRequestCount());
-  }
-
-  @Test
   public void regionalAccessBoundary_shouldFailOpenWhenRefreshCannotBeStarted() throws IOException {
     // Use a simple AccessToken-based credential that won't try to refresh.
     GoogleCredentials credentials = GoogleCredentials.create(new AccessToken("some-token", null));
@@ -1249,30 +1205,6 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     // Should not have triggered any lookup.
     assertEquals(0, transport.getRegionalAccessBoundaryRequestCount());
-  }
-
-  @Test
-  public void regionalAccessBoundary_staleHeaderPrevention()
-      throws IOException, InterruptedException {
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "true");
-
-    MockTokenServerTransport transport = new MockTokenServerTransport();
-    // Start with an expired RAB (using 0 as expiration timestamp).
-    RegionalAccessBoundary expiredRAB =
-        new RegionalAccessBoundary("expired-rab", Collections.singletonList("us-central1"), 0L);
-    transport.setRegionalAccessBoundary(expiredRAB);
-
-    GoogleCredentials credentials = createTestCredentials(transport);
-    credentials.setRegionalAccessBoundary(expiredRAB);
-
-    // Verify it is considered expired.
-    assertNull(credentials.getRegionalAccessBoundary());
-
-    // Call should NOT have the stale header.
-    Map<String, List<String>> headers = credentials.getRequestMetadata();
-    assertNull(headers.get(HEADER_KEY));
   }
 
   private GoogleCredentials createTestCredentials(MockTokenServerTransport transport)

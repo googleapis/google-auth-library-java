@@ -93,15 +93,6 @@ final class RegionalAccessBoundaryManager {
   }
 
   /**
-   * Sets a manual override for the Regional Access Boundary. This seeds the cache.
-   *
-   * @param rab The Regional Access Boundary to cache.
-   */
-  void setManualOverride(RegionalAccessBoundary rab) {
-    cachedRAB.set(rab);
-  }
-
-  /**
    * Triggers an asynchronous refresh of the RegionalAccessBoundary if it is not already being
    * refreshed and if the cooldown period is not active.
    *
@@ -149,26 +140,6 @@ final class RegionalAccessBoundaryManager {
             }
           });
     }
-  }
-
-  /** Invalidates the current cache. Useful for reactive refresh on stale error. */
-  void invalidateCache() {
-    cachedRAB.set(null);
-  }
-
-  /**
-   * Invalidates the cache and triggers an immediate asynchronous refresh.
-   *
-   * @param transportFactory The HTTP transport factory to use for the lookup.
-   * @param url The lookup endpoint URL.
-   * @param accessToken The access token for authentication.
-   */
-  void reactiveRefresh(
-      final HttpTransportFactory transportFactory,
-      final String url,
-      final AccessToken accessToken) {
-    invalidateCache();
-    triggerAsyncRefresh(transportFactory, url, accessToken);
   }
 
   private void handleRefreshFailure(Exception e) {

@@ -63,8 +63,6 @@ public class HttpCredentialsAdapter
   private static final Pattern INVALID_TOKEN_ERROR =
       Pattern.compile("\\s*error\\s*=\\s*\"?invalid_token\"?");
 
-  private static final String STALE_RAB_ERROR_MESSAGE = "stale regional access boundary";
-
   private final Credentials credentials;
 
   /**
@@ -123,12 +121,6 @@ public class HttpCredentialsAdapter
    */
   @Override
   public boolean handleResponse(HttpRequest request, HttpResponse response, boolean supportsRetry) {
-    if (shouldHandleStaleRegionalAccessBoundaryError(request, response)) {
-      if (handleStaleRegionalAccessBoundaryError(request, response)) {
-        return true;
-      }
-    }
-
     boolean refreshToken = false;
     boolean bearer = false;
 
@@ -159,45 +151,6 @@ public class HttpCredentialsAdapter
       } catch (IOException exception) {
         LOGGER.log(Level.SEVERE, "unable to refresh token", exception);
       }
-    }
-    return false;
-  }
-
-  private boolean shouldHandleStaleRegionalAccessBoundaryError(
-      HttpRequest request, HttpResponse response) {
-    if (response.getStatusCode() != 406) {
-      return false;
-    }
-    if (!(credentials instanceof GoogleCredentials)) {
-      return false;
-    }
-
-    // Only check for stale RAB error if we actually sent the header.
-    if (request.getHeaders().get(RegionalAccessBoundary.HEADER_KEY) == null) {
-      return false;
-    }
-
-    try {
-      // Check for the stale regional access boundary error message in the response body.
-      // Note: This consumes the response stream.
-      String content = response.parseAsString();
-      return content != null && content.toLowerCase().contains(STALE_RAB_ERROR_MESSAGE);
-    } catch (Exception e) {
-      LOGGER.log(Level.FINE, "Error while checking for stale regional access boundary", e);
-    }
-    return false;
-  }
-
-  private boolean handleStaleRegionalAccessBoundaryError(
-      HttpRequest request, HttpResponse response) {
-    GoogleCredentials googleCredentials = (GoogleCredentials) credentials;
-    try {
-      googleCredentials.reactiveRefreshRegionalAccessBoundary(googleCredentials.getAccessToken());
-      // Re-initialize headers (this will remove the stale header since cache is cleared)
-      initialize(request);
-      return true;
-    } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "Error while handling stale regional access boundary", e);
     }
     return false;
   }
