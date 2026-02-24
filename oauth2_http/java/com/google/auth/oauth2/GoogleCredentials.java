@@ -403,10 +403,13 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     Map<String, List<String>> metadata = super.getRequestMetadata(uri);
     RegionalAccessBoundary rab = getRegionalAccessBoundary();
     if (rab != null) {
-      metadata = new HashMap<>(metadata);
-      metadata.put(
-          RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY,
-          Collections.singletonList(rab.getEncodedLocations()));
+      metadata =
+          ImmutableMap.<String, List<String>>builder()
+              .putAll(metadata)
+              .put(
+                  RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY,
+                  Collections.singletonList(rab.getEncodedLocations()))
+              .build();
     }
     refreshRegionalAccessBoundaryIfExpired(uri, getAccessToken());
     return metadata;
@@ -433,10 +436,13 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
           public void onSuccess(Map<String, List<String>> metadata) {
             RegionalAccessBoundary rab = getRegionalAccessBoundary();
             if (rab != null) {
-              metadata = new HashMap<>(metadata);
-              metadata.put(
-                  RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY,
-                  Collections.singletonList(rab.getEncodedLocations()));
+              metadata =
+                  ImmutableMap.<String, List<String>>builder()
+                      .putAll(metadata)
+                      .put(
+                          RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY,
+                          Collections.singletonList(rab.getEncodedLocations()))
+                      .build();
             }
             try {
               refreshRegionalAccessBoundaryIfExpired(uri, getAccessToken());
@@ -496,12 +502,13 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   static Map<String, List<String>> addQuotaProjectIdToRequestMetadata(
       String quotaProjectId, Map<String, List<String>> requestMetadata) {
     Preconditions.checkNotNull(requestMetadata);
-    Map<String, List<String>> newRequestMetadata = new HashMap<>(requestMetadata);
     if (quotaProjectId != null && !requestMetadata.containsKey(QUOTA_PROJECT_ID_HEADER_KEY)) {
-      newRequestMetadata.put(
-          QUOTA_PROJECT_ID_HEADER_KEY, Collections.singletonList(quotaProjectId));
+      return ImmutableMap.<String, List<String>>builder()
+          .putAll(requestMetadata)
+          .put(QUOTA_PROJECT_ID_HEADER_KEY, Collections.singletonList(quotaProjectId))
+          .build();
     }
-    return Collections.unmodifiableMap(newRequestMetadata);
+    return requestMetadata;
   }
 
   @Override
