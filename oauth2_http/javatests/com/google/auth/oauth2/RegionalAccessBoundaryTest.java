@@ -39,7 +39,6 @@ import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.auth.http.HttpTransportFactory;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.After;
@@ -106,7 +105,7 @@ public class RegionalAccessBoundaryTest {
   }
 
   @Test
-  public void testManagerTriggersRefreshInGracePeriod() throws IOException, InterruptedException {
+  public void testManagerTriggersRefreshInGracePeriod() throws InterruptedException {
     final String url =
         "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/default:allowedLocations";
     final AccessToken token =

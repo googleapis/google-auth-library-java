@@ -1875,9 +1875,16 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
             .build();
 
     // First call: initiates async refresh using the SSJWT as the token.
-    credentials.getRequestMetadata();
+    Map<String, List<String>> headers = credentials.getRequestMetadata();
+    assertNull(headers.get(X_ALLOWED_LOCATIONS_HEADER_KEY));
 
     waitForRegionalAccessBoundary(credentials);
+
+    // Second call: should have header.
+    headers = credentials.getRequestMetadata();
+    assertEquals(
+        headers.get(X_ALLOWED_LOCATIONS_HEADER_KEY),
+        Arrays.asList(TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION));
 
     assertEquals(
         TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION,

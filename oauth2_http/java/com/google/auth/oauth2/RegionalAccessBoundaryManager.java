@@ -38,7 +38,6 @@ import com.google.common.annotations.VisibleForTesting;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
@@ -50,13 +49,11 @@ import javax.annotation.Nullable;
 @InternalApi
 final class RegionalAccessBoundaryManager {
 
-  private static final Logger LOGGER =
-      Logger.getLogger(RegionalAccessBoundaryManager.class.getName());
   private static final LoggerProvider LOGGER_PROVIDER =
       LoggerProvider.forClazz(RegionalAccessBoundaryManager.class);
 
   static final long INITIAL_COOLDOWN_MILLIS = 15 * 60 * 1000L; // 15 minutes
-  static final long MAX_COOLDOWN_MILLIS = 24 * 60 * 60 * 1000L; // 24 hours
+  static final long MAX_COOLDOWN_MILLIS = 6 * 60 * 60 * 1000L; // 6 hours
 
   /**
    * cachedRAB uses AtomicReference to provide thread-safe, lock-free access to the cached data for
@@ -126,8 +123,7 @@ final class RegionalAccessBoundaryManager {
             try {
               String url = provider.getRegionalAccessBoundaryUrl();
               RegionalAccessBoundary newRAB =
-                  RegionalAccessBoundary.refresh(
-                      transportFactory, url, accessToken, cachedRAB.get());
+                  RegionalAccessBoundary.refresh(transportFactory, url, accessToken);
               cachedRAB.set(newRAB);
               resetCooldown();
               // Complete the future so monitors (like unit tests) know we are done.
@@ -146,11 +142,13 @@ final class RegionalAccessBoundaryManager {
   private void handleRefreshFailure(Exception e) {
     CooldownState current = cooldownState.get();
     CooldownState next;
-    if (current.startTime == 0) {
-      next = new CooldownState(clock.currentTimeMillis(), INITIAL_COOLDOWN_MILLIS);
+    if (current.expiryTime == 0) {
+      next =
+          new CooldownState(
+              clock.currentTimeMillis() + INITIAL_COOLDOWN_MILLIS, INITIAL_COOLDOWN_MILLIS);
     } else {
       long nextDuration = Math.min(current.durationMillis * 2, MAX_COOLDOWN_MILLIS);
-      next = new CooldownState(clock.currentTimeMillis(), nextDuration);
+      next = new CooldownState(clock.currentTimeMillis() + nextDuration, nextDuration);
     }
 
     // Atomically update the cooldown state. compareAndSet returns true only if the state
@@ -175,10 +173,10 @@ final class RegionalAccessBoundaryManager {
 
   boolean isCooldownActive() {
     CooldownState state = cooldownState.get();
-    if (state.startTime == 0) {
+    if (state.expiryTime == 0) {
       return false;
     }
-    return clock.currentTimeMillis() < state.startTime + state.durationMillis;
+    return clock.currentTimeMillis() < state.expiryTime;
   }
 
   @VisibleForTesting
@@ -192,14 +190,14 @@ final class RegionalAccessBoundaryManager {
   }
 
   private static class CooldownState {
-    /** The time (in milliseconds from epoch) when the current cooldown period started. */
-    final long startTime;
+    /** The time (in milliseconds from epoch) when the current cooldown period expires. */
+    final long expiryTime;
 
     /** The duration (in milliseconds) of the current cooldown period. */
     final long durationMillis;
 
-    CooldownState(long startTime, long durationMillis) {
-      this.startTime = startTime;
+    CooldownState(long expiryTime, long durationMillis) {
+      this.expiryTime = expiryTime;
       this.durationMillis = durationMillis;
     }
   }

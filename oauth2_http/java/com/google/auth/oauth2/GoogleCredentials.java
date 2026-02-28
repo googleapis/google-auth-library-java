@@ -401,16 +401,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   @Override
   public Map<String, List<String>> getRequestMetadata(URI uri) throws IOException {
     Map<String, List<String>> metadata = super.getRequestMetadata(uri);
-    RegionalAccessBoundary rab = getRegionalAccessBoundary();
-    if (rab != null) {
-      metadata =
-          ImmutableMap.<String, List<String>>builder()
-              .putAll(metadata)
-              .put(
-                  RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY,
-                  Collections.singletonList(rab.getEncodedLocations()))
-              .build();
-    }
+    metadata = addRegionalAccessBoundaryToRequestMetadata(metadata);
     refreshRegionalAccessBoundaryIfExpired(uri, getAccessToken());
     return metadata;
   }
@@ -434,16 +425,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
         new RequestMetadataCallback() {
           @Override
           public void onSuccess(Map<String, List<String>> metadata) {
-            RegionalAccessBoundary rab = getRegionalAccessBoundary();
-            if (rab != null) {
-              metadata =
-                  ImmutableMap.<String, List<String>>builder()
-                      .putAll(metadata)
-                      .put(
-                          RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY,
-                          Collections.singletonList(rab.getEncodedLocations()))
-                      .build();
-            }
+            metadata = addRegionalAccessBoundaryToRequestMetadata(metadata);
             try {
               refreshRegionalAccessBoundaryIfExpired(uri, getAccessToken());
             } catch (IOException e) {
@@ -506,6 +488,27 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       return ImmutableMap.<String, List<String>>builder()
           .putAll(requestMetadata)
           .put(QUOTA_PROJECT_ID_HEADER_KEY, Collections.singletonList(quotaProjectId))
+          .build();
+    }
+    return requestMetadata;
+  }
+
+  /**
+   * Adds Regional Access Boundary header to requestMetadata if available.
+   *
+   * @return a new map with Regional Access Boundary header added if needed
+   */
+  Map<String, List<String>> addRegionalAccessBoundaryToRequestMetadata(
+      Map<String, List<String>> requestMetadata) {
+    Preconditions.checkNotNull(requestMetadata);
+    RegionalAccessBoundary rab = getRegionalAccessBoundary();
+    if (rab != null
+        && !requestMetadata.containsKey(RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY)) {
+      return ImmutableMap.<String, List<String>>builder()
+          .putAll(requestMetadata)
+          .put(
+              RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY,
+              Collections.singletonList(rab.getEncodedLocations()))
           .build();
     }
     return requestMetadata;

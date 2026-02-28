@@ -114,11 +114,6 @@ public final class RegionalAccessBoundary implements Serializable {
     return locations;
   }
 
-  /** Returns the time at which the information was last refreshed. */
-  public long getRefreshTime() {
-    return refreshTime;
-  }
-
   /**
    * Checks if the regional access boundary data is expired.
    *
@@ -206,17 +201,12 @@ public final class RegionalAccessBoundary implements Serializable {
    * @param transportFactory The HTTP transport factory to use for the network request.
    * @param url The URL of the regional access boundary endpoint.
    * @param accessToken The access token to authenticate the request.
-   * @param cachedRAB An optional previously cached regional access boundary, which may be used in
-   *     the request headers.
    * @return A new RegionalAccessBoundary object containing the refreshed information.
    * @throws IllegalArgumentException If the provided access token is null or expired.
    * @throws IOException If a network error occurs or the response is malformed.
    */
   static RegionalAccessBoundary refresh(
-      HttpTransportFactory transportFactory,
-      String url,
-      AccessToken accessToken,
-      @Nullable RegionalAccessBoundary cachedRAB)
+      HttpTransportFactory transportFactory, String url, AccessToken accessToken)
       throws IOException {
     Preconditions.checkNotNull(accessToken, "The provided access token is null.");
     if (accessToken.getExpirationTimeMillis() != null
@@ -227,11 +217,6 @@ public final class RegionalAccessBoundary implements Serializable {
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(url));
     request.getHeaders().setAuthorization("Bearer " + accessToken.getTokenValue());
-
-    // Add the cached regional access boundary header, if available.
-    if (cachedRAB != null) {
-      request.getHeaders().set(X_ALLOWED_LOCATIONS_HEADER_KEY, cachedRAB.getEncodedLocations());
-    }
 
     // Add retry logic
     ExponentialBackOff backoff =

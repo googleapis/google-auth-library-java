@@ -1147,6 +1147,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     }
 
     Map<String, List<String>> requestMetadata = jwtCredentials.getRequestMetadata(null);
+    requestMetadata = addRegionalAccessBoundaryToRequestMetadata(requestMetadata);
     List<String> authHeaders = requestMetadata.get(AuthHttpConstants.AUTHORIZATION);
     if (authHeaders != null && !authHeaders.isEmpty()) {
       // Extract the token value to trigger a background Regional Access Boundary refresh.
