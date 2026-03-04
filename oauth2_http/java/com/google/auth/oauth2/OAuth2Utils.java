@@ -267,6 +267,20 @@ public class OAuth2Utils {
    *     key creation.
    */
   public static PrivateKey privateKeyFromPkcs8(String privateKeyPkcs8) throws IOException {
+    return privateKeyFromPkcs8(privateKeyPkcs8, "RSA");
+  }
+
+  /**
+   * Converts a PKCS#8 string to a private key of the specified algorithm.
+   *
+   * @param privateKeyPkcs8 the PKCS#8 string.
+   * @param algorithm the algorithm of the private key.
+   * @return the private key.
+   * @throws IOException if the PKCS#8 data is invalid or if an unexpected exception occurs during
+   *     key creation.
+   */
+  public static PrivateKey privateKeyFromPkcs8(String privateKeyPkcs8, String algorithm)
+      throws IOException {
     Reader reader = new StringReader(privateKeyPkcs8);
     Section section = PemReader.readFirstSectionAndClose(reader, "PRIVATE KEY");
     if (section == null) {
@@ -276,7 +290,7 @@ public class OAuth2Utils {
     PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(bytes);
     Exception unexpectedException;
     try {
-      KeyFactory keyFactory = SecurityUtils.getRsaKeyFactory();
+      KeyFactory keyFactory = KeyFactory.getInstance(algorithm);
       return keyFactory.generatePrivate(keySpec);
     } catch (NoSuchAlgorithmException | InvalidKeySpecException exception) {
       unexpectedException = exception;
