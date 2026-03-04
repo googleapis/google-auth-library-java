@@ -61,11 +61,11 @@ class GdchCredentialsTest extends BaseSerializationTest {
   private static final String FORMAT_VERSION = GdchCredentials.SUPPORTED_FORMAT_VERSION;
   private static final String PRIVATE_KEY_ID = "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
   static final String PRIVATE_KEY_PKCS8 =
-          "-----BEGIN PRIVATE KEY-----\n" +
-          "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgyITXsUvRm1C3lnyz\n" +
-          "OaMY7TNXZois4NH0bkMwqTAnVbqhRANCAASk5+U9skHVTo+sEVd2/yKY7A2eYn8K\n" +
-          "Cygd3bQalfWs533aTu93XwVx0YNN310aFquv3/VIiFofm1JEBAhUiG8e\n" +
-          "-----END PRIVATE KEY-----";
+      "-----BEGIN PRIVATE KEY-----\n"
+          + "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgyITXsUvRm1C3lnyz\n"
+          + "OaMY7TNXZois4NH0bkMwqTAnVbqhRANCAASk5+U9skHVTo+sEVd2/yKY7A2eYn8K\n"
+          + "Cygd3bQalfWs533aTu93XwVx0YNN310aFquv3/VIiFofm1JEBAhUiG8e\n"
+          + "-----END PRIVATE KEY-----";
   private static final String PROJECT_ID = "project-id";
   private static final String SERVICE_IDENTITY_NAME = "service-identity-name";
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
