@@ -80,6 +80,8 @@ public class GdchCredentials extends GoogleCredentials {
     this.caCertPath = builder.caCertPath;
     this.apiAudience = builder.apiAudience;
     this.lifetime = builder.lifetime;
+    this.name = GoogleCredentialsInfo.GDCH_CREDENTIALS.getCredentialName();
+
   }
 
   /**
