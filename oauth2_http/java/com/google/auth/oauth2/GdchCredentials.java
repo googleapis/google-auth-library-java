@@ -217,7 +217,7 @@ public class GdchCredentials extends GoogleCredentials {
     GenericData responseData = response.parseAs(GenericData.class);
     String accessToken = validateString(responseData, "access_token", PARSE_ERROR_PREFIX);
     int expiresInSeconds = validateInt32(responseData, "expires_in", PARSE_ERROR_PREFIX);
-    long expiresAtMilliseconds = Clock.SYSTEM.currentTimeMillis() + expiresInSeconds * 1000L;
+    long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000L;
     return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
   }
 

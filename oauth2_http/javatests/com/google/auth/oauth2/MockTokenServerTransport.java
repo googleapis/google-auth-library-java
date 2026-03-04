@@ -213,7 +213,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
               }
 
               String content = this.getContentAsString();
-              Map<String, String> query = TestUtils.parseQuery(content);
+              Map<String, String> query = TestUtils.parseBody(content);
               String accessToken = null;
               String refreshToken = null;
               String grantedScopesString = null;
@@ -255,6 +255,9 @@ public class MockTokenServerTransport extends MockHttpTransport {
               } else if (query.containsKey("grant_type")) {
                 String grantType = query.get("grant_type");
                 String assertion = query.get("assertion");
+                if (assertion == null) {
+                  assertion = query.get("subject_token");
+                }
                 JsonWebSignature signature = JsonWebSignature.parse(JSON_FACTORY, assertion);
                 if (OAuth2Utils.GRANT_TYPE_JWT_BEARER.equals(grantType)) {
                   String foundEmail = signature.getPayload().getIssuer();
@@ -284,7 +287,10 @@ public class MockTokenServerTransport extends MockHttpTransport {
                         "GDCH Service Account Service Identity Name not found as issuer.");
                   }
                   accessToken = gdchServiceAccounts.get(foundServiceIdentityName);
-                  String foundApiAudience = (String) signature.getPayload().get("api_audience");
+                  String foundApiAudience = query.get("audience");
+                  if (foundApiAudience == null || foundApiAudience.isEmpty()) {
+                    foundApiAudience = (String) signature.getPayload().get("api_audience");
+                  }
                   if ((foundApiAudience == null || foundApiAudience.length() == 0)) {
                     throw new IOException("Api_audience must be specified.");
                   }
@@ -326,7 +332,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
           new MockLowLevelHttpRequest(url) {
             @Override
             public LowLevelHttpResponse execute() throws IOException {
-              Map<String, String> parameters = TestUtils.parseQuery(this.getContentAsString());
+              Map<String, String> parameters = TestUtils.parseBody(this.getContentAsString());
               String token = parameters.get("token");
               if (token == null) {
                 throw new IOException("Token to revoke not found.");
@@ -358,7 +364,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
               }
 
               String content = this.getContentAsString();
-              Map<String, String> query = TestUtils.parseQuery(content);
+              Map<String, String> query = TestUtils.parseBody(content);
 
               // Validate required fields.
               if (!query.containsKey("code")
