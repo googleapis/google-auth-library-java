@@ -94,7 +94,7 @@ class DefaultCredentialsProviderTest {
   private static final String GDCH_SA_CA_CERT_FILE_NAME = "cert.pem";
   private static final String GDCH_SA_CA_CERT_PATH =
       GdchCredentialsTest.class.getClassLoader().getResource(GDCH_SA_CA_CERT_FILE_NAME).getPath();
-  private static final URI GDCH_SA_API_AUDIENCE = URI.create("https://gdch-api-audience");
+  private static final String GDCH_SA_API_AUDIENCE = "https://gdch-api-audience";
   private static final Collection<String> SCOPES = Collections.singletonList("dummy.scope");
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
   private static final String QUOTA_PROJECT = "sample-quota-project-id";

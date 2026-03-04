@@ -61,18 +61,11 @@ class GdchCredentialsTest extends BaseSerializationTest {
   private static final String FORMAT_VERSION = GdchCredentials.SUPPORTED_FORMAT_VERSION;
   private static final String PRIVATE_KEY_ID = "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
   static final String PRIVATE_KEY_PKCS8 =
-      "-----BEGIN PRIVATE KEY-----\n"
-          + "MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBALX0PQoe1igW12i"
-          + "kv1bN/r9lN749y2ijmbc/mFHPyS3hNTyOCjDvBbXYbDhQJzWVUikh4mvGBA07qTj79Xc3yBDfKP2IeyYQIFe0t0"
-          + "zkd7R9Zdn98Y2rIQC47aAbDfubtkU1U72t4zL11kHvoa0/RuFZjncvlr42X7be7lYh4p3NAgMBAAECgYASk5wDw"
-          + "4Az2ZkmeuN6Fk/y9H+Lcb2pskJIXjrL533vrDWGOC48LrsThMQPv8cxBky8HFSEklPpkfTF95tpD43iVwJRB/Gr"
-          + "CtGTw65IfJ4/tI09h6zGc4yqvIo1cHX/LQ+SxKLGyir/dQM925rGt/VojxY5ryJR7GLbCzxPnJm/oQJBANwOCO6"
-          + "D2hy1LQYJhXh7O+RLtA/tSnT1xyMQsGT+uUCMiKS2bSKx2wxo9k7h3OegNJIu1q6nZ6AbxDK8H3+d0dUCQQDTrP"
-          + "SXagBxzp8PecbaCHjzNRSQE2in81qYnrAFNB4o3DpHyMMY6s5ALLeHKscEWnqP8Ur6X4PvzZecCWU9BKAZAkAut"
-          + "LPknAuxSCsUOvUfS1i87ex77Ot+w6POp34pEX+UWb+u5iFn2cQacDTHLV1LtE80L8jVLSbrbrlH43H0DjU5AkEA"
-          + "gidhycxS86dxpEljnOMCw8CKoUBd5I880IUahEiUltk7OLJYS/Ts1wbn3kPOVX3wyJs8WBDtBkFrDHW2ezth2QJ"
-          + "ADj3e1YhMVdjJW5jqwlD/VNddGjgzyunmiZg0uOXsHXbytYmsA545S8KRQFaJKFXYYFo2kOjqOiC1T2cAzMDjCQ"
-          + "==\n-----END PRIVATE KEY-----\n";
+          "-----BEGIN PRIVATE KEY-----\n" +
+          "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgyITXsUvRm1C3lnyz\n" +
+          "OaMY7TNXZois4NH0bkMwqTAnVbqhRANCAASk5+U9skHVTo+sEVd2/yKY7A2eYn8K\n" +
+          "Cygd3bQalfWs533aTu93XwVx0YNN310aFquv3/VIiFofm1JEBAhUiG8e\n" +
+          "-----END PRIVATE KEY-----";
   private static final String PROJECT_ID = "project-id";
   private static final String SERVICE_IDENTITY_NAME = "service-identity-name";
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
@@ -81,7 +74,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
   private static final String CA_CERT_FILE_NAME = "cert.pem";
   private static final String CA_CERT_PATH =
       GdchCredentialsTest.class.getClassLoader().getResource(CA_CERT_FILE_NAME).getPath();
-  private static final URI API_AUDIENCE = URI.create("https://gdch-api-audience");
+  private static final String API_AUDIENCE = URI.create("https://gdch-api-audience").toString();
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
 
   @Test
@@ -771,7 +764,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
 
   @Test
   void equals_false_apiAudience() throws IOException {
-    URI otherApiAudience = URI.create("https://foo1.com/bar");
+    String otherApiAudience = URI.create("https://foo1.com/bar").toString();
 
     GenericJson json =
         writeGdchServiceAccountJson(

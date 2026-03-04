@@ -82,7 +82,7 @@ class GoogleCredentialsTest extends BaseSerializationTest {
   private static final String GDCH_SA_CA_CERT_FILE_NAME = "cert.pem";
   private static final String GDCH_SA_CA_CERT_PATH =
       GdchCredentialsTest.class.getClassLoader().getResource(GDCH_SA_CA_CERT_FILE_NAME).getPath();
-  private static final URI GDCH_API_AUDIENCE = URI.create("https://gdch-api-audience");
+  private static final String GDCH_API_AUDIENCE = "https://gdch-api-audience";
   private static final String USER_CLIENT_SECRET = "jakuaL9YyieakhECKL2SwZcu";
   private static final String USER_CLIENT_ID = "ya29.1.AADtN_UtlxN3PuGAxrN2XQnZTVRvDyVWnYq4I6dws";
   private static final String REFRESH_TOKEN = "1/Tl6awhpFjkMkSJoj1xsli0H2eL5YsMgU_NKPY2TyGWY";
