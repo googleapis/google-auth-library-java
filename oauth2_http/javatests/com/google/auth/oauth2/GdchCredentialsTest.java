@@ -40,10 +40,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.api.client.json.GenericJson;
+import com.google.api.client.json.Json;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.client.testing.http.FixedClock;
+import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.auth.TestUtils;
 import com.google.auth.oauth2.GoogleCredentials.GoogleCredentialsInfo;
@@ -405,6 +407,77 @@ class GdchCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.setTokenServerUri(TOKEN_SERVER_URI);
     Map<String, List<String>> metadata = gdchWithAudience.getRequestMetadata(CALL_URI);
     TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+  }
+
+  @Test
+  void fromStream_correct() throws IOException {
+    InputStream stream =
+        writeGdchServiceAccountStream(
+            FORMAT_VERSION,
+            PROJECT_ID,
+            PRIVATE_KEY_ID,
+            PRIVATE_KEY_PKCS8,
+            SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
+            TOKEN_SERVER_URI);
+    GdchCredentials credentials = GdchCredentials.fromStream(stream);
+
+    assertEquals(PROJECT_ID, credentials.getProjectId());
+    assertEquals(SERVICE_IDENTITY_NAME, credentials.getServiceIdentityName());
+  }
+
+  @Test
+  void fromStream_invalidType() throws IOException {
+    GenericJson json =
+        writeGdchServiceAccountJson(
+            FORMAT_VERSION,
+            PROJECT_ID,
+            PRIVATE_KEY_ID,
+            PRIVATE_KEY_PKCS8,
+            SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
+            TOKEN_SERVER_URI);
+    json.put("type", "invalid_type");
+    InputStream stream = TestUtils.jsonToInputStream(json);
+
+    try {
+      GdchCredentials.fromStream(stream);
+      fail("Should not be able to create GDCH credential with invalid type.");
+    } catch (IOException ex) {
+      assertTrue(ex.getMessage().contains("not recognized"));
+    }
+  }
+
+  @Test
+  void fromStream_withTransportFactory() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    InputStream stream =
+        writeGdchServiceAccountStream(
+            FORMAT_VERSION,
+            PROJECT_ID,
+            PRIVATE_KEY_ID,
+            PRIVATE_KEY_PKCS8,
+            SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
+            TOKEN_SERVER_URI);
+    GdchCredentials credentials = GdchCredentials.fromStream(stream, transportFactory);
+
+    assertEquals(transportFactory, credentials.getTransportFactory());
+  }
+
+  @Test
+  void fromPkcs8_correct() throws IOException {
+    GdchCredentials.Builder builder =
+        GdchCredentials.newBuilder()
+            .setProjectId(PROJECT_ID)
+            .setPrivateKeyId(PRIVATE_KEY_ID)
+            .setServiceIdentityName(SERVICE_IDENTITY_NAME)
+            .setTokenServerUri(TOKEN_SERVER_URI)
+            .setHttpTransportFactory(new MockTokenServerTransportFactory());
+
+    GdchCredentials credentials = GdchCredentials.fromPkcs8(PRIVATE_KEY_PKCS8, builder);
+    assertNotNull(credentials.getPrivateKey());
+    assertEquals(PROJECT_ID, credentials.getProjectId());
   }
 
   @Test
@@ -873,6 +946,173 @@ class GdchCredentialsTest extends BaseSerializationTest {
     assertEquals(
         MockTokenServerTransportFactory.class,
         deserializedCredentials.toBuilder().getHttpTransportFactory().getClass());
+  }
+
+  @Test
+  void refreshAccessToken_invalidResponse_missingAccessToken() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    GenericJson json =
+        writeGdchServiceAccountJson(
+            FORMAT_VERSION,
+            PROJECT_ID,
+            PRIVATE_KEY_ID,
+            PRIVATE_KEY_PKCS8,
+            SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
+            TOKEN_SERVER_URI);
+    GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
+    GdchCredentials gdchWithAudience = credentials.createWithGdchAudience(API_AUDIENCE);
+
+    transportFactory.transport.addGdchServiceAccount(
+        GdchCredentials.getIssuerSubjectValue(PROJECT_ID, SERVICE_IDENTITY_NAME), null);
+    transportFactory.transport.setTokenServerUri(TOKEN_SERVER_URI);
+
+    try {
+      gdchWithAudience.refreshAccessToken();
+      fail("Should not be able to refresh access token without exception.");
+    } catch (IOException ex) {
+      assertTrue(
+          ex.getMessage()
+              .contains(
+                  "Error parsing token refresh response. Expected value access_token not found."));
+    }
+  }
+
+  @Test
+  void refreshAccessToken_invalidResponse_wrongTypeAccessToken() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    GenericJson json =
+        writeGdchServiceAccountJson(
+            FORMAT_VERSION,
+            PROJECT_ID,
+            PRIVATE_KEY_ID,
+            PRIVATE_KEY_PKCS8,
+            SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
+            TOKEN_SERVER_URI);
+    GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
+    GdchCredentials gdchWithAudience = credentials.createWithGdchAudience(API_AUDIENCE);
+
+    transportFactory.transport.addResponseSequence(
+        new MockLowLevelHttpResponse()
+            .setContentType(Json.MEDIA_TYPE)
+            .setContent("{\"access_token\": 123, \"expires_in\": 3600}"));
+
+    try {
+      gdchWithAudience.refreshAccessToken();
+      fail("Should not be able to refresh access token with wrong type.");
+    } catch (IOException ex) {
+      assertTrue(ex.getMessage().contains("Expected string value access_token of wrong type"));
+    }
+  }
+
+  @Test
+  void refreshAccessToken_invalidResponse_missingExpiresIn() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    GenericJson json =
+        writeGdchServiceAccountJson(
+            FORMAT_VERSION,
+            PROJECT_ID,
+            PRIVATE_KEY_ID,
+            PRIVATE_KEY_PKCS8,
+            SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
+            TOKEN_SERVER_URI);
+    GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
+    GdchCredentials gdchWithAudience = credentials.createWithGdchAudience(API_AUDIENCE);
+
+    transportFactory.transport.addResponseSequence(
+        new MockLowLevelHttpResponse()
+            .setContentType(Json.MEDIA_TYPE)
+            .setContent("{\"access_token\": \"token\"}"));
+
+    try {
+      gdchWithAudience.refreshAccessToken();
+      fail("Should not be able to refresh access token with missing expires_in.");
+    } catch (IOException ex) {
+      assertTrue(ex.getMessage().contains("Expected value expires_in not found"));
+    }
+  }
+
+  @Test
+  void refreshAccessToken_invalidResponse_wrongTypeExpiresIn() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    GenericJson json =
+        writeGdchServiceAccountJson(
+            FORMAT_VERSION,
+            PROJECT_ID,
+            PRIVATE_KEY_ID,
+            PRIVATE_KEY_PKCS8,
+            SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
+            TOKEN_SERVER_URI);
+    GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
+    GdchCredentials gdchWithAudience = credentials.createWithGdchAudience(API_AUDIENCE);
+
+    transportFactory.transport.addResponseSequence(
+        new MockLowLevelHttpResponse()
+            .setContentType(Json.MEDIA_TYPE)
+            .setContent("{\"access_token\": \"token\", \"expires_in\": \"3600\"}"));
+
+    try {
+      gdchWithAudience.refreshAccessToken();
+      fail("Should not be able to refresh access token with wrong type expires_in.");
+    } catch (IOException ex) {
+      assertTrue(ex.getMessage().contains("Expected integer value expires_in of wrong type"));
+    }
+  }
+
+  @Test
+  void refreshAccessToken_serverError() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    GenericJson json =
+        writeGdchServiceAccountJson(
+            FORMAT_VERSION,
+            PROJECT_ID,
+            PRIVATE_KEY_ID,
+            PRIVATE_KEY_PKCS8,
+            SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
+            TOKEN_SERVER_URI);
+    GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
+    GdchCredentials gdchWithAudience = credentials.createWithGdchAudience(API_AUDIENCE);
+
+    transportFactory.transport.addResponseSequence(
+        new MockLowLevelHttpResponse().setStatusCode(400).setReasonPhrase("Bad Request"));
+
+    try {
+      gdchWithAudience.refreshAccessToken();
+      fail("Should not be able to refresh access token with server error.");
+    } catch (IOException ex) {
+      assertTrue(ex.getMessage().contains("Error getting access token for GDCH service account"));
+      assertTrue(ex.getMessage().contains("400 Bad Request"));
+    }
+  }
+
+  @Test
+  void refreshAccessToken_ioException() throws IOException {
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    GenericJson json =
+        writeGdchServiceAccountJson(
+            FORMAT_VERSION,
+            PROJECT_ID,
+            PRIVATE_KEY_ID,
+            PRIVATE_KEY_PKCS8,
+            SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
+            TOKEN_SERVER_URI);
+    GdchCredentials credentials = GdchCredentials.fromJson(json, transportFactory);
+    GdchCredentials gdchWithAudience = credentials.createWithGdchAudience(API_AUDIENCE);
+
+    transportFactory.transport.addResponseErrorSequence(new IOException("Connection reset"));
+
+    try {
+      gdchWithAudience.refreshAccessToken();
+      fail("Should not be able to refresh access token with IO exception.");
+    } catch (IOException ex) {
+      assertTrue(ex.getMessage().contains("Error getting access token for GDCH service account"));
+      assertTrue(ex.getMessage().contains("Connection reset"));
+    }
   }
 
   static GenericJson writeGdchServiceAccountJson(
