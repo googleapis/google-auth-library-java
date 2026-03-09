@@ -130,7 +130,7 @@ public class RegionalAccessBoundaryTest {
     RegionalAccessBoundaryManager manager = new RegionalAccessBoundaryManager();
 
     // 1. Let's first get a RAB into the cache
-    manager.triggerAsyncRefresh(transportFactory, provider, token);
+    manager.triggerAsyncRefresh(transportFactory, provider, token, null);
 
     // Wait for it to be cached
     int retries = 0;
@@ -161,7 +161,7 @@ public class RegionalAccessBoundaryTest {
     HttpTransportFactory transportFactory2 = () -> transport2;
 
     // 4. Trigger refresh - should start because we are in grace period
-    manager.triggerAsyncRefresh(transportFactory2, provider, token);
+    manager.triggerAsyncRefresh(transportFactory2, provider, token, null);
 
     // 5. Wait for background refresh to complete
     // We expect the cached RAB to eventually change to newerEncoded

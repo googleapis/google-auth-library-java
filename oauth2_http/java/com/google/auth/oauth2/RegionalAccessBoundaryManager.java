@@ -99,11 +99,13 @@ final class RegionalAccessBoundaryManager {
    * @param transportFactory The HTTP transport factory to use for the lookup.
    * @param provider The provider used to retrieve the lookup endpoint URL.
    * @param accessToken The access token for authentication.
+   * @param executor The executor to use for the background task. If null, a new thread is created.
    */
   void triggerAsyncRefresh(
       final HttpTransportFactory transportFactory,
       final RegionalAccessBoundaryProvider provider,
-      final AccessToken accessToken) {
+      final AccessToken accessToken,
+      @Nullable final java.util.concurrent.Executor executor) {
     if (isCooldownActive()) {
       return;
     }
@@ -118,7 +120,7 @@ final class RegionalAccessBoundaryManager {
     // this thread "won the race" and is responsible for starting the background task.
     // All other concurrent threads will return false and exit immediately.
     if (refreshFuture.compareAndSet(null, future)) {
-      CompletableFuture.runAsync(
+      Runnable refreshTask =
           () -> {
             try {
               String url = provider.getRegionalAccessBoundaryUrl();
@@ -135,7 +137,15 @@ final class RegionalAccessBoundaryManager {
               // Open the gate again for future refresh requests.
               refreshFuture.set(null);
             }
-          });
+          };
+
+      if (executor != null) {
+        executor.execute(refreshTask);
+      } else {
+        Thread refreshThread = new Thread(refreshTask, "RAB-refresh-thread");
+        refreshThread.setDaemon(true);
+        refreshThread.start();
+      }
     }
   }
 

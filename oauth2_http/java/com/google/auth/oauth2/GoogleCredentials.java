@@ -58,7 +58,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.Executor;
 import javax.annotation.Nullable;
 
 /** Base type for credentials for authorizing calls to Google APIs using OAuth2. */
@@ -353,9 +352,13 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    *
    * @param uri The URI of the outbound request.
    * @param token The access token to use for the refresh.
+   * @param executor The executor to use for the background task. If null, a new thread is created.
    * @throws IOException If getting the universe domain fails.
    */
-  void refreshRegionalAccessBoundaryIfExpired(@Nullable URI uri, @Nullable AccessToken token)
+  void refreshRegionalAccessBoundaryIfExpired(
+      @Nullable URI uri,
+      @Nullable AccessToken token,
+      @Nullable java.util.concurrent.Executor executor)
       throws IOException {
     if (!(this instanceof RegionalAccessBoundaryProvider)
         || !RegionalAccessBoundary.isEnabled()
@@ -384,7 +387,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     }
 
     regionalAccessBoundaryManager.triggerAsyncRefresh(
-        transportFactory, (RegionalAccessBoundaryProvider) this, token);
+        transportFactory, (RegionalAccessBoundaryProvider) this, token, executor);
   }
 
   /**
@@ -402,7 +405,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   public Map<String, List<String>> getRequestMetadata(URI uri) throws IOException {
     Map<String, List<String>> metadata = super.getRequestMetadata(uri);
     metadata = addRegionalAccessBoundaryToRequestMetadata(metadata);
-    refreshRegionalAccessBoundaryIfExpired(uri, getAccessToken());
+    refreshRegionalAccessBoundaryIfExpired(uri, getAccessToken(), null);
     return metadata;
   }
 
@@ -418,7 +421,9 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    */
   @Override
   public void getRequestMetadata(
-      final URI uri, Executor executor, final RequestMetadataCallback callback) {
+      final URI uri,
+      final java.util.concurrent.Executor executor,
+      final RequestMetadataCallback callback) {
     super.getRequestMetadata(
         uri,
         executor,
@@ -427,7 +432,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
           public void onSuccess(Map<String, List<String>> metadata) {
             metadata = addRegionalAccessBoundaryToRequestMetadata(metadata);
             try {
-              refreshRegionalAccessBoundaryIfExpired(uri, getAccessToken());
+              refreshRegionalAccessBoundaryIfExpired(uri, getAccessToken(), executor);
             } catch (IOException e) {
               // Ignore failure in async refresh trigger.
             }

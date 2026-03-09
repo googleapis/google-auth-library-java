@@ -1159,7 +1159,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
         // Self-signed JWT do not go through the typical OAuth2Credentials.getRequestMetadata()
         // flow.
         // We explicitly trigger it here to ensure the RAB cache is populated/maintained.
-        refreshRegionalAccessBoundaryIfExpired(uri, wrappedToken);
+        refreshRegionalAccessBoundaryIfExpired(uri, wrappedToken, null);
       }
     }
     return addQuotaProjectIdToRequestMetadata(quotaProjectId, requestMetadata);
