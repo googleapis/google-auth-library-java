@@ -61,7 +61,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -130,11 +129,6 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
   @Before
   public void setup() {
     transportFactory = new MockExternalAccountAuthorizedUserCredentialsTransportFactory();
-  }
-
-  @After
-  public void tearDown() {
-    RegionalAccessBoundary.setEnvironmentProviderForTest(null);
   }
 
   @Test
@@ -1223,10 +1217,6 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
 
   @Test
   public void testRefresh_regionalAccessBoundarySuccess() throws IOException, InterruptedException {
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
-
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
             .setClientId(CLIENT_ID)

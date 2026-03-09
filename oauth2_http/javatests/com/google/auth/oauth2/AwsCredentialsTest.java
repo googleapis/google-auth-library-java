@@ -56,7 +56,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
-import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -64,11 +63,6 @@ import org.junit.runners.JUnit4;
 /** Tests for {@link AwsCredentials}. */
 @RunWith(JUnit4.class)
 public class AwsCredentialsTest extends BaseSerializationTest {
-
-  @After
-  public void tearDown() {
-    RegionalAccessBoundary.setEnvironmentProviderForTest(null);
-  }
 
   private static final String STS_URL = "https://sts.googleapis.com/v1/token";
   private static final String AWS_CREDENTIALS_URL = "https://169.254.169.254";
@@ -1408,10 +1402,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void testRefresh_regionalAccessBoundarySuccess() throws IOException, InterruptedException {
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
-
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
@@ -1439,7 +1429,6 @@ public class AwsCredentialsTest extends BaseSerializationTest {
     assertEquals(
         headers.get(RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY),
         Arrays.asList(TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION));
-    RegionalAccessBoundary.setEnvironmentProviderForTest(null);
   }
 
   private void waitForRegionalAccessBoundary(GoogleCredentials credentials)

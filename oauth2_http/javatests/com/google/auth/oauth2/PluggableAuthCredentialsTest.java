@@ -50,7 +50,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
-import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -58,12 +57,6 @@ import org.junit.runners.JUnit4;
 /** Tests for {@link PluggableAuthCredentials}. */
 @RunWith(JUnit4.class)
 public class PluggableAuthCredentialsTest extends BaseSerializationTest {
-
-  @After
-  public void tearDown() {
-    RegionalAccessBoundary.setEnvironmentProviderForTest(null);
-  }
-
   // The default timeout for waiting for the executable to finish (30 seconds).
   private static final int DEFAULT_EXECUTABLE_TIMEOUT_MS = 30 * 1000;
   // The minimum timeout for waiting for the executable to finish (5 seconds).
@@ -615,10 +608,6 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void testRefresh_regionalAccessBoundarySuccess() throws IOException, InterruptedException {
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
-
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
@@ -645,7 +634,6 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
     assertEquals(
         headers.get(RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY),
         Arrays.asList(TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION));
-    RegionalAccessBoundary.setEnvironmentProviderForTest(null);
   }
 
   private void waitForRegionalAccessBoundary(GoogleCredentials credentials)

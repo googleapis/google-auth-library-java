@@ -59,7 +59,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
-import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -67,11 +66,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 /** Tests for {@link IdentityPoolCredentials}. */
 @RunWith(MockitoJUnitRunner.class)
 public class IdentityPoolCredentialsTest extends BaseSerializationTest {
-
-  @After
-  public void tearDown() {
-    RegionalAccessBoundary.setEnvironmentProviderForTest(null);
-  }
 
   private static final String STS_URL = "https://sts.googleapis.com/v1/token";
 
@@ -1313,10 +1307,6 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void testRefresh_regionalAccessBoundarySuccess() throws IOException, InterruptedException {
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
-
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
     HttpTransportFactory testingHttpTransportFactory = transportFactory;
@@ -1342,7 +1332,6 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
     assertEquals(
         headers.get(RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY),
         Arrays.asList(TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION));
-    RegionalAccessBoundary.setEnvironmentProviderForTest(null);
   }
 
   private void waitForRegionalAccessBoundary(GoogleCredentials credentials)

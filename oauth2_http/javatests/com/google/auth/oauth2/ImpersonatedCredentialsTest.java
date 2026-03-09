@@ -73,7 +73,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -168,11 +167,6 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   public void setup() throws IOException {
     sourceCredentials = getSourceCredentials();
     mockTransportFactory = new MockIAMCredentialsServiceTransportFactory();
-  }
-
-  @After
-  public void tearDown() {
-    RegionalAccessBoundary.setEnvironmentProviderForTest(null);
   }
 
   static GoogleCredentials getSourceCredentials() throws IOException {
@@ -1317,10 +1311,6 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void refresh_regionalAccessBoundarySuccess() throws IOException, InterruptedException {
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
-
     // Mock regional access boundary response
     RegionalAccessBoundary regionalAccessBoundary = REGIONAL_ACCESS_BOUNDARY;
 

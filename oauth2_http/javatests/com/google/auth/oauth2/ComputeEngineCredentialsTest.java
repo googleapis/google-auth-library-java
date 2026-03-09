@@ -70,7 +70,6 @@ import java.util.Queue;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -129,11 +128,6 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
                 {SCOPES.toString().replaceAll("\\s", ""), ACCESS_TOKEN_WITH_SCOPES},
               })
           .collect(Collectors.toMap(data -> data[0], data -> data[1]));
-
-  @After
-  public void tearDown() {
-    RegionalAccessBoundary.setEnvironmentProviderForTest(null);
-  }
 
   @Test
   public void buildTokenUrlWithScopes_null_scopes() {
@@ -1154,9 +1148,6 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void refresh_regionalAccessBoundarySuccess() throws IOException, InterruptedException {
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
     String defaultAccountEmail = "default@email.com";
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     RegionalAccessBoundary regionalAccessBoundary =

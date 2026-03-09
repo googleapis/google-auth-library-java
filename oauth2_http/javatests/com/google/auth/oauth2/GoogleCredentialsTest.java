@@ -102,7 +102,6 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
   @After
   public void tearDown() {
-    RegionalAccessBoundary.setEnvironmentProviderForTest(null);
     RegionalAccessBoundary.setClockForTest(Clock.SYSTEM);
     RegionalAccessBoundaryManager.setClockForTest(Clock.SYSTEM);
   }
@@ -947,34 +946,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void regionalAccessBoundary_shouldNotCallLookupEndpointWhenDisabled() throws IOException {
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "false");
-
-    MockTokenServerTransport transport = new MockTokenServerTransport();
-    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
-
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.newBuilder()
-            .setClientEmail(SA_CLIENT_EMAIL)
-            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
-            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
-            .setHttpTransportFactory(() -> transport)
-            .setScopes(SCOPES)
-            .build();
-
-    credentials.getRequestMetadata();
-    assertNull(credentials.getRegionalAccessBoundary());
-  }
-
-  @Test
   public void regionalAccessBoundary_shouldFetchAndReturnRegionalAccessBoundaryDataSuccessfully()
       throws IOException, InterruptedException {
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "true");
-
     MockTokenServerTransport transport = new MockTokenServerTransport();
     transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     RegionalAccessBoundary regionalAccessBoundary =
@@ -1008,10 +981,6 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   @Test
   public void regionalAccessBoundary_shouldRetryRegionalAccessBoundaryLookupOnFailure()
       throws IOException, InterruptedException {
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "true");
-
     // This transport will be used for the regional access boundary lookup.
     // We will configure it to fail on the first attempt.
     MockTokenServerTransport regionalAccessBoundaryTransport = new MockTokenServerTransport();
@@ -1061,10 +1030,6 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   @Test
   public void regionalAccessBoundary_refreshShouldNotThrowWhenNoValidAccessTokenIsPassed()
       throws IOException {
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "true");
-
     MockTokenServerTransport transport = new MockTokenServerTransport();
     // Return an expired access token.
     transport.addServiceAccount(SA_CLIENT_EMAIL, "expired-token");
@@ -1087,10 +1052,6 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   @Test
   public void regionalAccessBoundary_cooldownDoublingAndRefresh()
       throws IOException, InterruptedException {
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "true");
-
     MockTokenServerTransport transport = new MockTokenServerTransport();
     transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     // Always fail lookup for now.
@@ -1161,10 +1122,6 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   @Test
   public void regionalAccessBoundary_deduplicationOfConcurrentRefreshes()
       throws IOException, InterruptedException {
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "true");
-
     MockTokenServerTransport transport = new MockTokenServerTransport();
     transport.setRegionalAccessBoundary(
         new RegionalAccessBoundary("valid", Collections.singletonList("us-central1")));
@@ -1193,10 +1150,6 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void regionalAccessBoundary_shouldSkipRefreshForRegionalEndpoints() throws IOException {
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "true");
-
     MockTokenServerTransport transport = new MockTokenServerTransport();
     GoogleCredentials credentials = createTestCredentials(transport);
 

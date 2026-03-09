@@ -360,9 +360,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       @Nullable AccessToken token,
       @Nullable java.util.concurrent.Executor executor)
       throws IOException {
-    if (!(this instanceof RegionalAccessBoundaryProvider)
-        || !RegionalAccessBoundary.isEnabled()
-        || !isDefaultUniverseDomain()) {
+    if (!(this instanceof RegionalAccessBoundaryProvider) || !isDefaultUniverseDomain()) {
       return;
     }
 

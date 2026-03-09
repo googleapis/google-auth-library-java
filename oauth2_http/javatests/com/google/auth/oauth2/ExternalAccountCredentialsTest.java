@@ -55,7 +55,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.*;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -91,11 +90,6 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   @Before
   public void setup() {
     transportFactory = new MockExternalAccountCredentialsTransportFactory();
-  }
-
-  @After
-  public void tearDown() {
-    RegionalAccessBoundary.setEnvironmentProviderForTest(null);
   }
 
   @Test
@@ -1314,10 +1308,6 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     String audience =
         "//iam.googleapis.com/projects/12345/locations/global/workloadIdentityPools/my-pool/providers/my-provider";
 
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
-
     ExternalAccountCredentials credentials =
         new IdentityPoolCredentials(
             IdentityPoolCredentials.newBuilder()
@@ -1325,8 +1315,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
                 .setAudience(audience)
                 .setSubjectTokenType("subject_token_type")
                 .setTokenUrl(STS_URL)
-                .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
-                .setEnvironmentProvider(environmentProvider)) {
+                .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))) {
           @Override
           public String retrieveSubjectToken() throws IOException {
             // This override isolates the test from the filesystem.
@@ -1353,10 +1342,6 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     String audience =
         "//iam.googleapis.com/locations/global/workforcePools/my-pool/providers/my-provider";
 
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
-
     ExternalAccountCredentials credentials =
         new IdentityPoolCredentials(
             IdentityPoolCredentials.newBuilder()
@@ -1365,8 +1350,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
                 .setWorkforcePoolUserProject("12345")
                 .setSubjectTokenType("subject_token_type")
                 .setTokenUrl(STS_URL)
-                .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))
-                .setEnvironmentProvider(environmentProvider)) {
+                .setCredentialSource(new TestCredentialSource(FILE_CREDENTIAL_SOURCE_MAP))) {
           @Override
           public String retrieveSubjectToken() throws IOException {
             return "dummy-subject-token";
@@ -1396,10 +1380,6 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
         String.format(
             "//iam.googleapis.com/projects/%s/locations/global/workloadIdentityPools/%s/providers/%s",
             projectNumber, poolId, providerId);
-
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
 
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
 
@@ -1435,7 +1415,6 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
             .setTokenUrl(STS_URL)
             .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
             .setCredentialSource(new IdentityPoolCredentialSource(urlCredentialSourceMap))
-            .setEnvironmentProvider(environmentProvider)
             .build();
 
     // First call: initiates async refresh.
@@ -1460,10 +1439,6 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
         String.format(
             "//iam.googleapis.com/locations/global/workforcePools/%s/providers/%s",
             poolId, providerId);
-
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv("GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT", "1");
 
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());
 
@@ -1499,7 +1474,6 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
             .setTokenUrl(STS_URL)
             .setServiceAccountImpersonationUrl(SERVICE_ACCOUNT_IMPERSONATION_URL)
             .setCredentialSource(new IdentityPoolCredentialSource(urlCredentialSourceMap))
-            .setEnvironmentProvider(environmentProvider)
             .build();
 
     // First call: initiates async refresh.

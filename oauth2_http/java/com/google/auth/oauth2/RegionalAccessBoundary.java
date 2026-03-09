@@ -52,7 +52,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
-import javax.annotation.Nullable;
 
 /**
  * Represents the regional access boundary configuration for a credential. This class holds the
@@ -66,7 +65,6 @@ public final class RegionalAccessBoundary implements Serializable {
   public static final String X_ALLOWED_LOCATIONS_HEADER_KEY = "x-allowed-locations";
   private static final long serialVersionUID = -2428522338274020302L;
 
-  static final String ENABLE_EXPERIMENT_ENV_VAR = "GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT";
   static final long TTL_MILLIS = 6 * 60 * 60 * 1000L; // 6 hours
   static final long REFRESH_THRESHOLD_MILLIS = 1 * 60 * 60 * 1000L; // 1 hour
   private static int maxRetryElapsedTimeMillis = 60000; // 1 minute
@@ -101,8 +99,6 @@ public final class RegionalAccessBoundary implements Serializable {
             : Collections.unmodifiableList(locations);
     this.refreshTime = refreshTime;
   }
-
-  private static EnvironmentProvider environmentProvider = SystemEnvironmentProvider.getInstance();
 
   /** Returns the encoded string representation of the allowed locations. */
   public String getEncodedLocations() {
@@ -162,11 +158,6 @@ public final class RegionalAccessBoundary implements Serializable {
   }
 
   @VisibleForTesting
-  static void setEnvironmentProviderForTest(@Nullable EnvironmentProvider provider) {
-    environmentProvider = provider == null ? SystemEnvironmentProvider.getInstance() : provider;
-  }
-
-  @VisibleForTesting
   static void setClockForTest(Clock testClock) {
     clock = testClock;
   }
@@ -174,25 +165,6 @@ public final class RegionalAccessBoundary implements Serializable {
   @VisibleForTesting
   static void setMaxRetryElapsedTimeMillisForTest(int millis) {
     maxRetryElapsedTimeMillis = millis;
-  }
-
-  /**
-   * Checks if the regional access boundary feature is enabled. The feature is enabled if the
-   * environment variable or system property "GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT" is set
-   * to "true" or "1" (case-insensitive).
-   *
-   * @return True if the regional access boundary feature is enabled, false otherwise.
-   */
-  static boolean isEnabled() {
-    String enabled = environmentProvider.getEnv(ENABLE_EXPERIMENT_ENV_VAR);
-    if (enabled == null) {
-      enabled = System.getProperty(ENABLE_EXPERIMENT_ENV_VAR);
-    }
-    if (enabled == null) {
-      return false;
-    }
-    String lowercased = enabled.toLowerCase();
-    return "true".equals(lowercased) || "1".equals(enabled);
   }
 
   /**

@@ -246,7 +246,9 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
           }
         };
 
-    this.requests.add(request);
+    if (url == null || !url.contains("allowedLocations")) {
+      this.requests.add(request);
+    }
     return request;
   }
 
