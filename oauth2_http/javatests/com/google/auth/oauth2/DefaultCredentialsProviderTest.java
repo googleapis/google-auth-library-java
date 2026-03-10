@@ -181,47 +181,32 @@ class DefaultCredentialsProviderTest {
 
   @Test
   void getDefaultCredentials_noCredentials_linuxNotGce() {
-    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
-    testProvider.setProperty("os.name", "Linux");
-    String productFilePath = SMBIOS_PATH_LINUX;
-    InputStream productStream = new ByteArrayInputStream("test".getBytes());
-    testProvider.addFile(productFilePath, productStream);
-
-    assertFalse(ComputeEngineCredentials.checkStaticGceDetection(testProvider));
+    checkStaticGceDetection("Linux", "test", false);
   }
 
   @Test
   void getDefaultCredentials_static_linux() {
-    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
-    testProvider.setProperty("os.name", "Linux");
-    String productFilePath = SMBIOS_PATH_LINUX;
-    File productFile = new File(productFilePath);
-    InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
-    testProvider.addFile(productFile.getAbsolutePath(), productStream);
-
-    assertTrue(ComputeEngineCredentials.checkStaticGceDetection(testProvider));
+    checkStaticGceDetection("Linux", "Googlekdjsfhg", true);
   }
 
   @Test
-  void getDefaultCredentials_static_windows_configuredAsLinux_notGce() throws IOException {
-    TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
-    testProvider.setProperty("os.name", "windows");
-    String productFilePath = SMBIOS_PATH_LINUX;
-    InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
-    testProvider.addFile(productFilePath, productStream);
-
-    assertFalse(ComputeEngineCredentials.checkStaticGceDetection(testProvider));
+  void getDefaultCredentials_static_windows_configuredAsLinux_notGce() {
+    checkStaticGceDetection("windows", "Googlekdjsfhg", false);
   }
 
   @Test
   void getDefaultCredentials_static_unsupportedPlatform_notGce() {
+    checkStaticGceDetection("macos", "Googlekdjsfhg", false);
+  }
+
+  private void checkStaticGceDetection(String osName, String productContent, boolean expected) {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
-    testProvider.setProperty("os.name", "macos");
+    testProvider.setProperty("os.name", osName);
     String productFilePath = SMBIOS_PATH_LINUX;
-    InputStream productStream = new ByteArrayInputStream("Googlekdjsfhg".getBytes());
+    InputStream productStream = new ByteArrayInputStream(productContent.getBytes());
     testProvider.addFile(productFilePath, productStream);
 
-    assertFalse(ComputeEngineCredentials.checkStaticGceDetection(testProvider));
+    assertEquals(expected, ComputeEngineCredentials.checkStaticGceDetection(testProvider));
   }
 
   @Test
@@ -411,7 +396,7 @@ class DefaultCredentialsProviderTest {
         GDCH_SA_SERVICE_IDENTITY_NAME,
         ((GdchCredentials) defaultCredentials).getServiceIdentityName());
     assertEquals(
-        GDCH_SA_TOKEN_SERVER_URI, ((GdchCredentials) defaultCredentials).getTokenServerUri());
+        GDCH_SA_TOKEN_SERVER_URI, ((GdchCredentials) defaultCredentials).getServiceIdentityName());
     assertEquals(GDCH_SA_CA_CERT_PATH, ((GdchCredentials) defaultCredentials).getCaCertPath());
     assertNull(((GdchCredentials) defaultCredentials).getApiAudience());
 
@@ -424,7 +409,7 @@ class DefaultCredentialsProviderTest {
         GDCH_SA_SERVICE_IDENTITY_NAME,
         ((GdchCredentials) defaultCredentials).getServiceIdentityName());
     assertEquals(
-        GDCH_SA_TOKEN_SERVER_URI, ((GdchCredentials) defaultCredentials).getTokenServerUri());
+        GDCH_SA_TOKEN_SERVER_URI, ((GdchCredentials) defaultCredentials).getServiceIdentityName());
     assertEquals(GDCH_SA_CA_CERT_PATH, ((GdchCredentials) defaultCredentials).getCaCertPath());
     assertNotNull(((GdchCredentials) defaultCredentials).getApiAudience());
   }
