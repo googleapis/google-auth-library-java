@@ -36,10 +36,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.Json;
@@ -58,11 +56,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 
 /** Test case for {@link GdchCredentials}. */
 class GdchCredentialsTest extends BaseSerializationTest {
@@ -984,10 +978,28 @@ class GdchCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  @ParameterizedTest
-  @MethodSource("provideInvalidResponses")
-  void refreshAccessToken_invalidResponse(String responseContent, String expectedErrorMessage)
-      throws IOException {
+  @Test
+  void refreshAccessToken_invalidResponse_wrongTypeAccessToken() throws IOException {
+    refreshAccessToken_invalidResponse(
+        "{\"access_token\": 123, \"expires_in\": 3600}",
+        "Expected string value access_token of wrong type");
+  }
+
+  @Test
+  void refreshAccessToken_invalidResponse_missingExpiresIn() throws IOException {
+    refreshAccessToken_invalidResponse(
+        "{\"access_token\": \"token\"}", "Expected value expires_in not found");
+  }
+
+  @Test
+  void refreshAccessToken_invalidResponse_wrongTypeExpiresIn() throws IOException {
+    refreshAccessToken_invalidResponse(
+        "{\"access_token\": \"token\", \"expires_in\": \"3600\"}",
+        "Expected integer value expires_in of wrong type");
+  }
+
+  private void refreshAccessToken_invalidResponse(
+      String responseContent, String expectedErrorMessage) throws IOException {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     GenericJson json =
         writeGdchServiceAccountJson(
@@ -1006,20 +1018,12 @@ class GdchCredentialsTest extends BaseSerializationTest {
             .setContentType(Json.MEDIA_TYPE)
             .setContent(responseContent));
 
-    IOException exception =
-        assertThrows(IOException.class, () -> gdchWithAudience.refreshAccessToken());
-    assertTrue(exception.getMessage().contains(expectedErrorMessage));
-  }
-
-  private static Stream<Arguments> provideInvalidResponses() {
-    return Stream.of(
-        arguments(
-            "{\"access_token\": 123, \"expires_in\": 3600}",
-            "Expected string value access_token of wrong type"),
-        arguments("{\"access_token\": \"token\"}", "Expected value expires_in not found"),
-        arguments(
-            "{\"access_token\": \"token\", \"expires_in\": \"3600\"}",
-            "Expected integer value expires_in of wrong type"));
+    try {
+      gdchWithAudience.refreshAccessToken();
+      fail("Should not be able to refresh access token with invalid response.");
+    } catch (IOException ex) {
+      assertTrue(ex.getMessage().contains(expectedErrorMessage));
+    }
   }
 
   @Test
