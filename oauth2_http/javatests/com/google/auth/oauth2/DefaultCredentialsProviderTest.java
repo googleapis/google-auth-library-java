@@ -180,7 +180,7 @@ class DefaultCredentialsProviderTest {
   }
 
   @Test
-  void getDefaultCredentials_noCredentials_linuxNotGce() throws IOException {
+  void getDefaultCredentials_noCredentials_linuxNotGce() {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setProperty("os.name", "Linux");
     String productFilePath = SMBIOS_PATH_LINUX;
