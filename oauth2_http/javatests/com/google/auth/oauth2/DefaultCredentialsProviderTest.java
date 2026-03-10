@@ -38,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.LowLevelHttpRequest;
@@ -200,6 +201,9 @@ class DefaultCredentialsProviderTest {
   }
 
   private void checkStaticGceDetection(String osName, String productContent, boolean expected) {
+    assumeTrue(
+        System.getProperty("os.name").toLowerCase().startsWith("linux"),
+        "This test only runs on Linux.");
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setProperty("os.name", osName);
     String productFilePath = SMBIOS_PATH_LINUX;
