@@ -396,7 +396,7 @@ class DefaultCredentialsProviderTest {
         GDCH_SA_SERVICE_IDENTITY_NAME,
         ((GdchCredentials) defaultCredentials).getServiceIdentityName());
     assertEquals(
-        GDCH_SA_TOKEN_SERVER_URI, ((GdchCredentials) defaultCredentials).getServiceIdentityName());
+        GDCH_SA_TOKEN_SERVER_URI, ((GdchCredentials) defaultCredentials).getTokenServerUri());
     assertEquals(GDCH_SA_CA_CERT_PATH, ((GdchCredentials) defaultCredentials).getCaCertPath());
     assertNull(((GdchCredentials) defaultCredentials).getApiAudience());
 
@@ -409,7 +409,7 @@ class DefaultCredentialsProviderTest {
         GDCH_SA_SERVICE_IDENTITY_NAME,
         ((GdchCredentials) defaultCredentials).getServiceIdentityName());
     assertEquals(
-        GDCH_SA_TOKEN_SERVER_URI, ((GdchCredentials) defaultCredentials).getServiceIdentityName());
+        GDCH_SA_TOKEN_SERVER_URI, ((GdchCredentials) defaultCredentials).getTokenServerUri());
     assertEquals(GDCH_SA_CA_CERT_PATH, ((GdchCredentials) defaultCredentials).getCaCertPath());
     assertNotNull(((GdchCredentials) defaultCredentials).getApiAudience());
   }
