@@ -1014,9 +1014,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
     GdchCredentials gdchWithAudience = credentials.createWithGdchAudience(API_AUDIENCE);
 
     transportFactory.transport.addResponseSequence(
-        new MockLowLevelHttpResponse()
-            .setContentType(Json.MEDIA_TYPE)
-            .setContent(responseContent));
+        new MockLowLevelHttpResponse().setContentType(Json.MEDIA_TYPE).setContent(responseContent));
 
     try {
       gdchWithAudience.refreshAccessToken();
