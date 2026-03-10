@@ -191,7 +191,7 @@ class DefaultCredentialsProviderTest {
   }
 
   @Test
-  void getDefaultCredentials_static_linux() throws IOException {
+  void getDefaultCredentials_static_linux() {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setProperty("os.name", "Linux");
     String productFilePath = SMBIOS_PATH_LINUX;
