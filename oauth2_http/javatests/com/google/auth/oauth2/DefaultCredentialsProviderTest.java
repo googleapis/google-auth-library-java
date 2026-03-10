@@ -214,7 +214,7 @@ class DefaultCredentialsProviderTest {
   }
 
   @Test
-  void getDefaultCredentials_static_unsupportedPlatform_notGce() throws IOException {
+  void getDefaultCredentials_static_unsupportedPlatform_notGce() {
     TestDefaultCredentialsProvider testProvider = new TestDefaultCredentialsProvider();
     testProvider.setProperty("os.name", "macos");
     String productFilePath = SMBIOS_PATH_LINUX;
