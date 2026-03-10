@@ -781,7 +781,7 @@ class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void toString_containsFields() throws IOException {
+  void toString_containsFields() {
     String expectedToString =
         String.format(
             "GoogleCredentials{quotaProjectId=%s, universeDomain=%s, isExplicitUniverseDomain=%s}",
@@ -792,7 +792,7 @@ class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void hashCode_equals() throws IOException {
+  void hashCode_equals() {
     GoogleCredentials credentials =
         GoogleCredentials.newBuilder().setUniverseDomain("some-domain").build();
     GoogleCredentials otherCredentials =
@@ -801,7 +801,7 @@ class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void equals_true() throws IOException {
+  void equals_true() {
     GoogleCredentials credentials =
         GoogleCredentials.newBuilder().setUniverseDomain("some-domain").build();
     GoogleCredentials otherCredentials =

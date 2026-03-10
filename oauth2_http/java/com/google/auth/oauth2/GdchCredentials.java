@@ -53,7 +53,6 @@ import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.common.io.BaseEncoding;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.File;
 import java.io.FileInputStream;
@@ -66,6 +65,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
+import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
@@ -647,9 +647,11 @@ public class GdchCredentials extends GoogleCredentials {
       JsonWebToken.Payload payload)
       throws GeneralSecurityException, IOException {
     String content =
-        BaseEncoding.base64Url().omitPadding().encode(jsonFactory.toByteArray(header))
+        Base64.getUrlEncoder().withoutPadding().encodeToString(jsonFactory.toByteArray(header))
             + "."
-            + BaseEncoding.base64Url().omitPadding().encode(jsonFactory.toByteArray(payload));
+            + Base64.getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(jsonFactory.toByteArray(payload));
     byte[] contentBytes = StringUtils.getBytesUtf8(content);
     byte[] signature =
         SecurityUtils.sign(SecurityUtils.getEs256SignatureAlgorithm(), privateKey, contentBytes);
@@ -658,7 +660,7 @@ public class GdchCredentials extends GoogleCredentials {
     // format.
     // We need to transcode it. For ES256, the output length is 64 bytes.
     byte[] jwsSignature = transcodeDerToConcat(signature, 64);
-    return content + "." + BaseEncoding.base64Url().omitPadding().encode(jwsSignature);
+    return content + "." + Base64.getUrlEncoder().withoutPadding().encodeToString(jwsSignature);
   }
 
   private static byte[] transcodeDerToConcat(byte[] derSignature, int outputLength)
