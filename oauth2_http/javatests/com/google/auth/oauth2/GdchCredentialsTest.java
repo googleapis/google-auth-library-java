@@ -543,7 +543,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
     GdchCredentials credentials = GdchCredentials.fromJson(json);
     JsonFactory jsonFactory = OAuth2Utils.JSON_FACTORY;
     long currentTimeMillis = Clock.SYSTEM.currentTimeMillis();
-    String assertion = credentials.createAssertion(jsonFactory, currentTimeMillis, API_AUDIENCE);
+    String assertion = credentials.createAssertion(jsonFactory, currentTimeMillis);
 
     JsonWebSignature signature = JsonWebSignature.parse(jsonFactory, assertion);
     JsonWebToken.Payload payload = signature.getPayload();

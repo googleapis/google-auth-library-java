@@ -267,7 +267,7 @@ public class GdchCredentials extends GoogleCredentials {
     JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
 
     long currentTime = Clock.SYSTEM.currentTimeMillis();
-    String assertion = createAssertion(jsonFactory, currentTime, apiAudience);
+    String assertion = createAssertion(jsonFactory, currentTime);
 
     GenericData tokenRequest = new GenericData();
     tokenRequest.set("audience", apiAudience);
@@ -310,7 +310,7 @@ public class GdchCredentials extends GoogleCredentials {
    * (tokenServerUri), not for API call. It uses the serviceIdentityName as the `iss` and `sub`
    * claim, and the tokenServerUri as the `aud` claim. The JWT is signed with the privateKey.
    */
-  String createAssertion(JsonFactory jsonFactory, long currentTime, String apiAudience)
+  String createAssertion(JsonFactory jsonFactory, long currentTime)
       throws IOException {
     JsonWebSignature.Header header = new JsonWebSignature.Header();
     header.setAlgorithm("ES256");
