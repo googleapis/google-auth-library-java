@@ -71,8 +71,8 @@ import java.util.Map;
 import java.util.Objects;
 
 public class GdchCredentials extends GoogleCredentials {
-  private static String VALUE_NOT_FOUND_MESSAGE = "%sExpected value %s not found.";
-  private static String VALUE_WRONG_TYPE_MESSAGE = "%sExpected %s value %s of wrong type.";
+  private static final String VALUE_NOT_FOUND_MESSAGE = "%sExpected value %s not found.";
+  private static final String VALUE_WRONG_TYPE_MESSAGE = "%sExpected %s value %s of wrong type.";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   @VisibleForTesting static final String SUPPORTED_FORMAT_VERSION = "1";
 
