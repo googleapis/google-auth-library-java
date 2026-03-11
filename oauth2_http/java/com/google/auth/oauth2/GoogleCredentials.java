@@ -38,6 +38,7 @@ import com.google.api.client.util.Preconditions;
 import com.google.api.core.ObsoleteApi;
 import com.google.auth.Credentials;
 import com.google.auth.RequestMetadataCallback;
+import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
@@ -386,6 +387,34 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
 
     regionalAccessBoundaryManager.triggerAsyncRefresh(
         transportFactory, (RegionalAccessBoundaryProvider) this, token, executor);
+  }
+
+  /**
+   * Extracts the self-signed JWT from the request metadata and triggers a Regional Access Boundary
+   * refresh if expired.
+   *
+   * @param uri The URI of the outbound request.
+   * @param requestMetadata The request metadata containing the authorization header.
+   * @param executor The executor to use for the background task.
+   */
+  void refreshRegionalAccessBoundaryWithSelfSignedJwtIfExpired(
+      @Nullable URI uri,
+      Map<String, List<String>> requestMetadata,
+      @Nullable java.util.concurrent.Executor executor) {
+    List<String> authHeaders = requestMetadata.get(AuthHttpConstants.AUTHORIZATION);
+    if (authHeaders != null && !authHeaders.isEmpty()) {
+      String authHeader = authHeaders.get(0);
+      if (authHeader.startsWith(AuthHttpConstants.BEARER + " ")) {
+        String tokenValue = authHeader.substring((AuthHttpConstants.BEARER + " ").length());
+        // Use a null expiration as JWTs are short-lived anyway.
+        AccessToken wrappedToken = new AccessToken(tokenValue, null);
+        try {
+          refreshRegionalAccessBoundaryIfExpired(uri, wrappedToken, executor);
+        } catch (IOException e) {
+          // Ignore failure in async refresh trigger.
+        }
+      }
+    }
   }
 
   /**

@@ -1148,20 +1148,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
     Map<String, List<String>> requestMetadata = jwtCredentials.getRequestMetadata(null);
     requestMetadata = addRegionalAccessBoundaryToRequestMetadata(requestMetadata);
-    List<String> authHeaders = requestMetadata.get(AuthHttpConstants.AUTHORIZATION);
-    if (authHeaders != null && !authHeaders.isEmpty()) {
-      // Extract the token value to trigger a background Regional Access Boundary refresh.
-      String authHeader = authHeaders.get(0);
-      if (authHeader.startsWith(AuthHttpConstants.BEARER + " ")) {
-        String tokenValue = authHeader.substring((AuthHttpConstants.BEARER + " ").length());
-        // Use a null expiration as JWTs are short-lived anyway.
-        AccessToken wrappedToken = new AccessToken(tokenValue, null);
-        // Self-signed JWT do not go through the typical OAuth2Credentials.getRequestMetadata()
-        // flow.
-        // We explicitly trigger it here to ensure the RAB cache is populated/maintained.
-        refreshRegionalAccessBoundaryIfExpired(uri, wrappedToken, null);
-      }
-    }
+    refreshRegionalAccessBoundaryWithSelfSignedJwtIfExpired(uri, requestMetadata, null);
     return addQuotaProjectIdToRequestMetadata(quotaProjectId, requestMetadata);
   }
 
