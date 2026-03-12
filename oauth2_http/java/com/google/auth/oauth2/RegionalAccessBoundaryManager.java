@@ -155,14 +155,18 @@ final class RegionalAccessBoundaryManager {
   }
 
   private void handleRefreshFailure(Exception e) {
-    CooldownState current = cooldownState.get();
+    CooldownState currentCooldownState = cooldownState.get();
     CooldownState next;
-    if (current.expiryTime == 0) {
+    if (currentCooldownState.expiryTime == 0) {
+      // In the first non-retryable failure, we set cooldown to currentTime + 15 mins.
       next =
           new CooldownState(
               clock.currentTimeMillis() + INITIAL_COOLDOWN_MILLIS, INITIAL_COOLDOWN_MILLIS);
     } else {
-      long nextDuration = Math.min(current.durationMillis * 2, MAX_COOLDOWN_MILLIS);
+      // We attempted to exit cool-down but failed.
+      // For each failed cooldown exit attempt, we double the cooldown time (till max 6 hrs).
+      // This avoids overwhelming RAB lookup endpoint.
+      long nextDuration = Math.min(currentCooldownState.durationMillis * 2, MAX_COOLDOWN_MILLIS);
       next = new CooldownState(clock.currentTimeMillis() + nextDuration, nextDuration);
     }
 
@@ -170,7 +174,7 @@ final class RegionalAccessBoundaryManager {
     // hasn't been changed by another thread in the meantime. This prevents multiple
     // concurrent failures from logging redundant messages or incorrectly calculating
     // the exponential backoff.
-    if (cooldownState.compareAndSet(current, next)) {
+    if (cooldownState.compareAndSet(currentCooldownState, next)) {
       LoggingUtils.log(
           LOGGER_PROVIDER,
           Level.INFO,
