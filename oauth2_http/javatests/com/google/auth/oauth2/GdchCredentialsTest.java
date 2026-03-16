@@ -522,7 +522,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
     GdchCredentials credentials = GdchCredentials.fromJson(json);
 
     try {
-      GdchCredentials gdchWithAudience = credentials.createWithGdchAudience(null);
+      GdchCredentials gdchWithAudience = credentials.createWithGdchAudience((String) null);
       fail("Should not be able to create GDCH credential without exception.");
     } catch (NullPointerException ex) {
       assertTrue(ex.getMessage().contains("Audience are not configured for GDCH service account"));

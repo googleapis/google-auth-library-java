@@ -49,6 +49,7 @@ import com.google.api.client.util.Clock;
 import com.google.api.client.util.GenericData;
 import com.google.api.client.util.SecurityUtils;
 import com.google.api.client.util.StringUtils;
+import com.google.api.core.ObsoleteApi;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
@@ -236,6 +237,19 @@ public class GdchCredentials extends GoogleCredentials {
     builder.setPrivateKey(privateKey);
 
     return new GdchCredentials(builder);
+  }
+
+  /**
+   * Create a copy of GDCH credentials with the specified audience.
+   *
+   * @param apiAudience The intended audience for GDCH credentials.
+   * @deprecated use {@link #createWithGdchAudience(String)}} instead.
+   */
+  @ObsoleteApi("Use createWithGdchAudience(String) instead.")
+  public GdchCredentials createWithGdchAudience(URI apiAudience) {
+    Preconditions.checkNotNull(
+        apiAudience, "Audience are not configured for GDCH service account credentials.");
+    return this.toBuilder().setGdchAudience(apiAudience.toString()).build();
   }
 
   /**
