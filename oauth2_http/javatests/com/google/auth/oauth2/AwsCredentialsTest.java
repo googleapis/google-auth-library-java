@@ -64,6 +64,16 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class AwsCredentialsTest extends BaseSerializationTest {
 
+  @org.junit.Before
+  public void setUp() {
+    GoogleCredentials.disableRabRefreshForTest = true;
+  }
+
+  @org.junit.After
+  public void tearDown() {
+    GoogleCredentials.disableRabRefreshForTest = false;
+  }
+
   private static final String STS_URL = "https://sts.googleapis.com/v1/token";
   private static final String AWS_CREDENTIALS_URL = "https://169.254.169.254";
   private static final String AWS_CREDENTIALS_URL_WITH_ROLE = "https://169.254.169.254/roleName";
@@ -1402,6 +1412,8 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void testRefresh_regionalAccessBoundarySuccess() throws IOException, InterruptedException {
+    GoogleCredentials.disableRabRefreshForTest = false;
+
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 

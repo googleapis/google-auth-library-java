@@ -79,6 +79,16 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
+  @org.junit.Before
+  public void setUp() {
+    GoogleCredentials.disableRabRefreshForTest = true;
+  }
+
+  @org.junit.After
+  public void tearDown() {
+    GoogleCredentials.disableRabRefreshForTest = false;
+  }
+
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
 
   private static final String TOKEN_URL =
@@ -1148,6 +1158,8 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void refresh_regionalAccessBoundarySuccess() throws IOException, InterruptedException {
+    GoogleCredentials.disableRabRefreshForTest = false;
+
     String defaultAccountEmail = "default@email.com";
     MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
     RegionalAccessBoundary regionalAccessBoundary =

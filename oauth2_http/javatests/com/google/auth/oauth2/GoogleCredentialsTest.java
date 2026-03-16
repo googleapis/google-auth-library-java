@@ -56,7 +56,6 @@ import java.net.URI;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -100,8 +99,14 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   private static final String GOOGLE_DEFAULT_UNIVERSE = "googleapis.com";
   private static final String TPC_UNIVERSE = "foo.bar";
 
-  @After
+  @org.junit.Before
+  public void setUp() {
+    GoogleCredentials.disableRabRefreshForTest = true;
+  }
+
+  @org.junit.After
   public void tearDown() {
+    GoogleCredentials.disableRabRefreshForTest = false;
     RegionalAccessBoundary.setClockForTest(Clock.SYSTEM);
     RegionalAccessBoundaryManager.setClockForTest(Clock.SYSTEM);
   }
@@ -948,6 +953,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   @Test
   public void regionalAccessBoundary_shouldFetchAndReturnRegionalAccessBoundaryDataSuccessfully()
       throws IOException, InterruptedException {
+    GoogleCredentials.disableRabRefreshForTest = false;
     MockTokenServerTransport transport = new MockTokenServerTransport();
     transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     RegionalAccessBoundary regionalAccessBoundary =
@@ -981,6 +987,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   @Test
   public void regionalAccessBoundary_shouldRetryRegionalAccessBoundaryLookupOnFailure()
       throws IOException, InterruptedException {
+    GoogleCredentials.disableRabRefreshForTest = false;
+
     // This transport will be used for the regional access boundary lookup.
     // We will configure it to fail on the first attempt.
     MockTokenServerTransport regionalAccessBoundaryTransport = new MockTokenServerTransport();
@@ -1030,6 +1038,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   @Test
   public void regionalAccessBoundary_refreshShouldNotThrowWhenNoValidAccessTokenIsPassed()
       throws IOException {
+    GoogleCredentials.disableRabRefreshForTest = false;
     MockTokenServerTransport transport = new MockTokenServerTransport();
     // Return an expired access token.
     transport.addServiceAccount(SA_CLIENT_EMAIL, "expired-token");
@@ -1052,6 +1061,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   @Test
   public void regionalAccessBoundary_cooldownDoublingAndRefresh()
       throws IOException, InterruptedException {
+    GoogleCredentials.disableRabRefreshForTest = false;
     MockTokenServerTransport transport = new MockTokenServerTransport();
     transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
     // Always fail lookup for now.
@@ -1111,6 +1121,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void regionalAccessBoundary_shouldFailOpenWhenRefreshCannotBeStarted() throws IOException {
+    GoogleCredentials.disableRabRefreshForTest = false;
     // Use a simple AccessToken-based credential that won't try to refresh.
     GoogleCredentials credentials = GoogleCredentials.create(new AccessToken("some-token", null));
 
@@ -1122,6 +1133,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   @Test
   public void regionalAccessBoundary_deduplicationOfConcurrentRefreshes()
       throws IOException, InterruptedException {
+    GoogleCredentials.disableRabRefreshForTest = false;
     MockTokenServerTransport transport = new MockTokenServerTransport();
     transport.setRegionalAccessBoundary(
         new RegionalAccessBoundary("valid", Collections.singletonList("us-central1")));
@@ -1150,6 +1162,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void regionalAccessBoundary_shouldSkipRefreshForRegionalEndpoints() throws IOException {
+    GoogleCredentials.disableRabRefreshForTest = false;
     MockTokenServerTransport transport = new MockTokenServerTransport();
     GoogleCredentials credentials = createTestCredentials(transport);
 

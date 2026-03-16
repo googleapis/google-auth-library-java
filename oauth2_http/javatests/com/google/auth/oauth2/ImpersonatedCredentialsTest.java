@@ -165,8 +165,14 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
   @Before
   public void setup() throws IOException {
+    GoogleCredentials.disableRabRefreshForTest = true;
     sourceCredentials = getSourceCredentials();
     mockTransportFactory = new MockIAMCredentialsServiceTransportFactory();
+  }
+
+  @org.junit.After
+  public void tearDown() {
+    GoogleCredentials.disableRabRefreshForTest = false;
   }
 
   static GoogleCredentials getSourceCredentials() throws IOException {
@@ -1311,6 +1317,7 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void refresh_regionalAccessBoundarySuccess() throws IOException, InterruptedException {
+    GoogleCredentials.disableRabRefreshForTest = false;
     // Mock regional access boundary response
     RegionalAccessBoundary regionalAccessBoundary = REGIONAL_ACCESS_BOUNDARY;
 

@@ -57,6 +57,17 @@ import org.junit.runners.JUnit4;
 /** Tests for {@link PluggableAuthCredentials}. */
 @RunWith(JUnit4.class)
 public class PluggableAuthCredentialsTest extends BaseSerializationTest {
+
+  @org.junit.Before
+  public void setUp() {
+    GoogleCredentials.disableRabRefreshForTest = true;
+  }
+
+  @org.junit.After
+  public void tearDown() {
+    GoogleCredentials.disableRabRefreshForTest = false;
+  }
+
   // The default timeout for waiting for the executable to finish (30 seconds).
   private static final int DEFAULT_EXECUTABLE_TIMEOUT_MS = 30 * 1000;
   // The minimum timeout for waiting for the executable to finish (5 seconds).
@@ -608,6 +619,8 @@ public class PluggableAuthCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void testRefresh_regionalAccessBoundarySuccess() throws IOException, InterruptedException {
+    GoogleCredentials.disableRabRefreshForTest = false;
+
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
     transportFactory.transport.setExpireTime(TestUtils.getDefaultExpireTime());

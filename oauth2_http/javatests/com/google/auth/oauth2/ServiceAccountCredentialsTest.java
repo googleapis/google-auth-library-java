@@ -161,6 +161,16 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     return createDefaultBuilderWithKey(privateKey);
   }
 
+  @org.junit.Before
+  public void setUp() {
+    GoogleCredentials.disableRabRefreshForTest = true;
+  }
+
+  @org.junit.After
+  public void tearDown() {
+    GoogleCredentials.disableRabRefreshForTest = false;
+  }
+
   @Test
   public void setLifetime() throws IOException {
     ServiceAccountCredentials.Builder builder = createDefaultBuilder();
@@ -1805,6 +1815,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void refresh_regionalAccessBoundarySuccess() throws IOException, InterruptedException {
+    GoogleCredentials.disableRabRefreshForTest = false;
     // Mock regional access boundary response
     RegionalAccessBoundary regionalAccessBoundary =
         new RegionalAccessBoundary(
@@ -1841,6 +1852,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void refresh_regionalAccessBoundary_selfSignedJWT()
       throws IOException, InterruptedException {
+    GoogleCredentials.disableRabRefreshForTest = false;
     RegionalAccessBoundary regionalAccessBoundary =
         new RegionalAccessBoundary(
             TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION,

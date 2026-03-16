@@ -89,7 +89,13 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
   @Before
   public void setup() {
+    GoogleCredentials.disableRabRefreshForTest = true;
     transportFactory = new MockExternalAccountCredentialsTransportFactory();
+  }
+
+  @org.junit.After
+  public void tearDown() {
+    GoogleCredentials.disableRabRefreshForTest = false;
   }
 
   @Test
@@ -1305,6 +1311,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void refresh_workload_regionalAccessBoundarySuccess()
       throws IOException, InterruptedException {
+    GoogleCredentials.disableRabRefreshForTest = false;
     String audience =
         "//iam.googleapis.com/projects/12345/locations/global/workloadIdentityPools/my-pool/providers/my-provider";
 
@@ -1339,6 +1346,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void refresh_workforce_regionalAccessBoundarySuccess()
       throws IOException, InterruptedException {
+    GoogleCredentials.disableRabRefreshForTest = false;
     String audience =
         "//iam.googleapis.com/locations/global/workforcePools/my-pool/providers/my-provider";
 
@@ -1373,6 +1381,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void refresh_impersonated_workload_regionalAccessBoundarySuccess()
       throws IOException, InterruptedException {
+    GoogleCredentials.disableRabRefreshForTest = false;
     String projectNumber = "12345";
     String poolId = "my-pool";
     String providerId = "my-provider";
@@ -1433,6 +1442,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void refresh_impersonated_workforce_regionalAccessBoundarySuccess()
       throws IOException, InterruptedException {
+    GoogleCredentials.disableRabRefreshForTest = false;
     String poolId = "my-pool";
     String providerId = "my-provider";
     String audience =

@@ -72,6 +72,16 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
   private static final IdentityPoolSubjectTokenSupplier testProvider =
       (ExternalAccountSupplierContext context) -> "testSubjectToken";
 
+  @org.junit.Before
+  public void setUp() {
+    GoogleCredentials.disableRabRefreshForTest = true;
+  }
+
+  @org.junit.After
+  public void tearDown() {
+    GoogleCredentials.disableRabRefreshForTest = false;
+  }
+
   @Test
   public void createdScoped_clonedCredentialWithAddedScopes() throws IOException {
     IdentityPoolCredentials credentials =
@@ -1307,6 +1317,8 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void testRefresh_regionalAccessBoundarySuccess() throws IOException, InterruptedException {
+    GoogleCredentials.disableRabRefreshForTest = false;
+
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();
     HttpTransportFactory testingHttpTransportFactory = transportFactory;

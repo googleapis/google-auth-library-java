@@ -111,6 +111,11 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   private final String universeDomain;
   private final boolean isExplicitUniverseDomain;
 
+  // Note: this is for internal testing use use only.
+  // TODO: Fix unit test mocks so this can be removed
+  // Refer -> https://github.com/googleapis/google-auth-library-java/issues/1898
+  @VisibleForTesting static boolean disableRabRefreshForTest = false;
+
   transient RegionalAccessBoundaryManager regionalAccessBoundaryManager =
       new RegionalAccessBoundaryManager();
 
@@ -361,6 +366,9 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       @Nullable AccessToken token,
       @Nullable java.util.concurrent.Executor executor)
       throws IOException {
+    if (disableRabRefreshForTest) {
+      return;
+    }
     if (!(this instanceof RegionalAccessBoundaryProvider) || !isDefaultUniverseDomain()) {
       return;
     }
@@ -526,22 +534,22 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * Adds Regional Access Boundary header to requestMetadata if available.
+   * Adds Regional Access Boundary header to requestMetadata if available. Overwrites if present.
    *
-   * @return a new map with Regional Access Boundary header added if needed
+   * @return a new map with Regional Access Boundary header added or updated
    */
   Map<String, List<String>> addRegionalAccessBoundaryToRequestMetadata(
       Map<String, List<String>> requestMetadata) {
     Preconditions.checkNotNull(requestMetadata);
     RegionalAccessBoundary rab = getRegionalAccessBoundary();
-    if (rab != null
-        && !requestMetadata.containsKey(RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY)) {
-      return ImmutableMap.<String, List<String>>builder()
-          .putAll(requestMetadata)
-          .put(
-              RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY,
-              Collections.singletonList(rab.getEncodedLocations()))
-          .build();
+    if (rab != null) {
+      // Overwrite the header to ensure the most recent async update is used,
+      // preventing staleness if the token itself hasn't expired yet.
+      Map<String, List<String>> newMetadata = new HashMap<>(requestMetadata);
+      newMetadata.put(
+          RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY,
+          Collections.singletonList(rab.getEncodedLocations()));
+      return ImmutableMap.copyOf(newMetadata);
     }
     return requestMetadata;
   }
