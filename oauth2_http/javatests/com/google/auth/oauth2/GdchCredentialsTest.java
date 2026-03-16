@@ -505,7 +505,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
     assertEquals(SERVICE_IDENTITY_NAME, gdchWithAudience.getServiceIdentityName());
     assertEquals(TOKEN_SERVER_URI, gdchWithAudience.getTokenServerUri());
     assertEquals(CA_CERT_PATH, credentials.getCaCertPath());
-    assertEquals(API_AUDIENCE, gdchWithAudience.getApiAudience());
+    assertEquals(API_AUDIENCE, gdchWithAudience.getApiAudienceString());
   }
 
   @Test
@@ -527,6 +527,30 @@ class GdchCredentialsTest extends BaseSerializationTest {
     } catch (NullPointerException ex) {
       assertTrue(ex.getMessage().contains("Audience are not configured for GDCH service account"));
     }
+  }
+
+  @Test
+  void getApiAudienceString_vs_getApiAudience() throws IOException {
+    GenericJson json =
+        writeGdchServiceAccountJson(
+            FORMAT_VERSION,
+            PROJECT_ID,
+            PRIVATE_KEY_ID,
+            PRIVATE_KEY_PKCS8,
+            SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
+            TOKEN_SERVER_URI);
+    GdchCredentials credentials = GdchCredentials.fromJson(json);
+
+    String validUri = "https://valid-audience.com";
+    GdchCredentials validCredentials = credentials.createWithGdchAudience(validUri);
+    assertEquals(validUri, validCredentials.getApiAudienceString());
+    assertEquals(URI.create(validUri), validCredentials.getApiAudience());
+
+    String invalidUri = "invalid uri ^";
+    GdchCredentials invalidCredentials = credentials.createWithGdchAudience(invalidUri);
+    assertEquals(invalidUri, invalidCredentials.getApiAudienceString());
+    assertNull(invalidCredentials.getApiAudience());
   }
 
   @Test

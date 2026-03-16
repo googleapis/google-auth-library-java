@@ -54,6 +54,7 @@ import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.File;
 import java.io.FileInputStream;
@@ -379,8 +380,19 @@ public class GdchCredentials extends GoogleCredentials {
     return tokenServerUri;
   }
 
-  public final String getApiAudience() {
+  public final String getApiAudienceString() {
     return apiAudience;
+  }
+
+  public final URI getApiAudience() {
+    if (Strings.isNullOrEmpty(apiAudience)) {
+      return null;
+    }
+    try {
+      return new URI(apiAudience);
+    } catch (URISyntaxException e) {
+      return null;
+    }
   }
 
   public final HttpTransportFactory getTransportFactory() {
