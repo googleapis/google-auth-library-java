@@ -971,10 +971,9 @@ class GdchCredentialsTest extends BaseSerializationTest {
       gdchWithAudience.refreshAccessToken();
       fail("Should not be able to refresh access token without exception.");
     } catch (IOException ex) {
-      assertTrue(
-          ex.getMessage()
-              .contains(
-                  "Error parsing token refresh response. Expected value access_token not found."));
+      assertEquals(
+          "Error parsing token refresh response. Expected value access_token not found.",
+          ex.getMessage());
     }
   }
 
@@ -982,20 +981,21 @@ class GdchCredentialsTest extends BaseSerializationTest {
   void refreshAccessToken_invalidResponse_wrongTypeAccessToken() throws IOException {
     refreshAccessToken_invalidResponse(
         "{\"access_token\": 123, \"expires_in\": 3600}",
-        "Expected string value access_token of wrong type");
+        "Error parsing token refresh response. Expected string value access_token of wrong type.");
   }
 
   @Test
   void refreshAccessToken_invalidResponse_missingExpiresIn() throws IOException {
     refreshAccessToken_invalidResponse(
-        "{\"access_token\": \"token\"}", "Expected value expires_in not found");
+        "{\"access_token\": \"token\"}",
+        "Error parsing token refresh response. Expected value expires_in not found.");
   }
 
   @Test
   void refreshAccessToken_invalidResponse_wrongTypeExpiresIn() throws IOException {
     refreshAccessToken_invalidResponse(
         "{\"access_token\": \"token\", \"expires_in\": \"3600\"}",
-        "Expected integer value expires_in of wrong type");
+        "Error parsing token refresh response. Expected integer value expires_in of wrong type.");
   }
 
   private void refreshAccessToken_invalidResponse(
@@ -1020,7 +1020,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
       gdchWithAudience.refreshAccessToken();
       fail("Should not be able to refresh access token with invalid response.");
     } catch (IOException ex) {
-      assertTrue(ex.getMessage().contains(expectedErrorMessage));
+      assertEquals(expectedErrorMessage, ex.getMessage());
     }
   }
 

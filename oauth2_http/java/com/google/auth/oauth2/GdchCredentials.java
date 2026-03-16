@@ -71,9 +71,8 @@ import java.util.Map;
 import java.util.Objects;
 
 public class GdchCredentials extends GoogleCredentials {
-  private static final String VALUE_NOT_FOUND_MESSAGE = "%sExpected value %s not found.";
-  private static final String VALUE_WRONG_TYPE_MESSAGE = "%sExpected %s value %s of wrong type.";
-  private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
+  private static final String BAD_VALUE_ERROR_MESSAGE_FORMAT = "%s Expected %s %s %s.";
+  private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response.";
   @VisibleForTesting static final String SUPPORTED_FORMAT_VERSION = "1";
 
   private static final String ACCESS_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:access_token";
@@ -616,10 +615,13 @@ public class GdchCredentials extends GoogleCredentials {
       throws IOException {
     Object value = map.get(key);
     if (value == null) {
-      throw new IOException(String.format(VALUE_NOT_FOUND_MESSAGE, errorPrefix, key));
+      throw new IOException(
+          String.format(BAD_VALUE_ERROR_MESSAGE_FORMAT, errorPrefix, "value", key, "not found"));
     }
     if (!(value instanceof String)) {
-      throw new IOException(String.format(VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "string", key));
+      throw new IOException(
+          String.format(
+              BAD_VALUE_ERROR_MESSAGE_FORMAT, errorPrefix, "string value", key, "of wrong type"));
     }
     return (String) value;
   }
@@ -628,14 +630,17 @@ public class GdchCredentials extends GoogleCredentials {
       throws IOException {
     Object value = map.get(key);
     if (value == null) {
-      throw new IOException(String.format(VALUE_NOT_FOUND_MESSAGE, errorPrefix, key));
+      throw new IOException(
+          String.format(BAD_VALUE_ERROR_MESSAGE_FORMAT, errorPrefix, "value", key, "not found"));
     }
     if (value instanceof BigDecimal) {
       BigDecimal bigDecimalValue = (BigDecimal) value;
       return bigDecimalValue.intValueExact();
     }
     if (!(value instanceof Integer)) {
-      throw new IOException(String.format(VALUE_WRONG_TYPE_MESSAGE, errorPrefix, "integer", key));
+      throw new IOException(
+          String.format(
+              BAD_VALUE_ERROR_MESSAGE_FORMAT, errorPrefix, "integer value", key, "of wrong type"));
     }
     return (Integer) value;
   }
