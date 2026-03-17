@@ -671,37 +671,74 @@ public class GdchCredentials extends GoogleCredentials {
     return (Integer) value;
   }
 
+  /**
+   * Signs the JWS header and payload using the ES256 algorithm (ECDSA with SHA-256).
+   *
+   * <p>The ES256 algorithm is defined in <a href="https://tools.ietf.org/html/rfc7518#section-3.4">RFC 7518 Section 3.4</a>.
+   * This method follows the JWS Compact Serialization format described in
+   * <a href="https://tools.ietf.org/html/rfc7515#section-3.1">RFC 7515 Section 3.1</a>.
+   *
+   * <p>Unlike RSA signatures, ECDSA signatures produced by the Java Cryptography Architecture (JCA)
+   * are DER-encoded. This method transcodes the DER-encoded signature into the concatenated R|S
+   * format required by the JWS standard, as specified in
+   * <a href="https://tools.ietf.org/html/rfc7515#appendix-A.3">RFC 7515 Appendix A.3</a>.
+   *
+   * @param privateKey The Elliptic Curve private key used for signing.
+   * @param jsonFactory The JSON factory to serialize header and payload.
+   * @param header The JWS header (e.g., containing "alg": "ES256").
+   * @param payload The JWS payload containing claims like "iss", "sub", and "aud".
+   * @return A complete, signed JWS string in the format {@code [header].[payload].[signature]}.
+   * @throws GeneralSecurityException If signing fails due to cryptographic errors.
+   * @throws IOException If serialization or transcoding fails.
+   */
+  @VisibleForTesting
   private static String signUsingEsSha256(
-      PrivateKey privateKey,
-      JsonFactory jsonFactory,
-      JsonWebSignature.Header header,
-      JsonWebToken.Payload payload)
-      throws GeneralSecurityException, IOException {
-    String content =
-        Base64.getUrlEncoder().withoutPadding().encodeToString(jsonFactory.toByteArray(header))
-            + "."
-            + Base64.getUrlEncoder()
-                .withoutPadding()
-                .encodeToString(jsonFactory.toByteArray(payload));
-    byte[] contentBytes = StringUtils.getBytesUtf8(content);
-    byte[] signature =
-        SecurityUtils.sign(SecurityUtils.getEs256SignatureAlgorithm(), privateKey, contentBytes);
+          PrivateKey privateKey,
+          JsonFactory jsonFactory,
+          JsonWebSignature.Header header,
+          JsonWebToken.Payload payload)
+          throws GeneralSecurityException, IOException {
 
-    // The JCA returns a DER-encoded signature, but JWS needs the concatenated R|S
-    // format.
-    // We need to transcode it. For ES256, the output length is 64 bytes.
+    // 1. Construct the JWS Signing Input: Base64URL(UTF8(Header)) + '.' + Base64URL(UTF8(Payload))
+    String content =
+            Base64.getUrlEncoder().withoutPadding().encodeToString(jsonFactory.toByteArray(header))
+                    + "."
+                    + Base64.getUrlEncoder().withoutPadding().encodeToString(jsonFactory.toByteArray(payload));
+    byte[] contentBytes = StringUtils.getBytesUtf8(content);
+
+    // 2. Create the digital signature using SHA256withECDSA.
+    byte[] signature =
+            SecurityUtils.sign(SecurityUtils.getEs256SignatureAlgorithm(), privateKey, contentBytes);
+
+    // 3. Transcode the signature from DER to Concatenated R|S.
     byte[] jwsSignature = transcodeDerToConcat(signature, 64);
+
+    // 4. Return final JWS: [Signing Input] + '.' + Base64URL(Signature)
     return content + "." + Base64.getUrlEncoder().withoutPadding().encodeToString(jwsSignature);
   }
 
-  private static byte[] transcodeDerToConcat(byte[] derSignature, int outputLength)
-      throws IOException {
+  /**
+   * Transcodes a DER-encoded ECDSA signature into the concatenated R|S format.
+   *
+   * <p>DER format (ASN.1): {@code SEQUENCE { r INTEGER, s INTEGER }}
+   * <p>Concatenated format: {@code r | s} (where {@code |} is concatenation).
+   *
+   * @param derSignature The raw bytes of the DER-encoded signature.
+   * @param outputLength The total expected length of the concatenated signature (64 bytes for ES256).
+   * @return The signature in concatenated R|S format.
+   * @throws IOException If the DER format is invalid.
+   */
+  @VisibleForTesting
+  static byte[] transcodeDerToConcat(byte[] derSignature, int outputLength)
+          throws IOException {
+    // Validate basic ASN.1 DER structure (0x30 = SEQUENCE)
     if (derSignature.length < 8 || derSignature[0] != 0x30) {
       throw new IOException("Invalid DER signature format.");
     }
 
     int offset = 2;
     int seqLength = derSignature[1] & 0xFF;
+    // Handle long-form length encoding for the sequence
     if (seqLength == 0x81) {
       offset = 3;
       seqLength = derSignature[2] & 0xFF;
@@ -711,11 +748,12 @@ public class GdchCredentials extends GoogleCredentials {
       throw new IOException("Invalid DER signature length.");
     }
 
-    // R
+    // Parse Integer R (0x02 = INTEGER)
     if (derSignature[offset++] != 0x02) {
       throw new IOException("Expected INTEGER for R.");
     }
     int rLength = derSignature[offset++];
+    // Skip leading zero byte if it exists (DER integers are signed; zero is added to stay positive)
     if (derSignature[offset] == 0x00 && rLength > 1 && (derSignature[offset + 1] & 0x80) != 0) {
       offset++;
       rLength--;
@@ -724,7 +762,7 @@ public class GdchCredentials extends GoogleCredentials {
     System.arraycopy(derSignature, offset, r, 0, rLength);
     offset += rLength;
 
-    // S
+    // Parse Integer S
     if (derSignature[offset++] != 0x02) {
       throw new IOException("Expected INTEGER for S.");
     }
@@ -736,12 +774,12 @@ public class GdchCredentials extends GoogleCredentials {
     byte[] s = new byte[sLength];
     System.arraycopy(derSignature, offset, s, 0, sLength);
 
+    // Concatenate r and s into fixed-length segments (32 bytes each for ES256)
     int keySizeBytes = outputLength / 2;
     if (r.length > keySizeBytes || s.length > keySizeBytes) {
       throw new IOException(
-          String.format(
-              "Invalid R or S length. R: %d, S: %d, Expected: %d",
-              r.length, s.length, keySizeBytes));
+              String.format("Invalid R or S length. R: %d, S: %d, Expected: %d",
+                      r.length, s.length, keySizeBytes));
     }
 
     byte[] result = new byte[outputLength];
