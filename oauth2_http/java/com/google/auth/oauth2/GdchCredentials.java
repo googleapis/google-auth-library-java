@@ -228,13 +228,14 @@ public class GdchCredentials extends GoogleCredentials {
   /**
    * Internal constructor.
    *
-   * @param privateKeyPkcs8 RSA private key object for the service account in PKCS#8 format.
+   * @param privateKeyPkcs8 EC private key object for the service account in PKCS#8 format.
    * @param builder A builder for GdchCredentials.
    * @return an instance of GdchCredentials.
    */
   static GdchCredentials fromPkcs8(String privateKeyPkcs8, GdchCredentials.Builder builder)
       throws IOException {
-    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(privateKeyPkcs8, "EC");
+    PrivateKey privateKey =
+        OAuth2Utils.privateKeyFromPkcs8(privateKeyPkcs8, OAuth2Utils.Pkcs8Algorithm.EC);
     builder.setPrivateKey(privateKey);
 
     return new GdchCredentials(builder);

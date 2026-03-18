@@ -79,6 +79,11 @@ import java.util.Set;
  */
 public class OAuth2Utils {
 
+  public enum Pkcs8Algorithm {
+    RSA,
+    EC
+  }
+
   static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
 
   public static final String TOKEN_TYPE_ACCESS_TOKEN =
@@ -266,7 +271,7 @@ public class OAuth2Utils {
    *     key creation.
    */
   public static PrivateKey privateKeyFromPkcs8(String privateKeyPkcs8) throws IOException {
-    return privateKeyFromPkcs8(privateKeyPkcs8, "RSA");
+    return privateKeyFromPkcs8(privateKeyPkcs8, Pkcs8Algorithm.RSA);
   }
 
   /**
@@ -278,7 +283,7 @@ public class OAuth2Utils {
    * @throws IOException if the PKCS#8 data is invalid or if an unexpected exception occurs during
    *     key creation.
    */
-  public static PrivateKey privateKeyFromPkcs8(String privateKeyPkcs8, String algorithm)
+  public static PrivateKey privateKeyFromPkcs8(String privateKeyPkcs8, Pkcs8Algorithm algorithm)
       throws IOException {
     Reader reader = new StringReader(privateKeyPkcs8);
     Section section = PemReader.readFirstSectionAndClose(reader, "PRIVATE KEY");
@@ -289,7 +294,7 @@ public class OAuth2Utils {
     PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(bytes);
     Exception unexpectedException;
     try {
-      KeyFactory keyFactory = KeyFactory.getInstance(algorithm);
+      KeyFactory keyFactory = KeyFactory.getInstance(algorithm.toString());
       return keyFactory.generatePrivate(keySpec);
     } catch (NoSuchAlgorithmException | InvalidKeySpecException exception) {
       unexpectedException = exception;

@@ -1208,7 +1208,8 @@ class GdchCredentialsTest extends BaseSerializationTest {
 
   @Test
   void signUsingEsSha256_validStructure() throws Exception {
-    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8, "EC");
+    PrivateKey privateKey =
+        OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8, OAuth2Utils.Pkcs8Algorithm.EC);
     JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
 
     JsonWebSignature.Header header = new JsonWebSignature.Header();
