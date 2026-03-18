@@ -674,14 +674,15 @@ public class GdchCredentials extends GoogleCredentials {
   /**
    * Signs the JWS header and payload using the ES256 algorithm (ECDSA with SHA-256).
    *
-   * <p>The ES256 algorithm is defined in <a href="https://tools.ietf.org/html/rfc7518#section-3.4">RFC 7518 Section 3.4</a>.
-   * This method follows the JWS Compact Serialization format described in
-   * <a href="https://tools.ietf.org/html/rfc7515#section-3.1">RFC 7515 Section 3.1</a>.
+   * <p>The ES256 algorithm is defined in <a
+   * href="https://tools.ietf.org/html/rfc7518#section-3.4">RFC 7518 Section 3.4</a>. This method
+   * follows the JWS Compact Serialization format described in <a
+   * href="https://tools.ietf.org/html/rfc7515#section-3.1">RFC 7515 Section 3.1</a>.
    *
    * <p>Unlike RSA signatures, ECDSA signatures produced by the Java Cryptography Architecture (JCA)
    * are DER-encoded. This method transcodes the DER-encoded signature into the concatenated R|S
-   * format required by the JWS standard, as specified in
-   * <a href="https://tools.ietf.org/html/rfc7515#appendix-A.3">RFC 7515 Appendix A.3</a>.
+   * format required by the JWS standard, as specified in <a
+   * href="https://tools.ietf.org/html/rfc7515#appendix-A.3">RFC 7515 Appendix A.3</a>.
    *
    * @param privateKey The Elliptic Curve private key used for signing.
    * @param jsonFactory The JSON factory to serialize header and payload.
@@ -693,22 +694,24 @@ public class GdchCredentials extends GoogleCredentials {
    */
   @VisibleForTesting
   private static String signUsingEsSha256(
-          PrivateKey privateKey,
-          JsonFactory jsonFactory,
-          JsonWebSignature.Header header,
-          JsonWebToken.Payload payload)
-          throws GeneralSecurityException, IOException {
+      PrivateKey privateKey,
+      JsonFactory jsonFactory,
+      JsonWebSignature.Header header,
+      JsonWebToken.Payload payload)
+      throws GeneralSecurityException, IOException {
 
     // 1. Construct the JWS Signing Input: Base64URL(UTF8(Header)) + '.' + Base64URL(UTF8(Payload))
     String content =
-            Base64.getUrlEncoder().withoutPadding().encodeToString(jsonFactory.toByteArray(header))
-                    + "."
-                    + Base64.getUrlEncoder().withoutPadding().encodeToString(jsonFactory.toByteArray(payload));
+        Base64.getUrlEncoder().withoutPadding().encodeToString(jsonFactory.toByteArray(header))
+            + "."
+            + Base64.getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(jsonFactory.toByteArray(payload));
     byte[] contentBytes = StringUtils.getBytesUtf8(content);
 
     // 2. Create the digital signature using SHA256withECDSA.
     byte[] signature =
-            SecurityUtils.sign(SecurityUtils.getEs256SignatureAlgorithm(), privateKey, contentBytes);
+        SecurityUtils.sign(SecurityUtils.getEs256SignatureAlgorithm(), privateKey, contentBytes);
 
     // 3. Transcode the signature from DER to Concatenated R|S.
     byte[] jwsSignature = transcodeDerToConcat(signature, 64);
@@ -721,16 +724,17 @@ public class GdchCredentials extends GoogleCredentials {
    * Transcodes a DER-encoded ECDSA signature into the concatenated R|S format.
    *
    * <p>DER format (ASN.1): {@code SEQUENCE { r INTEGER, s INTEGER }}
+   *
    * <p>Concatenated format: {@code r | s} (where {@code |} is concatenation).
    *
    * @param derSignature The raw bytes of the DER-encoded signature.
-   * @param outputLength The total expected length of the concatenated signature (64 bytes for ES256).
+   * @param outputLength The total expected length of the concatenated signature (64 bytes for
+   *     ES256).
    * @return The signature in concatenated R|S format.
    * @throws IOException If the DER format is invalid.
    */
   @VisibleForTesting
-  static byte[] transcodeDerToConcat(byte[] derSignature, int outputLength)
-          throws IOException {
+  static byte[] transcodeDerToConcat(byte[] derSignature, int outputLength) throws IOException {
     // Validate basic ASN.1 DER structure (0x30 = SEQUENCE)
     if (derSignature.length < 8 || derSignature[0] != 0x30) {
       throw new IOException("Invalid DER signature format.");
@@ -778,8 +782,9 @@ public class GdchCredentials extends GoogleCredentials {
     int keySizeBytes = outputLength / 2;
     if (r.length > keySizeBytes || s.length > keySizeBytes) {
       throw new IOException(
-              String.format("Invalid R or S length. R: %d, S: %d, Expected: %d",
-                      r.length, s.length, keySizeBytes));
+          String.format(
+              "Invalid R or S length. R: %d, S: %d, Expected: %d",
+              r.length, s.length, keySizeBytes));
     }
 
     byte[] result = new byte[outputLength];

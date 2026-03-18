@@ -36,12 +36,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.Json;
 import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.client.testing.http.FixedClock;
@@ -52,8 +54,15 @@ import com.google.auth.oauth2.GoogleCredentials.GoogleCredentialsInfo;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.nio.file.Files;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.PrivateKey;
+import java.security.Signature;
+import java.security.spec.ECGenParameterSpec;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -156,7 +165,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
             TOKEN_SERVER_URI);
 
     try {
-      GdchCredentials credentials = GdchCredentials.fromJson(json);
+      GdchCredentials.fromJson(json);
       fail("Should not be able to create GDCH credential without exception.");
     } catch (IOException ex) {
       assertTrue(
@@ -182,7 +191,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
             TOKEN_SERVER_URI);
 
     try {
-      GdchCredentials credentials = GdchCredentials.fromJson(json);
+      GdchCredentials.fromJson(json);
       fail("Should not be able to create GDCH credential without exception.");
     } catch (IOException ex) {
       assertTrue(
@@ -208,7 +217,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
             TOKEN_SERVER_URI);
 
     try {
-      GdchCredentials credentials = GdchCredentials.fromJson(json);
+      GdchCredentials.fromJson(json);
       fail("Should not be able to create GDCH credential without exception.");
     } catch (IOException ex) {
       assertTrue(
@@ -234,7 +243,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
             TOKEN_SERVER_URI);
 
     try {
-      GdchCredentials credentials = GdchCredentials.fromJson(json);
+      GdchCredentials.fromJson(json);
       fail("Should not be able to create GDCH credential without exception.");
     } catch (IOException ex) {
       assertTrue(
@@ -260,7 +269,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
             TOKEN_SERVER_URI);
 
     try {
-      GdchCredentials credentials = GdchCredentials.fromJson(json);
+      GdchCredentials.fromJson(json);
       fail("Should not be able to create GDCH credential without exception.");
     } catch (IOException ex) {
       assertTrue(
@@ -301,7 +310,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
             null);
 
     try {
-      GdchCredentials credentials = GdchCredentials.fromJson(json);
+      GdchCredentials.fromJson(json);
       fail("Should not be able to create GDCH credential without exception.");
     } catch (IOException ex) {
       assertTrue(
@@ -327,7 +336,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
             TOKEN_SERVER_URI);
 
     try {
-      GdchCredentials credentials = GdchCredentials.fromJson(json);
+      GdchCredentials.fromJson(json);
       fail("Should not be able to create GDCH credential without exception.");
     } catch (IOException ex) {
       assertTrue(
@@ -349,7 +358,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
             TOKEN_SERVER_URI);
 
     try {
-      GdchCredentials credentials = GdchCredentials.fromJson(json);
+      GdchCredentials.fromJson(json);
       fail("Should not be able to create GDCH credential without exception.");
     } catch (IOException ex) {
       assertTrue(ex.getMessage().contains("Error reading certificate file from CA cert path"));
@@ -522,7 +531,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
     GdchCredentials credentials = GdchCredentials.fromJson(json);
 
     try {
-      GdchCredentials gdchWithAudience = credentials.createWithGdchAudience((String) null);
+      credentials.createWithGdchAudience((String) null);
       fail("Should not be able to create GDCH credential without exception.");
     } catch (NullPointerException ex) {
       assertTrue(ex.getMessage().contains("Audience are not configured for GDCH service account"));
@@ -639,7 +648,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
         GdchCredentials.getIssuerSubjectValue(PROJECT_ID, SERVICE_IDENTITY_NAME), tokenString);
     transportFactory.transport.setTokenServerUri(TOKEN_SERVER_URI);
     try {
-      AccessToken accessToken = credentials.refreshAccessToken();
+      credentials.refreshAccessToken();
       fail("Should not be able to refresh access token without exception.");
     } catch (NullPointerException ex) {
       assertTrue(
@@ -651,17 +660,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void getIssuerSubjectValue_correct() throws IOException {
-    GenericJson json =
-        writeGdchServiceAccountJson(
-            FORMAT_VERSION,
-            PROJECT_ID,
-            PRIVATE_KEY_ID,
-            PRIVATE_KEY_PKCS8,
-            SERVICE_IDENTITY_NAME,
-            CA_CERT_PATH,
-            TOKEN_SERVER_URI);
-    GdchCredentials credentials = GdchCredentials.fromJson(json);
+  void getIssuerSubjectValue_correct() {
     Object expectedIssSubValue =
         String.format("system:serviceaccount:%s:%s", PROJECT_ID, SERVICE_IDENTITY_NAME);
     assertEquals(
@@ -1099,6 +1098,146 @@ class GdchCredentialsTest extends BaseSerializationTest {
       assertTrue(ex.getMessage().contains("Error getting access token for GDCH service account"));
       assertTrue(ex.getMessage().contains("Connection reset"));
     }
+  }
+
+  @Test
+  void transcodeDerToConcat_withGeneratedSignature() throws Exception {
+    // Generate a new key pair and a signature.
+    KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC");
+    keyGen.initialize(new ECGenParameterSpec("secp256r1"));
+    KeyPair keyPair = keyGen.generateKeyPair();
+    Signature signer = Signature.getInstance("SHA256withECDSA");
+    signer.initSign(keyPair.getPrivate());
+    signer.update(new byte[] {1, 2, 3, 4});
+    byte[] derSignature = signer.sign();
+
+    // Transcode the signature and check length.
+    byte[] jwsSignature = GdchCredentials.transcodeDerToConcat(derSignature, 64);
+    assertEquals(64, jwsSignature.length);
+  }
+
+  @Test
+  void transcodeDerToConcat_invalidDerFormat() {
+    byte[] invalidDer = new byte[] {0x31, 0x00}; // Not a SEQUENCE
+    IOException e =
+        assertThrows(IOException.class, () -> GdchCredentials.transcodeDerToConcat(invalidDer, 64));
+    assertEquals("Invalid DER signature format.", e.getMessage());
+  }
+
+  @Test
+  void transcodeDerToConcat_invalidLength() {
+    // SEQUENCE length doesn't match actual length
+    byte[] invalidDer = new byte[] {0x30, 0x05, 0x02, 0x01, 0x01, 0x02, 0x01, 0x02};
+    IOException e =
+        assertThrows(IOException.class, () -> GdchCredentials.transcodeDerToConcat(invalidDer, 64));
+    assertEquals("Invalid DER signature length.", e.getMessage());
+  }
+
+  @Test
+  void transcodeDerToConcat_invalidRInteger() {
+    // Missing INTEGER for R
+    byte[] invalidDer = new byte[] {0x30, 0x06, 0x03, 0x01, 0x01, 0x02, 0x01, 0x02};
+    IOException e =
+        assertThrows(IOException.class, () -> GdchCredentials.transcodeDerToConcat(invalidDer, 64));
+    assertEquals("Expected INTEGER for R.", e.getMessage());
+  }
+
+  @Test
+  void transcodeDerToConcat_invalidSInteger() {
+    // Missing INTEGER for S
+    byte[] invalidDer = new byte[] {0x30, 0x06, 0x02, 0x01, 0x01, 0x03, 0x01, 0x01};
+    IOException e =
+        assertThrows(IOException.class, () -> GdchCredentials.transcodeDerToConcat(invalidDer, 64));
+    assertEquals("Expected INTEGER for S.", e.getMessage());
+  }
+
+  @Test
+  void signUsingEsSha256_producesVerifiableSignature() throws Exception {
+    KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC");
+    keyGen.initialize(new ECGenParameterSpec("secp256r1"));
+    KeyPair keyPair = keyGen.generateKeyPair();
+
+    JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
+
+    JsonWebSignature.Header header = new JsonWebSignature.Header();
+    header.setAlgorithm("ES256");
+    header.setType("JWT");
+    header.setKeyId("test-key-id");
+
+    JsonWebToken.Payload payload = new JsonWebToken.Payload();
+    payload.setIssuer("test-issuer");
+    payload.setAudience("test-audience");
+
+    // Use reflection to call the private method.
+    Method signMethod =
+        GdchCredentials.class.getDeclaredMethod(
+            "signUsingEsSha256",
+            PrivateKey.class,
+            JsonFactory.class,
+            JsonWebSignature.Header.class,
+            JsonWebToken.Payload.class);
+    signMethod.setAccessible(true);
+    String signedJws =
+        (String) signMethod.invoke(null, keyPair.getPrivate(), jsonFactory, header, payload);
+
+    // Verify the signature.
+    JsonWebSignature jws = JsonWebSignature.parse(jsonFactory, signedJws);
+    assertTrue(jws.verifySignature(keyPair.getPublic()));
+  }
+
+  @Test
+  void signUsingEsSha256_validStructure() throws Exception {
+    PrivateKey privateKey = OAuth2Utils.privateKeyFromPkcs8(PRIVATE_KEY_PKCS8, "EC");
+    JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
+
+    JsonWebSignature.Header header = new JsonWebSignature.Header();
+    header.setAlgorithm("ES256");
+    header.setType("JWT");
+    header.setKeyId(PRIVATE_KEY_ID);
+
+    JsonWebToken.Payload payload = new JsonWebToken.Payload();
+    payload.setIssuer("test-issuer");
+    payload.setAudience("test-audience");
+    payload.setSubject("test-subject");
+    payload.setIssuedAtTimeSeconds(1000L);
+    payload.setExpirationTimeSeconds(2000L);
+
+    // Reflectively call the private signUsingEsSha256 method
+    Method signMethod =
+        GdchCredentials.class.getDeclaredMethod(
+            "signUsingEsSha256",
+            PrivateKey.class,
+            JsonFactory.class,
+            JsonWebSignature.Header.class,
+            JsonWebToken.Payload.class);
+    signMethod.setAccessible(true);
+    String signedJws = (String) signMethod.invoke(null, privateKey, jsonFactory, header, payload);
+
+    // Verify JWS structure
+    String[] parts = signedJws.split("\\.");
+    assertEquals(3, parts.length);
+
+    // Verify header
+    JsonWebSignature.Header decodedHeader =
+        jsonFactory.fromInputStream(
+            new java.io.ByteArrayInputStream(Base64.getUrlDecoder().decode(parts[0])),
+            JsonWebSignature.Header.class);
+    assertEquals("ES256", decodedHeader.getAlgorithm());
+    assertEquals("JWT", decodedHeader.getType());
+    assertEquals(PRIVATE_KEY_ID, decodedHeader.getKeyId());
+
+    // Verify payload
+    JsonWebToken.Payload decodedPayload =
+        jsonFactory.fromInputStream(
+            new java.io.ByteArrayInputStream(Base64.getUrlDecoder().decode(parts[1])),
+            JsonWebToken.Payload.class);
+    assertEquals("test-issuer", decodedPayload.getIssuer());
+    assertEquals("test-audience", decodedPayload.getAudience());
+    assertEquals("test-subject", decodedPayload.getSubject());
+
+    // Verify signature format (64 bytes for ES256)
+    byte[] signatureBytes = Base64.getUrlDecoder().decode(parts[2]);
+    assertEquals(64, signatureBytes.length);
   }
 
   static GenericJson writeGdchServiceAccountJson(
