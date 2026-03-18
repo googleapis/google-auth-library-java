@@ -242,10 +242,10 @@ public class GdchCredentials extends GoogleCredentials {
   }
 
   /**
-   * Create a copy of GDCH credentials with the specified audience.
+   * This method is obsolete. Please use {@link #createWithGdchAudience(String)}} instead. Create a
+   * copy of GDCH credentials with the specified audience.
    *
    * @param apiAudience The intended audience for GDCH credentials.
-   * @deprecated use {@link #createWithGdchAudience(String)}} instead.
    */
   @ObsoleteApi("Use createWithGdchAudience(String) instead.")
   public GdchCredentials createWithGdchAudience(URI apiAudience) {
