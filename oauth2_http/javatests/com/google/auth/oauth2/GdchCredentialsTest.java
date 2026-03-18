@@ -533,7 +533,28 @@ class GdchCredentialsTest extends BaseSerializationTest {
     try {
       credentials.createWithGdchAudience((String) null);
       fail("Should not be able to create GDCH credential without exception.");
-    } catch (NullPointerException ex) {
+    } catch (IllegalArgumentException ex) {
+      assertTrue(ex.getMessage().contains("Audience are not configured for GDCH service account"));
+    }
+  }
+
+  @Test
+  void createWithGdchAudience_emptyApiAudience() throws IOException {
+    GenericJson json =
+        writeGdchServiceAccountJson(
+            FORMAT_VERSION,
+            PROJECT_ID,
+            PRIVATE_KEY_ID,
+            PRIVATE_KEY_PKCS8,
+            SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
+            TOKEN_SERVER_URI);
+    GdchCredentials credentials = GdchCredentials.fromJson(json);
+
+    try {
+      credentials.createWithGdchAudience("");
+      fail("Should not be able to create GDCH credential without exception.");
+    } catch (IllegalArgumentException ex) {
       assertTrue(ex.getMessage().contains("Audience are not configured for GDCH service account"));
     }
   }

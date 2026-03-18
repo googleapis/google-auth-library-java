@@ -259,8 +259,10 @@ public class GdchCredentials extends GoogleCredentials {
    * @param apiAudience The intended audience for GDCH credentials.
    */
   public GdchCredentials createWithGdchAudience(String apiAudience) {
-    Preconditions.checkNotNull(
-        apiAudience, "Audience are not configured for GDCH service account credentials.");
+    if (Strings.isNullOrEmpty(apiAudience)) {
+      throw new IllegalArgumentException(
+          "Audience are not configured for GDCH service account credentials.");
+    }
     return this.toBuilder().setGdchAudience(apiAudience).build();
   }
 
@@ -537,6 +539,13 @@ public class GdchCredentials extends GoogleCredentials {
     @CanIgnoreReturnValue
     public Builder setGdchAudience(String apiAudience) {
       this.apiAudience = apiAudience;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    @ObsoleteApi("Use setGdchAudience(String) instead")
+    public Builder setGdchAudience(URI apiAudience) {
+      this.apiAudience = apiAudience.toString();
       return this;
     }
 
