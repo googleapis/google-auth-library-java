@@ -521,4 +521,57 @@ class LoggingTest {
         testAppender.events.get(2).getKeyValuePairs().get(0).value);
     testAppender.stop();
   }
+  @Test
+  void stsRequestHandler_exchangeToken_masksSensitiveTokens() throws IOException {
+    TestAppender testAppender = setupTestLogger(StsRequestHandler.class);
+    MockStsTransport transport = new MockStsTransport();
+
+    StsTokenExchangeRequest tokenRequest =
+        StsTokenExchangeRequest.newBuilder(
+                "SECRET_SUBJECT_TOKEN", "urn:ietf:params:oauth:token-type:jwt")
+            .build();
+
+    StsRequestHandler stsRequestHandler =
+        StsRequestHandler.newBuilder(
+                "https://sts.googleapis.com/v1/token",
+                tokenRequest,
+                transport.createRequestFactory())
+            .build();
+
+    stsRequestHandler.exchangeToken();
+
+    assertEquals(3, testAppender.events.size());
+
+    // 1. Request Log
+    ILoggingEvent requestLog = testAppender.events.get(0);
+    assertEquals("Sending request for token exchange", requestLog.getMessage());
+    String requestPayload = null;
+    for (KeyValuePair kvp : requestLog.getKeyValuePairs()) {
+      if ("request.payload".equals(kvp.key)) {
+        requestPayload = (String) kvp.value;
+      }
+    }
+    assertNotNull(requestPayload);
+    assertTrue(isValidJson(requestPayload));
+    assertFalse(requestPayload.contains("SECRET_SUBJECT_TOKEN"));
+
+    // 2. Response Log (Headers)
+    ILoggingEvent responseLog = testAppender.events.get(1);
+    assertEquals("Received response for token exchange", responseLog.getMessage());
+
+    // 3. Response Payload Log
+    ILoggingEvent payloadLog = testAppender.events.get(2);
+    assertEquals("Response payload for token exchange", payloadLog.getMessage());
+
+    boolean foundAccessToken = false;
+    for (KeyValuePair kvp : payloadLog.getKeyValuePairs()) {
+      if ("access_token".equals(kvp.key)) {
+        foundAccessToken = true;
+        assertEquals("<Not Logged>", kvp.value);
+      }
+    }
+    assertTrue(foundAccessToken);
+
+    testAppender.stop();
+  }
 }

@@ -63,6 +63,9 @@ import javax.annotation.Nullable;
  * create a new builder for constructing an instance of this class.
  */
 public final class StsRequestHandler {
+  private static final LoggerProvider LOGGER_PROVIDER =
+      LoggerProvider.forClazz(StsRequestHandler.class);
+
   private static final String TOKEN_EXCHANGE_GRANT_TYPE =
       "urn:ietf:params:oauth:grant-type:token-exchange";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token response.";
@@ -113,6 +116,10 @@ public final class StsRequestHandler {
 
     HttpRequest httpRequest =
         httpRequestFactory.buildPostRequest(new GenericUrl(tokenExchangeEndpoint), content);
+    // Disable automatic logging by google-http-java-client to prevent leakage of sensitive
+    // tokens (e.g. access_token, subject_token) in high verbosity logs like Gradle --info.
+    // Explicit secure logging via LoggingUtils is used instead to mask those tokens.
+    httpRequest.setLoggingEnabled(false);
     httpRequest.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
     if (headers != null) {
       httpRequest.setHeaders(headers);
@@ -121,8 +128,12 @@ public final class StsRequestHandler {
     httpRequest.setReadTimeout(readTimeout);
 
     try {
+      LoggingUtils.logRequest(httpRequest, LOGGER_PROVIDER, "Sending request for token exchange");
       HttpResponse response = httpRequest.execute();
+      LoggingUtils.logResponse(response, LOGGER_PROVIDER, "Received response for token exchange");
       GenericData responseData = response.parseAs(GenericData.class);
+      LoggingUtils.logResponsePayload(
+          responseData, LOGGER_PROVIDER, "Response payload for token exchange");
       return buildResponse(responseData);
     } catch (HttpResponseException e) {
       throw OAuthException.createFromHttpResponseException(e);
