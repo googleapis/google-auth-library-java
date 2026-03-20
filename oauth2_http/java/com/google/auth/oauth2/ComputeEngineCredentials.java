@@ -446,8 +446,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
     HttpRequest request =
         transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
     // Disable automatic logging by google-http-java-client to prevent leakage of sensitive tokens.
-    // Explicit secure logging via LoggingUtils is used instead where appropriate (e.g., getting
-    // tokens).
+    // Secure logging via LoggingUtils is used instead where appropriate (e.g., getting tokens).
     request.setLoggingEnabled(false);
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     request.setParser(parser);
@@ -471,6 +470,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
         requestMessage = "Sending request to refresh access token";
         responseMessage = "Received response for refresh access token";
       } else {
+        // TODO: this includes get universe domain and get default sa. Refactor for more clear
+        // logging message.
         requestMessage = "Sending request for universe domain/default service account";
         responseMessage = "Received response for universe domain/default service account";
       }
@@ -570,8 +571,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
       try {
         HttpRequest request =
             transportFactory.create().createRequestFactory().buildGetRequest(tokenUrl);
-        // Disable automatic logging by google-http-java-client.
-        // This is a ping request and does not need to be logged.
+        // Disable automatic logging by google-http-java-client. This is a ping request
+        // and does not need to be logged by LoggingUtils.
         request.setLoggingEnabled(false);
         request.setConnectTimeout(COMPUTE_PING_CONNECTION_TIMEOUT_MS);
         request.getHeaders().set(METADATA_FLAVOR, GOOGLE);

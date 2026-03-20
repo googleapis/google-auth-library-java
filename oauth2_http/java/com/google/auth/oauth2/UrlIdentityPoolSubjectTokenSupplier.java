@@ -75,11 +75,9 @@ class UrlIdentityPoolSubjectTokenSupplier implements IdentityPoolSubjectTokenSup
             .createRequestFactory()
             .buildGetRequest(new GenericUrl(credentialSource.getCredentialLocation()));
     // Disable automatic logging by HttpRequest from google-http-java-client to prevent leakage
-    // of sensitive tokens (e.g. access_token). Google Http Java Client will log if logging is
-    // enabled
+    // of sensitive tokens. Google Http Java Client will log if logging is enabled
     // (default on) and if the log level is set to `CONFIG`. Explicit secure logging via
-    // LoggingUtils
-    // is used instead to mask those tokens.
+    // LoggingUtils is used instead to mask those tokens.
     request.setLoggingEnabled(false);
     request.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
 
