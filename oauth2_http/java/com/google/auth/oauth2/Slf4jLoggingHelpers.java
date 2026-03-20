@@ -115,8 +115,8 @@ class Slf4jLoggingHelpers {
         responseLogDataMap.put("response.status", String.valueOf(response.getStatusCode()));
         responseLogDataMap.put("response.status.message", response.getStatusMessage());
 
-        Map<String, Object> headers = new HashMap<>(response.getHeaders());
-        responseLogDataMap.put("response.headers", headers.toString());
+        Map<String, Object> headers = parseGenericData(response.getHeaders());
+        responseLogDataMap.put("response.headers", gson.toJson(headers));
         Slf4jUtils.log(logger, org.slf4j.event.Level.INFO, responseLogDataMap, message);
       }
     } catch (Exception e) {
@@ -138,12 +138,24 @@ class Slf4jLoggingHelpers {
     }
   }
 
+  /**
+   * Generic log method for non-standard request/response/payload logging.
+   *
+   * <p>Any key in the provided {@code contextMap} that matches the {@code SENSITIVE_KEYS} set will
+   * have its value masked via SHA-256 hash before being logged.
+   *
+   * @param loggerProvider the logger provider for the calling class
+   * @param level the java.util.logging level to map to SLF4J
+   * @param contextMap the key-value pairs to log
+   * @param message the log message
+   */
   static void log(
       LoggerProvider loggerProvider, Level level, Map<String, Object> contextMap, String message) {
     try {
       Logger logger = loggerProvider.getLogger();
       org.slf4j.event.Level slf4jLevel = matchUtilLevelToSLF4JLevel(level);
-      Slf4jUtils.log(logger, slf4jLevel, contextMap, message);
+      Map<String, Object> maskedContextMap = parseGenericData(contextMap);
+      Slf4jUtils.log(logger, slf4jLevel, maskedContextMap, message);
     } catch (Exception e) {
       // let logging fail silently
     }

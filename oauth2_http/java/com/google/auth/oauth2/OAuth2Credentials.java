@@ -446,6 +446,14 @@ public class OAuth2Credentials extends Credentials {
     return null;
   }
 
+  /**
+   * Returns a string representation of this credential, including request metadata and access
+   * token.
+   *
+   * <p><b>Security Warning:</b> The output of this method includes the request metadata which
+   * contains the raw Bearer access token, and the raw access token value. Do not log this output in
+   * production environments as it may expose sensitive credentials.
+   */
   @Override
   public String toString() {
     OAuthValue localValue = value;

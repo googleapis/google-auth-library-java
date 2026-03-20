@@ -114,6 +114,13 @@ public class AccessToken implements Serializable {
     return Objects.hash(tokenValue, expirationTimeMillis, scopes);
   }
 
+  /**
+   * Returns a string representation of this access token, including the raw token value.
+   *
+   * <p><b>Security Warning:</b> The output of this method includes the raw, unmasked access token
+   * value. Do not log this output in production environments as it may expose sensitive
+   * credentials.
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)

@@ -79,7 +79,8 @@ class LoggingUtils {
   /**
    * Generic log method to use when not logging standard request, response and payload.
    *
-   * <p>Note: This does not mask the data. Log carefully if the data contains sensitive tokens.
+   * <p>Any key in the provided {@code contextMap} that matches the sensitive keys set (e.g.
+   * access_token, refresh_token) will have its value masked via SHA-256 hash before being logged.
    */
   static void log(
       LoggerProvider loggerProvider, Level level, Map<String, Object> contextMap, String message) {

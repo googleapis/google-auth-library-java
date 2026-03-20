@@ -284,6 +284,13 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
         quotaProjectId);
   }
 
+  /**
+   * Returns a string representation of this credential.
+   *
+   * <p><b>Security Warning:</b> The output of this method includes sensitive fields such as the
+   * client secret, refresh token, and request metadata containing the raw Bearer access token. Do
+   * not log this output in production environments as it may expose sensitive credentials.
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
