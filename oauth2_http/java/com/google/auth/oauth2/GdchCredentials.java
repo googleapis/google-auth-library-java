@@ -274,7 +274,8 @@ public class GdchCredentials extends GoogleCredentials {
     try {
       LoggingUtils.logRequest(request, LOGGER_PROVIDER, "Sending request to get GDCH access token");
       response = request.execute();
-      LoggingUtils.logResponse(response, LOGGER_PROVIDER, "Received response for GDCH access token");
+      LoggingUtils.logResponse(
+          response, LOGGER_PROVIDER, "Received response for GDCH access token");
     } catch (HttpResponseException re) {
       String message = String.format(errorTemplate, re.getMessage(), getServiceIdentityName());
       throw GoogleAuthException.createWithTokenEndpointResponseException(re, message);

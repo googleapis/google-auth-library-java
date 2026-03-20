@@ -525,6 +525,7 @@ class LoggingTest {
         "id_token value should be masked, not logged as raw token");
     testAppender.stop();
   }
+
   @Test
   void stsRequestHandler_exchangeToken_masksSensitiveTokens() throws IOException {
     TestAppender testAppender = setupTestLogger(StsRequestHandler.class);
@@ -577,7 +578,9 @@ class LoggingTest {
             "accessToken".equals(kvp.value),
             "access_token value should be masked, not logged as raw token");
         // SHA-256 hex string is 64 characters
-        assertEquals(64, ((String) kvp.value).length(),
+        assertEquals(
+            64,
+            ((String) kvp.value).length(),
             "access_token should be masked as a SHA-256 hash (64 hex chars)");
       }
     }

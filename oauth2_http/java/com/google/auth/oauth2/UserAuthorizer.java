@@ -388,10 +388,11 @@ public class UserAuthorizer {
     // Disable automatic logging by google-http-java-client to prevent leakage of sensitive tokens.
     // Explicit secure logging via LoggingUtils is used instead.
     tokenRequest.setLoggingEnabled(false);
-    
+
     LoggingUtils.logRequest(tokenRequest, LOGGER_PROVIDER, "Sending request to revoke token");
     HttpResponse response = tokenRequest.execute();
-    LoggingUtils.logResponse(response, LOGGER_PROVIDER, "Received response for revoke token request");
+    LoggingUtils.logResponse(
+        response, LOGGER_PROVIDER, "Received response for revoke token request");
 
     if (deleteTokenException != null) {
       throw deleteTokenException;
@@ -485,9 +486,11 @@ public class UserAuthorizer {
     // Explicit secure logging via LoggingUtils is used instead.
     tokenRequest.setLoggingEnabled(false);
 
-    LoggingUtils.logRequest(tokenRequest, LOGGER_PROVIDER, "Sending request to exchange code for tokens");
+    LoggingUtils.logRequest(
+        tokenRequest, LOGGER_PROVIDER, "Sending request to exchange code for tokens");
     HttpResponse tokenResponse = tokenRequest.execute();
-    LoggingUtils.logResponse(tokenResponse, LOGGER_PROVIDER, "Received response for exchange code for tokens request");
+    LoggingUtils.logResponse(
+        tokenResponse, LOGGER_PROVIDER, "Received response for exchange code for tokens request");
 
     GenericJson parsedTokens = tokenResponse.parseAs(GenericJson.class);
     LoggingUtils.logResponsePayload(

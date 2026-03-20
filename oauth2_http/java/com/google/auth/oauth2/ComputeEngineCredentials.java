@@ -436,8 +436,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
     GenericData idTokenData = new GenericData();
     idTokenData.set("id_token", rawToken);
-    LoggingUtils.logResponsePayload(
-        idTokenData, LOGGER_PROVIDER, "Response Payload for ID token");
+    LoggingUtils.logResponsePayload(idTokenData, LOGGER_PROVIDER, "Response Payload for ID token");
     return IdToken.create(rawToken);
   }
 
@@ -447,7 +446,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
     HttpRequest request =
         transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
     // Disable automatic logging by google-http-java-client to prevent leakage of sensitive tokens.
-    // Explicit secure logging via LoggingUtils is used instead where appropriate (e.g., getting tokens).
+    // Explicit secure logging via LoggingUtils is used instead where appropriate (e.g., getting
+    // tokens).
     request.setLoggingEnabled(false);
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     request.setParser(parser);
