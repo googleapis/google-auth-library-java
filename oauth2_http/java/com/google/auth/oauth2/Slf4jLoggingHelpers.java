@@ -31,6 +31,7 @@
 
 package com.google.auth.oauth2;
 
+import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.UrlEncodedContent;
@@ -78,35 +79,24 @@ class Slf4jLoggingHelpers {
         loggingDataMap.put("request.method", request.getRequestMethod());
         loggingDataMap.put("request.url", request.getUrl().toString());
 
-        Map<String, Object> headers = new HashMap<>();
-        request
-            .getHeaders()
-            .forEach(
-                (key, val) -> {
-                  if (SENSITIVE_KEYS.contains(key)) {
-                    String hashedVal = calculateSHA256Hash(String.valueOf(val));
-                    headers.put(key, hashedVal);
-                  } else {
-                    headers.put(key, val);
-                  }
-                });
+        Map<String, Object> headers = parseGenericData(request.getHeaders());
         loggingDataMap.put("request.headers", gson.toJson(headers));
 
         if (request.getContent() != null && logger.isDebugEnabled()) {
-          // are payload always GenericData? If so, can parse and store in json
-          if (request.getContent() instanceof UrlEncodedContent) {
-            // this is parsed to GenericData because that is how it is constructed.
-            GenericData data = (GenericData) ((UrlEncodedContent) request.getContent()).getData();
+          GenericData data = null;
+          HttpContent content = request.getContent();
+          if (content instanceof UrlEncodedContent) {
+            data = (GenericData) ((UrlEncodedContent) content).getData();
+          } else if (content instanceof JsonHttpContent) {
+            data = (GenericData) ((JsonHttpContent) content).getData();
+          }
+          if (data != null) {
+            // this call will mask the sensitive keys in the payload
             Map<String, Object> contextMap = parseGenericData(data);
             loggingDataMap.put("request.payload", gson.toJson(contextMap));
-          } else if (request.getContent() instanceof JsonHttpContent) {
-            String jsonData = gson.toJson(((JsonHttpContent) request.getContent()).getData());
-            loggingDataMap.put("request.payload", jsonData);
           }
-
           Slf4jUtils.log(logger, org.slf4j.event.Level.DEBUG, loggingDataMap, message);
         } else {
-
           Slf4jUtils.log(logger, org.slf4j.event.Level.INFO, loggingDataMap, message);
         }
       }
@@ -137,7 +127,6 @@ class Slf4jLoggingHelpers {
   static void logResponsePayload(
       GenericData genericData, LoggerProvider loggerProvider, String message) {
     try {
-
       Logger logger = loggerProvider.getLogger();
       if (logger.isDebugEnabled()) {
         Map<String, Object> contextMap = parseGenericData(genericData);
