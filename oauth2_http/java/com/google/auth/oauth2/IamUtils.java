@@ -135,6 +135,10 @@ class IamUtils {
 
     HttpRequest request = factory.buildPostRequest(genericUrl, signContent);
 
+    // Disable automatic logging by google-http-java-client.
+    // This is a sign request and does not need to be logged.
+    request.setLoggingEnabled(false);
+
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     request.setParser(parser);
     request.setThrowExceptionOnExecuteError(false);
@@ -155,11 +159,7 @@ class IamUtils {
                     IamUtils.IAM_RETRYABLE_STATUS_CODES.contains(response.getStatusCode())));
     request.setIOExceptionHandler(new HttpBackOffIOExceptionHandler(backoff));
 
-    LoggingUtils.logRequest(
-        request, LOGGER_PROVIDER, "Sending request to get signature to sign the blob");
     HttpResponse response = request.execute();
-    LoggingUtils.logResponse(
-        response, LOGGER_PROVIDER, "Received response for signature to sign the blob");
     int statusCode = response.getStatusCode();
     if (statusCode >= 400 && statusCode < HttpStatusCodes.STATUS_CODE_SERVER_ERROR) {
       GenericData responseError = response.parseAs(GenericData.class);
@@ -186,8 +186,6 @@ class IamUtils {
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
-    LoggingUtils.logResponsePayload(
-        responseData, LOGGER_PROVIDER, "Response payload for sign blob");
     return OAuth2Utils.validateString(responseData, "signedBlob", PARSE_ERROR_SIGNATURE);
   }
 
@@ -231,6 +229,10 @@ class IamUtils {
     HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
     HttpRequest request =
         transport.createRequestFactory(adapter).buildPostRequest(genericUrl, idTokenContent);
+
+    // Disable automatic logging by google-http-java-client to prevent leakage of sensitive tokens.
+    // Explicit secure logging via LoggingUtils is used instead.
+    request.setLoggingEnabled(false);
 
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     request.setParser(parser);
