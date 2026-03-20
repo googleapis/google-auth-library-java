@@ -59,6 +59,9 @@ class Slf4jLoggingHelpers {
             "token",
             "assertion",
             "access_token",
+            // IAM Credentials getAccessTokenCall returns `accessToken` and not `access_token`:
+            // https://docs.cloud.google.com/iam/docs/reference/credentials/rest/v1/projects.serviceAccounts/generateAccessToken
+            "accessToken",
             "client_secret",
             "refresh_token",
             "signedBlob",
