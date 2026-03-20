@@ -364,9 +364,14 @@ public class ComputeEngineCredentials extends GoogleCredentials
 
     String projectIdFromMetadata = getProjectIdFromMetadata();
     synchronized (this) {
-      this.projectId = projectIdFromMetadata;
+      // Check first if another thread set the Project ID. No need to overwrite
+      // if a Projects ID already exists. Tries to prevent a case where the last call
+      // for `getProjectIdFromMetadata()` returns null and overwrites valid data.
+      if (this.projectId == null) {
+        this.projectId = projectIdFromMetadata;
+      }
     }
-    return projectIdFromMetadata;
+    return this.projectId;
   }
 
   private String getProjectIdFromMetadata() {
