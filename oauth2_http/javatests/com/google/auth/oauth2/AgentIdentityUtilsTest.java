@@ -117,9 +117,9 @@ public class AgentIdentityUtilsTest {
 
     // SHA-256 of {0x01, 0x02, 0x03, 0x04, 0xFF} is:
     // fc402e5e4d71483c6d537984a30c2b4c8b065539a4bd1b026c6112926ba52793
-    // Base64Url (no padding) of that hash is:
-    // _EAuXk1xSDxtU3mEowwrTIsGVTmkvRsCbGESkmulJ5M
-    String expectedFingerprint = "_EAuXk1xSDxtU3mEowwrTIsGVTmkvRsCbGESkmulJ5M";
+    // URL-encoded unpadded standard Base64 of that hash is:
+    // %2FEAuXk1xSDxtU3mEowwrTIsGVTmkvRsCbGESkmulJ5M
+    String expectedFingerprint = "%2FEAuXk1xSDxtU3mEowwrTIsGVTmkvRsCbGESkmulJ5M";
 
     String actualFingerprint = AgentIdentityUtils.calculateCertificateFingerprint(mockCert);
     assertEquals(expectedFingerprint, actualFingerprint);

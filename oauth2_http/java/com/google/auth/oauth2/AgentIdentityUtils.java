@@ -40,6 +40,7 @@ import com.google.common.io.BaseEncoding;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -337,14 +338,23 @@ final class AgentIdentityUtils {
     return false;
   }
 
-  /** Calculates the SHA-256 fingerprint of the certificate, Base64Url encoded without padding. */
+  /**
+   * Calculates the URL-encoded, unpadded, base64-encoded SHA256 fingerprint of a
+   * DER-encoded certificate.
+   */
   static String calculateCertificateFingerprint(X509Certificate cert) throws IOException {
     try {
       MessageDigest md = MessageDigest.getInstance("SHA-256");
       byte[] der = cert.getEncoded();
       md.update(der);
       byte[] digest = md.digest();
-      return BaseEncoding.base64Url().omitPadding().encode(digest);
+      // The certificate fingerprint is generated in two steps to align with GFE's
+      // expectations and ensure proper URL transmission:
+      // 1. Standard base64 encoding is applied, and padding ('=') is removed.
+      // 2. The resulting string is then URL-encoded to handle special characters
+      //    ('+', '/') that would otherwise be misinterpreted in URL parameters.
+      String base64Fingerprint = BaseEncoding.base64().omitPadding().encode(digest);
+      return URLEncoder.encode(base64Fingerprint, "UTF-8");
     } catch (GeneralSecurityException e) {
       throw new IOException("Failed to calculate fingerprint for Agent Identity certificate.", e);
     }
