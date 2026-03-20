@@ -448,6 +448,9 @@ public class ComputeEngineCredentials extends GoogleCredentials
     GenericUrl genericUrl = new GenericUrl(url);
     HttpRequest request =
         transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
+    // Disable automatic logging by google-http-java-client to prevent leakage of sensitive tokens.
+    // Explicit secure logging via LoggingUtils is used instead where appropriate (e.g., getting tokens).
+    request.setLoggingEnabled(false);
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     request.setParser(parser);
     request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
@@ -461,23 +464,23 @@ public class ComputeEngineCredentials extends GoogleCredentials
     request.setThrowExceptionOnExecuteError(false);
     HttpResponse response;
     try {
-      String requestMessage;
-      String responseMessage;
+      String requestMessage = null;
+      String responseMessage = null;
       if (requestType.equals(RequestType.ID_TOKEN_REQUEST)) {
         requestMessage = "Sending request to get ID token";
         responseMessage = "Received response for ID token request";
       } else if (requestType.equals(RequestType.ACCESS_TOKEN_REQUEST)) {
         requestMessage = "Sending request to refresh access token";
         responseMessage = "Received response for refresh access token";
-      } else {
-        // TODO: this includes get universe domain and get default sa.
-        // refactor for more clear logging message.
-        requestMessage = "Sending request for universe domain/default service account";
-        responseMessage = "Received response for universe domain/default service account";
       }
-      LoggingUtils.logRequest(request, LOGGER_PROVIDER, requestMessage);
+      
+      if (requestMessage != null) {
+        LoggingUtils.logRequest(request, LOGGER_PROVIDER, requestMessage);
+      }
       response = request.execute();
-      LoggingUtils.logResponse(response, LOGGER_PROVIDER, responseMessage);
+      if (responseMessage != null) {
+        LoggingUtils.logResponse(response, LOGGER_PROVIDER, responseMessage);
+      }
     } catch (UnknownHostException exception) {
       throw new IOException(
           "ComputeEngineCredentials cannot find the metadata server. This is"
@@ -571,6 +574,9 @@ public class ComputeEngineCredentials extends GoogleCredentials
       try {
         HttpRequest request =
             transportFactory.create().createRequestFactory().buildGetRequest(tokenUrl);
+        // Disable automatic logging by google-http-java-client.
+        // This is a ping request and does not need to be logged.
+        request.setLoggingEnabled(false);
         request.setConnectTimeout(COMPUTE_PING_CONNECTION_TIMEOUT_MS);
         request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
         MetricsUtils.setMetricsHeader(

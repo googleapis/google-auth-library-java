@@ -149,6 +149,9 @@ public class SecureSessionAgent {
     GenericUrl genericUrl = new GenericUrl(MDS_MTLS_ENDPOINT);
     try {
       request = transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
+      // Disable automatic logging by google-http-java-client.
+      // This is a configuration request to MDS and does not contain sensitive token payloads.
+      request.setLoggingEnabled(false);
     } catch (IOException ignore) {
       /*
        * Return empty addresses in {@link SecureSessionAgentConfig} if error building the GET request.

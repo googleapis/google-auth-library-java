@@ -204,6 +204,9 @@ class InternalAwsSecurityCredentialsSupplier implements AwsSecurityCredentialsSu
       HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
       HttpRequest request =
           requestFactory.buildRequest(requestMethod, new GenericUrl(url), content);
+      
+      // Disable automatic logging by google-http-java-client to prevent leakage of sensitive metadata responses.
+      request.setLoggingEnabled(false);
 
       HttpHeaders requestHeaders = request.getHeaders();
       for (Map.Entry<String, Object> header : headers.entrySet()) {
