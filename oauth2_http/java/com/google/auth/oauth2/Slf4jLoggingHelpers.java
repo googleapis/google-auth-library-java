@@ -63,7 +63,8 @@ class Slf4jLoggingHelpers {
             "refresh_token",
             "signedBlob",
             "authorization",
-            "subject_token"));
+            "subject_token",
+            "id_token"));
   }
 
   static void logRequest(HttpRequest request, LoggerProvider loggerProvider, String message) {
