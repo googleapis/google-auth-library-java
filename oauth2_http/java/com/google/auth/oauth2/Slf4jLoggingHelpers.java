@@ -36,6 +36,7 @@ import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.UrlEncodedContent;
 import com.google.api.client.http.json.JsonHttpContent;
+import com.google.api.client.util.Data;
 import com.google.api.client.util.GenericData;
 import com.google.gson.Gson;
 import java.nio.charset.StandardCharsets;
@@ -86,15 +87,9 @@ class Slf4jLoggingHelpers {
           Map<String, Object> data = null;
           HttpContent content = request.getContent();
           if (content instanceof UrlEncodedContent) {
-            Object contentData = ((UrlEncodedContent) content).getData();
-            if (contentData instanceof Map) {
-              data = (Map<String, Object>) contentData;
-            }
+            data = Data.mapOf(((UrlEncodedContent) content).getData());
           } else if (content instanceof JsonHttpContent) {
-            Object contentData = ((JsonHttpContent) content).getData();
-            if (contentData instanceof Map) {
-              data = (Map<String, Object>) contentData;
-            }
+            data = Data.mapOf(((JsonHttpContent) content).getData());
           }
           if (data != null) {
             // this call will mask the sensitive keys in the payload
