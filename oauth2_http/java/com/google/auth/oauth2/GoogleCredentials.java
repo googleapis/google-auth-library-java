@@ -440,7 +440,12 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   public Map<String, List<String>> getRequestMetadata(URI uri) throws IOException {
     Map<String, List<String>> metadata = super.getRequestMetadata(uri);
     metadata = addRegionalAccessBoundaryToRequestMetadata(metadata);
-    refreshRegionalAccessBoundaryIfExpired(uri, getAccessToken(), null);
+    try {
+      // Sets off an async refresh for request-metadata.
+      refreshRegionalAccessBoundaryIfExpired(uri, getAccessToken(), null);
+    } catch (IOException e) {
+      // Ignore failure in async refresh trigger.
+    }
     return metadata;
   }
 
@@ -535,8 +540,9 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
 
   /**
    * Adds Regional Access Boundary header to requestMetadata if available. Overwrites if present.
+   * If the current RAB is null, it removes any stale header that might have survived serialization.
    *
-   * @return a new map with Regional Access Boundary header added or updated
+   * @return a new map with Regional Access Boundary header added, updated, or removed
    */
   Map<String, List<String>> addRegionalAccessBoundaryToRequestMetadata(
       Map<String, List<String>> requestMetadata) {
@@ -550,6 +556,12 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
           RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY,
           Collections.singletonList(rab.getEncodedLocations()));
       return ImmutableMap.copyOf(newMetadata);
+    } else if (requestMetadata.containsKey(RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY)) {
+      // If RAB is null but the header exists (e.g., from a serialized cache), we must strip it
+      // to prevent sending stale data to the server.
+      Map<String, List<String>> newMetadata = new HashMap<>(requestMetadata);
+      newMetadata.remove(RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY);
+      return ImmutableMap.copyOf(newMetadata);
     }
     return requestMetadata;
   }
@@ -557,13 +569,6 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   @Override
   protected Map<String, List<String>> getAdditionalHeaders() {
     Map<String, List<String>> headers = new HashMap<>(super.getAdditionalHeaders());
-
-    RegionalAccessBoundary rab = regionalAccessBoundaryManager.getCachedRAB();
-    if (rab != null) {
-      headers.put(
-          RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY,
-          Collections.singletonList(rab.getEncodedLocations()));
-    }
 
     String quotaProjectId = this.getQuotaProjectId();
     return addQuotaProjectIdToRequestMetadata(quotaProjectId, headers);

@@ -44,6 +44,7 @@ import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.util.Clock;
 import com.google.auth.Credentials;
+import com.google.auth.RequestMetadataCallback;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.ExternalAccountAuthorizedUserCredentialsTest.MockExternalAccountAuthorizedUserCredentialsTransportFactory;
@@ -56,6 +57,7 @@ import java.net.URI;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -802,6 +804,51 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
+  public void serialize_removesStaleRabHeaders() throws Exception {
+    GoogleCredentials.disableRabRefreshForTest = false;
+
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    RegionalAccessBoundary rab =
+        new RegionalAccessBoundary(
+            "test-encoded", Collections.singletonList("test-loc"), System.currentTimeMillis());
+    transportFactory.transport.setRegionalAccessBoundary(rab);
+    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+
+    GoogleCredentials credentials =
+        new ServiceAccountCredentials.Builder()
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setHttpTransportFactory(transportFactory)
+            .setScopes(SCOPES)
+            .build();
+
+    // 1. Trigger request metadata to start async RAB refresh
+    credentials.getRequestMetadata(URI.create("https://foo.com"));
+
+    // Wait for the RAB to be fetched and cached
+    waitForRegionalAccessBoundary(credentials);
+
+    // 2. Verify the live credential has the RAB header
+    Map<String, List<String>> metadata = credentials.getRequestMetadata();
+    assertEquals(
+        Collections.singletonList("test-encoded"),
+        metadata.get(RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY));
+
+    // 3. Serialize and deserialize.
+    GoogleCredentials deserialized = serializeAndDeserialize(credentials);
+
+    // 4. Verify.
+    // The manager is transient, so it should be empty.
+    assertNull(deserialized.getRegionalAccessBoundary());
+
+    // The metadata should NOT contain the RAB header anymore, preventing stale headers.
+    Map<String, List<String>> deserializedMetadata = deserialized.getRequestMetadata();
+    assertNull(
+        deserializedMetadata.get(RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY));
+  }
+
+  @Test
   public void toString_containsFields() throws IOException {
     String expectedToString =
         String.format(
@@ -1171,6 +1218,70 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     // Should not have triggered any lookup.
     assertEquals(0, transport.getRegionalAccessBoundaryRequestCount());
+  }
+
+  @Test
+  public void getRequestMetadata_ignoresRabRefreshException() throws IOException {
+    GoogleCredentials credentials =
+        new GoogleCredentials() {
+          @Override
+          public AccessToken refreshAccessToken() throws IOException {
+            return new AccessToken("token", null);
+          }
+
+          @Override
+          void refreshRegionalAccessBoundaryIfExpired(
+              @Nullable URI uri,
+              @Nullable AccessToken token,
+              @Nullable java.util.concurrent.Executor executor)
+              throws IOException {
+            throw new IOException("Simulated RAB failure");
+          }
+        };
+
+    // This should not throw the IOException from refreshRegionalAccessBoundaryIfExpired
+    Map<String, List<String>> metadata =
+        credentials.getRequestMetadata(URI.create("https://foo.com"));
+    assertTrue(metadata.containsKey("Authorization"));
+  }
+
+  @Test
+  public void getRequestMetadataAsync_ignoresRabRefreshException() throws IOException {
+    GoogleCredentials credentials =
+        new GoogleCredentials() {
+          @Override
+          public AccessToken refreshAccessToken() throws IOException {
+            return new AccessToken("token", null);
+          }
+
+          @Override
+          void refreshRegionalAccessBoundaryIfExpired(
+              @Nullable URI uri,
+              @Nullable AccessToken token,
+              @Nullable java.util.concurrent.Executor executor)
+              throws IOException {
+            throw new IOException("Simulated RAB failure");
+          }
+        };
+
+    java.util.concurrent.atomic.AtomicBoolean success =
+        new java.util.concurrent.atomic.AtomicBoolean(false);
+    credentials.getRequestMetadata(
+        URI.create("https://foo.com"),
+        Runnable::run,
+        new RequestMetadataCallback() {
+          @Override
+          public void onSuccess(Map<String, List<String>> metadata) {
+            success.set(true);
+          }
+
+          @Override
+          public void onFailure(Throwable exception) {
+            fail("Should not have failed");
+          }
+        });
+
+    assertTrue(success.get());
   }
 
   private GoogleCredentials createTestCredentials(MockTokenServerTransport transport)

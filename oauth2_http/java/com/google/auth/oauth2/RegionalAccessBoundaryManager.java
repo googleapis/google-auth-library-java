@@ -139,17 +139,26 @@ final class RegionalAccessBoundaryManager {
             }
           };
 
-      if (executor != null) {
-        executor.execute(refreshTask);
-      } else {
-        // We use new Thread() here instead of
-        // CompletableFuture.runAsync() (which uses ForkJoinPool.commonPool()).
-        // This avoids consuming CPU resources since
-        // The common pool has a small, fixed number of threads designed for
-        // CPU-bound tasks.
-        Thread refreshThread = new Thread(refreshTask, "RAB-refresh-thread");
-        refreshThread.setDaemon(true);
-        refreshThread.start();
+      try {
+        if (executor != null) {
+          executor.execute(refreshTask);
+        } else {
+          // We use new Thread() here instead of
+          // CompletableFuture.runAsync() (which uses ForkJoinPool.commonPool()).
+          // This avoids consuming CPU resources since
+          // The common pool has a small, fixed number of threads designed for
+          // CPU-bound tasks.
+          Thread refreshThread = new Thread(refreshTask, "RAB-refresh-thread");
+          refreshThread.setDaemon(true);
+          refreshThread.start();
+        }
+      } catch (Exception | Error e) {
+        // If scheduling fails (e.g., RejectedExecutionException, OutOfMemoryError for threads),
+        // the task's finally block will never execute. We must release the lock here.
+        refreshFuture.set(null);
+        future.completeExceptionally(e);
+        handleRefreshFailure(
+            new Exception("Regional Access Boundary background refresh failed to schedule", e));
       }
     }
   }
