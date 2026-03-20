@@ -315,48 +315,6 @@ class LoggingTest {
   }
 
   @Test
-  void impersonatedCredentials_exchangeToken_masksSensitiveTokens()
-      throws IOException, IllegalStateException {
-    TestAppender testAppender = setupTestLogger(ImpersonatedCredentials.class);
-    MockIAMCredentialsServiceTransportFactory mockTransportFactory =
-        new MockIAMCredentialsServiceTransportFactory();
-    mockTransportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mockTransportFactory.getTransport().setAccessToken(ACCESS_TOKEN);
-    mockTransportFactory.getTransport().setExpireTime(getDefaultExpireTime());
-    mockTransportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
-    ImpersonatedCredentials targetCredentials =
-        ImpersonatedCredentials.create(
-            ImpersonatedCredentialsTest.getSourceCredentials(),
-            IMPERSONATED_CLIENT_EMAIL,
-            null,
-            IMMUTABLE_SCOPES_LIST,
-            VALID_LIFETIME,
-            mockTransportFactory);
-
-    targetCredentials.refreshAccessToken();
-
-    assertEquals(3, testAppender.events.size());
-
-    // Verify response payload has tokens masked
-    assertEquals("Response payload for access token", testAppender.events.get(2).getMessage());
-    boolean foundAccessToken = false;
-    for (KeyValuePair kvp : testAppender.events.get(2).getKeyValuePairs()) {
-      if ("accessToken".equals(kvp.key)) {
-        foundAccessToken = true;
-        assertNotNull(kvp.value);
-        assertNotEquals(ACCESS_TOKEN, kvp.value, "accessToken value should be masked, not logged as raw token");
-        // SHA-256 hex string is 64 characters
-        assertEquals(
-            64,
-            ((String) kvp.value).length(),
-            "accessToken should be masked as a SHA-256 hash (64 hex chars)");
-      }
-    }
-    assertTrue(foundAccessToken, "Expected accessToken in response payload logs");
-    testAppender.stop();
-  }
-
-  @Test
   void idTokenWithAudience_withEmail() throws IOException {
     TestAppender testAppender = setupTestLogger(IamUtils.class);
     MockIAMCredentialsServiceTransportFactory mockTransportFactory =
@@ -590,7 +548,10 @@ class LoggingTest {
         foundAccessToken = true;
         // access_token is in SENSITIVE_KEYS, so the value should be SHA-256 hashed
         assertNotNull(kvp.value);
-        assertNotEquals(ACCESS_TOKEN, kvp.value, "access_token value should be masked, not logged as raw token");
+        assertNotEquals(
+            ACCESS_TOKEN,
+            kvp.value,
+            "access_token value should be masked, not logged as raw token");
         // SHA-256 hex string is 64 characters
         assertEquals(
             64,
@@ -609,7 +570,7 @@ class LoggingTest {
 
     StsTokenExchangeRequest tokenRequest =
         StsTokenExchangeRequest.newBuilder(
-                "SECRET_SUBJECT_TOKEN", "urn:ietf:params:oauth:token-type:jwt")
+                "SECRET_SUBJECT_TOKEN", ExternalAccountCredentials.SubjectTokenTypes.JWT.toString())
             .build();
 
     StsRequestHandler stsRequestHandler =
@@ -650,7 +611,10 @@ class LoggingTest {
         foundAccessToken = true;
         // access_token is in SENSITIVE_KEYS, so the value should be SHA-256 hashed, not raw
         assertNotNull(kvp.value);
-        assertNotEquals("accessToken", kvp.value, "access_token value should be masked, not logged as raw token");
+        assertNotEquals(
+            "accessToken",
+            kvp.value,
+            "access_token value should be masked, not logged as raw token");
         // SHA-256 hex string is 64 characters
         assertEquals(
             64,
@@ -660,6 +624,49 @@ class LoggingTest {
     }
     assertTrue(foundAccessToken);
 
+    testAppender.stop();
+  }
+
+  @Test
+  void impersonatedCredentials_exchangeToken_masksSensitiveTokens()
+      throws IOException, IllegalStateException {
+    TestAppender testAppender = setupTestLogger(ImpersonatedCredentials.class);
+    MockIAMCredentialsServiceTransportFactory mockTransportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    mockTransportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.getTransport().setAccessToken(ACCESS_TOKEN);
+    mockTransportFactory.getTransport().setExpireTime(getDefaultExpireTime());
+    mockTransportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            ImpersonatedCredentialsTest.getSourceCredentials(),
+            IMPERSONATED_CLIENT_EMAIL,
+            null,
+            IMMUTABLE_SCOPES_LIST,
+            VALID_LIFETIME,
+            mockTransportFactory);
+
+    targetCredentials.refreshAccessToken();
+
+    assertEquals(3, testAppender.events.size());
+
+    // Verify response payload has tokens masked
+    assertEquals("Response payload for access token", testAppender.events.get(2).getMessage());
+    boolean foundAccessToken = false;
+    for (KeyValuePair kvp : testAppender.events.get(2).getKeyValuePairs()) {
+      if ("accessToken".equals(kvp.key)) {
+        foundAccessToken = true;
+        assertNotNull(kvp.value);
+        assertNotEquals(
+            ACCESS_TOKEN, kvp.value, "accessToken value should be masked, not logged as raw token");
+        // SHA-256 hex string is 64 characters
+        assertEquals(
+            64,
+            ((String) kvp.value).length(),
+            "accessToken should be masked as a SHA-256 hash (64 hex chars)");
+      }
+    }
+    assertTrue(foundAccessToken, "Expected accessToken in response payload logs");
     testAppender.stop();
   }
 }
