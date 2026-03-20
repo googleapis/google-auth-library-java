@@ -61,8 +61,7 @@ public class RegionalAccessBoundaryTest {
   }
 
   @After
-  public void tearDown() {
-  }
+  public void tearDown() {}
 
   @Test
   public void testIsExpired() {
