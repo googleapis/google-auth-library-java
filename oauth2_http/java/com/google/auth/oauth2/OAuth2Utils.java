@@ -41,6 +41,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.PemReader;
 import com.google.api.client.util.PemReader.Section;
 import com.google.api.client.util.SecurityUtils;
+import com.google.api.core.InternalApi;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.Strings;
@@ -78,6 +79,7 @@ import java.util.Set;
  * com.google.auth} family. Application developers should avoid using these classes directly; they
  * are not part of the public API.
  */
+@InternalApi
 public class OAuth2Utils {
 
   static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
