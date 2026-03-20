@@ -51,7 +51,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.BufferedReader;
@@ -435,11 +434,10 @@ public class ComputeEngineCredentials extends GoogleCredentials
     }
     String rawToken = response.parseAsString();
 
-    LoggingUtils.log(
-        LOGGER_PROVIDER,
-        Level.FINE,
-        ImmutableMap.of("idToken", rawToken),
-        "Response Payload for ID token");
+    GenericData idTokenData = new GenericData();
+    idTokenData.set("id_token", rawToken);
+    LoggingUtils.logResponsePayload(
+        idTokenData, LOGGER_PROVIDER, "Response Payload for ID token");
     return IdToken.create(rawToken);
   }
 
@@ -472,15 +470,13 @@ public class ComputeEngineCredentials extends GoogleCredentials
       } else if (requestType.equals(RequestType.ACCESS_TOKEN_REQUEST)) {
         requestMessage = "Sending request to refresh access token";
         responseMessage = "Received response for refresh access token";
+      } else {
+        requestMessage = "Sending request for universe domain/default service account";
+        responseMessage = "Received response for universe domain/default service account";
       }
-      
-      if (requestMessage != null) {
-        LoggingUtils.logRequest(request, LOGGER_PROVIDER, requestMessage);
-      }
+      LoggingUtils.logRequest(request, LOGGER_PROVIDER, requestMessage);
       response = request.execute();
-      if (responseMessage != null) {
-        LoggingUtils.logResponse(response, LOGGER_PROVIDER, responseMessage);
-      }
+      LoggingUtils.logResponse(response, LOGGER_PROVIDER, responseMessage);
     } catch (UnknownHostException exception) {
       throw new IOException(
           "ComputeEngineCredentials cannot find the metadata server. This is"

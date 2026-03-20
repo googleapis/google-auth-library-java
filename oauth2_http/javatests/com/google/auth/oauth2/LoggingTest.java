@@ -48,6 +48,8 @@ import static com.google.auth.oauth2.UserCredentialsTest.CLIENT_SECRET;
 import static com.google.auth.oauth2.UserCredentialsTest.REFRESH_TOKEN;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -515,10 +517,12 @@ class LoggingTest {
 
     assertEquals("Response Payload for ID token", testAppender.events.get(2).getMessage());
     assertEquals(1, testAppender.events.get(2).getKeyValuePairs().size());
-    assertEquals("idToken", testAppender.events.get(2).getKeyValuePairs().get(0).key);
-    assertEquals(
-        ComputeEngineCredentialsTest.FULL_ID_TOKEN,
-        testAppender.events.get(2).getKeyValuePairs().get(0).value);
+    assertEquals("id_token", testAppender.events.get(2).getKeyValuePairs().get(0).key);
+    // id_token is now in SENSITIVE_KEYS, so the value should be masked (SHA-256 hashed)
+    assertFalse(
+        ComputeEngineCredentialsTest.FULL_ID_TOKEN.equals(
+            testAppender.events.get(2).getKeyValuePairs().get(0).value),
+        "id_token value should be masked, not logged as raw token");
     testAppender.stop();
   }
   @Test
@@ -567,7 +571,14 @@ class LoggingTest {
     for (KeyValuePair kvp : payloadLog.getKeyValuePairs()) {
       if ("access_token".equals(kvp.key)) {
         foundAccessToken = true;
-        assertEquals("<Not Logged>", kvp.value);
+        // access_token is in SENSITIVE_KEYS, so the value should be SHA-256 hashed, not raw
+        assertNotNull(kvp.value);
+        assertFalse(
+            "accessToken".equals(kvp.value),
+            "access_token value should be masked, not logged as raw token");
+        // SHA-256 hex string is 64 characters
+        assertEquals(64, ((String) kvp.value).length(),
+            "access_token should be masked as a SHA-256 hash (64 hex chars)");
       }
     }
     assertTrue(foundAccessToken);
