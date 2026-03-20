@@ -446,7 +446,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
     HttpRequest request =
         transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
     // Disable automatic logging by google-http-java-client to prevent leakage of sensitive tokens.
-    // Secure logging via LoggingUtils is used instead where appropriate (e.g., getting tokens).
+    // Client Library Debug Logging via LoggingUtils is used instead where appropriate.
     request.setLoggingEnabled(false);
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     request.setParser(parser);
