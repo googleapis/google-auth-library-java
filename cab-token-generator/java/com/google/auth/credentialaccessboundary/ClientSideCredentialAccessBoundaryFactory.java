@@ -37,8 +37,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.api.client.util.Clock;
 import com.google.auth.Credentials;
-import com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto.ClientSideAccessBoundary;
-import com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryProto.ClientSideAccessBoundaryRule;
+import com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundary;
+import com.google.auth.credentialaccessboundary.protobuf.ClientSideAccessBoundaryRule;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.CredentialAccessBoundary;

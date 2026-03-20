@@ -76,7 +76,11 @@ class LoggingUtils {
     }
   }
 
-  // generic log method to use when not logging standard request, response and payload
+  /**
+   * Generic log method to use when not logging standard request, response and payload.
+   *
+   * <p>Note: This does not mask the data. Log carefully if the data contains sensitive tokens.
+   */
   static void log(
       LoggerProvider loggerProvider, Level level, Map<String, Object> contextMap, String message) {
     if (loggingEnabled) {

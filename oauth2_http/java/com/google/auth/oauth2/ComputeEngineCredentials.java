@@ -51,7 +51,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.BufferedReader;
@@ -435,11 +434,9 @@ public class ComputeEngineCredentials extends GoogleCredentials
     }
     String rawToken = response.parseAsString();
 
-    LoggingUtils.log(
-        LOGGER_PROVIDER,
-        Level.FINE,
-        ImmutableMap.of("idToken", rawToken),
-        "Response Payload for ID token");
+    GenericData idTokenData = new GenericData();
+    idTokenData.set("id_token", rawToken);
+    LoggingUtils.logResponsePayload(idTokenData, LOGGER_PROVIDER, "Response Payload for ID token");
     return IdToken.create(rawToken);
   }
 
@@ -448,6 +445,9 @@ public class ComputeEngineCredentials extends GoogleCredentials
     GenericUrl genericUrl = new GenericUrl(url);
     HttpRequest request =
         transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
+    // Disable automatic logging by google-http-java-client to prevent leakage of sensitive tokens.
+    // Client Library Debug Logging via LoggingUtils is used instead where appropriate.
+    request.setLoggingEnabled(false);
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     request.setParser(parser);
     request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
@@ -461,8 +461,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
     request.setThrowExceptionOnExecuteError(false);
     HttpResponse response;
     try {
-      String requestMessage;
-      String responseMessage;
+      String requestMessage = null;
+      String responseMessage = null;
       if (requestType.equals(RequestType.ID_TOKEN_REQUEST)) {
         requestMessage = "Sending request to get ID token";
         responseMessage = "Received response for ID token request";
@@ -470,8 +470,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
         requestMessage = "Sending request to refresh access token";
         responseMessage = "Received response for refresh access token";
       } else {
-        // TODO: this includes get universe domain and get default sa.
-        // refactor for more clear logging message.
+        // TODO: this includes get universe domain and get default sa. Refactor for more clear
+        // logging message.
         requestMessage = "Sending request for universe domain/default service account";
         responseMessage = "Received response for universe domain/default service account";
       }
@@ -571,6 +571,9 @@ public class ComputeEngineCredentials extends GoogleCredentials
       try {
         HttpRequest request =
             transportFactory.create().createRequestFactory().buildGetRequest(tokenUrl);
+        // Disable automatic logging by google-http-java-client. This is a ping request
+        // and does not need to be logged by LoggingUtils.
+        request.setLoggingEnabled(false);
         request.setConnectTimeout(COMPUTE_PING_CONNECTION_TIMEOUT_MS);
         request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
         MetricsUtils.setMetricsHeader(

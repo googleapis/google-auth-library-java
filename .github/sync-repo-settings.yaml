@@ -141,6 +141,18 @@ branchProtectionRules:
     requiredApprovingReviewCount: 1
     requiresCodeOwnerReviews: true
     requiresStrictStatusChecks: true
+  - pattern: 1.42.x
+    isAdminEnforced: true
+    requiredStatusCheckContexts:
+      - dependencies (17)
+      - lint
+      - clirr
+      - units (8)
+      - units (11)
+      - cla/google
+    requiredApprovingReviewCount: 1
+    requiresCodeOwnerReviews: true
+    requiresStrictStatusChecks: true
 permissionRules:
   - team: Googlers
     permission: pull
@@ -152,7 +164,7 @@ permissionRules:
     permission: admin
   - team: yoshi-admins
     permission: admin
-  - team: googleapis-auth
+  - team: cloud-sdk-auth-team
     permission: admin
-  - team: aion-sdk
+  - team: aion-team
     permission: push

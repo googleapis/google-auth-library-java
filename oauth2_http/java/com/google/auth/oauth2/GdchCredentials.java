@@ -65,6 +65,8 @@ import java.util.Map;
 import java.util.Objects;
 
 public class GdchCredentials extends GoogleCredentials {
+  private static final LoggerProvider LOGGER_PROVIDER =
+      LoggerProvider.forClazz(GdchCredentials.class);
   static final String SUPPORTED_FORMAT_VERSION = "1";
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
@@ -260,6 +262,9 @@ public class GdchCredentials extends GoogleCredentials {
 
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
+    // Disable automatic logging by google-http-java-client to prevent leakage of sensitive tokens.
+    // Client Library Debug Logging via LoggingUtils is used instead.
+    request.setLoggingEnabled(false);
 
     request.setParser(new JsonObjectParser(jsonFactory));
 
@@ -267,7 +272,10 @@ public class GdchCredentials extends GoogleCredentials {
     String errorTemplate = "Error getting access token for GDCH service account: %s, iss: %s";
 
     try {
+      LoggingUtils.logRequest(request, LOGGER_PROVIDER, "Sending request to get GDCH access token");
       response = request.execute();
+      LoggingUtils.logResponse(
+          response, LOGGER_PROVIDER, "Received response for GDCH access token");
     } catch (HttpResponseException re) {
       String message = String.format(errorTemplate, re.getMessage(), getServiceIdentityName());
       throw GoogleAuthException.createWithTokenEndpointResponseException(re, message);
@@ -277,6 +285,8 @@ public class GdchCredentials extends GoogleCredentials {
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
+    LoggingUtils.logResponsePayload(
+        responseData, LOGGER_PROVIDER, "Response payload for GDCH access token");
     String accessToken =
         OAuth2Utils.validateString(responseData, "access_token", PARSE_ERROR_PREFIX);
     int expiresInSeconds =

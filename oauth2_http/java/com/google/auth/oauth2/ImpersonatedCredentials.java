@@ -628,6 +628,9 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
     HttpContent requestContent = new JsonHttpContent(parser.getJsonFactory(), body);
     HttpRequest request = requestFactory.buildPostRequest(url, requestContent);
+    // Disable automatic logging by google-http-java-client to prevent leakage of sensitive tokens.
+    // Client Library Debug Logging via LoggingUtils is used instead.
+    request.setLoggingEnabled(false);
     request.setConnectTimeout(connectTimeout);
     request.setReadTimeout(readTimeout);
     adapter.initialize(request);

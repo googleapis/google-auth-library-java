@@ -31,10 +31,12 @@
 
 package com.google.auth.oauth2;
 
+import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.UrlEncodedContent;
 import com.google.api.client.http.json.JsonHttpContent;
+import com.google.api.client.util.Data;
 import com.google.api.client.util.GenericData;
 import com.google.gson.Gson;
 import java.nio.charset.StandardCharsets;
@@ -59,10 +61,15 @@ class Slf4jLoggingHelpers {
             "token",
             "assertion",
             "access_token",
+            // IAM Credentials getAccessTokenCall returns `accessToken` and not `access_token`:
+            // https://docs.cloud.google.com/iam/docs/reference/credentials/rest/v1/projects.serviceAccounts/generateAccessToken
+            "accessToken",
             "client_secret",
             "refresh_token",
             "signedBlob",
-            "authorization"));
+            "authorization",
+            "subject_token",
+            "id_token"));
   }
 
   static void logRequest(HttpRequest request, LoggerProvider loggerProvider, String message) {
@@ -73,35 +80,24 @@ class Slf4jLoggingHelpers {
         loggingDataMap.put("request.method", request.getRequestMethod());
         loggingDataMap.put("request.url", request.getUrl().toString());
 
-        Map<String, Object> headers = new HashMap<>();
-        request
-            .getHeaders()
-            .forEach(
-                (key, val) -> {
-                  if (SENSITIVE_KEYS.contains(key)) {
-                    String hashedVal = calculateSHA256Hash(String.valueOf(val));
-                    headers.put(key, hashedVal);
-                  } else {
-                    headers.put(key, val);
-                  }
-                });
+        Map<String, Object> headers = parseGenericData(request.getHeaders());
         loggingDataMap.put("request.headers", gson.toJson(headers));
 
         if (request.getContent() != null && logger.isDebugEnabled()) {
-          // are payload always GenericData? If so, can parse and store in json
-          if (request.getContent() instanceof UrlEncodedContent) {
-            // this is parsed to GenericData because that is how it is constructed.
-            GenericData data = (GenericData) ((UrlEncodedContent) request.getContent()).getData();
+          Map<String, Object> data = null;
+          HttpContent content = request.getContent();
+          if (content instanceof UrlEncodedContent) {
+            data = Data.mapOf(((UrlEncodedContent) content).getData());
+          } else if (content instanceof JsonHttpContent) {
+            data = Data.mapOf(((JsonHttpContent) content).getData());
+          }
+          if (data != null) {
+            // this call will mask the sensitive keys in the payload
             Map<String, Object> contextMap = parseGenericData(data);
             loggingDataMap.put("request.payload", gson.toJson(contextMap));
-          } else if (request.getContent() instanceof JsonHttpContent) {
-            String jsonData = gson.toJson(((JsonHttpContent) request.getContent()).getData());
-            loggingDataMap.put("request.payload", jsonData);
           }
-
           Slf4jUtils.log(logger, org.slf4j.event.Level.DEBUG, loggingDataMap, message);
         } else {
-
           Slf4jUtils.log(logger, org.slf4j.event.Level.INFO, loggingDataMap, message);
         }
       }
@@ -132,7 +128,6 @@ class Slf4jLoggingHelpers {
   static void logResponsePayload(
       GenericData genericData, LoggerProvider loggerProvider, String message) {
     try {
-
       Logger logger = loggerProvider.getLogger();
       if (logger.isDebugEnabled()) {
         Map<String, Object> contextMap = parseGenericData(genericData);
@@ -168,22 +163,43 @@ class Slf4jLoggingHelpers {
     }
   }
 
-  private static Map<String, Object> parseGenericData(GenericData genericData) {
+  /**
+   * Parses standard {@link GenericData} key-value payloads into a loggable format.
+   *
+   * <p>Any key that exists within the {@code SENSITIVE_KEYS} set (e.g. access tokens, refresh
+   * tokens) will have its corresponding value masked via a SHA-256 hash. This guarantees that
+   * sensitive secrets are never logged in plain text while keeping the hash signature consistent
+   * for debugging purposes. Non-sensitive keys are passed through directly as strings.
+   *
+   * @param data the payload data to parse
+   * @return a map containing the safely parsed and optionally masked context
+   */
+  @SuppressWarnings("unchecked")
+  private static Map<String, Object> parseGenericData(Map<String, Object> data) {
     Map<String, Object> contextMap = new HashMap<>();
-    genericData.forEach(
+    data.forEach(
         (key, val) -> {
           if (SENSITIVE_KEYS.contains(key)) {
             String secretString = String.valueOf(val);
             String hashedVal = calculateSHA256Hash(secretString);
             contextMap.put(key, hashedVal);
           } else {
-            contextMap.put(key, val.toString());
+            contextMap.put(key, String.valueOf(val));
           }
         });
     return contextMap;
   }
 
-  // calculate SHA256Hash so we do not print secrets directly to log
+  /**
+   * Applies a SHA-256 one-way cryptographic hash to securely mask sensitive data.
+   *
+   * <p>Logging must be completely fail-safe. If the SHA-256 algorithm is unsupported on the system,
+   * this will gracefully downgrade to a static error fallback message to ensure the underlying auth
+   * request does not crash.
+   *
+   * @param data the sensitive secret string to hash
+   * @return the resulting 64-character hex string representing the hashed secret
+   */
   private static String calculateSHA256Hash(String data) {
     try {
       MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -195,6 +211,12 @@ class Slf4jLoggingHelpers {
     }
   }
 
+  /**
+   * Converts a raw cryptographic byte array digest into a padded, readable hexadecimal String.
+   *
+   * @param hash the digested byte array
+   * @return a formatted hexadecimal string representation
+   */
   private static String bytesToHex(byte[] hash) {
     StringBuilder hexString = new StringBuilder(2 * hash.length);
     for (byte b : hash) {

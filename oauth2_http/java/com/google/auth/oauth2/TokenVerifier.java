@@ -323,6 +323,9 @@ public class TokenVerifier {
               .createRequestFactory()
               .buildGetRequest(new GenericUrl(certificateUrl))
               .setParser(OAuth2Utils.JSON_FACTORY.createJsonObjectParser());
+      // Disable automatic logging by google-http-java-client.
+      // This is a request for public certificates and does not contain sensitive payloads.
+      request.setLoggingEnabled(false);
       request.setNumberOfRetries(DEFAULT_NUMBER_OF_RETRIES);
 
       ExponentialBackOff backoff =
