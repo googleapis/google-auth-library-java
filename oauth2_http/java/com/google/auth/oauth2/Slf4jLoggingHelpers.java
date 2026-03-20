@@ -83,12 +83,18 @@ class Slf4jLoggingHelpers {
         loggingDataMap.put("request.headers", gson.toJson(headers));
 
         if (request.getContent() != null && logger.isDebugEnabled()) {
-          GenericData data = null;
+          Map<String, Object> data = null;
           HttpContent content = request.getContent();
           if (content instanceof UrlEncodedContent) {
-            data = (GenericData) ((UrlEncodedContent) content).getData();
+            Object contentData = ((UrlEncodedContent) content).getData();
+            if (contentData instanceof Map) {
+              data = (Map<String, Object>) contentData;
+            }
           } else if (content instanceof JsonHttpContent) {
-            data = (GenericData) ((JsonHttpContent) content).getData();
+            Object contentData = ((JsonHttpContent) content).getData();
+            if (contentData instanceof Map) {
+              data = (Map<String, Object>) contentData;
+            }
           }
           if (data != null) {
             // this call will mask the sensitive keys in the payload
@@ -170,19 +176,20 @@ class Slf4jLoggingHelpers {
    * sensitive secrets are never logged in plain text while keeping the hash signature consistent
    * for debugging purposes. Non-sensitive keys are passed through directly as strings.
    *
-   * @param genericData the payload data to parse
+   * @param data the payload data to parse
    * @return a map containing the safely parsed and optionally masked context
    */
-  private static Map<String, Object> parseGenericData(GenericData genericData) {
+  @SuppressWarnings("unchecked")
+  private static Map<String, Object> parseGenericData(Map<String, Object> data) {
     Map<String, Object> contextMap = new HashMap<>();
-    genericData.forEach(
+    data.forEach(
         (key, val) -> {
           if (SENSITIVE_KEYS.contains(key)) {
             String secretString = String.valueOf(val);
             String hashedVal = calculateSHA256Hash(secretString);
             contextMap.put(key, hashedVal);
           } else {
-            contextMap.put(key, val.toString());
+            contextMap.put(key, String.valueOf(val));
           }
         });
     return contextMap;
