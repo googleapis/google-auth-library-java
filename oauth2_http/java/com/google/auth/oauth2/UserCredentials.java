@@ -279,7 +279,7 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
 
     // Disable automatic logging by google-http-java-client to prevent leakage of sensitive tokens.
-    // Explicit secure logging via LoggingUtils is used instead.
+    // Client Library Debug Logging via LoggingUtils is used instead.
     request.setLoggingEnabled(false);
 
     MetricsUtils.setMetricsHeader(

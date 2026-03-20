@@ -136,7 +136,7 @@ class IamUtils {
     HttpRequest request = factory.buildPostRequest(genericUrl, signContent);
 
     // Disable automatic logging by google-http-java-client to prevent leakage of sensitive tokens.
-    // Explicit secure logging via LoggingUtils is used instead.
+    // Client Library Debug Logging via LoggingUtils is used instead.
     request.setLoggingEnabled(false);
 
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
@@ -237,7 +237,7 @@ class IamUtils {
         transport.createRequestFactory(adapter).buildPostRequest(genericUrl, idTokenContent);
 
     // Disable automatic logging by google-http-java-client to prevent leakage of sensitive tokens.
-    // Explicit secure logging via LoggingUtils is used instead.
+    // Client Library Debug Logging via LoggingUtils is used instead.
     request.setLoggingEnabled(false);
 
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);

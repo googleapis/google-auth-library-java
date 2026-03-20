@@ -386,7 +386,7 @@ public class UserAuthorizer {
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest tokenRequest = requestFactory.buildPostRequest(revokeUrl, content);
     // Disable automatic logging by google-http-java-client to prevent leakage of sensitive tokens.
-    // Explicit secure logging via LoggingUtils is used instead.
+    // Client Library Debug Logging via LoggingUtils is used instead.
     tokenRequest.setLoggingEnabled(false);
 
     LoggingUtils.logRequest(tokenRequest, LOGGER_PROVIDER, "Sending request to revoke token");
@@ -483,7 +483,7 @@ public class UserAuthorizer {
     }
 
     // Disable automatic logging by google-http-java-client to prevent leakage of sensitive tokens.
-    // Explicit secure logging via LoggingUtils is used instead.
+    // Client Library Debug Logging via LoggingUtils is used instead.
     tokenRequest.setLoggingEnabled(false);
 
     LoggingUtils.logRequest(

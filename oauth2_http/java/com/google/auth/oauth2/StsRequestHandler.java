@@ -118,7 +118,7 @@ public final class StsRequestHandler {
         httpRequestFactory.buildPostRequest(new GenericUrl(tokenExchangeEndpoint), content);
     // Disable automatic logging by HttpRequest from google-http-java-client to prevent leakage
     // of sensitive tokens. Google Http Java Client will log if logging is enabled (default on)
-    // and if the log level is set to `CONFIG`. Explicit secure logging via LoggingUtils
+    // and if the log level is set to `CONFIG`. Logging via LoggingUtils
     // is used instead to mask those tokens.
     httpRequest.setLoggingEnabled(false);
     httpRequest.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));

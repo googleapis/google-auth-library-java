@@ -535,7 +535,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
     // Disable automatic logging by google-http-java-client to prevent leakage of sensitive tokens.
-    // Explicit secure logging via LoggingUtils is used instead.
+    // Client Library Debug Logging via LoggingUtils is used instead.
     request.setLoggingEnabled(false);
 
     MetricsUtils.setMetricsHeader(
@@ -697,7 +697,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(uri), content);
     // Disable automatic logging by google-http-java-client to prevent leakage of sensitive tokens.
-    // Explicit secure logging via LoggingUtils is used instead.
+    // Client Library Debug Logging via LoggingUtils is used instead.
     request.setLoggingEnabled(false);
     request.setParser(new JsonObjectParser(jsonFactory));
     return request;
