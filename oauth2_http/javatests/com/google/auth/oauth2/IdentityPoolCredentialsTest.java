@@ -73,13 +73,11 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
       (ExternalAccountSupplierContext context) -> "testSubjectToken";
 
   @org.junit.Before
-  public void setUp() {
-    GoogleCredentials.disableRabRefreshForTest = true;
-  }
+  public void setUp() {}
 
   @org.junit.After
   public void tearDown() {
-    GoogleCredentials.disableRabRefreshForTest = false;
+    RegionalAccessBoundary.setEnvironmentProviderForTest(null);
   }
 
   @Test
@@ -1317,7 +1315,9 @@ public class IdentityPoolCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void testRefresh_regionalAccessBoundarySuccess() throws IOException, InterruptedException {
-    GoogleCredentials.disableRabRefreshForTest = false;
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "1");
 
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();

@@ -52,6 +52,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * Represents the regional access boundary configuration for a credential. This class holds the
@@ -65,6 +66,10 @@ public final class RegionalAccessBoundary implements Serializable {
   public static final String X_ALLOWED_LOCATIONS_HEADER_KEY = "x-allowed-locations";
   private static final long serialVersionUID = -2428522338274020302L;
 
+  // Note: this is for internal testing use use only.
+  // TODO: Fix unit test mocks so this can be removed
+  // Refer -> https://github.com/googleapis/google-auth-library-java/issues/1898
+  static final String ENABLE_EXPERIMENT_ENV_VAR = "GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT";
   static final long TTL_MILLIS = 6 * 60 * 60 * 1000L; // 6 hours
   static final long REFRESH_THRESHOLD_MILLIS = 1 * 60 * 60 * 1000L; // 1 hour
 
@@ -72,6 +77,8 @@ public final class RegionalAccessBoundary implements Serializable {
   private final List<String> locations;
   private final long refreshTime;
   private final transient Clock clock;
+
+  private static EnvironmentProvider environmentProvider = SystemEnvironmentProvider.getInstance();
 
   /**
    * Creates a new RegionalAccessBoundary instance.
@@ -164,6 +171,30 @@ public final class RegionalAccessBoundary implements Serializable {
     }
   }
 
+  @VisibleForTesting
+  static void setEnvironmentProviderForTest(@Nullable EnvironmentProvider provider) {
+    environmentProvider = provider == null ? SystemEnvironmentProvider.getInstance() : provider;
+  }
+
+  /**
+   * Checks if the regional access boundary feature is enabled. The feature is enabled if the
+   * environment variable or system property "GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT" is set
+   * to "true" or "1" (case-insensitive).
+   *
+   * @return True if the regional access boundary feature is enabled, false otherwise.
+   */
+  static boolean isEnabled() {
+    String enabled = environmentProvider.getEnv(ENABLE_EXPERIMENT_ENV_VAR);
+    if (enabled == null) {
+      enabled = System.getProperty(ENABLE_EXPERIMENT_ENV_VAR);
+    }
+    if (enabled == null) {
+      return false;
+    }
+    String lowercased = enabled.toLowerCase();
+    return "true".equals(lowercased) || "1".equals(enabled);
+  }
+
   /**
    * Refreshes the regional access boundary by making a network call to the lookup endpoint.
    *
@@ -177,7 +208,11 @@ public final class RegionalAccessBoundary implements Serializable {
    * @throws IOException If a network error occurs or the response is malformed.
    */
   static RegionalAccessBoundary refresh(
-      HttpTransportFactory transportFactory, String url, AccessToken accessToken, Clock clock, int maxRetryElapsedTimeMillis)
+      HttpTransportFactory transportFactory,
+      String url,
+      AccessToken accessToken,
+      Clock clock,
+      int maxRetryElapsedTimeMillis)
       throws IOException {
     Preconditions.checkNotNull(accessToken, "The provided access token is null.");
     if (accessToken.getExpirationTimeMillis() != null

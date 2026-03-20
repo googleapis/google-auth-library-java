@@ -162,13 +162,11 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   }
 
   @org.junit.Before
-  public void setUp() {
-    GoogleCredentials.disableRabRefreshForTest = true;
-  }
+  public void setUp() {}
 
   @org.junit.After
   public void tearDown() {
-    GoogleCredentials.disableRabRefreshForTest = false;
+    RegionalAccessBoundary.setEnvironmentProviderForTest(null);
   }
 
   @Test
@@ -1815,7 +1813,9 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void refresh_regionalAccessBoundarySuccess() throws IOException, InterruptedException {
-    GoogleCredentials.disableRabRefreshForTest = false;
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "1");
     // Mock regional access boundary response
     RegionalAccessBoundary regionalAccessBoundary =
         new RegionalAccessBoundary(
@@ -1853,7 +1853,9 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void refresh_regionalAccessBoundary_selfSignedJWT()
       throws IOException, InterruptedException {
-    GoogleCredentials.disableRabRefreshForTest = false;
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "1");
     RegionalAccessBoundary regionalAccessBoundary =
         new RegionalAccessBoundary(
             TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION,

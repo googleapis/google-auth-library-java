@@ -89,13 +89,12 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
 
   @Before
   public void setup() {
-    GoogleCredentials.disableRabRefreshForTest = true;
     transportFactory = new MockExternalAccountCredentialsTransportFactory();
   }
 
   @org.junit.After
   public void tearDown() {
-    GoogleCredentials.disableRabRefreshForTest = false;
+    RegionalAccessBoundary.setEnvironmentProviderForTest(null);
   }
 
   @Test
@@ -1311,7 +1310,9 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void refresh_workload_regionalAccessBoundarySuccess()
       throws IOException, InterruptedException {
-    GoogleCredentials.disableRabRefreshForTest = false;
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "1");
     String audience =
         "//iam.googleapis.com/projects/12345/locations/global/workloadIdentityPools/my-pool/providers/my-provider";
 
@@ -1346,7 +1347,9 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void refresh_workforce_regionalAccessBoundarySuccess()
       throws IOException, InterruptedException {
-    GoogleCredentials.disableRabRefreshForTest = false;
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "1");
     String audience =
         "//iam.googleapis.com/locations/global/workforcePools/my-pool/providers/my-provider";
 
@@ -1381,7 +1384,9 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void refresh_impersonated_workload_regionalAccessBoundarySuccess()
       throws IOException, InterruptedException {
-    GoogleCredentials.disableRabRefreshForTest = false;
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "1");
     String projectNumber = "12345";
     String poolId = "my-pool";
     String providerId = "my-provider";
@@ -1397,7 +1402,8 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
         String.format(
             IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKLOAD_POOL, projectNumber, poolId);
     RegionalAccessBoundary workloadRab =
-        new RegionalAccessBoundary("workload-encoded", Collections.singletonList("workload-loc"), null);
+        new RegionalAccessBoundary(
+            "workload-encoded", Collections.singletonList("workload-loc"), null);
     transportFactory.transport.addRegionalAccessBoundary(workloadRabUrl, workloadRab);
 
     String saEmail =
@@ -1442,7 +1448,9 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
   @Test
   public void refresh_impersonated_workforce_regionalAccessBoundarySuccess()
       throws IOException, InterruptedException {
-    GoogleCredentials.disableRabRefreshForTest = false;
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "1");
     String poolId = "my-pool";
     String providerId = "my-provider";
     String audience =
@@ -1456,7 +1464,8 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     String workforceRabUrl =
         String.format(IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKFORCE_POOL, poolId);
     RegionalAccessBoundary workforceRab =
-        new RegionalAccessBoundary("workforce-encoded", Collections.singletonList("workforce-loc"), null);
+        new RegionalAccessBoundary(
+            "workforce-encoded", Collections.singletonList("workforce-loc"), null);
     transportFactory.transport.addRegionalAccessBoundary(workforceRabUrl, workforceRab);
 
     String saEmail =

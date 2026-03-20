@@ -111,11 +111,6 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   private final String universeDomain;
   private final boolean isExplicitUniverseDomain;
 
-  // Note: this is for internal testing use use only.
-  // TODO: Fix unit test mocks so this can be removed
-  // Refer -> https://github.com/googleapis/google-auth-library-java/issues/1898
-  @VisibleForTesting static boolean disableRabRefreshForTest = false;
-
   transient RegionalAccessBoundaryManager regionalAccessBoundaryManager =
       new RegionalAccessBoundaryManager(clock);
 
@@ -366,10 +361,9 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
       @Nullable AccessToken token,
       @Nullable java.util.concurrent.Executor executor)
       throws IOException {
-    if (disableRabRefreshForTest) {
-      return;
-    }
-    if (!(this instanceof RegionalAccessBoundaryProvider) || !isDefaultUniverseDomain()) {
+    if (!(this instanceof RegionalAccessBoundaryProvider)
+        || !RegionalAccessBoundary.isEnabled()
+        || !isDefaultUniverseDomain()) {
       return;
     }
 
@@ -539,8 +533,8 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   }
 
   /**
-   * Adds Regional Access Boundary header to requestMetadata if available. Overwrites if present.
-   * If the current RAB is null, it removes any stale header that might have survived serialization.
+   * Adds Regional Access Boundary header to requestMetadata if available. Overwrites if present. If
+   * the current RAB is null, it removes any stale header that might have survived serialization.
    *
    * @param uri The URI of the request.
    * @param requestMetadata The request metadata.

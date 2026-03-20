@@ -166,14 +166,13 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
   @Before
   public void setup() throws IOException {
-    GoogleCredentials.disableRabRefreshForTest = true;
     sourceCredentials = getSourceCredentials();
     mockTransportFactory = new MockIAMCredentialsServiceTransportFactory();
   }
 
   @org.junit.After
   public void tearDown() {
-    GoogleCredentials.disableRabRefreshForTest = false;
+    RegionalAccessBoundary.setEnvironmentProviderForTest(null);
   }
 
   static GoogleCredentials getSourceCredentials() throws IOException {
@@ -1318,7 +1317,9 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void refresh_regionalAccessBoundarySuccess() throws IOException, InterruptedException {
-    GoogleCredentials.disableRabRefreshForTest = false;
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "1");
     // Mock regional access boundary response
     RegionalAccessBoundary regionalAccessBoundary = REGIONAL_ACCESS_BOUNDARY;
 

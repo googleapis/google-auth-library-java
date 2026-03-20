@@ -65,13 +65,11 @@ import org.junit.runners.JUnit4;
 public class AwsCredentialsTest extends BaseSerializationTest {
 
   @org.junit.Before
-  public void setUp() {
-    GoogleCredentials.disableRabRefreshForTest = true;
-  }
+  public void setUp() {}
 
   @org.junit.After
   public void tearDown() {
-    GoogleCredentials.disableRabRefreshForTest = false;
+    RegionalAccessBoundary.setEnvironmentProviderForTest(null);
   }
 
   private static final String STS_URL = "https://sts.googleapis.com/v1/token";
@@ -1412,7 +1410,9 @@ public class AwsCredentialsTest extends BaseSerializationTest {
 
   @Test
   public void testRefresh_regionalAccessBoundarySuccess() throws IOException, InterruptedException {
-    GoogleCredentials.disableRabRefreshForTest = false;
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "1");
 
     MockExternalAccountCredentialsTransportFactory transportFactory =
         new MockExternalAccountCredentialsTransportFactory();

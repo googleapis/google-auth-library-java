@@ -128,13 +128,12 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
 
   @Before
   public void setup() {
-    GoogleCredentials.disableRabRefreshForTest = true;
     transportFactory = new MockExternalAccountAuthorizedUserCredentialsTransportFactory();
   }
 
   @org.junit.After
   public void tearDown() {
-    GoogleCredentials.disableRabRefreshForTest = false;
+    RegionalAccessBoundary.setEnvironmentProviderForTest(null);
   }
 
   @Test
@@ -1223,7 +1222,9 @@ public class ExternalAccountAuthorizedUserCredentialsTest extends BaseSerializat
 
   @Test
   public void testRefresh_regionalAccessBoundarySuccess() throws IOException, InterruptedException {
-    GoogleCredentials.disableRabRefreshForTest = false;
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "1");
 
     ExternalAccountAuthorizedUserCredentials credentials =
         ExternalAccountAuthorizedUserCredentials.newBuilder()
