@@ -58,21 +58,17 @@ public class RegionalAccessBoundaryTest {
   @Before
   public void setUp() {
     testClock = new TestClock();
-    RegionalAccessBoundary.setClockForTest(testClock);
-    RegionalAccessBoundaryManager.setClockForTest(testClock);
   }
 
   @After
   public void tearDown() {
-    RegionalAccessBoundary.setClockForTest(Clock.SYSTEM);
-    RegionalAccessBoundaryManager.setClockForTest(Clock.SYSTEM);
   }
 
   @Test
   public void testIsExpired() {
     long now = testClock.currentTimeMillis();
     RegionalAccessBoundary rab =
-        new RegionalAccessBoundary("encoded", Collections.singletonList("loc"), now);
+        new RegionalAccessBoundary("encoded", Collections.singletonList("loc"), now, testClock);
 
     assertFalse(rab.isExpired());
 
@@ -87,7 +83,7 @@ public class RegionalAccessBoundaryTest {
   public void testShouldRefresh() {
     long now = testClock.currentTimeMillis();
     RegionalAccessBoundary rab =
-        new RegionalAccessBoundary("encoded", Collections.singletonList("loc"), now);
+        new RegionalAccessBoundary("encoded", Collections.singletonList("loc"), now, testClock);
 
     // Initial state: fresh
     assertFalse(rab.shouldRefresh());
@@ -127,7 +123,7 @@ public class RegionalAccessBoundaryTest {
     HttpTransportFactory transportFactory = () -> transport;
     RegionalAccessBoundaryProvider provider = () -> url;
 
-    RegionalAccessBoundaryManager manager = new RegionalAccessBoundaryManager();
+    RegionalAccessBoundaryManager manager = new RegionalAccessBoundaryManager(testClock);
 
     // 1. Let's first get a RAB into the cache
     manager.triggerAsyncRefresh(transportFactory, provider, token, null);
@@ -184,7 +180,7 @@ public class RegionalAccessBoundaryTest {
 
   @Test
   public void testManagerReleasesLockOnSchedulingFailure() {
-    RegionalAccessBoundaryManager manager = new RegionalAccessBoundaryManager();
+    RegionalAccessBoundaryManager manager = new RegionalAccessBoundaryManager(testClock);
     HttpTransportFactory transportFactory = () -> new MockHttpTransport();
     RegionalAccessBoundaryProvider provider = () -> "https://dummy";
     AccessToken token =

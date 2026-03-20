@@ -1397,7 +1397,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
         String.format(
             IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKLOAD_POOL, projectNumber, poolId);
     RegionalAccessBoundary workloadRab =
-        new RegionalAccessBoundary("workload-encoded", Collections.singletonList("workload-loc"));
+        new RegionalAccessBoundary("workload-encoded", Collections.singletonList("workload-loc"), null);
     transportFactory.transport.addRegionalAccessBoundary(workloadRabUrl, workloadRab);
 
     String saEmail =
@@ -1406,7 +1406,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
         String.format(IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT, saEmail);
     RegionalAccessBoundary impersonatedRab =
         new RegionalAccessBoundary(
-            "impersonated-encoded", Collections.singletonList("impersonated-loc"));
+            "impersonated-encoded", Collections.singletonList("impersonated-loc"), null);
     transportFactory.transport.addRegionalAccessBoundary(impersonatedRabUrl, impersonatedRab);
 
     // Use a URL-based source that the mock transport can handle, to avoid file IO.
@@ -1456,7 +1456,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
     String workforceRabUrl =
         String.format(IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_WORKFORCE_POOL, poolId);
     RegionalAccessBoundary workforceRab =
-        new RegionalAccessBoundary("workforce-encoded", Collections.singletonList("workforce-loc"));
+        new RegionalAccessBoundary("workforce-encoded", Collections.singletonList("workforce-loc"), null);
     transportFactory.transport.addRegionalAccessBoundary(workforceRabUrl, workforceRab);
 
     String saEmail =
@@ -1465,7 +1465,7 @@ public class ExternalAccountCredentialsTest extends BaseSerializationTest {
         String.format(IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT, saEmail);
     RegionalAccessBoundary impersonatedRab =
         new RegionalAccessBoundary(
-            "impersonated-encoded", Collections.singletonList("impersonated-loc"));
+            "impersonated-encoded", Collections.singletonList("impersonated-loc"), null);
     transportFactory.transport.addRegionalAccessBoundary(impersonatedRabUrl, impersonatedRab);
 
     // Use a URL-based source that the mock transport can handle, to avoid file IO.

@@ -56,6 +56,12 @@ final class RegionalAccessBoundaryManager {
   static final long MAX_COOLDOWN_MILLIS = 6 * 60 * 60 * 1000L; // 6 hours
 
   /**
+   * The default maximum elapsed time in milliseconds for retrying Regional Access Boundary lookup
+   * requests.
+   */
+  private static final int DEFAULT_MAX_RETRY_ELAPSED_TIME_MILLIS = 60000;
+
+  /**
    * cachedRAB uses AtomicReference to provide thread-safe, lock-free access to the cached data for
    * high-concurrency request threads.
    */
@@ -72,7 +78,23 @@ final class RegionalAccessBoundaryManager {
   private final AtomicReference<CooldownState> cooldownState =
       new AtomicReference<>(new CooldownState(0, INITIAL_COOLDOWN_MILLIS));
 
-  private static Clock clock = Clock.SYSTEM;
+  private final transient Clock clock;
+  private final int maxRetryElapsedTimeMillis;
+
+  /**
+   * Creates a new RegionalAccessBoundaryManager with the default retry timeout of 60 seconds.
+   *
+   * @param clock The clock to use for cooldown and expiration checks.
+   */
+  RegionalAccessBoundaryManager(Clock clock) {
+    this(clock, DEFAULT_MAX_RETRY_ELAPSED_TIME_MILLIS);
+  }
+
+  @VisibleForTesting
+  RegionalAccessBoundaryManager(Clock clock, int maxRetryElapsedTimeMillis) {
+    this.clock = clock != null ? clock : Clock.SYSTEM;
+    this.maxRetryElapsedTimeMillis = maxRetryElapsedTimeMillis;
+  }
 
   /**
    * Returns the currently cached RegionalAccessBoundary, or null if none is available or if it has
@@ -125,7 +147,8 @@ final class RegionalAccessBoundaryManager {
             try {
               String url = provider.getRegionalAccessBoundaryUrl();
               RegionalAccessBoundary newRAB =
-                  RegionalAccessBoundary.refresh(transportFactory, url, accessToken);
+                  RegionalAccessBoundary.refresh(
+                      transportFactory, url, accessToken, clock, maxRetryElapsedTimeMillis);
               cachedRAB.set(newRAB);
               resetCooldown();
               // Complete the future so monitors (like unit tests) know we are done.
@@ -210,11 +233,6 @@ final class RegionalAccessBoundaryManager {
   @VisibleForTesting
   long getCurrentCooldownMillis() {
     return cooldownState.get().durationMillis;
-  }
-
-  @VisibleForTesting
-  static void setClockForTest(Clock testClock) {
-    clock = testClock;
   }
 
   private static class CooldownState {

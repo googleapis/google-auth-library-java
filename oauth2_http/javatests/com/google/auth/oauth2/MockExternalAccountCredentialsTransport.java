@@ -210,7 +210,8 @@ public class MockExternalAccountCredentialsTransport extends MockHttpTransport {
                   rab =
                       new RegionalAccessBoundary(
                           TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION,
-                          TestUtils.REGIONAL_ACCESS_BOUNDARY_LOCATIONS);
+                          TestUtils.REGIONAL_ACCESS_BOUNDARY_LOCATIONS,
+                          null);
                 }
                 GenericJson responseJson = new GenericJson();
                 responseJson.setFactory(OAuth2Utils.JSON_FACTORY);

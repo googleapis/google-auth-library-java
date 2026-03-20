@@ -158,7 +158,8 @@ public class ImpersonatedCredentialsTest extends BaseSerializationTest {
   public static final RegionalAccessBoundary REGIONAL_ACCESS_BOUNDARY =
       new RegionalAccessBoundary(
           TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION,
-          TestUtils.REGIONAL_ACCESS_BOUNDARY_LOCATIONS);
+          TestUtils.REGIONAL_ACCESS_BOUNDARY_LOCATIONS,
+          null);
 
   private GoogleCredentials sourceCredentials;
   private MockIAMCredentialsServiceTransportFactory mockTransportFactory;

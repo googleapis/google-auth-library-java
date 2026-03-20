@@ -1820,7 +1820,8 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     RegionalAccessBoundary regionalAccessBoundary =
         new RegionalAccessBoundary(
             TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION,
-            TestUtils.REGIONAL_ACCESS_BOUNDARY_LOCATIONS);
+            TestUtils.REGIONAL_ACCESS_BOUNDARY_LOCATIONS,
+            null);
 
     MockTokenServerTransport transport = new MockTokenServerTransport();
     transport.addServiceAccount(CLIENT_EMAIL, "test-access-token");
@@ -1856,7 +1857,8 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     RegionalAccessBoundary regionalAccessBoundary =
         new RegionalAccessBoundary(
             TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION,
-            TestUtils.REGIONAL_ACCESS_BOUNDARY_LOCATIONS);
+            TestUtils.REGIONAL_ACCESS_BOUNDARY_LOCATIONS,
+            null);
 
     MockTokenServerTransport transport = new MockTokenServerTransport();
     transport.setRegionalAccessBoundary(regionalAccessBoundary);
@@ -1901,7 +1903,7 @@ public class ServiceAccountCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  private void verifyJwtAccess(Map<String, List<String>> metadata, String expectedScopeClaim)
+  void verifyJwtAccess(Map<String, List<String>> metadata, String expectedScopeClaim)
       throws IOException {
     assertNotNull(metadata);
     List<String> authorizations = metadata.get(AuthHttpConstants.AUTHORIZATION);

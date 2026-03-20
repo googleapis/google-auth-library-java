@@ -117,7 +117,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   @VisibleForTesting static boolean disableRabRefreshForTest = false;
 
   transient RegionalAccessBoundaryManager regionalAccessBoundaryManager =
-      new RegionalAccessBoundaryManager();
+      new RegionalAccessBoundaryManager(clock);
 
   protected final String quotaProjectId;
 
@@ -439,7 +439,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
   @Override
   public Map<String, List<String>> getRequestMetadata(URI uri) throws IOException {
     Map<String, List<String>> metadata = super.getRequestMetadata(uri);
-    metadata = addRegionalAccessBoundaryToRequestMetadata(metadata);
+    metadata = addRegionalAccessBoundaryToRequestMetadata(uri, metadata);
     try {
       // Sets off an async refresh for request-metadata.
       refreshRegionalAccessBoundaryIfExpired(uri, getAccessToken(), null);
@@ -470,7 +470,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
         new RequestMetadataCallback() {
           @Override
           public void onSuccess(Map<String, List<String>> metadata) {
-            metadata = addRegionalAccessBoundaryToRequestMetadata(metadata);
+            metadata = addRegionalAccessBoundaryToRequestMetadata(uri, metadata);
             try {
               refreshRegionalAccessBoundaryIfExpired(uri, getAccessToken(), executor);
             } catch (IOException e) {
@@ -542,11 +542,21 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    * Adds Regional Access Boundary header to requestMetadata if available. Overwrites if present.
    * If the current RAB is null, it removes any stale header that might have survived serialization.
    *
+   * @param uri The URI of the request.
+   * @param requestMetadata The request metadata.
    * @return a new map with Regional Access Boundary header added, updated, or removed
    */
   Map<String, List<String>> addRegionalAccessBoundaryToRequestMetadata(
-      Map<String, List<String>> requestMetadata) {
+      URI uri, Map<String, List<String>> requestMetadata) {
     Preconditions.checkNotNull(requestMetadata);
+
+    if (uri != null && uri.getHost() != null) {
+      String host = uri.getHost();
+      if (host.endsWith(".rep.googleapis.com") || host.endsWith(".rep.sandbox.googleapis.com")) {
+        return requestMetadata;
+      }
+    }
+
     RegionalAccessBoundary rab = getRegionalAccessBoundary();
     if (rab != null) {
       // Overwrite the header to ensure the most recent async update is used,
@@ -684,7 +694,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
 
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
     input.defaultReadObject();
-    regionalAccessBoundaryManager = new RegionalAccessBoundaryManager();
+    regionalAccessBoundaryManager = new RegionalAccessBoundaryManager(clock);
   }
 
   public static Builder newBuilder() {

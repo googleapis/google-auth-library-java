@@ -67,21 +67,25 @@ public final class RegionalAccessBoundary implements Serializable {
 
   static final long TTL_MILLIS = 6 * 60 * 60 * 1000L; // 6 hours
   static final long REFRESH_THRESHOLD_MILLIS = 1 * 60 * 60 * 1000L; // 1 hour
-  private static int maxRetryElapsedTimeMillis = 60000; // 1 minute
 
   private final String encodedLocations;
   private final List<String> locations;
   private final long refreshTime;
-  private static Clock clock = Clock.SYSTEM;
+  private final transient Clock clock;
 
   /**
    * Creates a new RegionalAccessBoundary instance.
    *
    * @param encodedLocations The encoded string representation of the allowed locations.
    * @param locations A list of human-readable location strings.
+   * @param clock The clock used to set the creation time.
    */
-  RegionalAccessBoundary(String encodedLocations, List<String> locations) {
-    this(encodedLocations, locations, clock.currentTimeMillis());
+  RegionalAccessBoundary(String encodedLocations, List<String> locations, Clock clock) {
+    this(
+        encodedLocations,
+        locations,
+        clock != null ? clock.currentTimeMillis() : Clock.SYSTEM.currentTimeMillis(),
+        clock);
   }
 
   /**
@@ -90,14 +94,17 @@ public final class RegionalAccessBoundary implements Serializable {
    * @param encodedLocations The encoded string representation of the allowed locations.
    * @param locations A list of human-readable location strings.
    * @param refreshTime The time at which the information was last refreshed.
+   * @param clock The clock to use for expiration checks.
    */
-  RegionalAccessBoundary(String encodedLocations, List<String> locations, long refreshTime) {
+  RegionalAccessBoundary(
+      String encodedLocations, List<String> locations, long refreshTime, Clock clock) {
     this.encodedLocations = encodedLocations;
     this.locations =
         locations == null
             ? Collections.<String>emptyList()
             : Collections.unmodifiableList(locations);
     this.refreshTime = refreshTime;
+    this.clock = clock != null ? clock : Clock.SYSTEM;
   }
 
   /** Returns the encoded string representation of the allowed locations. */
@@ -157,28 +164,20 @@ public final class RegionalAccessBoundary implements Serializable {
     }
   }
 
-  @VisibleForTesting
-  static void setClockForTest(Clock testClock) {
-    clock = testClock;
-  }
-
-  @VisibleForTesting
-  static void setMaxRetryElapsedTimeMillisForTest(int millis) {
-    maxRetryElapsedTimeMillis = millis;
-  }
-
   /**
    * Refreshes the regional access boundary by making a network call to the lookup endpoint.
    *
    * @param transportFactory The HTTP transport factory to use for the network request.
    * @param url The URL of the regional access boundary endpoint.
    * @param accessToken The access token to authenticate the request.
+   * @param clock The clock to use for expiration checks.
+   * @param maxRetryElapsedTimeMillis The max duration to wait for retries.
    * @return A new RegionalAccessBoundary object containing the refreshed information.
    * @throws IllegalArgumentException If the provided access token is null or expired.
    * @throws IOException If a network error occurs or the response is malformed.
    */
   static RegionalAccessBoundary refresh(
-      HttpTransportFactory transportFactory, String url, AccessToken accessToken)
+      HttpTransportFactory transportFactory, String url, AccessToken accessToken, Clock clock, int maxRetryElapsedTimeMillis)
       throws IOException {
     Preconditions.checkNotNull(accessToken, "The provided access token is null.");
     if (accessToken.getExpirationTimeMillis() != null
@@ -231,6 +230,6 @@ public final class RegionalAccessBoundary implements Serializable {
       throw new IOException(
           "RegionalAccessBoundary: Malformed response from lookup endpoint - `encodedLocations` was null.");
     }
-    return new RegionalAccessBoundary(encodedLocations, json.getLocations());
+    return new RegionalAccessBoundary(encodedLocations, json.getLocations(), clock);
   }
 }

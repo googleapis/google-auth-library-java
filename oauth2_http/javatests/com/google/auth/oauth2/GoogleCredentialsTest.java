@@ -109,8 +109,6 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   @org.junit.After
   public void tearDown() {
     GoogleCredentials.disableRabRefreshForTest = false;
-    RegionalAccessBoundary.setClockForTest(Clock.SYSTEM);
-    RegionalAccessBoundaryManager.setClockForTest(Clock.SYSTEM);
   }
 
   @Test
@@ -810,7 +808,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     RegionalAccessBoundary rab =
         new RegionalAccessBoundary(
-            "test-encoded", Collections.singletonList("test-loc"), System.currentTimeMillis());
+            "test-encoded", Collections.singletonList("test-loc"), System.currentTimeMillis(), null);
     transportFactory.transport.setRegionalAccessBoundary(rab);
     transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
 
@@ -1006,7 +1004,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     RegionalAccessBoundary regionalAccessBoundary =
         new RegionalAccessBoundary(
             TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION,
-            Collections.singletonList("us-central1"));
+            Collections.singletonList("us-central1"),
+            null);
     transport.setRegionalAccessBoundary(regionalAccessBoundary);
 
     ServiceAccountCredentials credentials =
@@ -1044,7 +1043,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     RegionalAccessBoundary regionalAccessBoundary =
         new RegionalAccessBoundary(
             TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION,
-            TestUtils.REGIONAL_ACCESS_BOUNDARY_LOCATIONS);
+            TestUtils.REGIONAL_ACCESS_BOUNDARY_LOCATIONS,
+            null);
     regionalAccessBoundaryTransport.setRegionalAccessBoundary(regionalAccessBoundary);
 
     // This transport will be used for the access token refresh.
@@ -1124,8 +1124,8 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
             .build();
 
     TestClock testClock = new TestClock();
-    RegionalAccessBoundaryManager.setClockForTest(testClock);
-    RegionalAccessBoundary.setMaxRetryElapsedTimeMillisForTest(100);
+    credentials.clock = testClock;
+    credentials.regionalAccessBoundaryManager = new RegionalAccessBoundaryManager(testClock, 100);
 
     // First attempt: triggers lookup, fails, enters 15m cooldown.
     credentials.getRequestMetadata();
@@ -1155,7 +1155,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
     // Set successful response.
     transport.setRegionalAccessBoundary(
-        new RegionalAccessBoundary("0x123", Collections.emptyList()));
+        new RegionalAccessBoundary("0x123", Collections.emptyList(), null));
 
     // Fourth attempt: triggers lookup, succeeds, resets cooldown.
     credentials.getRequestMetadata();
@@ -1183,7 +1183,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     GoogleCredentials.disableRabRefreshForTest = false;
     MockTokenServerTransport transport = new MockTokenServerTransport();
     transport.setRegionalAccessBoundary(
-        new RegionalAccessBoundary("valid", Collections.singletonList("us-central1")));
+        new RegionalAccessBoundary("valid", Collections.singletonList("us-central1"), null));
     // Add delay to lookup to ensure threads overlap.
     transport.setResponseDelayMillis(500);
 

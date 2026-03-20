@@ -1147,7 +1147,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     }
 
     Map<String, List<String>> requestMetadata = jwtCredentials.getRequestMetadata(null);
-    requestMetadata = addRegionalAccessBoundaryToRequestMetadata(requestMetadata);
+    requestMetadata = addRegionalAccessBoundaryToRequestMetadata(uri, requestMetadata);
     refreshRegionalAccessBoundaryWithSelfSignedJwtIfExpired(uri, requestMetadata, null);
     return addQuotaProjectIdToRequestMetadata(quotaProjectId, requestMetadata);
   }

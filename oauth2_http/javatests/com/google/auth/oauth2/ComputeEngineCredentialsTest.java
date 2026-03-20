@@ -1165,7 +1165,8 @@ public class ComputeEngineCredentialsTest extends BaseSerializationTest {
     RegionalAccessBoundary regionalAccessBoundary =
         new RegionalAccessBoundary(
             TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION,
-            TestUtils.REGIONAL_ACCESS_BOUNDARY_LOCATIONS);
+            TestUtils.REGIONAL_ACCESS_BOUNDARY_LOCATIONS,
+            null);
     transportFactory.transport.setRegionalAccessBoundary(regionalAccessBoundary);
     transportFactory.transport.setServiceAccountEmail(defaultAccountEmail);
 
