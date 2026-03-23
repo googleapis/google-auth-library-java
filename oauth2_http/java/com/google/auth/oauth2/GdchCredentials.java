@@ -306,10 +306,10 @@ public class GdchCredentials extends GoogleCredentials {
       response = request.execute();
     } catch (HttpResponseException re) {
       String message = String.format(errorTemplate, re.getMessage(), getServiceIdentityName());
-      throw new IOException(message, re);
+      throw GoogleAuthException.createWithTokenEndpointResponseException(re, message);
     } catch (IOException e) {
       String message = String.format(errorTemplate, e.getMessage(), getServiceIdentityName());
-      throw new IOException(message, e);
+      throw GoogleAuthException.createWithTokenEndpointIOException(e, message);
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
