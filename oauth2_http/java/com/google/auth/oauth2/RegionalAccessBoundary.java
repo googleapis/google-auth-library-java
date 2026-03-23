@@ -49,6 +49,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
@@ -76,7 +77,7 @@ public final class RegionalAccessBoundary implements Serializable {
   private final String encodedLocations;
   private final List<String> locations;
   private final long refreshTime;
-  private final transient Clock clock;
+  private transient Clock clock;
 
   private static EnvironmentProvider environmentProvider = SystemEnvironmentProvider.getInstance();
 
@@ -266,5 +267,14 @@ public final class RegionalAccessBoundary implements Serializable {
           "RegionalAccessBoundary: Malformed response from lookup endpoint - `encodedLocations` was null.");
     }
     return new RegionalAccessBoundary(encodedLocations, json.getLocations(), clock);
+  }
+
+  /**
+   * Initializes the transient clock to Clock.SYSTEM upon deserialization to prevent
+   * NullPointerException when evaluating expiration on deserialized objects.
+   */
+  private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
+    input.defaultReadObject();
+    clock = Clock.SYSTEM;
   }
 }

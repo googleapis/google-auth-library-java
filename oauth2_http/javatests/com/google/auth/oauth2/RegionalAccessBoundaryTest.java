@@ -39,6 +39,10 @@ import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import com.google.api.client.util.Clock;
 import com.google.auth.http.HttpTransportFactory;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.After;
@@ -97,6 +101,30 @@ public class RegionalAccessBoundaryTest {
 
     // Still not expired
     assertFalse(rab.isExpired());
+  }
+
+  @Test
+  public void testSerialization() throws Exception {
+    long now = testClock.currentTimeMillis();
+    RegionalAccessBoundary rab =
+        new RegionalAccessBoundary("encoded", Collections.singletonList("loc"), now, testClock);
+
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    ObjectOutputStream oos = new ObjectOutputStream(baos);
+    oos.writeObject(rab);
+    oos.close();
+
+    ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+    ObjectInputStream ois = new ObjectInputStream(bais);
+    RegionalAccessBoundary deserializedRab = (RegionalAccessBoundary) ois.readObject();
+    ois.close();
+
+    assertEquals("encoded", deserializedRab.getEncodedLocations());
+    assertEquals(1, deserializedRab.getLocations().size());
+    assertEquals("loc", deserializedRab.getLocations().get(0));
+    // The transient clock field should be restored to Clock.SYSTEM upon deserialization,
+    // thereby avoiding a NullPointerException when checking expiration.
+    assertFalse(deserializedRab.isExpired());
   }
 
   @Test
