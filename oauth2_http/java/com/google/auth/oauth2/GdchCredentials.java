@@ -681,7 +681,7 @@ public class GdchCredentials extends GoogleCredentials {
    * @throws IOException If serialization or transcoding fails.
    */
   @VisibleForTesting
-  private static String signUsingEsSha256(
+  static String signUsingEsSha256(
       PrivateKey privateKey,
       JsonFactory jsonFactory,
       JsonWebSignature.Header header,

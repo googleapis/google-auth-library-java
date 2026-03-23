@@ -1189,17 +1189,8 @@ class GdchCredentialsTest extends BaseSerializationTest {
     payload.setIssuer("test-issuer");
     payload.setAudience("test-audience");
 
-    // Use reflection to call the private method.
-    Method signMethod =
-        GdchCredentials.class.getDeclaredMethod(
-            "signUsingEsSha256",
-            PrivateKey.class,
-            JsonFactory.class,
-            JsonWebSignature.Header.class,
-            JsonWebToken.Payload.class);
-    signMethod.setAccessible(true);
     String signedJws =
-        (String) signMethod.invoke(null, keyPair.getPrivate(), jsonFactory, header, payload);
+        GdchCredentials.signUsingEsSha256(keyPair.getPrivate(), jsonFactory, header, payload);
 
     // Verify the signature.
     JsonWebSignature jws = JsonWebSignature.parse(jsonFactory, signedJws);
@@ -1224,16 +1215,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
     payload.setIssuedAtTimeSeconds(1000L);
     payload.setExpirationTimeSeconds(2000L);
 
-    // Reflectively call the private signUsingEsSha256 method
-    Method signMethod =
-        GdchCredentials.class.getDeclaredMethod(
-            "signUsingEsSha256",
-            PrivateKey.class,
-            JsonFactory.class,
-            JsonWebSignature.Header.class,
-            JsonWebToken.Payload.class);
-    signMethod.setAccessible(true);
-    String signedJws = (String) signMethod.invoke(null, privateKey, jsonFactory, header, payload);
+    String signedJws = GdchCredentials.signUsingEsSha256(privateKey, jsonFactory, header, payload);
 
     // Verify JWS structure
     String[] parts = signedJws.split("\\.");
