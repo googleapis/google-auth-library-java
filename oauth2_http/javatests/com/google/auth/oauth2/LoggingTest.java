@@ -627,6 +627,8 @@ class LoggingTest {
     testAppender.stop();
   }
 
+  // We specifically test ImpersonatedCredentials here because it constructs its HTTP requests
+  // using JsonHttpContent, unlike most other credentials which use UrlEncodedContent.
   @Test
   void impersonatedCredentials_exchangeToken_masksSensitiveTokens()
       throws IOException, IllegalStateException {
@@ -659,8 +661,7 @@ class LoggingTest {
         requestPayload = (String) kvp.value;
       }
     }
-    // When logged at DEBUG level, the request payload should be present and valid JSON
-    // (the JsonHttpContent payload goes through parseGenericData for masking)
+    // When logged at DEBUG level, the request payload should be present and valid JSON.
     if (requestPayload != null) {
       assertTrue(isValidJson(requestPayload), "Request payload should be valid JSON");
     }
@@ -685,6 +686,8 @@ class LoggingTest {
     testAppender.stop();
   }
 
+  // We specifically use ImpersonatedCredentials for this test because its request payload
+  // is formatted using JsonHttpContent, whereas other credentials primarily use UrlEncodedContent.
   @Test
   void impersonatedCredentials_requestPayload_masksJsonHttpContentSensitiveKeys()
       throws IOException, IllegalStateException {
@@ -734,10 +737,8 @@ class LoggingTest {
       assertNotNull(requestPayload, "Request payload should be logged at DEBUG level");
       assertTrue(isValidJson(requestPayload), "Request payload should be valid JSON");
 
-      // The ImpersonatedCredentials request payload uses JsonHttpContent with fields:
-      // delegates, scope, lifetime. None of these are in SENSITIVE_KEYS, so they should
-      // appear as-is (not hashed). This validates that JsonHttpContent goes through
-      // parseGenericData without breaking.
+      // The request payload uses JsonHttpContent with fields: delegates, scope, lifetime. None of
+      // these are in SENSITIVE_KEYS, so they should appear as-is (not hashed).
       assertFalse(
           requestPayload.contains("\"delegates\":null"),
           "Payload should be properly serialized from JsonHttpContent");
