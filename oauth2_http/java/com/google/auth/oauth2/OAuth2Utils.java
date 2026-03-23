@@ -79,7 +79,7 @@ import java.util.Set;
  */
 public class OAuth2Utils {
 
-  public enum Pkcs8Algorithm {
+  enum Pkcs8Algorithm {
     RSA,
     EC
   }
@@ -270,7 +270,7 @@ public class OAuth2Utils {
    * @throws IOException if the PKCS#8 data is invalid or if an unexpected exception occurs during
    *     key creation.
    */
-  public static PrivateKey privateKeyFromPkcs8(String privateKeyPkcs8) throws IOException {
+  static PrivateKey privateKeyFromPkcs8(String privateKeyPkcs8) throws IOException {
     return privateKeyFromPkcs8(privateKeyPkcs8, Pkcs8Algorithm.RSA);
   }
 
@@ -283,7 +283,7 @@ public class OAuth2Utils {
    * @throws IOException if the PKCS#8 data is invalid or if an unexpected exception occurs during
    *     key creation.
    */
-  public static PrivateKey privateKeyFromPkcs8(String privateKeyPkcs8, Pkcs8Algorithm algorithm)
+  static PrivateKey privateKeyFromPkcs8(String privateKeyPkcs8, Pkcs8Algorithm algorithm)
       throws IOException {
     Reader reader = new StringReader(privateKeyPkcs8);
     Section section = PemReader.readFirstSectionAndClose(reader, "PRIVATE KEY");
