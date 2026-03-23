@@ -213,7 +213,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
               }
 
               String content = this.getContentAsString();
-              Map<String, String> query = TestUtils.parseBody(content);
+              Map<String, String> query = parseRequestContent(content);
               String accessToken = null;
               String refreshToken = null;
               String grantedScopesString = null;
@@ -332,7 +332,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
           new MockLowLevelHttpRequest(url) {
             @Override
             public LowLevelHttpResponse execute() throws IOException {
-              Map<String, String> parameters = TestUtils.parseBody(this.getContentAsString());
+              Map<String, String> parameters = parseRequestContent(this.getContentAsString());
               String token = parameters.get("token");
               if (token == null) {
                 throw new IOException("Token to revoke not found.");
@@ -364,7 +364,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
               }
 
               String content = this.getContentAsString();
-              Map<String, String> query = TestUtils.parseBody(content);
+              Map<String, String> query = parseRequestContent(content);
 
               // Validate required fields.
               if (!query.containsKey("code")
@@ -420,6 +420,12 @@ public class MockTokenServerTransport extends MockHttpTransport {
     return super.buildRequest(method, url);
   }
 
+  private Map<String, String> parseRequestContent(String content) throws IOException {
+    if (content != null && content.trim().startsWith("{")) {
+      return TestUtils.parseJson(content);
+    }
+    return TestUtils.parseQuery(content);
+  }
   private void validateAdditionalParameters(Map<String, String> query) {
     if (additionalParameters.containsKey(query.get("code"))) {
       Map<String, String> additionalParametersMap = additionalParameters.get(query.get("code"));

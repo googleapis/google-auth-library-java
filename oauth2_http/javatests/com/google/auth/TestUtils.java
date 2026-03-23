@@ -116,24 +116,14 @@ public class TestUtils {
     return map;
   }
 
-  /**
-   * Parses the request body as either JSON or a query string.
-   *
-   * @param content The request body content.
-   * @return A map of the parsed parameters.
-   * @throws IOException If the content cannot be parsed.
-   */
-  public static Map<String, String> parseBody(String content) throws IOException {
-    if (content != null && content.trim().startsWith("{")) {
-      GenericJson json = JSON_FACTORY.fromString(content, GenericJson.class);
-      Map<String, String> map = new HashMap<>();
-      for (Map.Entry<String, Object> entry : json.entrySet()) {
-        Object value = entry.getValue();
-        map.put(entry.getKey(), value == null ? null : value.toString());
-      }
-      return map;
+  public static Map<String, String> parseJson(String content) throws IOException {
+    GenericJson json = JSON_FACTORY.fromString(content, GenericJson.class);
+    Map<String, String> map = new HashMap<>();
+    for (Map.Entry<String, Object> entry : json.entrySet()) {
+      Object value = entry.getValue();
+      map.put(entry.getKey(), value == null ? null : value.toString());
     }
-    return parseQuery(content);
+    return map;
   }
 
   public static String errorJson(String message) throws IOException {
