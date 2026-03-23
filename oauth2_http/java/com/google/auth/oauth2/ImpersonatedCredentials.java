@@ -714,8 +714,8 @@ public class ImpersonatedCredentials extends GoogleCredentials
    * Returns a string representation of this credential.
    *
    * <p><b>Security Warning:</b> The output of this method includes the source credentials which may
-   * recursively contain sensitive fields such as access tokens. Do not log this output in production
-   * environments as it may expose sensitive credentials.
+   * recursively contain sensitive fields such as access tokens. Do not log this output in
+   * production environments as it may expose sensitive credentials.
    */
   @Override
   public String toString() {

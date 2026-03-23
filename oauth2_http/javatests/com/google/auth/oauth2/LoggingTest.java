@@ -652,8 +652,7 @@ class LoggingTest {
 
     // 1. Verify request log contains properly formatted payload (JsonHttpContent masking)
     ILoggingEvent requestLog = testAppender.events.get(0);
-    assertEquals(
-        "Sending request to refresh access token", requestLog.getMessage());
+    assertEquals("Sending request to refresh access token", requestLog.getMessage());
     String requestPayload = null;
     for (KeyValuePair kvp : requestLog.getKeyValuePairs()) {
       if ("request.payload".equals(kvp.key)) {
@@ -748,4 +747,3 @@ class LoggingTest {
     }
   }
 }
-
