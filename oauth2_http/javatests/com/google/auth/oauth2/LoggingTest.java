@@ -627,6 +627,8 @@ class LoggingTest {
     testAppender.stop();
   }
 
+  // We specifically test ImpersonatedCredentials here because it constructs its HTTP requests
+  // using JsonHttpContent, unlike most other credentials which use UrlEncodedContent.
   @Test
   void impersonatedCredentials_exchangeToken_masksSensitiveTokens()
       throws IOException, IllegalStateException {
@@ -650,7 +652,21 @@ class LoggingTest {
 
     assertEquals(3, testAppender.events.size());
 
-    // Verify response payload has tokens masked
+    // 1. Verify request log contains properly formatted payload (JsonHttpContent masking)
+    ILoggingEvent requestLog = testAppender.events.get(0);
+    assertEquals("Sending request to refresh access token", requestLog.getMessage());
+    String requestPayload = null;
+    for (KeyValuePair kvp : requestLog.getKeyValuePairs()) {
+      if ("request.payload".equals(kvp.key)) {
+        requestPayload = (String) kvp.value;
+      }
+    }
+    // When logged at DEBUG level, the request payload should be present and valid JSON.
+    if (requestPayload != null) {
+      assertTrue(isValidJson(requestPayload), "Request payload should be valid JSON");
+    }
+
+    // 2. Verify response payload has tokens masked
     assertEquals("Response payload for access token", testAppender.events.get(2).getMessage());
     boolean foundAccessToken = false;
     for (KeyValuePair kvp : testAppender.events.get(2).getKeyValuePairs()) {
@@ -668,5 +684,67 @@ class LoggingTest {
     }
     assertTrue(foundAccessToken, "Expected accessToken in response payload logs");
     testAppender.stop();
+  }
+
+  // We specifically use ImpersonatedCredentials for this test because its request payload
+  // is formatted using JsonHttpContent, whereas other credentials primarily use UrlEncodedContent.
+  @Test
+  void impersonatedCredentials_requestPayload_masksJsonHttpContentSensitiveKeys()
+      throws IOException, IllegalStateException {
+    // Set DEBUG level to ensure request payloads are logged
+    Logger logger = LoggerFactory.getLogger(ImpersonatedCredentials.class);
+    ch.qos.logback.classic.Logger logbackLogger = (ch.qos.logback.classic.Logger) logger;
+    ch.qos.logback.classic.Level previousLevel = logbackLogger.getLevel();
+    logbackLogger.setLevel(ch.qos.logback.classic.Level.DEBUG);
+
+    TestAppender testAppender = new TestAppender();
+    testAppender.start();
+    logbackLogger.addAppender(testAppender);
+
+    try {
+      MockIAMCredentialsServiceTransportFactory mockTransportFactory =
+          new MockIAMCredentialsServiceTransportFactory();
+      mockTransportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+      mockTransportFactory.getTransport().setAccessToken(ACCESS_TOKEN);
+      mockTransportFactory.getTransport().setExpireTime(getDefaultExpireTime());
+      mockTransportFactory
+          .getTransport()
+          .addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
+      ImpersonatedCredentials targetCredentials =
+          ImpersonatedCredentials.create(
+              ImpersonatedCredentialsTest.getSourceCredentials(),
+              IMPERSONATED_CLIENT_EMAIL,
+              null,
+              IMMUTABLE_SCOPES_LIST,
+              VALID_LIFETIME,
+              mockTransportFactory);
+
+      targetCredentials.refreshAccessToken();
+
+      // Find the request log event
+      ILoggingEvent requestLog = testAppender.events.get(0);
+      assertEquals("Sending request to refresh access token", requestLog.getMessage());
+
+      // Extract request.payload
+      String requestPayload = null;
+      for (KeyValuePair kvp : requestLog.getKeyValuePairs()) {
+        if ("request.payload".equals(kvp.key)) {
+          requestPayload = (String) kvp.value;
+        }
+      }
+
+      // At DEBUG level, request payload must be present
+      assertNotNull(requestPayload, "Request payload should be logged at DEBUG level");
+      assertTrue(isValidJson(requestPayload), "Request payload should be valid JSON");
+
+      // The request payload uses JsonHttpContent with fields: delegates, scope, lifetime. None of
+      // these are in SENSITIVE_KEYS, so they should appear as-is (not hashed).
+      assertFalse(
+          requestPayload.contains("\"delegates\":null"),
+          "Payload should be properly serialized from JsonHttpContent");
+    } finally {
+      logbackLogger.setLevel(previousLevel);
+      testAppender.stop();
+    }
   }
 }
