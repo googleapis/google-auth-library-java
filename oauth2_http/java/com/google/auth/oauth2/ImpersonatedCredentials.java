@@ -628,6 +628,9 @@ public class ImpersonatedCredentials extends GoogleCredentials
 
     HttpContent requestContent = new JsonHttpContent(parser.getJsonFactory(), body);
     HttpRequest request = requestFactory.buildPostRequest(url, requestContent);
+    // Disable automatic logging by google-http-java-client to prevent leakage of sensitive tokens.
+    // Client Library Debug Logging via LoggingUtils is used instead.
+    request.setLoggingEnabled(false);
     request.setConnectTimeout(connectTimeout);
     request.setReadTimeout(readTimeout);
     adapter.initialize(request);
@@ -707,6 +710,13 @@ public class ImpersonatedCredentials extends GoogleCredentials
         iamEndpointOverride);
   }
 
+  /**
+   * Returns a string representation of this credential.
+   *
+   * <p><b>Security Warning:</b> The output of this method includes the source credentials which may
+   * recursively contain sensitive fields such as access tokens. Do not log this output in
+   * production environments as it may expose sensitive credentials.
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)

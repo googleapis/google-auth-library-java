@@ -75,6 +75,8 @@ import javax.annotation.Nullable;
  * </pre>
  */
 public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials {
+  private static final LoggerProvider LOGGER_PROVIDER =
+      LoggerProvider.forClazz(ExternalAccountAuthorizedUserCredentials.class);
 
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
 
@@ -191,13 +193,19 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
     HttpResponse response;
     try {
       HttpRequest httpRequest = buildRefreshRequest();
+      LoggingUtils.logRequest(
+          httpRequest, LOGGER_PROVIDER, "Sending request to refresh access token");
       response = httpRequest.execute();
+      LoggingUtils.logResponse(
+          response, LOGGER_PROVIDER, "Received response for refresh access token");
     } catch (HttpResponseException e) {
       throw OAuthException.createFromHttpResponseException(e);
     }
 
     // Parse response.
     GenericData responseData = response.parseAs(GenericData.class);
+    LoggingUtils.logResponsePayload(
+        responseData, LOGGER_PROVIDER, "Response payload for refresh access token");
     response.disconnect();
 
     // Required fields.
@@ -276,6 +284,13 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
         quotaProjectId);
   }
 
+  /**
+   * Returns a string representation of this credential.
+   *
+   * <p><b>Security Warning:</b> The output of this method includes sensitive fields such as the
+   * client secret, refresh token, and request metadata containing the raw Bearer access token. Do
+   * not log this output in production environments as it may expose sensitive credentials.
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -379,6 +394,9 @@ public class ExternalAccountAuthorizedUserCredentials extends GoogleCredentials 
             .create()
             .createRequestFactory()
             .buildPostRequest(new GenericUrl(tokenUrl), new UrlEncodedContent(tokenRequest));
+    // Disable automatic logging by google-http-java-client to prevent leakage of sensitive tokens.
+    // Client Library Debug Logging via LoggingUtils is used instead.
+    request.setLoggingEnabled(false);
 
     request.setParser(new JsonObjectParser(JSON_FACTORY));
 

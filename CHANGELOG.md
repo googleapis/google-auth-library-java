@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.43.0](https://github.com/googleapis/google-auth-library-java/compare/v1.42.1...v1.43.0) (2026-02-10)
+
+
+### Features
+
+* Next release from main branch is 1.43.0 ([#1887](https://github.com/googleapis/google-auth-library-java/issues/1887)) ([bec0ece](https://github.com/googleapis/google-auth-library-java/commit/bec0ecea8d1064a3467c4329a0d09f7d5705f84d))
+
+
+### Bug Fixes
+
+* Deserialization checks valid class types for HttpTransportFactory ([#1882](https://github.com/googleapis/google-auth-library-java/issues/1882)) ([76ff74e](https://github.com/googleapis/google-auth-library-java/commit/76ff74e4c810d54763ca34d4f483730c43c329a8))
+
+## [1.42.1](https://github.com/googleapis/google-auth-library-java/compare/v1.42.0...v1.42.1) (2026-01-23)
+
+
+### Bug Fixes
+
+* Mark GdchCredentialsTestUtil test util class as public ([#1877](https://github.com/googleapis/google-auth-library-java/issues/1877)) ([1868969](https://github.com/googleapis/google-auth-library-java/commit/1868969b2701fe0faa4511c36443666c3aaad534))
+
+## [1.42.0](https://github.com/googleapis/google-auth-library-java/compare/v1.41.0...v1.42.0) (2026-01-23)
+
+
+### Features
+
+* Update protobuf version to 4.33.2 ([#1875](https://github.com/googleapis/google-auth-library-java/issues/1875)) ([13ddbd1](https://github.com/googleapis/google-auth-library-java/commit/13ddbd1744fb908fb51e8866e5aac291f0e9bada))
+
+
+### Bug Fixes
+
+* Simplify call to directly retrieve the default service account from MDS ([#1844](https://github.com/googleapis/google-auth-library-java/issues/1844)) ([6efda0b](https://github.com/googleapis/google-auth-library-java/commit/6efda0bc2063b1d1b30de43785d08ec86da1791c))
+
 ## [1.41.0](https://github.com/googleapis/google-auth-library-java/compare/v1.40.0...v1.41.0) (2025-12-03)
 
 

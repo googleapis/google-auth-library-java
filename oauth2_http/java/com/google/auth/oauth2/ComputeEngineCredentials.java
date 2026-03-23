@@ -51,7 +51,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.BufferedReader;
@@ -129,6 +128,7 @@ public class ComputeEngineCredentials extends GoogleCredentials
   private transient HttpTransportFactory transportFactory;
 
   private String universeDomainFromMetadata = null;
+  private String projectId = null;
 
   /**
    * Experimental Feature.
@@ -340,6 +340,81 @@ public class ComputeEngineCredentials extends GoogleCredentials
     return responseString;
   }
 
+  /**
+   * Retrieves the Google Cloud project ID from the Compute Engine (GCE) metadata server.
+   *
+   * <p>On its first successful execution, it fetches the project ID and caches it for the lifetime
+   * of the object. Subsequent calls will return the cached value without making additional network
+   * requests.
+   *
+   * <p>If the request to the metadata server fails (e.g., due to network issues, or if the VM lacks
+   * the required service account permissions), the method will attempt to fall back to a default
+   * project ID provider which could be {@code null}.
+   *
+   * @return the GCP project ID string, or {@code null} if the metadata server is inaccessible and
+   *     no fallback project ID can be determined.
+   */
+  @Override
+  public String getProjectId() {
+    synchronized (this) {
+      if (this.projectId != null) {
+        return this.projectId;
+      }
+    }
+
+    String projectIdFromMetadata = getProjectIdFromMetadata();
+    synchronized (this) {
+      // Check first if another thread set the Project ID. No need to overwrite
+      // if a Projects ID already exists. Tries to prevent a case where the last call
+      // for `getProjectIdFromMetadata()` returns null and overwrites valid data.
+      if (this.projectId == null) {
+        this.projectId = projectIdFromMetadata;
+      }
+    }
+    return this.projectId;
+  }
+
+  private String getProjectIdFromMetadata() {
+    try {
+      HttpResponse response = getMetadataResponse(getProjectIdUrl(), RequestType.UNTRACKED, false);
+      int statusCode = response.getStatusCode();
+      if (statusCode == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
+        LoggingUtils.log(
+            LOGGER_PROVIDER,
+            Level.WARNING,
+            Collections.emptyMap(),
+            String.format(
+                "Error code %s trying to get project ID from"
+                    + " Compute Engine metadata. This may be because the virtual machine instance"
+                    + " does not have permission scopes specified.",
+                statusCode));
+        return super.getProjectId();
+      }
+      if (statusCode != HttpStatusCodes.STATUS_CODE_OK) {
+        LoggingUtils.log(
+            LOGGER_PROVIDER,
+            Level.WARNING,
+            Collections.emptyMap(),
+            String.format(
+                "Unexpected Error code %s trying to get project ID"
+                    + " from Compute Engine metadata for the default service account: %s",
+                statusCode, response.parseAsString()));
+        return super.getProjectId();
+      }
+      return response.parseAsString();
+    } catch (IOException e) {
+      LoggingUtils.log(
+          LOGGER_PROVIDER,
+          Level.WARNING,
+          Collections.emptyMap(),
+          String.format(
+              "Unexpected Error: %s trying to get project ID"
+                  + " from Compute Engine metadata server. Reason: %s",
+              e.getMessage(), e.getCause().toString()));
+      return super.getProjectId();
+    }
+  }
+
   /** Refresh the access token by getting it from the GCE metadata server */
   @Override
   public AccessToken refreshAccessToken() throws IOException {
@@ -435,11 +510,9 @@ public class ComputeEngineCredentials extends GoogleCredentials
     }
     String rawToken = response.parseAsString();
 
-    LoggingUtils.log(
-        LOGGER_PROVIDER,
-        Level.FINE,
-        ImmutableMap.of("idToken", rawToken),
-        "Response Payload for ID token");
+    GenericData idTokenData = new GenericData();
+    idTokenData.set("id_token", rawToken);
+    LoggingUtils.logResponsePayload(idTokenData, LOGGER_PROVIDER, "Response Payload for ID token");
     return IdToken.create(rawToken);
   }
 
@@ -448,6 +521,9 @@ public class ComputeEngineCredentials extends GoogleCredentials
     GenericUrl genericUrl = new GenericUrl(url);
     HttpRequest request =
         transportFactory.create().createRequestFactory().buildGetRequest(genericUrl);
+    // Disable automatic logging by google-http-java-client to prevent leakage of sensitive tokens.
+    // Client Library Debug Logging via LoggingUtils is used instead where appropriate.
+    request.setLoggingEnabled(false);
     JsonObjectParser parser = new JsonObjectParser(OAuth2Utils.JSON_FACTORY);
     request.setParser(parser);
     request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
@@ -461,8 +537,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
     request.setThrowExceptionOnExecuteError(false);
     HttpResponse response;
     try {
-      String requestMessage;
-      String responseMessage;
+      String requestMessage = null;
+      String responseMessage = null;
       if (requestType.equals(RequestType.ID_TOKEN_REQUEST)) {
         requestMessage = "Sending request to get ID token";
         responseMessage = "Received response for ID token request";
@@ -470,8 +546,8 @@ public class ComputeEngineCredentials extends GoogleCredentials
         requestMessage = "Sending request to refresh access token";
         responseMessage = "Received response for refresh access token";
       } else {
-        // TODO: this includes get universe domain and get default sa.
-        // refactor for more clear logging message.
+        // TODO: this includes get universe domain and get default sa. Refactor for more clear
+        // logging message.
         requestMessage = "Sending request for universe domain/default service account";
         responseMessage = "Received response for universe domain/default service account";
       }
@@ -564,6 +640,11 @@ public class ComputeEngineCredentials extends GoogleCredentials
     return false;
   }
 
+  @VisibleForTesting
+  void setProjectId(String projectId) {
+    this.projectId = projectId;
+  }
+
   private static boolean pingComputeEngineMetadata(
       HttpTransportFactory transportFactory, DefaultCredentialsProvider provider) {
     GenericUrl tokenUrl = new GenericUrl(getMetadataServerUrl(provider));
@@ -571,6 +652,9 @@ public class ComputeEngineCredentials extends GoogleCredentials
       try {
         HttpRequest request =
             transportFactory.create().createRequestFactory().buildGetRequest(tokenUrl);
+        // Disable automatic logging by google-http-java-client. This is a ping request
+        // and does not need to be logged by LoggingUtils.
+        request.setLoggingEnabled(false);
         request.setConnectTimeout(COMPUTE_PING_CONNECTION_TIMEOUT_MS);
         request.getHeaders().set(METADATA_FLAVOR, GOOGLE);
         MetricsUtils.setMetricsHeader(
@@ -640,6 +724,11 @@ public class ComputeEngineCredentials extends GoogleCredentials
   public static String getIdentityDocumentUrl() {
     return getMetadataServerUrl(DefaultCredentialsProvider.DEFAULT)
         + "/computeMetadata/v1/instance/service-accounts/default/identity";
+  }
+
+  public static String getProjectIdUrl() {
+    return getMetadataServerUrl(DefaultCredentialsProvider.DEFAULT)
+        + "/computeMetadata/v1/project/project-id";
   }
 
   @Override

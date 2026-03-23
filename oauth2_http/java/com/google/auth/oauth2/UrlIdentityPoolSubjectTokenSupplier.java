@@ -47,6 +47,9 @@ import java.io.IOException;
  */
 class UrlIdentityPoolSubjectTokenSupplier implements IdentityPoolSubjectTokenSupplier {
 
+  private static final LoggerProvider LOGGER_PROVIDER =
+      LoggerProvider.forClazz(UrlIdentityPoolSubjectTokenSupplier.class);
+
   private static final long serialVersionUID = 4964578313468011844L;
 
   private final IdentityPoolCredentialSource credentialSource;
@@ -71,6 +74,11 @@ class UrlIdentityPoolSubjectTokenSupplier implements IdentityPoolSubjectTokenSup
             .create()
             .createRequestFactory()
             .buildGetRequest(new GenericUrl(credentialSource.getCredentialLocation()));
+    // Disable automatic logging by HttpRequest from google-http-java-client to prevent leakage
+    // of sensitive tokens. Google Http Java Client will log if logging is enabled
+    // (default on) and if the log level is set to `CONFIG`. Logging via
+    // LoggingUtils is used instead to mask those tokens.
+    request.setLoggingEnabled(false);
     request.setParser(new JsonObjectParser(OAuth2Utils.JSON_FACTORY));
 
     if (credentialSource.hasHeaders()) {
@@ -80,7 +88,10 @@ class UrlIdentityPoolSubjectTokenSupplier implements IdentityPoolSubjectTokenSup
     }
 
     try {
+      LoggingUtils.logRequest(request, LOGGER_PROVIDER, "Sending request to fetch subject token");
       HttpResponse response = request.execute();
+      LoggingUtils.logResponse(
+          response, LOGGER_PROVIDER, "Received response for subject token request");
       return parseToken(response.getContent(), this.credentialSource);
     } catch (IOException e) {
       throw new IOException(

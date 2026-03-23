@@ -8,5 +8,5 @@
   "repo_short": "google-auth-library-java",
   "library_type": "AUTH",
   "distribution_name": "com.google.auth:google-auth-library",
-  "codeowner_team": "@googleapis/googleapis-auth"
+  "codeowner_team": "@googleapis/cloud-sdk-auth-team"
 }
