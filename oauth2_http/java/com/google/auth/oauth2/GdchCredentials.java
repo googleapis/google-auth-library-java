@@ -691,24 +691,28 @@ public class GdchCredentials extends GoogleCredentials {
       JsonWebToken.Payload payload)
       throws GeneralSecurityException, GoogleAuthException {
 
-    // 1. Construct the JWS Signing Input: Base64URL(UTF8(Header)) + '.' + Base64URL(UTF8(Payload))
-    String content =
-        Base64.getUrlEncoder().withoutPadding().encodeToString(jsonFactory.toByteArray(header))
-            + "."
-            + Base64.getUrlEncoder()
-                .withoutPadding()
-                .encodeToString(jsonFactory.toByteArray(payload));
-    byte[] contentBytes = StringUtils.getBytesUtf8(content);
+    try {
+      // 1. Construct the JWS Signing Input: Base64URL(UTF8(Header)) + '.' + Base64URL(UTF8(Payload))
+      String content =
+          Base64.getUrlEncoder().withoutPadding().encodeToString(jsonFactory.toByteArray(header))
+              + "."
+              + Base64.getUrlEncoder()
+                  .withoutPadding()
+                  .encodeToString(jsonFactory.toByteArray(payload));
+      byte[] contentBytes = StringUtils.getBytesUtf8(content);
 
-    // 2. Create the digital signature using SHA256withECDSA.
-    byte[] signature =
-        SecurityUtils.sign(SecurityUtils.getEs256SignatureAlgorithm(), privateKey, contentBytes);
+      // 2. Create the digital signature using SHA256withECDSA.
+      byte[] signature =
+          SecurityUtils.sign(SecurityUtils.getEs256SignatureAlgorithm(), privateKey, contentBytes);
 
-    // 3. Transcode the signature from DER to Concatenated R|S.
-    byte[] jwsSignature = transcodeDerToConcat(signature, 64);
+      // 3. Transcode the signature from DER to Concatenated R|S.
+      byte[] jwsSignature = transcodeDerToConcat(signature, 64);
 
-    // 4. Return final JWS: [Signing Input] + '.' + Base64URL(Signature)
-    return content + "." + Base64.getUrlEncoder().withoutPadding().encodeToString(jwsSignature);
+      // 4. Return final JWS: [Signing Input] + '.' + Base64URL(Signature)
+      return content + "." + Base64.getUrlEncoder().withoutPadding().encodeToString(jwsSignature);
+    } catch (IOException e) {
+      throw new GoogleAuthException(false, 0, "Error serializing or transcoding JWT.", e);
+    }
   }
 
   /**
