@@ -62,7 +62,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
-import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
@@ -246,8 +245,10 @@ public class GdchCredentials extends GoogleCredentials {
    */
   @ObsoleteApi("Use createWithGdchAudience(String) instead.")
   public GdchCredentials createWithGdchAudience(URI apiAudience) {
-    Preconditions.checkNotNull(
-        apiAudience, "Audience cannot be null or empty for GDCH service account credentials.");
+    if (apiAudience == null) {
+      throw new IllegalArgumentException(
+          "Audience cannot be null or empty for GDCH service account credentials.");
+    }
     return this.toBuilder().setGdchAudience(apiAudience.toString()).build();
   }
 
@@ -311,8 +312,10 @@ public class GdchCredentials extends GoogleCredentials {
     }
 
     GenericData responseData = response.parseAs(GenericData.class);
-    String accessToken = OAuth2Utils.validateString(responseData, "access_token", PARSE_ERROR_PREFIX);
-    int expiresInSeconds = OAuth2Utils.validateInt32(responseData, "expires_in", PARSE_ERROR_PREFIX);
+    String accessToken =
+        OAuth2Utils.validateString(responseData, "access_token", PARSE_ERROR_PREFIX);
+    int expiresInSeconds =
+        OAuth2Utils.validateInt32(responseData, "expires_in", PARSE_ERROR_PREFIX);
     long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000L;
     return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
   }
@@ -550,17 +553,21 @@ public class GdchCredentials extends GoogleCredentials {
 
     @CanIgnoreReturnValue
     public Builder setGdchAudience(String apiAudience) {
-      this.apiAudience =
-          Preconditions.checkNotNull(
-              apiAudience, "Audience cannot be null or empty for GDCH service account credentials.");
+      if (Strings.isNullOrEmpty(apiAudience)) {
+        throw new IllegalArgumentException(
+            "Audience cannot be null or empty for GDCH service account credentials.");
+      }
+      this.apiAudience = apiAudience;
       return this;
     }
 
     @CanIgnoreReturnValue
     @ObsoleteApi("Use setGdchAudience(String) instead")
     public Builder setGdchAudience(URI apiAudience) {
-      Preconditions.checkNotNull(
-          apiAudience, "Audience cannot be null or empty for GDCH service account credentials.");
+      if (apiAudience == null) {
+        throw new IllegalArgumentException(
+            "Audience cannot be null or empty for GDCH service account credentials.");
+      }
       this.apiAudience = apiAudience.toString();
       return this;
     }
@@ -661,7 +668,6 @@ public class GdchCredentials extends GoogleCredentials {
     }
   }
 
-
   /**
    * Signs the JWS header and payload using the ES256 algorithm (ECDSA with SHA-256).
    *
@@ -692,7 +698,8 @@ public class GdchCredentials extends GoogleCredentials {
       throws GeneralSecurityException, GoogleAuthException {
 
     try {
-      // 1. Construct the JWS Signing Input: Base64URL(UTF8(Header)) + '.' + Base64URL(UTF8(Payload))
+      // 1. Construct the JWS Signing Input: Base64URL(UTF8(Header)) + '.' +
+      // Base64URL(UTF8(Payload))
       String content =
           Base64.getUrlEncoder().withoutPadding().encodeToString(jsonFactory.toByteArray(header))
               + "."

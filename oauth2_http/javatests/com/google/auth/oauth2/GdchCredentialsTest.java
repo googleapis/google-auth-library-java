@@ -38,7 +38,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.Json;
@@ -163,10 +162,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
             CA_CERT_PATH,
             TOKEN_SERVER_URI);
 
-    IOException ex =
-        assertThrows(
-            IOException.class,
-            () -> GdchCredentials.fromJson(json));
+    IOException ex = assertThrows(IOException.class, () -> GdchCredentials.fromJson(json));
     assertTrue(
         ex.getMessage()
             .contains(
@@ -188,10 +184,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
             CA_CERT_PATH,
             TOKEN_SERVER_URI);
 
-    IOException ex =
-        assertThrows(
-            IOException.class,
-            () -> GdchCredentials.fromJson(json));
+    IOException ex = assertThrows(IOException.class, () -> GdchCredentials.fromJson(json));
     assertTrue(
         ex.getMessage()
             .contains(
@@ -213,10 +206,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
             CA_CERT_PATH,
             TOKEN_SERVER_URI);
 
-    IOException ex =
-        assertThrows(
-            IOException.class,
-            () -> GdchCredentials.fromJson(json));
+    IOException ex = assertThrows(IOException.class, () -> GdchCredentials.fromJson(json));
     assertTrue(
         ex.getMessage()
             .contains(
@@ -238,10 +228,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
             CA_CERT_PATH,
             TOKEN_SERVER_URI);
 
-    IOException ex =
-        assertThrows(
-            IOException.class,
-            () -> GdchCredentials.fromJson(json));
+    IOException ex = assertThrows(IOException.class, () -> GdchCredentials.fromJson(json));
     assertTrue(
         ex.getMessage()
             .contains(
@@ -263,10 +250,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
             CA_CERT_PATH,
             TOKEN_SERVER_URI);
 
-    IOException ex =
-        assertThrows(
-            IOException.class,
-            () -> GdchCredentials.fromJson(json));
+    IOException ex = assertThrows(IOException.class, () -> GdchCredentials.fromJson(json));
     assertTrue(
         ex.getMessage()
             .contains(
@@ -303,10 +287,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
             CA_CERT_PATH,
             null);
 
-    IOException ex =
-        assertThrows(
-            IOException.class,
-            () -> GdchCredentials.fromJson(json));
+    IOException ex = assertThrows(IOException.class, () -> GdchCredentials.fromJson(json));
     assertTrue(
         ex.getMessage()
             .contains(
@@ -328,10 +309,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
             CA_CERT_PATH,
             TOKEN_SERVER_URI);
 
-    IOException ex =
-        assertThrows(
-            IOException.class,
-            () -> GdchCredentials.fromJson(json));
+    IOException ex = assertThrows(IOException.class, () -> GdchCredentials.fromJson(json));
     assertTrue(
         ex.getMessage()
             .contains(String.format("Only format version %s is supported", FORMAT_VERSION)));
@@ -349,10 +327,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
             "/path/to/missing/file",
             TOKEN_SERVER_URI);
 
-    IOException ex =
-        assertThrows(
-            IOException.class,
-            () -> GdchCredentials.fromJson(json));
+    IOException ex = assertThrows(IOException.class, () -> GdchCredentials.fromJson(json));
     assertTrue(ex.getMessage().contains("Error reading certificate file from CA cert path"));
   }
 
@@ -440,10 +415,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
     json.put("type", "invalid_type");
     InputStream stream = TestUtils.jsonToInputStream(json);
 
-    IOException ex =
-        assertThrows(
-            IOException.class,
-            () -> GdchCredentials.fromStream(stream));
+    IOException ex = assertThrows(IOException.class, () -> GdchCredentials.fromStream(stream));
     assertTrue(ex.getMessage().contains("not recognized"));
   }
 
@@ -524,7 +496,8 @@ class GdchCredentialsTest extends BaseSerializationTest {
         assertThrows(
             IllegalArgumentException.class,
             () -> credentials.createWithGdchAudience((String) null));
-    assertTrue(ex.getMessage().contains("Audience cannot be null or empty for GDCH service account"));
+    assertTrue(
+        ex.getMessage().contains("Audience cannot be null or empty for GDCH service account"));
   }
 
   @Test
@@ -541,10 +514,9 @@ class GdchCredentialsTest extends BaseSerializationTest {
     GdchCredentials credentials = GdchCredentials.fromJson(json);
 
     IllegalArgumentException ex =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> credentials.createWithGdchAudience(""));
-    assertTrue(ex.getMessage().contains("Audience cannot be null or empty for GDCH service account"));
+        assertThrows(IllegalArgumentException.class, () -> credentials.createWithGdchAudience(""));
+    assertTrue(
+        ex.getMessage().contains("Audience cannot be null or empty for GDCH service account"));
   }
 
   @Test
@@ -1041,8 +1013,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addResponseSequence(
         new MockLowLevelHttpResponse().setContentType(Json.MEDIA_TYPE).setContent(responseContent));
 
-    IOException ex =
-        assertThrows(IOException.class, () -> gdchWithAudience.refreshAccessToken());
+    IOException ex = assertThrows(IOException.class, () -> gdchWithAudience.refreshAccessToken());
     assertEquals(expectedErrorMessage, ex.getMessage());
   }
 
@@ -1223,19 +1194,21 @@ class GdchCredentialsTest extends BaseSerializationTest {
   @Test
   void builder_setGdchAudience_nullString() {
     GdchCredentials.Builder builder = GdchCredentials.newBuilder();
-    NullPointerException ex =
-        assertThrows(NullPointerException.class, () -> builder.setGdchAudience((String) null));
-    assertEquals(
-        "Audience cannot be null or empty for GDCH service account credentials.", ex.getMessage());
+    IllegalArgumentException ex =
+        assertThrows(IllegalArgumentException.class, () -> builder.setGdchAudience((String) null));
+    assertTrue(
+        ex.getMessage()
+            .contains("Audience cannot be null or empty for GDCH service account credentials."));
   }
 
   @Test
   void builder_setGdchAudience_nullUri() {
     GdchCredentials.Builder builder = GdchCredentials.newBuilder();
-    NullPointerException ex =
-        assertThrows(NullPointerException.class, () -> builder.setGdchAudience((URI) null));
-    assertEquals(
-        "Audience cannot be null or empty for GDCH service account credentials.", ex.getMessage());
+    IllegalArgumentException ex =
+        assertThrows(IllegalArgumentException.class, () -> builder.setGdchAudience((URI) null));
+    assertTrue(
+        ex.getMessage()
+            .contains("Audience cannot be null or empty for GDCH service account credentials."));
   }
 
   static GenericJson writeGdchServiceAccountJson(
