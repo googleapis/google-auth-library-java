@@ -525,7 +525,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
         assertThrows(
             IllegalArgumentException.class,
             () -> credentials.createWithGdchAudience((String) null));
-    assertTrue(ex.getMessage().contains("Audience are not configured for GDCH service account"));
+    assertTrue(ex.getMessage().contains("Audience cannot be null or empty for GDCH service account"));
   }
 
   @Test
@@ -545,7 +545,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
         assertThrows(
             IllegalArgumentException.class,
             () -> credentials.createWithGdchAudience(""));
-    assertTrue(ex.getMessage().contains("Audience are not configured for GDCH service account"));
+    assertTrue(ex.getMessage().contains("Audience cannot be null or empty for GDCH service account"));
   }
 
   @Test
@@ -664,8 +664,8 @@ class GdchCredentialsTest extends BaseSerializationTest {
       assertTrue(
           ex.getMessage()
               .contains(
-                  "Audience are not configured for GDCH service account. Specify the "
-                      + "audience by calling createWithGDCHAudience"));
+                  "Audience cannot be null or empty for GDCH service account credentials. "
+                      + "Specify the audience by calling createWithGdchAudience"));
     }
   }
 

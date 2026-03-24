@@ -250,7 +250,7 @@ public class GdchCredentials extends GoogleCredentials {
   @ObsoleteApi("Use createWithGdchAudience(String) instead.")
   public GdchCredentials createWithGdchAudience(URI apiAudience) {
     Preconditions.checkNotNull(
-        apiAudience, "Audience are not configured for GDCH service account credentials.");
+        apiAudience, "Audience cannot be null or empty for GDCH service account credentials.");
     return this.toBuilder().setGdchAudience(apiAudience.toString()).build();
   }
 
@@ -262,7 +262,7 @@ public class GdchCredentials extends GoogleCredentials {
   public GdchCredentials createWithGdchAudience(String apiAudience) {
     if (Strings.isNullOrEmpty(apiAudience)) {
       throw new IllegalArgumentException(
-          "Audience are not configured for GDCH service account credentials.");
+          "Audience cannot be null or empty for GDCH service account credentials.");
     }
     return this.toBuilder().setGdchAudience(apiAudience).build();
   }
@@ -278,8 +278,8 @@ public class GdchCredentials extends GoogleCredentials {
   public AccessToken refreshAccessToken() throws IOException {
     Preconditions.checkNotNull(
         this.apiAudience,
-        "Audience are not configured for GDCH service account. Specify the "
-            + "audience by calling createWithGDCHAudience.");
+        "Audience cannot be null or empty for GDCH service account credentials. "
+            + "Specify the audience by calling createWithGdchAudience.");
 
     JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
 
