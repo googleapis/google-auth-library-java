@@ -656,16 +656,13 @@ class GdchCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addGdchServiceAccount(
         GdchCredentials.getIssuerSubjectValue(PROJECT_ID, SERVICE_IDENTITY_NAME), tokenString);
     transportFactory.transport.setTokenServerUri(TOKEN_SERVER_URI);
-    try {
-      credentials.refreshAccessToken();
-      fail("Should not be able to refresh access token without exception.");
-    } catch (NullPointerException ex) {
-      assertTrue(
-          ex.getMessage()
-              .contains(
-                  "Audience cannot be null or empty for GDCH service account credentials. "
-                      + "Specify the audience by calling createWithGdchAudience"));
-    }
+    NullPointerException ex =
+        assertThrows(NullPointerException.class, () -> credentials.refreshAccessToken());
+    assertTrue(
+        ex.getMessage()
+            .contains(
+                "Audience cannot be null or empty for GDCH service account credentials. "
+                    + "Specify the audience by calling createWithGdchAudience"));
   }
 
   @Test
@@ -999,14 +996,10 @@ class GdchCredentialsTest extends BaseSerializationTest {
         GdchCredentials.getIssuerSubjectValue(PROJECT_ID, SERVICE_IDENTITY_NAME), null);
     transportFactory.transport.setTokenServerUri(TOKEN_SERVER_URI);
 
-    try {
-      gdchWithAudience.refreshAccessToken();
-      fail("Should not be able to refresh access token without exception.");
-    } catch (IOException ex) {
-      assertEquals(
-          "Error parsing token refresh response. Expected value access_token not found.",
-          ex.getMessage());
-    }
+    IOException ex = assertThrows(IOException.class, () -> gdchWithAudience.refreshAccessToken());
+    assertEquals(
+        "Error parsing token refresh response. Expected value access_token not found.",
+        ex.getMessage());
   }
 
   @Test
@@ -1048,12 +1041,9 @@ class GdchCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addResponseSequence(
         new MockLowLevelHttpResponse().setContentType(Json.MEDIA_TYPE).setContent(responseContent));
 
-    try {
-      gdchWithAudience.refreshAccessToken();
-      fail("Should not be able to refresh access token with invalid response.");
-    } catch (IOException ex) {
-      assertEquals(expectedErrorMessage, ex.getMessage());
-    }
+    IOException ex =
+        assertThrows(IOException.class, () -> gdchWithAudience.refreshAccessToken());
+    assertEquals(expectedErrorMessage, ex.getMessage());
   }
 
   @Test
@@ -1074,13 +1064,10 @@ class GdchCredentialsTest extends BaseSerializationTest {
     transportFactory.transport.addResponseSequence(
         new MockLowLevelHttpResponse().setStatusCode(400).setReasonPhrase("Bad Request"));
 
-    try {
-      gdchWithAudience.refreshAccessToken();
-      fail("Should not be able to refresh access token with server error.");
-    } catch (IOException ex) {
-      assertTrue(ex.getMessage().contains("Error getting access token for GDCH service account"));
-      assertTrue(ex.getMessage().contains("400 Bad Request"));
-    }
+    GoogleAuthException ex =
+        assertThrows(GoogleAuthException.class, () -> gdchWithAudience.refreshAccessToken());
+    assertTrue(ex.getMessage().contains("Error getting access token for GDCH service account"));
+    assertTrue(ex.getMessage().contains("400 Bad Request"));
   }
 
   @Test
@@ -1100,13 +1087,10 @@ class GdchCredentialsTest extends BaseSerializationTest {
 
     transportFactory.transport.addResponseErrorSequence(new IOException("Connection reset"));
 
-    try {
-      gdchWithAudience.refreshAccessToken();
-      fail("Should not be able to refresh access token with IO exception.");
-    } catch (IOException ex) {
-      assertTrue(ex.getMessage().contains("Error getting access token for GDCH service account"));
-      assertTrue(ex.getMessage().contains("Connection reset"));
-    }
+    GoogleAuthException ex =
+        assertThrows(GoogleAuthException.class, () -> gdchWithAudience.refreshAccessToken());
+    assertTrue(ex.getMessage().contains("Error getting access token for GDCH service account"));
+    assertTrue(ex.getMessage().contains("Connection reset"));
   }
 
   @Test
