@@ -31,6 +31,7 @@
 package com.google.auth.mtls;
 
 import com.google.api.client.util.SecurityUtils;
+import com.google.api.core.InternalApi;
 import com.google.auth.oauth2.EnvironmentProvider;
 import com.google.auth.oauth2.PropertyProvider;
 import com.google.auth.oauth2.SystemEnvironmentProvider;
@@ -48,6 +49,7 @@ import java.security.KeyStore;
  * libraries, and the public facing methods may be changed without notice, and have no guarantee of
  * backwards compatibility.
  */
+@InternalApi
 public class X509Provider implements MtlsProvider {
   private final EnvironmentProvider envProvider;
   private final PropertyProvider propProvider;
