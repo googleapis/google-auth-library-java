@@ -33,6 +33,7 @@ package com.google.auth.oauth2;
 
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.mtls.MtlsHttpTransportFactory;
+import com.google.auth.mtls.MtlsUtils;
 import com.google.auth.mtls.X509Provider;
 import com.google.auth.oauth2.IdentityPoolCredentialSource.IdentityPoolCredentialSourceType;
 import com.google.common.annotations.VisibleForTesting;
@@ -95,7 +96,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
         == IdentityPoolCredentialSourceType.CERTIFICATE) {
       try {
         this.subjectTokenSupplier =
-            createCertificateSubjectTokenSupplier(builder, credentialSource);
+            createCertificateSubjectTokenSupplier(credentialSource);
       } catch (IOException e) {
         throw new RuntimeException(
             // Wrap IOException in RuntimeException because constructors cannot throw checked
@@ -159,39 +160,31 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
   }
 
   private IdentityPoolSubjectTokenSupplier createCertificateSubjectTokenSupplier(
-      Builder builder, IdentityPoolCredentialSource credentialSource) throws IOException {
+      IdentityPoolCredentialSource credentialSource) throws IOException {
+    final IdentityPoolCredentialSource.CertificateConfig certConfig =
+        credentialSource.getCertificateConfig();
+    String explicitCertConfigPath =
+        certConfig.useDefaultCertificateConfig()
+            ? null
+            : certConfig.getCertificateConfigLocation();
+
     // Configure the mTLS transport with the x509 keystore.
-    X509Provider x509Provider = getX509Provider(builder, credentialSource);
+    X509Provider x509Provider =
+        new X509Provider(getEnvironmentProvider(), getPropertyProvider(), explicitCertConfigPath);
     KeyStore mtlsKeyStore = x509Provider.getKeyStore();
     this.transportFactory = new MtlsHttpTransportFactory(mtlsKeyStore);
 
     // Initialize the subject token supplier with the certificate path.
-    credentialSource.setCredentialLocation(x509Provider.getCertificatePath());
+    String configCertPath =
+        MtlsUtils.getCertificatePath(
+            getEnvironmentProvider(), getPropertyProvider(), explicitCertConfigPath);
+    credentialSource.setCredentialLocation(configCertPath);
     return new CertificateIdentityPoolSubjectTokenSupplier(credentialSource);
-  }
-
-  private X509Provider getX509Provider(
-      Builder builder, IdentityPoolCredentialSource credentialSource) {
-    final IdentityPoolCredentialSource.CertificateConfig certConfig =
-        credentialSource.getCertificateConfig();
-
-    // Use the provided X509Provider if available, otherwise initialize a default one.
-    X509Provider x509Provider = builder.x509Provider;
-    if (x509Provider == null) {
-      // Determine the certificate path based on the configuration.
-      String explicitCertConfigPath =
-          certConfig.useDefaultCertificateConfig()
-              ? null
-              : certConfig.getCertificateConfigLocation();
-      x509Provider = new X509Provider(explicitCertConfigPath);
-    }
-    return x509Provider;
   }
 
   public static class Builder extends ExternalAccountCredentials.Builder {
 
     private IdentityPoolSubjectTokenSupplier subjectTokenSupplier;
-    private X509Provider x509Provider;
 
     Builder() {}
 
@@ -202,20 +195,8 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       }
     }
 
-    /**
-     * Sets a custom {@link X509Provider} to manage the client certificate and private key for mTLS.
-     * If set, this provider will be used instead of the default behavior which initializes an
-     * {@code X509Provider} based on the {@code certificateConfigLocation} or default paths found in
-     * the {@code credentialSource}. This is primarily used for testing.
-     *
-     * @param x509Provider the custom X509 provider to use.
-     * @return this {@code Builder} object
-     */
-    @CanIgnoreReturnValue
-    Builder setX509Provider(X509Provider x509Provider) {
-      this.x509Provider = x509Provider;
-      return this;
-    }
+    
+
 
     /**
      * Sets the subject token supplier. The supplier should return a valid subject token string.

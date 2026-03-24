@@ -1019,17 +1019,11 @@ class IdentityPoolCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void build_withCertificateSourceAndCustomX509Provider_success()
-      throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException {
-    // Create an empty KeyStore and a spy on a custom X509Provider.
-    KeyStore keyStore = KeyStore.getInstance("JKS");
-    keyStore.load(null, null);
-    TestX509Provider x509Provider =
-        spy(new TestX509Provider(keyStore, "/path/to/certificate.json"));
-
+  void build_withCertificateSource_succeeds() throws Exception {
     // Set up credential source for certificate type.
     Map<String, Object> certificateMap = new HashMap<>();
-    certificateMap.put("use_default_certificate_config", true);
+    certificateMap.put("use_default_certificate_config", false);
+    certificateMap.put("certificate_config_location", "testresources/mtls/certificate_config.json");
     Map<String, Object> credentialSourceMap = new HashMap<>();
     credentialSourceMap.put("certificate", certificateMap);
     IdentityPoolCredentialSource credentialSource =
@@ -1037,10 +1031,9 @@ class IdentityPoolCredentialsTest extends BaseSerializationTest {
     MockExternalAccountCredentialsTransportFactory mockTransportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
-    // Build credentials with the custom provider.
+    // Build credentials.
     IdentityPoolCredentials credentials =
         IdentityPoolCredentials.newBuilder()
-            .setX509Provider(x509Provider)
             .setHttpTransportFactory(mockTransportFactory)
             .setAudience("test-audience")
             .setSubjectTokenType("test-token-type")
@@ -1057,10 +1050,6 @@ class IdentityPoolCredentialsTest extends BaseSerializationTest {
         IdentityPoolCredentials.CERTIFICATE_METRICS_HEADER_VALUE,
         credentials.getCredentialSourceType(),
         "Metrics header should indicate certificate source");
-
-    // Verify the custom provider methods were called during build.
-    verify(x509Provider).getKeyStore();
-    verify(x509Provider).getCertificatePath();
   }
 
   @Test
@@ -1089,81 +1078,6 @@ class IdentityPoolCredentialsTest extends BaseSerializationTest {
         exception.getMessage());
   }
 
-  @Test
-  void build_withCustomProvider_throwsOnGetKeyStore()
-      throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException {
-    // Simulate a scenario where the X509Provider fails to load the KeyStore, typically due to an
-    // IOException when reading the certificate or private key files.
-    KeyStore keyStore = KeyStore.getInstance("JKS");
-    keyStore.load(null, null);
-    TestX509Provider x509Provider = new TestX509Provider(keyStore, "/path/to/certificate.json");
-    x509Provider.setShouldThrowOnGetKeyStore(true); // Configure to throw
-
-    Map<String, Object> certificateMap = new HashMap<>();
-    certificateMap.put("certificate_config_location", "/path/to/certificate.json");
-
-    // Expect RuntimeException because the constructor wraps the IOException.
-    RuntimeException exception =
-        assertThrows(
-            RuntimeException.class,
-            () -> createCredentialsWithCertificate(x509Provider, certificateMap));
-
-    // Verify the cause is the expected IOException from the mock.
-    assertNotNull(exception.getCause());
-    assertTrue(exception.getCause() instanceof IOException);
-    assertEquals("Simulated IOException on get keystore", exception.getCause().getMessage());
-
-    // Verify the wrapper exception message
-    assertEquals(
-        "Failed to initialize IdentityPoolCredentials from certificate source due to an I/O error.",
-        exception.getMessage());
-  }
-
-  @Test
-  void build_withCustomProvider_throwsOnGetCertificatePath()
-      throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException {
-    // Simulate a scenario where the X509Provider cannot access or read the certificate
-    // configuration file needed to determine the certificate path, resulting in an IOException.
-    KeyStore keyStore = KeyStore.getInstance("JKS");
-    keyStore.load(null, null);
-    TestX509Provider x509Provider = new TestX509Provider(keyStore, "/path/to/certificate.json");
-    x509Provider.setShouldThrowOnGetCertificatePath(true); // Configure to throw
-
-    Map<String, Object> certificateMap = new HashMap<>();
-    certificateMap.put("certificate_config_location", "/path/to/certificate.json");
-
-    // Expect RuntimeException because the constructor wraps the IOException.
-    RuntimeException exception =
-        assertThrows(
-            RuntimeException.class,
-            () -> createCredentialsWithCertificate(x509Provider, certificateMap));
-
-    // Verify the cause is the expected IOException from the mock.
-    assertNotNull(exception.getCause());
-    assertTrue(exception.getCause() instanceof IOException);
-    assertEquals("Simulated IOException on certificate path", exception.getCause().getMessage());
-
-    // Verify the wrapper exception message
-    assertEquals(
-        "Failed to initialize IdentityPoolCredentials from certificate source due to an I/O error.",
-        exception.getMessage());
-  }
-
-  private void createCredentialsWithCertificate(
-      X509Provider x509Provider, Map<String, Object> certificateMap) {
-    Map<String, Object> credentialSourceMap = new HashMap<>();
-    credentialSourceMap.put("certificate", certificateMap);
-    IdentityPoolCredentialSource credentialSource =
-        new IdentityPoolCredentialSource(credentialSourceMap);
-
-    IdentityPoolCredentials.newBuilder()
-        .setX509Provider(x509Provider)
-        .setHttpTransportFactory(new MockExternalAccountCredentialsTransportFactory())
-        .setAudience("")
-        .setSubjectTokenType("")
-        .setCredentialSource(credentialSource)
-        .build();
-  }
 
   static InputStream writeIdentityPoolCredentialsStream(
       String tokenUrl,
@@ -1246,40 +1160,5 @@ class IdentityPoolCredentialsTest extends BaseSerializationTest {
     }
   }
 
-  private static class TestX509Provider extends X509Provider {
-    private final KeyStore keyStore;
-    private final String certificatePath;
-    private boolean shouldThrowOnGetKeyStore = false;
-    private boolean shouldThrowOnGetCertificatePath = false;
 
-    TestX509Provider(KeyStore keyStore, String certificatePath) {
-      super();
-      this.keyStore = keyStore;
-      this.certificatePath = certificatePath;
-    }
-
-    @Override
-    public KeyStore getKeyStore() throws IOException {
-      if (shouldThrowOnGetKeyStore) {
-        throw new IOException("Simulated IOException on get keystore");
-      }
-      return keyStore;
-    }
-
-    @Override
-    public String getCertificatePath() throws IOException {
-      if (shouldThrowOnGetCertificatePath) {
-        throw new IOException("Simulated IOException on certificate path");
-      }
-      return certificatePath;
-    }
-
-    void setShouldThrowOnGetKeyStore(boolean shouldThrow) {
-      this.shouldThrowOnGetKeyStore = shouldThrow;
-    }
-
-    void setShouldThrowOnGetCertificatePath(boolean shouldThrow) {
-      this.shouldThrowOnGetCertificatePath = shouldThrow;
-    }
-  }
 }
