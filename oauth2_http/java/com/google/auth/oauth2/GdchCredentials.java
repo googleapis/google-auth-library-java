@@ -553,13 +553,17 @@ public class GdchCredentials extends GoogleCredentials {
 
     @CanIgnoreReturnValue
     public Builder setGdchAudience(String apiAudience) {
-      this.apiAudience = apiAudience;
+      this.apiAudience =
+          Preconditions.checkNotNull(
+              apiAudience, "Audience cannot be null or empty for GDCH service account credentials.");
       return this;
     }
 
     @CanIgnoreReturnValue
     @ObsoleteApi("Use setGdchAudience(String) instead")
     public Builder setGdchAudience(URI apiAudience) {
+      Preconditions.checkNotNull(
+          apiAudience, "Audience cannot be null or empty for GDCH service account credentials.");
       this.apiAudience = apiAudience.toString();
       return this;
     }

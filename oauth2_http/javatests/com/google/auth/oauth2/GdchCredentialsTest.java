@@ -1232,6 +1232,24 @@ class GdchCredentialsTest extends BaseSerializationTest {
     assertEquals(64, signatureBytes.length);
   }
 
+  @Test
+  void builder_setGdchAudience_nullString() {
+    GdchCredentials.Builder builder = GdchCredentials.newBuilder();
+    NullPointerException ex =
+        assertThrows(NullPointerException.class, () -> builder.setGdchAudience((String) null));
+    assertEquals(
+        "Audience cannot be null or empty for GDCH service account credentials.", ex.getMessage());
+  }
+
+  @Test
+  void builder_setGdchAudience_nullUri() {
+    GdchCredentials.Builder builder = GdchCredentials.newBuilder();
+    NullPointerException ex =
+        assertThrows(NullPointerException.class, () -> builder.setGdchAudience((URI) null));
+    assertEquals(
+        "Audience cannot be null or empty for GDCH service account credentials.", ex.getMessage());
+  }
+
   static GenericJson writeGdchServiceAccountJson(
       String formatVersion,
       String project,
