@@ -40,7 +40,6 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.PemReader;
 import com.google.api.client.util.PemReader.Section;
-import com.google.api.client.util.SecurityUtils;
 import com.google.api.core.InternalApi;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.http.HttpTransportFactory;
