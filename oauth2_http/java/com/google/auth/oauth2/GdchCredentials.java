@@ -233,6 +233,7 @@ public class GdchCredentials extends GoogleCredentials {
    */
   static GdchCredentials fromPkcs8(String privateKeyPkcs8, GdchCredentials.Builder builder)
       throws IOException {
+    // GDCH key generation natively only supports the EC algorithm.
     PrivateKey privateKey =
         OAuth2Utils.privateKeyFromPkcs8(privateKeyPkcs8, OAuth2Utils.Pkcs8Algorithm.EC);
     builder.setPrivateKey(privateKey);
