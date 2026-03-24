@@ -181,12 +181,12 @@ class DefaultCredentialsProviderTest {
 
   @Test
   void getDefaultCredentials_noCredentials_linuxNotGce() {
-    checkStaticGceDetection("Linux", "test", false);
+    checkStaticGceDetection("linux", "test", false);
   }
 
   @Test
   void getDefaultCredentials_static_linux() {
-    checkStaticGceDetection("Linux", "Googlekdjsfhg", true);
+    checkStaticGceDetection("linux", "Googlekdjsfhg", true);
   }
 
   @Test
