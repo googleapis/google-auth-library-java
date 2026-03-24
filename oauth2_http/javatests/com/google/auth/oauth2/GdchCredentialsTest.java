@@ -85,7 +85,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
   private static final String CA_CERT_FILE_NAME = "cert.pem";
   private static final String CA_CERT_PATH =
       GdchCredentialsTest.class.getClassLoader().getResource(CA_CERT_FILE_NAME).getPath();
-  private static final String API_AUDIENCE = URI.create("https://gdch-api-audience").toString();
+  private static final String API_AUDIENCE = "https://gdch-api-audience";
   private static final URI CALL_URI = URI.create("http://googleapis.com/testapi/v1/foo");
 
   @Test
