@@ -44,6 +44,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.api.client.http.HttpStatusCodes;
+import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonGenerator;
@@ -54,6 +55,7 @@ import com.google.api.client.util.Clock;
 import com.google.auth.Credentials;
 import com.google.auth.ServiceAccountSigner.SigningException;
 import com.google.auth.TestUtils;
+import com.google.auth.http.HttpTransportFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.ByteArrayOutputStream;
@@ -1295,6 +1297,112 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
     assertEquals(targetCredentials.hashCode(), deserializedCredentials.hashCode());
     assertEquals(targetCredentials.toString(), deserializedCredentials.toString());
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
+  }
+
+  /**
+   * A stateful {@link HttpTransportFactory} that provides a shared {@link
+   * MockIAMCredentialsServiceTransport} instance.
+   *
+   * <p>This is necessary for serialization tests because {@link ImpersonatedCredentials} stores the
+   * factory's class name and re-instantiates it via reflection during deserialization. A standard
+   * factory would create a fresh, unconfigured transport upon re-instantiation, causing refreshed
+   * token requests to fail. Using a static transport ensures the mock configuration persists across
+   * serialization boundaries.
+   */
+  public static class StatefulMockIAMTransportFactory implements HttpTransportFactory {
+    private static final MockIAMCredentialsServiceTransport TRANSPORT =
+        new MockIAMCredentialsServiceTransport(GoogleCredentials.GOOGLE_DEFAULT_UNIVERSE);
+
+    @Override
+    public HttpTransport create() {
+      return TRANSPORT;
+    }
+
+    public static MockIAMCredentialsServiceTransport getTransport() {
+      return TRANSPORT;
+    }
+  }
+
+  @Test
+  void refreshAccessToken_afterSerialization_success() throws IOException, ClassNotFoundException {
+    // This test ensures that credentials can still refresh after being serialized.
+    // ImpersonatedCredentials only serializes the transport factory's class name.
+    // Upon deserialization, it creates a new instance of that factory via reflection.
+    // StatefulMockIAMTransportFactory uses a static transport instance so that the
+    // configuration we set here (token, expiration) is available to the new factory instance.
+    MockIAMCredentialsServiceTransport transport = StatefulMockIAMTransportFactory.getTransport();
+    transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    transport.setAccessToken(ACCESS_TOKEN);
+
+    transport.setExpireTime(getDefaultExpireTime());
+    transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "", true);
+
+    // Use a source credential that doesn't need refresh
+    AccessToken sourceToken =
+        new AccessToken("source-token", new Date(System.currentTimeMillis() + 3600000));
+    GoogleCredentials sourceCredentials = GoogleCredentials.create(sourceToken);
+
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            sourceCredentials,
+            IMPERSONATED_CLIENT_EMAIL,
+            null,
+            IMMUTABLE_SCOPES_LIST,
+            VALID_LIFETIME,
+            new StatefulMockIAMTransportFactory());
+
+    ImpersonatedCredentials deserializedCredentials = serializeAndDeserialize(targetCredentials);
+
+    // This should not throw NPE. The transient 'calendar' field being null after
+    // deserialization is now handled by using java.time.Instant for parsing.
+    AccessToken token = deserializedCredentials.refreshAccessToken();
+    assertNotNull(token);
+    assertEquals(ACCESS_TOKEN, token.getTokenValue());
+  }
+
+  @Test
+  void refreshAccessToken_withCustomCalendar_success() throws IOException {
+    // This test verifies behavioral parity between the new Instant-based logic and
+    // the legacy Calendar-based logic. It ensures that if a user provides a custom
+    // calendar with a specific timezone, that context is correctly respected
+    // during parsing, even though the primary parsing engine has changed.
+    MockIAMCredentialsServiceTransport transport = StatefulMockIAMTransportFactory.getTransport();
+    transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    transport.setAccessToken(ACCESS_TOKEN);
+
+    // Create a calendar in a specific timezone (PST/PDT)
+    Calendar c = Calendar.getInstance(TimeZone.getTimeZone("America/Los_Angeles"));
+    // Set to a fixed point in time: 1:00 PM local wall-clock time
+    c.set(2026, Calendar.MARCH, 24, 13, 0, 0);
+    c.set(Calendar.MILLISECOND, 0);
+    Date expectedDate = c.getTime();
+
+    // The IAM API always returns Zulu (UTC) time strings.
+    // 1:00 PM PDT (UTC-7) corresponds to 8:00 PM UTC.
+    String expireTime = "2026-03-24T20:00:00Z";
+    transport.setExpireTime(expireTime);
+    transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "", true);
+
+    AccessToken sourceToken =
+        new AccessToken("source-token", new Date(System.currentTimeMillis() + 3600000));
+    GoogleCredentials sourceCredentials = GoogleCredentials.create(sourceToken);
+
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+                sourceCredentials,
+                IMPERSONATED_CLIENT_EMAIL,
+                null,
+                IMMUTABLE_SCOPES_LIST,
+                VALID_LIFETIME,
+                new StatefulMockIAMTransportFactory())
+            .createWithCustomCalendar(c);
+
+    // This should work and correctly integrate the custom calendar's timezone configuration.
+    AccessToken token = targetCredentials.refreshAccessToken();
+    assertNotNull(token);
+    assertEquals(ACCESS_TOKEN, token.getTokenValue());
+    // Verify that the resulting point-in-time matches our original calendar configuration.
+    assertEquals(expectedDate.getTime(), token.getExpirationTime().getTime());
   }
 
   public static String getDefaultExpireTime() {
