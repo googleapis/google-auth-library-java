@@ -76,11 +76,8 @@ public class GdchCredentials extends GoogleCredentials {
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
   @VisibleForTesting static final String SUPPORTED_FORMAT_VERSION = "1";
 
-  private static final String ACCESS_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:access_token";
   private static final String SERVICE_ACCOUNT_TOKEN_TYPE =
       "urn:k8s:params:oauth:token-type:serviceaccount";
-  private static final String TOKEN_TYPE_TOKEN_EXCHANGE =
-      "urn:ietf:params:oauth:token-type:token-exchange";
 
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
 
@@ -288,8 +285,8 @@ public class GdchCredentials extends GoogleCredentials {
 
     GenericData tokenRequest = new GenericData();
     tokenRequest.set("audience", apiAudience);
-    tokenRequest.set("grant_type", TOKEN_TYPE_TOKEN_EXCHANGE);
-    tokenRequest.set("requested_token_type", ACCESS_TOKEN_TYPE);
+    tokenRequest.set("grant_type", OAuth2Utils.TOKEN_TYPE_TOKEN_EXCHANGE);
+    tokenRequest.set("requested_token_type", OAuth2Utils.TOKEN_TYPE_ACCESS_TOKEN);
     tokenRequest.set("subject_token", assertion);
     tokenRequest.set("subject_token_type", SERVICE_ACCOUNT_TOKEN_TYPE);
 
